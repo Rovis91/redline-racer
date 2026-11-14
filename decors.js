@@ -1800,5 +1800,74 @@
       for (let k = 0; k < 9; k++) { const a = -2.2 + k * 0.5 + rnd() * 0.2, r = 1700 + rnd() * 300, w = 260 + rnd() * 160;
         const m = h.pose('panneau', vol, h.scene, [300 + Math.cos(a) * r, 400 + rnd() * 180, 250 + Math.sin(a) * r]); m.scale.set(w, w / 2, 1); m.lookAt(300, m.position.y, 250); }
     },
+    // ---------- Barrage 74 : centrale hydroélectrique soviétique des années 70, vannes ouvertes, matin voilé (docs/SPEC-BARRAGE.md) ----------
+    // Le corps du barrage est fait de gradins de béton (x de -252 à 170) qui enferment les galeries du tunnel : couronnement (z 12-30, au ras de la crête), gradin haut (z 30-68, 111 m)
+    // où s'ouvrent les cinq vannes, gradin bas (z 68-113, 79 m), puis la salle des turbines (z 113-160), creuse, que la route traverse à ciel fermé (pts 17-21). À l'est (x 170-480), le mur nu de 104 m :
+    // la crête y longe le vide. Les gerbes des vannes passent au-dessus de la halle et tombent dans le bassin, juste en amont du pont (pts 10-11) ; la rivière file au sud sous la ligne de départ.
+    barrage(h) {
+      const { THREE, S, N, W, rnd } = h, P = i => pt(h, i), LUMI = { lum: 1 }, DS = { side: THREE.DoubleSide };
+      const bloc = (m, x0, x1, z0, z1, y0, y1) => boite(h, m, x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+      const yA = (x, z) => S[near(h, x, z)].y; // altitude de la route la plus proche
+      // --- le sol : la vallée à 9 m, le relief suit la route dans la vallée et les lacets ; sous le barrage (du portail à la fin de la crête), il reste au fond de la vallée ---
+      const i15 = P(15), i48 = P(48), bassin = (x, z) => x > -170 && x < 130 && z > 160 && z < 228;
+      const creux = (x, z) => bassin(x, z) ? 7 : z > 160 ? 7 * Math.max(0, Math.min(1, (24 - Math.abs(x)) / 6)) : 0; // le bassin de dissipation, puis la rivière (x ≈ 0)
+      const g = terrain(h, { pas: 14, marge: 650, sol: s => { const i = S.indexOf(s); return i >= i15 && i < i48 ? 8 : s.y; }, creux, mat: h.mat('bruit', {}, '#5f6450', ['#545a46', '#6c705a', '#5c5446']) });
+      // --- l'eau : la retenue au ras de la crête (101 m), le bassin et la rivière (4 m) ---
+      const eau = h.mat('eauGES'), eauVive = h.mat('eauGES', {}, '#8ab8cc', 90);
+      bloc(eau, -330, 735, -1200, -14, 100, 101); bloc(eauVive, -170, 130, 160, 228, 3, 4); bloc(eau, -22, 22, 205, 1250, 3, 4);
+      // --- les rives de la retenue : deux massifs de roche, à l'ouest et à l'est (hors de la vallée) ---
+      const roche = h.mat('bruit', { rep: [24, 8] }, '#5c5446', ['#4a4438', '#6a6254', '#545048']);
+      for (const [x0, x1, z0, z1, y] of [[-1200, -330, -1200, 180, 150], [-1200, -620, -1200, 120, 215], [-620, -420, -1200, -200, 185], [745, 1450, -1200, 390, 165], [930, 1450, -1200, 300, 240], [745, 930, -1200, -260, 200]]) bloc(roche, x0, x1, z0, z1, 0, y);
+      // --- le corps du barrage ---
+      const bet = h.mat('betonGES'), betS = h.mat('betonGES', {}, '#6d726d'), baies = h.mat('baiesHalle');
+      bloc(bet, -252, 480, -14, 12, 0, 104.6); // mur de la crête (le parapet est la glissière de game.js)
+      bloc(bet, -252, 170, 12, 30, 0, 104.6); bloc(bet, -252, 170, 30, 68, 0, 111); bloc(bet, -252, 170, 68, 113, 0, 79); // couronnement, gradin haut, gradin bas
+      bloc(betS, -330, -252, -20, 175, 0, 116); // culée ouest : portails des galeries (pts 22 et 44)
+      // salle des turbines : façade sud vitrée, toit, pignon est percé pour la route (elle y entre vers 29 m d'altitude, entre z = 126 et 152)
+      bloc(baies, -252, 312, 157, 160, 0, 62); bloc(betS, -252, 312, 113, 160, 60, 62.5);
+      bloc(bet, 309, 312, 113, 126, 0, 62); bloc(bet, 309, 312, 152, 160, 0, 62); bloc(bet, 309, 312, 126, 152, 40, 62); bloc(bet, 309, 312, 126, 152, 0, 27.4);
+      { const a = P(17) - 8, n = P(22) - a, dalle = h.mat('betonGES', DS, '#7a7e78'); for (const sd of [-1, 1]) h.ribbon(a, n, sd * W, -0.05, sd * 22, -0.05, dalle, 8); } // le sol de la halle, de la route aux murs
+      // la halle : alternateurs vert d'eau des deux côtés, colonnes, rails et pont roulant orange, mosaïque sur le mur nord, lumière du jour par les baies et lampes au plafond
+      const vert = h.mat('peinture', { c: 0x5fa89a }), orange = h.mat('toleOrange'), acier = h.mat('acier', { c: 0x6d726d }), alt = [], cap = [], col = [];
+      for (let x = -225; x <= 285; x += 45) for (const z of [119, 151]) { const y = yA(x, 135) - 0.05; alt.push([x, y, z]); cap.push([x, y + 7, z]); }
+      for (let x = -240; x < 309; x += 22.5) for (const z of [114, 156]) { const y = yA(x, 135) - 0.05; col.push([x, y + (61 - y) / 2, z, 0, 1.4, 61 - y, 1.4]); }
+      inst(h, h.geo('alternateur'), vert, alt); inst(h, h.geo('capot'), h.mat('peinture', { c: 0x4a8478 }), cap); inst(h, h.geo('bloc'), betS, col);
+      for (const z of [114.6, 155.4]) bloc(orange, -252, 309, z - 0.6, z + 0.6, 52.4, 53.6);
+      { const gr = new THREE.Group(); gr.position.set(40, 51.4, 135); gr.rotation.y = Math.PI / 2; h.scene.add(gr); h.pose('pontRoulant', { acier: orange, chariot: orange, cabine: h.mat('peinture', { c: 0xe8e4d8 }), cable: h.mat('matGris') }, gr, [0, 0, 0], 41); }
+      bloc(h.mat('mosaique'), -110, -14, 113, 113.4, 40, 58); bloc(h.mat('lettres', {}, 'ГЭС-74 · ГА 1-12'), 60, 220, 113, 113.4, 44, 52);
+      for (let x = -220; x < 300; x += 65) { const i = near(h, x, 135); h.lum(i, x, S[i].y + 22, 135, 0xfff0d8, 48, 0.8); }
+      // --- les cinq vannes du gradin haut et leurs gerbes : la lame part à 96 m, passe au-dessus des gradins et de la halle, tombe dans le bassin (z ≈ 231) ---
+      const gerbe = h.mat('gerbe', { lum: 1, transparent: true, depthWrite: false, side: THREE.DoubleSide }), brume = h.mat('brume', { lum: 1, transparent: true, depthWrite: false, side: THREE.DoubleSide });
+      const trou = h.mat('peinture', { c: 0x202224 }), bru = [];
+      [-150, -90, -30, 30, 90].forEach((x, k) => {
+        h.pose('vanne', { trou, beton: betS, vantail: orange, numero: h.mat('lettres', {}, 'ГА-' + (k + 1)) }, h.scene, [x, 92, 68]);
+        const m = h.pose('gerbe', gerbe, h.scene, [x, 96, 69], 162, 91, 9, 24); m.renderOrder = 2;
+        bru.push([x, 14, 224, rnd() * 3, 60, 34, 60], [x + 20, 30, 205, rnd() * 3, 44, 30, 44]);
+      });
+      bru.push([-20, 22, 245, 0, 110, 26, 40]); // le nuage qui passe sur le pont
+      inst(h, h.geo('brume'), brume, bru).renderOrder = 3;
+      // --- la crête : portiques des vannes au-dessus de la route, lampadaires des deux côtés, lettres peintes sur le mur aval nu ---
+      const portique = { acier: orange, treuil: h.mat('peinture', { c: 0x5fa89a }) };
+      for (const x of [-150, -30, 90]) { const s = S[near(h, x, 0)]; h.pose('portiqueVanne', portique, repere(h, s), [0, 0, 0], W); }
+      { const mats = [], tetes = []; for (let i = P(44) + 10; i < P(49); i += 20) { const s = S[i], ry = h.across(s);
+          for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 0.8), [tx, tz] = bord(s, sd, W - 0.7); mats.push([x, s.y + 5, z, ry]); tetes.push([tx, s.y + 10, tz, ry]); }
+          { const [lx, lz] = bord(s, (i / 20) & 1 ? 1 : -1, W - 0.7); h.lum(i, lx, s.y + 9.6, lz, 0xfff0d0, 28, 0.9); } }
+        inst(h, h.geo('matLampadaire'), h.mat('matGris'), mats); inst(h, h.geo('teteLampadaire'), h.mat('lampe', LUMI), tetes); }
+      bloc(h.mat('lettres', {}, 'ГЭС'), 205, 385, 12, 12.4, 46, 86);
+      h.pose('tourControle', { beton: bet, vitre: h.mat('vitreSombre'), acier: h.mat('matGris') }, h.scene, [-292, 116, 110]);
+      // --- le pont d'acier au pied du mur (pts 10-11) : tablier, deux poutres-treillis, piles sur les berges ; un pont de béton sur la rivière à la ligne de départ ---
+      { const y = yA(0, 245); bloc(betS, -80, 80, 235, 255, y - 2.2, y - 0.3); for (const x of [-30, 30]) bloc(bet, x - 2, x + 2, 238, 252, 0, y - 2.2);
+        for (const sd of [-1, 1]) { const gr = new THREE.Group(); gr.position.set(0, y - 0.3, 245 + sd * (W + 0.9)); h.scene.add(gr); h.pose('treillisPont', { acier: orange }, gr, [0, 0, 0], 152); } }
+      { const y = yA(0, 430); bloc(betS, -34, 34, 420, 440, y - 1.8, y - 0.3); }
+      // --- la vallée : silos, cabane de garde, pylônes haute tension, peupliers ---
+      inst(h, h.geo('silo'), h.mat('betonGES', {}, '#a4a69e'), [[-170, 9, 330], [-156, 9, 330], [-142, 9, 330]]);
+      h.pose('cabane', { beton: h.mat('betonGES', {}, '#b8b4a4'), toit: h.mat('toleOrange', {}, '#b5483c'), vitre: h.mat('lampe', LUMI) }, h.scene, [262, 9.5, 446]);
+      const py = []; for (const [x0, z0, dx, dz] of [[120, 300, 0, 130], [-230, 340, -40, 130]]) for (let k = 0; k < 7; k++) { const x = x0 + dx * k, z = z0 + dz * k; if (g.dAt(x, z) > W + 14) py.push([x, g.hAt(x, z), z, Math.atan2(dx, dz), 1]); }
+      insts(h, 'pyloneHT', { acier: h.mat('matGris'), feu: h.mat('feuRouge', LUMI) }, py);
+      const ced = []; for (let k = 0; k < 260; k++) { const x = -520 + rnd() * 1300, z = 250 + rnd() * 700; if (g.dAt(x, z) > W + 9 && Math.abs(x) > 34 && !bassin(x, z) && !(x > -180 && x < -130 && Math.abs(z - 330) < 12)) ced.push([x, g.hAt(x, z) + 7, z, rnd() * 6, 0.7 + rnd() * 0.5]); }
+      inst(h, h.geo('cedre'), h.mat('cedre'), ced);
+      // les gerbes coulent : la texture défile le long de la chute ; la brume ondule
+      return (dt, now) => { gerbe.map.offset.y = -(now * 0.0011 % 1); brume.map.offset.x = Math.sin(now * 0.0004) * 0.05; };
+    },
   };
 })();

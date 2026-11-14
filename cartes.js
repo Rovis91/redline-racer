@@ -230,6 +230,23 @@
         sec: { i: 'c1 lo', a: 'k0 s0 h0 b0 c0', b: 'k0 s1 h0 b1 c0', c: 'k1 s0 h0 b0 c1 l0', x: 'c1 l1 P1', u: 'k0 h0 b1 c0 roll P1', e: 'k1 s1 h0 b0 c1 l1 P1' }, form: 'iabcxucceabc' }),
 
     ],
+    // barrage : l'autoradio d'une berline d'État en 1974, sur la bande OIRT (66 à 74 MHz). Niveaux (vol) non mesurés dans ecoute.html : à régler
+    barrage: [
+      st({ name: 'MAYAK 74', fq: '69.8', vol: 1, genre: 'ESTRADA FUNK', bpm: 112, gamme: 'mineur', sw: 0.06, key: 57, kit: 'lin', eq: [2, 1200, 3, 1], rev: 0.16, echo: [3, 0.2], pump: 1, cO: -12, // orchestre de variétés funk : basse claquée, orgue, cordes, thème aux cuivres sur les notes des accords
+        prog: ['Am Am Dm Em', 'F G Am Am'], k: ['x..x..x...x.....', 'x.....x.x..x....'], s: [SN, '....x..g....x..g'], h: ['x.x.x.x.x.x.x.o.', 'x.xxx.x.x.xxx.o.'],
+        b: ['bSlap', '0 - 12 - 0 0 - 7 - 12 - 0 - 7 - 12', '0 - - 0 - - 7 - 0 - - 12 - 7 - -'], d: ['strings', 0], c: ['organ', '..x...x...x...x.', 'x.....x.........'],
+        l: ['ldBrass', '12 - - - 15 - - - 19 - - - 15 - 12 - | 19 - - - 17 . 15 - 12 - - - . - - - | 17 - - - 20 - - - 24 - - - 20 - 17 - | 19 - - - 22 - - - 26 - - - 22 - 19 -',
+          '20 - - - 24 - - - 27 - - - 24 - - - | 22 - - - 26 - - - 29 - - - 26 - - - | 24 - - - 19 - - - 15 - - - 12 - - - | 12 - - - - - - - . - - - - - - -'],
+        sec: { i: 'h0 d lo', a: 'k0 s0 h0 b0 c0', b: 'k0 s0 h1 b1 c0 d', c: 'k1 s1 h1 b0 l0 d', x: 'l1 d P1', e: 'k1 s1 h1 b1 l1 P1' }, form: 'iabccxecabcc' }),
+      st({ name: 'ORBITA 66', fq: '66.4', vol: 1, genre: 'KRAUTROCK', bpm: 138, gamme: 'mineur', key: 52, kit: 'acou', eq: [0, 1500, 2, 2], rev: 0.2, echo: [3, 0.3], pump: 1, // motorik : batterie droite, basse au médiator sur une note, séquence qui tourne, guitare claire à contretemps ; pas de thème
+        prog: ['Em Em C D', 'Am C D Em'], k: ['x...x...x...x...', 'x...x...x..xx...'], s: [SN], h: ['x.x.x.x.x.x.x.x.', 'xxxxxxxxxxxxxxxx'],
+        b: ['bPick', '0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0', '0 0 12 0 0 0 12 0 0 0 12 0 7 0 12 0'], d: ['warm', 0], a: ['seqArp', '0.1.2.4.0.1.2.4.', '0124012401240124'], g: ['gtrClean', '..x...x...x...x.'],
+        sec: { i: 'a0 lo', a: 'k0 h0 b0 a0', b: 'k0 s0 h0 b0 a0 d', c: 'k1 s0 h1 b1 a1 g0 d', x: 'a0 d P1', u: 'k0 h1 b0 a1 roll P1', e: 'k1 s0 h1 b1 a1 g0 P1' }, form: 'iabcxuceabcc' }),
+      st({ name: 'TURBINA 3', fq: '72.1', vol: 1, genre: 'JAZZ-FUNK', bpm: 104, gamme: 'mineur', sw: 0.1, key: 50, kit: 'brk', eq: [3, 900, 2, -1], rev: 0.17, echo: [3, 0.22], pump: 1, cO: -12, // jazz-funk de conservatoire : breakbeat, basse ronde, piano électrique en accords de septième, cordes ; pas de thème
+        prog: ['Dm7 Gm7 Dm7 Am7', 'BbM7 C7 Dm7 Dm7'], k: ['x..x......x.....', 'x..x...x..x..x..'], s: ['....x..g.g..x..g'], h: ['x.x.x.x.x.x.x.o.', 'r.r.r.rrr.r.r.rr'],
+        b: ['bMoog', '0 - - 0 - 12 - - 7 - - 0 - 12 7 -', '0 - 7 - 12 - 7 - 0 - 7 - 12 - 7 -'], c: ['epFM', '..x..x....x..x..', 'x.....x...x.....'], d: ['strings', 0],
+        sec: { i: 'c1 lo', a: 'k0 s0 h0 b0 c0', b: 'k1 s0 h1 b0 c0 d', c: 'k1 s0 h1 b1 c0 d', x: 'c1 d P1', u: 'k0 h1 b0 c1 roll P1', e: 'k1 s0 h1 b1 c0 P1' }, form: 'iabcxuceabcc' }),
+    ],
   };
 
   // Éditeur de musique (editeur.html) : ses réglages, par nom de station, sont enregistrés dans localStorage « vpr.musique » et appliqués par-dessus
@@ -387,9 +404,33 @@
         tun: { sol: ['#8a7860', '#968470', '#f4ead0', '#f0b840', '#c8323c', '#3a2418'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
           fog: 0x5a3020, portail: 0xf0b840, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
+    // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes ouvertes, au matin voilé (docs/SPEC-BARRAGE.md). Sens horaire, départ cap ouest dans la vallée,
+    // grand U, pont d'acier sous les embruns des gerbes (pts 10-11), rampe vers le portail (pt 15), salle des turbines en ligne droite (pts 17-21, à ciel fermé : c'est le décor qui la construit,
+    // le tunnel du moteur ne couvre que les galeries), galeries en zigzag dans le corps du barrage (pts 22-44 : trois épingles de 22,5 m de rayon, de 37 à 105 m), crête de 720 m au bord du vide (pts 44-49),
+    // lacets de la falaise est (trois épingles), retour dans la vallée. Tracé de la spec raccourci à l'ouest (vallée et galeries : 5,7 km → 5,0 km ; 130 s au tour, plus long que toutes les autres) et épingles redessinées en arcs (rayon 12 m au lieu de 15 mini).
+    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [190, 235], grip: 20, sc: 1, tun: [22, 44], chaud: [44, 58], sect: [22, 49], amb: [[8, 13], [17, 21], [44, 49]], anticipe: 1, trafic: 4,
+      sauts: [[48, 40, 1.2]], // tremplin au milieu de la crête : le « saut du bec » de la spec (fin de crête, fosse de 8 m) se recevait en pleine descente, réception dure du pilote automatique
+      surf: { zones: [[22, 44, 'mouille', 0.35]] }, // galeries suintantes (sous le tunnel, la pluie est coupée) ; le pont est mouillé par les embruns (th.pluie)
+      pts: [[300, 430, 10], [100, 430, 10], [-100, 430, 10], [-180, 425, 10], [-300, 405, 10], [-370, 355, 10], [-390, 300, 10], [-360, 250, 10], [-270, 232, 10], [-200, 238, 13], [-70, 245, 14], [70, 245, 14], [200, 240, 14], [310, 235, 21], [345, 210, 24],
+        [345, 170, 26], [330, 148, 28], [300, 135, 30], [220, 135, 35], [120, 135, 35], [20, 135, 35], [-70, 135, 35],
+        [-250, 135, 37], [-261, 132, 37.5], [-269, 124, 38], [-272, 113, 38.5], [-269, 101, 39], [-261, 93, 39.5], [-250, 90, 40], [-65, 90, 52], [120, 90, 64], [131, 87, 64.5], [139, 79, 65], [143, 68, 65.5], [139, 56, 66], [131, 48, 66.5], [120, 45, 67],
+        [-65, 45, 83], [-250, 45, 99], [-261, 42, 100], [-269, 34, 101], [-272, 23, 102], [-269, 11, 103.1], [-261, 3, 104], [-250, 0, 105],
+        [-100, 0, 105], [100, 0, 105], [250, 0, 105], [380, 0, 105], [470, 0, 105],
+        [560, 8, 98], [639, 14, 91.1], [656, 32, 88.9], [662, 55, 86.8], [656, 79, 84.6], [639, 96, 82.5], [615, 102, 80.3], [540, 112, 73.7], [499, 118, 70.1], [483, 134, 68.1], [477, 155, 66.2], [483, 177, 64.2], [499, 192, 62.3], [520, 198, 60.4],
+        [600, 208, 53.4], [674, 214, 46.9], [691, 232, 44.7], [697, 255, 42.6], [691, 279, 40.5], [674, 296, 38.4], [650, 302, 36.2], [580, 318, 30], [490, 340, 23], [430, 385, 17], [380, 420, 12]],
+      // voiture inventée : une berline d'État des années 70 réarmée, V8 de 5,5 L, environ 340 ch, 1480 kg, propulsion, boîte à 5 rapports (chiffres inventés)
+      car: car({ nom: 'VOLNA 24 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
+        tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'gtr', col: 0x3d6e8a, l: 1.05, w: 1.02, h: 1.04, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0, bandes: 0xe8761e } }),
+      radio: RADIO.barrage,
+      th: { decor: 'barrage', pluie: [[8, 13, 3]], fog: 0xc3cdc9, fogD: [80, 900], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
+        astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c8d0, 0x8a8a80, 0.95], sun: [0xfff0d0, 0.55], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
+        chev: 1, murH: 1, route: ['#4a4d50', '#56595c', '#e8e4d8', '#e8e4d8', '#4a4d50', '#4a4d50', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
+        tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#f2b43a', '#f2b43a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#f2b43a', '#f2b43a', '#5a5e5a'],
+          fog: 0x2a2a24, portail: 0x8d918a, neons: [0xf2b43a, 0xf2b43a], coque: 6 }, // galeries : béton, néons sodium
+        hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VANNES OUVERTES · 6 H 10'], titre: ['BARRAGE', '74'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
-  G.SOIREE = [['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30']]
+  G.SOIREE = [['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30'], ['barrage', '06:10']]
     .map(([id, heure]) => Object.assign(G.CARTES.find(m => m.id === id), { heure }));
   let id = 'ville';
   if (typeof location !== 'undefined') try { id = (/^#defi=\d+\.([a-z0-9]+)\./.exec(location.hash) || [])[1] || new URLSearchParams(location.search).get('carte') || localStorage.getItem('vpr.carte') || id; } catch (e) { } // un lien de défi (#defi=version.carte.données, voir defiCode dans sim.js) ouvre sa carte
