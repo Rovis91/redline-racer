@@ -915,6 +915,7 @@
       }
       const o0 = l[0], m = new THREE.Mesh(G, o0.material); m.castShadow = o0.castShadow; m.receiveShadow = o0.receiveShadow; m.frustumCulled = o0.frustumCulled; m.renderOrder = o0.renderOrder; m.layers.mask = o0.layers.mask;
       m.matrixAutoUpdate = false; m.userData.petit = l.some(o => o.userData.petit); scene.add(m);
+      if (window.__origines) m.userData.src = l.map(o => { let p = o.virt || o; while (p && !p.userData.origine) p = p.parent; return [p ? p.userData.origine : '?', (o.geometry.index || o.geometry.attributes.position).count]; }); // outils/profil.js : d'où viennent les pièces fondues
       for (const o of l) o.userData.fondu = 1;
     }
     for (const o of inst) o.parent.remove(o); // toutes ses pièces sont fondues (même seules dans leur lot)
