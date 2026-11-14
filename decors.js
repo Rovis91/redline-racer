@@ -1950,7 +1950,9 @@
       const chaussee = h.mat('chaussee', { side: THREE.DoubleSide, gloss: 0.08, ...lisseBord }, ...h.TH.route), glis = h.mat('glissiere', DS, h.TH.mur);
       for (const [a, b] of [[g1, p0], [p1, g0]]) tranche(a, b, (i, l) => h.ribbon(i, l, s => -s.w, 0, s => s.w, 0, chaussee, 32));
       const gueM = h.mat('eauGue', { ...DS, gloss: 0.8, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
-      tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0x8a8078 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
+      tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0xc8c0b0 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
+      { const ecu = h.mat('peinture', { lum: 1, c: 0xf2efe6, transparent: true, opacity: 0.75, depthWrite: false, ...lisseBord, side: THREE.DoubleSide }); // l'écume crème au bord du courant
+        tranche(iF0, iF1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * (W - 0.25), 0.06, sd * (W + 0.45), 0.06, ecu, 6); }); }
       // le bas-côté, en pente douce depuis le bord de la chaussée, par tronçons de même largeur et de même sol
       const solM = { plateau: h.mat('campoSol', { rep: [3, 1] }), lacets: h.mat('herbeRoche', { rep: [1, 1] }), gorge: h.mat('herbeRoche', { rep: [1, 1] }), foret: h.mat('litiere', { rep: [2, 1] }) };
       for (const sd of [-1, 1]) { let deb = -1, cle = ''; for (let i = 0; i <= N; i++) { const j = i % N, a = acc(j, sd), c = a ? zone(j) + a : '';
@@ -2021,7 +2023,7 @@
       { const rv = new THREE.Group(); rv.position.set(sb.x, sb.y - 13.5, sb.z); rv.rotation.y = h.across(sb); h.scene.add(rv); h.pose('boite', eau, rv, [0, 0, 0], 300, 0.3, 30);
         for (let k = 0; k < 50; k++) { const u = (rnd() - 0.5) * 280, v = (rnd() - 0.5) * 26; // des blocs dans le torrent, en travers de la route
           const bx = sb.x + (-sb.tz) * u + sb.tx * v, bz = sb.z + sb.tx * u + sb.tz * v; blocs.push([bx, sb.y - 13.6, bz, rnd() * 6, 1.5 + rnd() * 3, 1 + rnd() * 2.5, 1.5 + rnd() * 3]); } }
-      const pyl = [iB0 - 3, iB1 + 3].map(i => S[(i + N) % N]); for (const s of pyl) h.pose('pyloneBois', { bois, beton: h.mat('beton') }, repere(h, s), [0, 0, 0], W);
+      const pyl = [iB0 - 3, iB1 + 3].map(i => S[(i + N) % N]), feuP = h.mat('peinture', { lum: 1, c: 0xffb45a }); for (const s of pyl) { const r = repere(h, s); h.pose('pyloneBois', { bois, beton: h.mat('beton') }, r, [0, 0, 0], W); for (const sd of [-1, 1]) h.pose('boite', feuP, r, [sd * (W + 0.7), 7.2, -0.6], 0.4, 0.5, 0.4); h.lum(IX.get(s), s.x, s.y + 7, s.z, 0xffb45a, 24, 0.6); }
       { const L = [], A3 = (i, sd, off, y) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, off); return [x, s.y + y, z]; }, nb = (iB1 + 3 - (iB0 - 3) + N) % N;
         for (const sd of [-1, 1]) { const o = W + 0.7;
           for (let k = 0; k < nb; k++) { const t0 = k / nb, t1 = (k + 1) / nb, y = t => 8.6 - 7.4 * 4 * t * (1 - t), i = iB0 - 3 + k; L.push(...A3(i, sd, o, y(t0)), ...A3(i + 1, sd, o, y(t1)), ...A3(i, sd, o, 1.05), ...A3(i + 1, sd, o, 1.05)); // câble porteur et main courante
@@ -2052,12 +2054,13 @@
         inst(h, h.geo('boite', 0.18, 1.2, 0.18), h.mat('peinture', { c: 0xe8e4d8 }), bal); inst(h, h.geo('boite', 0.2, 0.18, 0.2), h.mat('peinture', { lum: 1, c: 0xff6a2a }), ref);
         ['150', '100', '50'].forEach((t, j) => inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j])); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
-      const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches');
+      const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches'), lanterne = h.mat('peinture', { lum: 1, c: 0xffb45a });
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + 7 + rnd() * rnd() * 40, [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
         if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9)) continue; const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
         maisons.push([x, g.hAt(x, z) - 0.2, z, a, w, d, ru]); }
       for (const [x, y, z, a, w, d, ru] of maisons) { const gr = new THREE.Group(); gr.position.set(x, y, z); gr.rotation.y = a; h.scene.add(gr);
         h.pose('maisonIgatu', { pierre, tuile, porte }, gr, [0, 0, 0], w, d, rnd() < 0.35 ? 5.5 + rnd() * 2 : 3.4 + rnd() * 0.8, ru);
+        if (!ru) { const lp = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.35), lanterne); lp.position.set(0.9, 2.5, -d / 2 - 0.35); gr.add(lp); }
         if (rnd() < 0.7) { const l = 6 + rnd() * 10; h.pose('muret', { pierre }, gr, [(rnd() < 0.5 ? -1 : 1) * (w / 2 + l / 2 + 1), 0, d / 2 + 2 + rnd() * 4], l); } } // l'enclos du quintal
 
       // ---------- la végétation, par lieu et par plan ----------
@@ -2098,8 +2101,8 @@
         for (const sd of [-1, 1]) { const a = acc(i, sd), at = (o, f) => { const [x, z] = bord(s, sd, o), y = o < s.w + a + 0.5 ? s.y + A(Math.min(o - s.w, a)) : g.hAt(x, z); f(x, y, z); }, o = () => s.w + 2.6 + rnd() * rnd() * 34;
           if (zn === 'plateau') { // REFS 5 : campo rupestre, à touche-touche au bord
             for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.6 + rnd() * 1.2]));
-            if (rnd() < 0.4) at(o(), (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + (rnd() - 0.5) * 0.6, 0.5 + rnd() * 1.3]));
-            if (rnd() < 0.08) at(s.w + 4 + rnd() * 30, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
+            if (rnd() < 0.55) at(o(), (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + (rnd() - 0.5) * 0.6, 0.8 + rnd() * 1.6]));
+            if (rnd() < 0.1) at(s.w + 3.5 + rnd() * rnd() * 25, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
             at(s.w + 8 + rnd() * 30, (x, y, z) => { for (let c = 0; c < 8; c++) fleurs.push(x + (rnd() - 0.5) * 4, y + 0.45 + rnd() * 0.3, z + (rnd() - 0.5) * 4); }); }
           else { // REFS 4 : le sous-bois au bord
             if (rnd() < 0.5) at(o(), (x, y, z) => fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]));
@@ -2134,7 +2137,7 @@
       { const fog = COL(h.TH.fog), sun = new THREE.Vector3(...h.TH.astre.dir).normalize(), pos = [], col = [], idx = [];
         const mesa = (cx, cz, R, H, y0) => { const n = 30, nR = bruit(), prof = [[1.9, 0], [1.35, 0.3], [1.1, 0.36], [1.08, 0.46], [1.03, 0.47], [1.01, 0.58], [0.98, 0.6], [0.97, 0.7], [0.93, 0.72], [0.92, 0.86], [0.9, 0.88], [0.89, 1], [0, 1.01]], b0 = pos.length / 3;
           for (let a = 0; a <= n; a++) { const t = a / n * 6.2832, rr = R * (0.8 + 0.45 * nR(a * 0.7)), c = Math.cos(t), s = Math.sin(t), lum = 0.72 + 0.28 * Math.max(0, c * sun.x + s * sun.z);
-            prof.forEach(([k, y], j) => { pos.push(cx + c * rr * k, y0 + H * y, cz + s * rr * k); const base = COL(j < 2 ? '#7d7458' : j === 12 ? '#5f6a48' : j % 2 ? '#b8a888' : '#6a5a4a', lum); col.push(...mix(base, COL('#8a9aa2'), 0.5 - 0.2 * y)); }); }
+            prof.forEach(([k, y], j) => { pos.push(cx + c * rr * k, y0 + H * y, cz + s * rr * k); const base = COL(j < 2 ? '#7d7458' : j === 12 ? '#5f6a48' : j % 2 ? '#a89880' : '#8a7a66', lum); col.push(...mix(base, COL('#8a9aa2'), 0.5 - 0.2 * y)); }); }
           for (let a = 0; a < n; a++) for (let j = 0; j < prof.length - 1; j++) { const i0 = b0 + a * prof.length + j, i1 = i0 + prof.length; idx.push(i0, i0 + 1, i1, i1, i0 + 1, i1 + 1); } };
         for (const [cx, cz, R, H] of [[350, -900, 260, 300], [1150, -760, 180, 240], [1700, 300, 220, 260], [-750, 250, 200, 280], [-600, 1100, 240, 220], [700, 1350, 200, 250], [-300, -700, 160, 230], [1650, -250, 150, 200], [1500, 1000, 200, 270], [-900, -200, 140, 210]]) mesa(cx, cz, R, H, -60);
         const gm = new THREE.BufferGeometry(); gm.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gm.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); gm.setIndex(idx);
