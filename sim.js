@@ -464,7 +464,7 @@
     // une voiture arrivée lève le pied : elle finit son tour au ralenti au lieu de repartir à fond
     const piste = R.elim || R.casse ? cars.filter(c => !c.out) : cars; // les voitures encore en course : les seules qui se touchent, s'aspirent et s'évitent
     const ins = cars.map((c, i) => c.out ? range(c, T) : ia[i] ? autopilot(c, T, c.fin ? 0.6 : i < R.h ? c.lvl : rub(c), piste) : inps[i]);
-    if (R.casse) ins.forEach((p, i) => { if (ia[i] && !cars[i].out && !cars[i].fin) cherche(cars[i], piste, p, i === R.h + 1 ? 1 : 0.5); }); // la tête brûlée (2e rival) plus que les autres
+    if (R.casse) ins.forEach((p, i) => { if (ia[i] && !cars[i].out && !cars[i].fin) cherche(cars[i], piste, p, i === R.h + 1 ? 1.4 : 0.8, R); }); // la tête brûlée (2e rival) plus que les autres
     for (const c of cars) c.bump = 0; ins.forEach((p, i) => { const c = cars[i]; if (c.fin && ia[i] && Math.hypot(c.vx, c.vz) > 28) { p.gas = 0; p.brake = Math.max(p.brake, 0.3); } }); // tour d'honneur à 100 km/h
     // les chocs entre voitures d'abord, puis step() : les murs ont le dernier mot, aucune voiture ne peut être poussée hors piste
     for (let i = 0; i < piste.length; i++) for (let j = i + 1; j < piste.length; j++) collide(piste[i], piste[j]);
@@ -510,10 +510,12 @@
     const nc = K.creve[0] + K.creve[1] + K.creve[2] + K.creve[3];
     K.p = K.z[0] >= 0.85 ? 0.65 : K.z[0] >= 0.6 ? 0.85 : 1; K.vf = Math.pow(0.9, nc); K.grip = Math.pow(0.85, nc); K.dir = K.tire + (K.creve[1] + K.creve[3] - K.creve[0] - K.creve[2]) * 0.03;
   }
-  // l'IA du mode CASSE cherche le contact : une voiture à côté ou juste devant, elle braque vers elle (agr : 0,5 à 1)
-  function cherche(c, piste, p, agr) { const fx = Math.cos(c.th), fz = Math.sin(c.th); let best = null, bd = 1e9;
-    for (const o of piste) { if (o === c) continue; const dx = o.x - c.x, dz = o.z - c.z, lon = dx * fx + dz * fz, lat = dz * fx - dx * fz; if (lon < -3 || lon > 8 || Math.abs(lat) > 6) continue; const d = Math.hypot(lon, lat); if (d < bd) { bd = d; best = lat; } }
-    if (best !== null) p.steer = clamp(p.steer + clamp(best * 0.1, -0.3, 0.3) * agr, -1, 1); }
+  // l'IA du mode CASSE cherche le contact : une voiture à côté ou devant (les joueurs d'abord), elle braque vers elle et remet les gaz pour la percuter (agr : 0,8, la tête brûlée 1,4)
+  function cherche(c, piste, p, agr, R) { const fx = Math.cos(c.th), fz = Math.sin(c.th); let best = null, bd = 1e9, blon = 0;
+    for (const o of piste) { if (o === c || o.out) continue; const dx = o.x - c.x, dz = o.z - c.z, lon = dx * fx + dz * fz, lat = dz * fx - dx * fz; if (lon < -4 || lon > 18 || Math.abs(lat) > 8) continue;
+      const d = Math.hypot(lon, lat) * (piste.indexOf(o) < R.h ? 0.5 : 1); if (d < bd) { bd = d; best = lat; blon = lon; } }
+    if (best === null) return; p.steer = clamp(p.steer + clamp(best * 0.25, -0.6, 0.6) * agr, -1, 1);
+    if (blon > 2) { p.gas = 1; p.brake = 0; if (blon < 10 && agr > 1) p.nitro = true; } } // derrière elle : plein gaz (la tête brûlée met la nitro)
 
   // ---------- Trafic (cartes qui en ont : champ trafic de cartes.js) ----------
   // Des camions à vitesse constante sur trois files. Leur position ne dépend que du temps écoulé depuis le départ : même trafic à chaque essai.
@@ -597,13 +599,13 @@
   //   Z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] de 0 à 1, modifiée sur place ; Z0 = les zones au début du tour ; renvoie l'usure ajoutée (toutes zones).
   //   Seule la vitesse normale casse (frotter un mur ne fait rien) ; usure quadratique (proche de l'énergie), un coin prend 1,3 fois plus, rendement décroissant ;
   //   hors du mode CASSE, une zone ne dépasse jamais USURE.cap et ne prend pas plus de USURE.tour par tour : très abîmée, jamais une épave (mesures : outils/chocs.js).
-  const USURE = { cap: 0.7, tour: 0.4, seuil: { mur: 6, camion: 6, voiture: 4 }, mult: { mur: 1, camion: 1.5, voiture: 0.6 } };
+  const USURE = { cap: 0.7, tour: 0.4, seuil: { mur: 6, camion: 6, voiture: 4 }, mult: { mur: 1, camion: 1.5, voiture: 0.8 }, k: 0.75, max: 0.5, kC: 1, maxC: 0.8 }; // k, max : part de l'usure d'un choc et plafond par choc (C : en CASSE, plus fort)
   function usure(Z, Z0, lx, lz, vn, type = 'mur', casse = false) {
     const s = USURE.seuil[type]; if (vn <= s) return 0;
     const wx = lx * lx, wz = lz * lz, u = Math.min(1, ((vn - s) / 24) ** 2) * USURE.mult[type] * (wx > 0.2 && wz > 0.2 ? 1.3 : 1);
     let du = 0;
     for (const [zi, w] of [[lx > 0 ? 0 : 1, wx], [lz < 0 ? 2 : 3, wz]]) {
-      const max = casse ? 1 : Math.min(USURE.cap, Z0[zi] + USURE.tour), nz = Math.min(max, Z[zi] + Math.min(0.45, 0.6 * u * w) * (1 - Z[zi]));
+      const max = casse ? 1 : Math.min(USURE.cap, Z0[zi] + USURE.tour), nz = Math.min(max, Z[zi] + Math.min(casse ? USURE.maxC : USURE.max, (casse ? USURE.kC : USURE.k) * u * w) * (1 - Z[zi]));
       if (nz > Z[zi]) { du += nz - Z[zi]; Z[zi] = nz; }
     }
     return du;

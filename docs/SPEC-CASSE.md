@@ -31,10 +31,10 @@ Débat entre trois game designers (lisibilité arcade, simulation façon Wreckfe
 - Seuil : rien sous **6 m/s** contre un mur ou un camion, sous **4 m/s** entre voitures.
   - Repères tirés de sim.js : frotter en virage donne vn 3 à 9 ; un mur raté, 12 à 18 ; une épingle ratée, 20 à 28 ; une portière d'IA, 2 à 6 ; un camion tamponné, 20 à 35.
 - Usure d'un choc, proche de l'énergie : `u = min(1, ((vn − seuil) / 24)²) × type × endroit`.
-  - type : mur 1, camion 1,5, voiture 0,6.
+  - type : mur 1, camion 1,5, voiture 0,8.
   - endroit : coin × 1,3, face ou flanc × 1.
 - Le choc se répartit entre la face (avant ou arrière) et le flanc selon le carré de chaque composante de sa direction.
-- Rendement décroissant : `zone += min(0,45, 0,6·u·poids) × (1 − zone)`.
+- Rendement décroissant : `zone += min(0,5, 0,75·u·poids) × (1 − zone)` ; en CASSE, `min(0,8, 1·u·poids)`. Après essai : à 200 km/h dans un mur à 45° (39 m/s), on n'avait que de petits dégâts. Maintenant, ce choc met l'avant et le flanc à 0,64 en CASSE (0,40 en course, plafond du tour).
 - Un contact frais compte au plus une fois toutes les 0,4 s contre un mur (`wallT` de sim.js), et toutes les 0,15 s entre voitures (`dgPas` de game.js).
 
 **Plafond** : hors du mode CASSE, aucune zone ne dépasse **0,70**. On peut être très abîmé, jamais une épave. Et chaque zone prend au plus **+0,40 par tour** (indispensable, voir les mesures).
@@ -72,10 +72,10 @@ Profils du joueur :
 
 | Profil | Zone la plus abîmée en fin de course (min / médiane / max sur les 12 cartes) | Fin du tour 1 |
 |---|---|---|
-| Propre | 0 / 2 / 22 : nickel, un creux au pire (un gros contact au givre) | 0 à 22 |
-| IA (rivaux) | 0 / 0 / 22 : les rivaux restent propres, un creux au pire | — |
-| Moyen | 4 / 17 / 35 : quelques creux, parfois un rétro ou une optique | 0 à 21 |
-| Bourrin | 26 / 70 / 70 : au plafond, mais roule | 13 à **40 au plus** (pare-chocs qui pend, une optique) |
+| Propre | 0 / 4 / 31 : nickel ou presque, un creux au pire | 0 à 31 |
+| IA (rivaux) | 0 / 0 / 36 : les rivaux restent propres en course | — |
+| Moyen | 5 / 21 / 42 : des creux, souvent un rétro ou une optique | 0 à 31 |
+| Bourrin | 32 / 70 / 70 : au plafond, mais roule | 17 à **40 au plus** (pare-chocs qui pend, une optique) |
 
 - Sans plafond par tour, le bourrin atteignait 70 dès la fin du tour 1 (touge, stade). Le plafond par tour est donc indispensable.
 - Frottements : chaque course compte des dizaines de contacts entre 4 et 10 m/s. Leur effet est nul ou négligeable : à vn = 8, l'usure est de 0,007.
@@ -190,9 +190,12 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
   - Hors d'usage à 0,97 à l'avant ou à 3,4 au total : la voiture sort, comme en élimination.
 - **Takedowns** : une voiture mise hors d'usage dans les 3 s après un contact, ou envoyée dans un mur au-dessus de 15 m/s dans les 2 s, compte pour la dernière voiture qui l'a touchée. Un message « TAKEDOWN ! » s'affiche pour l'auteur et pour la victime.
 - **Score** : place à l'arrivée 10 / 6 / 4 / 2 (rien hors d'usage), plus 3 points par takedown. Le tableau d'arrivée donne les takedowns, les points et le vainqueur aux points. Capture : `docs/avant-apres/casse/jeu-casse-arrivee.jpg`.
-- **IA** : à côté d'une autre voiture ou juste derrière, elle braque vers elle. La tête brûlée (2e rival) le fait deux fois plus que les autres.
+- **IA** (renforcée après essai, elle était trop sage) : une voiture à côté ou jusqu'à 18 m devant, les joueurs en priorité. L'IA braque franchement vers elle (gain 0,25 par mètre d'écart, jusqu'à 0,6 de volant) et remet plein gaz pour la percuter. La tête brûlée frappe 1,4 fois plus fort et met la nitro ; les autres à 0,8.
 - **Visuels** : les zones viennent de sim.js (sans plafond). Fumée du moteur à bout, noire et épaisse hors d'usage, et étincelles des jantes crevées pour toutes les voitures.
-- **Simulation** : sur 3 tours, le pilote bourrin finit avec l'avant entre 0,85 et 0,96 et une ou deux roues crevées. Les rivaux restent presque intacts : ils se touchent peu, et l'IA de contact est encore timide.
+- **Simulation, après réglage** (3 tours, ville, touge, stade) :
+  - les rivaux se battent : zones entre 0,2 et 0,97, des roues crevées, 1 à 2 takedowns par course ;
+  - le pilote bourrin finit hors d'usage sur le touge et le stade ;
+  - un pilote propre prend tout de même des coups de l'IA (jusqu'à 0,62 sur un flanc).
 
 **Reste à faire** :
 - régler en jouant : la force de la déviation, l'agressivité de l'IA, les points ;
