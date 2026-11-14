@@ -464,15 +464,16 @@
         astre: { dir: [0.8, 0.25, 0.4], col: '#ffd9a0', ombre: '#ffd9a0', taille: 240 }, hemi: [0xcfe6d8, 0x1d3a2a, 0.7], sun: [0xffe2b0, 0.8], phares: 0.3, bloom: 0.12, scan: 0.05,
         chev: 0, murH: 0, route: ['#3b3f3c', '#4a4e49', '#ede6cf', '#e9b44c', '#3b3f3c', '#3b3f3c', false], mur: ['#6e6656', '#c8c4b0', '#6c7075', '#3a3428'], depart: [0xe9b44c, 0x4b5359, '#ede6cf'],
         hud: { y: '#f2f0dc', c: '#ffb94a', r: '#ff5a4a', fond: 'rgba(10,22,18,.82)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'CHAPADA DIAMANTINA · 7 H'], titre: ['MATIN SUR', 'LA CHAPADA'] } } },
-    // Playa 307 (Riviera Maya, midi) : la ligne droite de la plage (sable dur au milieu, sable mou de part et d'autre), l'épingle au bout du ponton, la rue aux guirlandes de papel picado, le marché couvert,
-    // la route de garrigue, le cénote ouvert (place : on peut couper par le bassin, sur fond meuble), la grotte du cénote (le tunnel), le lobby d'hôtel, retour à la plage. Mexique d'aujourd'hui, rien de maya.
-    { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], med: [1.06, 0.98, 0.9], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [32, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [32, 42]], anticipe: 1,
-      large: [[45, 2, 20], [31, 32, 13]], // la plage : sable mou au-delà du sable dur (surf.large) ; la sortie du cénote vers la grotte, élargie (fond meuble)
-      surf: { zones: [[43, 2, 'mouille', 0.35], [14, 17, 'paves', 1], [33, 35, 'mouille', 0.6], [37, 41, 'mouille', 0.5]], large: 'terre' }, // terre = sable mou de la plage et fond du bassin du cénote (une seule surface hors bitume par carte)
-      place: { c: [320, 452], r: 125, a: -Math.PI / 2, piles: [[16, 0, 3, 3], [-16, 0, 3, 3]] }, // le cénote : on roule partout dans le cercle ; deux rochers de calcaire de part et d'autre de l'axe de la place (en diagonale, visé pour que la traversée en ligne droite rejoigne la sortie vers la grotte, pt 31 : test-cartes.js)
+    // Playa 307 (Riviera Maya, midi) : la plage, grande zone de sable roulable (sable dur au milieu, sable mou de part et d'autre, une place de sable entre les palapas), l'épingle au bout du muelle,
+    // la rue aux guirlandes de papel picado, le marché couvert, la route de garrigue, le cénote souterrain (le tunnel : voûte de calcaire, stalactites, eau turquoise, rayons de lumière par les trous du plafond),
+    // la chaussée de la lagune de mangrove (flamants), retour à la plage. Mexique d'aujourd'hui, rien de maya. Sources : docs/REFS-plage.md
+    { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], med: [1.06, 0.98, 0.9], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [26, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [26, 35]], anticipe: 1,
+      large: [[45, 2, 28]], // la plage : 56 m de sable roulable ; sable mou au-delà du sable dur (surf.large)
+      surf: { zones: [[43, 2, 'mouille', 0.35], [14, 17, 'paves', 1], [30, 34, 'mouille', 0.6]], large: 'terre' }, // terre = sable mou de la plage et de sa place ; flaques au fond de la grotte
+      place: { c: [300, 22], r: 60, a: Math.PI / 2, piles: [[-36, 12, 1.7, 1.7]] }, // la place de sable entre les palapas : on y roule partout ; la pile est la tour de maître-nageur (sim.js la heurte)
       pts: [[150, 0, 0], [300, 0, 0], [420, 0, 0], [470, -6, 0], [490, -40, 0], [490, -100, 0], [497, -118, 0], [515, -125, 0], [533, -118, 0], [540, -100, 0], [540, -40, 0], [550, -6, 0], [590, 2, 0], [640, 15, 0], [655, 45, 0], [660, 100, 0],
-        [660, 160, 0], [660, 215, 0], [660, 260, 0], [660, 300, 0], [660, 340, 0], [660, 385, 0], [645, 425, 0], [600, 448, 0], [540, 452, 0], [440, 452, 0], [424, 512, 0], [380, 556, 0], [320, 572, 0], [260, 556, 0], [216, 512, 0], [200, 452, 0],
-        [180, 428, -1], [130, 425, -3], [80, 425, -3], [38, 418, -1], [8, 392, 0], [0, 360, 0], [0, 300, 0], [0, 250, 0], [0, 190, 0], [0, 140, 0], [0, 90, 0], [5, 40, 0], [30, 10, 0], [80, 0, 0]],
+        [660, 160, 0], [660, 215, 0], [660, 260, 0], [660, 300, 0], [660, 340, 0], [660, 385, 0], [645, 425, 0], [600, 448, 0], [540, 452, 0], [440, 452, 0], [424, 512, -2], [380, 556, -4], [320, 572, -5], [260, 556, -5], [216, 512, -4], [200, 452, -4],
+        [180, 428, -4], [130, 425, -5], [80, 425, -4], [38, 418, -2], [8, 392, 0], [0, 360, 0], [0, 300, 0], [0, 250, 0], [0, 190, 0], [0, 140, 0], [0, 90, 0], [5, 40, 0], [30, 10, 0], [80, 0, 0]],
       // voiture inventée : un buggy de plage à moteur arrière, 4 cylindres à plat de 2,3 L turbo, 300 ch, 760 kg, propulsion
       car: car({ nom: 'COCOTERO 2.3 TURBO', ratios: [3.0, 2.0, 1.45, 1.13, 0.92], final: 3.7, wheel: 0.31, mass: 840, idle: 950, red: 7400, cd: 0.38, area: 1.75,
         tq: [0, 160, 230, 275, 300, 310, 305, 285, 250], trac: 10.5, son: 1.15, moteur: 'l4', turbo: 1, look: { type: 'r5', col: 0x19c7c9, l: 0.82, w: 1, h: 0.95, nez: 0.35, cab: [-0.3, 2.1, 0.55], aileron: 0, bandes: 0xff3d7f } }),
@@ -496,11 +497,12 @@
             '17 - - - 20 - 24 - 20 - - - . - - - | 19 - - - 15 - 12 - 15 - - - . - - - | 23 - - - 19 - 14 - 11 - - - . - - - | 19 - - - - - - - . - - - . - - -'],
           sec: { i: 'b0 c0', a: 'k0 s0 h0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
       ],
-      th: { decor: 'plage', fog: 0xcfeeff, fogD: [180, 1800], sky: [[0, '#1478d8'], [0.3, '#2f95e6'], [0.45, '#8fd0f0'], [0.49, '#dff3f8'], [0.5, '#cfeeff'], [1, '#cfeeff']], stars: 0,
-        astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 220 }, hemi: [0xbfe3ff, 0xc8b890, 0.72], sun: [0xfff2d0, 0.85], phares: 0, bloom: 0.04, scan: 0, chaleur: 0.5,
-        murH: 0, route: ['#8a8478', '#9a9488', '#fff4e0', '#f7d36b', '#8a8478', '#8a8478', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xff3d7f, 0x1fb5a8, '#fff4e0'], // route de calcaire ; le décor repeint la plage, le ponton, la rue et le lobby par-dessus
-        tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], plafond: ['#5a5040', '#fff3c0', '#fff3c0', '#3a3224'],
-          fog: 0x0a2a30, portail: 0xfff3c0, neons: [0xfff3c0, 0x1fd6b0], coque: 20 }, // grotte du cénote : calcaire clair, lueurs d'eau turquoise, puits de lumière chaude
+      th: { decor: 'plage', fog: 0xb8dcf0, fogD: [220, 1900], sky: [[0, '#0b4fae'], [0.3, '#1c74cc'], [0.45, '#6ab4e4'], [0.49, '#c4e4f2'], [0.5, '#b8dcf0'], [1, '#b8dcf0']], stars: 0,
+        // exposition baissée (retour de l'auteur : V1 trop claire, couleurs confondues) : ciel plus profond, moins de lumière d'ambiance, rebond du sol plus sombre ; les valeurs se séparent dans les textures
+        astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 200 }, hemi: [0xa8d0ee, 0x6a5a3e, 0.5], sun: [0xfff0d0, 0.78], phares: 0, bloom: 0.03, scan: 0, chaleur: 0.35,
+        murH: 0, route: ['#5e5a52', '#6a665c', '#e8e0c8', '#f2c850', '#5e5a52', '#5e5a52', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xff3d7f, 0x1fb5a8, '#fff4e0'], // route de calcaire ; le décor repeint la plage, le muelle et la rue par-dessus
+        tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], plafond: ['#3a3224', '#3a3224', '#3a3224', '#2a2418'],
+          fog: 0x0e3a3c, portail: 0x5a5040, neons: [0x40d8c0, 0xffcf8a], coque: 20, eclat: 1.8 }, // grotte du cénote : le décor pose sa voûte et ses parois par-dessus ; neons = la lumière des reflets de l'eau (turquoise) et des puits (chaude)
         hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', fond: 'rgba(10,70,90,.88)', style: 'panneau', split: 0, jp: null, sur: [null, 'RIVIERA MAYA · MIDI'], titre: ['PLAYA', '307'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)

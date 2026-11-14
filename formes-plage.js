@@ -54,5 +54,44 @@
     // escalier de bois accroché à la paroi, descendant le long de X : marches, limon, rampe ; n marches
     escalier: (n = 12) => [...Array.from({ length: n }, (_, k) => ['bois', 0.45, 0.08, 1.4, k * 0.5, -k * 0.4, 0]), ['bois', n * 0.5, 0.25, 0.08, n * 0.25 - 0.25, -n * 0.2 + 0.1, 0.72, [0, 0, -0.67]],
       ['bois', n * 0.5, 0.06, 0.06, n * 0.25 - 0.25, -n * 0.2 + 1.1, 0.72, [0, 0, -0.67]]],
+
+    // ---------- V2 : chaque forme dit la fiche de docs/REFS-plage.md qu'elle suit ----------
+    // tour de maître-nageur (fiche 1, torre de salvavidas) : quatre pieds, plateforme à 3 m, cabine fermée sur trois côtés, toit plat débordant, rampe vers la plage (+Z), mât à drapeau ; origine au sol
+    torreSalvavidas: () => [...paire(a => paire(b => ['bois', 0.18, 3.1, 0.18, a * 1.1, 1.55, b * 1.1])).flat(), ['bois', 2.8, 0.15, 2.8, 0, 3.1, 0, null, 1],
+      ['cabine', 2.3, 1.9, 0.12, 0, 4.1, -1.1], ...paire(sd => ['cabine', 0.12, 1.9, 2.3, sd * 1.1, 4.1, 0]), ['cabine', 2.3, 0.9, 0.12, 0, 3.6, 1.1], ['toit', 3.2, 0.18, 3.2, 0, 5.15, 0, null, 1],
+      ['bois', 1, 0.08, 4.2, 0, 1.55, 3, [0.78, 0, 0]], ['bois', 0.08, 3, 0.08, 1.2, 6.6, -1.2], ['drapeau', 0.9, 0.6, 0.03, 1.65, 7.7, -1.2]],
+    // filet de beach-volley : deux poteaux, filet tendu le long de X (9 m) ; origine au sol, milieu du filet
+    voley: () => [...paire(sd => ['poteau', 0.12, 2.6, 0.12, sd * 4.7, 1.3, 0]), ['filet', 9.4, 0.9, 0.03, 0, 2.0, 0], ['poteau', 9.4, 0.06, 0.05, 0, 2.47, 0]],
+    // palétuvier rouge (fiche 7) : tronc court et racines-échasses arquées qui plongent dans l'eau (zone racine) ; la couronne est posée à part (buisson) ; origine au niveau de l'eau, sous le tronc
+    mangle: () => [['racine', 0.22, 1.6, 0.22, 0, 1.6, 0, null, 1], ...Array.from({ length: 7 }, (_, k) => { const a = k / 7 * 6.2832, c = Math.cos(a), s = Math.sin(a);
+      return [['racine', 0.09, 1.3, 0.09, c * 0.5, 1.1, s * 0.5, [s * 0.6, 0, -c * 0.6]], ['racine', 0.08, 1, 0.08, c * 1.05, 0.35, s * 1.05, [s * 0.25, 0, -c * 0.25]]]; }).flat()],
+    // flamant rose (fiche 7) : pattes fines, corps, cou en S (deux pièces), tête et bec noir ; t = 1 tête dans l'eau (il mange) ; la proue vers +X ; origine au sol (sous l'eau de 0,2 m)
+    flamant: (t = 0) => [['patte', 0.04, 1.05, 0.04, 0, 0.5, -0.07], ['patte', 0.04, 1.05, 0.04, 0.05, 0.5, 0.07], ['plume', 0.75, 0.38, 0.34, 0, 1.2, 0, [0, 0, 0.1], 1], ['plume', 0.3, 0.2, 0.3, -0.42, 1.23, 0, [0, 0, -0.3]],
+      ...(t ? [['plume', 0.09, 0.75, 0.09, 0.45, 0.95, 0, [0, 0, 0.6]], ['plume', 0.18, 0.12, 0.12, 0.62, 0.55, 0], ['bec', 0.14, 0.08, 0.07, 0.72, 0.48, 0]]
+        : [['plume', 0.09, 0.55, 0.09, 0.38, 1.55, 0, [0, 0, -0.35]], ['plume', 0.09, 0.4, 0.09, 0.44, 1.95, 0, [0, 0, 0.3]], ['plume', 0.2, 0.13, 0.12, 0.5, 2.18, 0], ['bec', 0.14, 0.08, 0.07, 0.64, 2.12, 0, [0, 0, -0.5]]])],
+    // tour d'observation en bois de la lagune (fiche 7) : quatre poteaux de 9 m, deux planchers, garde-corps ; le toit de palapa est posé à part ; origine au sol
+    tourObs: () => [...paire(a => paire(b => ['bois', 0.25, 9, 0.25, a * 1.8, 4.5, b * 1.8])).flat(), ['bois', 4.2, 0.2, 4.2, 0, 4, 0, null, 1], ['bois', 4.2, 0.2, 4.2, 0, 8, 0, null, 1],
+      ...paire(sd => ['bois', 4.2, 0.9, 0.08, 0, 8.55, sd * 2.05]), ...paire(sd => ['bois', 0.08, 0.9, 4.2, sd * 2.05, 8.55, 0]), ['bois', 5.4, 0.12, 0.9, 0, 2, 2.6, [0, 0, 0.8]]],
+    // kayak de location, la proue vers +X ; origine sur l'eau
+    kayak: () => [['coque', 3.6, 0.3, 0.7, 0, 0.1, 0], ['coque', 0.7, 0.24, 0.4, 2.0, 0.1, 0], ['siege', 0.5, 0.08, 0.5, -0.2, 0.28, 0], ['siege', 0.06, 0.06, 2.2, 0.2, 0.55, 0, [0, 0.5, 0.2]]],
+    // tinaco : réservoir d'eau noir des toits mexicains (fiche 3), cylindre d'1,1 m ; origine au pied
+    tinaco: () => { const g = new THREE.CylinderGeometry(0.62, 0.62, 1.2, 10); g.translate(0, 0.6, 0); return g; },
+    // panneau de bord de route vers -Z : plaque sur deux poteaux (la plaque porte l'écrit) ; origine au sol
+    panneauRoute: (L = 3, H = 1.4) => [...paire(sd => ['poteau', 0.1, 2.4 + H / 2, 0.1, sd * L * 0.35, (2.4 + H / 2) / 2, 0.05]), ['plaque', L, H, 0.08, 0, 2.4 + H / 2, 0]],
+    // mototaxi (triporteur à toit de toile), la proue vers +X ; caisse teintée ; origine au sol
+    mototaxi: () => [['caisse', 1.6, 0.8, 1.3, -0.3, 0.75, 0, null, 1], ['caisse', 1.1, 0.4, 0.15, 0.75, 0.9, 0], ['toit', 2.1, 0.08, 1.4, -0.2, 2.05, 0], ...paire(sd => ['cadre', 0.05, 1.0, 0.05, -1.2, 1.55, sd * 0.65]),
+      ...paire(sd => ['cadre', 0.05, 1.0, 0.05, 0.6, 1.55, sd * 0.65]), ['roue', 0.5, 0.5, 0.15, 0.9, 0.25, 0], ...paire(sd => ['roue', 0.5, 0.5, 0.15, -0.6, 0.25, sd * 0.6])],
+    // vélo garé, le long de X ; origine au sol
+    velo: () => [...paire(sd => ['roue', 0.68, 0.68, 0.05, sd * 0.52, 0.34, 0]), ['cadre', 1.05, 0.05, 0.05, 0, 0.62, 0, [0, 0, 0.12]], ['cadre', 0.05, 0.55, 0.05, -0.15, 0.62, 0], ['cadre', 0.5, 0.05, 0.05, 0.42, 0.95, 0]],
+    // stalagmite : cône pointe en haut, 1 m de haut et 0,5 m de rayon au pied ; origine au sol (fiche 6)
+    stalagmite: () => { const g = new THREE.ConeGeometry(0.5, 1, 6); g.translate(0, 0.5, 0); return g; },
+    // colonne de grotte (fiche 6) : stalactite et stalagmite soudées, large aux deux bouts, étranglée au milieu, h m ; origine au sol
+    colonneGrotte: (h = 7.6) => new THREE.LatheGeometry([[0.01, 0], [1.4, 0], [1.1, 0.12 * h], [0.55, 0.35 * h], [0.32, 0.52 * h], [0.5, 0.66 * h], [1.0, 0.86 * h], [1.6, h]].map(([x, y]) => new THREE.Vector2(x, y)), 8),
+    // cône ouvert du rayon de lumière (fiche 6) : 1 m de haut, rayon 1 en bas et 0,7 en haut ; origine en haut (au trou du plafond), il descend
+    coneRayon: () => { const g = new THREE.CylinderGeometry(0.7, 1, 1, 14, 1, true); g.translate(0, -0.5, 0); return g; },
+    // disque posé à plat, 1 m de rayon : trou de lumière du plafond, tache de soleil au sol ; origine au centre
+    disque: () => { const g = new THREE.CircleGeometry(1, 16); g.rotateX(-Math.PI / 2); return g; },
+    // bac à ferry de Cozumel, la proue vers +X : coque blanche, bande, deux ponts ; origine à la flottaison
+    ferry: () => [['coque', 40, 4, 9, 0, 1, 0], ['bande', 40.2, 0.8, 9.2, 0, 2.2, 0], ['coque', 26, 3, 8, -3, 4.5, 0], ['vitre', 26.2, 1, 8.2, -3, 4.8, 0], ['coque', 12, 2.5, 6, -6, 7.2, 0]],
   });
 })();
