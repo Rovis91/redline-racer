@@ -1689,5 +1689,174 @@
         const t = now * 0.00006; dg.position.set(760 + Math.cos(t) * 520, 125, 110 + Math.sin(t) * 260); dg.rotation.y = -t - Math.PI / 2;
       };
     },
+    // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
+    // Le nord (z < 0) est la mer. Intérieurs : la grotte est le tunnel du moteur ; le marché et le lobby sont des halles posées autour de la route (toit haut, ombre franche), sans mode tunnel.
+    plage(h) {
+      const { THREE, S, N, W, T, rnd } = h, D = THREE.DoubleSide, P = i => pt(h, i);
+      const tranche = (a, b, m0 = 0, m1 = 0) => { const i0 = (P(a) - m0 + N) % N; return [i0, (P(b) + m1 - i0 + N) % N]; }; // [premier échantillon, nombre] du point a au point b, marges en échantillons
+      const chaque = ([i0, n], pas, f) => { for (let k = 0; k <= n; k += pas) f(S[(i0 + k) % N], (i0 + k) % N, k); };
+      const ecart = (x, z) => { let b = 1e9; for (let i = 0; i < N; i += 2) { const s = S[i], d = Math.hypot(s.x - x, s.z - z) - s.w; if (d < b) b = d; } return b; }; // distance au bord de la route (négative dessus)
+      const PL = h.M.place, CX = PL.c[0], CZ = PL.c[1], loinCenote = (x, z, m = 0) => Math.hypot(x - CX, z - CZ) > 150 + m;
+      const versRoute = (s, sd) => Math.atan2(-sd * s.tz, sd * s.tx); // rotation Y qui tourne le -Z local d'un objet posé du côté sd vers la route (et met son X local le long de la route)
+      const enFace = s => Math.atan2(s.tx, s.tz); // rotation Y qui met le +Z local dans le sens de la course (un panneau plat vu de face par le pilote)
+      const colore = (m, l) => { if (l.length) { l.forEach((p, i) => m.setColorAt(i, new THREE.Color(p[7]))); m.instanceColor.needsUpdate = true; } return m; };
+      const OFF = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, couvre = (i0, n, oa, ob, m, v = 8) => h.ribbon((i0 + N) % N, n, oa, 0.02, ob, 0.02, m, v); // peinture posée sur la chaussée
+      const blancT = h.mat('peinture', { c: 0xffffff }), bois = h.mat('planches'), chaume = h.mat('chaume', { side: D }), calc = h.mat('calcaire'), crepi = h.mat('crepi');
+      const tronc = h.mat('bruit', {}, '#9a8a78', ['#7a6a58', '#b4a490', '#6a5a4a']), palme = h.mat('bruit', { side: D }, '#5f9a2a', ['#7ab32e', '#3f8f2a', '#8cc43a']);
+      const noix = h.mat('peinture', { c: 0xf2c230 }), feuillage = h.mat('bruit', {}, '#4c7a2a', ['#3a6a24', '#6a9a3a', '#5a7a30']);
+      const PAPEL = [0xff3d7f, 0xffb100, 0x1fb5a8, 0x7a4bd6, 0xff6a2b], FACADES = [0xf2b45a, 0xf7d36b, 0xd9693a, 0xfff4e0, 0xf2c890, 0x8fd0c8];
+      const palmiers = [[], []], buissons = [], maisons = [];
+      const palmier = (x, z, v = rnd() < 0.4 ? 1 : 0, t = 1) => palmiers[v].push([x, 0, z, rnd() * 6.28, t * (0.85 + rnd() * 0.3)]);
+
+      // --- le sol : le large, la mer turquoise du bord, la plage, la garrigue ; la ligne d'écume et de sargasses ---
+      const mMer = h.mat('merTurquoise', { gloss: 0.5 }), mLarge = h.mat('merLarge', { gloss: 0.4 });
+      boite(h, mLarge, 7000, 1, 3350, 400, -1.8, -1825); boite(h, mMer, 7000, 1, 124, 400, -1.7, -88);
+      boite(h, h.mat('sableSec'), 7000, 1, 96, 400, -0.55, 22); boite(h, h.mat('solGarrigue'), 7000, 1, 2930, 400, -0.56, 1535);
+      boite(h, h.mat('sableDur'), 7000, 0.3, 6, 400, -0.2, -23); // sable mouillé, entre la corde et l'eau
+      { const m = new THREE.Mesh(new THREE.PlaneGeometry(7000, 3), h.mat('ecumeMer', { transparent: true, alphaTest: 0.3, rep: [1200, 1] })); m.rotation.set(-Math.PI / 2, 0, Math.PI); m.position.set(400, -1.15, -27.5); h.scene.add(m); }
+
+      // --- secteur 1, la plage : sable dur sur la piste, corde et bouées des deux côtés de la plage large, palapas, parasols, transats, cocotiers, barques ---
+      const dur = h.mat('sableDur', { side: D, ...OFF }), [b0, nb] = tranche(43, 3);
+      couvre(b0, (N - 5 - b0 + N) % N, -W, W, dur, 32); couvre(5, P(3) - 5, -W, W, dur, 32); // la ligne de départ garde sa peinture
+      const plageL = tranche(45, 2, 20, 20), corde = h.mat('peinture', { c: 0xfff4e0 }), poteaux = [], bouees = [];
+      for (const sd of [-1, 1]) {
+        h.ribbon(plageL[0], plageL[1], s => sd * (s.w + 0.6), 1.05, s => sd * (s.w + 0.6), 0.93, h.mat('peinture', { c: 0xfff4e0, side: D }), 4);
+        chaque(plageL, 2, (s, i, k) => { const [x, z] = bord(s, sd, s.w + 0.6); if (k % 4 === 0) poteaux.push([x, -0.05, z, 0, 1, 1.15, 1]); else if (sd < 0) bouees.push([x, 0.98, z, 0, 0.42, 0.42, 0.42, [0xff6a2b, 0xffffff, 0xffb100][k / 2 % 3 | 0]]); });
+      }
+      inst(h, h.geo('poteauBois'), bois, poteaux); colore(inst(h, h.geo('bouee'), blancT, bouees), bouees);
+      const cones = [], pieds = [], parasols = [], mats = [], transats = [];
+      for (let x = 25; x < 480; x += 16 + rnd() * 10) { // côté terre, de 22 à 70 m de la ligne d'eau
+        const z = 28 + rnd() * 8; if (ecart(x, z) < 4) continue;
+        if (rnd() < 0.55) { cones.push([x, 2.6, z, rnd() * 6, 3.2, 2.2, 3.2]); for (const [a, b] of [[-1, -1], [-1, 1], [1, -1], [1, 1]]) pieds.push([x + a * 1.9, -0.05, z + b * 1.9, 0, 1, 2.7, 1]);
+          for (const a of [-1, 1]) transats.push([x + a * 1.3, -0.05, z + 3.8, -1.5708, 1, 1, 1, [0x1fb5a8, 0x2f95e6, 0xff3d7f][rnd() * 3 | 0]]); }
+        else { parasols.push([x, 2.3, z, 0, 1.5, 0.55, 1.5, PAPEL[rnd() * 5 | 0]]); mats.push([x, -0.05, z, 0, 0.5, 2.4, 0.5]); transats.push([x + 1, -0.05, z + 1.5, -1.5708 + rnd() * 0.4, 1, 1, 1, 0xfff4e0]); }
+        for (let k = 0; k < 2; k++) palmier(x + rnd() * 14, 44 + rnd() * 26);
+      }
+      inst(h, h.geo('toitPalapa'), chaume, cones); inst(h, h.geo('poteauBois'), bois, [...pieds, ...mats]);
+      colore(inst(h, h.geo('toitPalapa'), h.mat('peinture', { c: 0xffffff, side: D }), parasols), parasols);
+      insts(h, 'transat', { bois, toile: blancT }, transats, { teinte: 'toile' });
+      const barques = [];
+      for (let k = 0; k < 14; k++) { const x = -60 + rnd() * 560, z = k < 4 ? -23.5 : -34 - rnd() * 50, y = k < 4 ? -0.15 : -1.35; if (ecart(x, z) < 8) continue; barques.push([x, y, z, rnd() * 6.28, 1, 1, 1, [0x1478d8, 0x1fb5a8, 0xff3d7f, 0xffb100, 0x3f8f2a][k % 5]]); }
+      insts(h, 'barque', { coque: h.mat('peinture', { c: 0xfff8f0 }), bande: blancT, bois, moteur: h.mat('matGris') }, barques, { teinte: 'bande' });
+      const voiles = []; for (let k = 0; k < 6; k++) voiles.push([-200 + rnd() * 900, 18 + rnd() * 14, -260 - rnd() * 260, rnd() * 6, 9, 0.2, 3.2, PAPEL[k % 5]]); // ailes de kitesurf au large
+      colore(inst(h, h.geo('boite', 1, 1, 1), h.mat('peinture', { c: 0xffffff, fog: false }), voiles), voiles);
+
+      // --- secteur 2, le ponton : planches, pilotis, garde-corps, lampadaires ; dans le U, une terrasse de bois sous une grande palapa-bar ---
+      const pon = tranche(3, 11, 10, 10); let p0 = -1, pn = 0;
+      chaque(pon, 1, (s, i) => { if (s.z < -20) { if (p0 < 0) p0 = i; pn = (i - p0 + N) % N; } });
+      couvre(p0, pn, -W, W, h.mat('planches', { side: D, ...OFF }), 4);
+      for (const sd of [-1, 1]) h.ribbon(p0, pn, sd * (W + 0.15), 1.12, sd * (W + 0.15), 0.98, h.mat('planches', { side: D }), 4);
+      const pil = [], gc = [], lamp = [], ampoules = [];
+      chaque([p0, pn], 1, (s, i, k) => { for (const sd of [-1, 1]) {
+        if (k % 3 === 0) { const [x, z] = bord(s, sd, W - 0.6); pil.push([x, -1.6, z]); }
+        if (k % 2 === 0) { const [x, z] = bord(s, sd, W + 0.15); gc.push([x, 0, z, 0, 0.6, 1.05, 0.6]); }
+        if (k % 12 === 6 && (k / 12 | 0) % 2 === (sd > 0 ? 1 : 0)) { const [x, z] = bord(s, sd, W + 0.5); lamp.push([x, 0, z, 0, 0.9, 5, 0.9]); ampoules.push([x, 5.1, z]); } } });
+      inst(h, h.geo('boite', 0.45, 3.2, 0.45), bois, pil); inst(h, h.geo('poteauBois'), bois, [...gc, ...lamp]); inst(h, h.geo('boite', 0.5, 0.5, 0.5), h.mat('lampe', LUM), ampoules);
+      { const x = 515, z = -64; // la terrasse entre les deux voies du ponton, la palapa-bar au milieu
+        boite(h, bois, 30, 0.3, 70, x, -0.2, z); const sous = []; for (let a = -12; a <= 12; a += 6) for (let b = -30; b <= 30; b += 10) sous.push([x + a, -1.6, z + b]); inst(h, h.geo('boite', 0.45, 3.2, 0.45), bois, sous);
+        inst(h, h.geo('toitPalapa'), chaume, [[x, 4.3, z, 0.3, 9, 4.2, 9]]); inst(h, h.geo('poteauBois'), bois, [[x - 6, -0.05, z - 6, 0, 1.6, 4.4, 1.6], [x + 6, -0.05, z - 6, 0, 1.6, 4.4, 1.6], [x - 6, -0.05, z + 6, 0, 1.6, 4.4, 1.6], [x + 6, -0.05, z + 6, 0, 1.6, 4.4, 1.6]]);
+        h.pose('barPaillote', { bois, bouteilles: h.mat('vitrine', LUM) }, h.scene, [x, -0.05, z]);
+        const gens = []; for (let k = 0; k < 10; k++) gens.push([x - 9 + rnd() * 18, -0.05, z - 4 + rnd() * 18, rnd() * 6.28, 1, 1, 1, PAPEL[k % 5]]);
+        insts(h, 'figurant', { blanc: h.mat('peinture', { c: 0xfff4e0 }), peau: h.mat('peinture', { c: 0xb07850 }), tenue: blancT, or: noix }, gens, { a: [0], teinte: 'tenue' }); }
+
+      // --- secteur 3, la rue : dalles claires, trottoirs, façades crépies de couleur, étals, enseignes ; papel picado en fils au-dessus de la route ---
+      const rue = tranche(13, 17, 0, 4), dalles = h.mat('dallesRue', { side: D, ...OFF });
+      couvre(rue[0], rue[1], -W, W, dalles, 8); for (const sd of [-1, 1]) h.ribbon(rue[0], rue[1], sd * W, 0.15, sd * (W + 3.5), 0.15, h.mat('dallesRue', { side: D }), 8);
+      const fac = [], etals = [], fils = [], fanions = [];
+      const facades = ([i0, n], off, L, sy) => chaque([i0, n], Math.round(L / 2), s => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, off); if (ecart(x, z) > off - W - 1) fac.push([x, -0.05, z, versRoute(s, sd), L / 10, sy * (0.85 + rnd() * 0.35), 1, FACADES[rnd() * FACADES.length | 0]]); } });
+      facades(rue, W + 3.6, 10, 1);
+      chaque(rue, 9, (s, i, k) => { const sd = (k / 9) % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 2.1); etals.push([x, 0.15, z, versRoute(s, sd), 1, 1, 1, PAPEL[(k / 9) % 5]]); });
+      chaque([rue[0] + 3, rue[1] - 3], 6, (s, i, k) => { // un fil tous les 12 m, une quarantaine de fanions qui pendent en chaînette
+        const half = W + 3.5; fils.push([s.x, 6.6, s.z, h.across(s), 2 * half, 1, 1]);
+        for (let u = -half + 0.3, j = 0; u < half; u += 0.55, j++) { const [x, z] = bord(s, 1, u); fanions.push([x, 6.55 - 0.7 * (1 - (u / half) ** 2), z, enFace(s), 1, 1, 1, PAPEL[(j + k) % 5]]); } });
+      inst(h, h.geo('corde'), h.mat('matGris'), fils); colore(inst(h, h.geo('fanion'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), fanions), fanions);
+      insts(h, 'etalPlaya', { bois, toile: h.mat('toldo', { side: D }, '#fff4e0', '#ff3d7f'), paille: h.mat('chaume'), hamac: blancT }, etals, { teinte: 'hamac' });
+      [['TACOS', '#d9693a'], ['MEZCAL', '#1fb5a8'], ['HELADOS', '#ff3d7f'], ['FARMACIA', '#3f8f2a'], ['CERVEZA', '#ffb100'], ['ARTESANIAS', '#7a4bd6']].forEach(([t, c], k) => {
+        const s = S[(rue[0] + 12 + k * 14) % N], sd = k % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 4.5), m = boite(h, h.mat('ecrit', {}, 96, 24, c, '#fff4e0', t, 16), 4.2, 1, 0.2, x, 4.3, z); m.rotation.y = versRoute(s, sd); });
+
+      // --- secteur 4, le marché couvert : piliers, toit de tôle et de paille (des jours en long laissent passer le soleil), étals de chapeaux et de hamacs, murs du fond percés ---
+      const mar = tranche(18, 20, 6, 6), piliers = [], toits = [], pailles = [], toitsD = [], paillesD = [], fonds = [], etalsM = [];
+      chaque(mar, 5, (s, i, k) => {
+        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 1.2); piliers.push([x, -0.05, z]); if ((k / 5) % 2) { const [fx, fz] = bord(s, sd, W + 9); fonds.push([fx, 4.4, fz, versRoute(s, sd)]); } }
+        if ((k / 5) % 3 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 5 - 4.5); toitsD.push([x, 9.15, z, h.across(s)]); paillesD.push([x, 9.55, z, h.across(s)]); } // jour au faîte
+        else { toits.push([s.x, 9.15, s.z, h.across(s)]); pailles.push([s.x, 9.55, s.z, h.across(s)]); }
+        if (k % 10 === 5) h.lum(i, s.x, s.y + 7.5, s.z, 0xffd8a0, 20, 0.5);
+      });
+      chaque(mar, 3, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 3.6); etalsM.push([x, -0.05, z, versRoute(s, sd), 1, 1, 1, PAPEL[(k / 3 + (sd > 0 ? 2 : 0)) % 5]]); } });
+      insts(h, 'pilierHalle', { pilier: h.mat('peinture', { c: 0xd9693a }) }, piliers, { a: [9] });
+      const tole = h.mat('toleToit', { side: D }); inst(h, h.geo('boite', 26, 0.3, 10.6), tole, toits); inst(h, h.geo('boite', 22, 0.5, 10.6), chaume, pailles); inst(h, h.geo('boite', 9, 0.3, 10.6), tole, toitsD); inst(h, h.geo('boite', 8, 0.5, 10.6), chaume, paillesD);
+      inst(h, h.geo('boite', 10, 8.8, 0.5), h.mat('crepi', { c: 0xf2b45a }), fonds);
+      insts(h, 'etalPlaya', { bois, toile: h.mat('toldo', { side: D }, '#fff4e0', '#1fb5a8'), paille: h.mat('chaume'), hamac: blancT }, etalsM, { teinte: 'hamac' });
+      facades(tranche(20, 21, -8, 0), W + 3.6, 10, 0.9); // les dernières maisons du bourg, à la sortie du marché
+
+      // --- secteur 5, la route de garrigue : murets de pierre sèche, poteaux, deux topes peints (visuels : le moteur n'a pas de dos d'âne sans relief) ---
+      const gar = tranche(20, 24, -10, 0), murets = [], pot = [];
+      chaque(gar, 4, (s, i, k) => { for (const sd of [-1, 1]) if (rnd() < 0.75) { const [x, z] = bord(s, sd, W + 2.6); murets.push([x, -0.05, z, Math.atan2(-s.tz, s.tx)]); }
+        if (k % 20 === 0) { const [x, z] = bord(s, 1, W + 6); pot.push([x, -0.05, z, 0, 1.4, 7.5, 1.4]); } });
+      insts(h, 'muret', { pierre: calc }, murets, { a: [7] }); inst(h, h.geo('poteauBois'), bois, pot);
+      for (const i of [P(21) - 12, P(23) + 10]) couvre(i, 2, -W, W, h.mat('topes', { side: D, ...OFF }), 4);
+
+      // --- secteur 6, le cénote : bassin turquoise peu profond dans tout le cercle de la place, cirque de calcaire autour (ouvert là où passe la route), lianes, escalier, rochers, baigneurs ---
+      { const eau = new THREE.Mesh(new THREE.CircleGeometry(130, 72), h.mat('eauCenote', { gloss: 0.4, rep: [26, 26] })); eau.rotation.x = -Math.PI / 2; eau.position.set(CX, -0.04, CZ); eau.receiveShadow = true; h.scene.add(eau); }
+      const roches = [], lianes = [], hauts = [], NB = 84;
+      for (let k = 0; k < NB; k++) {
+        const a = k / NB * 6.2832, dx = Math.sin(a), dz = Math.cos(a), tx = Math.cos(a), tz = -Math.sin(a), Hh = 12 + rnd() * 6, L = 2 * Math.PI * 139.5 / NB + 1;
+        if ([129.5, 139.5, 149.5].some(r => [-0.5, 0, 0.5].some(u => ecart(CX + dx * r + tx * u * L, CZ + dz * r + tz * u * L) < 1.5))) continue; // la route passe : ouverture
+        roches.push([CX + dx * 139.5, Hh / 2 - 0.5, CZ + dz * 139.5, Math.atan2(dx, dz), 1, Hh / 15, 1]);
+        if (rnd() < 0.65) lianes.push([CX + dx * 129.3, Hh - 0.3, CZ + dz * 129.3, Math.atan2(-dx, -dz), 4 + rnd() * 4, Hh - 1 - rnd() * 4, 1]);
+        for (let j = 0; j < 3; j++) { const r = 132 + rnd() * 16, b = a + (rnd() - 0.5) * 0.06; hauts.push([CX + Math.sin(b) * r, Hh - 0.5, CZ + Math.cos(b) * r, rnd() * 6, 1.5 + rnd() * 2.5, 1.2 + rnd(), 1.5 + rnd() * 2.5]); }
+        if (rnd() < 0.3) palmier(CX + dx * (134 + rnd() * 12), CZ + dz * (134 + rnd() * 12));
+      }
+      inst(h, h.geo('boite', 2 * Math.PI * 139.5 / NB + 1, 15, 20), calc, roches); inst(h, h.geo('pan'), h.mat('lianes', { side: D, alphaTest: 0.5 }), lianes);
+      buissons.push(...hauts);
+      for (const [px, pz] of PL.piles) { const x = CX + px * Math.cos(PL.a) + pz * Math.sin(PL.a), z = CZ - px * Math.sin(PL.a) + pz * Math.cos(PL.a); h.pose('rocher', calc, h.scene, [x, 1.2, z]).scale.set(3.3, 3.2, 3.3); } // les deux rochers du milieu : les piles de la place (sim.js les heurte)
+      h.pose('escalier', { bois }, h.scene, [CX - 7.5, 12, CZ - 127.4], 30);
+      const nageurs = [], boueesC = [];
+      for (let k = 0; k < 8; k++) { const a = Math.PI + (rnd() - 0.5) * 1.6, r = 126.5 + rnd() * 2; nageurs.push([CX + Math.sin(a) * r, -0.9, CZ + Math.cos(a) * r, rnd() * 6, 1, 1, 1, PAPEL[k % 5]]); }
+      for (let a = 0; a < 6.2832; a += 0.035) { const x = CX + Math.sin(a) * 124.6, z = CZ + Math.cos(a) * 124.6; if (ecart(x, z) > 2) boueesC.push([x, 0.15, z, 0, 0.5, 0.5, 0.5, a * 30 % 2 < 1 ? 0xff6a2b : 0xfff4e0]); } // la limite de la place, côté nord, en ligne de bouées
+      insts(h, 'figurant', { blanc: h.mat('peinture', { c: 0x1fb5a8 }), peau: h.mat('peinture', { c: 0xb07850 }), tenue: blancT, or: noix }, nageurs, { a: [0], teinte: 'tenue' });
+      colore(inst(h, h.geo('bouee'), blancT, boueesC), boueesC);
+
+      // --- secteur 7, la grotte (le tunnel) : stalactites, puits de lumière avec leurs rayons, eau fluo au pied des parois ---
+      { const t0 = T.t0, n = T.t1 - T.t0, stal = [], trous = [];
+        for (let i = t0 + 2; i < T.t1 - 1; i += 3) { const s = S[i % N]; for (let j = 0; j < 4; j++) { const d = -W + 0.6 + rnd() * (2 * W - 1.2), l = Math.abs(d) > W - 2.5 ? 1 + rnd() * 2.2 : 0.3 + rnd() * 0.8, r = 0.5 + rnd() * 0.6, [x, z] = bord(s, 1, d); stal.push([x, s.y + 7.98, z, rnd() * 6, r, l, r]); } }
+        inst(h, h.geo('stalactite'), h.mat('bruit', {}, '#b8a880', ['#8a7e62', '#d4c8a6', '#a8602c']), stal);
+        const rayon = h.mat('rayon', { lum: 1, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: D, fog: false }), rayons = [];
+        for (const f of [0.22, 0.55, 0.82]) { const i = (t0 + Math.round(n * f)) % N, s = S[i], d = (f * 10 | 0) % 2 ? 3 : -3, [x, z] = bord(s, 1, d);
+          for (const r of [0, 1.5708]) rayons.push([x, s.y + 8, z, enFace(s) + r + 0.4, 3, 8, 1]); trous.push([x, s.y + 7.97, z, 0, 3.2, 0.06, 3.2]); h.lum(i, x, s.y + 6.5, z, 0xfff3c0, 26, 1.6); }
+        inst(h, h.geo('pan'), rayon, rayons).castShadow = false; inst(h, h.geo('boite', 1, 1, 1), h.mat('peinture', { lum: 1, c: 0xfff3c0 }), trous);
+        for (const sd of [-1, 1]) couvre(t0, n, sd * (W - 0.2), sd * (W - 2.2), h.mat('eauCenote', { lum: 1, side: D, ...OFF }), 6); }
+
+      // --- secteur 8, le lobby d'hôtel : carrelage mouillé, colonnade blanche, grand toit de palapa, aile de chambres à l'ouest, piscine, bar et plantes en pot à l'est ---
+      const lob = tranche(36, 42, 3, 3), carrel = h.mat('carrelage', { side: D, gloss: 0.35, ...OFF });
+      couvre(lob[0], lob[1], -W, W, carrel, 8); for (const sd of [-1, 1]) h.ribbon(lob[0], lob[1], sd * W, 0.02, sd * (W + 9), 0.02, h.mat('carrelage', { side: D, gloss: 0.35 }), 8);
+      const cols = [], toitL = [], sousL = [], faite = [], pots = [];
+      chaque(lob, 4, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 0.9); cols.push([x, 0, z]); if (k % 8 === 4) { const [px, pz] = bord(s, sd, W + 2.6); pots.push([px, 0.02, pz, rnd() * 6]); } }
+        if (k % 12 === 0) h.lum(i, s.x, s.y + 8, s.z, 0xffe0b0, 22, 0.5); });
+      chaque(lob, 5, s => { toitL.push([s.x, 10.3, s.z, h.across(s)]); sousL.push([s.x, 9.9, s.z, h.across(s)]); faite.push([s.x, 11.3, s.z, h.across(s)]); });
+      inst(h, h.geo('colonne', 9.9), h.mat('peinture', { c: 0xfff4e0 }), cols); inst(h, h.geo('boite', 36, 0.6, 10.6), chaume, toitL); inst(h, h.geo('boite', 18, 1.6, 10.6), chaume, faite); inst(h, h.geo('boite', 34, 0.15, 10.6), bois, sousL);
+      insts(h, 'potPlante', { pot: h.mat('peinture', { c: 0xd9693a }), plante: feuillage }, pots);
+      facades(tranche(36, 42, 0, 0), W + 10.5, 12, 1.5); // l'aile des chambres (les façades de l'est tombent dans la piscine : retirées plus bas)
+      { const x0 = W + 12, x1 = W + 38, z0 = 150, z1 = 330, xc = (x0 + x1) / 2, zc = (z0 + z1) / 2; // la piscine, ouverte sur le hall côté est
+        for (let k = fac.length - 1; k >= 0; k--) if (fac[k][0] > 0 && fac[k][0] < x1 + 6 && fac[k][2] > 40 && fac[k][2] < 430 && Math.abs(fac[k][0]) < 40) fac.splice(k, 1);
+        boite(h, h.mat('merTurquoise', { gloss: 0.6 }), x1 - x0, 0.3, z1 - z0, xc, -0.35, zc);
+        for (const [w, d, x, z] of [[x1 - x0 + 3, 1.5, xc, z0 - 0.75], [x1 - x0 + 3, 1.5, xc, z1 + 0.75], [1.5, z1 - z0, x0 - 0.75, zc], [1.5, z1 - z0, x1 + 0.75, zc]]) boite(h, h.mat('carrelage'), w, 0.4, d, x, -0.15, z);
+        const tr = []; for (let z = z0 + 6; z < z1; z += 9) tr.push([x1 + 4, -0.05, z, Math.PI, 1, 1, 1, 0xfff4e0]); insts(h, 'transat', { bois, toile: blancT }, tr, { teinte: 'toile' });
+        const s = S[P(41)]; h.pose('barPaillote', { bois, bouteilles: h.mat('vitrine', LUM) }, h.scene, [W + 7, 0, s.z + 20]).forEach(m => m.rotation.y = -Math.PI / 2); }
+
+      // --- le reste : hôtels du front de mer, maisons basses du bourg, cocotiers, buissons de garrigue, tours d'hôtels au loin sur la côte ---
+      for (let x = 60; x < 600; x += 40) for (let z = 95; z < 400; z += 38) { const px = x + rnd() * 16, pz = z + rnd() * 16; if (rnd() < 0.35 || ecart(px, pz) < 16 || !loinCenote(px, pz, 12) || (px < 95 && pz > 140 && pz < 340)) continue;
+        if (pz < 140) fac.push([px, -0.05, pz, rnd() < 0.5 ? 0 : Math.PI, 1.6, 1.4 + rnd() * 0.6, 1.4, 0xfff4e0]); else maisons.push([px, -0.05, pz, (rnd() * 4 | 0) * 1.5708, 0.9, 0.6 + rnd() * 0.25, 0.9, FACADES[rnd() * FACADES.length | 0]]); }
+      for (let x = 700; x < 900; x += 26) for (let z = -10; z < 300; z += 26) { const px = x + rnd() * 10, pz = z + rnd() * 10; if (rnd() < 0.3 || ecart(px, pz) < 14) continue; maisons.push([px, -0.05, pz, (rnd() * 4 | 0) * 1.5708, 0.9, 0.6 + rnd() * 0.4, 0.9, FACADES[rnd() * FACADES.length | 0]]); }
+      insts(h, 'facadePlaya', { mur: h.mat('facadePlaya'), cadre: h.mat('peinture', { c: 0x4a3424 }), toile: h.mat('toldo', { side: D }, '#fff4e0', '#ff6a2b') }, [...fac, ...maisons], { a: [10, 8], teinte: 'mur' });
+      for (let k = 0; k < 900; k++) { const x = -260 + rnd() * 1200, z = 30 + rnd() * 820, e = ecart(x, z); if (e < 4 || !loinCenote(x, z, 2)) continue;
+        if (z < 75 || (x > 600 && x < 720 && z < 260)) { if (rnd() < 0.5) palmier(x, z); continue; } if ((x > -45 && x < 60 && z > 40 && z < 430) || (x > 60 && x < 600 && z > 85 && z < 400 && rnd() < 0.6)) { if (rnd() < 0.3) palmier(x, z); continue; }
+        if (rnd() < 0.12) palmier(x, z, 1, 0.5); else buissons.push([x, -0.1, z, rnd() * 6, 1.2 + rnd() * 2.4, 0.8 + rnd() * 1.4, 1.2 + rnd() * 2.4]); }
+      inst(h, h.geo('buisson'), feuillage, buissons);
+      palmiers.forEach((l, v) => insts(h, 'cocotier', { tronc, palme, noix }, l, { a: [v] }));
+      const tours = []; for (let k = 0; k < 26; k++) { const x = k < 13 ? -700 + rnd() * 560 : 900 + rnd() * 700, z = 30 + rnd() * 140, hh = 18 + rnd() * 32, w = 20 + rnd() * 30; tours.push([x, hh / 2 - 0.5, z, rnd() < 0.5 ? 0 : 0.3, w / 30, hh / 30, (16 + rnd() * 10) / 20]); }
+      inst(h, h.geo('boite', 30, 30, 20), h.mat('crepi', { c: 0xfff4e0 }), tours);
+      return (dt, now) => { mMer.map.offset.set(now * 0.000012, now * 0.000007); };
+    },
   };
 })();

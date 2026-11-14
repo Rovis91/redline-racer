@@ -363,9 +363,47 @@
         astre: { dir: [-0.6, 0.35, 0.5], col: '#fff2c0', ombre: '#fff2c0', taille: 220 }, hemi: [0xc8d8f0, 0xb07848, 0.9], sun: [0xffd8a0, 0.9], phares: 0.15, bloom: 0.03, scan: 0.05,
         murH: 0.9, poussiere: [0.82, 0.62, 0.42], route: ['#a86a3a', '#8a5228', '#96602f', '#b87a48', '#7a6a3a', '#8a7444', false, 'terre'], mur: ['#8a5a30', '#6a7a3a', '#7a4c28', '#6e4424'], depart: [0xe8482a, 0x3a2a1c, '#f4f0e0'],
         hud: { y: '#ffffff', c: '#ffb03a', r: '#e8482a', fond: 'rgba(70,36,16,.9)', style: 'rallye', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'SPECIALE 7 · FIN DE JOURNEE'], titre: ['SPECIALE', 'DES OCRES'] } } },
+    // Playa 307 (Riviera Maya, midi) : la ligne droite de la plage (sable dur au milieu, sable mou de part et d'autre), l'épingle au bout du ponton, la rue aux guirlandes de papel picado, le marché couvert,
+    // la route de garrigue, le cénote ouvert (place : on peut couper par le bassin, sur fond meuble), la grotte du cénote (le tunnel), le lobby d'hôtel, retour à la plage. Mexique d'aujourd'hui, rien de maya.
+    { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [32, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [32, 42]], anticipe: 1,
+      large: [[45, 2, 20], [31, 32, 13]], // la plage : sable mou au-delà du sable dur (surf.large) ; la sortie du cénote vers la grotte, élargie (fond meuble)
+      surf: { zones: [[43, 2, 'mouille', 0.35], [14, 17, 'paves', 1], [33, 35, 'mouille', 0.6], [37, 41, 'mouille', 0.5]], large: 'terre' }, // terre = sable mou de la plage et fond du bassin du cénote (une seule surface hors bitume par carte)
+      place: { c: [320, 452], r: 125, a: -Math.PI / 2, piles: [[16, 0, 3, 3], [-16, 0, 3, 3]] }, // le cénote : on roule partout dans le cercle ; deux rochers de calcaire de part et d'autre de l'axe de la place (en diagonale, visé pour que la traversée en ligne droite rejoigne la sortie vers la grotte, pt 31 : test-cartes.js)
+      pts: [[150, 0, 0], [300, 0, 0], [420, 0, 0], [470, -6, 0], [490, -40, 0], [490, -100, 0], [497, -118, 0], [515, -125, 0], [533, -118, 0], [540, -100, 0], [540, -40, 0], [550, -6, 0], [590, 2, 0], [640, 15, 0], [655, 45, 0], [660, 100, 0],
+        [660, 160, 0], [660, 215, 0], [660, 260, 0], [660, 300, 0], [660, 340, 0], [660, 385, 0], [645, 425, 0], [600, 448, 0], [540, 452, 0], [440, 452, 0], [424, 512, 0], [380, 556, 0], [320, 572, 0], [260, 556, 0], [216, 512, 0], [200, 452, 0],
+        [180, 428, -1], [130, 425, -3], [80, 425, -3], [38, 418, -1], [8, 392, 0], [0, 360, 0], [0, 300, 0], [0, 250, 0], [0, 190, 0], [0, 140, 0], [0, 90, 0], [5, 40, 0], [30, 10, 0], [80, 0, 0]],
+      // voiture inventée : un buggy de plage à moteur arrière, 4 cylindres à plat de 2,3 L turbo, 300 ch, 760 kg, propulsion
+      car: car({ nom: 'COCOTERO 2.3 TURBO', ratios: [3.0, 2.0, 1.45, 1.13, 0.92], final: 3.7, wheel: 0.31, mass: 840, idle: 950, red: 7400, cd: 0.38, area: 1.75,
+        tq: [0, 160, 230, 275, 300, 310, 305, 285, 250], trac: 10.5, son: 1.15, moteur: 'l4', turbo: 1, look: { type: 'r5', col: 0x19c7c9, l: 0.82, w: 1, h: 0.95, nez: 0.35, cab: [-0.3, 2.1, 0.55], aileron: 0, bandes: 0xff3d7f } }),
+      radio: [ // compositions originales, déclarées ici et non dans RADIO (l'éditeur de musique ne les voit pas) : cumbia de la côte, reggaeton de la Quinta, surf rock du ponton. Thèmes de 8 mesures, calés sur la progression
+        st({ name: 'CUMBIA 307', fq: '90.7', vol: 1.2, genre: 'CUMBIA', bpm: 96, sw: 0.04, gamme: 'majeur', key: 55, kit: 'acou', eq: [1, 2200, 2, 2], rev: 0.14, echo: [3, 0.16], pump: 1, // güiro (shaker) et congas, basse qui saute de la fondamentale à la quinte, orgue au thème
+          prog: ['G G D D D D G G', 'C D G G'], k: ['x.......x.......'], s: ['....c.......c...'], h: ['x.xxx.xxx.xxx.xx'], p: ['m.mmm.mmm.mmm.mm', '..h.l...h.l.h.l.'],
+          b: ['bCorde', '0 - - - 7 - - - 0 - - - 7 - - -', '0 - - 0 7 - - - 0 - - 0 7 - 5 -'], c: ['gtrNylon', '..x...x...x...x.'],
+          l: ['organ', '16 - 14 - 12 - - - 14 - 16 - 19 - - - | 21 - 19 - 16 - - - 14 - 12 - 14 - - - | 14 - - - 11 - 14 - 19 - - - 21 - - - | 23 - 21 - 19 - - - 14 - - - . - - - | 14 - 16 - 14 - 11 - 9 - - - 11 - - - | 14 - - - 19 - - - 23 - - - 21 - - - | 19 - 16 - 14 - 12 - 14 - 16 - . - - - | 12 - - - - - - - . - - - . - - -',
+            '21 - - - 19 - 16 - 12 - - - 16 - - - | 14 - - - 11 - 14 - 19 - - - . - - - | 19 - 16 - 14 - 12 - 14 - 16 - 19 - - - | 24 - - - - - - - . - - - . - - -'],
+          sec: { i: 'p0 c0', a: 'k0 s0 h0 b0 c0 p1', b: 'k0 s0 h0 b1 c0 p0', c: 'k0 s0 h0 b0 c0 l0 p1', x: 'l1 P1 p0', e: 'k0 s0 h0 b1 c0 l1 P1 p1' }, form: 'iabcbxecabc' }),
+        st({ name: 'QUINTA FM', fq: '99.3', vol: 0.6, genre: 'REGGAETON', bpm: 92, gamme: 'mineur', key: 57, kit: 'k808', eq: [5, 500, -3, 3], rev: 0.1, echo: [3, 0.2], pump: 0.7, // rythme dembow à la 808, basse grave, nappe chaude, thème au sifflet de synthé
+          prog: ['Am Am F F C C G G', 'F G Am Am'], k: ['x...x...x...x...'], s: ['...x..x....x..x.', '...x..x....x..xx'], h: ['x.x.x.x.x.x.x.x.'],
+          b: ['bMoog', '0 - - - - - - - 0 - - - - - - -', '0 - - 0 - - 0 - 0 - - 0 - - 7 -'], d: ['warm', 0], c: ['epFM', '..x...x...x...x.'],
+          l: ['ldWhistle', '24 - - - 22 - 19 - . - 17 - 19 - - - | 24 - - - 27 - 26 - 24 - - - . - - - | 24 - - - 22 - 20 - . - 17 - 20 - - - | 27 - - - 24 - - - 20 - - - . - - - | 22 - - - 19 - 15 - . - 14 - 15 - - - | 19 - - - 22 - 24 - 22 - - - . - - - | 26 - - - 22 - 19 - . - 17 - 14 - - - | 17 - - - - - - - . - - - . - - -',
+            '24 - - - 20 - 17 - 20 - - - . - - - | 22 - - - 19 - 17 - 14 - - - . - - - | 24 - - - 27 - 31 - 27 - - - . - - - | 24 - - - - - - - . - - - . - - -'],
+          sec: { i: 'd h0', a: 'k0 s0 h0 b0 d', b: 'k0 s1 h0 b1 c0', c: 'k0 s0 h0 b1 l0 d', x: 'l1 d P1', e: 'k0 s1 h0 b1 l1 P1' }, form: 'iabcbxecabc' }),
+        st({ name: 'RADIO PONTON', fq: '104.1', vol: 1.6, genre: 'SURF ROCK', bpm: 150, gamme: 'mineur', emprunts: 'B', key: 52, kit: 'rock', eq: [-2, 1800, 3, 2], rev: 0.25, echo: [3, 0.25], pump: 1, // batterie qui galope, basse au médiator, guitare twang noyée dans la réverbération ; si majeur emprunté (dominante de mi mineur)
+          prog: ['Em Em C C D D B B', 'Am C B B'], k: ['x.....x.x.......'], s: ['....x.......x...'], h: ['x.x.x.x.x.x.x.x.'],
+          b: ['bPick', '0 - 0 - 0 - 0 - 0 - 0 - 7 - 5 -'], c: ['gtrClean', 'x..x..x...x.x...'],
+          l: ['ldTwang', '19 - 19 19 - - 17 - 15 - 14 - 12 - - - | 24 - 24 24 - - 22 - 19 - - - . - - - | 20 - 20 20 - - 19 - 15 - 12 - . - - - | 24 - - - 19 - - - 15 - - - . - - - | 22 - 22 22 - - 26 - 24 - 22 - . - - - | 17 - - - 14 - - - 10 - - - . - - - | 23 - 23 23 - - 19 - 14 - 11 - . - - - | 19 - - - - - - - . - - - . - - -',
+            '17 - - - 20 - 24 - 20 - - - . - - - | 19 - - - 15 - 12 - 15 - - - . - - - | 23 - - - 19 - 14 - 11 - - - . - - - | 19 - - - - - - - . - - - . - - -'],
+          sec: { i: 'b0 c0', a: 'k0 s0 h0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
+      ],
+      th: { decor: 'plage', fog: 0xcfeeff, fogD: [180, 1800], sky: [[0, '#1478d8'], [0.3, '#2f95e6'], [0.45, '#8fd0f0'], [0.49, '#dff3f8'], [0.5, '#cfeeff'], [1, '#cfeeff']], stars: 0,
+        astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 220 }, hemi: [0xbfe3ff, 0xf3e3b8, 1.0], sun: [0xfff2d0, 1.0], phares: 0, bloom: 0.06, scan: 0, chaleur: 0.5,
+        murH: 0, route: ['#8a8478', '#9a9488', '#fff4e0', '#f7d36b', '#8a8478', '#8a8478', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xff3d7f, 0x1fb5a8, '#fff4e0'], // route de calcaire ; le décor repeint la plage, le ponton, la rue et le lobby par-dessus
+        tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#8a7e62', '#cbbf9c', '#a89a76', '#3a3224'], plafond: ['#5a5040', '#fff3c0', '#fff3c0', '#3a3224'],
+          fog: 0x0a2a30, portail: 0xfff3c0, neons: [0xfff3c0, 0x1fd6b0], coque: 20, eclat: 1.3 }, // grotte du cénote : calcaire clair, lueurs d'eau turquoise, puits de lumière chaude
+        hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', fond: 'rgba(10,70,90,.88)', style: 'panneau', split: 0, jp: null, sur: [null, 'RIVIERA MAYA · MIDI'], titre: ['PLAYA', '307'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
-  G.SOIREE = [['terre', '18:40'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30']]
+  G.SOIREE = [['terre', '18:40'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30'], ['plage', '11:45']]
     .map(([id, heure]) => Object.assign(G.CARTES.find(m => m.id === id), { heure }));
   let id = 'ville';
   if (typeof location !== 'undefined') try { id = (/^#defi=\d+\.([a-z0-9]+)\./.exec(location.hash) || [])[1] || new URLSearchParams(location.search).get('carte') || localStorage.getItem('vpr.carte') || id; } catch (e) { } // un lien de défi (#defi=version.carte.données, voir defiCode dans sim.js) ouvre sa carte
