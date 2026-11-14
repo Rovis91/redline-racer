@@ -363,9 +363,33 @@
         astre: { dir: [-0.6, 0.35, 0.5], col: '#fff2c0', ombre: '#fff2c0', taille: 220 }, hemi: [0xc8d8f0, 0xb07848, 0.9], sun: [0xffd8a0, 0.9], phares: 0.15, bloom: 0.03, scan: 0.05,
         murH: 0.9, poussiere: [0.82, 0.62, 0.42], route: ['#a86a3a', '#8a5228', '#96602f', '#b87a48', '#7a6a3a', '#8a7444', false, 'terre'], mur: ['#8a5a30', '#6a7a3a', '#7a4c28', '#6e4424'], depart: [0xe8482a, 0x3a2a1c, '#f4f0e0'],
         hud: { y: '#ffffff', c: '#ffb03a', r: '#e8482a', fond: 'rgba(70,36,16,.9)', style: 'rallye', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'SPECIALE 7 · FIN DE JOURNEE'], titre: ['SPECIALE', 'DES OCRES'] } } },
+    // Route royale (spec : docs/SPEC-PERSE.md) : Persépolis au couchant. La plaine en S (la seule droite), le grand escalier de la terrasse (pavés, +14 m), la Porte des Nations et son épingle,
+    // la salle aux cent colonnes (une place où l'on roule partout entre 15 colonnes), le jardin au canal turquoise qui redescend, puis les coudes à 90° du bazar couvert (pavés, voûte de briques).
+    { id: 'perse', nom: 'ROUTE ROYALE', rivaux: ['DARIUS', 'ROXANE', 'KAVEH'], W: 10, kmh: 0.8, vit: [150, 190], grip: 17, sc: 1, anticipe: 1, trafic: 0,
+      large: [[0, 8, 16], [20, 24, 16]],
+      surf: { zones: [[9, 12, 'paves', 0.8], [14, 19, 'mouille', 0.5], [20, 24, 'mouille', 0.3], [25, 38, 'paves', 1]] },
+      tun: [26, 34], chaud: [12, 24], amb: [[12, 20], [25, 38]], sect: [13, 25],
+      place: { c: [430, 460], r: 55, a: -Math.PI / 2, piles: [[-28, -18, 2.5, 2.5], [-28, 36, 2.5, 2.5], [-28, 18, 2.5, 2.5], [-28, 0, 2.5, 2.5], [-28, -36, 2.5, 2.5], [30, 27, 2.5, 2.5], [30, 9, 2.5, 2.5], [30, -9, 2.5, 2.5], [30, -27, 2.5, 2.5], [-44, 27, 2.5, 2.5], [-44, 9, 2.5, 2.5], [-44, -9, 2.5, 2.5], [-44, -27, 2.5, 2.5], [44, 18, 2.5, 2.5], [44, -18, 2.5, 2.5]] }, // a : l'axe de la salle suit la route (vers -x) ; piles dans ce repère : [z, -x] du monde autour du centre
+      pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [290, 80, 0], [370, 70, 0], [450, 20, 0], [540, 10, 0], [620, 50, 0], [660, 120, 0],
+        [665, 185, 0], [670, 250, 4], [670, 320, 9], [660, 380, 14], [640, 425, 14], [590, 450, 14],
+        [510, 455, 14], [470, 472, 14], [430, 452, 14], [390, 472, 14], [355, 455, 14], [315, 450, 13],
+        [270, 440, 12], [220, 440, 10], [170, 440, 9], [140, 442, 8],
+        [118, 418, 8], [104, 386, 7], [36, 374, 6], [36, 326, 6], [114, 314, 5], [114, 256, 4], [46, 244, 3], [46, 196, 3], [104, 184, 2], [104, 131, 1],
+        [10, 125, 1], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
+      // voiture inventée : une propulsion légère, 4 cylindres atmosphérique de 2,2 L, 290 ch, 1050 kg : faite pour glisser d'un coude à l'autre
+      car: car({ nom: 'SHAHIN 2.2', ratios: [3.1, 2.1, 1.55, 1.22, 1.0, 0.84], final: 4.1, wheel: 0.31, mass: 1125, idle: 950, red: 8200, cd: 0.36, area: 1.8,
+        tq: [0, 170, 230, 265, 285, 295, 290, 270, 230], trac: 10, son: 1.2, moteur: 'l4', look: { type: 'fd', col: 0x2aa39a, l: 0.95, w: 1, h: 1, nez: 0.6, cab: [-0.4, 2, 0.52], aileron: 1, bandes: 0xf0b840 } }),
+      // shortcut: les stations du canal sous d'autres noms (test-cartes exige noms et genres uniques), en attendant une radio perse composée (daf, tar, santour : spec §4.5)
+      radio: RADIO.canal.map((s, i) => ({ ...s, name: ['RADIO SHIRAZ', 'BAZAR 122', 'MARVDASHT FM'][i], fq: ['99.2', '122.0', '70.7'][i], genre: ['FUNK ROYAL', 'ELECTRO DU BAZAR', 'ROCK DES DUNES'][i] })),
+      th: { decor: 'perse', fog: 0xe0a060, fogD: [140, 1600], sky: [[0, '#1d2a5a'], [0.22, '#1d2a5a'], [0.23, '#5a3a78'], [0.34, '#5a3a78'], [0.35, '#c8505a'], [0.42, '#c8505a'], [0.43, '#f08a3a'], [0.48, '#f08a3a'], [0.49, '#ffc860'], [0.5, '#e0a060'], [1, '#e0a060']], stars: 0,
+        astre: { dir: [-0.8, 0.08, 0.4], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0x8a78b8, 0xc89a6a, 0.8], sun: [0xffa850, 0.95], phares: 0.3, bloom: 0.04, scan: 0.05, chaleur: 0.4,
+        murH: 0, route: ['#8a7a64', '#968670', '#f4ead0', '#2aa39a', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
+        tun: { sol: ['#6a4a34', '#7a5a40', '#f0b840', '#f4ead0', '#c8323c', '#3a2418'], murs: ['#c8323c', '#f0b840'], paroi: ['#9a5a38', '#b8704a', '#c8323c', '#4a2a1a'], plafond: ['#5a3020', '#f0b840', '#ffd890', '#9a5a38'],
+          fog: 0x5a3020, portail: 0xf0b840, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1.4 },
+        hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
-  G.SOIREE = [['terre', '18:40'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30']]
+  G.SOIREE = [['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30']]
     .map(([id, heure]) => Object.assign(G.CARTES.find(m => m.id === id), { heure }));
   let id = 'ville';
   if (typeof location !== 'undefined') try { id = (/^#defi=\d+\.([a-z0-9]+)\./.exec(location.hash) || [])[1] || new URLSearchParams(location.search).get('carte') || localStorage.getItem('vpr.carte') || id; } catch (e) { } // un lien de défi (#defi=version.carte.données, voir defiCode dans sim.js) ouvre sa carte
