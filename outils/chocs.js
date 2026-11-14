@@ -1,16 +1,11 @@
 // Mesure des chocs en vraie course, sans écran : node outils/chocs.js [carte]
 // Chaque carte : une course de 3 tours (3 IA) par profil du joueur, et le contre-la-montre de wangan avec ses camions (trafic).
 // On note chaque choc comme le jeu le voit (c.hit : mur ou camion, c.bump : voiture ; même lecture que dgPas dans game.js) et on rejoue dessus le modèle de dégâts
-// de docs/SPEC-CASSE.md (« Mécanique des chocs ») : usure par zone [avant, arrière, gauche, droite], plafonnée à CAP hors du mode CASSE.
+// de docs/SPEC-CASSE.md (« Mécanique des chocs ») : usure par zone [avant, arrière, gauche, droite], plafonnée hors du mode CASSE (usure et USURE de sim.js).
 const THREE = require('../three/three.module.js'); require('../cartes.js'); require('../sim.js');
-const H = 1 / 120, CAP = 0.7, TOUR = 0.4, SEUIL = { mur: 6, camion: 6, voiture: 4 }, MULT = { mur: 1, voiture: 0.6, camion: 1.5 };
+const H = 1 / 120;
 const BACS = [4, 6, 10, 15, 20, 30, 1e9], bac = v => BACS.findIndex(b => v < b);
-// shortcut: copie du modèle du bac à sable (propositions/casse.html, choc) sans la géométrie ; au portage, une seule fonction dans sim.js pour les deux
-function choc(Z, lx, lz, vn, type, Z0) { // Z0 : les zones au début du tour (chacune prend au plus TOUR par tour)
-  const s = SEUIL[type]; if (vn <= s) return;
-  const wx = lx * lx, wz = lz * lz, u = Math.min(1, ((vn - s) / 24) ** 2) * MULT[type] * (wx > 0.2 && wz > 0.2 ? 1.3 : 1);
-  for (const [zi, w] of [[lx > 0 ? 0 : 1, wx], [lz < 0 ? 2 : 3, wz]]) Z[zi] = Math.min(CAP, Z0[zi] + TOUR, Z[zi] + Math.min(0.45, 0.6 * u * w) * (1 - Z[zi]));
-}
+const choc = (Z, lx, lz, vn, type, Z0) => usure(Z, Z0, lx, lz, vn, type); // le modèle du jeu (sim.js), hors mode CASSE
 const etape = z => z < 0.1 ? 'nickel' : z < 0.25 ? 'creux' : z < 0.45 ? 'rétro/optique' : z < 0.6 ? 'pare-chocs parti' : 'capot/portière qui bat';
 function suivi(c) { return { c, Z: [0, 0, 0, 0], Z0: [0, 0, 0, 0], lap: 1, n: Array(BACS.length).fill(0), nb: Array(BACS.length).fill(0), t: -1, tour: [], vx: 0, vz: 0, frot: 0 }; }
 function note(o, t, truck) { // après un pas : un choc franc (même lecture que dgPas : direction = changement de vitesse, dans le repère de la voiture)

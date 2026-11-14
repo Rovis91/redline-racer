@@ -559,5 +559,21 @@
     return ok && tr.length >= 8 && t > 0 && Math.abs((tr.length / 4 - 1) / 5 - t) < 1.5 ? { carte: m[2], t, trace: etire(tr, 4) } : { err: DEFI_ERR[2] };
   }
 
-  Object.assign(G, { DEFI_V, DEFI_ERR, defiCode, defiLit, etire, tourRef, vAdmise, alerteVirage, sol, paroi, pente, dansPlace, buildTrack, newCar, step, autopilot, piloteGlisse, newRace, stepRace, seche, MO, raceOrder, tournee, BAREME, trafic, hitTrafic, AI_LVL, DIFF, TOP, vturn, omega, SURF, GL });
+  // ---------- Usure des voitures (docs/SPEC-CASSE.md, « Mécanique des chocs ») ----------
+  // usure(Z, Z0, lx, lz, vn, type, casse) : un choc venu de (lx, lz) (repère de la voiture, x vers l'avant, unitaire), à la vitesse normale vn (m/s), contre un « mur », un « camion » ou une « voiture ».
+  //   Z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] de 0 à 1, modifiée sur place ; Z0 = les zones au début du tour ; renvoie l'usure ajoutée (toutes zones).
+  //   Seule la vitesse normale casse (frotter un mur ne fait rien) ; usure quadratique (proche de l'énergie), un coin prend 1,3 fois plus, rendement décroissant ;
+  //   hors du mode CASSE, une zone ne dépasse jamais USURE.cap et ne prend pas plus de USURE.tour par tour : très abîmée, jamais une épave (mesures : outils/chocs.js).
+  const USURE = { cap: 0.7, tour: 0.4, seuil: { mur: 6, camion: 6, voiture: 4 }, mult: { mur: 1, camion: 1.5, voiture: 0.6 } };
+  function usure(Z, Z0, lx, lz, vn, type = 'mur', casse = false) {
+    const s = USURE.seuil[type]; if (vn <= s) return 0;
+    const wx = lx * lx, wz = lz * lz, u = Math.min(1, ((vn - s) / 24) ** 2) * USURE.mult[type] * (wx > 0.2 && wz > 0.2 ? 1.3 : 1);
+    let du = 0;
+    for (const [zi, w] of [[lx > 0 ? 0 : 1, wx], [lz < 0 ? 2 : 3, wz]]) {
+      const max = casse ? 1 : Math.min(USURE.cap, Z0[zi] + USURE.tour), nz = Math.min(max, Z[zi] + Math.min(0.45, 0.6 * u * w) * (1 - Z[zi]));
+      if (nz > Z[zi]) { du += nz - Z[zi]; Z[zi] = nz; }
+    }
+    return du;
+  }
+  Object.assign(G, { USURE, usure, DEFI_V, DEFI_ERR, defiCode, defiLit, etire, tourRef, vAdmise, alerteVirage, sol, paroi, pente, dansPlace, buildTrack, newCar, step, autopilot, piloteGlisse, newRace, stepRace, seche, MO, raceOrder, tournee, BAREME, trafic, hitTrafic, AI_LVL, DIFF, TOP, vturn, omega, SURF, GL });
 })(typeof window !== 'undefined' ? window : globalThis);

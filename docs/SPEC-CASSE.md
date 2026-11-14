@@ -152,6 +152,28 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
 - l'IA qui cherche le contact (la « tête brûlée » plus que les autres) ;
 - un takedown compte-t-il pour une voiture sortie par un mur juste après un contact (fenêtre de 2 s) ?
 
+## Intégration dans le jeu
+
+**Phase 1 (faite)** :
+- **Modèle de chocs partagé** : `usure` et `USURE` vivent dans sim.js (testés dans test.js) ; `outils/chocs.js` et game.js s'en servent.
+- **Pièces** (game.js, dégâts) :
+  - rétros, phares et feux tombent en éclats ;
+  - pare-chocs et aileron pendent puis tombent, une seule pièce pend à la fois et son bout traîne avec des étincelles ;
+  - un phare avant reste toujours allumé ;
+  - la caisse s'enfonce selon l'usure ajoutée ;
+  - le pare-brise étoilé passe à 22 m/s.
+- **Débris** : ils restent toute la course, 40 au plus, et les voitures les chassent. Posés, ils ne portent plus d'ombre ; le maillage unique reste à faire.
+- **Traces selon la surface** :
+  - elles apparaissent en glisse, au freinage bloqué et au patinage du départ, et restent les 500 derniers points par roue ;
+  - un bug antérieur est corrigé : la matière des traces n'était pas en DoubleSide, et on ne les voyait jamais.
+- **Captures** : `docs/avant-apres/casse/jeu-degats-70.jpg` et `jeu-traces.jpg`.
+
+**Reste à faire** :
+- phase 2 : le décor (marques sur les murs-rubans, objets renversables par carte, glissières, néons) ;
+- phase 3 : la saleté (injectée dans la livrée) et l'huile ;
+- phase 4 : le mode CASSE (menu, effets dans sim.js pour le réseau, score place + takedowns, IA qui cherche le contact) ;
+- capot et portières, qui demandent une livrée par flanc.
+
 ## Mode CASSE (à préciser après les prototypes)
 
 Les dégâts entrent dans la simulation (sim.js) pour rester déterministes en réseau : puissance perdue (avant), direction qui tire (flancs, train avant), pneu crevé (adhérence, étincelles de jante), voiture hors d'usage au-delà d'un seuil. Pistes chiffrées (designer simulation) :

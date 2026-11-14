@@ -629,8 +629,11 @@
     gGeo.setAttribute('position', new THREE.BufferAttribute(gP, 3)); gGeo.setAttribute('color', new THREE.BufferAttribute(gC, 4)); gGeo.setIndex(gmI); gm.frustumCulled = false; scene.add(gm);
     return { hist: [], P, C, geo, tr, gR: [[], []], gOn: [0, 0], gP, gC, gGeo, vAcc: 0 };
   };
-  // traces de gomme de la glisse : un ruban au sol par roue arrière, un point tous les GD mètres au plus, effacé en GV secondes
-  const GN = 240, GV = 8, GD = 0.8, gmI = [], gmMat = new THREE.MeshBasicMaterial({ color: 0x050506, vertexColors: true, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+  // traces au sol : un ruban par roue arrière, un point tous les GD mètres au plus, gardé toute la course (les GN derniers points de chaque roue)
+  // TR : ce que chaque surface garde (docs/SPEC-CASSE.md) : gomme noire sur le bitume sec, sillons sur la terre et ornières dans la neige (même en roulant), rien sur la glace ni le mouillé
+  const TR = { sec: { c: [0.02, 0.02, 0.025], a: 0.7, roule: 0, w: 1 }, terre: { c: [0.2, 0.12, 0.06], a: 0.8, roule: 0.38, w: 1.25 }, neige: { c: [0.55, 0.6, 0.7], a: 0.8, roule: 0.4, w: 1.35 } };
+  const trSol = q => q.vir >= 0.4 || q.aq > 0.05 ? null : q.roul >= 0.35 ? TR.terre : q.roul >= 0.15 ? TR.neige : TR.sec; // (la bruine de la ville, à 30 % du mouillé, garde la gomme)
+  const GN = 500, GD = 0.8, gmI = [], gmMat = new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); // DoubleSide : les rubans tournent leur face vers le bas (gauche, droite, puis le point d'avant) ; sans lui, on ne les voyait jamais
   for (let l = 0; l < 2; l++) for (let k = 0; k < GN - 1; k++) { const a = (l * GN + k) * 2; gmI.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
 
   // particules additives : fumée de pneus, étincelles contre les murs, flammes d'échappement
@@ -709,14 +712,16 @@
     for (const fl of hu.fl) { fl.visible = car.boost > 0; fl.scale.y = (0.5 + Math.random() * 0.7) * Math.min(1, car.boost * 2); } // nitro : deux flammes d'échappement qui vacillent, les traînées virent au bleu
     const gl = car.dd && sp > 10 && !car.air;
     if (gl && car.driftT > 0.6) for (const sd of [-0.9, 0.9]) for (let k = 1 + (Math.random() < 0.5); k--;) trait(car.x + fx * xr + rx * sd, carY + 0.08, car.z + fz * xr + rz * sd, car.vx * 0.7 + rx * sd * 4 + jit(4), 2 + Math.random() * 4, car.vz * 0.7 + rz * sd * 4 + jit(4), 0.4, 18, 0.06, [1, 0.55, 0.1], carY + 0.03); // palier de glisse (la jauge se remplit à plein débit) : des étincelles orange, en traits fins, dans la fumée
-    // traces de gomme : chaque roue arrière tire son ruban tant qu'elle glisse ; un point d'alpha nul ouvre et ferme chaque trace, pour ne pas la relier à la suivante
+    // traces : chaque roue arrière tire son ruban tant qu'elle marque (glisse, freinage bloqué, patinage au départ ; terre et neige marquent même en roulant) ; un point d'alpha nul ouvre et ferme chaque trace
+    const st = trSol(T.surf[car.idx]); hu.lance = (inp.gas || 0) > 0.8 && sp < 12 ? (hu.lance || 0) + dt : 0;
+    const k = Math.max(gl ? 1 : 0, (inp.brake || 0) > 0.6 && sp > 6 ? 1 : 0, hu.lance > 0 && hu.lance < 1.4 ? 1 - sp / 12 : 0), ga = st && !car.air && sp > 1 ? st.roule + (st.a - st.roule) * k : 0, on = ga > 0.04;
     // shortcut: posées à la hauteur de la voiture, sans le tangage ; sur une pente raide le bout peut s'enfoncer ou flotter de quelques centimètres
-    for (let l = 0; l < 2; l++) { const R = hu.gR[l], sd = l ? zr : -zr, p = { x: car.x + fx * xr + rx * sd, y: carY + 0.04, z: car.z + fz * xr + rz * sd, rx, rz, t: 0, a: 0.7 };
-      if (gl) { if (!hu.gOn[l]) R.unshift({ ...p, a: 0 }); hu.gOn[l] = 1; if (!R[0].a || Math.hypot(p.x - R[1].x, p.z - R[1].z) > GD) R.unshift(p); else Object.assign(R[0], p, { t: R[0].t }); }
+    for (let l = 0; l < 2; l++) { const R = hu.gR[l], sd = l ? zr : -zr, p = { x: car.x + fx * xr + rx * sd, y: carY + 0.04, z: car.z + fz * xr + rz * sd, rx, rz, a: ga, c: st ? st.c : TR.sec.c, w: st ? st.w : 1 };
+      if (on) { if (!hu.gOn[l]) R.unshift({ ...p, a: 0 }); hu.gOn[l] = 1; if (!R[0].a || Math.hypot(p.x - R[1].x, p.z - R[1].z) > GD) R.unshift(p); else Object.assign(R[0], p); }
       else if (hu.gOn[l]) { R.unshift({ ...R[0], a: 0 }); hu.gOn[l] = 0; }
-      for (const e of R) e.t += dt; while (R.length && (R.length > GN || R[R.length - 1].t > GV)) R.pop();
-      for (let k = 0; k < GN; k++) { const e = R[k], a = (l * GN + k) * 6, c = (l * GN + k) * 8, w = tw / 2; if (!e) { hu.gC.fill(0, c, c + 8); continue; }
-        hu.gP.set([e.x - e.rx * w, e.y, e.z - e.rz * w, e.x + e.rx * w, e.y, e.z + e.rz * w], a); const al = e.a * (1 - e.t / GV); hu.gC.set([1, 1, 1, al, 1, 1, 1, al], c); } }
+      while (R.length > GN) R.pop();
+      for (let k = 0; k < GN; k++) { const e = R[k], a = (l * GN + k) * 6, c = (l * GN + k) * 8; if (!e) { hu.gC.fill(0, c, c + 8); continue; } const w = tw / 2 * e.w;
+        hu.gP.set([e.x - e.rx * w, e.y, e.z - e.rz * w, e.x + e.rx * w, e.y, e.z + e.rz * w], a); hu.gC.set([...e.c, e.a, ...e.c, e.a], c); } }
     hu.gGeo.attributes.position.needsUpdate = hu.gGeo.attributes.color.needsUpdate = true;
   }
   // effets de la scène entière, une fois par image : poussière, particules, éclairs, vie du décor
@@ -785,67 +790,91 @@
 
   fond && await souffle();
   // ---------- dégâts : purement visuels et sonores (la conduite et les temps n'en savent rien : fantômes, médailles et réseau intacts), remis à zéro à chaque départ ----------
-  // Par modèle (g.userData.dg) : z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] de 0 à 1 ; la caisse s'enfonce autour de chaque impact (au plus DG_MAX mètres par sommet) ;
-  // ph / fe = phare / feu cassé de chaque côté [z < 0, z > 0] : éteint, et sa lumière dynamique avec (vueFrame) ; pare-chocs et rétroviseurs qui tombent ; fumée du capot ; vitre fêlée peinte sur la livrée.
+  // Le modèle des chocs est celui de sim.js (usure, docs/SPEC-CASSE.md) : seule la vitesse normale casse, plafonds 0,4 par tour et 0,7 par zone.
+  // Par modèle (g.userData.dg) : z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] ; z0 = les zones au début du tour ; la caisse s'enfonce autour de chaque impact, d'autant plus que le choc a usé ;
+  // les pièces pendent puis tombent à des seuils de leur zone (une seule pend à la fois, dessinée à part sur sa charnière) ; ph / fe = phare / feu tombé de chaque côté [z < 0, z > 0] : sa lumière dynamique s'éteint (vueFrame) ;
+  // les débris restent au sol toute la course (au plus DEBMAX, le plus vieux disparaît), poussés par les voitures qui passent ; fumée du capot ; vitre fêlée peinte sur la livrée.
   // Chaque modèle a sa copie des géométries de carG (formes-voitures.js) : P0 = la forme intacte, d = l'enfoncement cumulé.
-  const DG_MAX = 0.28, DGV = new Float32Array(32), DEB = [], NOIRV = [0.05, 0.05, 0.06], HC0 = LUX.uHC.value.clone(); let dgT = 0;
-  const nez = Math.max(...VO.plan.dessusCaisse.map(q => q[0])), cul = Math.min(...VO.plan.dessusCaisse.map(q => q[0])), cab0 = VO.plan.cab[0][0];
+  const DG_MAX = 0.38, DGV = new Float32Array(32), DEB = [], DEBMAX = 40, HC0 = LUX.uHC.value.clone(); let dgT = 0;
+  const VERRE = [new THREE.MeshStandardMaterial({ color: 0xdde8f0, roughness: 0.1, transparent: true, opacity: 0.7 }), new THREE.MeshStandardMaterial({ color: 0xff3020, roughness: 0.2, transparent: true, opacity: 0.8 })];
+  const nez = Math.max(...VO.plan.dessusCaisse.map(q => q[0])), cul = Math.min(...VO.plan.dessusCaisse.map(q => q[0])), cab0 = VO.plan.cab[0][0], cab3 = VO.plan.cab[3][0];
+  const prof = x => { const d = VO.plan.dessusCaisse; let y = 0; for (let i = 0; i < d.length - 1; i++) { const [x0, y0] = d[i], [x1, y1] = d[i + 1]; if (x0 !== x1 && (x - x0) * (x - x1) <= 0) y = Math.max(y, y0 + (y1 - y0) * (x - x0) / (x1 - x0)); } return y; }; // hauteur du dessus de caisse en x
+  const hash = (x, y, z) => { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); }; // même point, même bruit : les sommets confondus restent soudés
   const DGM = [carG, ...opps].map(g => {
-    const D = { z: [0, 0, 0, 0], ph: [0, 0], fe: [0, 0], m: [], p: [], t: -1, fis: null, liv: null };
+    const D = { z: [0, 0, 0, 0], z0: [0, 0, 0, 0], lap: 0, ph: [0, 0], fe: [0, 0], m: [], p: [], t: -1, fis: null, liv: null, pend: null, c: null };
     g.children[0].traverse(o => { const zn = Object.keys(VO.zones).find(k => VO.zones[k] === o.geometry); if (!zn) return;
-      const ge = o.geometry = o.geometry.clone(), P = ge.attributes.position.array, me = { o, zn, P0: P.slice(), d: new Float32Array(P.length) };
-      if (zn === 'phare' || zn === 'feu') { ge.setAttribute('color', new THREE.BufferAttribute(new Float32Array(P.length).fill(1), 3)); o.material.vertexColors = true; o.material.needsUpdate = true; }
-      if (zn === 'caisse') D.liv = o.material;
-      D.m.push(me);
-      // pièces qui peuvent tomber : les triangles entièrement dans leur boîte (pare-chocs : zone noire, au bout et en bas ; rétroviseurs : pièces unies de la caisse, hors de l'habitacle, près du pied de pare-brise)
-      const uv = ge.attributes.uv.array, uni = i => Math.abs(uv[i / 3 * 2] - 124 / 128) < 1e-3 && Math.abs(uv[i / 3 * 2 + 1] - 0.25) < 1e-3; // l'aplat de teinte de la livrée (plan.teinte)
-      const cherche = (nom, zi, test, sg) => { const tri = []; for (let i = 0; i < P.length; i += 9) { let ok = true; for (let k = 0; k < 9 && ok; k += 3) ok = test(P[i + k], P[i + k + 1], P[i + k + 2], i + k); if (ok) tri.push(i); } if (tri.length) D.p.push({ nom, zi, me, tri, sg, off: 0 }); };
-      if (zn === 'noir') { cherche('av', 0, (x, y) => x > nez - 0.3 && y < 0.5, [1, 0]); cherche('ar', 1, (x, y) => x < cul + 0.3 && y < 0.5, [-1, 0]); }
-      if (zn === 'caisse') for (const s of [-1, 1]) cherche('retro', s < 0 ? 2 : 3, (x, y, z, i) => uni(i) && z * s > VO.plan.wc / 2 && x > cab0 - 0.5 && x < cab0 + 0.3, [0, s]);
-    });
+      const ge = o.geometry = o.geometry.clone(), P = ge.attributes.position.array; D.m.push({ o, zn, P0: P.slice(), d: new Float32Array(P.length) });
+      if (zn === 'caisse') D.liv = o.material; });
+    // les pièces : les triangles qui passent leur test, dans une ou plusieurs zones ; { pend : seuil où elle pend (absent : tombe d'un coup), off : seuil où elle tombe, ch : charnière, verre : éclats (0 phare, 1 feu), s : côté, sg : où elle part }
+    const me = zn => D.m.find(m => m.zn === zn), uvC = me('caisse').o.geometry.attributes.uv.array, uni = i => Math.abs(uvC[i / 3 * 2] - 124 / 128) < 1e-3 && Math.abs(uvC[i / 3 * 2 + 1] - 0.25) < 1e-3; // l'aplat de teinte de la livrée (plan.teinte)
+    const cherche = (nom, zi, specs, o) => { const parts = []; for (const [zn, test] of specs) { const m = me(zn); if (!m) continue; const P = m.P0, tri = [];
+        for (let i = 0; i < P.length; i += 9) { let ok = true; for (let k = 0; k < 9 && ok; k += 3) ok = test(P[i + k], P[i + k + 1], P[i + k + 2], i + k); if (ok) tri.push(i); }
+        if (tri.length) parts.push({ me: m, tri }); }
+      if (parts.length) D.p.push({ nom, zi, parts, etat: 0, ...o }); };
+    for (const s of [-1, 1]) {
+      cherche('retro', s < 0 ? 2 : 3, [['caisse', (x, y, z, i) => uni(i) && z * s > VO.plan.wc / 2 && x > cab0 - 0.5 && x < cab0 + 0.3]], { off: 0.25, sg: [0, s], s });
+      cherche('phare', 0, [['phare', (x, y, z) => z * s > 0]], { off: 0.25, sg: [1, s * 0.5], s, verre: 0 });
+      cherche('feu', 1, [['feu', (x, y, z) => z * s > 0]], { off: 0.25, sg: [-1, s * 0.5], s, verre: 1 });
+    }
+    cherche('parechocs', 0, [['noir', (x, y) => x > nez - 0.3 && y < 0.5]], { pend: 0.3, off: 0.45, ch: 'bout', sg: [1, 0] });
+    cherche('parechocs', 1, [['noir', (x, y) => x < cul + 0.3 && y < 0.5]], { pend: 0.3, off: 0.45, ch: 'bout', sg: [-1, 0] });
+    const ail = (x, y) => x < cab3 - 0.1 && y > prof(x) + 0.05; cherche('aileron', 1, [['caisse', ail], ['noir', ail]], { pend: 0.35, off: 0.55, ch: 'bout', sg: [-1, 0] });
     if (D.liv) { const im = D.liv.map.image; D.fis0 = im.getContext('2d').getImageData(0, 0, im.width, im.height); } // la livrée intacte, lue au chargement : la relire au premier choc (fissure) bloquait jusqu'à ce que le GPU rende le canvas, de 50 ms à près d'une seconde
     return g.userData.dg = D;
   });
   const dgEcrit = (D, me) => { const ge = me.o.geometry, P = ge.attributes.position.array; for (let i = 0; i < P.length; i++) P[i] = me.P0[i] + me.d[i];
-    for (const p of D.p) if (p.off && p.me === me) for (const i of p.tri) P.fill(0, i, i + 9); // pièce tombée : ses triangles réduits à un point
+    for (const p of D.p) if (p.etat) for (const q of p.parts) if (q.me === me) for (const i of q.tri) P.fill(0, i, i + 9); // pièce qui pend (dessinée à part) ou tombée : ses triangles réduits à un point
     ge.attributes.position.needsUpdate = true; ge.computeVertexNormals(); };
-  function dgRaz() { // départ d'une course : toutes les voitures intactes, les débris ramassés
-    for (const D of DGM) { D.z.fill(0); D.ph.fill(0); D.fe.fill(0); D.t = -1;
-      for (const p of D.p) p.off = 0;
-      for (const me of D.m) { me.d.fill(0); dgEcrit(D, me); const c = me.o.geometry.attributes.color; if (c) { c.array.fill(1); c.needsUpdate = true; } }
+  function dgRaz() { // départ d'une course : toutes les voitures intactes, les débris ramassés, les traces effacées
+    for (const D of DGM) { if (D.pend) { D.pend.piv.parent.remove(D.pend.piv); D.pend = null; }
+      D.z.fill(0); D.z0.fill(0); D.lap = 0; D.ph.fill(0); D.fe.fill(0); D.t = -1;
+      for (const p of D.p) p.etat = 0;
+      for (const me of D.m) { me.d.fill(0); dgEcrit(D, me); }
       if (D.fis) { D.liv.map.image.getContext('2d').putImageData(D.fis, 0, 0); D.liv.map.needsUpdate = true; D.fis = null; } }
     for (const d of DEB) { scene.remove(d.m); d.m.geometry.dispose(); } DEB.length = 0;
+    for (const vu of VUES) vu.hu.gR[0].length = vu.hu.gR[1].length = vu.hu.gOn[0] = vu.hu.gOn[1] = 0;
   }
-  // un choc sur le modèle g : (lx, lz) = d'où il vient, unitaire, dans le repère de la voiture (x vers l'avant) ; f = sa force (m/s) ; (vx, vz) = vitesse de la voiture, que gardent les pièces qui tombent
-  function dgChoc(g, lx, lz, f, vx = 0, vz = 0) {
-    const D = g.userData.dg, k = Math.min(1, (f - 2) / 25); if (k <= 0) return;
-    [lx, -lx, -lz, lz].forEach((a, i) => { if (a > 0) D.z[i] = Math.min(1, D.z[i] + k * a * a * 1.5); });
-    // enfoncement : un creux en cloche autour du point d'impact, posé sur le bord de l'encombrement
-    const t = Math.min(ENCt.x / 2 / (Math.abs(lx) + 1e-6), ENCt.z / 2 / (Math.abs(lz) + 1e-6)), px = ENCc.x + lx * t, pz = ENCc.z + lz * t, R = Math.min(1.2, 0.5 + f * 0.03), pr = Math.min(0.22, f * 0.013);
-    for (const me of D.m) { const P = me.P0, d = me.d;
-      for (let i = 0; i < P.length; i += 3) { const r = Math.hypot(P[i] - px, (P[i + 1] - 0.55) * 1.5, P[i + 2] - pz); if (r >= R) continue;
-        const w = (1 - r / R) ** 2 * pr; d[i] -= lx * w; d[i + 1] -= w * 0.3; d[i + 2] -= lz * w;
-        const l = Math.hypot(d[i], d[i + 1], d[i + 2]); if (l > DG_MAX) for (let c = 0; c < 3; c++) d[i + c] *= DG_MAX / l; } }
-    // phares et feux : cassés du côté du choc, des deux côtés si le choc est franc et la zone très abîmée
-    const s = lz < 0 ? 0 : 1, franc = Math.abs(lz) < 0.3;
-    if (lx > 0.4 && D.z[0] > 0.45) { D.ph[s] = 1; if (franc && D.z[0] > 0.8) D.ph[1 - s] = 1; }
-    if (lx < -0.4 && D.z[1] > 0.45) { D.fe[s] = 1; if (franc && D.z[1] > 0.8) D.fe[1 - s] = 1; }
-    for (const me of D.m) if (me.zn === 'phare' || me.zn === 'feu') { const c = me.o.geometry.attributes.color, B = me.zn === 'phare' ? D.ph : D.fe;
-      for (let i = 0; i < me.P0.length; i += 3) if (B[me.P0[i + 2] < 0 ? 0 : 1]) c.array.set(NOIRV, i); c.needsUpdate = true; }
-    for (const p of D.p) if (!p.off && D.z[p.zi] > (p.nom === 'retro' ? 0.5 : 0.65)) { p.off = 1; tombe(g, p, vx, vz); } // au-delà du seuil de sa zone, la pièce tombe
+  // un choc sur le modèle g : (lx, lz) = d'où il vient, unitaire, dans le repère de la voiture (x vers l'avant) ; f = sa vitesse normale (m/s) ; (vx, vz) = vitesse de la voiture, que gardent les pièces qui tombent
+  function dgChoc(g, lx, lz, f, vx = 0, vz = 0, type = 'mur') {
+    const D = g.userData.dg, du = usure(D.z, D.z0, lx, lz, f, type);
+    const t = Math.min(ENCt.x / 2 / (Math.abs(lx) + 1e-6), ENCt.z / 2 / (Math.abs(lz) + 1e-6)), px = ENCc.x + lx * t, pz = ENCc.z + lz * t;
+    if (du > 0.002) { // l'enfoncement suit l'usure ajoutée (plus rien une fois le plafond atteint) ; une face qui a perdu son pare-chocs se plie 1,5 fois plus
+      const nu = lx * lx > 0.5 && D.p.some(p => p.nom === 'parechocs' && p.etat === 2 && p.zi === (lx > 0 ? 0 : 1)), R = 0.6 + 1.2 * Math.sqrt(du), pr = (0.06 + 0.6 * du) * (nu ? 1.5 : 1);
+      for (const me of D.m) { const P = me.P0, d = me.d;
+        for (let i = 0; i < P.length; i += 3) { const r = Math.hypot(P[i] + d[i] - px, (P[i + 1] + d[i + 1] - 0.55) * 1.4, P[i + 2] + d[i + 2] - pz); if (r >= R) continue;
+          const w = (1 - r / R) ** 2 * pr * (0.6 + 0.8 * hash(P[i], P[i + 1], P[i + 2])); d[i] -= lx * w; d[i + 1] -= w * 0.3 * hash(P[i + 2], P[i], P[i + 1]); d[i + 2] -= lz * w; // froissé : chaque point un peu plus ou un peu moins
+          const l = Math.hypot(d[i], d[i + 1], d[i + 2]); if (l > DG_MAX) for (let c = 0; c < 3; c++) d[i + c] *= DG_MAX / l; } } }
+    for (const p of D.p) { if (p.etat === 2) continue; const z = D.z[p.zi], cote = !p.s || pz * p.s > -0.2 || z > 0.6; // rétro et optiques : du côté du choc
+      if (p.nom === 'phare' && D.p.some(q => q !== p && q.nom === 'phare' && q.etat)) continue; // un phare reste toujours : la nuit, sinon on ne voit plus la route
+      if (z >= p.off && cote) { if (D.pend && D.pend.p === p) lache(g, D, vx, vz); else { p.etat = 2; tombe(g, p, morceaux(p), p.parts[0].me.o.parent, vx, vz); } }
+      else if (!p.etat && p.pend != null && z >= p.pend) pend(g, D, p, vx, vz); }
+    for (const p of D.p) if (p.etat === 2 && p.verre !== undefined) D[p.verre ? 'fe' : 'ph'][p.s < 0 ? 0 : 1] = 1;
     for (const me of D.m) dgEcrit(D, me);
-    if (f > 12 && !D.fis) fissure(D, lx);
+    if (f > 22 && !D.fis) fissure(D, lx);
   }
-  function tombe(g, p, vx, vz) { // une pièce qui se détache : sa géométrie à part (telle que cabossée), lancée vers l'extérieur ; elle rebondit et reste au sol 20 s
-    const { me, tri, sg } = p, A = new Float32Array(tri.length * 9), U = new Float32Array(tri.length * 6), uv = me.o.geometry.attributes.uv.array, c = new V3(), ge = new THREE.BufferGeometry();
+  const morceaux = p => p.parts.map(({ me, tri }) => { const A = new Float32Array(tri.length * 9), U = new Float32Array(tri.length * 6), uv = me.o.geometry.attributes.uv.array, ge = new THREE.BufferGeometry(); // la pièce telle que cabossée, dans le repère du modèle
     tri.forEach((i, k) => { for (let j = 0; j < 9; j++) A[k * 9 + j] = me.P0[i + j] + me.d[i + j]; U.set(uv.subarray(i / 3 * 2, i / 3 * 2 + 6), k * 6); });
-    ge.setAttribute('position', new THREE.BufferAttribute(A, 3)); ge.setAttribute('uv', new THREE.BufferAttribute(U, 2));
-    ge.computeBoundingBox(); ge.boundingBox.getCenter(c); ge.translate(-c.x, -c.y, -c.z); ge.computeVertexNormals();
-    const m = new THREE.Mesh(ge, me.o.material); m.castShadow = true; m.userData.dyn = 1; m.layers.set(OMBD); g.updateMatrixWorld(true);
-    m.position.copy(c).applyMatrix4(me.o.matrixWorld); m.quaternion.setFromRotationMatrix(me.o.matrixWorld); scene.add(m);
-    const fx = Math.cos(g.rotation.y), fz = -Math.sin(g.rotation.y), ox = fx * sg[0] - fz * sg[1], oz = fz * sg[0] + fx * sg[1]; // g.rotation.y = -cap
-    DEB.push({ m, v: new V3(vx * 0.8 + ox * 3, 2 + Math.random() * 2, vz * 0.8 + oz * 3), w: new V3(jit(10), jit(10), jit(10)), y0: g.position.y, t: 20 });
+    ge.setAttribute('position', new THREE.BufferAttribute(A, 3)); ge.setAttribute('uv', new THREE.BufferAttribute(U, 2)); ge.computeVertexNormals(); ge.computeBoundingBox();
+    const m = new THREE.Mesh(ge, me.o.material); m.castShadow = true; m.layers.mask = me.o.layers.mask; return m; });
+  function debris(m, v) { m.userData.dyn = 1; m.layers.set(OMBD); m.castShadow = true; scene.add(m); DEB.push({ m, v, w: new V3(jit(10), jit(10), jit(10)), y0: m.position.y - 1, dort: 0 });
+    while (DEB.length > DEBMAX) { const o = DEB.shift(); scene.remove(o.m); o.m.geometry.dispose(); } }
+  function tombe(g, p, ms, parent, vx, vz) { // une pièce qui se détache, lancée vers l'extérieur ; une optique laisse en plus des éclats
+    g.updateMatrixWorld(true); const q = parent.getWorldQuaternion(new THREE.Quaternion()), c = new V3(), y0 = g.position.y;
+    const fx = Math.cos(g.rotation.y), fz = -Math.sin(g.rotation.y), ox = fx * p.sg[0] - fz * p.sg[1], oz = fz * p.sg[0] + fx * p.sg[1]; // g.rotation.y = -cap
+    for (const m of ms) { m.geometry.computeBoundingBox(); m.geometry.boundingBox.getCenter(c); m.geometry.translate(-c.x, -c.y, -c.z); m.position.copy(c).applyMatrix4(parent.matrixWorld); m.quaternion.copy(q);
+      debris(m, new V3(vx * 0.8 + ox * 3, 2 + Math.random() * 2, vz * 0.8 + oz * 3)); DEB[DEB.length - 1].y0 = y0; }
+    if (p.verre !== undefined) for (let i = 0; i < 6; i++) { const t = new THREE.BufferGeometry(), r = () => jit(0.14); t.setAttribute('position', new THREE.BufferAttribute(new Float32Array([r(), r(), r(), r(), r(), r(), r(), r(), r()]), 3)); t.computeVertexNormals();
+      const e = new THREE.Mesh(t, VERRE[p.verre]); e.position.copy(ms[0].position); debris(e, new V3(vx * 0.6 + ox * 4 + jit(3), 1 + Math.random() * 3, vz * 0.6 + oz * 4 + jit(3))); DEB[DEB.length - 1].y0 = y0; }
   }
+  function pend(g, D, p, vx, vz) { // la pièce se décroche d'un côté : elle tient du côté le moins abîmé, l'autre bout tombe (et traîne au sol)
+    if (D.pend) lache(g, D, vx, vz);
+    const ms = morceaux(p), bb = new THREE.Box3(); for (const m of ms) bb.union(m.geometry.boundingBox);
+    const c = bb.getCenter(new V3()), s = D.z[2] < D.z[3] ? -1 : 1, h = new V3(c.x, bb.max.y, s < 0 ? bb.min.z : bb.max.z), piv = new THREE.Group();
+    piv.position.copy(h); for (const m of ms) { m.geometry.translate(-h.x, -h.y, -h.z); piv.add(m); } p.parts[0].me.o.parent.add(piv);
+    p.etat = 1; D.pend = { p, piv, a: -s * 0.22, t: 0, bout: new V3(0, -0.15, (s < 0 ? bb.max.z : bb.min.z) - h.z) }; piv.rotation.x = D.pend.a;
+  }
+  function lache(g, D, vx, vz) { const { p, piv } = D.pend; D.pend = null; p.etat = 2; piv.updateMatrix(); const ms = [...piv.children]; // la pièce qui pendait tombe, telle qu'elle pendait
+    for (const m of ms) { m.geometry.applyMatrix4(piv.matrix); piv.remove(m); } const parent = piv.parent; parent.remove(piv); tombe(g, p, ms, parent, vx, vz); }
   function fissure(D, lx) { // choc violent : une étoile de fêlures sur le pare-brise (la lunette si le choc vient de l'arrière), peinte sur la livrée de ce modèle ; dgRaz rend l'image d'origine
     const lv = D.liv.map, g = lv.image.getContext('2d'), p = VO.plan, [[x0], [x1], [x2], [x3]] = p.cab, hw = p.wc / 2 - 0.16, av = lx > -0.4, xa = av ? x0 : x3, xb = av ? x1 : x2;
     D.fis = D.fis0;
@@ -856,16 +885,25 @@
     g.moveTo(cx + 3, cy); g.arc(cx, cy, 3, 0, 2 * Math.PI); g.stroke(); g.restore(); lv.needsUpdate = true;
   }
   const dgPas = (c, vx0, vz0) => { // après un pas de simulation : un choc franc (mur, camion, autre voiture) abîme son modèle ; il vient de l'opposé de ce qu'il a fait à la vitesse
-    const f = Math.max(c.hit, c.bump || 0), g = modele(c), D = g.userData.dg; if (f <= 3 || dgT - D.t < 0.15) return; D.t = dgT; // un contact qui dure ne compte qu'une fois
+    const g = modele(c), D = g.userData.dg, lap = Math.floor(c.dist / T.n); D.c = c; if (lap !== D.lap) { D.lap = lap; D.z0 = D.z.slice(); } // nouveau tour : chaque zone peut reprendre 0,4
+    const f = Math.max(c.hit, c.bump || 0); if (f <= 3 || dgT - D.t < 0.15) return; D.t = dgT; // un contact qui dure ne compte qu'une fois
     let dx = vx0 - c.vx, dz = vz0 - c.vz, l = Math.hypot(dx, dz); if (l < 0.5) { dx = c.vx; dz = c.vz; l = Math.hypot(dx, dz) || 1; }
-    const fx = Math.cos(c.th), fz = Math.sin(c.th); dgChoc(g, (dx * fx + dz * fz) / l, (dz * fx - dx * fz) / l, f, c.vx, c.vz);
+    const fx = Math.cos(c.th), fz = Math.sin(c.th); dgChoc(g, (dx * fx + dz * fz) / l, (dz * fx - dx * fz) / l, f, c.vx, c.vz, (c.bump || 0) > c.hit ? 'voiture' : 'mur');
   };
   const dgNiv = c => { const z = modele(c).userData.dg.z; return Math.min(1, z[0] * 0.6 + (z[1] + z[2] + z[3]) * 0.2); }; // pour le son : l'avant (le moteur) compte le plus
-  function dgFrame(dt) { // débris qui tombent, fumée d'un capot très abîmé
-    for (let i = DEB.length - 1; i >= 0; i--) { const d = DEB[i], p = d.m.position; if ((d.t -= dt) < 0) { scene.remove(d.m); d.m.geometry.dispose(); DEB.splice(i, 1); continue; }
+  function dgFrame(dt) { // débris (qui tombent, puis dorment au sol jusqu'à ce qu'une voiture les chasse), pièce qui pend, fumée d'un capot très abîmé
+    const cars = race ? race.cars : VUES.map(v => v.car);
+    for (const d of DEB) { const p = d.m.position;
+      for (const c of cars) { const sp = Math.hypot(c.vx, c.vz), dx = p.x - c.x, dz = p.z - c.z, l = Math.hypot(dx, dz); if (l > 2.2 || sp < 3 || p.y > d.y0 + 1.2) continue; // une voiture passe dessus : le débris repart devant elle
+        d.v.set(c.vx * 0.8 + dx / (l || 1) * 2, 1 + Math.random() * 2 + sp * 0.05, c.vz * 0.8 + dz / (l || 1) * 2); d.w.set(jit(16), jit(16), jit(16)); if (d.dort) { d.dort = 0; d.m.castShadow = true; } }
+      if (d.dort) continue;
       d.v.y -= 15 * dt; p.addScaledVector(d.v, dt); d.m.rotation.x += d.w.x * dt; d.m.rotation.y += d.w.y * dt; d.m.rotation.z += d.w.z * dt;
-      if (p.y < d.y0 + 0.06) { p.y = d.y0 + 0.06; d.v.y *= -0.3; d.v.x *= 0.5; d.v.z *= 0.5; d.w.multiplyScalar(0.5); } }
-    for (const vu of VUES) { const c = vu.moi, g = modele(c), z = g.userData.dg.z[0]; if (!g.visible || z < 0.85 || Math.random() > dt * 8 * (z - 0.8)) continue; // seulement les voitures des joueurs, un filet : au plus 1,6 bouffée par seconde
+      if (p.y < d.y0 + 0.06) { p.y = d.y0 + 0.06; d.v.y *= -0.3; d.v.x *= 0.5; d.v.z *= 0.5; d.w.multiplyScalar(0.5); if (d.v.length() < 0.4) { d.dort = 1; d.m.castShadow = false; } } } // posé : il ne porte plus d'ombre (une passe de moins)
+    // shortcut: un débris dort à la hauteur de la voiture d'où il est tombé ; chassé loin dans une pente, il peut flotter ou s'enfoncer un peu ; dans un second temps, un seul maillage pour les débris posés (docs/SPEC-CASSE.md)
+    for (const D of DGM) { const P = D.pend; if (!P || !D.c) continue; const c = D.c, sp = Math.hypot(c.vx, c.vz); P.t += dt; // la pièce qui pend bat avec la vitesse ; un bout qui traîne crache des étincelles
+      P.piv.rotation.x = P.a * (1 + Math.min(1, sp / 15) * 0.3 * Math.sin(P.t * (4 + sp * 0.25)));
+      if (sp > 6 && P.piv.parent && Math.random() < dt * 20) { const w = P.piv.localToWorld(P.bout.clone()); emit(w.x, Math.max(w.y, modele(c).position.y + 0.05), w.z, c.vx * 0.5 + jit(2), Math.random() * 2, c.vz * 0.5 + jit(2), 0.4, 1, 0.7, 0.3, 22); } }
+    for (const vu of VUES) { const c = vu.moi, g = modele(c), z = g.userData.dg.z[0]; if (!g.visible || z < 0.6 || Math.random() > dt * 8 * (z - 0.55)) continue; // seulement les voitures des joueurs, un filet : au plus 1,2 bouffée par seconde (le plafond de course est 0,7)
       const fx = Math.cos(c.th), fz = Math.sin(c.th), a = ENC.max.x - 0.9; FUM.emit(c.x + fx * a + jit(0.4), g.position.y + 1, c.z + fz * a + jit(0.4), c.vx * 0.3 + jit(1), 1.5 + Math.random(), c.vz * 0.3 + jit(1)); } // lâchée presque sur place : elle tombe derrière au lieu de suivre la voiture devant la caméra
   }
   // feux arrière des adversaires et des camions : deux points rouges hors brouillard (au-delà de 60 m la caisse ne fait plus que quelques pixels et rien ne l'éclaire) ;
@@ -1819,7 +1857,7 @@
     const i0 = CARTES.indexOf(M), ordre = [...new Set(CARTES.flatMap((_, k) => [CARTES[(i0 + k) % CARTES.length], CARTES[(i0 - k + CARTES.length * 2) % CARTES.length]]))];
     window.__prep = (async () => { for (const c of ordre) { await construit(c); await souffle(); } })();
   };
-  const api = { veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { const f = 2 + 25 * x / 1.5; for (const g of [carG, ...opps]) for (const [a, b] of [[1, 0], [-1, 0], [0, -1], [0, 1]]) dgChoc(g, a, b, f); } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
+  const api = { veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
   if (fond) { // première image de la carte d'avance, dans sa cible : shaders compilés et textures envoyées au GPU maintenant, pas au moment où elle s'affiche
     await souffle(); const vu = VUES[0], caches = [], tri = [];
     scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { tri.push(o); o.frustumCulled = false; } });
