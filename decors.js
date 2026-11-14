@@ -1711,25 +1711,25 @@
         const k = ravin(x, z); if (k > 0) r = Math.max(r, (y - (sb.y - 15)) * k);
         return r; };
       const g = terrain(h, { pas: 8, marge: 260, creux, mat: h.mat('bruit', {}, '#2f4a32', ['#3a5a36', '#24382a', '#4b5359', '#5f7a3a']) });
-      const roche = h.mat('rocheStrates', DS), sable = h.mat('sableBlanc', DS), eau = h.mat('eauThe', { ...DS, gloss: 0.3 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x9cc060 });
-      const chuteM = h.mat('chute', { ...DS, transparent: true, depthWrite: false, rep: [3, 1] }), lisseBord = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
+      const roche = h.mat('rocheStrates', DS), sable = h.mat('sableBlanc', DS), eau = h.mat('eauThe', { ...DS, gloss: 0.5, rep: [5, 1], c: 0xb0a08a }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x9cc060 });
+      const chuteM = h.mat('chute', { ...DS, lum: 1, c: 0xd8f0ec, transparent: true, depthWrite: false, rep: [6, 1] }), lisseBord = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
       const tranche = (a, b, f) => { const l = (b - a + N) % N; f((a + N) % N, l); }; // ruban de l'échantillon a à b
 
       // ---------- la route : chaussée et garde-corps de bois à la demi-largeur réelle (s.w), comme au givre ; au gué, du sable sur les bords et l'eau au milieu ; au pont, des planches ----------
       const chaussee = h.mat('chaussee', { side: THREE.DoubleSide, gloss: 0.08, ...lisseBord }, ...h.TH.route), glis = h.mat('glissiere', DS, h.TH.mur);
       const g0 = iF0 - 30, g1 = iF1 + 30, p0 = iB0 - 4, p1 = iB1 + 4;
       for (const [a, b] of [[g1, p0], [p1, g0]]) tranche(a, b, (i, l) => { h.ribbon(i, l, s => -s.w, 0, s => s.w, 0, chaussee, 32); for (const sd of [-1, 1]) h.ribbon(i, l, sd > 0 ? s => s.w : s => -s.w, 1, sd > 0 ? s => s.w : s => -s.w, -2, glis); });
-      tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, h.mat('eauThe', { ...DS, gloss: 0.4, ...lisseBord }), 12)); // le courant passe au milieu
+      const gueM = h.mat('eauThe', { ...DS, gloss: 0.8, c: 0xf0c898, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
       tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('sableBlanc', { ...DS, ...lisseBord }), 8); });
       // la rivière : un ruban au sud de la route, au fond de son lit ; au gué elle s'étale des deux côtés
-      tranche(P(12) - 20, P(23), (i, l) => h.ribbon(i, l, s => -(s.w + 1), nivS, s => -(s.w + 54), nivS, eau, 12));
+      tranche(P(12) - 20, iB0 - 8, (i, l) => h.ribbon(i, l, s => -(s.w + 1), nivS, s => -(s.w + 54), nivS, eau, 12));
       tranche(iF0 - 20, iF1 + 20, (i, l) => h.ribbon(i, l, s => s.w + 1, nivS, s => s.w + 45, nivS, eau, 12));
       // la paroi d'en face, au sud de la rivière : 55 m de grès en strates, et trois petites chutes qui la descendent
       tranche(P(12) - 30, P(23) + 20, (i, l) => h.ribbon(i, l, s => -(s.w + 54), s => nivS(s) - 1, s => -(s.w + 54), 55, roche, 14));
       for (const [k, f] of [[12, 0.6], [17, 0.3], [20, 0.7]]) { const i = (P(k) + Math.round(((P(k + 1) - P(k) + N) % N) * f)) % N; h.ribbon(i, 6, s => -(s.w + 53.5), nivS, s => -(s.w + 53.5), 54, chuteM, 12); }
       // pas de garde-corps au gué : des galets marquent le bord (le mur de la simulation y est)
-      const galets = []; for (let i = g0; i < g1; i += 2) for (const sd of [-1, 1]) { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + 0.5); galets.push([x, s.y + 0.1, z, rnd() * 6, 0.6 + rnd() * 0.7, 0.4 + rnd() * 0.4]); }
-      for (let k = 0; k < 160; k++) { const i = (P(12) + (rnd() * ((P(23) - P(12) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w + 4 + rnd() * 50); galets.push([x, s.y + niv(i) + 0.1, z, rnd() * 6, 0.8 + rnd() * 2.5, 0.4 + rnd() * 1]); }
+      const galets = []; for (let i = g0; i < g1; i += 2) for (const sd of [-1, 1]) { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + 0.5); galets.push([x, s.y, z, rnd() * 6, 0.6 + rnd() * 0.7, 0.25 + rnd() * 0.25]); }
+      for (let k = 0; k < 160; k++) { const i = (P(12) + (rnd() * ((P(23) - P(12) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w + 4 + rnd() * 50); galets.push([x, s.y + niv(i), z, rnd() * 6, 0.8 + rnd() * 2.5, 0.3 + rnd() * 0.5]); }
       inst(h, h.geo('boite', 1, 1, 1), h.mat('rocheStrates'), galets);
       insts(h, 'troncCouche', { bois }, [[iF0 + 10, 1, 16], [iF1 - 6, -1, 20], [iF0 + 30, -1, 30]].map(([i, sd, off]) => { const s = S[i], [x, z] = bord(s, sd, s.w + off); return [x, s.y + niv(i) + 0.2, z, rnd() * 6, 0.9 + rnd() * 0.4]; }), { a: [12] });
 
@@ -1742,7 +1742,7 @@
       // ---------- la galerie (pts 12 à 14) : la paroi au nord, une voûte de roche moussue au-dessus de la route, la grande chute de 40 m qui tombe devant elle ----------
       const i13 = P(13), gal0 = (i13 - 55 + N) % N, gal1 = (i13 + 55) % N;
       tranche(P(12) - 20, P(14) + 10, (i, l) => h.ribbon(i, l, s => s.w + 1.2, -1, s => s.w + 1.2, 44, roche, 14));
-      tranche(gal0 - 8, gal1 + 8, (i, l) => { h.ribbon(i, l, s => s.w + 1.2, 7.5, s => -(s.w + 3.5), 7.5, roche, 14); h.ribbon(i, l, s => s.w + 1.2, 8.5, s => -(s.w + 3.5), 8.5, mousse, 14); });
+      tranche(gal0 - 8, gal1 + 8, (i, l) => { h.ribbon(i, l, s => s.w + 1.2, 7.5, s => -(s.w + 3.5), 7.5, h.mat('rocheStrates', { ...DS, emissive: 0x24343a }), 14); h.ribbon(i, l, s => s.w + 1.2, 8.5, s => -(s.w + 3.5), 8.5, mousse, 14); });
       tranche(gal0, gal1, (i, l) => { h.ribbon(i, l, s => -(s.w + 3.8), nivS, s => -(s.w + 3.8), 44, chuteM, 12); h.ribbon(i, l, s => -(s.w + 6), nivS, s => -(s.w + 6), 44, chuteM, 9); });
       // à l'entrée, un voile d'eau en travers de la route : on le traverse, la vue se coupe un instant
       { const s = S[(gal0 + 6) % N], vg = new THREE.PlaneGeometry(9, 2 * s.w + 8); vg.rotateZ(Math.PI / 2); const v = new THREE.Mesh(vg, chuteM); v.position.set(s.x, s.y + 4, s.z); v.rotation.y = h.across(s); h.scene.add(v); }
@@ -1750,10 +1750,10 @@
       const NE = 500, pe = new Float32Array(NE * 3), ge = new THREE.BufferGeometry(), base = [];
       for (let k = 0; k < NE; k++) { const i = (gal0 + (rnd() * ((gal1 - gal0 + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w * (rnd() * 2 - 0.2) + 2); base.push([x, s.y, z]); pe.set([x, s.y + rnd() * 9, z], k * 3); }
       ge.setAttribute('position', new THREE.BufferAttribute(pe, 3));
-      const embruns = new THREE.Points(ge, new THREE.PointsMaterial({ color: 0xf4faf7, size: 0.5, transparent: true, opacity: 0.6, depthWrite: false })); embruns.frustumCulled = false; h.scene.add(embruns);
+      const embruns = new THREE.Points(ge, new THREE.PointsMaterial({ color: 0xf4faf7, size: 0.6, map: h.mat('brume').map, transparent: true, opacity: 0.45, depthWrite: false })); embruns.frustumCulled = false; h.scene.add(embruns);
       // l'arc-en-ciel à la sortie : cinq demi-cercles additifs dans les embruns
-      { const s = S[(gal1 + 25) % N], arc = new THREE.Group(); const [ax, az] = bord(s, -1, 30); arc.position.set(ax, s.y - 4, az); arc.rotation.y = h.across(s) + Math.PI / 2; h.scene.add(arc);
-        [0xff5040, 0xffb040, 0xf0f060, 0x60d080, 0x6080ff].forEach((c, k) => arc.add(new THREE.Mesh(new THREE.TorusGeometry(26 - k * 0.9, 0.45, 3, 40, Math.PI), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.14, blending: THREE.AdditiveBlending, depthWrite: false })))); }
+      { const s = S[(gal1 + 40) % N], arc = new THREE.Group(); const [ax, az] = bord(s, -1, 12); arc.position.set(ax, s.y - 6, az); arc.rotation.y = h.across(s); h.scene.add(arc); // en travers de la route : on passe dessous
+        [0xff5040, 0xffb040, 0xf0f060, 0x60d080, 0x6080ff].forEach((c, k) => arc.add(new THREE.Mesh(new THREE.TorusGeometry(26 - k * 0.9, 0.45, 3, 40, Math.PI), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.2, blending: THREE.AdditiveBlending, depthWrite: false })))); }
 
       // ---------- le pont suspendu (pts 21 à 22) : tablier de planches, pylônes de bois, câbles d'acier ; le ravin du torrent dessous ----------
       tranche(p0, p1, (i, l) => { h.ribbon(i, l, s => -s.w, 0.04, s => s.w, 0.04, planches, 4); h.ribbon(i, l, s => -s.w - 0.3, -0.7, s => s.w + 0.3, -0.7, planches, 4);
@@ -1765,6 +1765,9 @@
           for (let k = 0; k < nb; k++) { const t0 = k / nb, t1 = (k + 1) / nb, y = t => 8.6 - 7.4 * 4 * t * (1 - t), i = iB0 - 3 + k; L.push(...A(i, sd, o, y(t0)), ...A(i + 1, sd, o, y(t1)), ...A(i, sd, o, 1.05), ...A(i + 1, sd, o, 1.05)); // câble porteur et main courante
             if (k % 2 === 0) L.push(...A(i, sd, o, y(t0)), ...A(i, sd, o - 0.2, 0.1)); } // suspentes
           for (const [i, dir] of [[iB0 - 3, -1], [iB1 + 3, 1]]) L.push(...A(i, sd, o, 8.6), ...A(i + dir * 9, sd, o + 2, -0.5)); } // haubans d'ancrage
+        const acierM = h.mat('matGris'); for (const sd of [-1, 1]) for (const y of [t => 8.6 - 7.4 * 4 * t * (1 - t), () => 1.05]) { // câble porteur et main courante en tubes (les traits d'un pixel ne se voyaient pas)
+          const C = []; for (let k = 0; k <= nb; k += 2) C.push(new THREE.Vector3(...A(iB0 - 3 + k, sd, W + 0.7, y(k / nb))));
+          h.scene.add(new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(C), nb, 0.14, 5), acierM)); }
         const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(L, 3)); const ls = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x6c7075 })); ls.userData.cables = 1; h.scene.add(ls); }
 
       // ---------- l'arche de roche (pt 31) : la dernière ligne droite passe dessous ----------
@@ -1791,14 +1794,14 @@
       // en forêt, une haie de grands arbres au bord de la route, dont les lianes pendent au-dessus
       for (let i = P(23); dans(i, 23, 29); i = (i + 4) % N) for (const sd of [-1, 1]) { const s = S[i], off = s.w + 5 + rnd() * 8, [x, z] = bord(s, sd, off), t = 0.9 + rnd() * 0.6; arbres.push([x, g.hAt(x, z), z, rnd() * 6, t]);
         if (rnd() < 0.5) { const [lx, lz] = bord(s, sd, s.w + 1 + rnd() * 3), l = 5 + rnd() * 6; lianes.push([lx, s.y + 19 * t - l / 2, lz, rnd() * 6, 1, l, 1]); } }
-      const fut = arbres.map(p => [p[0], p[1] + 9 * p[4], p[2], p[3], 2.2 * p[4], 3.6 * p[4], 2.2 * p[4]]); // fût de 19 m (tronc de 5,2 m étiré)
-      const vert = [0x1f4d34, 0x2e6a3a, 0x5f9a45]; vert.forEach((c, k) => inst(h, h.geo('houppier'), h.mat('feuillage', { c }), arbres.filter((_, j) => j % 3 === k).map(p => [p[0], p[1] + 20 * p[4], p[2], p[3], 2.3 * p[4], 1.3 * p[4], 2.3 * p[4]])));
+      const fut = arbres.map(p => [p[0], p[1] + 9 * p[4], p[2], p[3], 3 * p[4], 3.6 * p[4], 3 * p[4]]); // fût de 19 m (tronc de 5,2 m étiré)
+      const vert = [0x1f4d34, 0x2e6a3a, 0x5f9a45]; vert.forEach((c, k) => inst(h, h.geo('houppier'), h.mat('feuillage', { c }), arbres.filter((_, j) => j % 3 === k).map(p => [p[0], p[1] + 19 * p[4], p[2], p[3], 2 * p[4], 1.6 * p[4], 2 * p[4]])));
       inst(h, h.geo('tronc'), bois, fut);
       insts(h, 'fougereArbo', { stipe: h.mat('tronc'), fronde: h.mat('feuillage', { c: 0x7da23d }) }, fougeres);
       insts(h, 'arbreCerrado', { bois, feuille: h.mat('feuillage', { c: 0x8a9a4a }) }, cerrado);
       insts(h, 'bromelia', { feuille: h.mat('feuillage', { c: 0x6a9a3a }), fleur: h.mat('peinture', { c: 0xd8402a }) }, bromelias);
       inst(h, h.geo('boite', 0.8, 1, 0.8), h.mat('feuillage', { c: 0xc8b870 }), herbes); // herbes sèches du cerrado
-      inst(h, h.geo('boite', 0.1, 1, 0.1), h.mat('feuillage', { c: 0x3a5a2a }), lianes);
+      inst(h, h.geo('boite', 0.25, 1, 0.25), h.mat('feuillage', { c: 0x4a6a2a }), lianes);
 
       // ---------- brume en nappes et rayons de soleil ----------
       const brume = h.mat('brume', { lum: 1, c: 0xe8eee4, transparent: true, opacity: 0.35, depthWrite: false, side: THREE.DoubleSide }), voiles = [];
@@ -1807,16 +1810,16 @@
       for (let k = 0; k < 30; k++) { const i = (P(4) + (rnd() * ((P(11) - P(4) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, s.tx < 0 ? -1 : 1, s.w + 15 + rnd() * 30); voiles.push([x, s.y - 4 - rnd() * 6, z, rnd() * 6, 30 + rnd() * 30, 1, 30 + rnd() * 20]); } // dans le vide sous les épingles
       const nap = inst(h, nappe, brume, voiles); nap.castShadow = nap.receiveShadow = false;
       // au pont, le blanc s'épaissit : des voiles debout en travers de la route, qu'on traverse
-      const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 22); i = (i + 14) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 60, 14, 1]); }
-      const vds = inst(h, debout, h.mat('brume', { lum: 1, c: 0xeef2ec, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }), vd); vds.castShadow = vds.receiveShadow = false;
+      const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 22); i = (i + 14) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
+      const vds = inst(h, debout, h.mat('brume', { lum: 1, c: 0xeef2ec, transparent: true, opacity: 0.13, depthWrite: false, side: THREE.DoubleSide }), vd); vds.castShadow = vds.receiveShadow = false;
       // rayons : des fuseaux additifs dans l'axe du soleil (bas, à l'est), en forêt et sur la paroi de la galerie
-      const sun = new THREE.Vector3(...h.TH.astre.dir).normalize(), rg = new THREE.PlaneGeometry(4, 70); rg.translate(0, 35, 0); rg.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sun));
+      const sun = new THREE.Vector3(...h.TH.astre.dir).normalize(), rg = new THREE.PlaneGeometry(6, 70); rg.translate(0, 35, 0); rg.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sun));
       const rayons = []; for (let k = 0; k < 40; k++) { const i = (P(23) + (rnd() * ((P(29) - P(23) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, rnd() * (s.w + 10)); rayons.push([x, s.y - 1, z, 0, 0.6 + rnd()]); }
-      const rmat = h.mat('rayon', { lum: 1, c: 0xffd9a0, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-      for (const a of [0, Math.PI / 2]) { const gg = rg.clone().applyAxisAngle(sun, a), m = inst(h, gg, rmat, rayons); m.castShadow = m.receiveShadow = false; }
+      const rmat = h.mat('rayon', { lum: 1, c: 0xffd9a0, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+      for (const a of [0, Math.PI / 2]) { const gg = rg.clone().applyQuaternion(new THREE.Quaternion().setFromAxisAngle(sun, a)), m = inst(h, gg, rmat, rayons); m.castShadow = m.receiveShadow = false; }
 
       return (dt, now) => {
-        chuteM.map.offset.x += dt * 0.9; eau.map.offset.y -= dt * 0.15; rmat.opacity = 0.16 + 0.04 * Math.sin(now * 0.0007);
+        chuteM.map.offset.x += dt * 0.9; eau.map.offset.y -= dt * 0.15; rmat.opacity = 0.32 + 0.06 * Math.sin(now * 0.0007); gueM.map.offset.y -= dt * 0.3;
         for (let k = 0; k < NE; k++) { const j = k * 3 + 1; pe[j] += dt * (1.5 + (k % 5) * 0.4); if (pe[j] > base[k][1] + 10) pe[j] = base[k][1]; } ge.attributes.position.needsUpdate = true;
       };
     },

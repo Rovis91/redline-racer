@@ -5,9 +5,9 @@
     // lits clairs, lits sombres mouillés, mousse jaune-vert dans les joints, coulures d'eau
     rocheStrates: () => [64, 64, (g, o) => {
       const { R, alea, voile } = o; R(g, '#4b5359', 0, 0, 64, 64);
-      for (let x = 0; x < 64;) { const l = 2 + (alea() * 7 | 0); R(g, alea() < 0.45 ? '#8c8f86' : alea() < 0.5 ? '#2c3236' : '#5a6268', x, 0, l, 64); x += l + 1 + (alea() * 3 | 0); }
+      for (let x = 0; x < 64;) { const l = 2 + (alea() * 7 | 0); R(g, alea() < 0.4 ? '#8c8f8a' : alea() < 0.5 ? '#2c3236' : '#5a646c', x, 0, l, 64); x += l + 1 + (alea() * 3 | 0); }
       voile(g, 0.3, () => { for (let i = 0; i < 260; i++) R(g, alea() < 0.5 ? '#000' : '#fff', alea() * 64 | 0, alea() * 64 | 0, 1, 1 + (alea() * 3 | 0)); });
-      voile(g, 0.55, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.6 ? '#7da23d' : '#5f9a45', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 2 + (alea() * 6 | 0)); });
+      voile(g, 0.25, () => { for (let i = 0; i < 30; i++) R(g, alea() < 0.6 ? '#7da23d' : '#5f9a45', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 2 + (alea() * 6 | 0)); });
       voile(g, 0.25, () => { for (let i = 0; i < 10; i++) R(g, '#1a1e20', alea() * 64 | 0, alea() * 64 | 0, 6 + alea() * 20 | 0, 1); });
     }, 8],
     // sable de quartz blanc du plateau et des bancs du gué : grains gris, éclats blancs, traces de terre grise
@@ -17,12 +17,12 @@
       for (let i = 0; i < 80; i++) R(g, '#ffffff', alea() * 64 | 0, alea() * 64 | 0, 1, 1);
       voile(g, 0.2, () => { for (let i = 0; i < 8; i++) R(g, '#a39d8c', alea() * 56 | 0, alea() * 56 | 0, 6 + alea() * 10 | 0, 3 + alea() * 6 | 0); });
     }, 8],
-    // rivière couleur thé : brun profond, reflets cuivrés étirés dans le courant (le long de v), un peu d'écume
+    // rivière couleur thé : brun profond, rides en travers du courant (x du dessin : en travers sur un ruban), reflets cuivrés, un peu d'écume
     eauThe: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#6e4520', 0, 0, 64, 64);
-      for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#8a5a2b' : '#5a3818', alea() * 64 | 0, alea() * 64 | 0, 1, 3 + (alea() * 8 | 0));
-      for (let i = 0; i < 40; i++) R(g, '#c58a4a', alea() * 64 | 0, alea() * 64 | 0, 1, 2 + (alea() * 5 | 0));
-      for (let i = 0; i < 14; i++) R(g, '#f4faf7', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1);
+      const { R, alea } = o; R(g, '#8a5a2b', 0, 0, 64, 64);
+      for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#9a6a38' : '#6e4520', alea() * 64 | 0, alea() * 64 | 0, 3 + (alea() * 8 | 0), 1);
+      for (let i = 0; i < 90; i++) R(g, '#c58a4a', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1);
+      for (let i = 0; i < 40; i++) R(g, '#f4faf7', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1);
     }, 12],
     // rideau de chute : filets d'eau turquoise et blancs, transparent entre eux (matière transparente, la carte fait défiler la texture vers le bas).
     // Posé en ruban vertical (u = la hauteur) : les filets courent le long de x du dessin
