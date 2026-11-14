@@ -4,13 +4,13 @@
   Object.assign(TEXTURES, {
     // sable sec de la plage : presque blanc, grains, petites rides du vent, traces de pas
     sableSec: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#f4ecd8', 0, 0, 64, 64); grain(g, o, 700, ['#e8dcc0', '#fff8ea', '#dccfae']);
+      const { R, alea, voile } = o; R(g, '#e6dcc2', 0, 0, 64, 64); grain(g, o, 700, ['#d8caa8', '#f2e8d2', '#cfc09c']);
       voile(g, 0.25, () => { for (let y = 2; y < 64; y += 5) for (let x = 0; x < 64; x += 2) R(g, '#bfae85', x, y + (Math.sin(x * 0.3 + y) * 1.5 | 0), 2, 1); });
       for (let i = 0; i < 10; i++) { const x = alea() * 60 | 0, y = alea() * 60 | 0; R(g, '#d6c8a4', x, y, 2, 3); R(g, '#d6c8a4', x + 3, y + 4, 2, 3); }
     }, 6],
     // sable dur et humide du milieu de la plage (la piste) : plus foncé, lissé, traces de pneus le long, laisse de coquillages
     sableDur: () => [64, 256, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#d9c9a3', 0, 0, 64, 256); grain(g, o, 1400, ['#cbb98f', '#e4d6b4', '#c4b088'], 64, 256);
+      const { R, alea, voile } = o; R(g, '#b8a47a', 0, 0, 64, 256); grain(g, o, 1400, ['#a8946a', '#c8b48a', '#9c8a62'], 64, 256);
       voile(g, 0.3, () => { for (const x of [14, 22, 40, 49]) for (let y = 0; y < 256; y += 2) R(g, '#a8966c', x + (Math.sin(y * 0.05 + x) * 2 | 0), y, 3, 2); }); // ornières
       voile(g, 0.25, () => { for (let i = 0; i < 12; i++) R(g, '#fff4dc', alea() * 64 | 0, alea() * 256 | 0, 6 + (alea() * 14 | 0), 2); }); // reflets de l'eau restée
       for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#fff8f0' : '#e8a890', alea() * 64 | 0, alea() * 256 | 0, 1, 1); // coquillages
@@ -36,17 +36,17 @@
     }],
     // dalles claires de la rue : grandes plaques de calcaire, joints, taches
     dallesRue: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#e6dcc4', 0, 0, 64, 64);
-      for (let y = 0; y < 64; y += 16) for (let x = (y / 16 & 1) * 10; x < 74; x += 20) { R(g, ['#e6dcc4', '#dcd0b4', '#efe6d2', '#d8cbb0'][alea() * 4 | 0], x, y, 19, 15); }
+      const { R, alea, voile } = o; R(g, '#cdbf9e', 0, 0, 64, 64);
+      for (let y = 0; y < 64; y += 16) for (let x = (y / 16 & 1) * 10; x < 74; x += 20) { R(g, ['#cdbf9e', '#c2b290', '#d8ccae', '#bcae8c'][alea() * 4 | 0], x, y, 19, 15); }
       grain(g, o, 500, ['#cfc2a4', '#f4ecdc']);
-      for (let y = 15; y < 64; y += 16) R(g, '#a89a7a', 0, y, 64, 1);
+      for (let y = 15; y < 64; y += 16) R(g, '#7a6c50', 0, y, 64, 1);
       for (let y = 0; y < 64; y += 16) for (let x = (y / 16 & 1) * 10 + 19; x < 64; x += 20) R(g, '#a89a7a', x, y, 1, 15);
       voile(g, 0.15, () => { for (let i = 0; i < 6; i++) R(g, '#6a5a3a', alea() * 60 | 0, alea() * 60 | 0, 3 + (alea() * 5 | 0), 2 + (alea() * 3 | 0)); });
     }, 8],
     // carrelage du lobby : carreaux blancs, frise turquoise, joints, reflets mouillés
     carrelage: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#fff4e0', 0, 0, 64, 64);
-      for (let y = 0; y < 64; y += 8) for (let x = 0; x < 64; x += 8) { R(g, (x + y) % 16 ? '#f6ead2' : '#fffaf0', x, y, 8, 8); R(g, '#c8b898', x, y, 8, 1); R(g, '#c8b898', x, y, 1, 8); }
+      const { R, alea, voile } = o; R(g, '#e4d8c0', 0, 0, 64, 64);
+      for (let y = 0; y < 64; y += 8) for (let x = 0; x < 64; x += 8) { R(g, (x + y) % 16 ? '#dccfb4' : '#ece2cc', x, y, 8, 8); R(g, '#c8b898', x, y, 8, 1); R(g, '#c8b898', x, y, 1, 8); }
       for (let x = 0; x < 64; x += 8) { R(g, '#1fb5a8', x + 2, 26, 4, 4); R(g, '#1fb5a8', x + 3, 33, 2, 2); }
       voile(g, 0.3, () => { for (let i = 0; i < 8; i++) R(g, '#ffffff', alea() * 56 | 0, alea() * 60 | 0, 8, 2); });
     }, 4],
@@ -104,7 +104,7 @@
     topes: () => [64, 16, (g, o) => { const { R } = o; for (let x = 0; x < 64; x += 16) { R(g, '#f7d36b', x, 0, 8, 16); R(g, '#1a1a1a', x + 8, 0, 8, 16); } o.voile(g, 0.25, () => { for (let i = 0; i < 60; i++) R(g, '#000', o.alea() * 64 | 0, o.alea() * 16 | 0, 2, 1); }); }],
     // rayon de lumière dans la grotte : bande verticale floue, blanche chaude au centre, transparente sur les bords et vers le bas (à rendre en additif)
     rayon: () => [16, 64, (g) => {
-      for (let y = 0; y < 64; y++) for (let x = 0; x < 16; x++) { const a = Math.max(0, 1 - Math.abs(x - 7.5) / 8) ** 1.5 * (1 - y / 64) * 0.9; g.fillStyle = `rgba(255,243,192,${a.toFixed(3)})`; g.fillRect(x, y, 1, 1); }
+      for (let y = 0; y < 64; y++) for (let x = 0; x < 16; x++) { const a = Math.max(0, 1 - Math.abs(x - 7.5) / 8) ** 1.5 * (1 - y / 64) * 0.4; g.fillStyle = `rgba(255,243,192,${a.toFixed(3)})`; g.fillRect(x, y, 1, 1); }
     }],
   });
 })();

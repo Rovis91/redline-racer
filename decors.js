@@ -1720,8 +1720,8 @@
       couvre(b0, (N - 5 - b0 + N) % N, -W, W, dur, 32); couvre(5, P(3) - 5, -W, W, dur, 32); // la ligne de départ garde sa peinture
       const plageL = tranche(45, 2, 20, 20), corde = h.mat('peinture', { c: 0xfff4e0 }), poteaux = [], bouees = [];
       for (const sd of [-1, 1]) {
-        h.ribbon(plageL[0], plageL[1], s => sd * (s.w + 0.6), 1.05, s => sd * (s.w + 0.6), 0.93, h.mat('peinture', { c: 0xfff4e0, side: D }), 4);
-        chaque(plageL, 2, (s, i, k) => { const [x, z] = bord(s, sd, s.w + 0.6); if (k % 4 === 0) poteaux.push([x, -0.05, z, 0, 1, 1.15, 1]); else if (sd < 0) bouees.push([x, 0.98, z, 0, 0.42, 0.42, 0.42, [0xff6a2b, 0xffffff, 0xffb100][k / 2 % 3 | 0]]); });
+        h.ribbon(plageL[0], plageL[1], s => sd * (s.w + 0.6), 1.12, s => sd * (s.w + 0.6), 0.86, h.mat('peinture', { c: 0xff6a2b, side: D }), 4);
+        chaque(plageL, 2, (s, i, k) => { const [x, z] = bord(s, sd, s.w + 0.6); if (k % 4 === 0) poteaux.push([x, -0.05, z, 0, 1, 1.15, 1]); else if (sd < 0) bouees.push([x, 0.98, z, 0, 0.65, 0.65, 0.65, [0xff6a2b, 0xffffff, 0xffb100][k / 2 % 3 | 0]]); });
       }
       inst(h, h.geo('poteauBois'), bois, poteaux); colore(inst(h, h.geo('bouee'), blancT, bouees), bouees);
       const cones = [], pieds = [], parasols = [], mats = [], transats = [];
@@ -1823,18 +1823,18 @@
         inst(h, h.geo('stalactite'), h.mat('bruit', {}, '#b8a880', ['#8a7e62', '#d4c8a6', '#a8602c']), stal);
         const rayon = h.mat('rayon', { lum: 1, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: D, fog: false }), rayons = [];
         for (const f of [0.22, 0.55, 0.82]) { const i = (t0 + Math.round(n * f)) % N, s = S[i], d = (f * 10 | 0) % 2 ? 3 : -3, [x, z] = bord(s, 1, d);
-          for (const r of [0, 1.5708]) rayons.push([x, s.y + 8, z, enFace(s) + r + 0.4, 3, 8, 1]); trous.push([x, s.y + 7.97, z, 0, 3.2, 0.06, 3.2]); h.lum(i, x, s.y + 6.5, z, 0xfff3c0, 26, 1.6); }
+          for (const r of [0, 1.5708]) rayons.push([x, s.y + 8, z, enFace(s) + r + 0.4, 1.8, 8, 1]); trous.push([x, s.y + 7.97, z, 0, 3.2, 0.06, 3.2]); h.lum(i, x, s.y + 6.5, z, 0xfff3c0, 26, 1.6); }
         inst(h, h.geo('pan'), rayon, rayons).castShadow = false; inst(h, h.geo('boite', 1, 1, 1), h.mat('peinture', { lum: 1, c: 0xfff3c0 }), trous);
         for (const sd of [-1, 1]) couvre(t0, n, sd * (W - 0.2), sd * (W - 2.2), h.mat('eauCenote', { lum: 1, side: D, ...OFF }), 6); }
 
       // --- secteur 8, le lobby d'hôtel : carrelage mouillé, colonnade blanche, grand toit de palapa, aile de chambres à l'ouest, piscine, bar et plantes en pot à l'est ---
-      const lob = tranche(36, 42, 3, 3), carrel = h.mat('carrelage', { side: D, gloss: 0.35, ...OFF });
+      const lob = tranche(36, 42, 3, 3), carrel = h.mat('carrelage', { side: D, gloss: 0.2, ...OFF });
       couvre(lob[0], lob[1], -W, W, carrel, 8); for (const sd of [-1, 1]) h.ribbon(lob[0], lob[1], sd * W, 0.02, sd * (W + 9), 0.02, h.mat('carrelage', { side: D, gloss: 0.35 }), 8);
       const cols = [], toitL = [], sousL = [], faite = [], pots = [];
       chaque(lob, 4, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 0.9); cols.push([x, 0, z]); if (k % 8 === 4) { const [px, pz] = bord(s, sd, W + 2.6); pots.push([px, 0.02, pz, rnd() * 6]); } }
         if (k % 12 === 0) h.lum(i, s.x, s.y + 8, s.z, 0xffe0b0, 22, 0.5); });
       chaque(lob, 5, s => { toitL.push([s.x, 10.3, s.z, h.across(s)]); sousL.push([s.x, 9.9, s.z, h.across(s)]); faite.push([s.x, 11.3, s.z, h.across(s)]); });
-      inst(h, h.geo('colonne', 9.9), h.mat('peinture', { c: 0xfff4e0 }), cols); inst(h, h.geo('boite', 36, 0.6, 10.6), chaume, toitL); inst(h, h.geo('boite', 18, 1.6, 10.6), chaume, faite); inst(h, h.geo('boite', 34, 0.15, 10.6), bois, sousL);
+      inst(h, h.geo('colonne', 9.9), h.mat('peinture', { c: 0xd8ccb4 }), cols); inst(h, h.geo('boite', 36, 0.6, 10.6), chaume, toitL); inst(h, h.geo('boite', 18, 1.6, 10.6), chaume, faite); inst(h, h.geo('boite', 34, 0.15, 10.6), bois, sousL);
       insts(h, 'potPlante', { pot: h.mat('peinture', { c: 0xd9693a }), plante: feuillage }, pots);
       facades(tranche(36, 42, 0, 0), W + 10.5, 12, 1.5); // l'aile des chambres (les façades de l'est tombent dans la piscine : retirées plus bas)
       { const x0 = W + 12, x1 = W + 38, z0 = 150, z1 = 330, xc = (x0 + x1) / 2, zc = (z0 + z1) / 2; // la piscine, ouverte sur le hall côté est

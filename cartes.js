@@ -365,7 +365,7 @@
         hud: { y: '#ffffff', c: '#ffb03a', r: '#e8482a', fond: 'rgba(70,36,16,.9)', style: 'rallye', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'SPECIALE 7 · FIN DE JOURNEE'], titre: ['SPECIALE', 'DES OCRES'] } } },
     // Playa 307 (Riviera Maya, midi) : la ligne droite de la plage (sable dur au milieu, sable mou de part et d'autre), l'épingle au bout du ponton, la rue aux guirlandes de papel picado, le marché couvert,
     // la route de garrigue, le cénote ouvert (place : on peut couper par le bassin, sur fond meuble), la grotte du cénote (le tunnel), le lobby d'hôtel, retour à la plage. Mexique d'aujourd'hui, rien de maya.
-    { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [32, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [32, 42]], anticipe: 1,
+    { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], med: [1.06, 0.98, 0.9], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [32, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [32, 42]], anticipe: 1,
       large: [[45, 2, 20], [31, 32, 13]], // la plage : sable mou au-delà du sable dur (surf.large) ; la sortie du cénote vers la grotte, élargie (fond meuble)
       surf: { zones: [[43, 2, 'mouille', 0.35], [14, 17, 'paves', 1], [33, 35, 'mouille', 0.6], [37, 41, 'mouille', 0.5]], large: 'terre' }, // terre = sable mou de la plage et fond du bassin du cénote (une seule surface hors bitume par carte)
       place: { c: [320, 452], r: 125, a: -Math.PI / 2, piles: [[16, 0, 3, 3], [-16, 0, 3, 3]] }, // le cénote : on roule partout dans le cercle ; deux rochers de calcaire de part et d'autre de l'axe de la place (en diagonale, visé pour que la traversée en ligne droite rejoigne la sortie vers la grotte, pt 31 : test-cartes.js)
@@ -396,10 +396,10 @@
           sec: { i: 'b0 c0', a: 'k0 s0 h0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
       ],
       th: { decor: 'plage', fog: 0xcfeeff, fogD: [180, 1800], sky: [[0, '#1478d8'], [0.3, '#2f95e6'], [0.45, '#8fd0f0'], [0.49, '#dff3f8'], [0.5, '#cfeeff'], [1, '#cfeeff']], stars: 0,
-        astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 220 }, hemi: [0xbfe3ff, 0xf3e3b8, 1.0], sun: [0xfff2d0, 1.0], phares: 0, bloom: 0.06, scan: 0, chaleur: 0.5,
+        astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 220 }, hemi: [0xbfe3ff, 0xc8b890, 0.72], sun: [0xfff2d0, 0.85], phares: 0, bloom: 0.04, scan: 0, chaleur: 0.5,
         murH: 0, route: ['#8a8478', '#9a9488', '#fff4e0', '#f7d36b', '#8a8478', '#8a8478', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xff3d7f, 0x1fb5a8, '#fff4e0'], // route de calcaire ; le décor repeint la plage, le ponton, la rue et le lobby par-dessus
-        tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#8a7e62', '#cbbf9c', '#a89a76', '#3a3224'], plafond: ['#5a5040', '#fff3c0', '#fff3c0', '#3a3224'],
-          fog: 0x0a2a30, portail: 0xfff3c0, neons: [0xfff3c0, 0x1fd6b0], coque: 20, eclat: 1.3 }, // grotte du cénote : calcaire clair, lueurs d'eau turquoise, puits de lumière chaude
+        tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], plafond: ['#5a5040', '#fff3c0', '#fff3c0', '#3a3224'],
+          fog: 0x0a2a30, portail: 0xfff3c0, neons: [0xfff3c0, 0x1fd6b0], coque: 20 }, // grotte du cénote : calcaire clair, lueurs d'eau turquoise, puits de lumière chaude
         hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', fond: 'rgba(10,70,90,.88)', style: 'panneau', split: 0, jp: null, sur: [null, 'RIVIERA MAYA · MIDI'], titre: ['PLAYA', '307'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
