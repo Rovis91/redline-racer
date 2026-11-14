@@ -13,14 +13,15 @@
       voile(g, 0.12, () => { for (let y = 6; y < 96; y += 12) R(g, '#5a5e5a', 0, y, 64, 1); });
       R(g, '#3e423e', 0, 0, 3, 96); voile(g, 0.5, () => R(g, '#b8bcb4', 3, 0, 1, 96)); voile(g, 0.25, () => { for (let x = 6; x < 64; x += 3 + (alea() * 6 | 0)) R(g, alea() < 0.5 ? '#6a6e68' : '#a4a8a0', x, 0, 1 + (alea() * 2 | 0), 96); }); // plots et coulures verticales
       for (const x of [24]) { R(g, '#1c1e1e', x, 30, 4, 4); voile(g, 0.3, () => R(g, '#2a2c2a', x + 1, 36, 3, 18 + alea() * 20 | 0)); }
-      voile(g, 0.22, () => { for (let i = 0; i < 10; i++) R(g, '#2a2c2a', alea() * 64 | 0, alea() * 90 | 0, 1, 6 + alea() * 30 | 0); R(g, '#3a3e3a', 0, 80, 64, 16); });
+      voile(g, 0.38, () => { for (let i = 0; i < 16; i++) R(g, '#2a2c2a', alea() * 64 | 0, alea() * 90 | 0, 1 + (alea() * 2 | 0), 10 + alea() * 40 | 0); R(g, '#3a3e3a', 0, 80, 64, 16); });
     }],
     // REFS 7 — roche du canyon : gris-brun, strates obliques, fissures, lichen clair
     rocheGES: (fond = '#5c5446') => [64, 64, (g, o) => {
       const { R, alea, voile } = o; R(g, fond, 0, 0, 64, 64);
       for (let i = 0; i < 26; i++) voile(g, 0.45, () => R(g, ['#6e6658', '#4a4438', '#7a7466', '#55504a'][i & 3], alea() * 60 | 0, alea() * 60 | 0, 6 + (alea() * 14 | 0), 5 + (alea() * 12 | 0)));
       voile(g, 0.55, () => { for (let i = 0; i < 40; i++) { const v = alea() < 0.5; R(g, '#2e2a24', alea() * 64 | 0, alea() * 64 | 0, v ? 1 : 3 + (alea() * 8 | 0), v ? 3 + (alea() * 8 | 0) : 1); } });
-      voile(g, 0.35, () => semis(g, o, 220, '#8a8476')); voile(g, 0.25, () => semis(g, o, 60, '#9aa47a')); voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#3a3630', 0, alea() * 64 | 0, 64, 1 + (alea() * 2 | 0)); }); // ruissellements (sur les parois, x de la texture = la hauteur)
+      voile(g, 0.35, () => semis(g, o, 220, '#8a8476')); voile(g, 0.45, () => { for (let i = 0; i < 14; i++) { const x = alea() * 64 | 0, y = alea() * 64 | 0; R(g, '#5e6a3e', x, y, 2 + (alea() * 4 | 0), 2 + (alea() * 3 | 0)); } }); // touffes d'herbe et de mousse
+      voile(g, 0.5, () => { for (let k = 0; k < 64; k += 9) for (let y = 0; y < 64; y++) R(g, '#3a352e', (k + y * 0.35) % 64 | 0, y, 1, 1); }); // lits obliques voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#3a3630', 0, alea() * 64 | 0, 64, 1 + (alea() * 2 | 0)); }); // ruissellements (sur les parois, x de la texture = la hauteur)
     }, 10],
     // REFS 7 — sol de taïga : herbe sombre, mousse, aiguilles rousses, cailloux
     solGES: () => [64, 64, (g, o) => {
@@ -106,6 +107,7 @@
       const { R, alea } = o; R(g, fond, 0, 0, 64, 64);
       for (let i = 0; i < 140; i++) R(g, alea() < 0.5 ? '#7fb4d0' : '#5a88a2', alea() * 64 | 0, alea() * 64 | 0, 3 + (alea() * 7 | 0), 1);
       for (let i = 0; i < ecume; i++) R(g, '#e8f2f4', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1);
+      for (let i = 0; i < 10; i++) { const y = alea() * 64 | 0; R(g, 'rgba(214,228,232,0.5)', 0, y, 64, 1); } // reflets du ciel en longues lignes
     }, 16],
     // gerbe d'une vanne : filets d'eau blanche dans le sens de la chute (v), bords effilochés ; transparente, elle défile (map.offset) dans decors.js
     gerbe: () => [32, 128, (g, o) => {
