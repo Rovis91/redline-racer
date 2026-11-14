@@ -460,9 +460,9 @@
       car: car({ nom: 'ONCA 2000 TURBO', ratios: [3.2, 2.1, 1.52, 1.18, 0.95], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
         tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], son: 1.2, moteur: 'l4', turbo: 1, look: { col: 0x1f6a4a, l: 0.9, w: 0.98, h: 0.98, nez: 0.55, cab: [-0.3, 2, 0.55], aileron: 1, bandes: 0xe9b44c } }),
       radio: RADIO.chapada,
-      th: { decor: 'chapada', fog: 0xcdd9d0, fogD: [20, 340], sky: [[0, '#8fb8b8'], [0.36, '#cfe0d4'], [0.48, '#f6e4b4'], [0.5, '#cdd9d0'], [1, '#cdd9d0']], stars: 0,
-        astre: { dir: [0.8, 0.25, 0.4], col: '#ffd9a0', ombre: '#ffd9a0', taille: 240 }, hemi: [0xcfe6d8, 0x1d3a2a, 0.7], sun: [0xffe2b0, 0.8], phares: 0.3, bloom: 0.12, scan: 0.05,
-        chev: 0, murH: 0, route: ['#3b3f3c', '#4a4e49', '#ede6cf', '#e9b44c', '#3b3f3c', '#3b3f3c', false], mur: ['#6e6656', '#c8c4b0', '#6c7075', '#3a3428'], depart: [0xe9b44c, 0x4b5359, '#ede6cf'],
+      th: { decor: 'chapada', fog: 0xbcc8c0, fogD: [20, 340], sky: [[0, '#7fa8aa'], [0.36, '#bccfc4'], [0.48, '#e0c896'], [0.5, '#bcc8c0'], [1, '#bcc8c0']], stars: 0, // ciel et brume un ton sous la V1 : 16 captures sur 20 avaient plus de 5 % de pixels brûlés
+        astre: { dir: [0.8, 0.25, 0.4], col: '#f8cc8c', ombre: '#ffd9a0', taille: 200 }, hemi: [0xcfe6d8, 0x4a5444, 0.8], sun: [0xffe2b0, 0.8], phares: 0.3, bloom: 0.05, scan: 0.05,
+        chev: 0, murH: 0, route: ['#3b3f3c', '#4a4e49', '#ede6cf', '#d8c070', '#3b3f3c', '#3b3f3c', false], mur: ['#6e6656', '#c8c4b0', '#6c7075', '#3a3428'], depart: [0xe9b44c, 0x4b5359, '#ede6cf'],
         hud: { y: '#f2f0dc', c: '#ffb94a', r: '#ff5a4a', fond: 'rgba(10,22,18,.82)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'CHAPADA DIAMANTINA · 7 H'], titre: ['MATIN SUR', 'LA CHAPADA'] } } },
     // Playa 307 (Riviera Maya, midi) : la ligne droite de la plage (sable dur au milieu, sable mou de part et d'autre), l'épingle au bout du ponton, la rue aux guirlandes de papel picado, le marché couvert,
     // la route de garrigue, le cénote ouvert (place : on peut couper par le bassin, sur fond meuble), la grotte du cénote (le tunnel), le lobby d'hôtel, retour à la plage. Mexique d'aujourd'hui, rien de maya.
