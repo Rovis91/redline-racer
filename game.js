@@ -355,7 +355,7 @@
     }
     `;
   const LU_F = `{
-      vec3 n = normalize(cross(dFdx(vLw), dFdy(vLw))), v = normalize(uCam - vLw); // uCam et non cameraPosition : three r128 ne le renseigne pas pour les matériaux Basic et Lambert (il reste à l'origine du monde)
+      vec3 n = normalize(cross(dFdx(vLw), dFdy(vLw))), v = normalize(uCam - vLw); // uCam et non cameraPosition : three ne le renseigne pas pour les matériaux Basic et Lambert (il reste à l'origine du monde)
       if (dot(n, v) < 0.) n = -n;
       float g = uGloss + (1. - diffuseColor.a) * 2., plat = step(.8, n.y);
       #ifdef MOUILLE

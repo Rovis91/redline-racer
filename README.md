@@ -273,6 +273,8 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 
 ## Tests
 
+Node 22.12 ou plus récent : les tests chargent three par `require` d'un module ES (`three/three.module.js`).
+
 ```bash
 node test.js
 ```
