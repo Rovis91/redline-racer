@@ -25,11 +25,11 @@
     // REFS §6 : la Porte des Nations restituée, à cheval sur la route (repère de la route : Z vers la voiture qui arrive) : salle carrée de brique crue ocre à toit plat et corniche à gorge,
     // portes à chambranles de pierre, taureaux côté arrivée (ouest), lamassus à tête humaine côté sortie (est), quatre colonnes de 16,5 m à l'intérieur ; ni arc, ni créneau, ni tour
     porteNations: (W = 10) => { const L = 2 * W + 20; return [...[-1, 1].flatMap(sd => [['crue', 3, 18, 27, sd * (W + 8.5), 9, 0, null, 1], ['pierre', 3.2, 1.2, 27.4, sd * (W + 8.5), 0.6, 0],
-        ...[-1, 1].flatMap(fz => [['pierre', 3.4, 14, 3.6, sd * (W + 1.7), 7, fz * 11.7, null, 1], ['crue', 4.6, 14, 3, sd * (W + 5.9), 7, fz * 11.7]]),
-        ...[...lamassu(sd * (W + 1.7), 17.5, 1, false), ...lamassu(sd * (W + 1.7), -17.5, -1, true)].map(b => { const c = b.slice(); c[5] += 2.6; return c; }), // debout sur leur socle
+        ...[-1, 1].flatMap(fz => [['pierre', 3.4, 14, 3.6, sd * (W + 1.7), 7, fz * 11.7, null, 1], ['crue', 4.6, 18, 3, sd * (W + 5.9), 9, fz * 11.7]]),
+        ...[...lamassu(0, 0, 1, false).map(b => [b, sd * (W + 2.1), 17.5]), ...lamassu(0, 0, -1, true).map(b => [b, sd * (W + 2.1), -17.5])].map(([b, x0, z0]) => { const k = 1.25, c = b.slice(); c[1] *= k; c[2] *= k; c[3] *= k; c[4] = x0 + c[4] * k; c[5] = c[5] * k + 2.6; c[6] = z0 + c[6] * k; return c; }), // debout sur leur socle, un quart plus grands : lisibles de face
         ...[-5, 5].flatMap(z => colonne(sd * (W + 4.6), z, 16.5)), ['pierre', 3.4, 2.6, 9, sd * (W + 1.7), 1.3, 17.5], ['pierre', 3.4, 2.6, 9, sd * (W + 1.7), 1.3, -17.5]]), // socles des taureaux
       ...[-1, 1].flatMap(fz => [['crue', L, 3.4, 3, 0, 16.3, fz * 11.7], ['pierre', 2 * W + 7.2, 1.3, 3.8, 0, 14.6, fz * 11.7], ['relief', 2 * W + 7, 1, 0.2, 0, 15.6, fz * 13.65]]),
-      ['crue', L, 1, 27, 0, 18.5, 0, null, 1], ['cedre', L - 6, 0.2, 21, 0, 17.9, 0], ['pierre', L + 1, 0.6, 28, 0, 19.3, 0], ['pierre', L + 2.2, 0.5, 29.2, 0, 19.85, 0], ['or', L + 2.4, 0.15, 29.4, 0, 20.15, 0]]; },
+      ['crue', L, 1, 27, 0, 18.5, 0, null, 1], ['cedre', L - 6, 0.2, 21, 0, 17.9, 0], ['pierre', L + 1.2, 0.7, 28.2, 0, 19.35, 0], ['sculpte', L + 2.6, 0.6, 29.6, 0, 20, 0], ['pierre', L + 3.4, 0.5, 30.4, 0, 20.55, 0], ['or', L + 3.5, 0.15, 30.5, 0, 20.85, 0]]; },
     // REFS §1-3 : bandeau de rosettes et corniche lisse qui couronnent le parapet de l'escalier (à la place des merlons, interdits) ; 2 m le long de la route
     couronne: () => [['pierre', 2, 0.35, 0.9, 0, 0.18, 0], ['pierre', 2, 0.3, 1.2, 0, 0.5, 0], ['or', 2, 0.1, 1.25, 0, 0.7, 0]],
     // REFS §8 : encadrement de porte du Tachara, debout dans les ruines : chambranles et linteau de pierre noire, corniche à gorge ; X en travers de la porte
@@ -49,6 +49,10 @@
     caravanserail: () => [...[-1, 1].flatMap(s => [['crue', 56, 9, 2, 0, 4.5, s * 27, null, 1], ['crue', 2, 9, 56, s * 27, 4.5, 0, null, 1]]),
       ...[[-1, -1], [-1, 1], [1, -1], [1, 1]].map(([a, b]) => ['crue', 5, 10, 5, a * 27, 5, b * 27, R45]),
       ['crue', 18, 14, 5, 0, 7, -27, null, 1], ['sombre', 8, 10, 0.4, 0, 5, -29.6], ['faience', 10, 1.2, 0.3, 0, 11.8, -29.6], ['faience', 18.2, 0.8, 5.2, 0, 14, -27]],
+    // REFS §16 : personnage en robe longue (paysan, marchand), silhouette plate de miniature ; la robe prend la teinte de l'instance
+    personnage: () => [['robe', 0.6, 1.25, 0.42, 0, 0.63, 0], ['robe', 0.75, 0.25, 0.5, 0, 0.12, 0], ['peau', 0.3, 0.32, 0.3, 0, 1.42, 0], ['coiffe', 0.36, 0.18, 0.36, 0, 1.64, 0]],
+    // REFS §16 et §2 : étendard achéménide le long de la route royale : mât, drap (teinte de l'instance), aigle d'or au sommet ; X en travers de la route
+    banniere: () => [['mat', 0.16, 7, 0.16, 0, 3.5, 0], ['drap', 0.06, 2.6, 1.5, 0, 5.4, 0.8], ['or', 0.5, 0.5, 0.25, 0, 7.2, 0], ['or', 1.1, 0.12, 0.2, 0, 7.15, 0]],
     // REFS §15 : tente noire des nomades : lés tendus en deux pans, rebord bas
     tente: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
     // REFS §12 : arc transversal brisé du bazar couvert (repère de la route) : deux piles et l'arc en six segments, de la naissance à 3,8 m jusqu'à la clé à 6,8 m
