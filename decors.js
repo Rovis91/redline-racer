@@ -1995,14 +1995,14 @@
         tranche(gal0 - 10, gal1 + 10, (i, l) => extrude(i, l, 1, (j, s) => { const t = Math.min((j - i + N) % N, (i + l - j + N) % N), e = lisse(0, 10, t), b = 7.2 + 1.6 * nV(j * 0.08);
           return [[s.w + 1.2, 6.5, sombre], [s.w * 0.3, b + 0.6 * nV(j * 0.2 + 9), sombre.map(v => v * 0.8)], [-(s.w + 1) * e, b + 0.5 * e + 0.4 * nV(j * 0.15 + 3), sombre], [-(s.w + 3.8) * e, 8.5 * e + 2, mix(sombre, mo2, 0.5)], null,
             [-(s.w + 3.8) * e, 8.5 * e + 2, mo2], [-(s.w + 3.8) * e, 11 * e + 2, mo], [s.w * 0.2, 12.5 + nV(j * 0.1 + 5), mo], [s.w + 3, 14, mo2]]; })); }
-      tranche(gal0, gal1, (i, l) => h.ribbon(i, l, s => -(s.w + 3.8), nivS, s => -(s.w + 3.8), 44, chuteM, 12)); // un seul rideau : deux superposés faisaient un moiré
+      tranche(gal0, gal1, (i, l) => h.ribbon(i, l, s => -(s.w + 10.5), nivS, s => -(s.w + 10.5), 44, chuteM, 12)); // un seul rideau : deux superposés faisaient un moiré
       { const nL = bruit(), c1 = COL('#8a7660'), c2 = COL('#a89478'), mo = COL('#6f8a3a'); // REFS 2 : la lèvre de la corniche d'où tombe la chute, en surplomb au-dessus du rideau
         tranche(gal0 - 30, gal1 + 30, (i, l) => extrude(i, l, -1, (j, s) => { const e = lisse(0, 25, Math.min((j - i + N) % N, (i + l - j + N) % N)), y = 43 + 2 * nL(j * 0.05);
-          return [[s.w + 6 - 3 * e, y - 1, c1], [s.w + 2.5 - 1.5 * e, y - 0.5, c1], [s.w + 2.5 - 1.5 * e, y + 2.5, c2], [s.w + 14, y + 4, mo]]; })); }
+          return [[s.w + 13 - 3 * e, y - 1, c1], [s.w + 7 - 1.5 * e, y - 0.5, c1], [s.w + 7 - 1.5 * e, y + 2.5, c2], [s.w + 20, y + 4, mo]]; })); }
       { const fil = [], ecume = []; for (let i = gal0; entre(i, gal0, gal1); i = (i + 1) % N) { const s = S[i]; if (rnd() < 0.45) continue;
-          for (const o of [3.2, 4.6]) { const [x, z] = bord(s, -1, s.w + o + rnd() * 0.6), y0 = s.y + niv(i), hh = 44 - niv(i); fil.push([x, y0 + hh / 2, z, h.across(s), 0.5 + rnd() * 1.6, hh, 1, rnd() < 0.7 ? 0xf2f6f4 : 0xc8d6d8]); }
-          if (rnd() < 0.5) { const [x, z] = bord(s, -1, s.w + 4 + rnd() * 6); ecume.push([x, s.y + niv(i) + 0.4, z, rnd() * 6, 2 + rnd() * 3, 0.8 + rnd(), 2 + rnd() * 3]); } }
-        const pf = new THREE.PlaneGeometry(1, 1); const mf = inst(h, pf, h.mat('peinture', { lum: 1, c: 0xffffff, transparent: true, opacity: 0.82, side: THREE.DoubleSide, depthWrite: false }), fil); fil.forEach((p, k) => mf.setColorAt(k, new THREE.Color(p[7]))); mf.castShadow = false;
+          for (const o of [8, 9.6]) { const [x, z] = bord(s, -1, s.w + o + rnd() * 0.6), y0 = s.y + niv(i), hh = 44 - niv(i); fil.push([x, y0 + hh / 2, z, h.across(s), 0.5 + rnd() * 1.6, hh, 1, rnd() < 0.7 ? 0xf2f6f4 : 0xc8d6d8]); }
+          if (rnd() < 0.5) { const [x, z] = bord(s, -1, s.w + 6 + rnd() * 6); ecume.push([x, s.y + niv(i) + 0.4, z, rnd() * 6, 2 + rnd() * 3, 0.8 + rnd(), 2 + rnd() * 3]); } }
+        const pf = new THREE.PlaneGeometry(1, 1); const mf = inst(h, pf, h.mat('peinture', { lum: 1, c: 0xffffff, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false }), fil); fil.forEach((p, k) => mf.setColorAt(k, new THREE.Color(p[7]))); mf.castShadow = false;
         inst(h, h.geo('cime'), h.mat('peinture', { lum: 1, c: 0xe8eef0 }), ecume.map(p => [p[0], p[1], p[2], p[3], p[4] / 3.4, p[5] / 3.4, p[6] / 3.4])); // l'écume au pied
         for (let k = 0; k < 4; k++) { const i = (gal0 + Math.round((k + 0.5) / 4 * ((gal1 - gal0 + N) % N))) % N, s = S[i], [x, z] = bord(s, -1, s.w + 2); h.lum(i, x, s.y + 4, z, 0xcfe8e4, 26, 0.7); } } // le jour qui traverse l'eau
       // à l'entrée, un voile d'eau en travers de la route : on le traverse, la vue se coupe un instant
@@ -2064,7 +2064,7 @@
       const arbres = [], cimes = [[], [], [], []], troncsC = [], fougeres = [], palm = [], palmT = [], bromelias = [], buissons = [], lianes = [], canelas = [], lajedos = [], affl = [];
       const touffes = [[], [], []], fleurs = [];
       // un arbre de la forêt de galerie (REFS 4) : fût de 10 à 24 m, clair ou sombre, couronne de 2 à 4 houppiers de trois verts
-      const arbre = (x, y, z, t, prochePiste) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]);
+      const arbre = (x, y, z, t, prochePiste, loin) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; if (!loin) (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]); // loin de la route, la brume ne laisse voir que les houppiers
         const nc = 2 + (rnd() * 2 | 0); for (let c = 0; c < nc; c++) { const r = (0.8 + rnd() * 1.8) * t, a = rnd() * 6.28; cimes[rnd() * 4 | 0].push([x + Math.cos(a) * r, y + Ht - 1 + rnd() * 3 * t, z + Math.sin(a) * r, rnd() * 6, (0.9 + rnd() * 0.7) * t, (0.85 + rnd() * 0.6) * t, (0.9 + rnd() * 0.7) * t]); }
         if (rnd() < 0.3) coupes.push([x + 0.4, y + 3 + rnd() * Ht * 0.4, z, rnd() * 6, 0.5]); // une broméliacée épiphyte sur le fût
         if (prochePiste && rnd() < 0.7) for (let c = 0; c < 1 + (rnd() * 3 | 0); c++) { const ll = 4 + rnd() * 8, a = rnd() * 6.28, r = 1 + rnd() * 3; lianes.push([x + Math.cos(a) * r, y + Ht - ll / 2, z + Math.sin(a) * r, rnd() * 6, 1, ll, 1]); } };
@@ -2086,12 +2086,12 @@
           if (d < 14) { if (r < 0.28) fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]); else if (r < 0.36) (d < 6 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.7 + rnd() * 0.8]); else if (r < 0.55) buissons.push([x, y + 0.6, z, rnd() * 6, 0.35 + rnd() * 0.35, 0.3 + rnd() * 0.25]);
             else if (r < 0.7 && d > 4) fougeres.push([x, y, z, rnd() * 6, 0.8 + rnd() * 0.5]); else if (r < 0.76 && d > 3) palmier(x, y, z, 0.3 + rnd() * 0.9); else if (r < 0.86 && d > 6) arbre(x, y, z, 0.8 + rnd() * 0.5, true); }
           else if (d < 80) { if (r < 0.25) arbre(x, y, z, 0.8 + rnd() * 0.7, false); else if (r < 0.35) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.6]); else if (r < 0.45) palmier(x, y, z, 0.8 + rnd() * 0.6); else if (r < 0.6) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.4, 0.4]); }
-          else if (r < 0.22 && d < 150) arbre(x, y, z, 1 + rnd() * 0.6, false);
+          else if (r < 0.14 && d < 150) arbre(x, y, z, 1 + rnd() * 0.6, false, true);
           continue; }
         // la gorge et les lacets : mata ciliar sur les rives et les pentes, fougères arborescentes, palmiers ; roche nue là où c'est raide
         if (d < 10) { if (r < 0.25) fbas.push([x, y, z, rnd() * 6, 0.7 + rnd() * 0.6]); else if (r < 0.36) (d < 5 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.8 + rnd() * 0.6]); else if (r < 0.48) touffes[2].push([x, y, z, rnd() * 6, 0.6 + rnd() * 0.5, 0.6 + rnd() * 0.6]); else if (r < 0.62) blocs.push([x, y, z, rnd() * 6, 0.6 + rnd(), 0.4 + rnd() * 0.6, 0.6 + rnd()]); else if (r < 0.74 && d > 3.5) fougeres.push([x, y, z, rnd() * 6, 0.7 + rnd() * 0.6]); else if (r < 0.8 && d > 4) palmier(x, y, z, 0.5 + rnd() * 0.5); }
         else if (d < 90) { if (r < 0.2) arbre(x, y, z, 0.7 + rnd() * 0.6, false); else if (r < 0.32) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); else if (r < 0.4) palmier(x, y, z, 0.8 + rnd() * 0.5); else if (r < 0.55) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.5, 0.4]); else if (r < 0.6 && d > 20) affl.push([x, y - 1.5, z, rnd() * 6, 3 + rnd() * 6, 2 + rnd() * 3, 3 + rnd() * 6]); }
-        else if (r < 0.2 && d < 150) arbre(x, y, z, 0.9 + rnd() * 0.5, false);
+        else if (r < 0.13 && d < 150) arbre(x, y, z, 0.9 + rnd() * 0.5, false, true);
       }
       for (let i = P(23); dans(i, 23, 29); i = (i + 3) % N) if (rnd() < 0.5) { const s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w - 1 + rnd() * 4), ll = 3 + rnd() * 7; lianes.push([x, s.y + 17 - ll / 2, z, rnd() * 6, 1, ll, 1]); cimes[rnd() * 4 | 0].push([x, s.y + 18, z, rnd() * 6, 1.1, 0.5, 1.1]); } // les lianes qui pendent au-dessus de la route
       for (let i = 0; i < N; i++) { const s = S[i], zn = zone(i); if (zn !== 'plateau' && zn !== 'foret') continue;
@@ -2099,7 +2099,7 @@
           if (zn === 'plateau') { // REFS 5 : campo rupestre, à touche-touche au bord
             for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.6 + rnd() * 1.2]));
             if (rnd() < 0.4) at(o(), (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + (rnd() - 0.5) * 0.6, 0.5 + rnd() * 1.3]));
-            if (rnd() < 0.12) at(s.w + 4 + rnd() * 30, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
+            if (rnd() < 0.08) at(s.w + 4 + rnd() * 30, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
             at(o(), (x, y, z) => { for (let c = 0; c < 8; c++) fleurs.push(x + (rnd() - 0.5) * 4, y + 0.45 + rnd() * 0.3, z + (rnd() - 0.5) * 4); }); }
           else { // REFS 4 : le sous-bois au bord
             if (rnd() < 0.5) at(o(), (x, y, z) => fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]));
@@ -2150,6 +2150,7 @@
       for (let k = 0; k < 24; k++) { const i = (P(29) + (rnd() * ((P(3) - P(29) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 30 + rnd() * 90); voiles.push([x, g.hAt(x, z) + 1 + rnd() * 2, z, rnd() * 6, 40 + rnd() * 40, 1, 30 + rnd() * 20]); } // brume rasante du plateau
       for (let k = 0; k < 14; k++) { const u = (rnd() - 0.5) * 240, v = (rnd() - 0.5) * 30; voiles.push([sb.x - sb.tz * u + sb.tx * v, sb.y - 12 + rnd() * 6, sb.z + sb.tx * u + sb.tz * v, rnd() * 6, 40 + rnd() * 30, 1, 30 + rnd() * 20]); } // le ravin du pont
       for (let k = 0; k < 40; k++) { const i = (P(23) + (rnd() * ((P(29) - P(23) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 4 + rnd() * 40); voiles.push([x, g.hAt(x, z) + 0.6 + rnd() * 1.5, z, rnd() * 6, 20 + rnd() * 20, 1, 20 + rnd() * 15]); } // brume rasante entre les troncs
+      for (let k = 0; k < 40; k++) { const i = (P(3) + (rnd() * ((P(12) - P(3) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -amont(s), s.w + 6 + rnd() * 30); voiles.push([x, s.y - 1 - rnd() * 3, z, rnd() * 6, 25 + rnd() * 20, 1, 25 + rnd() * 20]); } // la brume monte du vide, au ras des lacets
       const nap = inst(h, nappe, brume, voiles); nap.castShadow = nap.receiveShadow = false;
       // au pont, le blanc s'épaissit : des voiles debout en travers de la route, qu'on traverse
       const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 23); i = (i + 8) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
