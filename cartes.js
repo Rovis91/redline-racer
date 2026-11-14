@@ -424,29 +424,30 @@
         tun: { sol: ['#8a7860', '#968470', '#f4ead0', '#f0b840', '#c8323c', '#3a2418'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
           fog: 0x5a3020, portail: 0xf0b840, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
-    // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes ouvertes, au matin voilé (docs/SPEC-BARRAGE.md). Sens horaire, départ cap ouest dans la vallée,
-    // grand U, pont d'acier sous les embruns des gerbes (pts 10-11), rampe vers le portail (pt 15), salle des turbines en ligne droite (pts 17-21, à ciel fermé : c'est le décor qui la construit,
-    // le tunnel du moteur ne couvre que les galeries), galeries en zigzag dans le corps du barrage (pts 22-44 : trois épingles de 22,5 m de rayon, de 37 à 105 m), crête de 720 m au bord du vide (pts 44-49),
-    // lacets de la falaise est (trois épingles), retour dans la vallée. Tracé de la spec raccourci à l'ouest (vallée et galeries : 5,7 km → 5,0 km ; 130 s au tour, plus long que toutes les autres) et épingles redessinées en arcs (rayon 12 m au lieu de 15 mini).
-    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [190, 235], grip: 20, sc: 1, tun: [22, 44], chaud: [44, 58], sect: [22, 49], amb: [[8, 13], [17, 21], [44, 49]], anticipe: 1, trafic: 4,
-      sauts: [[48, 40, 1.2]], // tremplin au milieu de la crête : le « saut du bec » de la spec (fin de crête, fosse de 8 m) se recevait en pleine descente, réception dure du pilote automatique
-      surf: { zones: [[22, 44, 'mouille', 0.35]] }, // galeries suintantes (sous le tunnel, la pluie est coupée) ; le pont est mouillé par les embruns (th.pluie)
-      pts: [[300, 430, 10], [100, 430, 10], [-100, 430, 10], [-180, 425, 10], [-300, 405, 10], [-370, 355, 10], [-390, 300, 10], [-360, 250, 10], [-270, 232, 10], [-200, 238, 13], [-70, 245, 14], [70, 245, 14], [200, 240, 14], [310, 235, 21], [345, 210, 24],
-        [345, 170, 26], [330, 148, 28], [300, 135, 30], [220, 135, 35], [120, 135, 35], [20, 135, 35], [-70, 135, 35],
-        [-250, 135, 37], [-261, 132, 37.5], [-269, 124, 38], [-272, 113, 38.5], [-269, 101, 39], [-261, 93, 39.5], [-250, 90, 40], [-65, 90, 52], [120, 90, 64], [131, 87, 64.5], [139, 79, 65], [143, 68, 65.5], [139, 56, 66], [131, 48, 66.5], [120, 45, 67],
-        [-65, 45, 83], [-250, 45, 99], [-261, 42, 100], [-269, 34, 101], [-272, 23, 102], [-269, 11, 103.1], [-261, 3, 104], [-250, 0, 105],
-        [-100, 0, 105], [100, 0, 105], [250, 0, 105], [380, 0, 105], [470, 0, 105],
-        [560, 8, 98], [639, 14, 91.1], [656, 32, 88.9], [662, 55, 86.8], [656, 79, 84.6], [639, 96, 82.5], [615, 102, 80.3], [540, 112, 73.7], [499, 118, 70.1], [483, 134, 68.1], [477, 155, 66.2], [483, 177, 64.2], [499, 192, 62.3], [520, 198, 60.4],
-        [600, 208, 53.4], [674, 214, 46.9], [691, 232, 44.7], [697, 255, 42.6], [691, 279, 40.5], [674, 296, 38.4], [650, 302, 36.2], [580, 318, 30], [490, 340, 23], [430, 385, 17], [380, 420, 12]],
+    // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes de fond ouvertes, au matin voilé (docs/SPEC-BARRAGE.md, sources : docs/REFS-barrage.md). Sens des points :
+    // départ sur la rive est de la rivière aval, cap nord vers le mur ; le pied du mur le long du bassin de dissipation (pts 3-5, embruns) ; la salle des machines au pied du mur (pts 6-12 : la voie, bordée de garde-corps,
+    // serpente entre trois groupes posés au milieu de la halle, en quinconce : un slalom) ; la montée de la culée est en trois lacets (pts 13-35), dont un court passage en galerie dans la roche (pts 22-27) ;
+    // la crête de 660 m cap ouest, retenue à droite, vide à gauche (pts 35-40) ; la corniche de la rive ouest qui descend au-dessus de la rivière (pts 41-49) ; le grand pont qui la traverse (pts 49-53).
+    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [22, 27], chaud: [35, 46], sect: [13, 40], amb: [[3, 6], [6, 12], [36, 41]], anticipe: 1, trafic: 4,
+      surf: { zones: [[3, 6, 'mouille', 0.6], [22, 27, 'mouille', 0.35]] }, // le pied du mur, mouillé par les embruns des jets ; la galerie suinte (pas de th.pluie : ce sont des embruns, pas une averse)
+      pts: [[115, 640, 12], [108, 520, 12], [100, 400, 12], [96, 290, 12], [98, 200, 12], [115, 140, 12],
+        [145, 110, 12], [175, 99, 12], [200, 110, 12], [225, 121, 12], [250, 110, 12], [275, 99, 12], [305, 110, 12],
+        [345, 114, 14], [450, 115, 23], [560, 115, 32], [680, 115, 40], [732, 108, 41.5], [739, 91, 43], [732, 74, 44.5],
+        [680, 67, 46], [600, 67, 52], [520, 67, 57], [484, 61, 59.5], [477, 44.5, 61.5], [484, 28, 63.5],
+        [540, 22, 66], [640, 22, 74], [720, 22, 81], [762, 15, 84], [769.5, -2.5, 86], [762, -20, 88],
+        [700, -27, 92], [600, -28, 97.5], [500, -25, 102], [450, -12, 105], [400, 0, 105],
+        [250, 0, 105], [100, 0, 105], [-100, 0, 105], [-260, 0, 105], [-318, 15, 104], [-338, 55, 102],
+        [-330, 160, 96], [-290, 290, 84], [-240, 420, 70], [-215, 560, 56], [-225, 700, 40], [-200, 820, 26], [-160, 900, 18],
+        [-90, 935, 14], [0, 942, 14], [90, 930, 14], [150, 880, 13], [150, 780, 12]],
       // voiture inventée : une berline d'État des années 70 réarmée, V8 de 5,5 L, environ 340 ch, 1480 kg, propulsion, boîte à 5 rapports (chiffres inventés)
       car: car({ nom: 'VOLNA 24 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'gtr', col: 0x3d6e8a, l: 1.05, w: 1.02, h: 1.04, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0, bandes: 0xe8761e } }),
       radio: RADIO.barrage,
-      th: { decor: 'barrage', pluie: [[8, 13, 3]], fog: 0xc3cdc9, fogD: [80, 900], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
+      th: { decor: 'barrage', fog: 0xc3cdc9, fogD: [110, 1300], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
         astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c8d0, 0x8a8a80, 0.95], sun: [0xfff0d0, 0.55], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
-        chev: 1, murH: 1, route: ['#4a4d50', '#56595c', '#e8e4d8', '#e8e4d8', '#4a4d50', '#4a4d50', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
-        tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#f2b43a', '#f2b43a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#f2b43a', '#f2b43a', '#5a5e5a'],
-          fog: 0x2a2a24, portail: 0x8d918a, neons: [0xf2b43a, 0xf2b43a], coque: 6 }, // galeries : béton, néons sodium
+        chev: 0, murH: 0, route: ['#4a4d50', '#56595c', '#e8e4d8', '#e8e4d8', '#4a4d50', '#4a4d50', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
+        tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#8d918a', '#7d817a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#8d918a', '#5fa89a', '#5a5e5a'],
+          fog: 0x2a2a28, portail: 0xe8761e, neons: [0xf4d8a0, 0xe8f0e8], coque: 6 }, // galeries : béton, néons sodium
         hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VANNES OUVERTES · 6 H 10'], titre: ['BARRAGE', '74'] } } },
     // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
