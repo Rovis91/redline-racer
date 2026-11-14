@@ -247,6 +247,26 @@
         b: ['bMoog', '0 - - 0 - 12 - - 7 - - 0 - 12 7 -', '0 - 7 - 12 - 7 - 0 - 7 - 12 - 7 -'], c: ['epFM', '..x..x....x..x..', 'x.....x...x.....'], d: ['strings', 0],
         sec: { i: 'c1 lo', a: 'k0 s0 h0 b0 c0', b: 'k1 s0 h1 b0 c0 d', c: 'k1 s0 h1 b1 c0 d', x: 'c1 d P1', u: 'k0 h1 b0 c1 roll P1', e: 'k1 s0 h1 b1 c0 P1' }, form: 'iabcxuceabcc' }),
     ],
+    chapada: [ // la Chapada au matin : trois stations esquissées pour la V1 (vol à régler par mesure dans ecoute.html), compositions originales, thèmes sur les notes des accords
+      st({ name: 'SERRA FM', fq: '89.7', vol: 1, genre: 'FORRO ELECTRO', bpm: 128, gamme: 'majeur', key: 55, kit: 'acou', eq: [0, 1500, 2, 2], rev: 0.14, echo: [3, 0.2], pump: 0.8, // baião : zabumba en croche pointée, triangle, accordéon plaqué, fifre
+        prog: ['G C D G G C D G', 'Em C D D'], k: ['x..x....x..x....'], s: [SN], h: ['x.xxx.xxx.xxx.xx', 'x.x.x.x.x.x.x.x.'],
+        b: ['bSlap', '0 - - 7 - - 0 - 0 - - 7 - - 12 -', '0 - - 0 - - 7 - 0 - - 0 - - 7 -'], c: ['organ', '..x...x...x...x.'],
+        l: ['ldWhistle', '19 - 16 - 19 - 24 - 19 - - - 16 - - - | 21 - 17 - 21 - 24 - 21 - - - 17 - - - | 23 - 19 - 23 - 26 - 23 - - - 19 - - - | 19 - - - 16 - - - 12 - - - . - - - | 19 - 16 - 19 - 24 - 19 - - - 16 - - - | 21 - 17 - 21 - 24 - 21 - - - 17 - - - | 23 - 19 - 23 - 26 - 23 - - - 19 - - - | 24 - - - - - - - . - - - - - - -',
+          '21 - 24 - 28 - 24 - 21 - - - 16 - - - | 24 - 21 - 17 - 21 - 24 - - - . - - - | 26 - 23 - 19 - 23 - 26 - - - 23 - - - | 19 - - - - - - - . - - - - - - -'],
+        sec: { i: 'h0 c0', a: 'k0 s0 h0 b0 c0', b: 'k0 s0 h1 b0 c0', c: 'k0 s0 h0 b1 l0', x: 'h0 l1 P1', e: 'k0 s0 h0 b1 l1 P1' }, form: 'iabccxecabcc' }),
+      st({ name: 'MPB AURORA', fq: '96.1', vol: 1, genre: 'MPB', bpm: 96, gamme: 'majeur', key: 57, kit: 'lin', eq: [1, 900, -1, 1], rev: 0.2, echo: [3, 0.22], pump: 1, // accords à quatre sons, piano électrique, voix sans paroles
+        prog: ['AM7 F#m7 Bm7 E7 AM7 F#m7 DM7 E7', 'DM7 C#m7 Bm7 E7'], k: ['x.......x.......', 'x......xx.......'], s: [SN], h: ['x.x.x.x.x.x.x.x.', 'x.xxx.xxx.xxx.xx'],
+        b: ['bFM', '0 - - - 7 - - - 0 - - 7 - - 12 -', '0 - - 0 - - 7 - 12 - - 7 - - 0 -'], d: ['warm', 0], c: ['epFM', '..x...x...x...x.', 'x.....x...x.....'],
+        l: ['ldVoixF', '16 - - - 19 - - - 23 - - - 19 - - - | 21 - - - 19 - - - 16 - - - . - - - | 17 - - - 21 - - - 24 - - - 21 - - - | 23 - - - - - - - 19 - - - . - - - | 16 - - - 19 - - - 23 - - - 28 - - - | 24 - - - 21 - - - 19 - - - . - - - | 21 - - - 24 - - - 28 - - - 24 - - - | 23 - - - - - - - . - - - - - - -',
+          '24 - - - 21 - - - 17 - - - 21 - - - | 23 - - - 19 - - - 16 - - - . - - - | 14 - - - 17 - - - 21 - - - 24 - - - | 26 - - - - - - - 23 - - - . - - -'],
+        sec: { i: 'h0 c1 d', a: 'k0 s0 h0 b0 c0', b: 'k1 s0 h1 b1 c0', c: 'k0 s0 h0 b0 l0 d', x: 'l1 d P1', e: 'k1 s0 h1 b1 l1 P1' }, form: 'iabccxecabcc' }),
+      st({ name: 'CAFE BOSSA', fq: '102.3', vol: 1, genre: 'BOSSA NOVA', bpm: 132, gamme: 'majeur', key: 62, kit: 'acou', eq: [0, 1200, 1, -1], rev: 0.18, echo: [3, 0.18], pump: 1, // guitare de nylon, cercle de caisse claire, contrebasse, cordes
+        prog: ['DM7 Em7 F#m7 GM7 DM7 Bm7 Em7 A7', 'GM7 F#m7 Em7 A7'], k: ['x..x....x..x....'], s: ['r..r..r...r..r..'], h: ['x.x.x.x.x.x.x.x.'],
+        b: ['bCorde', '0 - - 7 - - - - 0 - - 7 - - - -', '0 - - - 7 - - - 12 - - - 7 - - -'], d: ['strings', 0], c: ['gtrNylon', 'x..x..x...x..x..', 'x.....x...x.....'],
+        l: ['ldNylon', '16 - - - 19 - 16 - - - 23 - - - . - | 17 - - - 21 - 17 - - - 24 - - - . - | 19 - - - 23 - 19 - - - 26 - - - . - | 21 - - - 24 - - - 28 - - - 24 - - - | 23 - - - 19 - - - 16 - - - 12 - - - | 24 - - - 21 - - - 28 - - - . - - - | 21 - - - 17 - - - 14 - - - 17 - - - | 19 - - - - - - - . - - - - - - -',
+          '28 - - - 24 - - - 21 - - - 17 - - - | 26 - - - 23 - - - 19 - - - . - - - | 24 - - - 21 - - - 17 - - - 14 - - - | 23 - - - - - - - . - - - - - - -'],
+        sec: { i: 'h0 c0', a: 'k0 s0 h0 b0 c0', b: 'k0 s0 h0 b1 c1 d', c: 'k0 s0 h0 b0 c0 l0', x: 'c1 l1 d P1', e: 'k0 s0 h0 b1 c0 l1 P1' }, form: 'iabccxecabcc' }),
+    ],
   };
 
   // Éditeur de musique (editeur.html) : ses réglages, par nom de station, sont enregistrés dans localStorage « vpr.musique » et appliqués par-dessus
@@ -428,9 +448,25 @@
         tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#f2b43a', '#f2b43a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#f2b43a', '#f2b43a', '#5a5e5a'],
           fog: 0x2a2a24, portail: 0x8d918a, neons: [0xf2b43a, 0xf2b43a], coque: 6 }, // galeries : béton, néons sodium
         hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VANNES OUVERTES · 6 H 10'], titre: ['BARRAGE', '74'] } } },
+    // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
+    // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
+    // W = la voie unique du pont : large ne fait qu'élargir (sim.js), tout le reste est élargi à 7 m ; le gué à 13 m. Pts 20 et 23 : bornes de l'élargissement, à 60 m du pont (le raccord de sim.js).
+    { id: 'chapada', nom: 'MATIN SUR LA CHAPADA', rivaux: ['TIAGO', 'LUANA', 'BRUNO'], W: 4.5, kmh: 0.75, vit: [150, 185], grip: 20, sc: 1.1, tun: null, chaud: [4, 14], sect: [8, 22], amb: [[12, 14], [15, 19]], anticipe: 1,
+      large: [[23, 20, 7], [15, 19, 13]], surf: { zones: [[12, 14, 'mouille', 1.5], [15, 19, 'mouille', 2], [21, 22, 'mouille', 0.5], [24, 29, 'mouille', 0.4]], large: 'sec' },
+      pts: [[0, 0, 70], [250, 0, 70], [500, 0, 69], [760, 70, 66], [1075, 168, 62], [1180, 245, 58], [1075, 320, 55], [875, 337, 50], [787, 400, 47], [875, 475, 44], [1075, 512, 38], [1162, 600, 31], [1075, 662, 25],
+        [962, 700, 22], [850, 737, 19], [775, 762, 16], [690, 735, 14], [600, 775, 14], [510, 735, 14], [425, 762, 14], [350, 762, 16], [287, 762, 18], [150, 762, 20], [90, 752, 22], [-40, 717, 26], [-100, 600, 32],
+        [-25, 500, 40], [50, 400, 48], [-105, 300, 55], [-125, 200, 60], [-110, 85, 66], [-60, 4, 69], [-25, 0, 69.6]],
+      // voiture inventée : un coupé brésilien léger à moteur avant, 4 cylindres turbo de 2 L, 250 ch, 1050 kg, propulsion (rapports et courbe de couple estimés)
+      car: car({ nom: 'ONCA 2000 TURBO', ratios: [3.2, 2.1, 1.52, 1.18, 0.95], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
+        tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], son: 1.2, moteur: 'l4', turbo: 1, look: { col: 0x1f6a4a, l: 0.9, w: 0.98, h: 0.98, nez: 0.55, cab: [-0.3, 2, 0.55], aileron: 1, bandes: 0xe9b44c } }),
+      radio: RADIO.chapada,
+      th: { decor: 'chapada', fog: 0xcdd9d0, fogD: [20, 340], sky: [[0, '#8fb8b8'], [0.36, '#cfe0d4'], [0.48, '#f6e4b4'], [0.5, '#cdd9d0'], [1, '#cdd9d0']], stars: 0,
+        astre: { dir: [0.8, 0.25, 0.4], col: '#ffd9a0', ombre: '#ffd9a0', taille: 240 }, hemi: [0xcfe6d8, 0x1d3a2a, 0.7], sun: [0xffe2b0, 0.8], phares: 0.3, bloom: 0.12, scan: 0.05,
+        chev: 0, murH: 0, route: ['#3b3f3c', '#4a4e49', '#ede6cf', '#e9b44c', '#3b3f3c', '#3b3f3c', false], mur: ['#6e6656', '#c8c4b0', '#6c7075', '#3a3428'], depart: [0xe9b44c, 0x4b5359, '#ede6cf'],
+        hud: { y: '#f2f0dc', c: '#ffb94a', r: '#ff5a4a', fond: 'rgba(10,22,18,.82)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'CHAPADA DIAMANTINA · 7 H'], titre: ['MATIN SUR', 'LA CHAPADA'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
-  G.SOIREE = [['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30'], ['barrage', '06:10']]
+  G.SOIREE = [['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30'], ['barrage', '06:10'], ['chapada', '07:00']]
     .map(([id, heure]) => Object.assign(G.CARTES.find(m => m.id === id), { heure }));
   let id = 'ville';
   if (typeof location !== 'undefined') try { id = (/^#defi=\d+\.([a-z0-9]+)\./.exec(location.hash) || [])[1] || new URLSearchParams(location.search).get('carte') || localStorage.getItem('vpr.carte') || id; } catch (e) { } // un lien de défi (#defi=version.carte.données, voir defiCode dans sim.js) ouvre sa carte
