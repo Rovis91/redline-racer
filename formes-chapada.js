@@ -53,7 +53,7 @@
       for (const sd of [-1, 1]) { [[12, 4, 13, 0], [10.5, 3.5, 12, 0.8], [11.5, 4.5, 13.5, -0.6], [10, 3, 11, 1]].reduce((y, [w, hh, d, dx], k) => { L.push([k % 2 ? 'rouille' : 'roche', w, hh, d, sd * (o + dx), y + hh / 2, dx * 1.5, [0, 0.05 * k * sd, 0]], ['joint', w + 0.6, 0.35, d + 0.6, sd * (o + dx), y + hh, dx * 1.5]); return y + hh; }, -1);
         L.push(['roche', 5, 3, 4, sd * (W + 2.5), 0.5, 5, [0, 0.5, 0.15]], ['rouille', 3, 2, 3, sd * (W + 3), 0.2, -6, [0.1, 1.1, 0]], ['roche', 2.5, 1.6, 2.2, sd * (W + 1.8), 0, 9, [0, 0.4, 0.2]]); }
       [[2 * o + 14, 3.5, 14, 15.2, 'roche'], [2 * o + 10, 3, 12.5, 18.4, 'rouille'], [2 * o + 4, 3, 11, 21.4, 'roche']].forEach(([w, hh, d, y, z], k) => L.push([z, w, hh, d, (k - 1) * 1.5, y, k * 0.5, [0, 0, 0.02 * (k - 1)]], ['joint', w + 0.4, 0.35, d + 0.4, (k - 1) * 1.5, y - hh / 2, k * 0.5]));
-      L.push(['roche', 2 * W + 4, 2, 11, 0, 12.6, 0.5, [0, 0, 0.04]], ['mousse', 2 * o + 2, 0.8, 10, 0, 23.3, 0.5], ['mousse', 8, 1.2, 8, -o + 3, 23.6, -1]); return L; },
+      L.push(['joint', 2 * W + 4, 2, 11, 0, 12.6, 0.5, [0, 0, 0.04]], ['gris', 2 * o + 8, 1.4, 12, 0, 20.2, 0.3], ['mousse', 2 * o + 2, 0.8, 10, 0, 23.3, 0.5], ['mousse', 8, 1.2, 8, -o + 3, 23.6, -1]); return L; },
     // cairn de pierres sèches
     cairn: () => [['pierre', 1.4, 0.5, 1.2, 0, 0.25, 0], ['pierre', 1.1, 0.45, 0.9, 0.05, 0.7, 0, [0, 0.6, 0]], ['pierre', 0.8, 0.4, 0.7, -0.05, 1.1, 0, [0, 1.2, 0]], ['pierre', 0.5, 0.35, 0.45, 0, 1.45, 0, [0, 0.3, 0]]],
     // panneau de bois du parc : deux poteaux, une planche gravée (face vers Z, la voiture qui arrive)

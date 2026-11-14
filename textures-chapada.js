@@ -39,9 +39,9 @@
     // REFS 3 : l'eau du gué, peu profonde : ambre clair, rides claires et reflets du ciel, écume crème en traînées (x du dessin : en travers sur un ruban)
     eauGue: () => [64, 64, (g, o) => {
       const { R, alea } = o; R(g, '#a8742f', 0, 0, 64, 64);
-      for (let i = 0; i < 140; i++) R(g, alea() < 0.5 ? '#c08a40' : '#8a5a28', alea() * 64 | 0, alea() * 64 | 0, 4 + (alea() * 10 | 0), 1);
-      for (let i = 0; i < 60; i++) R(g, '#e8c890', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 6 | 0), 1);
-      for (let i = 0; i < 25; i++) R(g, '#f4efe0', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 3 | 0), 1);
+      for (let i = 0; i < 26; i++) R(g, ['#c08a40', '#8a5a28', '#b88038', '#6e4520'][alea() * 4 | 0], alea() * 56 | 0, alea() * 56 | 0, 4 + (alea() * 12 | 0), 4 + (alea() * 12 | 0)); // des taches de fond et de profondeur
+      for (let i = 0; i < 40; i++) R(g, '#e0c08a', alea() * 62 | 0, alea() * 62 | 0, 2 + (alea() * 3 | 0), 2 + (alea() * 2 | 0)); // reflets du ciel
+      for (let i = 0; i < 14; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 62 | 0, 2, 2); // écume
     }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
     // t = 1 : dessin tourné d'un quart, pour un ruban vertical (u = la hauteur) : les assises restent horizontales
@@ -65,9 +65,9 @@
     // REFS 2 : rideau de chute : filets d'eau blancs et gris-bleu pâle, transparents entre eux (pas de turquoise : la V1 se lisait comme des blocs de couleur) (matière transparente, la carte fait défiler la texture vers le bas).
     // Posé en ruban vertical (u = la hauteur) : les filets courent le long de x du dessin
     chute: () => [64, 32, (g, o) => {
-      const { alea } = o; g.fillStyle = 'rgba(220,232,232,.35)'; g.fillRect(0, 0, 64, 32);
-      for (let y = 0; y < 32; y += 2) { const a = 0.35 + alea() * 0.4; for (let x = 0; x < 64;) { const l = 10 + (alea() * 30 | 0);
-        g.fillStyle = alea() < 0.7 ? 'rgba(244,248,246,' + a + ')' : 'rgba(200,214,216,' + a + ')'; g.fillRect(x, y, l, 2); x += l + (alea() * 4 | 0); } }
+      const { alea } = o; g.fillStyle = 'rgba(214,226,228,.45)'; g.fillRect(0, 0, 64, 32);
+      for (let y = 0; y < 32; y += 4) { const a = 0.45 + alea() * 0.4; for (let x = 0; x < 64;) { const l = 28 + (alea() * 36 | 0); // de longs filets continus, larges, peu de trous
+        g.fillStyle = alea() < 0.75 ? 'rgba(246,249,248,' + a + ')' : 'rgba(196,210,214,' + a + ')'; g.fillRect(x, y + (alea() * 2 | 0), l, 3); x += l + (alea() * 3 | 0); } }
     }],
     // planches du pont suspendu : en travers de la route (lignes du dessin), joints sombres, bois gris de pluie, quelques planches neuves plus claires
     planches: () => [64, 64, (g, o) => {
