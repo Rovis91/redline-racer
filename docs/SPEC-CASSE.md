@@ -90,6 +90,26 @@ Profils du joueur :
 - Les rayures se peignent sur la livrée (canvas), au plus une mise à jour par voiture et par image, sans jamais relire le canvas. Pas de décalcomanies.
 - Débris : au plus environ 8 en vol, en Mesh. Une fois posés, ils sont copiés dans **un seul maillage** de taille fixe (48 pièces), sans ombre, qui coûte 1 passe. Le prototype garde un Mesh par débris.
 
+## Prototype 2 : le décor (fait)
+
+Dans `propositions/casse.html` : une « rue » devant le départ. Capture dans `docs/avant-apres/casse/casse-decor.jpg`.
+
+- **Marques sur les murs** : un anneau de 3 000 segments, en un seul maillage. Chaque segment porte une bande de peinture de la teinte de la voiture et deux rayures claires.
+  - Un frottement suivi prolonge la même traînée ; un choc seul laisse une tache. La bande est plus haute quand le choc est fort.
+  - Les marques restent toute la course. Dans le jeu, le même maillage sert pour les murs-rubans de la piste.
+- **Cônes et poubelles** : un InstancedMesh par sorte, mis à jour seulement quand un objet bouge.
+  - Au contact, l'objet part devant et de côté, pour sortir de la trajectoire au lieu d'être poussé jusqu'au mur. Il tourne, rebondit et reste où il tombe.
+  - La voiture perd 1 % de sa vitesse par cône et 6 % par poubelle. Une poubelle lâche ses déchets.
+- **Glissière** : un rail découpé tous les 0,5 m, qui garde la forme qu'on lui donne.
+  - Au-dessus de 4 m/s, il recule de 0,035 × (vn − 4) m, plafonné à 0,5 m par choc et à 0,9 m en cumul, sur un rayon de 1,5 + 0,12 × vn m. Les poteaux se couchent avec lui.
+  - Il rend moins qu'un mur (70 % de la vitesse normale) et sa collision suit sa forme. Il abîme la voiture comme un mur. Sa peinture est dans ses sommets, sur la face touchée seulement. Des marques collées comme sur les murs restaient suspendues là où le rail était avant de plier.
+- **Néons sur pied** : un choc sous 8 m/s les fait grésiller 1,4 s, puis ils s'éteignent, lumière comprise. Au-delà, le panneau part avec la voiture. Dans les deux cas, éclats et étincelles.
+- **Vitrine** : au-dessus de 5 m/s, elle vole en éclats (une quarantaine de débris de verre).
+
+Limites du prototype :
+- Les objets traversent la glissière et les blocs, et ils peuvent s'endormir en équilibre sur une arête.
+- Les débris de verre sont des Mesh séparés : dans le jeu, ils iront dans le maillage unique des débris posés.
+
 ## Mode CASSE (à préciser après les prototypes)
 
 Les dégâts entrent dans la simulation (sim.js) pour rester déterministes en réseau : puissance perdue (avant), direction qui tire (flancs, train avant), pneu crevé (adhérence, étincelles de jante), voiture hors d'usage au-delà d'un seuil. Pistes chiffrées (designer simulation) :
