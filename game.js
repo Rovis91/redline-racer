@@ -441,11 +441,12 @@
   const route = ribbon(T.t1, cO, -W, 0, W, 0, mat('chaussee', { side: THREE.DoubleSide, gloss: TH.route[6] ? 0.2 : 0.08 }, ...TH.route), 32); route.material.userData.mo = 1;
   if (SSR) { route.material.userData.mou = 1; route.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cO + 1) * 2 }, (_, j) => pluieAt((T.t1 + (j >> 1)) % N)), 1)); } // pluie par échantillon : ssr ne reflète que là où il pleut
   const barrier = mat('glissiere', { lum: TH.tubes, side: THREE.DoubleSide }, TH.mur); // ville : liseré néon, lumineux par lui-même ; ailleurs la glissière prend la lumière
-  if (!T.vert) { ribbon(T.t1, cO, -W, TH.murH, -W, -2, barrier); ribbon(T.t1, cO, W, TH.murH, W, -2, barrier); }
+  const MURS = {}; // les deux glissières (côté -1 et +1), qui gardent la forme des chocs (voir « décor qui s'abîme »)
+  if (!T.vert) { MURS[-1] = ribbon(T.t1, cO, -W, TH.murH, -W, -2, barrier); MURS[1] = ribbon(T.t1, cO, W, TH.murH, W, -2, barrier); }
   else { // carte à relief : la glissière suit le haut des murs roulables, et chaque paroi est un quart de tube en 16 facettes, du pied du plat au mur
     const haut = s => paroi(s, s.w), tube = mat(TH.paroi || 'beton', { side: THREE.DoubleSide });
     for (const sg of [-1, 1]) {
-      if (TH.glis ?? 1) ribbon(T.t1, cO, s => sg * s.w, s => haut(s) + TH.murH, s => sg * s.w, s => haut(s) - 2, barrier); // th.glis = 0 : le décor pose lui-même ses glissières (stade : pas sur l'aire centrale), celle-ci doublerait la sienne
+      if (TH.glis ?? 1) MURS[sg] = ribbon(T.t1, cO, s => sg * s.w, s => haut(s) + TH.murH, s => sg * s.w, s => haut(s) - 2, barrier); // th.glis = 0 : le décor pose lui-même ses glissières (stade : pas sur l'aire centrale), celle-ci doublerait la sienne
       for (let i = 0; i < N; i++) if (S[i].rc && !S[(i - 1 + N) % N].rc) { let c = 0; while (S[(i + c + 1) % N].rc) c++;
         for (let j = 0; j < 16; j++) { const o = k => s => sg * (W + (s.w - W) * k / 16), y = k => s => paroi(s, W + (s.w - W) * k / 16); ribbon(i, c, o(j), y(j), o(j + 1), y(j + 1), tube, 16); } } // 16 facettes : avec 6, la corde passait jusqu'à 0,7 m au-dessus de la paroi de sim.js, la voiture s'y enfonçait
     }
@@ -734,7 +735,7 @@
         if (dansEau) gerbe(c, v, moi, dt, 1 + 2.5 * Math.max(0, 1 - c.eauT / 0.35) + (aq(4) ? 0 : 2)); // fort : le coup d'étrave à l'entrée, et la vague des 8 derniers mètres avant la sortie ; hors de l'eau, rien // le gué : une gerbe d'eau de chaque côté, là seulement où la zone mouillée est pleine ; sur la boue de ses bords, ni gerbe ni poussière (decors.js y pose la nappe), et rien dans la boue de ses bords ; allégée pour une voiture que suit une caméra de poursuite (pas en caméra d'inspection, __g.vue, qui regarde de loin)
         else if (q.roul > 0.25 && !q.aq) for (let k = 0; k < 2; k++) poussiere(x + jit(0.6), c.y + 0.15, z + jit(0.6), c.vx * 0.7 + jit(2), 0.3 + Math.random() * 1.2, c.vz * 0.7 + jit(2)); }
       POUS.step(dt); if (GERBE) { GERBE.step(dt); GERBE1.step(dt); ECUME.step(dt); } }
-    dgFrame(dt); FUM.step(dt); dEch.value = RH / 2;
+    dgFrame(dt); decorFrame(dt); FUM.step(dt); dEch.value = RH / 2;
     for (const p of VAPS) { for (p.t += dt; p.t > 0.12; p.t -= 0.12) p.f.emit(p.x + jit(0.6), p.y, p.z + jit(0.6), 0.3 + jit(0.4), 1 + Math.random() * 0.6, jit(0.4)); p.f.step(dt); } // vapeur : toujours, même loin (40 points par bouche)
     for (let i = 0; i < VN; i++) { const j = i * 6, s = i * VK; if (vS[s + 3] <= 0) { vCo.fill(0, j, j + 6); continue; }
       vS[s + 3] -= dt; vS[s + 1] -= vS[s + 5] * dt; const a = Math.max(0, vS[s + 3] / vS[s + 4]), k = vS[s + 6];
@@ -763,9 +764,9 @@
   const opps = OPP.map(([, col]) => {
     const g = carG.clone(), m = reflete(livree(new THREE.Color(col).getHex())), b = brakeMat.clone(), u = { feu: b, roue: roueMat.clone(), sol: solMat.clone() }; m.emissive.setRGB(1, 1, 1); m.emissiveMap = m.map; m.emissiveIntensity = 0.3; // un peu lumineuse : lisible de nuit et de loin
     g.traverse(o => { if (o.material === carMat) o.material = m; else if (o.material === brakeMat) o.material = b; else if (o.material === roueMat) o.material = u.roue; else if (o.material === solMat) o.material = u.sol; });
-    g.visible = false; g.userData.y = 0; Object.assign(g.userData, u); scene.add(g); return g;
+    g.visible = false; g.userData.y = 0; Object.assign(g.userData, u, { col: new THREE.Color(col) }); scene.add(g); return g;
   });
-  Object.assign(carG.userData, { feu: brakeMat, roue: roueMat, sol: solMat }); // après les copies : Object3D.clone recopie userData en JSON
+  Object.assign(carG.userData, { feu: brakeMat, roue: roueMat, sol: solMat, col: new THREE.Color(L.col) }); // après les copies : Object3D.clone recopie userData en JSON
   // freinage d'une voiture (fr : force du frein, 0 à 1) sur son modèle g : feu stop, lueur au sol, et disques qui chauffent aux gros freinages (≈ 1,5 s à fond depuis la pointe) puis refroidissent en ~3 s
   const freins = (g, fr, sp, dt) => { const u = g.userData, h = u.ch = clamp((u.ch || 0) + (fr && sp > 12 ? fr * sp / TOP * 0.9 : -0.35) * dt, 0, 1); u.fr = fr;
     u.feu.color.setHex(fr ? 0xff7080 : 0x8a1020); u.sol.opacity = fr * (0.25 + 0.5 * Math.min(1, NUIT)); u.roue.emissive.setRGB(1.6 * h * h, 0.55 * h ** 3, 0.12 * h ** 4); }; // rouge sombre, puis orange quand ça cogne
@@ -833,6 +834,7 @@
       if (D.fis) { D.liv.map.image.getContext('2d').putImageData(D.fis, 0, 0); D.liv.map.needsUpdate = true; D.fis = null; } }
     for (const d of DEB) { scene.remove(d.m); d.m.geometry.dispose(); } DEB.length = 0;
     for (const vu of VUES) vu.hu.gR[0].length = vu.hu.gR[1].length = vu.hu.gOn[0] = vu.hu.gOn[1] = 0;
+    decorRaz();
   }
   // un choc sur le modèle g : (lx, lz) = d'où il vient, unitaire, dans le repère de la voiture (x vers l'avant) ; f = sa vitesse normale (m/s) ; (vx, vz) = vitesse de la voiture, que gardent les pièces qui tombent
   function dgChoc(g, lx, lz, f, vx = 0, vz = 0, type = 'mur') {
@@ -886,7 +888,7 @@
   }
   const dgPas = (c, vx0, vz0) => { // après un pas de simulation : un choc franc (mur, camion, autre voiture) abîme son modèle ; il vient de l'opposé de ce qu'il a fait à la vitesse
     const g = modele(c), D = g.userData.dg, lap = Math.floor(c.dist / T.n); D.c = c; if (lap !== D.lap) { D.lap = lap; D.z0 = D.z.slice(); } // nouveau tour : chaque zone peut reprendre 0,4
-    const f = Math.max(c.hit, c.bump || 0); if (f <= 3 || dgT - D.t < 0.15) return; D.t = dgT; // un contact qui dure ne compte qu'une fois
+    murChoc(c); const f = Math.max(c.hit, c.bump || 0); if (f <= 3 || dgT - D.t < 0.15) return; D.t = dgT; // un contact qui dure ne compte qu'une fois
     let dx = vx0 - c.vx, dz = vz0 - c.vz, l = Math.hypot(dx, dz); if (l < 0.5) { dx = c.vx; dz = c.vz; l = Math.hypot(dx, dz) || 1; }
     const fx = Math.cos(c.th), fz = Math.sin(c.th); dgChoc(g, (dx * fx + dz * fz) / l, (dz * fx - dx * fz) / l, f, c.vx, c.vz, (c.bump || 0) > c.hit ? 'voiture' : 'mur');
   };
@@ -911,6 +913,70 @@
   // à moins de 40 m, aucun point : les feux de la caisse se voient, et un point de 0,5 m y ferait un pavé rouge
   const feuxGeo = new THREE.BufferGeometry(), feuxP = new Float32Array(6 * Math.max(3, M.trafic || 0)); feuxGeo.setAttribute('position', new THREE.BufferAttribute(feuxP, 3));
   const feux = new THREE.Points(feuxGeo, new THREE.PointsMaterial({ color: 0xff2030, size: 1, fog: false })); feux.frustumCulled = false; scene.add(feux);
+
+  // ---------- décor qui s'abîme (docs/SPEC-CASSE.md, prototype 2) : purement visuel, comme les dégâts ; remis à zéro à chaque départ (decorRaz) ----------
+  // Glissières : chaque côté (MURS) garde la forme des chocs, dz[i] = recul de l'échantillon i (m). La collision de sim.js ne bouge pas : un rail embouti laisse un creux derrière la voiture, pas devant.
+  // Peinture : un anneau de MN segments sur les parois (bande de la teinte de la voiture + rayure claire), recalé sur la glissière quand elle recule.
+  // Cônes et poubelles : posés au bord des virages, ils volent au contact d'une voiture (qui n'en sait rien) et restent où ils tombent.
+  const DS = T.len / N, OFF = s => T.vert ? s.w : W, MDZ = { '-1': new Float32Array(N), 1: new Float32Array(N) }, MP0 = {}; // OFF : où est la paroi ; MP0 : les glissières intactes
+  for (const sg in MURS) { MURS[sg].userData.dyn = 1; MP0[sg] = MURS[sg].geometry.attributes.position.array.slice(); }
+  const murK = i => (i - T.t1 + N) % N; // le rang de l'échantillon i dans un ruban qui part de T.t1 (au-delà de cO : dans le tunnel, pas de glissière)
+  function murEcrit(sg, a, b) { const M = MURS[sg]; if (!M) return; const P = M.geometry.attributes.position.array, d = MDZ[sg];
+    for (let j = a; j <= b; j++) { const i = (j + N) % N, k = murK(i); if (k > cO) continue; const s = S[i], nx = -s.tz * sg, nz = s.tx * sg;
+      for (let v = 0; v < 2; v++) { const q = (k * 2 + v) * 3; P[q] = MP0[sg][q] + nx * d[i]; P[q + 2] = MP0[sg][q + 2] + nz * d[i]; } }
+    M.geometry.attributes.position.needsUpdate = true; }
+  function murTord(i, sg, vn) { if (vn <= 6) return; const d = Math.min(0.3, 0.03 * (vn - 6)), R = Math.max(1, Math.round((1.5 + 0.12 * vn) / DS)), D = MDZ[sg];
+    for (let j = -R; j <= R; j++) { const u = 1 - Math.abs(j) / (R + 1), i2 = (i + j + N) % N; D[i2] = Math.min(0.45, D[i2] + d * u * u * (3 - 2 * u)); }
+    murEcrit(sg, i - R, i + R); marquesSuivent(sg); }
+  const MN = 2000, mP = new Float32Array(MN * 24), mB = new Float32Array(MN * 24), mC = new Float32Array(MN * 32), mI = new Uint32Array(MN * 12), mK = new Int32Array(MN * 2), mS = new Int8Array(MN), mGeo = new THREE.BufferGeometry(); let mi = 0;
+  for (let k = 0; k < MN * 2; k++) mI.set([k * 4, k * 4 + 1, k * 4 + 2, k * 4 + 1, k * 4 + 3, k * 4 + 2], k * 6);
+  mGeo.setAttribute('position', new THREE.BufferAttribute(mP, 3)); mGeo.setAttribute('color', new THREE.BufferAttribute(mC, 4)); mGeo.setIndex(new THREE.BufferAttribute(mI, 1));
+  const mMesh = new THREE.Mesh(mGeo, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })); mMesh.frustumCulled = false; mMesh.userData.dyn = 1; scene.add(mMesh);
+  const mPose = n => { for (let v = 0; v < 8; v++) { const e = mK[n * 2 + (v & 2 ? 1 : 0)], s = S[e], sg = mS[n], dz = MDZ[sg][e], q = n * 24 + v * 3; // sommets 0-1 et 4-5 au bout a, 2-3 et 6-7 au bout b
+    mP[q] = mB[q] - s.tz * sg * dz; mP[q + 1] = mB[q + 1]; mP[q + 2] = mB[q + 2] + s.tx * sg * dz; } };
+  const mEnvoie = () => { mGeo.attributes.position.needsUpdate = mGeo.attributes.color.needsUpdate = true; };
+  function marquesSuivent(sg) { for (let n = 0; n < MN; n++) if (mS[n] == sg) mPose(n); mEnvoie(); } // la glissière a reculé : la peinture recule avec elle
+  function marque(c, sg, vn) { // contact de la voiture c avec la paroi du côté sg (+1 : z > 0 de la piste, à gauche de la normale) ; vn = vitesse normale, plus haute bande si fort
+    const s = S[c.idx], nx = -s.tz, nz = s.tx, o = sg * (OFF(s) - 0.05) - c.d, x = c.x + nx * o, z = c.z + nz * o, L = MK.get(c), t = dgT;
+    let a, b, ia, ib; if (L && L.sg === sg && t - L.t < 0.3 && Math.hypot(x - L.x, z - L.z) < 3) { if (Math.hypot(x - L.x, z - L.z) < 0.5) return; a = [L.x, L.z]; b = [x, z]; ia = L.i; ib = c.idx; }
+    else { const w = 0.25 + Math.min(0.5, vn * 0.03); a = [x - s.tx * w, z - s.tz * w]; b = [x + s.tx * w, z + s.tz * w]; ia = ib = c.idx; } // un choc seul : une tache ; un frottement : une traînée
+    MK.set(c, { x, z, i: c.idx, sg, t });
+    const y0 = c.y + 0.3, h = 0.1 + Math.min(0.3, vn * 0.02), col = modele(c).userData.col || NOIRP, n = mi;
+    [[y0, y0 + h, [col.r, col.g, col.b], 0.85], [y0 + h + 0.03, y0 + h + 0.05, [0.82, 0.82, 0.8], 0.9]].forEach(([ya, yb, cc, al], k) => {
+      mB.set([a[0], ya, a[1], a[0], yb, a[1], b[0], ya, b[1], b[0], yb, b[1]], n * 24 + k * 12); for (let v = 0; v < 4; v++) mC.set([...cc, al], n * 32 + k * 16 + v * 4); });
+    mK[n * 2] = ia; mK[n * 2 + 1] = ib; mS[n] = sg; mPose(n); mEnvoie(); mi = (mi + 1) % MN;
+  }
+  const NOIRP = new THREE.Color(0.3, 0.3, 0.32), MK = new WeakMap(); // MK : le dernier point de peinture de chaque voiture (hors de l'objet de sim.js)
+  // cônes et poubelles : au bord extérieur des virages (là où l'on sort large), un InstancedMesh par sorte ; poubelles seulement en ville
+  const urbain = ['ville', 'paris', 'canal', 'perse'].includes(M.id), OBJ = [], SORTES = [
+    { nom: 'cone', geo: new THREE.ConeGeometry(0.22, 0.7, 8), mat: new THREE.MeshLambertMaterial({ color: 0xff6a10 }), r: 0.22, h: 0.7 },
+    { nom: 'poubelle', geo: new THREE.CylinderGeometry(0.3, 0.26, 0.9, 8), mat: new THREE.MeshLambertMaterial({ color: 0x2c5a34 }), r: 0.3, h: 0.9 }];
+  { let a = 12345; const alea = () => (a = (a * 16807) % 2147483647) / 2147483647, places = []; // tirage fixe : les mêmes à chaque course
+    for (let i = 0; i < N; i += 3) { const k = S[i].k || 0, kp = S[(i + N - 6) % N].k || 0; if (Math.abs(k) > 0.012 && Math.abs(kp) <= 0.012 && murK(i) <= cO) places.push(i); } // l'entrée de chaque virage marqué
+    for (const i of places.slice(0, 14)) { const sg = -Math.sign(S[i].k); for (let j = 0; j < 3; j++) { const ii = (i + j * 3) % N, s = S[ii], o = sg * (OFF(s) - 0.7 - alea() * 0.4), sorte = SORTES[urbain && alea() < 0.35 ? 1 : 0];
+      OBJ.push({ S: sorte, x0: s.x - s.tz * o, z0: s.z + s.tx * o, y0: s.y + (T.vert ? paroi(s, Math.abs(o)) : 0), p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), dort: 1 }); } } }
+  for (const So of SORTES) { const l = OBJ.filter(o => o.S === So); So.im = new THREE.InstancedMesh(So.geo, So.mat, Math.max(1, l.length)); So.im.count = l.length; So.im.castShadow = true; So.im.userData.dyn = 1; scene.add(So.im); l.forEach((o, k) => { o.k = k; }); }
+  // shortcut: le sens du virage (signe de S.k) donne l'extérieur ; si une carte définit k à l'envers, les objets seraient à l'intérieur : à vérifier carte par carte au premier passage
+  const objEcrit = o => { o.S.im.setMatrixAt(o.k, new THREE.Matrix4().compose(o.p, o.q, new V3(1, 1, 1))); o.S.im.instanceMatrix.needsUpdate = true; };
+  function decorRaz() { for (const sg in MDZ) { MDZ[sg].fill(0); if (MURS[sg]) { MURS[sg].geometry.attributes.position.array.set(MP0[sg]); MURS[sg].geometry.attributes.position.needsUpdate = true; } }
+    mB.fill(0); mP.fill(0); mEnvoie();
+    for (const o of OBJ) { o.p.set(o.x0, o.y0 + o.S.h / 2, o.z0); o.v.set(0, 0, 0); o.w.set(0, 0, 0); o.q.identity(); o.dort = 1; objEcrit(o); } }
+  decorRaz();
+  function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg]) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
+  function decorFrame(dt) {
+    const cars = race ? race.cars : VUES.map(v => v.car), up = new V3(), dq = new THREE.Quaternion();
+    for (const c of cars) { const sp = Math.hypot(c.vx, c.vz); if (c.out || sp < 3) continue;
+      if (c.rub) marque(c, Math.sign(c.d) || 1, 0); // le long d'un mur : une traînée de peinture (les chocs francs passent par murChoc, à chaque pas)
+      const fx = Math.cos(c.th), fz = Math.sin(c.th);
+      for (const o of OBJ) for (const off of [1.3, -1.3]) { const dx = o.p.x - (c.x + fx * off), dz = o.p.z - (c.z + fz * off), d = Math.hypot(dx, dz); if (d > 1 + o.S.r || o.p.y > c.y + 1.4 || !(o.dort || o.v.length() < sp * 0.8)) continue;
+        const cote = Math.sign(dx * -fz + dz * fx) || 1, lat = 3 + sp * 0.2; o.v.set(c.vx * 1.1 - fz * cote * lat, 1.5 + sp * 0.07 + Math.random(), c.vz * 1.1 + fx * cote * lat); o.w.set(jit(20), jit(10), jit(20)).multiplyScalar(0.3 + sp / 30); o.dort = 0; } } // il part devant et de côté : il sort de la trajectoire
+    for (const o of OBJ) { if (o.dort) continue;
+      o.v.y -= 9.8 * dt; o.p.addScaledVector(o.v, dt); const wl = o.w.length(); if (wl > 1e-3) { dq.setFromAxisAngle(up.copy(o.w).divideScalar(wl), wl * dt); o.q.premultiply(dq); }
+      up.set(0, 1, 0).applyQuaternion(o.q); const sol = o.y0 + Math.abs(up.y) * o.S.h / 2 + (1 - Math.abs(up.y)) * o.S.r; // debout sur sa base, couché sur son flanc
+      if (o.p.y < sol) { o.p.y = sol; if (o.v.y < 0) o.v.y *= -0.35; const f = Math.exp(-dt * 9); o.v.x *= f; o.v.z *= f; o.w.multiplyScalar(Math.exp(-dt * 5)); if (o.v.length() < 0.3 && o.w.length() < 0.5) o.dort = 1; }
+      objEcrit(o); }
+    // shortcut: un objet dort à la hauteur de sa place de départ et peut traverser le mur ; projeté loin dans une pente, il flotte ou s'enfonce un peu
+  }
 
   fond && await souffle();
   // ---------- fusion du décor fixe : une passe de dessin par matière, au lieu d'une par objet ----------
@@ -1857,7 +1923,7 @@
     const i0 = CARTES.indexOf(M), ordre = [...new Set(CARTES.flatMap((_, k) => [CARTES[(i0 + k) % CARTES.length], CARTES[(i0 - k + CARTES.length * 2) % CARTES.length]]))];
     window.__prep = (async () => { for (const c of ordre) { await construit(c); await souffle(); } })();
   };
-  const api = { veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
+  const api = { get decor() { return { dz: MDZ, obj: OBJ, marques: mi, deb: DEB.length, tord: murTord, marque }; }, veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
   if (fond) { // première image de la carte d'avance, dans sa cible : shaders compilés et textures envoyées au GPU maintenant, pas au moment où elle s'affiche
     await souffle(); const vu = VUES[0], caches = [], tri = [];
     scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { tri.push(o); o.frustumCulled = false; } });

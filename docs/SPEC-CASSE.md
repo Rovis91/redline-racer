@@ -168,8 +168,13 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
   - un bug antérieur est corrigé : la matière des traces n'était pas en DoubleSide, et on ne les voyait jamais.
 - **Captures** : `docs/avant-apres/casse/jeu-degats-70.jpg` et `jeu-traces.jpg`.
 
+**Phase 2 (faite)** : le décor de game.js, section « décor qui s'abîme », purement visuel, remis à zéro au départ. Capture : `docs/avant-apres/casse/jeu-decor.jpg`.
+- **Glissières** : les deux rubans de la piste gardent la forme des chocs francs. Ils sont sortis de la fusion du décor (`userData.dyn`), ce qui coûte 2 passes de dessin. La collision de sim.js ne bouge pas : le creux reste derrière la voiture.
+- **Peinture** : bande de la teinte de la voiture, plus une rayure claire, sur la paroi touchée. Un frottement laisse une traînée, un choc une tache. Un anneau de 2 000 segments, en un maillage ; la peinture recule avec la glissière.
+- **Cônes et poubelles** : 3 objets à l'entrée de 14 virages, côté extérieur. Les poubelles ne sont posées qu'en ville (ville, paris, canal, perse). Un InstancedMesh par sorte ; ils volent au contact d'une voiture, qui n'en sait rien (fantômes et réseau intacts).
+- **Néons qui cassent** : pas faits, car ils sont fondus dans le décor de chaque carte. Il faudrait que chaque décor pose ses enseignes cassables à part.
+
 **Reste à faire** :
-- phase 2 : le décor (marques sur les murs-rubans, objets renversables par carte, glissières, néons) ;
 - phase 3 : la saleté (injectée dans la livrée) et l'huile ;
 - phase 4 : le mode CASSE (menu, effets dans sim.js pour le réseau, score place + takedowns, IA qui cherche le contact) ;
 - capot et portières, qui demandent une livrée par flanc.
