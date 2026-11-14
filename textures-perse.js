@@ -18,7 +18,7 @@
     }, 10],
     // dallage de la salle : damier de marbre ivoire et pierre grise, joints sombres, 2 m par dalle
     dallage: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) R(g, (x + y) & 1 ? '#b09878' : '#d0bc98', x * 16, y * 16, 16, 16);
+      const { R, alea, voile } = o; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) R(g, (x + y) & 1 ? '#a8826a' : '#c8a888', x * 16, y * 16, 16, 16);
       voile(g, 0.15, () => { for (let i = 0; i < 40; i++) R(g, '#5a5048', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 6 | 0), 1); });
       voile(g, 0.35, () => { for (let k = 0; k < 64; k += 16) { R(g, '#3a3028', 0, k, 64, 1); R(g, '#3a3028', k, 0, 1, 64); } });
     }, 8],
@@ -63,7 +63,7 @@
     // auvent rayé des étals : bandes de deux couleurs, frange festonnée
     auvent: (a, b) => [32, 16, (g, { R }) => { R(g, b, 0, 0, 32, 16); for (let x = 0; x < 32; x += 8) { R(g, a, x, 0, 4, 16); R(g, b, x + 4, 0, 4, 16); } R(g, IVOIRE, 0, 13, 32, 1); for (let x = 0; x < 32; x += 4) R(g, a, x, 14, 2, 2); }, 4], // bandes de 0,5 m : plus fines, elles se fondaient en blanc à distance
     // nez des marches du grand escalier, posé sur la chaussée
-    marchesPerse: () => [8, 16, (g, { R }) => { R(g, '#a8947a', 0, 0, 8, 16); R(g, '#9a8670', 0, 9, 8, 7); R(g, '#4a3e30', 0, 0, 8, 2); R(g, '#e0d0b0', 0, 2, 8, 1); }], // REFS §2 : marches basses de pierre, nez d'ombre et arête claire
+    marchesPerse: () => [8, 16, (g, { R }) => { R(g, '#a88e73', 0, 0, 8, 16); R(g, '#9c846c', 0, 9, 8, 7); R(g, '#3e342d', 0, 0, 8, 2); R(g, '#e8d8b8', 0, 2, 8, 1); }], // REFS §2 : marches basses de pierre, nez d'ombre et arête claire
     // façade de palais vue de loin (fond, à contre-jour) : iwan central, arcades sur deux niveaux, frise de faïence, toit plat
     palais: () => [64, 32, (g, { R }) => {
       R(g, '#b0905a', 0, 0, 64, 32); R(g, TURQ, 0, 4, 64, 2); R(g, '#8a6a40', 0, 0, 64, 2);
@@ -97,6 +97,8 @@
         R(g, '#5a4430', x + 2, y, 2, 2); R(g, '#3a2818', x + 1, y, 1, 2); R(g, robe, x + 1, y + 2, 4, 7); R(g, '#5a4430', x + 1, y + 9, 1, 2); R(g, '#5a4430', x + 4, y + 9, 1, 2); // tête, coiffe, robe, pieds
         if (k % 3 === 0) R(g, OR, x + 5, y + 3, 2, 3); else if (k % 3 === 1) R(g, '#8a7050', x + 5, y + 2, 1, 6); } // vase porté, ou bâton
     }],
+    // REFS §2-3 : bandeau de rosettes à huit pétales (couronnement de l'escalier)
+    rosettes: () => [8, 32, (g, { R }) => { R(g, '#8a7050', 0, 0, 8, 32); for (let y = 4; y < 32; y += 8) { R(g, '#d8c098', 2, y - 2, 5, 5); R(g, '#d8c098', 1, y - 1, 7, 3); R(g, '#d8c098', 3, y - 3, 3, 7); R(g, OR, 3, y, 3, 1); R(g, OR, 4, y - 1, 1, 3); } }], // posé sur un ruban vertical : x en hauteur, y le long
     // REFS §9 : calcaire du Kuh-e Rahmat, gris miel en strates horizontales, éboulis plus sombres au pied
     strates: () => [64, 64, (g, { R, alea }) => { R(g, '#8a7c6c', 0, 0, 64, 64); for (let y = 0; y < 64; y += 5 + (alea() * 4 | 0)) { R(g, '#5f5046', 0, y, 64, 1); R(g, '#a8987e', 0, y + 1, 64, 1); }
       for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#6e6052' : '#9a8a76', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1); R(g, '#5f5046', 0, 56, 64, 8); }, 40],

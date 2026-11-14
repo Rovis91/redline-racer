@@ -18,10 +18,10 @@
   Object.assign(FORMES, {
     // REFS §4 : colonne persépolitaine de H m : socle, base en cloche (deux boîtes croisées), fût cannelé octogonal, chapiteau, deux protomés de taureau dos à dos (X), poutre du plafond posée dessus
     colonnePerse: (H = 19) => [['pierre', 3.4, 0.6, 3.4, 0, 0.3, 0], ['pierre', 2.6, 1.2, 2.6, 0, 1.2, 0], ['pierre', 2.6, 1.2, 2.6, 0, 1.2, 0, R45],
-      ['fut', 1.5, H - 6, 1.5, 0, 1.8 + (H - 6) / 2, 0, null, 1], ['fut', 1.5, H - 6, 1.5, 0, 1.8 + (H - 6) / 2, 0, R45], ['sculpte', 2.4, 1, 2.4, 0, H - 4.4, 0, R45], // couronne de palmes (REFS §4)
+      ['fut', 1.2, H - 6, 1.2, 0, 1.8 + (H - 6) / 2, 0, null, 1], ['fut', 1.2, H - 6, 1.2, 0, 1.8 + (H - 6) / 2, 0, R45], ['sculpte', 2.4, 1, 2.4, 0, H - 4.4, 0, R45], // couronne de palmes (REFS §4)
      
       ['pierre', 2.2, 1.4, 2.2, 0, H - 3.5, 0], ['pierre', 1.6, 1.2, 1.6, 0, H - 2.3, 0, R45],
-      ['sculpte', 7.6, 2.2, 2.4, 0, H - 1, 0, null, 1], ...[-1, 1].flatMap(sd => [['sculpte', 1.8, 1.9, 2, sd * 4.4, H - 0.4, 0], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, 0.6], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, -0.6], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, 0.5], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, -0.5]])],
+      ['sculpte', 7.6, 2.2, 2.4, 0, H - 1, 0, null, 1], ...[-1, 1].flatMap(sd => [['sculpte', 1.8, 1.9, 2, sd * 4.4, H - 0.4, 0], ['sculpte', 1.1, 1.1, 1.3, sd * 5.4, H - 0.7, 0], ['or', 0.3, 0.3, 1.9, sd * 4.9, H + 0.75, 0], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, 0.9], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, -0.9], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, 0.5], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, -0.5]])],
     // REFS §6 : la Porte des Nations restituée, à cheval sur la route (repère de la route : Z vers la voiture qui arrive) : salle carrée de brique crue ocre à toit plat et corniche à gorge,
     // portes à chambranles de pierre, taureaux côté arrivée (ouest), lamassus à tête humaine côté sortie (est), quatre colonnes de 16,5 m à l'intérieur ; ni arc, ni créneau, ni tour
     porteNations: (W = 10) => { const L = 2 * W + 20; return [...[-1, 1].flatMap(sd => [['crue', 3, 18, 27, sd * (W + 8.5), 9, 0, null, 1], ['pierre', 3.2, 1.2, 27.4, sd * (W + 8.5), 0.6, 0],
@@ -53,6 +53,8 @@
     personnage: () => [['robe', 0.6, 1.25, 0.42, 0, 0.63, 0], ['robe', 0.75, 0.25, 0.5, 0, 0.12, 0], ['peau', 0.3, 0.32, 0.3, 0, 1.42, 0], ['coiffe', 0.36, 0.18, 0.36, 0, 1.64, 0]],
     // REFS §16 et §2 : étendard achéménide le long de la route royale : mât, drap (teinte de l'instance), aigle d'or au sommet ; X en travers de la route
     banniere: () => [['mat', 0.16, 7, 0.16, 0, 3.5, 0], ['drap', 0.06, 2.6, 1.5, 0, 5.4, 0.8], ['or', 0.5, 0.5, 0.25, 0, 7.2, 0], ['or', 1.1, 0.12, 0.2, 0, 7.15, 0]],
+    // REFS §9 : autel du feu achéménide (Naqsh-e Rostam) : socle à degrés, fût carré, coupe à degrés ; la flamme est posée à part
+    autel: () => [['pierre', 1.4, 0.4, 1.4, 0, 0.2, 0], ['pierre', 0.8, 1.3, 0.8, 0, 1.05, 0], ['pierre', 1.2, 0.3, 1.2, 0, 1.85, 0], ['pierre', 1.5, 0.3, 1.5, 0, 2.15, 0], ['or', 1.55, 0.08, 1.55, 0, 2.34, 0]],
     // REFS §15 : tente noire des nomades : lés tendus en deux pans, rebord bas
     tente: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
     // REFS §12 : arc transversal brisé du bazar couvert (repère de la route) : deux piles et l'arc en six segments, de la naissance à 3,8 m jusqu'à la clé à 6,8 m
@@ -60,13 +62,13 @@
       for (let k = 0; k < n; k++) { const [x0, y0] = pt(k), [x1, y1] = pt(k + 1), l = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0); for (const sd of [-1, 1]) segs.push(['brique', l + 0.3, 0.7, 1.1, sd * (x0 + x1) / 2, (y0 + y1) / 2, 0, [0, 0, sd > 0 ? a : -a]]); }
       return [...[-1, 1].flatMap(sd => [['brique', 0.9, 3.8, 1.2, sd * R0, 1.9, 0], ['faience', 1, 0.4, 1.3, sd * R0, 3.7, 0]]), ...segs]; },
     // REFS §13 : portail (pishtaq) à l'entrée du bazar couvert, à cheval sur la route : cadre de faïence plus haut que les toits, bandeau d'inscription, niche brisée à muqarnas au-dessus de la voûte
-    pishtaq: (W = 10) => { const b = [...[-1, 1].flatMap(sd => [['brique', 4, 21, 3.4, sd * (W + 2), 10.5, 0, null, 1], ['faience', 0.6, 19, 3.6, sd * (W - 0.1), 10.5, 0]]),
-        ['brique', 2 * W + 8, 3.6, 3.4, 0, 19.2, 0, null, 1], ['inscr', 2 * W + 8.2, 1.4, 3.6, 0, 17.6, 0], ['faience', 2 * W + 8.4, 0.5, 3.8, 0, 21.2, 0], ['muq', 2 * W, 9, 0.4, 0, 12.4, -2.6]];
+    pishtaq: (W = 10) => { const b = [...[-1, 1].flatMap(sd => [['brique', 4, 25, 3.4, sd * (W + 2), 12.5, 0, null, 1], ['faience', 0.6, 23, 3.6, sd * (W - 0.1), 12.5, 0]]),
+        ['brique', 2 * W + 8, 7.6, 3.4, 0, 21.2, 0, null, 1], ['inscr', 2 * W + 8.2, 1.6, 3.6, 0, 17.6, 0], ['inscr', 2 * W + 8.2, 1.6, 3.6, 0, 23.2, 0], ['faience', 2 * W + 8.4, 0.5, 3.8, 0, 25.2, 0], ['muq', 2 * W, 9, 0.4, 0, 12.4, -2.6]];
       for (let k = 0; k < 12; k++) { const y = 8 + k * 0.7, hw = W * Math.pow(1 - (k + 0.5) / 12, 0.7); for (const sd of [-1, 1]) b.push(['muq', W - hw + 0.1, 0.72, 3.2, sd * (hw + (W - hw) / 2), y + 0.35, 0]); }
       return b; },
     // REFS §12 : module d'arcades du bazar à ciel ouvert, 12 m : mur de brique peint de deux arcs, corniche, coupole basse derrière (bulbe en deux boîtes)
     // V2 : toit plat à rebord, plus de coupole en gradins (lue comme un merlon, REFS §12) : les coupoles du quartier sont des calottes à part
-    arcade: () => [['brique', 12, 5.5, 1.2, 0, 2.75, 0.6, null, 1], ['faience', 12.2, 0.6, 1.4, 0, 5.8, 0.6], ['crue', 12, 7, 9, 0, 3.5, 5.6], ['crue', 12.3, 0.4, 9.3, 0, 7.2, 5.6]],
+    arcade: () => [['brique', 12, 5.5, 1.2, 0, 2.75, 0.6, null, 1], ['faience', 12.2, 0.6, 1.4, 0, 5.8, 0.6], ['crue', 12, 7, 9, 0, 3.5, 5.6], ['crue', 12.3, 0.4, 9.3, 0, 7.2, 5.6], ...[-3, 3].flatMap(x => [['bois', 3, 1.3, 0.9, x, 6.4, 0.75], ['bois', 3.2, 0.15, 1.1, x, 7.1, 0.75]])], // balcons de bois à claustras à l'étage
     // REFS §12, §16 : étal à auvent (X le long de la route) : comptoir, deux montants, toile rayée penchée vers la route, marchandises
     etalPerse: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
       ['marchandise', 3, 0.5, 1, 0, 1.25, 1.2]],
