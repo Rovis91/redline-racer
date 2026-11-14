@@ -9,7 +9,7 @@
     gerbe: (L = 70, chute = 14, w0 = 7, w1 = 16) => {
       const P = [], UV = [], I = [], n = 20;
       for (const nappe of [0, 1]) { const b = P.length / 3;
-        for (let k = 0; k <= n; k++) { const t = k / n, z = t * L, y = -chute * t * t, w = (nappe ? 2 + (w1 / 2 - 2) * t : w0 + (w1 - w0) * t) / 2;
+        for (let k = 0; k <= n; k++) { const t = k / n, z = t * L, y = -chute * t * t, w = (nappe ? 4 + (w1 * 0.8 - 4) * t : w0 + (w1 - w0) * t) / 2;
           if (nappe) P.push(0, y - w, z, 0, y + w, z); else P.push(-w, y, z, w, y, z); UV.push(0, t * 4, 1, t * 4);
           if (k < n) { const a = b + k * 2; I.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } } }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.setIndex(I); g.computeVertexNormals(); return g;
@@ -67,6 +67,8 @@
     cabane: () => [['beton', 4, 3, 3.4, 0, 1.5, 0, null, 1], ['toit', 5, 0.3, 4.2, 0, 3.15, 0], ['vitre', 1.6, 1, 0.1, 0, 1.8, 1.72]],
     // REFS 5 — tour de commande sur la culée : fût, salle vitrée, toit, antenne
     tourControle: () => [['beton', 7, 24, 7, 0, 12, 0, null, 1], ['vitre', 10, 4, 10, 0, 26, 0], ['beton', 11, 1, 11, 0, 28.5, 0], ['acier', 0.4, 12, 0.4, 2, 35, 2]],
+    // REFS 7 — berline garée des années 70 (X = le long) : caisse, pavillon, vitres
+    berline: () => [['caisse', 4.7, 0.9, 1.8, 0, 0.75, 0, null, 1], ['caisse', 2.4, 0.6, 1.6, -0.3, 1.5, 0], ['vitre', 2.3, 0.45, 1.65, -0.3, 1.45, 0], ['pneu', 3.4, 0.6, 1.7, 0, 0.3, 0]],
     // REFS 7 — panneau de route sur deux poteaux (face vers -Z), 4 × 2 m
     panneauGES: () => [...paire(sd => ['poteau', 0.15, 3.6, 0.15, sd * 1.6, 1.8, 0]), ['plaque', 4, 2, 0.08, 0, 3.4, 0]],
     // REFS 7 — abri de bus en béton, mosaïque au fond (face vers +Z)

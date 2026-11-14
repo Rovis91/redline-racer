@@ -20,7 +20,7 @@
       const { R, alea, voile } = o; R(g, fond, 0, 0, 64, 64);
       for (let i = 0; i < 26; i++) voile(g, 0.45, () => R(g, ['#6e6658', '#4a4438', '#7a7466', '#55504a'][i & 3], alea() * 60 | 0, alea() * 60 | 0, 6 + (alea() * 14 | 0), 5 + (alea() * 12 | 0)));
       voile(g, 0.55, () => { for (let i = 0; i < 40; i++) { const v = alea() < 0.5; R(g, '#2e2a24', alea() * 64 | 0, alea() * 64 | 0, v ? 1 : 3 + (alea() * 8 | 0), v ? 3 + (alea() * 8 | 0) : 1); } });
-      voile(g, 0.35, () => semis(g, o, 220, '#8a8476')); voile(g, 0.25, () => semis(g, o, 60, '#9aa47a'));
+      voile(g, 0.35, () => semis(g, o, 220, '#8a8476')); voile(g, 0.25, () => semis(g, o, 60, '#9aa47a')); voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#3a3630', 0, alea() * 64 | 0, 64, 1 + (alea() * 2 | 0)); }); // ruissellements (sur les parois, x de la texture = la hauteur)
     }, 10],
     // REFS 7 — sol de taïga : herbe sombre, mousse, aiguilles rousses, cailloux
     solGES: () => [64, 64, (g, o) => {
@@ -43,6 +43,9 @@
     ecorceB: () => [16, 64, (g, o) => { const { R, alea } = o; R(g, '#e4e2d8', 0, 0, 16, 64); for (let i = 0; i < 30; i++) R(g, '#2a2a26', alea() * 16 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1); }, 4],
     feuillesB: () => [32, 32, (g, o) => { const { R, alea } = o; R(g, '#7a9a4a', 0, 0, 32, 32); for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#9ab85a' : '#5a7a3a', alea() * 32 | 0, alea() * 32 | 0, 2, 2); }, 3],
     aiguilles: (c = '#2e4430') => [32, 32, (g, o) => { const { R, alea } = o; R(g, c, 0, 0, 32, 32); for (let y = 0; y < 32; y += 4) R(g, '#1c2a1e', 0, y, 32, 1); for (let i = 0; i < 90; i++) R(g, alea() < 0.6 ? '#3e5a3a' : '#5a6a3a', alea() * 32 | 0, alea() * 32 | 0, 2, 1); }, 4],
+    // REFS 7 — clôture de béton soviétique type ПО-2 : panneaux gris à losanges en relief, poteaux tous les 4 m (sur un ruban : x = la hauteur, y = le long)
+    betonPO2: () => [32, 32, (g, o) => { const { R, voile } = o; R(g, '#a4a49a', 0, 0, 32, 32); R(g, '#c0c0b6', 0, 0, 2, 32); R(g, '#6e6e66', 0, 30, 32, 2);
+      for (let x = 3; x < 30; x += 1) { const k = Math.abs(((x - 3) % 9) - 4.5); R(g, '#7e7e76', x, 8 + k | 0, 1, 1); R(g, '#7e7e76', x, 8 - k + 16 | 0, 1, 1); R(g, '#c8c8be', x, 24 - k | 0, 1, 1); } voile(g, 0.2, () => semis(g, o, 60, '#000', 32, 32)); }, 4],
     // REFS 2 — remous du bassin de dissipation : écume blanche, bouillons gris-bleu (défile dans decors.js)
     ecumeGES: () => [64, 64, (g, o) => { const { R, alea } = o; R(g, '#cfe2e6', 0, 0, 64, 64); for (let i = 0; i < 220; i++) R(g, alea() < 0.5 ? '#f4fafa' : '#9cbcc6', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 8 | 0), 1 + (alea() * 2 | 0)); }, 14],
     // REFS 7 — filet pare-pierres sur la paroi : maille de 1 m transparente (alphaTest)
@@ -50,7 +53,7 @@
     // bandes de danger orange et noires (portails, pieds de portiques)
     bandeOrange: () => [32, 8, (g, { R }) => { R(g, '#e8761e', 0, 0, 32, 8); g.fillStyle = '#1e1e1c'; for (let x = -8; x < 32; x += 8) { g.beginPath(); g.moveTo(x, 8); g.lineTo(x + 4, 8); g.lineTo(x + 8, 0); g.lineTo(x + 4, 0); g.fill(); } }],
     // REFS 5 — parapet de la crête : béton clair, chaperon, barbacanes
-    parapet: () => [32, 16, (g, o) => { const { R, voile } = o; R(g, '#a8aca4', 0, 0, 32, 16); R(g, '#c8ccc4', 0, 0, 32, 3); R(g, '#6d726d', 0, 15, 32, 1); for (let x = 4; x < 32; x += 16) R(g, '#3a3c3a', x, 11, 3, 2); voile(g, 0.25, () => semis(g, o, 60, '#000', 32, 16)); }, 3],
+    parapet: () => [16, 32, (g, o) => { const { R, voile, alea } = o; R(g, '#a8aca4', 0, 0, 16, 32); R(g, '#c8ccc4', 0, 0, 3, 32); R(g, '#7d817a', 3, 0, 1, 32); R(g, '#5a5e5a', 12, 0, 4, 32); R(g, '#3a3c3a', 8, 6, 2, 3); R(g, '#3a3c3a', 8, 22, 2, 3); voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#5a5e5a', 4 + (alea() * 6 | 0), alea() * 32 | 0, 1 + (alea() * 3 | 0), 1); R(g, '#000', 0, 31, 16, 1); }); }, 3], // x = la hauteur (0 = chaperon), y = le long de la route : joint tous les 3 m, barbacanes
     // REFS 4 — panneau de danger : triangle jaune à l'éclair noir, « ВЫСОКОЕ НАПРЯЖЕНИЕ » ; borne blanche à bande noire
     danger: () => [64, 32, (g, { R }) => { R(g, '#f0f0e8', 0, 0, 64, 32); g.fillStyle = '#f2c21a'; g.beginPath(); g.moveTo(12, 3); g.lineTo(22, 21); g.lineTo(2, 21); g.fill();
       g.fillStyle = '#111'; g.beginPath(); g.moveTo(13, 7); g.lineTo(9, 14); g.lineTo(12, 14); g.lineTo(10, 19); g.lineTo(16, 11); g.lineTo(13, 11); g.fill();
@@ -106,7 +109,7 @@
     gerbe: () => [32, 128, (g, o) => {
       const { R, alea } = o; g.clearRect(0, 0, 32, 128);
       for (let x = 0; x < 32; x++) { const bord = Math.min(x, 31 - x) / 6, a = Math.min(1, bord) * 0.95;
-        for (let y = 0; y < 128; y += 2 + (alea() * 6 | 0)) { const l = 4 + (alea() * 20 | 0); R(g, `rgba(${alea() < 0.3 ? '200,224,232' : '240,248,250'},${(a * (0.4 + alea() * 0.6)).toFixed(2)})`, x, y, 1, l); } }
+        for (let y = 0; y < 128; y += 2 + (alea() * 6 | 0)) { const l = 4 + (alea() * 20 | 0); R(g, `rgba(${alea() < 0.35 ? '150,182,196' : '244,250,252'},${(a * (0.5 + alea() * 0.5)).toFixed(2)})`, x, y, 1, l); } } // filets clairs et filets gris-bleu : on lit l'eau qui file, pas un dôme lisse
     }],
     // brume des embruns au pied des gerbes : nuage rond, opaque au centre, transparent au bord
     brumeGES: () => [64, 64, (g) => {
