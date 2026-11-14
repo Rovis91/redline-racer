@@ -1,0 +1,116 @@
+# Casse et interactions — scope
+
+Inspiration : Wreckfest, FlatOut, Burnout. Tout est d'abord validé dans un bac à sable (`propositions/casse.html`), une mécanique à la fois, avant d'entrer dans le jeu.
+
+## Ce qui existe déjà
+
+- **Dégâts** (7a3eb7f) : 4 zones (avant, arrière, flancs), caisse cabossée, phares et feux qui s'éteignent, pare-chocs et rétros qui tombent (20 s au sol), fumée, pare-brise fêlé, moteur qui rate. Purement visuel : la simulation n'en sait rien.
+- **Traces de gomme** : noires, en glisse seulement, quelle que soit la surface, effacées en 8 s.
+- **Surfaces** (sim.js, `SURF`) : sec, mouillé, glace, neige, terre ; trajectoire qui sèche sous la pluie.
+
+## Décidé
+
+| Sujet | Règle |
+|---|---|
+| Dégâts et conduite | Visuels dans tous les modes actuels (fantômes, médailles, réseau restent justes). Un **nouveau mode CASSE** où ils comptent. |
+| Voiture | Déformation plus forte et progressive (beaucoup de petits chocs s'additionnent), plus de pièces qui tombent (pare-chocs, optiques en éclats, puis capot, portières…). |
+| Débris | Restent au sol toute la course, poussés par les voitures qui passent. Nombre plafonné (les plus vieux disparaissent). |
+| Traces au sol | Par surface : bitume sec = gomme noire ; terre / gravier = sillons sombres, même en roulant ; neige = ornières, même en roulant ; mouillé et glace = rien. En glisse, au freinage bloqué et au patinage du départ. Restent toute la course (anneau de taille fixe). |
+| Décor | Marques de peinture et rayures sur les murs ; objets légers renversables (cônes, poubelles, panneaux, barrières) ; glissières qui se tordent ; néons et vitres qui cassent. |
+| Bonus | Saleté qui s'accumule sur la caisse (lavée par la pluie, le gué) ; gerbes dans les flaques, traînée d'huile d'une voiture très abîmée ; étincelles de châssis (réception de saut, jante sur pneu crevé). |
+| Écarté | Caméra de crash au ralenti. |
+
+## Mécanique des chocs (arbitrée)
+
+Débat entre trois game designers (lisibilité arcade, simulation façon Wreckfest, équilibrage course) et un technical artist. Implémentée dans `propositions/casse.html` (`choc`, `pend`, `lache`), captures dans `docs/avant-apres/casse/`.
+
+**Le défaut du modèle actuel** : un frottement à 5 m/s ajoute +0,18 d'usure. Trois frottements suffisent à faire tomber un rétro, c'est l'épave au premier tour.
+
+**Force et angle**
+- Seule la **vitesse normale** (vn, ce que `c.hit` et `c.bump` portent déjà) casse. La vitesse tangentielle (frotter le long d'un mur) ne donne que des étincelles et des rayures de peinture, jamais d'usure.
+- Seuil : rien sous **6 m/s** contre un mur ou un camion, sous **4 m/s** entre voitures.
+  - Repères tirés de sim.js : frotter en virage donne vn 3 à 9 ; un mur raté, 12 à 18 ; une épingle ratée, 20 à 28 ; une portière d'IA, 2 à 6 ; un camion tamponné, 20 à 35.
+- Usure d'un choc, proche de l'énergie : `u = min(1, ((vn − seuil) / 24)²) × type × endroit`.
+  - type : mur 1, camion 1,5, voiture 0,6.
+  - endroit : coin × 1,3, face ou flanc × 1.
+- Le choc se répartit entre la face (avant ou arrière) et le flanc selon le carré de chaque composante de sa direction.
+- Rendement décroissant : `zone += min(0,45, 0,6·u·poids) × (1 − zone)`.
+- Un contact frais compte au plus une fois toutes les 0,4 s (comme `wallT`).
+
+**Plafond** : hors du mode CASSE, aucune zone ne dépasse **0,70**. On peut être très abîmé, jamais une épave. Et chaque zone prend au plus **+0,40 par tour** (indispensable, voir les mesures).
+
+**Déformation** : l'enfoncement suit l'usure ajoutée, donc plus rien une fois le plafond atteint. Une face qui a perdu son pare-chocs se plie 1,5 fois plus.
+
+**Pièces : elles pendent, puis elles tombent** (seuils sur l'usure de leur zone)
+
+| Pièce | Pend à | Tombe à | Comment elle pend |
+|---|---|---|---|
+| Rétro, du côté du choc | — | 0,25 | — |
+| Phare / feu, du côté du choc | — | 0,25 (éclats) | hors CASSE, un phare reste toujours allumé |
+| Pare-chocs | 0,30 | 0,45 | tient d'un bout, l'autre traîne au sol (étincelles) |
+| Aileron | 0,35 | 0,55 | penche d'un côté |
+| Capot | 0,55 | 0,85 (CASSE seulement) | se soulève et bat ; on voit le compartiment moteur |
+| Portière | 0,60 | 0,85 (CASSE seulement) | s'ouvre et bat ; on voit l'ouverture sombre |
+
+Une seule pièce pend à la fois : la suivante fait tomber la précédente. Une pièce qui pend est dessinée à part, elle coûte 2 passes. Pare-brise étoilé : à partir de vn > 22.
+
+**Profils, sur une course de 3 tours** (suites de chocs fixes dans le prototype, touches 1 à 4)
+
+| Profil | Ce qu'il prend | État (usure avant / arrière / gauche / droite) |
+|---|---|---|
+| Propre | 10 frottements, 2 touchettes, 4 portières d'IA | 1 / 1 / 2 / 4 : nickel |
+| Moyen | 15 frottements, 6 murs moyens, 1 gros choc, 8 contacts d'IA | 16 / 6 / 21 / 9 : quelques creux |
+| Bourrin | par tour : 4 murs ratés, 2 gros chocs, 1 camion, 2 tamponnages | 70 / 24 / 19 / 60 : pare-chocs avant parti, un phare cassé, capot soulevé, aileron qui penche, roule toujours |
+| Épave (CASSE) | bourrin, plus 12 crashs | presque 100 partout : capot, portières, pare-chocs, optiques partis |
+
+**Mesuré en vraie course** (`node outils/chocs.js [carte]`) : 8 cartes, 3 tours, 3 IA, la vraie physique de sim.js. On note chaque choc comme le jeu le voit et on rejoue dessus le modèle ci-dessus, **avec le plafond par tour** (+0,40 au plus par zone et par tour, ajouté après la première mesure).
+
+Profils du joueur :
+- propre = le pilote automatique ;
+- moyen = 6 % trop vite et un volant imprécis ;
+- bourrin = toujours à fond, jamais de frein.
+
+| Profil | Zone la plus abîmée en fin de course (min / médiane / max sur les 8 cartes) | Fin du tour 1 |
+|---|---|---|
+| Propre | 0 / 5 / 22 : nickel, un creux au pire (un gros contact au givre) | 0 à 22 |
+| IA (rivaux) | 0 / 0 / 13 : les rivaux restent propres | — |
+| Moyen | 4 / 22 / 32 : quelques creux, parfois un rétro ou une optique | 4 à 17 |
+| Bourrin | 26 / 70 / 70 : au plafond, mais roule | **40 au plus** (pare-chocs qui pend, une optique) |
+
+- Sans plafond par tour, le bourrin atteignait 70 dès la fin du tour 1 (touge, stade). Le plafond par tour est donc indispensable.
+- Frottements : chaque course compte des dizaines de contacts entre 4 et 10 m/s. Leur effet est nul ou négligeable : à vn = 8, l'usure est de 0,007.
+- Gros chocs : le bourrin prend 3 à 10 chocs au-dessus de 20 m/s par course. Contre les camions de wangan en contre-la-montre, il en prend 10 au-dessus de 30 m/s, et le plafond par tour le retient à 40.
+- Limite : le pilote « moyen » est aléatoire, donc ses chiffres bougent d'un essai à l'autre. Aucun vrai joueur humain n'a encore été mesuré.
+
+**Technique** (technical artist)
+- La déformation reste sur le CPU, au choc. Elle coûte environ 0,1 ms par voiture (1 200 à 2 600 sommets) ; le GPU n'apporterait rien.
+- `fondre` (formes-voitures.js) note l'**id de pièce** de chaque triangle, pour remplacer les recherches par boîte du prototype, qui sont fragiles. Une pièce qui s'en va voit ses triangles réduits à un point, ce qui ne coûte aucune passe. Faire de chaque pièce un Mesh à part ajouterait environ 100 passes par vue : à éviter.
+- Capot et portières n'existent pas en géométrie. On ajoute des plaques fines par-dessus, plus une ouverture et un compartiment moteur sombres.
+- **Point bloquant** pour les portières et les rayures : la livrée lit les mêmes pixels pour les deux flancs (`plan.cote` ignore z). Il faut une vue de côté par flanc dans textures-voitures.js.
+- Les rayures se peignent sur la livrée (canvas), au plus une mise à jour par voiture et par image, sans jamais relire le canvas. Pas de décalcomanies.
+- Débris : au plus environ 8 en vol, en Mesh. Une fois posés, ils sont copiés dans **un seul maillage** de taille fixe (48 pièces), sans ombre, qui coûte 1 passe. Le prototype garde un Mesh par débris.
+
+## Mode CASSE (à préciser après les prototypes)
+
+Les dégâts entrent dans la simulation (sim.js) pour rester déterministes en réseau : puissance perdue (avant), direction qui tire (flancs, train avant), pneu crevé (adhérence, étincelles de jante), voiture hors d'usage au-delà d'un seuil. Pistes chiffrées (designer simulation) :
+- usure de l'avant au-delà de 0,6 : −15 % de puissance ; au-delà de 0,85 : −35 % et de la fumée ;
+- choc de coin avant au-dessus de vn 12 : la direction tire de 0,02 rad, jusqu'à 0,08 rad ;
+- pare-chocs qui traîne : −1,5 % de vitesse maximale ;
+- chaque pièce perdue : +1 % d'accélération, la voiture s'allège (touche FlatOut).
+
+Questions ouvertes : derby en arène ou course sur les cartes existantes, score (dernier debout, points par choc), IA qui cherche le contact.
+
+## Prototypes, dans l'ordre
+
+1. **Sols et voiture** : bandes de surfaces, traces par surface, flaques, déformation progressive, pièces qui tombent et restent, étincelles de châssis à la réception d'un tremplin.
+2. **Décor** : marques sur les murs, cônes et poubelles, glissière qui se tord, néon qui casse.
+3. **Bonus** : saleté de caisse, traînée d'huile.
+4. **Mode CASSE** : dégâts qui jouent sur la conduite, dans une copie de la physique du bac à sable.
+
+Chaque mécanique validée entre dans le jeu avec un passage au banc (`node outils/banc.js`).
+
+## Coût à surveiller dans le jeu
+
+- Le décor est fondu en gros lots (une passe de dessin par matière) : tout ce qui se tord ou tombe doit en être sorti, donc garder ces objets peu nombreux et près de la piste.
+- Traces, marques et débris : un seul maillage chacun, tableaux de taille fixe, envoi au GPU de la partie modifiée seulement.
+- Déformation : seulement au choc, jamais par image.
