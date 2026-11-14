@@ -110,6 +110,47 @@ Limites du prototype :
 - Les objets traversent la glissière et les blocs, et ils peuvent s'endormir en équilibre sur une arête.
 - Les débris de verre sont des Mesh séparés : dans le jeu, ils iront dans le maillage unique des débris posés.
 
+## Prototype 3 : les bonus (fait)
+
+Capture : `docs/avant-apres/casse/casse-bonus.jpg`.
+
+- **Saleté de caisse** : une injection dans la matière de la caisse (`onBeforeCompile`), trois uniformes (niveau, hauteur, couleur).
+  - La saleté arrive par seuils, pour une progression continue (`casse-salete.jpg`, de 8 à 100 %).
+    - Chaque cellule a son seuil : d'abord des éclaboussures fines, puis de grosses plaques qui se rejoignent, et la couche s'épaissit.
+    - Le niveau local décroît avec la hauteur : le bas de caisse se salit 1,7 fois plus vite que le niveau, le toit 0,3 fois.
+    - La surface devient mate et perd son reflet.
+  - Chaque surface dépose sa couleur à sa vitesse : terre 0,07/s, neige 0,05/s, poussière du bitume sec 0,004/s. Ça va plus vite en vitesse et en travers, et moins vite quand la caisse est déjà sale.
+  - La couleur se mêle au fil des surfaces. Le bitume mouillé lave à 0,06/s, une flaque 8 fois plus vite, et L lave d'un coup.
+  - Dans le jeu : la même injection dans la matière de la livrée. La pluie lavera comme le mouillé.
+- **Traînée d'huile** : au-delà de 0,6 d'usure à l'avant, le moteur goutte, à l'arrêt comme en roulant.
+  - Ce sont des gouttes rondes, sombres et brillantes, de plus en plus serrées et grosses avec l'usure.
+  - Un anneau de 1 500 taches en un seul maillage. En mode CASSE, elles pourraient faire glisser les voitures qui passent dessus.
+- **Déjà là depuis le prototype 1** : les gerbes dans les flaques, et les étincelles de châssis (réception de saut, pare-chocs qui traîne).
+
+## Prototype 4 : le mode CASSE (conduite)
+
+**Décidé** : une **course de casse** de 3 tours sur les cartes existantes, façon FlatOut, avec les rivaux IA. Le score combine **la place à l'arrivée et les takedowns** (un rival mis hors d'usage ou envoyé dans le mur). Hors du mode CASSE, rien ne change : les dégâts restent visuels.
+
+**Effets sur la conduite**, essayés dans `propositions/casse.html` (touche M). Capture : `docs/avant-apres/casse/casse-mode.jpg`.
+
+| Effet | Règle | Mesure dans le bac à sable (départ arrêté, 5 s pied au plancher) |
+|---|---|---|
+| Moteur qui faiblit | usure avant ≥ 0,6 : −15 % de puissance ; ≥ 0,85 : −35 % et fumée grise | intacte 201 km/h ; avant 70 % : 172 ; avant 90 % : 131 |
+| Direction qui tire | choc sur l'avant de côté au-dessus de 12 m/s : le volant dévie de 0,02 vers le côté touché, jusqu'à 0,08 | déviation de 0,04 sans corriger : 22° de cap en 5 s |
+| Pneu crevé | gros choc (> 15 m/s) sur un coin dont la face est déjà à 0,5 : la roue crève ; −15 % d'adhérence et −10 % de vitesse maximale par roue, la voiture tire de son côté, la caisse s'affaisse, la jante crache des étincelles | roue avant droite crevée : 15° de cap en 5 s sans corriger |
+| Hors d'usage | usure avant ≥ 0,97 ou somme des zones ≥ 3,4 : moteur coupé, fumée noire, la voiture est éliminée | — |
+| En plus | pare-chocs qui traîne : −1,5 % de vitesse maximale ; chaque pièce perdue : +1 % d'accélération | — |
+
+Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
+- Les zones d'usure, `tire`, `creve` et `mort` deviennent des champs de la voiture.
+- Le modèle de chocs doit être calculé dans sim.js, pas dans game.js.
+
+À trancher en jeu :
+- la force de la déviation (0,08 au maximum est peut-être trop pour une manette) ;
+- le nombre de points par takedown ;
+- l'IA qui cherche le contact (la « tête brûlée » plus que les autres) ;
+- un takedown compte-t-il pour une voiture sortie par un mur juste après un contact (fenêtre de 2 s) ?
+
 ## Mode CASSE (à préciser après les prototypes)
 
 Les dégâts entrent dans la simulation (sim.js) pour rester déterministes en réseau : puissance perdue (avant), direction qui tire (flancs, train avant), pneu crevé (adhérence, étincelles de jante), voiture hors d'usage au-delà d'un seuil. Pistes chiffrées (designer simulation) :
