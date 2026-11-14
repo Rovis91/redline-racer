@@ -197,6 +197,19 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
   - le pilote bourrin finit hors d'usage sur le touge et le stade ;
   - un pilote propre prend tout de même des coups de l'IA (jusqu'à 0,62 sur un flanc).
 
+**Après essai (2)** : capture `docs/avant-apres/casse/jeu-feu-verre.jpg`.
+- **Flammes** (CASSE) :
+  - un moteur à bout (avant à 0,85 ou plus) prend feu, et une voiture hors d'usage brûle franchement ;
+  - ce sont des sprites additifs ronds qui montent du capot en passant du jaune au rouge, sous la fumée noire ;
+  - un seul système de 360 points.
+- **Verre 3D** :
+  - de petits prismes triangulaires épais de 9 cm, transparents et brillants (reflet de la cube map) ;
+  - une gerbe forme un InstancedMesh, donc une seule passe ; au plus 16 gerbes à la fois ;
+  - les optiques en éclats clairs ou rouges ;
+  - le pare-brise ou la lunette à plus de 22 m/s, une vitre latérale à plus de 18 m/s sur un choc de côté, une fois par vitre ;
+  - les éclats retombent à plat et brillent au sol.
+- **Son du contact entre voitures** (audio.js, `contact`) : deux caisses creuses qui s'entrechoquent, plus graves et plus rondes qu'un mur. Une touchette n'est qu'un « tok » de bouclier ; fort, la tôle se froisse ; très fort, des éclats. Les murs gardent `choc`.
+
 **Reste à faire** :
 - régler en jouant : la force de la déviation, l'agressivité de l'IA, les points ;
 - jeu en ligne : il reste en mode Course (l'état de casse n'est pas envoyé aux invités) ;

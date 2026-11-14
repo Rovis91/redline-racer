@@ -798,7 +798,26 @@
   // les débris restent au sol toute la course (au plus DEBMAX, le plus vieux disparaît), poussés par les voitures qui passent ; fumée du capot ; vitre fêlée peinte sur la livrée.
   // Chaque modèle a sa copie des géométries de carG (formes-voitures.js) : P0 = la forme intacte, d = l'enfoncement cumulé.
   const DG_MAX = 0.38, DGV = new Float32Array(32), DEB = [], DEBMAX = 40, HC0 = LUX.uHC.value.clone(); let dgT = 0;
-  const VERRE = [new THREE.MeshStandardMaterial({ color: 0xdde8f0, roughness: 0.1, transparent: true, opacity: 0.7 }), new THREE.MeshStandardMaterial({ color: 0xff3020, roughness: 0.2, transparent: true, opacity: 0.8 })];
+  // éclats de verre : de petits prismes triangulaires épais (une vraie épaisseur, des arêtes qui accrochent la lumière), brillants et transparents ; une gerbe = un InstancedMesh (une passe) ; au plus GERBES gerbes, la plus vieille disparaît
+  const VERRE = [new THREE.MeshStandardMaterial({ color: 0xd8ecf6, roughness: 0.04, metalness: 0.7, envMap: CUBE.texture, envMapIntensity: 1.6, transparent: true, opacity: 0.6, side: THREE.DoubleSide }), // vitre et phare
+    new THREE.MeshStandardMaterial({ color: 0xff2a18, emissive: 0x400800, roughness: 0.15, metalness: 0.3, envMap: CUBE.texture, transparent: true, opacity: 0.85, side: THREE.DoubleSide })]; // feu arrière
+  const ECLAT = (() => { const a = [0, 0], b = [1, 0.15], c = [0.35, 0.85], e = 0.14, h = 0.09, p = [], add = (...v) => v.forEach(q => p.push(q[0] * h, q[1], q[2] * h)); // triangle de 9 cm, 1,3 cm d'épaisseur
+    const T0 = [a, b, c].map(([x, z]) => [x, 0, z]), T1 = [a, b, c].map(([x, z]) => [x, e * h, z]); add(T0[0], T0[2], T0[1]); add(T1[0], T1[1], T1[2]);
+    for (let i = 0; i < 3; i++) { const j = (i + 1) % 3; add(T0[i], T0[j], T1[j]); add(T0[i], T1[j], T1[i]); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3)); g.translate(-0.4 * h, -e * h / 2, -0.33 * h); g.computeVertexNormals(); return g; })();
+  const GERBES = 16, GER = [], gm4 = new THREE.Matrix4(), gsc = new V3();
+  function eclats(x, y, z, n, verre, vx, vz, ox, oz, y0) { // une gerbe de n éclats depuis (x, y, z), projetés vers (ox, oz) et avec la voiture ; y0 : le sol
+    const im = new THREE.InstancedMesh(ECLAT, VERRE[verre], n); im.userData.dyn = 1; im.frustumCulled = false; im.castShadow = false; scene.add(im);
+    const G = { im, y0, e: Array.from({ length: n }, () => ({ p: new V3(x + jit(0.4), y + jit(0.2), z + jit(0.4)), v: new V3(vx * 0.6 + ox * (2 + Math.random() * 3) + jit(3), 1 + Math.random() * 3.5, vz * 0.6 + oz * (2 + Math.random() * 3) + jit(3)),
+      q: new THREE.Quaternion().setFromEuler(new THREE.Euler(jit(6), jit(6), jit(6))), w: new V3(jit(30), jit(30), jit(30)), s: 0.5 + Math.random() * 1.3, dort: 0 })), dort: 0 };
+    GER.push(G); while (GER.length > GERBES) { const o = GER.shift(); scene.remove(o.im); o.im.dispose(); } gerbePose(G); }
+  const gerbePose = G => { G.e.forEach((e, i) => { im4(e); G.im.setMatrixAt(i, gm4); }); G.im.instanceMatrix.needsUpdate = true; };
+  const im4 = e => gm4.compose(e.p, e.q, gsc.setScalar(e.s));
+  const dq4 = new THREE.Quaternion(), ax4 = new V3();
+  function eclatsPas(dt) { for (const G of GER) { if (G.dort) continue; let dorment = 0;
+    for (const e of G.e) { if (e.dort) { dorment++; continue; } e.v.y -= 15 * dt; e.p.addScaledVector(e.v, dt); const wl = e.w.length(); if (wl > 1e-3) { dq4.setFromAxisAngle(ax4.copy(e.w).divideScalar(wl), wl * dt); e.q.premultiply(dq4); }
+      if (e.p.y < G.y0 + 0.01) { e.p.y = G.y0 + 0.01; e.v.y *= -0.25; e.v.x *= 0.4; e.v.z *= 0.4; e.w.multiplyScalar(0.3); if (e.v.length() < 0.3) { e.dort = 1; e.q.setFromEuler(new THREE.Euler(0, Math.random() * 6.28, 0)); } } } // posé à plat : il brille au sol
+    gerbePose(G); if (dorment === G.e.length) G.dort = 1; } }
   const nez = Math.max(...VO.plan.dessusCaisse.map(q => q[0])), cul = Math.min(...VO.plan.dessusCaisse.map(q => q[0])), cab0 = VO.plan.cab[0][0], cab3 = VO.plan.cab[3][0];
   const prof = x => { const d = VO.plan.dessusCaisse; let y = 0; for (let i = 0; i < d.length - 1; i++) { const [x0, y0] = d[i], [x1, y1] = d[i + 1]; if (x0 !== x1 && (x - x0) * (x - x1) <= 0) y = Math.max(y, y0 + (y1 - y0) * (x - x0) / (x1 - x0)); } return y; }; // hauteur du dessus de caisse en x
   const hash = (x, y, z) => { const s = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719) * 43758.5453; return s - Math.floor(s); }; // même point, même bruit : les sommets confondus restent soudés
@@ -834,6 +853,7 @@
       for (const me of D.m) { me.d.fill(0); dgEcrit(D, me); }
       if (D.fis) { D.liv.map.image.getContext('2d').putImageData(D.fis, 0, 0); D.liv.map.needsUpdate = true; D.fis = null; } }
     for (const d of DEB) { scene.remove(d.m); d.m.geometry.dispose(); } DEB.length = 0;
+    for (const G of GER) { scene.remove(G.im); G.im.dispose(); } GER.length = 0; for (const D of DGM) D.vitres = {};
     for (const vu of VUES) vu.hu.gR[0].length = vu.hu.gR[1].length = vu.hu.gOn[0] = vu.hu.gOn[1] = 0;
     decorRaz(); huileRaz();
   }
@@ -853,7 +873,8 @@
       else if (!p.etat && p.pend != null && z >= p.pend) pend(g, D, p, vx, vz); }
     for (const p of D.p) if (p.etat === 2 && p.verre !== undefined) D[p.verre ? 'fe' : 'ph'][p.s < 0 ? 0 : 1] = 1;
     for (const me of D.m) dgEcrit(D, me);
-    if (f > 22 && !D.fis) fissure(D, lx);
+    if (f > 22 && !D.fis) { fissure(D, lx); vitre(g, lx > -0.4 ? 'av' : 'ar', vx, vz); }
+    if (f > 18 && lz * lz > 0.5) vitre(g, lz < 0 ? -1 : 1, vx, vz); // gros choc de côté : la vitre latérale vole en éclats
   }
   const morceaux = p => p.parts.map(({ me, tri }) => { const A = new Float32Array(tri.length * 9), U = new Float32Array(tri.length * 6), uv = me.o.geometry.attributes.uv.array, ge = new THREE.BufferGeometry(); // la pièce telle que cabossée, dans le repère du modèle
     tri.forEach((i, k) => { for (let j = 0; j < 9; j++) A[k * 9 + j] = me.P0[i + j] + me.d[i + j]; U.set(uv.subarray(i / 3 * 2, i / 3 * 2 + 6), k * 6); });
@@ -866,8 +887,7 @@
     const fx = Math.cos(g.rotation.y), fz = -Math.sin(g.rotation.y), ox = fx * p.sg[0] - fz * p.sg[1], oz = fz * p.sg[0] + fx * p.sg[1]; // g.rotation.y = -cap
     for (const m of ms) { m.geometry.computeBoundingBox(); m.geometry.boundingBox.getCenter(c); m.geometry.translate(-c.x, -c.y, -c.z); m.position.copy(c).applyMatrix4(parent.matrixWorld); m.quaternion.copy(q);
       debris(m, new V3(vx * 0.8 + ox * 3, 2 + Math.random() * 2, vz * 0.8 + oz * 3)); DEB[DEB.length - 1].y0 = y0; }
-    if (p.verre !== undefined) for (let i = 0; i < 6; i++) { const t = new THREE.BufferGeometry(), r = () => jit(0.14); t.setAttribute('position', new THREE.BufferAttribute(new Float32Array([r(), r(), r(), r(), r(), r(), r(), r(), r()]), 3)); t.computeVertexNormals();
-      const e = new THREE.Mesh(t, VERRE[p.verre]); e.position.copy(ms[0].position); debris(e, new V3(vx * 0.6 + ox * 4 + jit(3), 1 + Math.random() * 3, vz * 0.6 + oz * 4 + jit(3))); DEB[DEB.length - 1].y0 = y0; }
+    if (p.verre !== undefined) { const q0 = ms[0].position; eclats(q0.x, q0.y, q0.z, 14, p.verre, vx, vz, ox, oz, y0); } // l'optique éclate en morceaux de verre (clair) ou de plastique (rouge)
   }
   function pend(g, D, p, vx, vz) { // la pièce se décroche d'un côté : elle tient du côté le moins abîmé, l'autre bout tombe (et traîne au sol)
     if (D.pend) lache(g, D, vx, vz);
@@ -878,6 +898,11 @@
   }
   function lache(g, D, vx, vz) { const { p, piv } = D.pend; D.pend = null; p.etat = 2; piv.updateMatrix(); const ms = [...piv.children]; // la pièce qui pendait tombe, telle qu'elle pendait
     for (const m of ms) { m.geometry.applyMatrix4(piv.matrix); piv.remove(m); } const parent = piv.parent; parent.remove(piv); tombe(g, p, ms, parent, vx, vz); }
+  function vitre(g, w, vx, vz) { // une vitre qui éclate : w = 'av' (pare-brise), 'ar' (lunette), -1 ou 1 (vitre latérale de ce côté) ; une fois par vitre et par course
+    const D = g.userData.dg; D.vitres = D.vitres || {}; if (D.vitres[w]) return; D.vitres[w] = 1;
+    const p = VO.plan, [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = p.cab, l = typeof w === 'string' ? (w === 'av' ? [(x0 + x1) / 2, (y0 + y1) / 2, 0, 1, 0] : [(x2 + x3) / 2, (y2 + y3) / 2, 0, -1, 0]) : [(x0 + x3) / 2, (y0 + y1) / 2 + 0.05, w * p.wc / 2, 0, w];
+    g.updateMatrixWorld(true); const q = new V3(l[0], l[1], l[2]).applyMatrix4(g.children[0].matrixWorld), fx = Math.cos(g.rotation.y), fz = -Math.sin(g.rotation.y), ox = fx * l[3] - fz * l[4], oz = fz * l[3] + fx * l[4];
+    eclats(q.x, q.y, q.z, typeof w === 'string' ? 26 : 16, 0, vx, vz, ox, oz, g.position.y); }
   function fissure(D, lx) { // choc violent : une étoile de fêlures sur le pare-brise (la lunette si le choc vient de l'arrière), peinte sur la livrée de ce modèle ; dgRaz rend l'image d'origine
     const lv = D.liv.map, g = lv.image.getContext('2d'), p = VO.plan, [[x0], [x1], [x2], [x3]] = p.cab, hw = p.wc / 2 - 0.16, av = lx > -0.4, xa = av ? x0 : x3, xb = av ? x1 : x2;
     D.fis = D.fis0;
@@ -894,7 +919,7 @@
     const fx = Math.cos(c.th), fz = Math.sin(c.th); dgChoc(g, (dx * fx + dz * fz) / l, (dz * fx - dx * fz) / l, f, c.vx, c.vz, (c.bump || 0) > c.hit ? 'voiture' : 'mur', c.ca ? c.ca.z : null);
   };
   const dgNiv = c => { const z = modele(c).userData.dg.z; return Math.min(1, z[0] * 0.6 + (z[1] + z[2] + z[3]) * 0.2); }; // pour le son : l'avant (le moteur) compte le plus
-  function dgFrame(dt) { // débris (qui tombent, puis dorment au sol jusqu'à ce qu'une voiture les chasse), pièce qui pend, fumée d'un capot très abîmé
+  function dgFrame(dt) { eclatsPas(dt); // débris (qui tombent, puis dorment au sol jusqu'à ce qu'une voiture les chasse), pièce qui pend, fumée d'un capot très abîmé
     const cars = race ? race.cars : VUES.map(v => v.car);
     for (const d of DEB) { const p = d.m.position;
       for (const c of cars) { const sp = Math.hypot(c.vx, c.vz), dx = p.x - c.x, dz = p.z - c.z, l = Math.hypot(dx, dz); if (l > 2.2 || sp < 3 || p.y > d.y0 + 1.2) continue; // une voiture passe dessus : le débris repart devant elle
@@ -964,13 +989,26 @@
     for (const o of OBJ) { o.p.set(o.x0, o.y0 + o.S.h / 2, o.z0); o.v.set(0, 0, 0); o.w.set(0, 0, 0); o.q.identity(); o.dort = 1; objEcrit(o); } }
   decorRaz();
   function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg]) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
+  // flammes (mode CASSE) : un moteur à bout (avant ≥ 0,85) prend feu, une voiture hors d'usage brûle franchement ; des sprites additifs ronds qui montent en passant du jaune au rouge, sous la fumée noire
+  const FLN = 360, flP = new Float32Array(FLN * 3).fill(-1e4), flC = new Float32Array(FLN * 3), flV = new Float32Array(FLN * 3), flL = new Float32Array(FLN), flL0 = new Float32Array(FLN), flGeo = new THREE.BufferGeometry(); let fli = 0;
+  flGeo.setAttribute('position', new THREE.BufferAttribute(flP, 3)); flGeo.setAttribute('color', new THREE.BufferAttribute(flC, 3));
+  const flTex = tex(32, 32, g => { const d = g.createRadialGradient(16, 16, 1, 16, 16, 15); d.addColorStop(0, '#fff'); d.addColorStop(0.35, 'rgba(255,255,255,0.8)'); d.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = d; g.fillRect(0, 0, 32, 32); });
+  const flammes = new THREE.Points(flGeo, new THREE.PointsMaterial({ size: 1.3, map: flTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); flammes.frustumCulled = false; flammes.userData.dyn = 1; scene.add(flammes);
+  const flamme = (x, y, z, vx, vz, f) => { const i = fli++ % FLN; flP.set([x, y, z], i * 3); flV.set([vx * 0.85 + jit(0.6), 1.2 + Math.random() * 1.6 * f, vz * 0.85 + jit(0.6)], i * 3); flL[i] = flL0[i] = 0.45 + Math.random() * 0.4 * f; };
+  function flammesPas(dt) { for (let i = 0; i < FLN; i++) { if (flL[i] <= 0) continue; const j = i * 3; flL[i] -= dt; if (flL[i] <= 0) { flP[j + 1] = -1e4; continue; }
+      const a = 1 - flL[i] / flL0[i]; flV[j + 1] += 2.5 * dt; flV[j] *= 1 - 2 * dt; flV[j + 2] *= 1 - 2 * dt; for (let k = 0; k < 3; k++) flP[j + k] += flV[j + k] * dt;
+      const fe = (1 - a) * (0.75 + Math.random() * 0.25); flC[j] = fe; flC[j + 1] = fe * (0.75 - 0.6 * a); flC[j + 2] = fe * 0.25 * (1 - a) ** 2; } // jaune pâle → orange → rouge sombre, qui vacille
+    flGeo.attributes.position.needsUpdate = flGeo.attributes.color.needsUpdate = true; }
   function decorFrame(dt) {
+    flammesPas(dt);
     const cars = race ? race.cars : VUES.map(v => v.car), up = new V3(), dq = new THREE.Quaternion();
     if (race && race.casse) { // CASSE : messages de takedown, fumée des moteurs à bout (noire et épaisse hors d'usage), étincelles des jantes
       for (let i = race.tdVu || 0; i < race.td.length; i++) { const e = race.td[i]; for (const vu of VUES) if (e.par === vu.moi) vu.casseMsg = { t: 'TAKEDOWN ! ' + pil(e.vic)[0], T: 2.5, c: Y }; else if (e.vic === vu.moi) vu.casseMsg = { t: 'TAKEDOWN PAR ' + pil(e.par)[0], T: 2.5, c: RD }; }
       race.tdVu = race.td.length;
       for (const c of cars) { const K = c.ca, sp = Math.hypot(c.vx, c.vz), fx = Math.cos(c.th), fz = Math.sin(c.th); if (partie(c)) continue;
-        if ((K.mort || K.z[0] >= 0.85) && Math.random() < dt * (K.mort ? 25 : 6)) FUM.emit(c.x + fx * (ENC.max.x - 0.9) + jit(0.4), c.y + 1, c.z + fz * (ENC.max.x - 0.9) + jit(0.4), c.vx * 0.3 + jit(1), 1.5 + Math.random(), c.vz * 0.3 + jit(1));
+        if (K.mort || K.z[0] >= 0.85) { const hx = c.x + fx * (ENC.max.x - 1.1), hz = c.z + fz * (ENC.max.x - 1.1), fort = K.mort ? 1.6 : 0.8; // le feu sort du capot
+          for (let n = Math.floor(dt * (K.mort ? 140 : 70) + Math.random()); n-- > 0;) flamme(hx + jit(0.7) * fort, c.y + 0.8 + Math.random() * 0.2, hz + jit(0.7) * fort, c.vx, c.vz, fort);
+          if (Math.random() < dt * (K.mort ? 25 : 8)) FUM.emit(hx + jit(0.4), c.y + 1.6, hz + jit(0.4), c.vx * 0.3 + jit(1), 1.8 + Math.random(), c.vz * 0.3 + jit(1)); } // la fumée au-dessus des flammes
         if (sp > 4 && !c.air) K.creve.forEach((v, i) => { if (!v || Math.random() > dt * 30) return; const x = i >= 2 ? xf : xr, zs = (i & 1 ? 1 : -1) * (i >= 2 ? zf : zr); emit(c.x + fx * x - fz * zs, c.y + 0.05, c.z + fz * x + fx * zs, c.vx * 0.4 + jit(2), Math.random() * 2, c.vz * 0.4 + jit(2), 0.35, 1, 0.75, 0.35, 22); }); } }
     for (const c of cars) { if (!c.out) { saleFrame(c, dt); huileFrame(c, dt); } const sp = Math.hypot(c.vx, c.vz); if (c.out || sp < 3) continue;
       if (c.rub) marque(c, Math.sign(c.d) || 1, 0); // le long d'un mur : une traînée de peinture (les chocs francs passent par murChoc, à chaque pas)
@@ -1971,7 +2009,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const i0 = CARTES.indexOf(M), ordre = [...new Set(CARTES.flatMap((_, k) => [CARTES[(i0 + k) % CARTES.length], CARTES[(i0 - k + CARTES.length * 2) % CARTES.length]]))];
     window.__prep = (async () => { for (const c of ordre) { await construit(c); await souffle(); } })();
   };
-  const api = { get decor() { return { dz: MDZ, obj: OBJ, marques: mi, deb: DEB.length, tord: murTord, marque, huile: hi, sale: [carG, ...opps].map(g => +saleDe(g).n.toFixed(2)) }; }, veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
+  const api = { get decor() { return { dz: MDZ, obj: OBJ, marques: mi, deb: DEB.length, tord: murTord, marque, vitre: w => vitre(carG, w, 0, 0), huile: hi, sale: [carG, ...opps].map(g => +saleDe(g).n.toFixed(2)) }; }, veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
   if (fond) { // première image de la carte d'avance, dans sa cible : shaders compilés et textures envoyées au GPU maintenant, pas au moment où elle s'affiche
     await souffle(); const vu = VUES[0], caches = [], tri = [];
     scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { tri.push(o); o.frustumCulled = false; } });

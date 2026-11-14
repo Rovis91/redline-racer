@@ -758,6 +758,14 @@ registerProcessor('moteur', Moteur);`;
     const b = 280 + Math.random() * 200; for (const [m, a] of [[1, 0.25], [2.32, 0.15], [4.1, 0.08]]) osc('sine', b * m, t, 0.45, v * a * 0.6, V.choc); // partiels inharmoniques d'une tôle
     joue(tampon(0.8, x => { for (let i = 0; i < 9; i++) { const d = 0.12 + Math.random() * 0.6; coup(x, d, 0.015, v * (0.1 + Math.random() * 0.2), 0.005, 0); if (i % 3 === 0) coup(x, d, 0.06, v * 0.06, 0.005, 3500 + Math.random() * 3000); } }), t, filt('highpass', 3000, 1, V.choc)); // débris et éclats : un tampon, une source (12 avant)
   }
+  function contact(bump, t = AC.currentTime) { // voiture contre voiture : deux caisses creuses qui s'entrechoquent, plus graves et plus rondes qu'un mur ; une touchette n'est qu'un « tok » de bouclier
+    const k = Math.min(1, bump / 12), g = 0.1 + 0.35 * k, f0 = 90 + Math.random() * 35;
+    nz(t, 0.05, g * 0.9, V.choc, 'bandpass', 700 + Math.random() * 600, 1.4); // l'attaque : plastique des boucliers et tôle
+    const o = osc('sine', f0 * 1.7, t, 0.2 + 0.25 * k, g * 0.6, V.choc); o && o.frequency.exponentialRampToValueAtTime(f0, t + 0.18); // le coup sourd de la caisse
+    for (const [m, a] of [[2.13, 0.22], [3.47, 0.12], [5.31, 0.06]]) osc('sine', f0 * 2 * m * (0.97 + Math.random() * 0.06), t, 0.12 + 0.3 * k, g * a, V.choc); // la portière qui résonne (partiels inharmoniques)
+    if (k > 0.35) { const f = nz(t, 0.16, g * 0.6, shaper(5, gain(0.5, V.choc)), 'bandpass', 1900, 0.9); f && f.frequency.exponentialRampToValueAtTime(450, t + 0.15); } // fort : la tôle se froisse
+    if (k > 0.7) joue(tampon(0.5, x => { for (let i = 0; i < 6; i++) coup(x, 0.05 + Math.random() * 0.35, 0.012, g * (0.1 + Math.random() * 0.15), 0.004, 3000 + Math.random() * 3500); }), t, filt('highpass', 2500, 1, V.choc)); // très fort : des éclats
+  }
   function boostFx(t = AC.currentTime) { // départ de la nitro : purge sifflante, puis la flamme qui s'ouvre et un coup dans le grave
     nz(t, 0.35, 0.05, V.choc, 'highpass', 2500, 0.7, nbuf, 0.003);
     const w = nz(t + 0.05, 0.9, 0.07, V.choc, 'lowpass', 250, 1, nbuf, 0.08); w && w.frequency.exponentialRampToValueAtTime(1600, t + 0.5);
@@ -816,7 +824,7 @@ registerProcessor('moteur', Moteur);`;
     pluieFrame(state === 'title' ? 0 : (e.pluie != null ? e.pluie : T.pluie ? T.pluie[car.idx] : 0) * (1 - tun), r, car.aq || 0, k);
     rubT -= dt; if (bump > 0.3) rubT = 0.35; // deux voitures qui se touchent : un petit choc, puis elles frottent un instant
     k(scrapeG.gain, rub || rubT > 0 ? 0.1 + 0.2 * r : 0, 0.05);
-    if ((hit > 3 || bump > 0.3) && t - lastHit > 0.15) { lastHit = t; choc(Math.max(hit, bump > 0.3 ? 5 + bump * 2 : 0), t);
+    if ((hit > 3 || bump > 0.3) && t - lastHit > 0.15) { lastHit = t; if (hit > 3) choc(hit, t); else contact(bump, t); // un mur : le choc ; une autre voiture : son contact à elle
       if (racing && t - lastMus > 4 && e.hit > 6) { lastMus = t; coupMusique(e.hit, t); satT = 0.2; if (e.hit > 14) platine = 1; } } // adouci : seul un vrai choc de mur touche la musique (le contact entre voitures plus du tout), au plus toutes les 4 s, ralenti de platine réservé aux gros chocs // au plus une fois toutes les 2 s : en rebondissant de mur en mur (pluie), la musique restait plongée, ralentie et saturée en continu // la musique encaisse : coup de basse, demi-seconde de saturation, et sur un gros choc elle ralentit comme une platine qu'on freine
     // glisse (car.dd, car.driftT) : la tension monte en 1,5 s, palier à 0,6 s (la jauge de nitro se remplit alors à plein débit) ; nitro déclenchée (car.boost) : tout s'ouvre d'un coup et le refrain joue tant qu'elle pousse
     const gl = racing && car.dd ? car.driftT || 0 : 0, vise = car.boost > 0 ? 0 : clamp(gl / 1.5, 0, 1);
@@ -879,7 +887,7 @@ registerProcessor('moteur', Moteur);`;
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },
     volume(fam, v) { vol[fam] = v; if (V[fam]) V[fam].gain.value = v; },
     evenement: () => { ambT = 0; }, get live() { return live; },
-    clac: down => AC && clac(down), levier: down => AC && levier(down), choc: v => AC && choc(v), boost: () => AC && boostFx(), petarade: () => AC && petarade(), pschitt: () => AC && pschitt(), reception: l => AC && reception(l), klaxon: () => AC && klaxon(),
+    clac: down => AC && clac(down), levier: down => AC && levier(down), choc: v => AC && choc(v), contact: v => AC && contact(v), boost: () => AC && boostFx(), petarade: () => AC && petarade(), pschitt: () => AC && pschitt(), reception: l => AC && reception(l), klaxon: () => AC && klaxon(),
     moniteur(v) { if (outG) outG.gain.value = OUT * v; }, get vu() { return vu; }, // gain d'écoute du banc : sans effet sur le jeu
     get vol() { return vol; }, get pret() { return pret; }, get stations() { return ST; },
     get station() { return station; }, get nom() { return ST[station].name; }, get fq() { return ST[station].fq; }, get genre() { return ST[station].genre; }, get musicOn() { return musicOn; },
