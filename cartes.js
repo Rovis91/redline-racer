@@ -384,8 +384,8 @@
       th: { decor: 'perse', fog: 0xe0a060, fogD: [140, 1600], sky: [[0, '#1d2a5a'], [0.22, '#1d2a5a'], [0.23, '#5a3a78'], [0.34, '#5a3a78'], [0.35, '#c8505a'], [0.42, '#c8505a'], [0.43, '#f08a3a'], [0.48, '#f08a3a'], [0.49, '#ffc860'], [0.5, '#e0a060'], [1, '#e0a060']], stars: 0,
         astre: { dir: [-0.8, 0.08, 0.4], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0x8a78b8, 0xc89a6a, 0.8], sun: [0xffa850, 0.95], phares: 0.3, bloom: 0.04, scan: 0.05, chaleur: 0.4,
         murH: 0, route: ['#c8b290', '#d4be9c', '#f4ead0', '#2aa39a', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
-        tun: { sol: ['#b8a284', '#c4ae90', '#f4ead0', '#f0b840', '#c8323c', '#3a2418'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
-          fog: 0x5a3020, portail: 0xf0b840, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1.2 },
+        tun: { sol: ['#8a7860', '#968470', '#f4ead0', '#f0b840', '#c8323c', '#3a2418'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
+          fog: 0x5a3020, portail: 0xf0b840, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
