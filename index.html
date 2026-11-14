@@ -13,38 +13,39 @@
 </style>
 </head>
 <body>
-<script src="three.min.js"></script>
-<script src="cartes.js"></script>
-<script src="traces-or.js"></script>
-<script src="sim.js"></script>
-<script src="session.js"></script>
-<script src="samples.js"></script>
-<script src="audio.js"></script>
-<script src="textures.js"></script>
-<script src="formes.js"></script>
-<script src="textures-paris.js"></script>
-<script src="formes-paris.js"></script>
-<script src="textures-canal.js"></script>
-<script src="formes-canal.js"></script>
-<script src="textures-stade.js"></script>
-<script src="formes-stade.js"></script>
-<script src="textures-givre.js"></script>
-<script src="formes-givre.js"></script>
-<script src="textures-terre.js"></script>
-<script src="formes-terre.js"></script>
-<script src="textures-touge.js"></script>
-<script src="formes-touge.js"></script>
-<script src="textures-wangan.js"></script>
-<script src="formes-wangan.js"></script>
-<script src="textures-voitures.js"></script>
-<script src="formes-voitures.js"></script>
-<script src="formes-ville.js"></script>
-<script src="decors.js"></script>
-<script src="langue.js"></script>
-<script src="peripheriques.js"></script>
-<script src="peerjs.min.js"></script>
-<script src="reseau.js"></script>
-<script src="game.js"></script>
-<script src="rythme.js"></script> <!-- essai : décor au rythme de la radio ; supprimer cette ligne pour le retirer -->
+<!-- three.js r187 (ES module, dossier three/) posé dans window.THREE ; les scripts suivants sont « defer » : ils s'exécutent après lui, dans cet ordre -->
+<script type="module">import * as THREE from "./three/three.module.js"; window.THREE = THREE;</script>
+<script defer src="cartes.js"></script>
+<script defer src="traces-or.js"></script>
+<script defer src="sim.js"></script>
+<script defer src="session.js"></script>
+<script defer src="samples.js"></script>
+<script defer src="audio.js"></script>
+<script defer src="textures.js"></script>
+<script defer src="formes.js"></script>
+<script defer src="textures-paris.js"></script>
+<script defer src="formes-paris.js"></script>
+<script defer src="textures-canal.js"></script>
+<script defer src="formes-canal.js"></script>
+<script defer src="textures-stade.js"></script>
+<script defer src="formes-stade.js"></script>
+<script defer src="textures-givre.js"></script>
+<script defer src="formes-givre.js"></script>
+<script defer src="textures-terre.js"></script>
+<script defer src="formes-terre.js"></script>
+<script defer src="textures-touge.js"></script>
+<script defer src="formes-touge.js"></script>
+<script defer src="textures-wangan.js"></script>
+<script defer src="formes-wangan.js"></script>
+<script defer src="textures-voitures.js"></script>
+<script defer src="formes-voitures.js"></script>
+<script defer src="formes-ville.js"></script>
+<script defer src="decors.js"></script>
+<script defer src="langue.js"></script>
+<script defer src="peripheriques.js"></script>
+<script defer src="peerjs.min.js"></script>
+<script defer src="reseau.js"></script>
+<script defer src="game.js"></script>
+<script defer src="rythme.js"></script> <!-- essai : décor au rythme de la radio ; supprimer cette ligne pour le retirer -->
 </body>
 </html>

@@ -1,6 +1,6 @@
 // node test-cartes.js — chaque carte de cartes.js passe dans la vraie physique : tracé valide, tour bouclé au pilote automatique, voiture plausible.
 // La ville a ses propres tests, plus complets, dans test.js (ses chiffres ne doivent pas bouger : records de la ville).
-const assert = require('assert'), THREE = require('./three.min.js');
+const assert = require('assert'), THREE = require('./three/three.module.js');
 require('./cartes.js'); require('./traces-or.js'); require('./sim.js');
 // inventaire : une carte se monte de son entrée de cartes.js, de son décor (decors.js), de sa trace or (traces-or.js) et de son titre anglais (TITRE_EN de langue.js, sinon le titre du HUD)
 globalThis.window = globalThis; require('./decors.js'); require('./langue.js');

@@ -40,10 +40,10 @@
   <p>Ma préférence : <b>glisse C + nitro C</b>, une seule écriture néon qui prolonge les traînées des feux et les liserés sous caisse, avec <b>l'anneau de B</b> au déclenchement pour que le départ de la nitro se voie de loin. La glisse B est la plus lisible en jeu si l'on veut un deuxième palier.</p>
   <p>Dans le jeu : les étincelles, braises et fumées passent par <code>emit()</code> (game.js), les rubans reprennent celui des traînées (<code>trainee()</code>), les flammes remplacent les deux cônes de <code>game.js:462</code>. Le champ élargi et la vignette de la nitro restent tels quels.</p>
 </aside>
-<script src="../three.min.js"></script>
-<script src="../formes.js"></script>
-<script src="../formes-voitures.js"></script>
-<script>
+<script type="module">import * as THREE from "../three/three.module.js"; window.THREE = THREE;</script>
+<script defer src="../formes.js"></script>
+<script defer src="../formes-voitures.js"></script>
+<script type="module">
 (() => {
   const $ = s => document.querySelector(s), V3 = THREE.Vector3, rnd = (a = 1) => (Math.random() * 2 - 1) * a, clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const DESC = {

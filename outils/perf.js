@@ -30,7 +30,7 @@ export async function tour({ images = 0 } = {}) {
   // cpu : temps de frame() image par image (le jeu et l'envoi des ordres de dessin) ; lot : temps réel par image sur LOT images enchaînées, GPU compris
   const cpu = [], ou = [], appels = [], tris = [], lot = [], ouLot = []; let fin = performance.now() + 12, t0 = performance.now();
   while (images ? cpu.length < images : g.car.dist < N + 20 && cpu.length < 20000) {
-    cpu.push(une()); parts.push('rendu ' + part.rendu.toFixed(1) + ' son ' + part.son.toFixed(1)); ou.push(g.car.idx); appels.push(info.render.calls); tris.push(info.render.triangles);
+    const np = info.programs.length; cpu.push(une()); parts.push('rendu ' + part.rendu.toFixed(1) + ' son ' + part.son.toFixed(1) + (info.programs.length > np ? ' shader ' + info.programs.slice(np).map(p => p.name).join('+') : '')); ou.push(g.car.idx); appels.push(info.render.calls); tris.push(info.render.triangles); // « shader » : un programme compilé en pleine mesure, c'est lui l'à-coup
     if (cpu.length % LOT === 0) { synchro(); lot.push((performance.now() - t0) / LOT); ouLot.push(g.car.idx); if (performance.now() > fin) { await cede(); fin = performance.now() + 12; } t0 = performance.now(); } // rend la main entre deux lots : l'onglet ne se fige pas
   }
   info.autoReset = true; g.renderer.setRenderTarget = cible; hors.dispose(); defait.forEach(f => f());

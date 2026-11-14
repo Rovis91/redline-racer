@@ -264,7 +264,7 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 | `samples.js` | sons de batterie encodés en base64 (généré depuis `samples/`) |
 | `samples/` | sons de Roland TR-808 d'origine et leur note d'auteur |
 | `fonts/` | polices pixel |
-| `three.min.js` | three.js r128 |
+| `three/` | three.js r187 (module ES : `three.module.js` + `three.core.js`), posé dans `window.THREE` par `index.html` ; les autres scripts sont `defer` |
 | `test.js` | tests de la physique |
 | `outils/perf.js` | banc de mesure : performances à une et à deux vues, mémoire sur un enchaînement de cartes (voir « Performances ») |
 | `outils/banc.js` | le banc en une commande : `node outils/banc.js [carte]`, SUCCÈS ou ÉCHEC par carte (voir « Performances ») |
@@ -272,6 +272,8 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 `game.js` est un seul fichier découpé en sections repérées par `// ----------` : rendu et passe finale, outils des trois entités du décor (`tx`, `mat`, `geo`, `pose`), piste, ville, horizon, voiture et effets, état de jeu et commandes, interface, boucle.
 
 ## Tests
+
+Node 22.12 ou plus récent : les tests chargent three par `require` d'un module ES (`three/three.module.js`).
 
 ```bash
 node test.js
@@ -350,7 +352,8 @@ Ce qui tient ces chiffres, et qu'il ne faut pas défaire :
 - **Le coût est surtout le nombre de passes de dessin** (~10 µs chacune entre three et le processus GPU), puis les sommets ; les pixels comptent peu (un quart des pixels : −4 %). La fusion prend aussi le décor instancié immobile (`InstancedMesh`), garde l'indexation des géométries (24 sommets par boîte au lieu de 36) et découpe en pavés une instance de plus de 100 000 sommets. Une `InstancedMesh` qui bouge doit porter `userData.dyn = 1`, comme un maillage.
 - **Ombres en deux temps** (`ombres` dans `game.js`) : le décor fixe n'est redessiné dans la carte d'ombre que quand la lune change de pas (24 m), puis gardé ; chaque image ne redessine que les objets mobiles (calques `OMBD` / `OMBI`, posés à la construction ; un objet ajouté en course qui porte une ombre doit y être mis), dans un carré de 120 m autour de la voiture.
 - Les quatre roues d'une voiture sont une seule instance (`rouesInst`) ; les matrices de la scène sont calculées une fois par vue ; la cube map des reflets refait une face toutes les 6 images.
-- `three.min.js` est retouché : les uniformes en tableau (les 20 luminaires, les matrices d'ombre) ne sont renvoyés que s'ils ont changé, et l'état des attributs d'une géométrie n'est recomparé que si elle a reçu un `setAttribute`. `LUX.uLP` / `uLC` sont des `Float32Array` à plat.
+- `three/three.module.js` est retouché (lignes marquées `// vpr`) : les uniformes en tableau (les 20 luminaires, les matrices d'ombre) ne sont renvoyés que s'ils ont changé. À refaire à chaque mise à jour de three. `LUX.uLP` / `uLC` sont des `Float32Array` à plat.
+- Au chargement d'une carte, `renderer.compile` lance tous ses shaders : le décor écarté hors champ (culling par instance) ne compile plus le sien en pleine course.
 - **Son** : les sons ponctuels (choc, rapport, pétarade…) créent leurs nœuds juste après l'image (`differe` dans `audio.js`) ; une série de coups brefs s'écrit dans un tampon (`coup`, `tampon`, `rafale`) plutôt qu'en dizaines de nœuds ; le moteur physique d'un véhicule inaudible ne calcule plus (`dors`). Ne pas recréer des centaines de nœuds dans une image : chaque création peut attendre le fil audio.
 - **Banc rapide** : `node outils/banc-rapide.js [cartes]` fait la mesure de `banc.js` dans un seul Chrome gardé ouvert (hors écran, son coupé mais calculé), un onglet par carte. Les deux bancs coupent le son (`--mute-audio`).
 - **Route mouillée** (`game.js`, `ssr` et `repli`) : sur une carte où il pleut, la route écrit dans l'alpha de la cible de la vue combien elle est mouillée (`1 - EAU × mouillure`), et tout autre opaque y écrit 1. Une passe plein écran suit ensuite le rayon réfléchi dans la profondeur de la vue et ajoute ce qu'il touche : voitures, néons, feux. Les rubans de reflet (`TH.reflets`, reflets des tubes) sont dessinés après, et seulement là où ce rayon n'a rien trouvé. Coût mesuré à la minuterie GPU : 0,54 ms par image pour quatre vues de 360 × 270, et une passe de dessin de plus par vue. Une matière qui écrirait son propre alpha dans la cible passerait pour de l'eau. Ce qui est transparent et additif (gouttes, impacts, particules) fait monter l'alpha et coupe le reflet sous lui.
@@ -420,7 +423,7 @@ Le jeu est un site statique : il suffit de servir le dossier tel quel. Sur GitHu
 
 ## Crédits et licences
 
-- **three.js** r128, licence MIT.
+- **three.js** r187, licence MIT (`three/LICENSE`).
 - **PeerJS** 1.5.4, licence MIT.
 - **Polices** Press Start 2P et DotGothic16, licence SIL Open Font.
 - **Sons de TR-808** : enregistrés par Michael Fischer (Technopolis, 1994) et distribués gratuitement par leur auteur, sans licence formelle. Voir `samples/TR808.TXT`. À vérifier ou à remplacer avant toute diffusion commerciale.

@@ -1,6 +1,6 @@
 // node test-session.js — le déroulé d'une partie (session.js) sans navigateur : tour bouclé et record, Glisse, deux humains à l'arrivée, manche de Tournée.
 // Les records et préférences passent par des objets ordinaires à la place de localStorage.
-const assert = require('assert'), THREE = require('./three.min.js');
+const assert = require('assert'), THREE = require('./three/three.module.js');
 require('./sim.js'); require('./session.js');
 const M = CARTE, T = buildTrack(THREE, M), N = T.n, H = 1 / 120, REFT = tourRef(T, H), MED = M.med || [1.1, 1.03, 0.97];
 const memoire = () => { const o = {}; return { o, get: k => k in o ? JSON.parse(o[k]) : null, set: (k, v) => { o[k] = JSON.stringify(v); } }; };
