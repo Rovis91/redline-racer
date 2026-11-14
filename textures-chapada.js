@@ -38,9 +38,9 @@
     }, 6],
     // REFS 3 : l'eau du gué, peu profonde : ambre clair, rides claires et reflets du ciel, écume crème en traînées (x du dessin : en travers sur un ruban)
     eauGue: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#a8742f', 0, 0, 64, 64);
-      for (let i = 0; i < 10; i++) R(g, alea() < 0.5 ? '#b07c36' : '#9c6a2c', alea() * 48 | 0, alea() * 48 | 0, 12 + (alea() * 16 | 0), 10 + (alea() * 14 | 0)); // fond et profondeur, en grandes plages douces
-      for (let i = 0; i < 30; i++) R(g, alea() < 0.6 ? '#c8a070' : '#b8c4c4', alea() * 58 | 0, alea() * 63 | 0, 4 + (alea() * 6 | 0), 1); // reflets du ciel, en rides
+      const { R, alea } = o; R(g, '#946430', 0, 0, 64, 64);
+      for (let i = 0; i < 10; i++) R(g, alea() < 0.5 ? '#a8742f' : '#7a5226', alea() * 48 | 0, alea() * 48 | 0, 12 + (alea() * 16 | 0), 10 + (alea() * 14 | 0)); // fond et profondeur, en grandes plages douces
+      for (let i = 0; i < 70; i++) R(g, ['#c8a070', '#b8c4c4', '#d8dcd4'][alea() * 3 | 0], alea() * 56 | 0, alea() * 63 | 0, 6 + (alea() * 9 | 0), 1); // reflets du ciel, en rides : c'est eux qui font lire de l'eau
       for (let i = 0; i < 10; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 63 | 0, 2 + (alea() * 2 | 0), 1); // écume
     }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen

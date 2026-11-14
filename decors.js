@@ -1917,7 +1917,7 @@
           if ((zn === 'gorge' && q.cote < 0 && y < q.s.y + niv(q.i) - 0.5) || ravin(x, z) > 0.3) c = dalle; // le lit de la rivière et le ravin du pont
           c = mix(c, roc, lisse(0.85, 0.6, nr.getY(v))); const k = 0.85 + 0.3 * u; C.set([c[0] * k, c[1] * k, c[2] * k], v * 3); }
         ge.setAttribute('color', new THREE.BufferAttribute(C, 3)); }
-      const eau = h.mat('eauGue', { ...DS, gloss: 0.7, rep: [5, 1], c: 0xb8aa98 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
+      const eau = h.mat('eauGue', { ...DS, gloss: 0.8, rep: [5, 1], c: 0xc8c0b0 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
       const gres = h.mat('grainGres', { vertexColors: true, emissive: 0x3a342c, ...DS }), pierre = h.mat('pierreSeche'), pierreR = h.mat('pierreSeche', { rep: [0.35, 1] }, 1);
       const chuteM = h.mat('chute', { ...DS, lum: 1, c: 0xccd8d8, transparent: true, depthWrite: false, rep: [6, 1] }), lisseBord = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
       const tranche = (a, b, f) => { const l = (b - a + N) % N; f((a + N) % N, l); }; // ruban de l'échantillon a à b
@@ -2064,7 +2064,7 @@
       const arbres = [], cimes = [[], [], [], []], troncsC = [], fougeres = [], palm = [], palmT = [], bromelias = [], buissons = [], lianes = [], canelas = [], lajedos = [], affl = [];
       const touffes = [[], [], []], fleurs = [];
       // un arbre de la forêt de galerie (REFS 4) : fût de 10 à 24 m, clair ou sombre, couronne de 2 à 4 houppiers de trois verts
-      const arbre = (x, y, z, t, prochePiste, loin) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; if (!loin) (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]); // loin de la route, la brume ne laisse voir que les houppiers
+      const arbre = (x, y, z, t, prochePiste, loin) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]); // sans fût, les houppiers lointains flottaient
         const nc = 2 + (rnd() * 2 | 0); for (let c = 0; c < nc; c++) { const r = (0.8 + rnd() * 1.8) * t, a = rnd() * 6.28; cimes[rnd() * 4 | 0].push([x + Math.cos(a) * r, y + Ht - 1 + rnd() * 3 * t, z + Math.sin(a) * r, rnd() * 6, (0.9 + rnd() * 0.7) * t, (0.85 + rnd() * 0.6) * t, (0.9 + rnd() * 0.7) * t]); }
         if (rnd() < 0.3) coupes.push([x + 0.4, y + 3 + rnd() * Ht * 0.4, z, rnd() * 6, 0.5]); // une broméliacée épiphyte sur le fût
         if (prochePiste && rnd() < 0.7) for (let c = 0; c < 1 + (rnd() * 3 | 0); c++) { const ll = 4 + rnd() * 8, a = rnd() * 6.28, r = 1 + rnd() * 3; lianes.push([x + Math.cos(a) * r, y + Ht - ll / 2, z + Math.sin(a) * r, rnd() * 6, 1, ll, 1]); } };
@@ -2093,14 +2093,14 @@
         else if (d < 90) { if (r < 0.2) arbre(x, y, z, 0.7 + rnd() * 0.6, false); else if (r < 0.32) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); else if (r < 0.4) palmier(x, y, z, 0.8 + rnd() * 0.5); else if (r < 0.55) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.5, 0.4]); else if (r < 0.6 && d > 20) affl.push([x, y - 1.5, z, rnd() * 6, 3 + rnd() * 6, 2 + rnd() * 3, 3 + rnd() * 6]); }
         else if (r < 0.13 && d < 150) arbre(x, y, z, 0.9 + rnd() * 0.5, false, true);
       }
-      for (let i = P(23); dans(i, 23, 29); i = (i + 3) % N) if (rnd() < 0.5) { const s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w - 1 + rnd() * 4), ll = 3 + rnd() * 7; lianes.push([x, s.y + 17 - ll / 2, z, rnd() * 6, 1, ll, 1]); cimes[rnd() * 4 | 0].push([x, s.y + 18, z, rnd() * 6, 1.1, 0.5, 1.1]); } // les lianes qui pendent au-dessus de la route
+      // (pas de lianes isolées au-dessus de la route : sans arbre au-dessus, elles flottaient ; celles des arbres de bord restent)
       for (let i = 0; i < N; i++) { const s = S[i], zn = zone(i); if (zn !== 'plateau' && zn !== 'foret') continue;
         for (const sd of [-1, 1]) { const a = acc(i, sd), at = (o, f) => { const [x, z] = bord(s, sd, o), y = o < s.w + a + 0.5 ? s.y + A(Math.min(o - s.w, a)) : g.hAt(x, z); f(x, y, z); }, o = () => s.w + 2.6 + rnd() * rnd() * 34;
           if (zn === 'plateau') { // REFS 5 : campo rupestre, à touche-touche au bord
             for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.6 + rnd() * 1.2]));
             if (rnd() < 0.4) at(o(), (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + (rnd() - 0.5) * 0.6, 0.5 + rnd() * 1.3]));
             if (rnd() < 0.08) at(s.w + 4 + rnd() * 30, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
-            at(o(), (x, y, z) => { for (let c = 0; c < 8; c++) fleurs.push(x + (rnd() - 0.5) * 4, y + 0.45 + rnd() * 0.3, z + (rnd() - 0.5) * 4); }); }
+            at(s.w + 8 + rnd() * 30, (x, y, z) => { for (let c = 0; c < 8; c++) fleurs.push(x + (rnd() - 0.5) * 4, y + 0.45 + rnd() * 0.3, z + (rnd() - 0.5) * 4); }); }
           else { // REFS 4 : le sous-bois au bord
             if (rnd() < 0.5) at(o(), (x, y, z) => fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]));
             if (rnd() < 0.35) at(o(), (x, y, z) => (rnd() < 0.3 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.8]));
@@ -2155,7 +2155,10 @@
       // au pont, le blanc s'épaissit : des voiles debout en travers de la route, qu'on traverse
       const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 23); i = (i + 8) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
       for (let k = 0; k < 60; k++) { const i = (P(23) + (rnd() * ((P(29) - P(23) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 18 + rnd() * 45); vd.push([x, g.hAt(x, z) + 5, z, h.across(s) + (rnd() - 0.5) * 0.5, 40 + rnd() * 20, 12, 1]); } // les plans de la forêt se séparent dans le blanc
-      const vds = inst(h, debout, h.mat('brume', { lum: 1, c: 0xeef2ec, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }), vd); vds.castShadow = vds.receiveShadow = false;
+      // la brume en couches, partout : des voiles debout à 30-160 m, parallèles à la route (les nappes à plat ne se voient pas de profil)
+      for (let k = 0; k < 160; k++) { const i = rnd() * N | 0, s = S[i], zn = zone(i), sd = zn === 'lacets' ? -amont(s) : rnd() < 0.5 ? -1 : 1, o = s.w + 30 + rnd() * 130, [x, z] = bord(s, sd, o);
+        const y = zn === 'lacets' || zn === 'gorge' ? s.y - 8 + rnd() * 10 : g.hAt(x, z) + 3; vd.push([x, y, z, h.across(s) + (rnd() - 0.5) * 0.6, 60 + rnd() * 60, 10 + rnd() * 10, 1]); }
+      const vds = inst(h, debout, h.mat('brume', { lum: 1, c: 0xe4ecf0, transparent: true, opacity: 0.24, depthWrite: false, side: THREE.DoubleSide }), vd); vds.castShadow = vds.receiveShadow = false;
       // rayons : des fuseaux additifs dans l'axe du soleil (bas, à l'est), en forêt et sur la paroi de la galerie
       const sun = new THREE.Vector3(...h.TH.astre.dir).normalize(), rg = new THREE.PlaneGeometry(9, 70); rg.translate(0, 35, 0); rg.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sun));
       const rayons = []; for (let k = 0; k < 70; k++) { const i = (P(23) + (rnd() * ((P(29) - P(23) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, rnd() * (s.w + 10)); rayons.push([x, s.y - 1, z, 0, 0.6 + rnd()]); }
