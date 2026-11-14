@@ -444,7 +444,7 @@
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'gtr', col: 0x3d6e8a, l: 1.05, w: 1.02, h: 1.04, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0, bandes: 0xe8761e } }),
       radio: RADIO.barrage,
       th: { decor: 'barrage', fog: 0xc3cdc9, fogD: [110, 1300], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
-        astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c8d0, 0x8a8a80, 0.95], sun: [0xfff0d0, 0.55], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
+        astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c8d0, 0x6a6a5e, 0.9], sun: [0xfff0d0, 0.6], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
         chev: 0, murH: 0, route: ['#4a4d50', '#56595c', '#e8e4d8', '#e8e4d8', '#4a4d50', '#4a4d50', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
         tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#8d918a', '#7d817a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#8d918a', '#5fa89a', '#5a5e5a'],
           fog: 0x2a2a28, portail: 0xe8761e, neons: [0xf4d8a0, 0xe8f0e8], coque: 6 }, // galeries : béton, néons sodium

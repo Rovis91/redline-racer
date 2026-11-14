@@ -58,6 +58,8 @@
     danger: () => [64, 32, (g, { R }) => { R(g, '#f0f0e8', 0, 0, 64, 32); g.fillStyle = '#f2c21a'; g.beginPath(); g.moveTo(12, 3); g.lineTo(22, 21); g.lineTo(2, 21); g.fill();
       g.fillStyle = '#111'; g.beginPath(); g.moveTo(13, 7); g.lineTo(9, 14); g.lineTo(12, 14); g.lineTo(10, 19); g.lineTo(16, 11); g.lineTo(13, 11); g.fill();
       g.fillStyle = '#b5483c'; g.font = 'bold 7px sans-serif'; g.textBaseline = 'middle'; g.fillText('ВЫСОКОЕ', 26, 10, 36); g.fillText('НАПРЯЖЕНИЕ', 26, 19, 36); R(g, '#b5483c', 0, 27, 64, 5); }],
+    // panneau de limitation de vitesse soviétique : disque blanc cerclé de rouge, « 60 »
+    panneauVit: () => [32, 32, (g, { R }) => { R(g, '#4a4e4a', 0, 0, 32, 32); g.fillStyle = '#c8302a'; g.beginPath(); g.arc(16, 16, 15, 0, 7); g.fill(); g.fillStyle = '#f4f4ec'; g.beginPath(); g.arc(16, 16, 11, 0, 7); g.fill(); g.fillStyle = '#111'; g.font = 'bold 12px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('60', 16, 17); }],
     borneGES: () => [8, 16, (g, { R }) => { R(g, '#ecece4', 0, 0, 8, 16); R(g, '#1a1a1a', 0, 3, 8, 3); }],
     // REFS 3 — sol de la halle : dalles de béton poli clair, joints, bandes de marquage jaunes le long des groupes
     solHalle: () => [64, 64, (g, o) => { const { R, voile } = o; R(g, '#a8a69c', 0, 0, 64, 64); for (let k = 0; k < 64; k += 16) { R(g, '#8a887e', k, 0, 1, 64); R(g, '#8a887e', 0, k, 64, 1); } voile(g, 0.2, () => semis(g, o, 200, '#000')); }, 8],
