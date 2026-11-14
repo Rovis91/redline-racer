@@ -8,8 +8,8 @@
   const lamassu = (x = 0, z = 0, dir = 1, humain = true) => { const Z = d => z + dir * d; return [
     ['sculpte', 2.6, 4.2, 7.5, x, 4.6, z], ['sculpte', 2.4, 2.2, 1.8, x, 7.2, Z(3.4)], // corps, poitrail
     ...[[-0.8, 3], [0.8, 3], [-0.8, -2.8], [0.8, -2.8], [0, 2.2]].map(([dx, dz]) => ['sculpte', 0.9, 2.6, 1, x + dx, 1.3, Z(dz)]), // cinq pattes : quatre vues de côté, deux de face
-    ...[-1, 1].map(sd => ['ailes', 0.35, 3.6, 6.8, x + sd * 1.45, 7.6, Z(-0.6), [dir * 0.35, 0, 0]]), // ailes en plumes recourbées le long du dos, relevées vers l'arrière
-    ...(humain ? [['sculpte', 1.7, 1.9, 1.6, x, 8.8, Z(4)], ['sculpte', 1.5, 1.6, 0.6, x, 7.5, Z(4.75)], ['or', 1.8, 1.4, 1.7, x, 10.4, Z(4)], ['sculpte', 1.9, 0.3, 1.8, x, 9.9, Z(4)], ['or', 1.9, 0.25, 1.8, x, 11.2, Z(4)]] // tête humaine, barbe étagée, tiare à cornes, couronne de rosettes
+    ...[-1, 1].map(sd => ['ailes', 0.35, 4.2, 6.8, x + sd * 1.9, 8.2, Z(-0.4), [dir * 0.4, sd * dir * 0.35, 0]]), // ailes en plumes recourbées, relevées vers l'arrière et ouvertes vers l'extérieur : la silhouette se lit de face
+    ...(humain ? [['sculpte', 2, 2.2, 1.8, x, 8.9, Z(4)], ['sculpte', 1.8, 2, 0.7, x, 7.4, Z(4.85)], ['or', 2.1, 1.6, 1.9, x, 10.8, Z(4)], ['sculpte', 1.9, 0.3, 1.8, x, 9.9, Z(4)], ['or', 1.9, 0.25, 1.8, x, 11.2, Z(4)]] // tête humaine, barbe étagée, tiare à cornes, couronne de rosettes
       : [['sculpte', 1.5, 1.7, 2.4, x, 8.3, Z(4.4)], ['sculpte', 3, 0.35, 0.4, x, 9.3, Z(4)], ['or', 0.3, 0.9, 0.3, x - 1.4, 9.8, Z(4)], ['or', 0.3, 0.9, 0.3, x + 1.4, 9.8, Z(4)]])]; }; // tête de taureau, cornes
   // REFS §4 : colonne persépolitaine (base en cloche sur plinthe, fût cannelé, couronne de palmes, volutes verticales, double protomé qui porte la poutre) ; H = hauteur sous poutre
   const colonne = (x, z, H) => [['pierre', 2.4, 0.5, 2.4, x, 0.25, z], ['pierre', 2, 1.1, 2, x, 1, z], ['pierre', 2, 1.1, 2, x, 1, z, R45], ['pierre', 1.6, 0.4, 1.6, x, 1.75, z],
