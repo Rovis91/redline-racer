@@ -35,7 +35,7 @@ Débat entre trois game designers (lisibilité arcade, simulation façon Wreckfe
   - endroit : coin × 1,3, face ou flanc × 1.
 - Le choc se répartit entre la face (avant ou arrière) et le flanc selon le carré de chaque composante de sa direction.
 - Rendement décroissant : `zone += min(0,45, 0,6·u·poids) × (1 − zone)`.
-- Un contact frais compte au plus une fois toutes les 0,4 s (comme `wallT`).
+- Un contact frais compte au plus une fois toutes les 0,4 s contre un mur (`wallT` de sim.js), et toutes les 0,15 s entre voitures (`dgPas` de game.js).
 
 **Plafond** : hors du mode CASSE, aucune zone ne dépasse **0,70**. On peut être très abîmé, jamais une épave. Et chaque zone prend au plus **+0,40 par tour** (indispensable, voir les mesures).
 
@@ -46,13 +46,13 @@ Débat entre trois game designers (lisibilité arcade, simulation façon Wreckfe
 | Pièce | Pend à | Tombe à | Comment elle pend |
 |---|---|---|---|
 | Rétro, du côté du choc | — | 0,25 | — |
-| Phare / feu, du côté du choc | — | 0,25 (éclats) | hors CASSE, un phare reste toujours allumé |
+| Phare / feu, du côté du choc | — | 0,25 (éclats) | hors CASSE, un phare avant reste toujours allumé (la nuit, il éclaire la route) ; les deux feux arrière peuvent casser |
 | Pare-chocs | 0,30 | 0,45 | tient d'un bout, l'autre traîne au sol (étincelles) |
 | Aileron | 0,35 | 0,55 | penche d'un côté |
 | Capot | 0,55 | 0,85 (CASSE seulement) | se soulève et bat ; on voit le compartiment moteur |
 | Portière | 0,60 | 0,85 (CASSE seulement) | s'ouvre et bat ; on voit l'ouverture sombre |
 
-Une seule pièce pend à la fois : la suivante fait tomber la précédente. Une pièce qui pend est dessinée à part, elle coûte 2 passes. Pare-brise étoilé : à partir de vn > 22.
+Une seule pièce pend à la fois : la suivante fait tomber la précédente. Une pièce qui pend est dessinée à part, elle coûte 2 passes. Pare-brise étoilé : à partir de vn > 22. Le jeu le fait déjà (`fissure` de game.js, au-dessus de 12 m/s) ; le seuil passera à 22 au portage. Le bac à sable n'a pas de livrée pour le peindre.
 
 **Profils, sur une course de 3 tours** (suites de chocs fixes dans le prototype, touches 1 à 4)
 
@@ -60,27 +60,27 @@ Une seule pièce pend à la fois : la suivante fait tomber la précédente. Une 
 |---|---|---|
 | Propre | 10 frottements, 2 touchettes, 4 portières d'IA | 1 / 1 / 2 / 4 : nickel |
 | Moyen | 15 frottements, 6 murs moyens, 1 gros choc, 8 contacts d'IA | 16 / 6 / 21 / 9 : quelques creux |
-| Bourrin | par tour : 4 murs ratés, 2 gros chocs, 1 camion, 2 tamponnages | 70 / 24 / 19 / 60 : pare-chocs avant parti, un phare cassé, capot soulevé, aileron qui penche, roule toujours |
+| Bourrin | par tour : 4 murs ratés, 2 gros chocs, 1 camion, 2 tamponnages | 70 / 24 / 19 / 60 : pare-chocs avant parti, un phare cassé, capot soulevé, roule toujours |
 | Épave (CASSE) | bourrin, plus 12 crashs | presque 100 partout : capot, portières, pare-chocs, optiques partis |
 
-**Mesuré en vraie course** (`node outils/chocs.js [carte]`) : 8 cartes, 3 tours, 3 IA, la vraie physique de sim.js. On note chaque choc comme le jeu le voit et on rejoue dessus le modèle ci-dessus, **avec le plafond par tour** (+0,40 au plus par zone et par tour, ajouté après la première mesure).
+**Mesuré en vraie course** (`node outils/chocs.js [carte]`) : 12 cartes, 3 tours, 3 IA, la vraie physique de sim.js. On note chaque choc comme le jeu le voit et on rejoue dessus le modèle ci-dessus, **avec le plafond par tour** (+0,40 au plus par zone et par tour, ajouté après la première mesure).
 
 Profils du joueur :
 - propre = le pilote automatique ;
 - moyen = 6 % trop vite et un volant imprécis ;
 - bourrin = toujours à fond, jamais de frein.
 
-| Profil | Zone la plus abîmée en fin de course (min / médiane / max sur les 8 cartes) | Fin du tour 1 |
+| Profil | Zone la plus abîmée en fin de course (min / médiane / max sur les 12 cartes) | Fin du tour 1 |
 |---|---|---|
-| Propre | 0 / 5 / 22 : nickel, un creux au pire (un gros contact au givre) | 0 à 22 |
-| IA (rivaux) | 0 / 0 / 13 : les rivaux restent propres | — |
-| Moyen | 4 / 22 / 32 : quelques creux, parfois un rétro ou une optique | 4 à 17 |
-| Bourrin | 26 / 70 / 70 : au plafond, mais roule | **40 au plus** (pare-chocs qui pend, une optique) |
+| Propre | 0 / 2 / 22 : nickel, un creux au pire (un gros contact au givre) | 0 à 22 |
+| IA (rivaux) | 0 / 0 / 22 : les rivaux restent propres, un creux au pire | — |
+| Moyen | 4 / 17 / 35 : quelques creux, parfois un rétro ou une optique | 0 à 21 |
+| Bourrin | 26 / 70 / 70 : au plafond, mais roule | 13 à **40 au plus** (pare-chocs qui pend, une optique) |
 
 - Sans plafond par tour, le bourrin atteignait 70 dès la fin du tour 1 (touge, stade). Le plafond par tour est donc indispensable.
 - Frottements : chaque course compte des dizaines de contacts entre 4 et 10 m/s. Leur effet est nul ou négligeable : à vn = 8, l'usure est de 0,007.
 - Gros chocs : le bourrin prend 3 à 10 chocs au-dessus de 20 m/s par course. Contre les camions de wangan en contre-la-montre, il en prend 10 au-dessus de 30 m/s, et le plafond par tour le retient à 40.
-- Limite : le pilote « moyen » est aléatoire, donc ses chiffres bougent d'un essai à l'autre. Aucun vrai joueur humain n'a encore été mesuré.
+- Le volant du pilote « moyen » dévie d'un tirage fixe, remis à zéro à chaque course : deux passages donnent les mêmes chiffres. Aucun vrai joueur humain n'a encore été mesuré.
 
 **Technique** (technical artist)
 - La déformation reste sur le CPU, au choc. Elle coûte environ 0,1 ms par voiture (1 200 à 2 600 sommets) ; le GPU n'apporterait rien.
@@ -107,6 +107,7 @@ Dans `propositions/casse.html` : une « rue » devant le départ. Capture dans `
 - **Vitrine** : au-dessus de 5 m/s, elle vole en éclats (une quarantaine de débris de verre).
 
 Limites du prototype :
+- En conduite libre, le bac à sable compte un « tour » toutes les 90 s pour appliquer le plafond par tour (les courses du jeu ont de vrais tours).
 - Les objets traversent la glissière et les blocs, et ils peuvent s'endormir en équilibre sur une arête.
 - Les débris de verre sont des Mesh séparés : dans le jeu, ils iront dans le maillage unique des débris posés.
 
@@ -136,10 +137,10 @@ Capture : `docs/avant-apres/casse/casse-bonus.jpg`.
 | Effet | Règle | Mesure dans le bac à sable (départ arrêté, 5 s pied au plancher) |
 |---|---|---|
 | Moteur qui faiblit | usure avant ≥ 0,6 : −15 % de puissance ; ≥ 0,85 : −35 % et fumée grise | intacte 201 km/h ; avant 70 % : 172 ; avant 90 % : 131 |
-| Direction qui tire | choc sur l'avant de côté au-dessus de 12 m/s : le volant dévie de 0,02 vers le côté touché, jusqu'à 0,08 | déviation de 0,04 sans corriger : 22° de cap en 5 s |
-| Pneu crevé | gros choc (> 15 m/s) sur un coin dont la face est déjà à 0,5 : la roue crève ; −15 % d'adhérence et −10 % de vitesse maximale par roue, la voiture tire de son côté, la caisse s'affaisse, la jante crache des étincelles | roue avant droite crevée : 15° de cap en 5 s sans corriger |
+| Direction qui tire | choc sur l'avant de côté au-dessus de 12 m/s : le volant dévie de 0,02 vers le côté touché, jusqu'à 0,08 | déviation de 0,04 sans corriger : 23° de cap en 5 s ; à 0,08 : 31° et le mur |
+| Pneu crevé | gros choc (> 15 m/s) sur un coin dont la face est déjà à 0,5 : la roue crève ; −15 % d'adhérence et −10 % de vitesse maximale par roue, la voiture tire de son côté, la caisse s'affaisse, la jante crache des étincelles | roue avant droite crevée : 16° de cap en 5 s sans corriger, 187 km/h au lieu de 201 |
 | Hors d'usage | usure avant ≥ 0,97 ou somme des zones ≥ 3,4 : moteur coupé, fumée noire, la voiture est éliminée | — |
-| En plus | pare-chocs qui traîne : −1,5 % de vitesse maximale ; chaque pièce perdue : +1 % d'accélération | — |
+| En plus | pare-chocs qui traîne : −1,5 % de vitesse maximale ; chaque pièce perdue : +1 % d'accélération, sans toucher la vitesse maximale | — |
 
 Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
 - Les zones d'usure, `tire`, `creve` et `mort` deviennent des champs de la voiture.
