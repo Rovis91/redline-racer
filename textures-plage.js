@@ -4,7 +4,7 @@
   Object.assign(TEXTURES, {
     // sable sec de la plage : presque blanc, grains, petites rides du vent, traces de pas
     sableSec: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#d4c39a', 0, 0, 64, 64); grain(g, o, 700, ['#c4b088', '#e2d4b0', '#b8a47c']);
+      const { R, alea, voile } = o; R(g, '#cab890', 0, 0, 64, 64); grain(g, o, 700, ['#baa680', '#dccca6', '#ae9a74']);
       voile(g, 0.25, () => { for (let y = 2; y < 64; y += 5) for (let x = 0; x < 64; x += 2) R(g, '#bfae85', x, y + (Math.sin(x * 0.3 + y) * 1.5 | 0), 2, 1); });
       for (let i = 0; i < 10; i++) { const x = alea() * 60 | 0, y = alea() * 60 | 0; R(g, '#d6c8a4', x, y, 2, 3); R(g, '#d6c8a4', x + 3, y + 4, 2, 3); }
     }, 6],
@@ -17,14 +17,14 @@
     }],
     // mer des Caraïbes vue de près : turquoise, rides claires, reflets du soleil
     merTurquoise: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#19c7c9', 0, 0, 64, 64);
+      const { R, alea, voile } = o; R(g, '#14aebe', 0, 0, 64, 64);
       voile(g, 0.5, () => { for (let i = 0; i < 60; i++) R(g, alea() < 0.5 ? '#12b0bc' : '#2fd8d4', alea() * 64 | 0, alea() * 64 | 0, 6 + (alea() * 16 | 0), 2 + (alea() * 2 | 0)); });
       for (let i = 0; i < 80; i++) R(g, '#7eeee6', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 6 | 0), 1);
       for (let i = 0; i < 26; i++) R(g, '#ffffff', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 3 | 0), 1);
     }, 10],
     // le large : bleu profond, moins de détails
     merLarge: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#0a7fa8', 0, 0, 64, 64);
+      const { R, alea, voile } = o; R(g, '#0a5e94', 0, 0, 64, 64);
       voile(g, 0.5, () => { for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#0c6e98' : '#1592b8', alea() * 64 | 0, alea() * 64 | 0, 8 + (alea() * 18 | 0), 2); });
       for (let i = 0; i < 30; i++) R(g, '#8fd8ee', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1);
     }, 24],
@@ -116,8 +116,8 @@
     }, 6],
     // mer du bord, sur le sable blanc : aigue-marine claire, rides et taches de lumière
     merBord: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#5fd8cf', 0, 0, 64, 64);
-      voile(g, 0.5, () => { for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#48c8c4' : '#7ee4da', alea() * 64 | 0, alea() * 64 | 0, 8 + (alea() * 14 | 0), 2); });
+      const { R, alea, voile } = o; R(g, '#8ee2cc', 0, 0, 64, 64);
+      voile(g, 0.5, () => { for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#74d6c0' : '#a8ecd8', alea() * 64 | 0, alea() * 64 | 0, 8 + (alea() * 14 | 0), 2); });
       for (let i = 0; i < 70; i++) R(g, '#c8fbf2', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1);
     }, 8],
     // traces de pneus et de pas sur le sable mou de la plage large : sillons sombres, transparents ailleurs (posé par-dessus le sable)
@@ -128,8 +128,8 @@
     }],
     // eau de la lagune de mangrove : vert d'eau plus sombre que la mer, reflets du ciel en bandes
     eauLagune: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#2f8a82', 0, 0, 64, 64);
-      voile(g, 0.5, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#276f6a' : '#3aa096', alea() * 64 | 0, alea() * 64 | 0, 10 + (alea() * 20 | 0), 2); });
+      const { R, alea, voile } = o; R(g, '#3e7f76', 0, 0, 64, 64);
+      voile(g, 0.5, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#346a62' : '#4a8a80', alea() * 64 | 0, alea() * 64 | 0, 10 + (alea() * 20 | 0), 2); });
       for (let i = 0; i < 40; i++) R(g, '#a8e0e0', alea() * 64 | 0, alea() * 64 | 0, 3 + (alea() * 6 | 0), 1);
     }, 12],
     // enrochement de calcaire au pied de la chaussée de la lagune : blocs gris clair, ombres entre eux
@@ -160,7 +160,7 @@
     }],
     // eau du cénote souterrain : turquoise vif sur fond de sable, plus sombre vers le profond (le haut de la texture est le bord de la paroi), réseau de lumière ondulante
     eauGrotte: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; for (let y = 0; y < 64; y++) R(g, 'rgb(' + (18 + y * 0.3 | 0) + ',' + (120 + y * 1.4 | 0) + ',' + (130 + y * 0.6 | 0) + ')', 0, y, 64, 1);
+      const { R, alea, voile } = o; for (let y = 0; y < 64; y++) R(g, 'rgb(' + (10 + y * 0.2 | 0) + ',' + (50 + y * 1.6 | 0) + ',' + (80 + y * 1.0 | 0) + ')', 0, y, 64, 1);
       voile(g, 0.5, () => { for (let i = 0; i < 90; i++) { const x = alea() * 64 | 0, y = alea() * 64 | 0; R(g, '#9ff8e8', x, y, 4 + (alea() * 5 | 0), 1); R(g, '#9ff8e8', x + 3, y + 1, 1, 2); } });
       voile(g, 0.3, () => { for (let i = 0; i < 12; i++) R(g, '#0a3a44', alea() * 60 | 0, alea() * 24 | 0, 6, 3); }); // roches immergées
     }],
@@ -185,5 +185,7 @@
     rayonFort: () => [16, 64, (g) => {
       for (let y = 0; y < 64; y++) for (let x = 0; x < 16; x++) { const a = Math.max(0, 1 - Math.abs(x - 7.5) / 8) ** 1.3 * (1 - y / 64) ** 0.8 * 0.7; g.fillStyle = 'rgba(255,243,200,' + a.toFixed(3) + ')'; g.fillRect(x, y, 1, 1); }
     }],
+    // auvents des façades : toile rayée de trois couleurs selon la hauteur (rouge, turquoise, jaune) : chaque façade en montre une bande, sans passe de dessin de plus
+    toldoMulti: () => [32, 96, (g, o) => { const { R } = o; ['#e8402a', '#1f9a96', '#e8a800'].forEach((c, k) => { for (let x = 0; x < 32; x += 8) { R(g, '#fff4e0', x, k * 32, 4, 32); R(g, c, x + 4, k * 32, 4, 32); } }); }, 2],
   });
 })();
