@@ -79,6 +79,8 @@
   // ---------- rendu basse définition : scène → cible 270p → passe finale (flou de vitesse, HUD, scanlines) ----------
   const renderer = window.__rendu || (window.__rendu = new THREE.WebGLRenderer({ antialias: false })); // un seul pour toute la session : il garde les shaders d'une carte à l'autre
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.BasicShadowMap;
+  // three r152+ convertit les couleurs (sRGB ↔ linéaire) : tout le jeu est réglé à l'œil sans conversion, on la coupe pour garder la même image
+  THREE.ColorManagement.enabled = false; renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
   document.body.prepend(renderer.domElement);
   const scene = new THREE.Scene();
   const FOG_OUT = new THREE.Color(TH.fog), FOG_IN = new THREE.Color(TH.tun ? TH.tun.fog : TH.fog), WHITE = new THREE.Color(0xffffff);
@@ -312,8 +314,8 @@
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('astre', TH.astre.col, TH.astre.ombre) }));
   sunDisc.scale.set(TH.astre.taille, TH.astre.taille, 1); scene.add(sunDisc);
 
-  const hemi = new THREE.HemisphereLight(...TH.hemi); scene.add(hemi); // bleu d'en haut, rebond magenta de la ville
-  const sun = new THREE.DirectionalLight(...TH.sun); sun.castShadow = true; const OMBD = 2, OMBI = 3; // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
+  const hemi = new THREE.HemisphereLight(TH.hemi[0], TH.hemi[1], TH.hemi[2] * Math.PI); scene.add(hemi); // bleu d'en haut, rebond magenta de la ville
+  const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const OMBD = 2, OMBI = 3; // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
   sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.5;
   Object.assign(sun.shadow.camera, { left: -300 * LOIN, right: 300 * LOIN, top: 300 * LOIN, bottom: -300 * LOIN, near: 10, far: 800 * LOIN });
   scene.add(sun, sun.target);
@@ -336,8 +338,8 @@
     #endif
     vLw = (modelMatrix * lw).xyz;
     if (uRes.x > 0.) gl_Position.xy = floor(gl_Position.xy / gl_Position.w * uRes + .5) / uRes * gl_Position.w;
-    #ifdef USE_UV
-      vAf = vec3(vUv, 1.) * gl_Position.w;
+    #ifdef USE_MAP
+      vAf = vec3(vMapUv, 1.) * gl_Position.w;
     #endif
     }
     `;
@@ -402,8 +404,9 @@
       if (mou) { sh.vertexShader = 'attribute float mou; varying float vMou;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vMou = mou;\n#include <fog_vertex>'); sh.fragmentShader = 'varying float vMou;\n' + sh.fragmentShader; }
       if (opaque) sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', (mou ? `gl_FragColor.a = 1. - ${EAU.toFixed(2)} * clamp(vMou * .3 + (1. - diffuseColor.a) * min(vMou, 1.), 0., 1.);` : 'gl_FragColor.a = 1.;') + '\n#include <fog_fragment>');
       // textures sans correction de perspective : vAf = uv × w, interpolé puis divisé par w interpolé, redonne l'interpolation affine à l'écran
-      if (ST && ST.affine) sh.fragmentShader = 'varying vec3 vAf;\n' + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.replace('vUv', `mix(vUv, vAf.xy / vAf.z, ${ST.affine.toFixed(3)})`));
+      if (ST && ST.affine) sh.fragmentShader = 'varying vec3 vAf;\n' + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment.replace('vMapUv', `mix(vMapUv, vAf.xy / vAf.z, ${ST.affine.toFixed(3)})`));
       if (m.userData.mo) sh.fragmentShader = '#define MOUILLE\n' + sh.fragmentShader; // en tête, avant LU_H qui s'en sert
+      sh.fragmentShader = '#undef OPAQUE\n' + sh.fragmentShader; // r151+ force l'alpha des opaques à 1 avant fog_fragment : les flaques (alpha de la texture) et la mouillure le lisent
     };
     m.customProgramCacheKey = () => 'lu' + lit + opaque + mou + (m.userData.mo ? 'mo' : '');
   };
@@ -596,7 +599,7 @@
   // vue à 300 m seulement (à 3° le pixel, plus loin ne fait presque rien et coûte des passes de dessin) : le ciel et l'astre y sont ramenés au dixième, en deçà ;
   // la caisse l'ajoute à sa couleur (envMap), dosée pixel par pixel par un masque tiré de la livrée : vitrage (sombre, bleuté) fort, peinture modérée, joints et cadres presque rien.
   // Les rivaux et les autres joueurs partagent la même cube map : prise à la voiture du joueur 1, elle ne leur est pas exacte, mais à leur taille à l'écran on ne le voit pas
-  const CUBE = new THREE.WebGLCubeRenderTarget(32, { generateMipmaps: false, minFilter: THREE.LinearFilter }), refCam = new THREE.CubeCamera(0.5, 300, CUBE); refCam.children.forEach(c => { c.layers.enable(OMBD); c.layers.enable(OMBI); }); // les objets mobiles qui portent une ombre
+  const CUBE = new THREE.WebGLCubeRenderTarget(32, { generateMipmaps: false, minFilter: THREE.LinearFilter }), refCam = new THREE.CubeCamera(0.5, 300, CUBE); refCam.coordinateSystem = renderer.coordinateSystem; refCam.updateCoordinateSystem(); refCam.children.forEach(c => { c.layers.enable(OMBD); c.layers.enable(OMBI); }); // r187 n'oriente les six faces que dans update(), que le jeu n'appelle pas (une face par image) // les objets mobiles qui portent une ombre
   let refF = 0;
   const refFace = () => { // la voiture du joueur 1 ne se voit pas dans sa propre cube map ; l'ombre du soleil n'est pas recalculée pour si peu
     if (refF++ % 6) return; const f = (refF / 6 | 0) % 6, P = refCam.position, sp = sky.position.clone(), dp = sunDisc.position.clone(), ds = sunDisc.scale.x;
@@ -926,7 +929,8 @@
   }
   { const fixe = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn || !p.visible) return false; return true; }; // les ombres mobiles (voir ombres) : tout ce qui porte une ombre sans être fixe
     scene.traverse(o => { if (o.isLight) { o.layers.enable(OMBD); o.layers.enable(OMBI); } else if (o.castShadow && !fixe(o)) o.layers.set(o.isInstancedMesh ? OMBI : OMBD); }); } // les lumières aussi : sans elles, la passe des ombres mobiles changeait l'éclairage de three, qui recompilait alors la clé de chaque matière à chaque image
-  scene.traverse(o => { if (o.isInstancedMesh) o.frustumCulled = false; if (o.material) eclaire(o.material); }); // r128 calcule le culling sur la géométrie de base, pas sur les instances
+  const bouge = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn) return true; return false; };
+  scene.traverse(o => { if (o.isInstancedMesh) { if (bouge(o)) o.frustumCulled = false; else o.computeBoundingSphere(); } if (o.material) eclaire(o.material); }); for (const sc of [scene, repliScene]) sc.traverse(o => { for (const m of [].concat(o.material || [])) m.forceSinglePass = true; }); // r149+ : une transparente double face se dessinait en deux passes (éclat doublé en additif) ; le décor posé en nombre est écarté hors champ sur l'étendue de ses instances (sphère calculée une fois) ; ce qui bouge reste toujours dessiné
 
   // ---------- audio : voir audio.js (window.SON) ; ici seulement ce que le jeu et le HUD lisent ----------
   let radioT = 0;
@@ -1472,14 +1476,17 @@
   // Ombres en deux temps. Le décor fixe (calque 0) n'est dessiné dans la carte d'ombre que quand la lune change de pas, puis gardé dans la cible de la vue (vu.ombre) ;
   // chaque image, la carte reprend cette copie (profondeur comprise : OMB écrit gl_FragDepth) et seuls les objets mobiles qui portent une ombre (calque OMBD : voitures, débris, décor dyn) y sont redessinés.
   // Avant : tout le décor à chaque image, 35 à 100 passes de dessin. Un objet qui bouge et porte une ombre doit être sur le calque OMBD (fait à la construction pour tout ce qui n'est pas fixe, voir « fusion »)
-  const OMB = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: post.vertexShader, depthFunc: THREE.AlwaysDepth, extensions: { fragDepth: true },
-      fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ vec4 c = texture2D(t, v); gl_FragColor = c; gl_FragDepthEXT = unpackRGBAToDepth(c); }' }),
+  // three r18x garde l'ombre dans la texture de profondeur de la carte (plus en couleur) : OMBS la range en couleur dans la copie (profondeur codée sur RGBA), OMB la remet dans la profondeur
+  const OMB = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: post.vertexShader, depthFunc: THREE.AlwaysDepth,
+      fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = vec4(0.); gl_FragDepth = unpackRGBAToDepth(texture2D(t, v)); }' }),
+    OMBS = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: post.vertexShader, depthTest: false, depthWrite: false,
+      fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = packDepthToRGBA(texture2D(t, v).x); }' }),
     ombScene = new THREE.Scene(), ombProf = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.BackSide }), ombProfI = ombProf.clone(), // une par calque : la même pour les deux faisait refaire à three la clé du programme à chaque passage de l'un à l'autre
     ombNul = new THREE.WebGLRenderTarget(1, 1), ombFixe = new THREE.OrthographicCamera(-1e-6, 1e-6, 1e-6, -1e-6, 0, 1e-6); // ombFixe : ne voit rien (loin sous la carte, champ nul) et seulement le calque 0 : le rendu qui la prend ne fait que l'ombre du décor fixe (shadowMap.render ne s'appelle pas hors d'un rendu)
   ombFixe.position.set(0, -1e7, 0); ombFixe.updateMatrixWorld();
-  { const q = new THREE.Mesh(quad.geometry, OMB); q.frustumCulled = false; ombScene.add(q); }
+  const ombQ = new THREE.Mesh(quad.geometry, OMB); ombQ.frustumCulled = false; ombScene.add(ombQ);
   sun.shadow.camera.layers.set(OMBD); renderer.shadowMap.autoUpdate = false;
-  const copie = (src, dst) => { OMB.uniforms.t.value = src.texture; renderer.setRenderTarget(dst); renderer.autoClear = false; renderer.render(ombScene, postCam); renderer.autoClear = true; };
+  const copie = (src, dst, m) => { ombQ.material = m; m.uniforms.t.value = src; renderer.setRenderTarget(dst); renderer.autoClear = false; renderer.render(ombScene, postCam); renderer.autoClear = true; };
   // Les ombres mobiles ne sont dessinées (et la copie reprise) que dans un carré de OMBR mètres autour de la voiture suivie : toute la carte à chaque image coûtait 1 à 2 ms de GPU.
   // Plus loin, un objet mobile ne porte pas d'ombre ; le décor fixe garde les siennes partout. Le carré de l'image d'avant est repris aussi : il n'y reste aucune ombre périmée
   const OMBR = 120;
@@ -1487,11 +1494,11 @@
     const S = sun.shadow, W = S.mapSize.x; sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
     if (!vu.ombre) vu.ombre = { C: new THREE.WebGLRenderTarget(W, S.mapSize.y, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false }), cle: null, b: null };
     const O = vu.ombre, fixe = O.cle !== cle || !S.map;
-    if (fixe) { renderer.shadowMap.needsUpdate = true; renderer.setRenderTarget(ombNul); renderer.render(scene, ombFixe); copie(S.map, O.C); O.cle = cle; O.b = null; } // décor fixe seul, puis gardé
+    if (fixe) { renderer.shadowMap.needsUpdate = true; S.camera.layers.set(0); /* r18x prend les calques de la caméra d'ombre (s'ils dépassent le calque 0) au lieu de ceux du rendu : on la remet sur le décor fixe */ renderer.setRenderTarget(ombNul); renderer.render(scene, ombFixe); copie(S.map.depthTexture, O.C, OMBS); O.cle = cle; O.b = null; } // décor fixe seul, puis gardé
     else S.updateMatrices(sun); // (la vue d'avant a pu laisser sa carte et ses matrices)
     tmp.set(car.x, y, car.z).applyMatrix4(S.matrix); const r = OMBR / TX, b = [tmp.x * W - r, tmp.y * W - r, tmp.x * W + r, tmp.y * W + r].map(v => clamp(Math.round(v), 0, W)), p = O.b || b;
     const bx = Math.min(b[0], p[0]), by = Math.min(b[1], p[1]); S.map.scissorTest = true;
-    if (!fixe) { S.map.scissor.set(bx, by, Math.max(b[2], p[2]) - bx, Math.max(b[3], p[3]) - by); copie(O.C, S.map); } // la copie : ce carré et celui de l'image d'avant
+    if (!fixe) { S.map.scissor.set(bx, by, Math.max(b[2], p[2]) - bx, Math.max(b[3], p[3]) - by); copie(O.C.texture, S.map, OMB); } // la copie : ce carré et celui de l'image d'avant
     S.map.scissor.set(b[0], b[1], b[2] - b[0], b[3] - b[1]); O.b = b;
     renderer.autoClear = false; renderer.setRenderTarget(S.map);
     for (const [c, m] of [[OMBD, ombProf], [OMBI, ombProfI]]) { S.camera.layers.set(c); scene.overrideMaterial = m; renderer.render(scene, S.camera); }
@@ -1651,7 +1658,7 @@
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN, 320, lm);
     skyMat.color.copy(WHITE).lerp(FOG_IN, lm);
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;
-    hemi.intensity = TH.hemi[2] * (1 - 0.75 * lm) + 3 * fl; sun.intensity = TH.sun[1] * (1 - lm); // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
+    hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * lm) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - lm); // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
     beams.forEach((b, i) => b.rotation.set(0, Math.atan2(cam.position.x - b.position.x, cam.position.z - b.position.z), Math.sin(now * 0.0004 * (i % 3 + 1) + i) * 0.5)); // les faisceaux de projecteurs font face à la caméra
     // lumière dynamique : phares, boîte d'ombre de la voiture, reflets, puis la liste des luminaires
     const cp = Math.cos(pitch);
@@ -1742,9 +1749,9 @@
       for (const o of caches) o.visible = false; for (const o of tri) o.frustumCulled = true;
     }
     // les matrices de la scène une fois pour les trois rendus de la vue (reflets, ombres mobiles, scène) : chacun les recalculait toutes
-    rouesInst(); scene.updateMatrixWorld(); scene.autoUpdate = false; if (!vu.n) refFace();
+    rouesInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n) refFace();
     ombres(vu, pasL, car, carY);
-    renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.autoUpdate = true;
+    renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
     if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       REPLI.rDz.value = vu.rt.depthTexture; REPLI.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(repliScene, cam); renderer.autoClear = true; }
     if (vu.oeil) { const [a, b] = vu.oeil, O = OEIL.uniforms; O.t.value = vu.rt.texture; O.prev.value = a.texture; O.kc.value = 1 - Math.exp(-dt / 0.6); O.kn.value = 1 - Math.exp(-dt / 2.5); O.kd.value = (1 - Math.exp(-dt / 3)) * (1 - lm); U.dn.value = 1 - (1 - TUN) * lm; O.ld.value = Math.log(U.dn.value);

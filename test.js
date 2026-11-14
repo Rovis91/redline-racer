@@ -1,6 +1,6 @@
 // node test.js — géométrie du circuit, tour complet au pilote auto, mécanique réaliste, murs, glisse (déclenchement, verrouillage, boost), boîte manuelle, course.
 const assert = require('assert');
-const THREE = require('./three.min.js');
+const THREE = require('./three/three.module.js');
 require('./sim.js');
 const T = buildTrack(THREE, CARTE), { S, n, W } = T, CARD = T.car, H = 1 / 120;
 const run = (c, inp, sec) => { for (let i = 0; i < sec / H; i++) step(c, typeof inp === 'function' ? inp(c) : inp, T, H); };
