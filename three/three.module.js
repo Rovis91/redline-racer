@@ -5452,7 +5452,9 @@ function getSingularSetter( type ) {
 
 function setValueV1fArray( gl, v ) {
 
+	if ( arraysEqual( this.cache, v ) ) return; // vpr : rien à renvoyer si le tableau n'a pas changé (les 20 luminaires du jeu, les matrices d'ombre)
 	gl.uniform1fv( this.addr, v );
+	copyArray( this.cache, v );
 
 }
 
@@ -5470,7 +5472,9 @@ function setValueV3fArray( gl, v ) {
 
 	const data = flatten( v, this.size, 3 );
 
+	if ( arraysEqual( this.cache, data ) ) return; // vpr : rien à renvoyer si le tableau n'a pas changé (les 20 luminaires du jeu, les matrices d'ombre)
 	gl.uniform3fv( this.addr, data );
+	copyArray( this.cache, data );
 
 }
 
@@ -5478,7 +5482,9 @@ function setValueV4fArray( gl, v ) {
 
 	const data = flatten( v, this.size, 4 );
 
+	if ( arraysEqual( this.cache, data ) ) return; // vpr : rien à renvoyer si le tableau n'a pas changé (les 20 luminaires du jeu, les matrices d'ombre)
 	gl.uniform4fv( this.addr, data );
+	copyArray( this.cache, data );
 
 }
 
@@ -5504,7 +5510,9 @@ function setValueM4Array( gl, v ) {
 
 	const data = flatten( v, this.size, 16 );
 
+	if ( arraysEqual( this.cache, data ) ) return; // vpr : rien à renvoyer si le tableau n'a pas changé (les 20 luminaires du jeu, les matrices d'ombre)
 	gl.uniformMatrix4fv( this.addr, false, data );
+	copyArray( this.cache, data );
 
 }
 

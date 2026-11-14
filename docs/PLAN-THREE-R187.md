@@ -3,7 +3,24 @@
 État au 14 novembre 2026. Le jeu tourne sur **r128** (2021, `three.min.js` global). La dernière version est **r187** (30 octobre 2026).
 Règle de ce plan : on ne garde que ce qui gagne en performance ou en stabilité, mesuré au banc (`node outils/banc.js`), avec des captures avant / après identiques.
 
-## Résumé
+## Bilan (fait le 14 novembre 2026, branche `three-r187`)
+
+- **Fait.** La pluie est calculée dans le shader. Le jeu tourne en r187 (dossier `three/`, sous forme de module ES) et le rendu des 8 cartes est identique à r128 sur les captures. Les styles `console32` et `encre`, l'écran partagé et le changement de carte ont été vérifiés.
+- **Perf.** Le temps par image est égal à celui de r128, mesuré en alternant les deux versions au banc rapide sur paris, ville et canal (moins de 0,05 ms d'écart). La pluie sur GPU fait gagner environ 0,2 ms sur wangan. Il y a autant de passes de dessin et de triangles qu'avant.
+- **Pièges de r187 corrigés dans `game.js`.**
+  - r151 force l'alpha des opaques à 1, alors que la mouillure le lit (`#undef OPAQUE`).
+  - La carte d'ombre est maintenant une texture de profondeur, et elle prend les calques de la caméra d'ombre : les ombres du décor fixe disparaissaient.
+  - `CubeCamera` n'oriente plus ses faces hors de `update()`.
+  - Les matières transparentes double face se dessinent en deux passes (`forceSinglePass`).
+  - Les intensités de lumière sont multipliées par π.
+  - Les textures affines passent à `vMapUv`.
+  - `matrixWorldAutoUpdate` remplace `autoUpdate`.
+- **Bug ancien révélé.** L'instance des piles de viaduc avait 60 places pour 83 piles sur wangan. Les 23 en trop n'étaient pas dessinées et devenaient des NaN dans la fusion. Elles apparaissent désormais.
+- **Retouche de three reportée.** Le cache des uniformes en tableau est marqué `// vpr` dans `three/three.module.js`. La retouche des attributs a été abandonnée, car r187 compare peu de choses.
+- **Écarté après mesure.** Passer les autres particules sur GPU (moins de 400 chacune, gain non mesurable), les UBO (three ne les permet pas sur ses matières Basic et Lambert) et `BatchedMesh` (la fusion fait déjà mieux).
+- **Phase 3 (WebGPU).** Toujours pas maintenant : voir les critères plus bas.
+
+## Résumé du plan d'origine
 
 | Phase | Quoi | Gain attendu | Risque | Décision |
 |---|---|---|---|---|

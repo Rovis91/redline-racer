@@ -503,7 +503,7 @@
   { // chevrons à l'extérieur des virages, piles du viaduc, tubes néon en bord de route (repères de vitesse)
     const dummy = new THREE.Object3D();
     const sg = [0, 1].map(f => new THREE.InstancedMesh(geo('chevron'), mat('chevron', { lum: 1, side: THREE.DoubleSide, retro: 1.5 }, f), 600)), cnt = [0, 0]; // rétroréfléchissants : ils s'allument dans les phares
-    const piles = new THREE.InstancedMesh(habille(geo('pileViaduc'), concrete), concrete, 60); let np = 0;
+    const piles = new THREE.InstancedMesh(habille(geo('pileViaduc'), concrete), concrete, Math.ceil(N / 30) + 1); let np = 0; // une pile tous les 30 échantillons au plus (60 places débordaient sur wangan : les piles en trop devenaient des pièces NaN dans la fusion)
     const tubes = [glowM, glowC].map(m => new THREE.InstancedMesh(geo('tubeNeon'), m, 200)), nt = [0, 0];
     const streaks = ['#ff2bd6', '#00f0ff'].map(c => new THREE.InstancedMesh(geo('refletTube'), addMat(tx('degrade', c)), 200));
     for (let i = 0; i < N; i++) {
@@ -1514,6 +1514,9 @@
   const assiette = c => { const s = S[c.idx], ax = Math.cos(c.th), az = Math.sin(c.th), gn = pente(s, c.d);
     return [c.air ? 0.7 * Math.atan2(c.vy, Math.max(5, Math.hypot(c.vx, c.vz))) : Math.atan(s.sl + gn * (s.tx * az - s.tz * ax)), -Math.atan(gn * (s.tx * ax + s.tz * az))]; };
   nouvelleVue(); // la vue du joueur : le décor est construit, tous ses luminaires sont déclarés
+  // tous les shaders de la scène lancés d'un coup (le pilote les compile en parallèle) : le décor écarté hors champ au départ ne compile plus son shader en pleine course
+  // à sa première apparition ; compile et non compileAsync : sans fond, tout doit finir d'un trait (voir plus haut)
+  renderer.compile(scene, VUES[0].cam);
   // Un ou deux joueurs : autant de vues. À deux, chacun a son périphérique et la couche plein écran commune est posée sur le canvas du jeu. Se règle au menu : appelé en course, on y revient.
   // Le périphérique de chacun vient de l'écran d'inscription (PLACES) ; le mode et la difficulté sont relus dans les préférences de ce nombre de joueurs. Les styles de comparaison (?style=) restent à une vue.
   const joueurs = n => {
