@@ -838,8 +838,8 @@
     decorRaz(); huileRaz();
   }
   // un choc sur le modèle g : (lx, lz) = d'où il vient, unitaire, dans le repère de la voiture (x vers l'avant) ; f = sa vitesse normale (m/s) ; (vx, vz) = vitesse de la voiture, que gardent les pièces qui tombent
-  function dgChoc(g, lx, lz, f, vx = 0, vz = 0, type = 'mur') {
-    const D = g.userData.dg, du = usure(D.z, D.z0, lx, lz, f, type);
+  function dgChoc(g, lx, lz, f, vx = 0, vz = 0, type = 'mur', zs = null) { // zs : en CASSE, les zones que sim.js a déjà calculées (c.ca.z), sans plafond
+    const D = g.userData.dg, z0 = D.z[0] + D.z[1] + D.z[2] + D.z[3], du = zs ? (zs.forEach((v, i) => { D.z[i] = v; }), D.z[0] + D.z[1] + D.z[2] + D.z[3] - z0) : usure(D.z, D.z0, lx, lz, f, type);
     const t = Math.min(ENCt.x / 2 / (Math.abs(lx) + 1e-6), ENCt.z / 2 / (Math.abs(lz) + 1e-6)), px = ENCc.x + lx * t, pz = ENCc.z + lz * t;
     if (du > 0.002) { // l'enfoncement suit l'usure ajoutée (plus rien une fois le plafond atteint) ; une face qui a perdu son pare-chocs se plie 1,5 fois plus
       const nu = lx * lx > 0.5 && D.p.some(p => p.nom === 'parechocs' && p.etat === 2 && p.zi === (lx > 0 ? 0 : 1)), R = 0.6 + 1.2 * Math.sqrt(du), pr = (0.06 + 0.6 * du) * (nu ? 1.5 : 1);
@@ -848,7 +848,7 @@
           const w = (1 - r / R) ** 2 * pr * (0.6 + 0.8 * hash(P[i], P[i + 1], P[i + 2])); d[i] -= lx * w; d[i + 1] -= w * 0.3 * hash(P[i + 2], P[i], P[i + 1]); d[i + 2] -= lz * w; // froissé : chaque point un peu plus ou un peu moins
           const l = Math.hypot(d[i], d[i + 1], d[i + 2]); if (l > DG_MAX) for (let c = 0; c < 3; c++) d[i + c] *= DG_MAX / l; } } }
     for (const p of D.p) { if (p.etat === 2) continue; const z = D.z[p.zi], cote = !p.s || pz * p.s > -0.2 || z > 0.6; // rétro et optiques : du côté du choc
-      if (p.nom === 'phare' && D.p.some(q => q !== p && q.nom === 'phare' && q.etat)) continue; // un phare reste toujours : la nuit, sinon on ne voit plus la route
+      if (!zs && p.nom === 'phare' && D.p.some(q => q !== p && q.nom === 'phare' && q.etat)) continue; // hors CASSE, un phare reste toujours : la nuit, sinon on ne voit plus la route
       if (z >= p.off && cote) { if (D.pend && D.pend.p === p) lache(g, D, vx, vz); else { p.etat = 2; tombe(g, p, morceaux(p), p.parts[0].me.o.parent, vx, vz); } }
       else if (!p.etat && p.pend != null && z >= p.pend) pend(g, D, p, vx, vz); }
     for (const p of D.p) if (p.etat === 2 && p.verre !== undefined) D[p.verre ? 'fe' : 'ph'][p.s < 0 ? 0 : 1] = 1;
@@ -891,7 +891,7 @@
     const g = modele(c), D = g.userData.dg, lap = Math.floor(c.dist / T.n); D.c = c; if (lap !== D.lap) { D.lap = lap; D.z0 = D.z.slice(); } // nouveau tour : chaque zone peut reprendre 0,4
     murChoc(c); const f = Math.max(c.hit, c.bump || 0); if (f <= 3 || dgT - D.t < 0.15) return; D.t = dgT; // un contact qui dure ne compte qu'une fois
     let dx = vx0 - c.vx, dz = vz0 - c.vz, l = Math.hypot(dx, dz); if (l < 0.5) { dx = c.vx; dz = c.vz; l = Math.hypot(dx, dz) || 1; }
-    const fx = Math.cos(c.th), fz = Math.sin(c.th); dgChoc(g, (dx * fx + dz * fz) / l, (dz * fx - dx * fz) / l, f, c.vx, c.vz, (c.bump || 0) > c.hit ? 'voiture' : 'mur');
+    const fx = Math.cos(c.th), fz = Math.sin(c.th); dgChoc(g, (dx * fx + dz * fz) / l, (dz * fx - dx * fz) / l, f, c.vx, c.vz, (c.bump || 0) > c.hit ? 'voiture' : 'mur', c.ca ? c.ca.z : null);
   };
   const dgNiv = c => { const z = modele(c).userData.dg.z; return Math.min(1, z[0] * 0.6 + (z[1] + z[2] + z[3]) * 0.2); }; // pour le son : l'avant (le moteur) compte le plus
   function dgFrame(dt) { // débris (qui tombent, puis dorment au sol jusqu'à ce qu'une voiture les chasse), pièce qui pend, fumée d'un capot très abîmé
@@ -966,6 +966,12 @@
   function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg]) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
   function decorFrame(dt) {
     const cars = race ? race.cars : VUES.map(v => v.car), up = new V3(), dq = new THREE.Quaternion();
+    if (race && race.casse) { // CASSE : messages de takedown, fumée des moteurs à bout (noire et épaisse hors d'usage), étincelles des jantes
+      for (let i = race.tdVu || 0; i < race.td.length; i++) { const e = race.td[i]; for (const vu of VUES) if (e.par === vu.moi) vu.casseMsg = { t: 'TAKEDOWN ! ' + pil(e.vic)[0], T: 2.5, c: Y }; else if (e.vic === vu.moi) vu.casseMsg = { t: 'TAKEDOWN PAR ' + pil(e.par)[0], T: 2.5, c: RD }; }
+      race.tdVu = race.td.length;
+      for (const c of cars) { const K = c.ca, sp = Math.hypot(c.vx, c.vz), fx = Math.cos(c.th), fz = Math.sin(c.th); if (partie(c)) continue;
+        if ((K.mort || K.z[0] >= 0.85) && Math.random() < dt * (K.mort ? 25 : 6)) FUM.emit(c.x + fx * (ENC.max.x - 0.9) + jit(0.4), c.y + 1, c.z + fz * (ENC.max.x - 0.9) + jit(0.4), c.vx * 0.3 + jit(1), 1.5 + Math.random(), c.vz * 0.3 + jit(1));
+        if (sp > 4 && !c.air) K.creve.forEach((v, i) => { if (!v || Math.random() > dt * 30) return; const x = i >= 2 ? xf : xr, zs = (i & 1 ? 1 : -1) * (i >= 2 ? zf : zr); emit(c.x + fx * x - fz * zs, c.y + 0.05, c.z + fz * x + fx * zs, c.vx * 0.4 + jit(2), Math.random() * 2, c.vz * 0.4 + jit(2), 0.35, 1, 0.75, 0.35, 22); }); } }
     for (const c of cars) { if (!c.out) { saleFrame(c, dt); huileFrame(c, dt); } const sp = Math.hypot(c.vx, c.vz); if (c.out || sp < 3) continue;
       if (c.rub) marque(c, Math.sign(c.d) || 1, 0); // le long d'un mur : une traînée de peinture (les chocs francs passent par murChoc, à chaque pas)
       const fx = Math.cos(c.th), fz = Math.sin(c.th);
@@ -1169,8 +1175,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   addEventListener('mousemove', e => { if (state !== 'race' && state !== 'count') return; const vu = VUES[0]; vu.lookA = clamp(vu.lookA + e.movementX * 0.006, -Math.PI, Math.PI); vu.lookP = clamp(vu.lookP + e.movementY * 0.03, -1, 5); vu.lookT = 2.5; }); // caméra libre à la souris : celle de la première vue (il n'y a qu'une souris)
   let state = 'title', count = 0, shown = 0, goT = 0, acc = 0, last = 0, manual = pref('vpr.boite', 'a') === 'm';
   // secteurs (entrée et sortie de l'échangeur) et fantôme du record : [x, y, z, cap] à 20 Hz
-  // mode : 'solo' (contre-la-montre à tours enchaînés), 'glisse' (deux tours, à points : le score est tenu par sim.js, voir GL), 'course' (3 tours contre les IA de sim.js) 'elim' (course à élimination : le dernier sort à chaque passage de ligne) ou 'tournee' (toutes les cartes à la suite, voir plus bas) ; race = la course en cours, sinon null
-  const MODES = ['solo', 'glisse', 'course', 'elim', 'tournee'], MODES2 = ['course', 'elim', 'glisse'], AVEC_IA = ['course', 'elim', 'tournee'], enCourse = () => AVEC_IA.includes(mode);
+  // mode : 'solo' (contre-la-montre à tours enchaînés), 'glisse' (deux tours, à points : le score est tenu par sim.js, voir GL), 'course' (3 tours contre les IA de sim.js), 'casse' (la même course, mais les dégâts jouent sur la conduite ; score : place + takedowns, voir CASSE_PTS) 'elim' (course à élimination : le dernier sort à chaque passage de ligne) ou 'tournee' (toutes les cartes à la suite, voir plus bas) ; race = la course en cours, sinon null
+  const MODES = ['solo', 'glisse', 'course', 'casse', 'elim', 'tournee'], MODES2 = ['course', 'casse', 'elim', 'glisse'], AVEC_IA = ['course', 'casse', 'elim', 'tournee'], enCourse = () => AVEC_IA.includes(mode);
   // défi par lien : l'adresse « …#defi=version.carte.données » (defiCode de sim.js) porte le tour d'un autre joueur. cartes.js a déjà ouvert sa carte ; ici on relit la trace : le jeu s'ouvre en contre-la-montre face à ce fantôme.
   // Lien illisible, abîmé, d'une autre version de la physique ou pour une carte inconnue : DEFI reste nul et le menu dit pourquoi (defiErr).
   const lienLu = (h => h && defiLit(h[1]))(/^#defi=(.*)$/.exec(location.hash)), defiErr = lienLu && (lienLu.err || (lienLu.carte !== M.id ? 'LIEN DE DEFI : CARTE INCONNUE' : '')), DEFI = lienLu && !defiErr ? lienLu : null;
@@ -1179,6 +1185,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // À deux joueurs (MODES2 : Course, Élimination, Glisse en duel) le mode et la difficulté ont leurs propres clés, vpr7.mode2 et vpr7.diff2 : revenir à un joueur rend le solo tel qu'on l'a laissé (voir joueurs).
   // Rien d'autre n'est lu ni écrit à deux : pas de record, de médaille, de fantôme, de trophée ni de Tournée ; une course à deux a toujours un objet race, donc les records et la Glisse seule de session.js n'y passent jamais.
   const cle = k => 'vpr7.' + k + (deux() ? '2' : ''), duel = () => deux() && mode === 'glisse';
+  // CASSE : points = place à l'arrivée (une voiture hors d'usage n'en a pas) + CASSE_PTS.td par takedown infligé
+  const CASSE_PTS = { place: [10, 6, 4, 2], td: 3 }, cassePts = c => (c.out || !c.fin ? 0 : CASSE_PTS.place[raceOrder(race).filter(o => o.fin).indexOf(c)] || 0) + c.ca.td * CASSE_PTS.td;
   const vivantes = () => race.cars.filter(c => !c.out), partie = c => c.out && race.t - c.out > 5; // élimination : voitures encore en course ; voiture sortie depuis 5 s, qu'on ne montre plus
   let prev = 'race', psel = 0;
   const H = 1 / 120, INS = []; // INS : l'entrée de chaque humain pour stepRace, réécrite à chaque pas
@@ -1446,11 +1454,11 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     if (state === 'title') { // menu principal : la carte tourne derrière, on choisit carte, mode et boîte
       R(hg, 'rgba(8,8,12,.45)', 0, 0, HW, HH); const d2 = deux(); // à deux, le menu dit ce qui est vrai à deux
-      if (HU.sur[0]) txt(HU.sur[0], cx, 6, 16, C, 'center', 0, JP); txt(mode === 'tournee' ? 'TOURNEE · ' + SOIREE[0].heure + ' > ' + SOIREE[SOIREE.length - 1].heure : mode === 'course' ? 'COURSE · 3 TOURS' : mode === 'elim' ? 'ELIMINATION · 4 TOURS' : mode === 'glisse' ? (d2 ? 'GLISSE EN DUEL' : 'GLISSE') + ' · 2 TOURS' : HU.sur[1], cx, 27, 8, C, 'center');
+      if (HU.sur[0]) txt(HU.sur[0], cx, 6, 16, C, 'center', 0, JP); txt(mode === 'tournee' ? 'TOURNEE · ' + SOIREE[0].heure + ' > ' + SOIREE[SOIREE.length - 1].heure : mode === 'course' ? 'COURSE · 3 TOURS' : mode === 'casse' ? 'CASSE · 3 TOURS' : mode === 'elim' ? 'ELIMINATION · 4 TOURS' : mode === 'glisse' ? (d2 ? 'GLISSE EN DUEL' : 'GLISSE') + ' · 2 TOURS' : HU.sur[1], cx, 27, 8, C, 'center');
       const ti = titreCarte(M.id, HU.titre, langue); txt(ti[0], cx, 44, 24, Y, 'center', 2); txt(ti[1], cx, 70, 24, Y, 'center', 2);
       if (tFlash && performance.now() - tFlash < 400) R(hg, 'rgba(255,255,255,' + (1 - (performance.now() - tFlash) / 400).toFixed(2) + ')', 0, 0, HW, HH); // éclair blanc au sortir de l'accueil
       panel(cx - 160, 100, 320, 140);
-      const L = [['CARTE', (cible || M).nom + '  ' + (CARTES.indexOf(cible || M) + 1) + '/' + CARTES.length], ['JOUEURS', d2 ? VUES.length + ' : ECRAN PARTAGE' : 'SOLO'], ['MODE', mode === 'tournee' ? 'TOURNEE' : mode === 'course' ? 'COURSE' : mode === 'elim' ? 'ELIMINATION' : mode === 'glisse' ? d2 ? 'GLISSE EN DUEL' : 'GLISSE' : 'CONTRE-LA-MONTRE'], ['DIFFICULTE', DIFF[diff].nom], [d2 ? 'BOITE J1' : 'BOITE', manuel1() ? 'MANUELLE' : 'AUTO']].map((r, i) => [...r, i]).filter(r => !cache(r[2]));
+      const L = [['CARTE', (cible || M).nom + '  ' + (CARTES.indexOf(cible || M) + 1) + '/' + CARTES.length], ['JOUEURS', d2 ? VUES.length + ' : ECRAN PARTAGE' : 'SOLO'], ['MODE', mode === 'tournee' ? 'TOURNEE' : mode === 'course' ? 'COURSE' : mode === 'casse' ? 'CASSE' : mode === 'elim' ? 'ELIMINATION' : mode === 'glisse' ? d2 ? 'GLISSE EN DUEL' : 'GLISSE' : 'CONTRE-LA-MONTRE'], ['DIFFICULTE', DIFF[diff].nom], [d2 ? 'BOITE J1' : 'BOITE', manuel1() ? 'MANUELLE' : 'AUTO']].map((r, i) => [...r, i]).filter(r => !cache(r[2]));
       const serre = L.length > 4; // 5 lignes (à deux, contre des IA) : plus rapprochées, pour laisser DEMARRER au-dessus du tracé
       L.forEach(([l, v, i], k) => {
         const on = msel === i, y = (serre ? 104 : 105) + k * (serre ? 10 : 12);
@@ -1486,10 +1494,12 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
         txt('DELAI ' + fmt(race.delai), cx, nc > 2 ? 178 : 174, 8, C, 'center');
       } else {
         txt('ARRIVEE', cx, 48, 16, Y, 'center', 1); txt(VUES.map(v => { const c = v.moi; return nom(c) + ' ' + ord(c.pos); }).join('   '), cx, 70, 8, C, 'center');
-        txt('TEMPS', cx - 4, 88, 8, C, 'right'); txt('ECART', cx + 62, 88, 8, C, 'right'); txt('MEIL. TOUR', cx + 158, 88, 8, C, 'right');
-        o.forEach((c, i) => { const y = 102 + i * 15, col = c.k < 0 || c.k >= 3 ? pil(c)[1] : '#e8e8e4'; txt((i + 1) + '. ' + nom(c), cx - 158, y, 8, pil(c)[1]); // les deux joueurs dans leur couleur sur toute la ligne
+        const ca = race.casse; txt('TEMPS', cx - 4, 88, 8, C, 'right'); txt(ca ? 'TAKEDOWNS' : 'ECART', cx + (ca ? 90 : 62), 88, 8, C, 'right'); txt(ca ? 'POINTS' : 'MEIL. TOUR', cx + 158, 88, 8, C, 'right');
+        if (ca) { const v = o.slice().sort((a, b) => cassePts(b) - cassePts(a))[0]; txt('VAINQUEUR AUX POINTS : ' + nom(v), cx, 160, 8, pil(v)[1], 'center'); }
+        if (ca) o.forEach((c, i) => { const y = 102 + i * 15, col = c.k < 0 || c.k >= 3 ? pil(c)[1] : '#e8e8e4'; txt((i + 1) + '. ' + nom(c), cx - 158, y, 8, pil(c)[1]); txt(c.fin ? fmt(c.fin) : c.out ? "HORS D'USAGE" : 'EN PISTE', cx - 4, y, 8, col, 'right'); txt(String(c.ca.td), cx + 90, y, 8, col, 'right'); txt(String(cassePts(c)), cx + 158, y, 8, col, 'right'); });
+        else o.forEach((c, i) => { const y = 102 + i * 15, col = c.k < 0 || c.k >= 3 ? pil(c)[1] : '#e8e8e4'; txt((i + 1) + '. ' + nom(c), cx - 158, y, 8, pil(c)[1]); // les deux joueurs dans leur couleur sur toute la ligne
           txt(c.fin ? fmt(c.fin) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.fin ? -4 : 62), y, 8, col, 'right'); if (i && c.fin) txt('+' + (c.fin - t1).toFixed(2), cx + 62, y, 8, col, 'right'); txt(c.bl ? fmt(c.bl) : '--', cx + 158, y, 8, col, 'right'); });
-        txt((race.elim ? 'ELIMINATION' : 'COURSE') + ' · NIVEAU ' + DIFF[diff].nom, cx, 170, 8, '#e8e8e4', 'center');
+        txt((race.elim ? 'ELIMINATION' : race.casse ? 'CASSE' : 'COURSE') + ' · NIVEAU ' + DIFF[diff].nom, cx, 170, 8, '#e8e8e4', 'center');
       }
       ['REVANCHE', 'MENU'].forEach((l, i) => i === fsel ? tag('> ' + l + ' <', cx - 70 + i * 140, 190, Y) : txt(l, cx - 70 + i * 140, 193, 8, '#e8e8e4', 'center'));
       txt('GAUCHE / DROITE : CHOISIR   ENTREE : VALIDER', cx, 226, 8, C, 'center');
@@ -1560,6 +1570,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       const f = car.nitro, plein = f >= 1 && blink, n = Math.round(f * 10); txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
       for (let i = 0; i < 10; i++) R(hg, i >= n ? '#30303c' : car.boost > 0 ? C : plein ? '#ffffff' : Y, HW - 108 + i * 10, HH - 17, 8, 7);
     }
+    if (vu.casseMsg && (vu.casseMsg.T -= dt) > 0) tag(vu.casseMsg.t, cx, 124, vu.casseMsg.c); // CASSE : takedown infligé ou subi
     if (splitMsg && (splitMsg.T -= dt) > 0) tag('S' + (splitMsg.i + 1) + ' ' + (splitMsg.d == null ? fmt(splitMsg.t) : (splitMsg.d <= 0 ? '-' : '+') + Math.abs(splitMsg.d).toFixed(2)), cx, 102, splitMsg.d == null ? Y : splitMsg.d <= 0 ? C : RD); // écart au record à chaque secteur
     if (warn) { // warn : distance signée au virage (> 0 droite, < 0 gauche, en m, alerteVirage) ou { glace: distance } ; arrondie au palier déjà franchi
       const d = warn.glace || Math.abs(warn), m = ' ' + (PALIERS.find(p => p <= d) || 10) + ' M ';
@@ -1571,8 +1582,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (race.tete && car.pos === v.length && blink) tag('DERNIER : DOUBLE AVANT LA LIGNE', cx, 102, RD);
     }
     if (COM && race && moi.out && !ses.raceEnd && state === 'race') { // à deux, joueur éliminé : l'annonce pendant 3 s, puis sa vue suit le meneur (voir frame) sous un simple rappel
-      if (vu.spec) tag('ELIMINE · CAMERA SUR ' + pil(car)[0], cx, 28, RD);
-      else { panel(cx - 124, 66, 248, 68); txt('ELIMINE', cx + 2, 76, 32, RD, 'center', 2); txt(moi.pos + 'E SUR ' + race.cars.length, cx, 118, 8, '#e8e8e4', 'center'); }
+      if (vu.spec) tag((race.casse ? "HORS D'USAGE" : 'ELIMINE') + ' · CAMERA SUR ' + pil(car)[0], cx, 28, RD);
+      else { panel(cx - 124, 66, 248, 68); txt(race.casse ? "HORS D'USAGE" : 'ELIMINE', cx + 2, 76, race.casse ? 16 : 32, RD, 'center', 2); txt(moi.pos + 'E SUR ' + race.cars.length, cx, 118, 8, '#e8e8e4', 'center'); }
     }
     // écrans
     if (mode === 'tournee' && state === 'count') tag('MANCHE ' + (tnOu().manche + 1) + '/' + SOIREE.length + ' · ' + M.heure, cx, 88, C); // l'heure de la nuit à laquelle se court la manche
@@ -1597,9 +1608,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       panel(cx - 130, 60, 260, 62); txt('SCORE ' + Math.round(moi.pts), cx, 68, 16, Y, 'center', 1); txt(moi.fin ? 'TEMPS ' + fmt(moi.fin) : 'HORS DELAI : SCORE NUL', cx, 92, 8, moi.fin ? '#e8e8e4' : RD, 'center'); txt("L'AUTRE JOUEUR ROULE ENCORE", cx, 106, 8, C, 'center');
     }
     if (fini && race && state === 'race' && !ses.tnFin && (seul || !ses.raceEnd && !moi.out && !race.delai)) { // arrivée : classement, complété à mesure que les autres passent la ligne (à deux : dans la vue du premier arrivé seulement, le tableau commun prend la suite)
-      panel(cx - 150, 52, 300, 166); txt((car.out ? 'ELIMINE : ' : 'ARRIVEE : ') + car.pos + (car.pos === 1 ? 'ER' : 'E'), cx, 60, 16, Y, 'center', 1); const t1 = raceOrder(race)[0].fin;
-      raceOrder(race).forEach((c, i) => { const j = c !== car; txt((i + 1) + '. ' + (j ? pil(c)[0] : 'VOUS'), cx - 138, 86 + i * 15, 8, j ? pil(c)[1] : Y); txt(c.fin ? fmt(c.fin) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.out ? 138 : 50), 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); if (i && c.fin) txt('+' + (c.fin - t1).toFixed(2), cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); });
-      txt('MEILLEUR TOUR ' + fmt(moi.bl), cx, 152, 8, C, 'center'); txt('GLISSES ' + car.nDrift + '  NITRO ' + car.nBoost + '  MURS ' + car.nWall, cx, 166, 8, '#e8e8e4', 'center'); txt('NIVEAU ' + DIFF[diff].nom, cx, 180, 8, '#e8e8e4', 'center');
+      panel(cx - 150, 52, 300, 166); txt((car.out ? (race.casse ? "HORS D'USAGE : " : 'ELIMINE : ') : 'ARRIVEE : ') + car.pos + (car.pos === 1 ? 'ER' : 'E'), cx, 60, 16, Y, 'center', 1); const t1 = raceOrder(race)[0].fin;
+      raceOrder(race).forEach((c, i) => { const j = c !== car; txt((i + 1) + '. ' + (j ? pil(c)[0] : 'VOUS'), cx - 138, 86 + i * 15, 8, j ? pil(c)[1] : Y); txt(c.fin ? fmt(c.fin) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.out ? 138 : 50), 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); if (race.casse) txt(cassePts(c) + ' PTS', cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); else if (i && c.fin) txt('+' + (c.fin - t1).toFixed(2), cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); });
+      txt('MEILLEUR TOUR ' + fmt(moi.bl), cx, 152, 8, C, 'center'); txt(race.casse ? 'TAKEDOWNS ' + car.ca.td + '  POINTS ' + cassePts(car) : 'GLISSES ' + car.nDrift + '  NITRO ' + car.nBoost + '  MURS ' + car.nWall, cx, 166, 8, race.casse ? Y : '#e8e8e4', 'center'); txt('NIVEAU ' + DIFF[diff].nom, cx, 180, 8, '#e8e8e4', 'center');
       txt(!ses.raceEnd ? (VUES.length > 2 ? "D'AUTRES JOUEURS ROULENT ENCORE" : "L'AUTRE JOUEUR ROULE ENCORE") : mode === 'tournee' ? 'ENTREE : CLASSEMENT GENERAL' : 'ENTREE : REJOUER   ECHAP : MENU', cx, 200, 8, C, 'center'); // (à deux : Entrée et Échap n'agissent qu'une fois les deux joueurs arrivés)
     }
     if (ses.tnFin && state === 'race') { // Tournée, manche close : le classement général, ce que la manche a rapporté, et la suite (ou le trophée après la dernière)

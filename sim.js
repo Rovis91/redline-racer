@@ -185,20 +185,20 @@
   // inp: {steer:-1..1 (droite>0), gas:0..1, brake:0..1, hand:bool}
   // un pas de conduite, roues au sol
   function roule(c, inp, T, dt) {
-    const S = T.S, KT = T.kt, CARD = T.car;
-    c.steer += clamp(inp.steer - c.steer, -12 * dt, 12 * dt);
+    const S = T.S, KT = T.kt, CARD = T.car, ca = c.ca; // ca : l'état de casse (mode CASSE seulement, voir casseChoc)
+    c.steer += clamp(inp.steer + (ca ? ca.dir : 0) - c.steer, -12 * dt, 12 * dt); // un train faussé ou une roue crevée font tirer la voiture
     let fx = Math.cos(c.th), fz = Math.sin(c.th);
     let vf = c.vx * fx + c.vz * fz, vl = c.vz * fx - c.vx * fz;
     const sp = Math.abs(vf);
     // Glisse (voir KT0) : bouton de glisse + volant, au-dessus de 45 km/h ; elle verrouille son sens (c.dd) tant que le bouton est tenu ; le volant ne fait plus qu'ouvrir ou fermer le rayon.
     const Q = c.sol = surfAt(T, c); // c.sol : le sol sous la voiture, pour le roulement (audio.js)
-    const adh = (1 - Q.colle) * (CARD.grip || 1); // adhérence = sol × voiture (pour que la vitesse suive le nez)
+    const adh = (1 - Q.colle) * (CARD.grip || 1) * (ca ? ca.grip : 1); // adhérence = sol × voiture (pour que la vitesse suive le nez)
     if (!c.dd && inp.hand && sp > 12 * (1 - Q.gl) && Math.abs(inp.steer) > 0.3 * (1 - Q.gl)) { c.dd = Math.sign(inp.steer); c.nDrift++; }
     if (c.dd && (!inp.hand || sp < 10 * (1 - Q.gl))) { c.dd = 0; c.driftT = 0; }
     if (c.dd) gagne(c, NI.gl * Math.min(1, c.driftT / 0.6) * Math.min(1, sp / TOP) * dt); // la glisse tenue remplit la jauge, d'autant plus qu'elle dure et qu'elle va vite
     c.frA = !!(inp.hand && !c.dd && sp > 8); // bouton de glisse sans volant : frein arrière
     c.aq = Q.aq ? clamp((sp - Q.vaq) / 4, 0, 1) : 0; // route glissante : moins de lacet, encore moins en aquaplaning
-    const ks = (1 - Q.vir) * (1 - Q.aq * c.aq), om = omega(sp, KT) * ks, sd = c.steer * (c.dd || 0), a = Math.min(1, adh); // ks : adhérence du sol pour tourner (la voiture est dans w0, w1)
+    const ks = (1 - Q.vir) * (1 - Q.aq * c.aq) * (ca ? ca.grip : 1), om = omega(sp, KT) * ks, sd = c.steer * (c.dd || 0), a = Math.min(1, adh); // ks : adhérence du sol pour tourner (la voiture est dans w0, w1)
     const cible = (c.dd || 0) * KT.angMax * (sd >= 0 ? lerp(KT.aN, KT.aIn, sd) : lerp(KT.aN, KT.aOut, -sd)) * (1.5 - 0.5 * a);
     const dsa = (cible - c.sa) * Math.min(1, dt * KT.sar * (c.dd ? 1.5 - 0.5 * a : 2));
     const w = c.dd ? c.dd * om * (sd >= 0 ? lerp(KT.kN, KT.kIn, sd) : lerp(KT.kN, KT.kOut, -sd)) : c.steer * om * (inp.gas && !inp.brake ? 1 : KT.lift);
@@ -226,6 +226,7 @@
       const tqe = inp.gas * torque(CARD, er) - (1 - inp.gas) * (20 + 0.01 * er) * Math.sign(vf); // couple moteur, ou frein moteur pied levé
       acc = Math.min(CARD.trac * (1 - Q.trac), tqe * ratio * CARD.final * CARD.eff / CARD.wheel / CARD.mass); // plafonné par la motricité (~1,1 g en 4 roues motrices, moins en propulsion)
     }
+    if (ca && acc > 0) acc *= ca.p; // moteur abîmé : moins de poussée
     c.boost = pousse; // (sur le dernier rapport la nitro passe le rupteur : elle pousse aussi une voiture en bout de course ; sur les autres le rupteur tient, sinon une 1re tenue en boîte manuelle garderait tout son couple au-delà du régime maxi)
     if (pousse) { c.nitro = Math.max(0, c.nitro - dt / NI.dur); acc += NI.acc * (rup ? 1 : 1 + NI.rep * Math.max(0, 1 - av / TOP)); } // au rupteur, la poussée de base seulement : il tient toujours
     if (c.stun > 0) { c.stun -= dt; if (acc > 0) acc *= 0.2; }
@@ -236,7 +237,7 @@
     if (vf < -12) vf = -12;
     // traînée aérodynamique (½·ρ·Cd·A·v²), résistance au roulement, et un peu de vitesse perdue en tournant
     if (c.asp) gagne(c, NI.asp * c.asp * dt); // dans l'aspiration : moins de traînée, et la jauge monte
-    vf -= (0.6 * CARD.cd * CARD.area * (1 - NI.acx * c.asp) * vf * Math.abs(vf) / CARD.mass +((Math.abs(vf) > 0.3 ? 0.15 + Q.roul : 0) + KT.tv * Math.abs(c.yaw) * Math.min(1, sp / 10)) * Math.sign(vf)) * dt;
+    vf -= (0.6 * CARD.cd * CARD.area * (1 - NI.acx * c.asp) * vf * Math.abs(vf) / CARD.mass / (ca ? ca.vf * ca.vf : 1) +((Math.abs(vf) > 0.3 ? 0.15 + Q.roul : 0) + KT.tv * Math.abs(c.yaw) * Math.min(1, sp / 10)) * Math.sign(vf)) * dt;
     // pas de pneus qui décrochent : la vitesse suit le nez de la voiture (décalé de l'angle de dérive en glisse), sans rien perdre ; un choc de côté est rattrapé en un dixième de seconde
     const v0 = Math.hypot(vf, vl);
     const dvl = (-Math.sin(c.sa) * v0 - vl) * Math.min(1, 25 * (c.dd ? Math.pow(adh, 0.35) : adh) * (1 - Q.aqc * c.aq) * dt); // sur une route glissante (ou une voiture peu adhérente), la vitesse suit le nez avec retard : la voiture chasse
@@ -403,7 +404,8 @@
       return Object.assign(c, { x: s.x - s.tz * d, z: s.z + s.tx * d, y: s.y, th: Math.atan2(s.tz, s.tx), idx: j, dist: -8 - 4 * k, d, file: d, lvl, pos: k + 1, lap: 1, fin: 0, out: 0, bump: 0 });
     });
     const mo = T.pluie.some(p => p) ? new Float32Array(T.n * MO.nb).fill(1) : null; cars.forEach(c => { c.mo = mo; }); // mouillure de la course (voir MO), partagée par ses voitures
-    return { T, cars, mo, laps: opt.elim ? cars.length : laps, el, elim: !!opt.elim, h, delai: opt.delai || 0, tete: 0, t: 0, done: false };
+    if (opt.casse) cars.forEach(c => { c.ca = casseNeuf(); });
+    return { T, cars, mo, laps: opt.elim ? cars.length : laps, el, elim: !!opt.elim, casse: !!opt.casse, td: [], h, delai: opt.delai || 0, tete: 0, t: 0, done: false };
   }
 
   // Tournée : toutes les cartes à la suite, des points à chaque manche. Les voitures sont désignées par leur indice dans R.cars (0 = joueur, 1.. = rivaux de la carte : les points suivent la place sur la liste, pas le nom).
@@ -447,7 +449,7 @@
       if (d >= 2 * CR) continue;
       const nx = d > 1e-6 ? dx / d : 1, nz = d > 1e-6 ? dz / d : 0, o = CR - d / 2, vn = (a.vx - b.vx) * nx + (a.vz - b.vz) * nz;
       a.x -= nx * o; a.z -= nz * o; b.x += nx * o; b.z += nz * o;
-      if (vn > 0) { a.vx -= nx * vn * 0.6; a.vz -= nz * vn * 0.6; b.vx += nx * vn * 0.6; b.vz += nz * vn * 0.6; a.bump = b.bump = Math.max(a.bump, vn); }
+      if (vn > 0) { a.vx -= nx * vn * 0.6; a.vz -= nz * vn * 0.6; b.vx += nx * vn * 0.6; b.vz += nz * vn * 0.6; a.bump = b.bump = Math.max(a.bump, vn); a.qui = b; b.qui = a; } // qui : l'autre voiture du dernier contact (takedowns du mode CASSE)
     }
   }
 
@@ -460,8 +462,9 @@
     const hum = cars.slice(0, R.h), enc = hum.filter(c => !c.fin && !c.out), ref = enc.length ? enc : hum, pd = ref.reduce((s, c) => s + c.dist, 0) / ref.length;
     const rub = c => Math.min(LVL_MAX, c.lvl * (1 - R.el * clamp((c.dist - pd) / 150, -1, 1)));
     // une voiture arrivée lève le pied : elle finit son tour au ralenti au lieu de repartir à fond
-    const piste = R.elim ? cars.filter(c => !c.out) : cars; // les voitures encore en course : les seules qui se touchent, s'aspirent et s'évitent
+    const piste = R.elim || R.casse ? cars.filter(c => !c.out) : cars; // les voitures encore en course : les seules qui se touchent, s'aspirent et s'évitent
     const ins = cars.map((c, i) => c.out ? range(c, T) : ia[i] ? autopilot(c, T, c.fin ? 0.6 : i < R.h ? c.lvl : rub(c), piste) : inps[i]);
+    if (R.casse) ins.forEach((p, i) => { if (ia[i] && !cars[i].out && !cars[i].fin) cherche(cars[i], piste, p, i === R.h + 1 ? 1 : 0.5); }); // la tête brûlée (2e rival) plus que les autres
     for (const c of cars) c.bump = 0; ins.forEach((p, i) => { const c = cars[i]; if (c.fin && ia[i] && Math.hypot(c.vx, c.vz) > 28) { p.gas = 0; p.brake = Math.max(p.brake, 0.3); } }); // tour d'honneur à 100 km/h
     // les chocs entre voitures d'abord, puis step() : les murs ont le dernier mot, aucune voiture ne peut être poussée hors piste
     for (let i = 0; i < piste.length; i++) for (let j = i + 1; j < piste.length; j++) collide(piste[i], piste[j]);
@@ -471,7 +474,9 @@
       for (const o of piste) { const dx = o.x - c.x, dz = o.z - c.z, lon = dx * fx + dz * fz;
         if (o !== c && lon > 3 && lon < NI.ad && Math.abs(dz * fx - dx * fz) < 1 + NI.ac * lon && o.vx * fx + o.vz * fz > 20 && Math.abs(o.y - c.y) < 1.5) c.asp = Math.max(c.asp, 1 - lon / NI.ad); } }
     cars.forEach((c, i) => {
+      const vx0 = c.vx, vz0 = c.vz;
       step(c, ins[i], T, dt);
+      if (R.casse) casseChoc(R, c, vx0, vz0);
       c.lap = clamp(Math.floor(c.dist / T.n) + 1, 1, R.laps);
       if (!c.fin && !c.out && c.dist >= R.laps * T.n) { c.fin = R.t; c.pts = R.delai && R.t > R.delai ? 0 : c.score; } // c.pts : le score de Glisse figé à l'arrivée, nul hors délai
     });
@@ -481,6 +486,34 @@
     raceOrder(R).forEach((c, i) => c.pos = i + 1);
     R.done = cars.every(c => c.fin || c.out);
   }
+
+
+  // ---------- Mode CASSE : les dégâts jouent sur la conduite (docs/SPEC-CASSE.md, prototype 4) ----------
+  // c.ca = { z : usure des zones (usure, sans plafond), z0, lap, t : dernier choc compté, tire : train faussé (rad de volant), creve : roue crevée [arrière g, arrière d, avant g, avant d],
+  //          mort : hors d'usage (heure), der / derT : la dernière voiture qui l'a touchée et quand, td : takedowns infligés ; p, vf, grip, dir : ce que roule() en tire }
+  // Calculé dans stepRace à chaque pas, comme le reste de la course : déterministe, l'hôte et les invités voient la même chose.
+  const casseNeuf = () => ({ z: [0, 0, 0, 0], z0: [0, 0, 0, 0], lap: 1, t: -1, tire: 0, creve: [0, 0, 0, 0], mort: 0, der: null, derT: -9, td: 0, p: 1, vf: 1, grip: 1, dir: 0 });
+  const takedown = (R, par, vic) => { if (!par || !par.ca || par === vic) return; par.ca.td++; R.td.push({ par, vic, t: R.t }); vic.ca.der = null; };
+  function casseChoc(R, c, vx0, vz0) {
+    const K = c.ca; if (K.mort) return;
+    if (c.lap !== K.lap) { K.lap = c.lap; K.z0 = K.z.slice(); }
+    const vo = c.bump || 0; if (vo > 2 && c.qui) { K.der = c.qui; K.derT = R.t; }
+    const f = Math.max(c.hit, vo);
+    if (f > 3 && R.t - K.t >= 0.15) { K.t = R.t; // un contact qui dure ne compte qu'une fois (même lecture que dgPas de game.js)
+      let dx = vx0 - c.vx, dz = vz0 - c.vz, l = Math.hypot(dx, dz); if (l < 0.5) { dx = c.vx; dz = c.vz; l = Math.hypot(dx, dz) || 1; }
+      const fx = Math.cos(c.th), fz = Math.sin(c.th), lx = (dx * fx + dz * fz) / l, lz = (dz * fx - dx * fz) / l, type = vo > c.hit ? 'voiture' : 'mur';
+      usure(K.z, K.z0, lx, lz, f, type, true);
+      if (lx > 0 && lz * lz > 0.2 && f > 12) K.tire = clamp(K.tire + 0.02 * Math.sign(lz), -0.08, 0.08); // l'avant pris de côté : la voiture tire du côté touché
+      const ri = (lx > 0 ? 2 : 0) + (lz < 0 ? 0 : 1); if (lx * lx > 0.2 && lz * lz > 0.2 && f > 15 && K.z[lx > 0 ? 0 : 1] >= 0.5) K.creve[ri] = 1; // un gros choc sur un coin déjà abîmé crève sa roue
+      if (type === 'mur' && f > 15 && K.der && R.t - K.derT < 2) takedown(R, K.der, c); } // envoyé dans le mur par un autre : takedown
+    if (K.z[0] >= 0.97 || K.z[0] + K.z[1] + K.z[2] + K.z[3] >= 3.4) { K.mort = R.t; c.out = R.t; if (K.der && R.t - K.derT < 3) takedown(R, K.der, c); } // hors d'usage : la voiture sort
+    const nc = K.creve[0] + K.creve[1] + K.creve[2] + K.creve[3];
+    K.p = K.z[0] >= 0.85 ? 0.65 : K.z[0] >= 0.6 ? 0.85 : 1; K.vf = Math.pow(0.9, nc); K.grip = Math.pow(0.85, nc); K.dir = K.tire + (K.creve[1] + K.creve[3] - K.creve[0] - K.creve[2]) * 0.03;
+  }
+  // l'IA du mode CASSE cherche le contact : une voiture à côté ou juste devant, elle braque vers elle (agr : 0,5 à 1)
+  function cherche(c, piste, p, agr) { const fx = Math.cos(c.th), fz = Math.sin(c.th); let best = null, bd = 1e9;
+    for (const o of piste) { if (o === c) continue; const dx = o.x - c.x, dz = o.z - c.z, lon = dx * fx + dz * fz, lat = dz * fx - dx * fz; if (lon < -3 || lon > 8 || Math.abs(lat) > 6) continue; const d = Math.hypot(lon, lat); if (d < bd) { bd = d; best = lat; } }
+    if (best !== null) p.steer = clamp(p.steer + clamp(best * 0.1, -0.3, 0.3) * agr, -1, 1); }
 
   // ---------- Trafic (cartes qui en ont : champ trafic de cartes.js) ----------
   // Des camions à vitesse constante sur trois files. Leur position ne dépend que du temps écoulé depuis le départ : même trafic à chaque essai.
@@ -575,5 +608,5 @@
     }
     return du;
   }
-  Object.assign(G, { USURE, usure, DEFI_V, DEFI_ERR, defiCode, defiLit, etire, tourRef, vAdmise, alerteVirage, sol, paroi, pente, dansPlace, buildTrack, newCar, step, autopilot, piloteGlisse, newRace, stepRace, seche, MO, raceOrder, tournee, BAREME, trafic, hitTrafic, AI_LVL, DIFF, TOP, vturn, omega, SURF, GL });
+  Object.assign(G, { USURE, usure, casseNeuf, casseChoc, DEFI_V, DEFI_ERR, defiCode, defiLit, etire, tourRef, vAdmise, alerteVirage, sol, paroi, pente, dansPlace, buildTrack, newCar, step, autopilot, piloteGlisse, newRace, stepRace, seche, MO, raceOrder, tournee, BAREME, trafic, hitTrafic, AI_LVL, DIFF, TOP, vturn, omega, SURF, GL });
 })(typeof window !== 'undefined' ? window : globalThis);

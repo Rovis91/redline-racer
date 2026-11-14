@@ -183,8 +183,20 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
 - **Genre de surface** (`genre`) : neige si elle est glissante et roulante, terre si elle est roulante et peu glissante. Le fondu entre la terre et le bitume passait pour de la neige, dans la saleté comme dans les traces : corrigé.
 - **Huile** : au-delà de 0,6 d'usure à l'avant, des gouttes rondes et brillantes, sous le moteur, pour toutes les voitures. Un anneau de 1 200 gouttes, en un maillage.
 
+**Phase 4 (faite)** : le mode **CASSE**, au menu entre Course et Élimination, à un joueur comme en écran partagé.
+- **Course de 3 tours** contre les rivaux.
+  - `newRace(..., { casse: true })` donne à chaque voiture un état `c.ca`, calculé dans `stepRace` à chaque pas (`casseChoc`), donc déterministe : un test le vérifie.
+  - Usure sans plafond, et les effets passent par `roule()` : moteur −15 % puis −35 %, direction qui tire, roue crevée (adhérence, vitesse maximale, tire de son côté).
+  - Hors d'usage à 0,97 à l'avant ou à 3,4 au total : la voiture sort, comme en élimination.
+- **Takedowns** : une voiture mise hors d'usage dans les 3 s après un contact, ou envoyée dans un mur au-dessus de 15 m/s dans les 2 s, compte pour la dernière voiture qui l'a touchée. Un message « TAKEDOWN ! » s'affiche pour l'auteur et pour la victime.
+- **Score** : place à l'arrivée 10 / 6 / 4 / 2 (rien hors d'usage), plus 3 points par takedown. Le tableau d'arrivée donne les takedowns, les points et le vainqueur aux points. Capture : `docs/avant-apres/casse/jeu-casse-arrivee.jpg`.
+- **IA** : à côté d'une autre voiture ou juste derrière, elle braque vers elle. La tête brûlée (2e rival) le fait deux fois plus que les autres.
+- **Visuels** : les zones viennent de sim.js (sans plafond). Fumée du moteur à bout, noire et épaisse hors d'usage, et étincelles des jantes crevées pour toutes les voitures.
+- **Simulation** : sur 3 tours, le pilote bourrin finit avec l'avant entre 0,85 et 0,96 et une ou deux roues crevées. Les rivaux restent presque intacts : ils se touchent peu, et l'IA de contact est encore timide.
+
 **Reste à faire** :
-- phase 4 : le mode CASSE (menu, effets dans sim.js pour le réseau, score place + takedowns, IA qui cherche le contact) ;
+- régler en jouant : la force de la déviation, l'agressivité de l'IA, les points ;
+- jeu en ligne : il reste en mode Course (l'état de casse n'est pas envoyé aux invités) ;
 - capot et portières, qui demandent une livrée par flanc.
 
 ## Mode CASSE (à préciser après les prototypes)

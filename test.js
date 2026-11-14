@@ -478,3 +478,16 @@ console.log(`OK  fantôme des médailles : ${fantTxt}`);
   assert(b[0] > a[0] * 2.5, 'usure quadratique : 20 m/s abîme bien plus que 14 m/s');
   console.log(`OK  usure : 14 m/s → ${a[0].toFixed(3)}, 20 m/s → ${b[0].toFixed(3)} ; plafonds 0,4 par tour et 0,7`);
 }
+
+// mode CASSE (docs/SPEC-CASSE.md) : les dégâts jouent sur la conduite, de façon déterministe ; une course ordinaire n'en sait rien
+{
+  const course = casse => { const R = newRace(T, 3, AI_LVL, 0, { casse }); let t = 0; while (!R.done && t < 400) { const c = R.cars[0]; stepRace(R, { ...autopilot(c, T, 1.05, R.cars), gas: 1, brake: 0 }, H); t += H; } return R; };
+  const A = course(true), B = course(true), O = course(false), j = A.cars[0];
+  assert(O.cars.every(c => !c.ca), 'une course ordinaire ne porte pas d\'état de casse');
+  assert(JSON.stringify(A.cars.map(c => [c.ca.z, c.ca.creve, c.ca.td, c.ca.mort])) === JSON.stringify(B.cars.map(c => [c.ca.z, c.ca.creve, c.ca.td, c.ca.mort])) && A.t === B.t, 'CASSE : deux courses identiques donnent les mêmes dégâts (réseau)');
+  assert(Math.max(...j.ca.z) > 0.7, 'CASSE : sans plafond, le bourrin finit très abîmé : ' + j.ca.z);
+  assert(j.ca.p < 1 && j.ca.grip < 1 && j.ca.dir !== 0, 'CASSE : moteur, adhérence et direction touchés : ' + [j.ca.p, j.ca.grip, j.ca.dir]);
+  { const c = newCar(T), d = newCar(T); c.ca = { ...casseNeuf(), p: 0.65, vf: 0.9, grip: 1, dir: 0 }; for (let i = 0; i < 6 / H; i++) { step(c, { steer: 0, gas: 1, brake: 0, hand: false }, T, H); step(d, { steer: 0, gas: 1, brake: 0, hand: false }, T, H); }
+    assert(c.vf < d.vf * 0.92, 'CASSE : un moteur à 65 % accélère moins : ' + c.vf.toFixed(1) + ' contre ' + d.vf.toFixed(1)); }
+  console.log(`OK  casse : bourrin ${j.ca.z.map(v => v.toFixed(2)).join('/')}, ${j.ca.creve.reduce((a, b) => a + b, 0)} roue(s) crevée(s), arrivé en ${(j.fin || j.out).toFixed(0)} s contre ${O.cars[0].fin.toFixed(0)} s sans casse ; ${A.td.length} takedown(s)`);
+}
