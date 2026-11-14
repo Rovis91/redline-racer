@@ -3,14 +3,16 @@
 // La fusion du décor (game.js, « fusion ») garde alors, pour chaque géométrie fondue, la liste de ses pièces et de leur origine (userData.src).
 (() => {
   window.__origines = 1;
-  // shortcut: PRELUDE = dernière ligne des poseurs partagés en tête de decors.js (inst, insts, boite, repere) ; à remonter si ce prélude grandit
-  const AIDES = /^(inst|insts|boite|repere)$/, PRELUDE = 30, SRC = /\/((?:decors|formes[\w-]*|textures[\w-]*|rythme)\.js):(\d+)/, JEU = /\/(game\.js):(\d+)/;
+  // shortcut: PRELUDE = dernière ligne des poseurs partagés en tête de decors.js (inst, insts, boite, repere ; poses, propre à wangan, est reconnu par son nom) ; à remonter si ce prélude grandit
+  const AIDES = /^(inst|insts|boite|repere|poses)$/, PRELUDE = 30, SRC = /\/((?:decors|formes[\w-]*|textures[\w-]*|rythme)\.js):(\d+)/, JEU = /\/(game\.js):(\d+)/;
+  const nom = s => (/at (?:Object\.)?(\S+) \(/.exec(s) || [])[1] || '';
   const lieu = () => {
     const l = new Error().stack.split('\n'); let jeu = null;
+    const lignesAides = new Map(l.map(s => [s, nom(s)]).filter(([, f]) => AIDES.test(f)).map(([s, f]) => [(SRC.exec(s) || [])[2], f])); // les rappels anonymes d'un poseur (son forEach) sont sur sa ligne
     let aide = ''; // les poseurs génériques de decors.js (inst, insts, boite, repere) : on remonte à la ligne qui les appelle, et on les note entre parenthèses
     for (const s of l) {
-      const m = SRC.exec(s), f = (/at (?:Object\.)?(\S+) \(/.exec(s) || [])[1] || '';
-      if (m) { if (m[1] === 'decors.js' && (AIDES.test(f) || +m[2] <= PRELUDE)) { aide = aide || (AIDES.test(f) ? f : 'decors.js:' + m[2]); continue; } return m[1] + ':' + m[2] + (f && !/^(Array|Object|eval|Map|forEach|map)/.test(f) ? ' ' + f : '') + (aide ? ' (' + aide + ')' : ''); }
+      const m = SRC.exec(s), f = nom(s);
+      if (m) { if (m[1] === 'decors.js' && (AIDES.test(f) || +m[2] <= PRELUDE || lignesAides.has(m[2]))) { aide = aide || (AIDES.test(f) ? f : lignesAides.get(m[2]) || 'decors.js:' + m[2]); continue; } return m[1] + ':' + m[2] + (f && !/^(Array|Object|eval|Map|forEach|map)/.test(f) ? ' ' + f : '') + (aide ? ' (' + aide + ')' : ''); }
       if (!jeu) { const j = JEU.exec(s); if (j) jeu = 'moteur ' + j[1] + ':' + j[2]; }
     }
     return jeu || '?';
