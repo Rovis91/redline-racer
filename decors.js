@@ -1917,7 +1917,7 @@
           if ((zn === 'gorge' && q.cote < 0 && y < q.s.y + niv(q.i) - 0.5) || ravin(x, z) > 0.3) c = dalle; // le lit de la rivière et le ravin du pont
           c = mix(c, roc, lisse(0.85, 0.6, nr.getY(v))); const k = 0.85 + 0.3 * u; C.set([c[0] * k, c[1] * k, c[2] * k], v * 3); }
         ge.setAttribute('color', new THREE.BufferAttribute(C, 3)); }
-      const eau = h.mat('eauThe', { ...DS, gloss: 0.5, rep: [5, 1], c: 0xb0a08a }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
+      const eau = h.mat('eauGue', { ...DS, gloss: 0.7, rep: [5, 1], c: 0xb8aa98 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
       const gres = h.mat('grainGres', { vertexColors: true, emissive: 0x2a2620, ...DS }), pierre = h.mat('pierreSeche'), pierreR = h.mat('pierreSeche', { rep: [0.35, 1] }, 1);
       const chuteM = h.mat('chute', { ...DS, lum: 1, c: 0xccd8d8, transparent: true, depthWrite: false, rep: [6, 1] }), lisseBord = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
       const tranche = (a, b, f) => { const l = (b - a + N) % N; f((a + N) % N, l); }; // ruban de l'échantillon a à b
@@ -2008,9 +2008,6 @@
       for (let k = 0; k < NE; k++) { const i = (gal0 + (rnd() * ((gal1 - gal0 + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w * (rnd() * 2 - 0.2) + 2); base.push([x, s.y, z]); pe.set([x, s.y + rnd() * 9, z], k * 3); }
       ge.setAttribute('position', new THREE.BufferAttribute(pe, 3));
       const embruns = new THREE.Points(ge, new THREE.PointsMaterial({ color: 0xf4faf7, size: 0.6, map: h.mat('brume').map, transparent: true, opacity: 0.45, depthWrite: false })); embruns.frustumCulled = false; h.scene.add(embruns);
-      // l'arc-en-ciel à la sortie : cinq demi-cercles additifs dans les embruns
-      { const s = S[(gal1 + 40) % N], arc = new THREE.Group(); const [ax, az] = bord(s, -1, 12); arc.position.set(ax, s.y - 6, az); arc.rotation.y = h.across(s); h.scene.add(arc); // en travers de la route : on passe dessous
-        [0xff5040, 0xffb040, 0xf0f060, 0x60d080, 0x6080ff].forEach((c, k) => arc.add(new THREE.Mesh(new THREE.TorusGeometry(26 - k * 0.9, 0.45, 3, 40, Math.PI), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: 0.09, blending: THREE.AdditiveBlending, depthWrite: false })))); }
 
       // ---------- le pont suspendu (pts 21 à 22) : tablier de planches, pylônes de bois, câbles d'acier ; le ravin du torrent dessous ----------
       tranche(p0, p1, (i, l) => { h.ribbon(i, l, s => -s.w, 0.04, s => s.w, 0.04, planches, 4); h.ribbon(i, l, s => -s.w - 0.3, -0.7, s => s.w + 0.3, -0.7, planches, 4);
@@ -2040,12 +2037,12 @@
 
       { const fl = [h.mat('ecrit', {}, 64, 32, '#e9b44c', '#1a1a16', '▶▶', 22), h.mat('ecrit', {}, 64, 32, '#e9b44c', '#1a1a16', '◀◀', 22)], pl = [[], []], po = [];
         for (let i = 0; i < N; i += 6) { const s = S[i]; if (Math.abs(s.k) < 0.006 || entre(i, g0, g1) || entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue;
-          const side = s.k > 0 ? -1 : 1, [x, z] = bord(s, side, s.w + 1.4); pl[side < 0 ? 0 : 1].push([x, s.y + 1.7, z, h.across(s) + Math.PI / 2]); for (const u of [-0.6, 0.6]) { const [px, pz] = bord(s, side, s.w + 1.4 + u); po.push([px, s.y + 0.6, pz, 0, 1, 1.4, 1]); } }
+          const side = s.k > 0 ? -1 : 1, [x, z] = bord(s, side, s.w + 1.4); pl[side < 0 ? 0 : 1].push([x, s.y + 2, z, h.across(s) + Math.PI / 2, 1.5, 1.5, 1.5]); for (const u of [-0.6, 0.6]) { const [px, pz] = bord(s, side, s.w + 1.4 + u); po.push([px, s.y + 0.6, pz, 0, 1, 2, 1]); } }
         pl.forEach((l, k) => inst(h, h.geo('boite', 0.08, 0.9, 1.7), fl[k], l)); inst(h, h.geo('boite', 0.12, 1, 0.12), bois, po); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
       const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches');
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + 7 + rnd() * rnd() * 40, [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
-        if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9)) continue; const ru = rnd() < 0.6 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
+        if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9)) continue; const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
         maisons.push([x, g.hAt(x, z) - 0.2, z, a, w, d, ru]); }
       for (const [x, y, z, a, w, d, ru] of maisons) { const gr = new THREE.Group(); gr.position.set(x, y, z); gr.rotation.y = a; h.scene.add(gr);
         h.pose('maisonIgatu', { pierre, tuile, porte }, gr, [0, 0, 0], w, d, rnd() < 0.35 ? 5.5 + rnd() * 2 : 3.4 + rnd() * 0.8, ru);
@@ -2085,6 +2082,19 @@
         else if (r < 0.2 && d < 150) arbre(x, y, z, 0.9 + rnd() * 0.5, false);
       }
       for (let i = P(23); dans(i, 23, 29); i = (i + 3) % N) if (rnd() < 0.5) { const s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w - 1 + rnd() * 4), ll = 3 + rnd() * 7; lianes.push([x, s.y + 17 - ll / 2, z, rnd() * 6, 1, ll, 1]); cimes[rnd() * 4 | 0].push([x, s.y + 18, z, rnd() * 6, 1.1, 0.5, 1.1]); } // les lianes qui pendent au-dessus de la route
+      for (let i = 0; i < N; i++) { const s = S[i], zn = zone(i); if (zn !== 'plateau' && zn !== 'foret') continue;
+        for (const sd of [-1, 1]) { const a = acc(i, sd), at = (o, f) => { const [x, z] = bord(s, sd, o), y = o < s.w + a + 0.5 ? s.y + A(Math.min(o - s.w, a)) : g.hAt(x, z); f(x, y, z); }, o = () => s.w + 2.6 + rnd() * rnd() * 34;
+          if (zn === 'plateau') { // REFS 5 : campo rupestre, à touche-touche au bord
+            for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.6 + rnd() * 1.2]));
+            if (rnd() < 0.4) at(o(), (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + (rnd() - 0.5) * 0.6, 0.5 + rnd() * 1.3]));
+            if (rnd() < 0.12) at(s.w + 4 + rnd() * 30, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
+            at(o(), (x, y, z) => { for (let c = 0; c < 8; c++) fleurs.push(x + (rnd() - 0.5) * 4, y + 0.45 + rnd() * 0.3, z + (rnd() - 0.5) * 4); }); }
+          else { // REFS 4 : le sous-bois au bord
+            if (rnd() < 0.5) at(o(), (x, y, z) => fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]));
+            if (rnd() < 0.35) at(o(), (x, y, z) => (rnd() < 0.3 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.8]));
+            if (rnd() < 0.3) at(o(), (x, y, z) => buissons.push([x, y + 0.6, z, rnd() * 6, 0.4 + rnd() * 0.4, 0.3 + rnd() * 0.3]));
+            if (rnd() < 0.08) at(s.w + 4 + rnd() * 10, (x, y, z) => fougeres.push([x, y, z, rnd() * 6, 0.8 + rnd() * 0.5]));
+            if (rnd() < 0.05) at(s.w + 4 + rnd() * 10, (x, y, z) => palmier(x, y, z, 0.4 + rnd() * 0.8)); } } }
       // le grand arbre fantôme dans la brume du pont
       { const s = S[(iB1 + 12) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 12); arbre(x, g.hAt(x, z), z, 1.8, false); } } // les grands arbres fantômes au bout du pont
       for (const p of corn) fougeres.push(p); for (const p of cornB) coupes.push(p);
@@ -2112,9 +2122,9 @@
       { const fog = COL(h.TH.fog), sun = new THREE.Vector3(...h.TH.astre.dir).normalize(), pos = [], col = [], idx = [];
         const mesa = (cx, cz, R, H, y0) => { const n = 30, nR = bruit(), prof = [[1.9, 0], [1.35, 0.3], [1.1, 0.36], [1.08, 0.46], [1.03, 0.47], [1.01, 0.58], [0.98, 0.6], [0.97, 0.7], [0.93, 0.72], [0.92, 0.86], [0.9, 0.88], [0.89, 1], [0, 1.01]], b0 = pos.length / 3;
           for (let a = 0; a <= n; a++) { const t = a / n * 6.2832, rr = R * (0.8 + 0.45 * nR(a * 0.7)), c = Math.cos(t), s = Math.sin(t), lum = 0.72 + 0.28 * Math.max(0, c * sun.x + s * sun.z);
-            prof.forEach(([k, y], j) => { pos.push(cx + c * rr * k, y0 + H * y, cz + s * rr * k); const base = COL(j < 2 ? '#7d7458' : j === 12 ? '#5f6a48' : j % 2 ? '#b8a888' : '#6a5a4a', lum); col.push(...mix(base, fog, 0.48 - 0.2 * y)); }); }
+            prof.forEach(([k, y], j) => { pos.push(cx + c * rr * k, y0 + H * y, cz + s * rr * k); const base = COL(j < 2 ? '#7d7458' : j === 12 ? '#5f6a48' : j % 2 ? '#b8a888' : '#6a5a4a', lum); col.push(...mix(base, COL('#8a9aa2'), 0.5 - 0.2 * y)); }); }
           for (let a = 0; a < n; a++) for (let j = 0; j < prof.length - 1; j++) { const i0 = b0 + a * prof.length + j, i1 = i0 + prof.length; idx.push(i0, i0 + 1, i1, i1, i0 + 1, i1 + 1); } };
-        for (const [cx, cz, R, H] of [[350, -900, 260, 300], [1150, -760, 180, 240], [1700, 300, 220, 260], [-750, 250, 200, 280], [-600, 1100, 240, 220], [700, 1350, 200, 250]]) mesa(cx, cz, R, H, -60);
+        for (const [cx, cz, R, H] of [[350, -900, 260, 300], [1150, -760, 180, 240], [1700, 300, 220, 260], [-750, 250, 200, 280], [-600, 1100, 240, 220], [700, 1350, 200, 250], [-300, -700, 160, 230], [1650, -250, 150, 200], [1500, 1000, 200, 270], [-900, -200, 140, 210]]) mesa(cx, cz, R, H, -60);
         const gm = new THREE.BufferGeometry(); gm.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gm.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); gm.setIndex(idx);
         h.scene.add(new THREE.Mesh(gm, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false }))); }
 
@@ -2123,13 +2133,13 @@
       const nappe = new THREE.PlaneGeometry(1, 1); nappe.rotateX(-Math.PI / 2);
       for (let k = 0; k < 70; k++) { const i = (P(12) + (rnd() * ((P(24) - P(12) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w + 10 + rnd() * 40); voiles.push([x, s.y + niv(i) + 1 + rnd() * 4, z, rnd() * 6, 25 + rnd() * 25, 1, 25 + rnd() * 20]); } // au fond de la gorge
       for (let k = 0; k < 30; k++) { const i = (P(4) + (rnd() * ((P(11) - P(4) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -amont(s), s.w + 15 + rnd() * 30); voiles.push([x, s.y - 4 - rnd() * 6, z, rnd() * 6, 30 + rnd() * 30, 1, 30 + rnd() * 20]); } // dans le vide sous les épingles
-      for (let k = 0; k < 16; k++) { const s = S[(gal0 + (rnd() * ((gal1 - gal0 + N) % N) | 0)) % N], [x, z] = bord(s, -1, s.w + 8 + rnd() * 14); voiles.push([x, s.y + niv(IX.get(s)) + 0.5 + rnd() * 3, z, rnd() * 6, 16 + rnd() * 10, 1, 16 + rnd() * 10]); } // le bassin de la grande chute fume
+      for (let k = 0; k < 16; k++) { const s = S[(gal0 + (rnd() * ((gal1 - gal0 + N) % N) | 0)) % N], [x, z] = bord(s, -1, s.w + 8 + rnd() * 14); voiles.push([x, s.y + niv(IX.get(s)) + 0.3 + rnd() * 1.2, z, rnd() * 6, 16 + rnd() * 10, 1, 16 + rnd() * 10]); } // le bassin de la grande chute fume
       for (const i of chutes) for (let k = 0; k < 4; k++) { const s = S[(i + k * 3) % N], [x, z] = bord(s, -1, s.w + 46 + rnd() * 4); voiles.push([x, s.y + niv(i) + 1 + k, z, rnd() * 6, 14 + rnd() * 8, 1, 14 + rnd() * 8]); } // les vasques des chutes
       for (let k = 0; k < 24; k++) { const i = (P(29) + (rnd() * ((P(3) - P(29) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 30 + rnd() * 90); voiles.push([x, g.hAt(x, z) + 1 + rnd() * 2, z, rnd() * 6, 40 + rnd() * 40, 1, 30 + rnd() * 20]); } // brume rasante du plateau
       for (let k = 0; k < 14; k++) { const u = (rnd() - 0.5) * 240, v = (rnd() - 0.5) * 30; voiles.push([sb.x - sb.tz * u + sb.tx * v, sb.y - 12 + rnd() * 6, sb.z + sb.tx * u + sb.tz * v, rnd() * 6, 40 + rnd() * 30, 1, 30 + rnd() * 20]); } // le ravin du pont
       const nap = inst(h, nappe, brume, voiles); nap.castShadow = nap.receiveShadow = false;
       // au pont, le blanc s'épaissit : des voiles debout en travers de la route, qu'on traverse
-      const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 22); i = (i + 14) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
+      const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 23); i = (i + 8) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
       const vds = inst(h, debout, h.mat('brume', { lum: 1, c: 0xeef2ec, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide }), vd); vds.castShadow = vds.receiveShadow = false;
       // rayons : des fuseaux additifs dans l'axe du soleil (bas, à l'est), en forêt et sur la paroi de la galerie
       const sun = new THREE.Vector3(...h.TH.astre.dir).normalize(), rg = new THREE.PlaneGeometry(6, 70); rg.translate(0, 35, 0); rg.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), sun));

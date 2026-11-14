@@ -41,6 +41,7 @@
       const { R, alea } = o; R(g, '#a8742f', 0, 0, 64, 64);
       for (let i = 0; i < 26; i++) R(g, ['#c08a40', '#8a5a28', '#b88038', '#6e4520'][alea() * 4 | 0], alea() * 56 | 0, alea() * 56 | 0, 4 + (alea() * 12 | 0), 4 + (alea() * 12 | 0)); // des taches de fond et de profondeur
       for (let i = 0; i < 40; i++) R(g, '#e0c08a', alea() * 62 | 0, alea() * 62 | 0, 2 + (alea() * 3 | 0), 2 + (alea() * 2 | 0)); // reflets du ciel
+      for (let i = 0; i < 18; i++) R(g, '#b8c4c4', alea() * 60 | 0, alea() * 62 | 0, 3 + (alea() * 5 | 0), 1 + (alea() * 2 | 0)); // le ciel gris-bleu en miroir
       for (let i = 0; i < 14; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 62 | 0, 2, 2); // écume
     }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
@@ -65,7 +66,7 @@
     // REFS 2 : rideau de chute : filets d'eau blancs et gris-bleu pâle, transparents entre eux (pas de turquoise : la V1 se lisait comme des blocs de couleur) (matière transparente, la carte fait défiler la texture vers le bas).
     // Posé en ruban vertical (u = la hauteur) : les filets courent le long de x du dessin
     chute: () => [64, 32, (g, o) => {
-      const { alea } = o; g.fillStyle = 'rgba(214,226,228,.45)'; g.fillRect(0, 0, 64, 32);
+      const { alea } = o; g.fillStyle = 'rgba(214,226,228,.18)'; g.fillRect(0, 0, 64, 32);
       for (let y = 0; y < 32; y += 4) { const a = 0.45 + alea() * 0.4; for (let x = 0; x < 64;) { const l = 28 + (alea() * 36 | 0); // de longs filets continus, larges, peu de trous
         g.fillStyle = alea() < 0.75 ? 'rgba(246,249,248,' + a + ')' : 'rgba(196,210,214,' + a + ')'; g.fillRect(x, y + (alea() * 2 | 0), l, 3); x += l + (alea() * 3 | 0); } }
     }],
