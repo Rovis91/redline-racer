@@ -10,9 +10,9 @@
     bromelia: () => [...Array.from({ length: 6 }, (_, k) => ['feuille', 1.1, 0.06, 0.22, 0, 0.3, 0, [0, k * 0.5236, 0.55]]), ...Array.from({ length: 6 }, (_, k) => ['feuille', 1.1, 0.06, 0.22, 0, 0.3, 0, [0, k * 0.5236 + 3.1416, 0.55]]),
       ['fleur', 0.18, 0.7, 0.18, 0, 0.45, 0]],
     // REFS 5 : canela-de-ema (Vellozia) du campo rupestre : tronc noir bas qui fourche deux ou trois fois, une touffe de feuilles raides vert-gris au bout de chaque branche (h = taille, 1 = 2,4 m)
-    canelaEma: (h = 1) => [['bois', 0.26 * h, 1.1 * h, 0.26 * h, 0, 0.55 * h, 0, [0, 0, 0.08]],
+    canelaEma: (h = 1) => [['bois', 0.34 * h, 1.1 * h, 0.26 * h, 0, 0.55 * h, 0, [0, 0, 0.08]],
       ...[[-0.45, 0, 0.55, 1.5], [0.4, 0.5, 0.5, 1.7], [0.1, -0.6, 0.25, 1.95]].flatMap(([dx, dz, r, y]) => [['bois', 0.15 * h, 0.9 * h, 0.15 * h, dx * h, (y - 0.35) * h, dz * h, [dz * 0.6, 0, -Math.sign(dx) * r]],
-        ['touffe', 0.9 * h, 0.4 * h, 0.22 * h, dx * 1.7 * h, y * h, dz * 1.4 * h, [0, 0.4, 0.35]], ['touffe', 0.9 * h, 0.4 * h, 0.22 * h, dx * 1.7 * h, y * h, dz * 1.4 * h, [0, 1.9, -0.35]], ['touffe', 0.22 * h, 0.55 * h, 0.22 * h, dx * 1.7 * h, (y + 0.15) * h, dz * 1.4 * h]])],
+        ['touffe', 1.4 * h, 0.6 * h, 0.3 * h, dx * 1.7 * h, y * h, dz * 1.4 * h, [0, 0.4, 0.35]], ['touffe', 1.4 * h, 0.6 * h, 0.3 * h, dx * 1.7 * h, y * h, dz * 1.4 * h, [0, 1.9, -0.35]], ['touffe', 0.3 * h, 0.8 * h, 0.3 * h, dx * 1.7 * h, (y + 0.15) * h, dz * 1.4 * h]])],
     // REFS 5 : affleurement de quartzite : dalles basses inclinées dans le même sens (le pendage), arêtes claires, lichen noir dessus
     lajedo: (l = 1) => [['roc', 4.2 * l, 0.9, 2.8, 0, 0.25, 0, [0, 0, 0.2]], ['roc', 3.2 * l, 0.8, 2.2, 1.9 * l, 0.55, 1.3, [0.08, 0.5, 0.24]], ['roc', 2.4 * l, 0.7, 1.8, -1.8 * l, 0.3, -1, [-0.06, -0.35, 0.16]],
       ['roc', 1.6 * l, 1.1, 1.3, 0.6 * l, 0.9, -1.1, [0, 0.9, 0.3]], ['lichen', 1.8 * l, 0.06, 1.2, 0.3 * l, 0.92, 0.2, [0, 0.2, 0.2]], ['lichen', 1.2 * l, 0.06, 0.9, 1.6 * l, 1.18, 1.4, [0.08, 0.5, 0.24]]],

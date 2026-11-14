@@ -11,7 +11,7 @@
     }, 6],
     // REFS 5 : sol du campo rupestre, au bord de la route du plateau : gravier de quartz gris et ocre, touffes olive et dorées, lichen noir sur les éclats de quartzite
     campoSol: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#9a8a6c', 0, 0, 64, 64);
+      const { R, alea, voile } = o; R(g, '#a8987a', 0, 0, 64, 64);
       for (let i = 0; i < 520; i++) R(g, ['#8a7a5e', '#a89478', '#b8ae98', '#7a6c54'][alea() * 4 | 0], alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1);
       for (let i = 0; i < 46; i++) { const x = alea() * 60 | 0, y = alea() * 60 | 0, c = alea() < 0.6 ? '#6f7b3e' : '#a8944a'; for (let k = 0; k < 5; k++) R(g, c, x + (alea() * 4 | 0), y + (alea() * 4 | 0), 1, 2); } // touffes
       voile(g, 0.6, () => { for (let i = 0; i < 18; i++) R(g, '#3c3a36', alea() * 60 | 0, alea() * 60 | 0, 2 + (alea() * 4 | 0), 1 + (alea() * 2 | 0)); }); // éclats noircis
@@ -39,10 +39,9 @@
     // REFS 3 : l'eau du gué, peu profonde : ambre clair, rides claires et reflets du ciel, écume crème en traînées (x du dessin : en travers sur un ruban)
     eauGue: () => [64, 64, (g, o) => {
       const { R, alea } = o; R(g, '#a8742f', 0, 0, 64, 64);
-      for (let i = 0; i < 26; i++) R(g, ['#c08a40', '#8a5a28', '#b88038', '#6e4520'][alea() * 4 | 0], alea() * 56 | 0, alea() * 56 | 0, 4 + (alea() * 12 | 0), 4 + (alea() * 12 | 0)); // des taches de fond et de profondeur
-      for (let i = 0; i < 40; i++) R(g, '#e0c08a', alea() * 62 | 0, alea() * 62 | 0, 2 + (alea() * 3 | 0), 2 + (alea() * 2 | 0)); // reflets du ciel
-      for (let i = 0; i < 18; i++) R(g, '#b8c4c4', alea() * 60 | 0, alea() * 62 | 0, 3 + (alea() * 5 | 0), 1 + (alea() * 2 | 0)); // le ciel gris-bleu en miroir
-      for (let i = 0; i < 14; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 62 | 0, 2, 2); // écume
+      for (let i = 0; i < 10; i++) R(g, alea() < 0.5 ? '#b07c36' : '#9c6a2c', alea() * 48 | 0, alea() * 48 | 0, 12 + (alea() * 16 | 0), 10 + (alea() * 14 | 0)); // fond et profondeur, en grandes plages douces
+      for (let i = 0; i < 30; i++) R(g, alea() < 0.6 ? '#c8a070' : '#b8c4c4', alea() * 58 | 0, alea() * 63 | 0, 4 + (alea() * 6 | 0), 1); // reflets du ciel, en rides
+      for (let i = 0; i < 10; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 63 | 0, 2 + (alea() * 2 | 0), 1); // écume
     }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
     // t = 1 : dessin tourné d'un quart, pour un ruban vertical (u = la hauteur) : les assises restent horizontales
