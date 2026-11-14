@@ -16,17 +16,17 @@
     colonnePerse: (H = 19) => [['pierre', 3.4, 0.6, 3.4, 0, 0.3, 0], ['pierre', 2.6, 1.2, 2.6, 0, 1.2, 0], ['pierre', 2.6, 1.2, 2.6, 0, 1.2, 0, R45],
       ['fut', 1.7, H - 6, 1.7, 0, 1.8 + (H - 6) / 2, 0, null, 1], ['fut', 1.7, H - 6, 1.7, 0, 1.8 + (H - 6) / 2, 0, R45],
       ['pierre', 2.2, 1.4, 2.2, 0, H - 3.5, 0], ['pierre', 1.6, 1.2, 1.6, 0, H - 2.3, 0, R45],
-      ['sculpte', 6.4, 1.5, 1.8, 0, H - 0.9, 0, null, 1], ...[-1, 1].flatMap(sd => [['sculpte', 1.1, 1.3, 1.5, sd * 3.6, H - 0.5, 0], ['or', 0.25, 0.7, 0.25, sd * 3.6, H + 0.4, 0.5], ['sculpte', 0.6, 1.4, 0.6, sd * 2.6, H - 2.1, 0]])],
+      ['sculpte', 7.6, 2.2, 2.4, 0, H - 1, 0, null, 1], ...[-1, 1].flatMap(sd => [['sculpte', 1.8, 1.9, 2, sd * 4.4, H - 0.4, 0], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, 0.6], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, -0.6], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, 0.5], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, -0.5]])],
     // la Porte des Nations, à cheval sur la route : deux piliers massifs de 20 m, un taureau ailé contre chacun du côté où l'on arrive, le linteau à frise ; W = demi-largeur de la route
-    porteNations: (W = 10) => [...[-1, 1].flatMap(sd => [['pierre', 5, 20, 12, sd * (W + 3.5), 10, 0, null, 1], ['frise', 5.2, 2.4, 12.2, sd * (W + 3.5), 18.5, 0], ...lamassu(sd * (W + 2.2), 8)]),
-      ['pierre', 2 * W + 12, 3, 12, 0, 21.5, 0, null, 1], ['frise', 2 * W + 12.2, 1.6, 12.2, 0, 22.4, 0], ['or', 2 * W + 12.4, 0.4, 12.4, 0, 23.3, 0]],
+    porteNations: (W = 10) => [...[-1, 1].flatMap(sd => [['pierre', 3.6, 17, 7, sd * (W + 2.8), 8.5, 0, null, 1], ['frise', 3.8, 2.2, 7.2, sd * (W + 2.8), 15.6, 0], ...lamassu(sd * (W + 2.2), 9)]),
+      ['pierre', 2 * W + 9, 2.6, 7, 0, 18.3, 0, null, 1], ['frise', 2 * W + 9.2, 1.4, 7.2, 0, 19.2, 0], ['or', 2 * W + 9.4, 0.4, 7.4, 0, 20.1, 0]],
     // taureau ailé seul (allée de la plaine, de loin)
     lamassu: () => [['pierre', 3.4, 2, 9, 0, 1, 0], ...lamassu(0, 0).map(b => { const c = b.slice(); c[5] += 2; return c; })],
     // merlon à degrés de la balustrade de l'escalier (1,2 m de large)
     merlon: () => [['pierre', 1.2, 0.7, 0.6, 0, 0.35, 0], ['pierre', 0.8, 0.5, 0.6, 0, 0.95, 0], ['pierre', 0.4, 0.4, 0.6, 0, 1.4, 0]],
     // module d'arcades du bazar à ciel ouvert, 12 m : mur de brique peint de deux arcs, corniche, coupole basse derrière (bulbe en deux boîtes)
-    arcade: () => [['brique', 12, 7, 1.2, 0, 3.5, 0.6, null, 1], ['faience', 12.2, 0.8, 1.4, 0, 7.4, 0.6], ['brique', 12, 3, 9, 0, 1.5, 5.5],
-      ['brique', 5, 2.2, 5, 0, 8, 5], ['brique', 3.6, 1.2, 3.6, 0, 9.6, 5, R45], ['or', 0.3, 1.4, 0.3, 0, 10.8, 5]],
+    arcade: () => [['brique', 12, 5.5, 1.2, 0, 2.75, 0.6, null, 1], ['faience', 12.2, 0.8, 1.4, 0, 5.9, 0.6], ['brique', 12, 3, 9, 0, 1.5, 5.5],
+      ['brique', 5, 2.2, 5, 0, 6.6, 5], ['brique', 3.6, 1.2, 3.6, 0, 8.2, 5, R45], ['or', 0.3, 1.4, 0.3, 0, 9.4, 5]],
     // étal à auvent (X le long de la route) : comptoir, deux montants, toile rayée penchée vers la route, marchandises
     etal: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
       ['marchandise', 3, 0.5, 1, 0, 1.25, 1.2]],

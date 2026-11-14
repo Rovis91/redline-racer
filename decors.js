@@ -1716,7 +1716,7 @@
       h.ribbon(P0(14) + 10, (P0(20) - P0(14) + N) % N - 20, -3.5, 0.03, 3.5, 0.03, h.mat('tapisAllee', DS), 7);
 
       // --- les murs : bordure de tapis, frise des Immortels le long de l'escalier, faïence au jardin ; ni dans la salle (on y roule partout), ni dans le tunnel (game.js les fait) ---
-      const MH = { plaine: 1.2, escalier: 2.6, jardin: 1, bazar: 2.4 }, murs = { plaine: nappe(h.mat('tapisBord', DS)), escalier: nappe(frise), jardin: nappe(faience), bazar: nappe(h.mat('arcades', DS)) };
+      const MH = { plaine: 1.2, escalier: 2.6, jardin: 0.6, bazar: 0.9 }, murs = { plaine: nappe(h.mat('tapisBord', DS)), escalier: nappe(frise), jardin: nappe(faience), bazar: nappe(h.mat('arcades', DS)) };
       for (let i = 0; i < N; i++) { if (enTunnel(i)) continue; const k = secteur(i), m = murs[k === 'salle' ? 'plaine' : k], ht = MH[k] || 1.2;
         for (const sd of [-1, 1]) { const a = S[i], b = S[(i + 1) % N], p = au(a, sd * a.w), q = au(b, sd * b.w), o = au(a, sd * (a.w + 2.2));
           if (dansSalle(p[0], p[2], -0.4) && dansSalle(q[0], q[2], -0.4) || dansSalle(o[0], o[2], -1.1)) continue;
@@ -1731,10 +1731,10 @@
       const HC = 19, ca = Math.cos(PL.a), sa = Math.sin(PL.a), cols = PL.piles.map(([x, z]) => [CX + x * ca + z * sa, YS, CZ - x * sa + z * ca, 0]); // repère tourné de la place (sim.js)
       for (let x = CX - 81; x <= CX + 81; x += 18) for (let z = CZ - 72; z <= CZ + 72; z += 18) { if (dansSalle(x, z, 4) || g.dAt(x, z) < W + 4) continue; cols.push([x, YS, z, 0]); }
       insts(h, 'colonnePerse', { pierre, fut: h.mat('cannelure'), sculpte, or }, cols, { a: [HC] });
-      const poutres = [], bois = h.mat('planches');
+      const poutres = [], bois = h.mat('planches'), cedre = h.mat('peinture', { c: 0xa8743c });
       for (let z = CZ - 72; z <= CZ + 72; z += 18) poutres.push([CX, YS + HC + 0.6, z, 0, 168, 1.2, 1.6]);
       for (let x = CX - 81; x <= CX + 81; x += 36) poutres.push([x, YS + HC + 1.6, CZ, 0, 1.2, 0.8, 150]);
-      inst(h, h.geo('bloc'), bois, poutres);
+      inst(h, h.geo('bloc'), cedre, poutres); // poutres de cèdre, claires : sombres, elles barraient le ciel
 
       // --- la Porte des Nations, à cheval sur la route juste avant l'épingle (pt 12-13) : on y arrive face au soleil couchant ---
       { const i = P0(12) + 6, s = S[i]; h.pose('porteNations', { pierre, frise, sculpte, ailes: h.mat('ailes'), or }, repere(h, s), [0, 0, 0], s.w); h.lum(i, s.x, s.y + 12, s.z, 0xffc070, 40, 0.5); }
@@ -1745,6 +1745,7 @@
       { const nr = i12 - i9; h.ribbon(i9, nr, s => -(s.w + 5), 0.02, s => -(s.w + 16), 0.02, h.mat('pierre', DS), 6); // le plat de la rampe miroir, à la même pente
         h.ribbon(i9, nr, s => -(s.w + 16), MH.escalier, s => -(s.w + 16), -6, frise, 6); // son mur extérieur à frise
         for (let i = i9; i < i12; i++) { const s = S[i], [x, z] = bord(s, -1, s.w + 16.3); merl.push([x, s.y + MH.escalier, z, ang(s, 1)]); } }
+      h.ribbon(i9, i12 - i9, -W + 0.4, 0.03, W - 0.4, 0.03, h.mat('marchesPerse', { alphaTest: 0.5, ...DS }), 1.2);
       inst(h, h.geo('boite', 1.2, 0.7, 0.6), pierre, merl.map(p => [p[0], p[1] + 0.35, p[2], p[3]]));
       inst(h, h.geo('boite', 0.6, 0.6, 0.6), pierre, merl.filter((_, k) => k % 2 === 0).map(p => [p[0], p[1] + 1, p[2], p[3]]));
       // le palier : deux taureaux ailés sur socle de part et d'autre du haut de l'escalier
@@ -1766,9 +1767,9 @@
 
       // --- le jardin (pts 20-24) : le canal turquoise côté intérieur (infranchissable : derrière le mur de faïence), des bassins ronds et des massifs jaunes et rouges de l'autre côté ---
       const eau = h.mat('bruit', { lum: 1, ...DS }, '#2aa39a', ['#3ab8ae', '#1f8a82', '#f4ead0']);
-      h.ribbon(i20, i25 - i20, s => s.w + 0.6, -0.4, s => s.w + 7, -0.4, eau, 6); h.ribbon(i20, i25 - i20, s => s.w + 7, 0.5, s => s.w + 7, -0.6, faience, 4);
+      h.ribbon(i20, i25 - i20, s => s.w + 0.3, 0.06, s => s.w + 7, 0.06, eau, 6); h.ribbon(i20, i25 - i20, s => s.w + 7, 0.6, s => s.w + 7, -0.6, faience, 4);
       const marg = [], plans = [], fleurs = [];
-      for (let i = i20 + 8, k = 0; i < i25 - 8; i += 20, k++) { const s = S[i], [x, z] = bord(s, -1, s.w + 15); if (g.dAt(x, z) < W + 12) continue; const y = s.y;
+      for (let i = i20 + 8, k = 0; i < i25 - 8; i += 20, k++) { const s = S[i], [x, z] = bord(s, -1, s.w + 15); if (g.dAt(x, z) < W + 12) continue; const y = Math.max(s.y, g.hAt(x, z));
         marg.push([x, y, z, 0, 5, 0.5, 5]); plans.push([x, y + 0.35, z, 0, 4.8, 1, 4.8]);
         for (let j = 0; j < 8; j++) { const a = j / 8 * 6.283; fleurs.push([x + Math.cos(a) * 7.5, y + 0.3, z + Math.sin(a) * 7.5, a, 2.4, 1, 1.2, j & 1 ? 0xf0c020 : 0xc8323c]); } }
       inst(h, h.geo('margelle'), faience, marg); inst(h, h.geo('disque'), eau, plans);
@@ -1781,9 +1782,9 @@
       // --- le bazar (pts 25-38) : la voûte de briques entre les pts 26 et 34 (tunnel de game.js, teintes th.tun), et à ciel ouvert des arcades, des étals rayés, des chameaux et des ânes ---
       const arc = [], eta = [], cham = [], anes = [], lant = [];
       for (let i = i25, k = 0; i < N + 4; i += 6, k++) { const j = i % N; if (enTunnel(j)) { if (k % 2 === 0) lant.push([S[j].x, S[j].y + 6.4, S[j].z, 0]); continue; }
-        for (const sd of [-1, 1]) { const s = S[j], [x, z] = bord(s, sd, s.w + 0.4); if (g.dAt(...bord(s, sd, s.w + 6)) < s.w + 4) continue;
-          if ((k + (sd > 0)) % 3) arc.push([x, s.y, z, ang(s, sd)]);
-          else { const [ex, ez] = bord(s, sd, s.w + 1); eta.push([ex, s.y, ez, ang(s, sd)]); const [cx, cz] = bord(s, sd, s.w + 5); (k & 1 ? cham : anes).push([cx, s.y, cz, Math.atan2(-s.tz, s.tx)]); } } }
+        for (const sd of [-1, 1]) { const s = S[j], [x, z] = bord(s, sd, s.w + 4); if (g.dAt(...bord(s, sd, s.w + 8)) < s.w + 6) continue; // les arcades en retrait de 4 m : devant elles, étals et bêtes, vus par-dessus le mur bas
+          arc.push([x, s.y, z, ang(s, sd)]);
+          if ((k + (sd > 0)) % 2 === 0) { const [ex, ez] = bord(s, sd, s.w + 1.6); eta.push([ex, s.y, ez, ang(s, sd)]); } else { const [cx, cz] = bord(s, sd, s.w + 2.4); (k & 2 ? cham : anes).push([cx, s.y, cz, Math.atan2(-s.tz, s.tx)]); } } }
       insts(h, 'arcade', { brique: h.mat('brique'), faience: h.mat('faience'), or }, arc);
       for (const [n, a, b] of [[0, '#c8323c', '#f4ead0'], [1, '#2aa39a', '#f0b840']]) insts(h, 'etal', { bois, auvent: h.mat('auvent', DS, a, b), marchandise: h.mat('peinture', { c: n ? 0xf0b840 : 0xc8323c }) }, eta.filter((_, k) => k % 2 === n));
       insts(h, 'chameau', { poil: h.mat('peinture', { c: 0xb08850 }), bat: h.mat('peinture', { c: 0xc8323c }) }, cham); insts(h, 'ane', { poil: h.mat('peinture', { c: 0x8a8478 }), bat: h.mat('peinture', { c: 0x1d3a8a }) }, anes);

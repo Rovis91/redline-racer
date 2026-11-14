@@ -62,6 +62,8 @@
     }],
     // auvent rayé des étals : bandes de deux couleurs, frange festonnée
     auvent: (a, b) => [32, 16, (g, { R }) => { for (let x = 0; x < 32; x += 8) { R(g, a, x, 0, 4, 16); R(g, b, x + 4, 0, 4, 16); } R(g, IVOIRE, 0, 13, 32, 1); for (let x = 0; x < 32; x += 4) R(g, a, x, 14, 2, 2); }, 2],
+    // nez des marches du grand escalier, posé sur la chaussée : un trait d'ombre et un trait clair, le reste transparent
+    marchesPerse: () => [8, 16, (g, { R }) => { g.clearRect(0, 0, 8, 16); R(g, '#4a3a28', 0, 0, 8, 2); R(g, '#e8d8b8', 0, 2, 8, 1); }],
     // façade de palais vue de loin (fond, à contre-jour) : iwan central, arcades sur deux niveaux, frise de faïence, créneaux
     palais: () => [64, 32, (g, { R }) => {
       R(g, '#b0905a', 0, 0, 64, 32); R(g, TURQ, 0, 4, 64, 2); for (let x = 0; x < 64; x += 4) R(g, '#b0905a', x, 0, 2, 2);
