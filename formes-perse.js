@@ -28,7 +28,7 @@
     arcade: () => [['brique', 12, 5.5, 1.2, 0, 2.75, 0.6, null, 1], ['faience', 12.2, 0.8, 1.4, 0, 5.9, 0.6], ['brique', 12, 3, 9, 0, 1.5, 5.5],
       ['brique', 5, 2.2, 5, 0, 6.6, 5], ['brique', 3.6, 1.2, 3.6, 0, 8.2, 5, R45], ['or', 0.3, 1.4, 0.3, 0, 9.4, 5]],
     // étal à auvent (X le long de la route) : comptoir, deux montants, toile rayée penchée vers la route, marchandises
-    etal: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
+    etalPerse: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
       ['marchandise', 3, 0.5, 1, 0, 1.25, 1.2]],
     // chameau de bât, X vers l'avant : pattes, corps, bosse, cou et tête ; bât rouge
     chameau: () => [...[[-0.8, -0.35], [-0.8, 0.35], [0.8, -0.35], [0.8, 0.35]].map(([x, z]) => ['poil', 0.25, 1.4, 0.25, x, 0.7, z]), ['poil', 2.2, 0.9, 0.9, 0, 1.75, 0],

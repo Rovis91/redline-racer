@@ -1786,7 +1786,7 @@
           arc.push([x, s.y, z, ang(s, sd)]);
           if ((k + (sd > 0)) % 2 === 0) { const [ex, ez] = bord(s, sd, s.w + 1.6); eta.push([ex, s.y, ez, ang(s, sd)]); } else { const [cx, cz] = bord(s, sd, s.w + 2.4); (k & 2 ? cham : anes).push([cx, s.y, cz, Math.atan2(-s.tz, s.tx)]); } } }
       insts(h, 'arcade', { brique: h.mat('brique'), faience: h.mat('faience'), or }, arc);
-      for (const [n, a, b] of [[0, '#c8323c', '#f4ead0'], [1, '#2aa39a', '#f0b840']]) insts(h, 'etal', { bois, auvent: h.mat('auvent', DS, a, b), marchandise: h.mat('peinture', { c: n ? 0xf0b840 : 0xc8323c }) }, eta.filter((_, k) => k % 2 === n));
+      for (const [n, a, b] of [[0, '#c8323c', '#f0b840'], [1, '#2aa39a', '#1d3a8a']]) insts(h, 'etalPerse', { bois, auvent: h.mat('auvent', DS, a, b), marchandise: h.mat('peinture', { c: n ? 0xf0b840 : 0xc8323c }) }, eta.filter((_, k) => k % 2 === n));
       insts(h, 'chameau', { poil: h.mat('peinture', { c: 0xb08850 }), bat: h.mat('peinture', { c: 0xc8323c }) }, cham); insts(h, 'ane', { poil: h.mat('peinture', { c: 0x8a8478 }), bat: h.mat('peinture', { c: 0x1d3a8a }) }, anes);
       inst(h, h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xffb850 }), lant);
       // au fond, à l'ouest du bazar : une mosquée à coupole turquoise et deux minarets, à contre-jour
@@ -1798,7 +1798,7 @@
       // --- le ciel de miniature : des volutes de nuages ivoire et or, plates, au-dessus du couchant ---
       const vol = h.mat('volute', { fog: false, alphaTest: 0.5, ...DS });
       for (let k = 0; k < 9; k++) { const a = -2.2 + k * 0.5 + rnd() * 0.2, r = 1700 + rnd() * 300, w = 260 + rnd() * 160;
-        const m = h.pose('panneau', vol, h.scene, [300 + Math.cos(a) * r, 260 + rnd() * 220, 250 + Math.sin(a) * r]); m.scale.set(w, w / 2, 1); m.lookAt(300, m.position.y, 250); }
+        const m = h.pose('panneau', vol, h.scene, [300 + Math.cos(a) * r, 400 + rnd() * 180, 250 + Math.sin(a) * r]); m.scale.set(w, w / 2, 1); m.lookAt(300, m.position.y, 250); }
     },
   };
 })();
