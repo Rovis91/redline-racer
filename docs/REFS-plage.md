@@ -211,3 +211,79 @@ Non traités faute de source vérifiée : Saamal (la catégorie Commons « Cenot
 Le lobby d'hôtel est un tunnel fermé : c'est ce que l'auteur n'aime pas. La chaussée sur lagune est l'inverse, et le contraste avec la grotte est le meilleur du parcours : on sort du noir et du plafond bas vers une ligne droite ouverte, lumineuse, avec de l'eau des deux côtés. La vitesse revient, et c'est utile juste avant la plage : on lâche le frein en ligne droite avant le dernier virage. C'est aussi un lieu réel et typique de la côte : le boulevard Kukulcán à Cancún roule littéralement entre lagune et mer, et Sian Ka'an est à une heure de Tulum. Enfin, il apporte deux couleurs qui manquent à la carte : le rose des flamants (`#F0836A`) et le vert sombre de la mangrove (`#2F5A34`, L* 34, le plus profond de la palette), qui font ressortir la route grise et l'eau de lagune sans toucher au sable de la plage suivante.
 
 **Alternative écartée** : un tunnel de verdure (selva) sous canopée, refusé parce qu'il garde l'effet « couvert, étroit » du lobby et se confond avec la route de garrigue de la section 5.
+
+---
+
+# Rapport V2 (METHODE-NOUVELLE-CARTE.md, section 5)
+
+Références de niveau : **canal** (bord d'eau de jour) et **paris** (ville dense). Captures : `captures/` (ignoré par git) : `v1/`, `ref-canal/`, `ref-paris/`, `sec-r1` à `sec-r4` (boucle par secteur), `final/` et `final2/` (tours complets `pas=5`).
+
+## Retours de l'auteur, point par point
+
+| Retour | Fait | Comment |
+|---|---|---|
+| Trop clair, couleurs confondues | oui | Ciel plus profond, `hemi` 0,72 → 0,5, `sun` 0,85 → 0,78, rebond du sol assombri, `bloom` 0,04 → 0,03. Valeurs séparées dans les textures : sable dur de la piste sombre (`#7a6a4c`), sable sec moyen-clair (`#cab890`), mer en trois bandes (aigue-marine, turquoise, bleu profond), lagune vert-gris mat (`#3e7f76`), végétation olive et vert sombre, façades saturées. Histogramme : V1 7 images brûlées sur 12 (plus de 5 % au-dessus de 245), luminance moyenne 143 ; V2 0 sur 12, moyenne 104. Écart route / bas-côté : V1 médiane 31, V2 42 à 48 (canal 29, paris 75). |
+| Plage roulable large, `large`, `place`, `surf` | oui | `large: [[45, 2, 28]]` : 56 m de sable roulable sur toute la ligne droite. `place` déplacée du cénote vers la plage : cercle de 60 m de rayon en (300, 22) entre les palapas, sa pile est la tour de maître-nageur. `surf` : sable dur `mouille` 0,35 au milieu, sable mou (`terre`) au-delà. Limites : corde, bouées, drapeaux de plage, liseré de sable mouillé au bord du sable dur. |
+| Remplacer le lobby couvert | oui | Chaussée sur une lagune de mangrove (fiche 7 et « Pourquoi ce remplacement ») : palétuviers rouges, flamants, aigrettes, tour d'observation et ponton, kayaks, pont à garde-corps. |
+| Vraie cénote souterraine | oui | Le tunnel couvre toute la boucle sud (`tun: [26, 35]`, 490 m, descente à -5 m) sous un tertre de calcaire et de selva. Voûte et parois de calcaire posées par-dessus celles du moteur (elles cachent ses luminaires), stalactites partout et en grappes contre les parois, stalagmites, eau turquoise au pied des parois, cordes de balisage, lampes de plongeurs, huit puits de lumière (trou clair, racines qui pendent, rayon en volume, tache de soleil sur le sol et sur l'eau) ; les trous se retrouvent sur le dessus du tertre. Sources : Samula, X'keken, Suytun, Dos Ojos, Gran Cenote, Choo-Ha, Ik Kil (fiche 6). |
+| Détail partout | oui | Voir le tableau de densité. Ajouts : laisse de sargasses, lanchas, baigneurs, Cozumel et son ferry à l'horizon, lettres « PLAYA 307 », clubs de plage ; pélicans, pêcheurs, chevrons sur le muelle ; tinacos, second rang de façades, balcons, enseignes en drapeau, vélos, mototaxis, câbles, bougainvilliers ; poutres, bâches, hamacs, sombreros, caisses de fruits, piñatas au marché ; broussaille dense, agaves, accotement de gravier, bornes, panneaux, étal de noix de coco en garrigue ; guichet et panneau du cénote. |
+
+
+## Densité par vingtième (profil `banc-rapide --profil`, passes de dessin / milliers de sommets par image)
+
+| 1/20 | lieu | V1 passes / k sommets | V2 passes / k sommets | canal | paris | médiane réf. (k sommets) |
+|---|---|---|---|---|---|---|
+| 1 | plage | 126 / 186 | 181 / 384 | 160 / 455 | 203 / 296 | 376 |
+| 2 | plage | 124 / 187 | 172 / 356 | 145 / 453 | 186 / 290 | 372 |
+| 3 | plage / muelle | 112 / 178 | 147 / 333 | 140 / 426 | 176 / 294 | 360 |
+| 4 | muelle | 99 / 173 | 126 / 304 | 136 / 406 | 139 / 283 | 345 |
+| 5 | muelle (épingle) | 134 / 185 | 195 / 426 | 136 / 414 | 135 / 256 | 335 |
+| 6 | rue | 104 / 177 | 133 / 300 | 126 / 367 | 147 / 256 | 312 |
+| 7 | rue | 121 / 187 | 170 / 364 | 125 / 371 | 125 / 248 | 310 |
+| 8 | rue / marché | 106 / 179 | 158 / 360 | 112 / 319 | 114 / 249 | 284 |
+| 9 | marché / garrigue | 93 / 176 | 145 / 347 | 102 / 296 | 140 / 246 | 271 |
+| 10 | garrigue | 127 / 184 | 178 / 452 | 164 / 471 | 189 / 285 | 378 |
+| 11 | garrigue / bouche | 128 / 181 | 182 / 463 | 176 / 493 | 165 / 275 | 384 |
+| 12 | bouche / grotte | 94 / 175 | 132 / 369 | 170 / 462 | 138 / 256 | 359 |
+| 13 | grotte | 121 / 183 | 162 / 456 | 162 / 431 | 174 / 275 | 353 |
+| 14 | grotte | 144 / 187 | 190 / 477 | 160 / 421 | 192 / 287 | 354 |
+| 15 | grotte | 122 / 184 | 161 / 453 | 153 / 404 | 182 / 292 | 348 |
+| 16 | grotte / lagune | 108 / 178 | 144 / 424 | 148 / 373 | 161 / 274 | 324 |
+| 17 | lagune | 119 / 179 | 170 / 449 | 131 / 338 | 142 / 265 | 302 |
+| 18 | lagune | 113 / 179 | 158 / 408 | 111 / 303 | 101 / 243 | 273 |
+| 19 | lagune | 111 / 182 | 152 / 392 | 124 / 343 | 121 / 260 | 302 |
+| 20 | plage | 134 / 187 | 189 / 386 | 174 / 500 | 205 / 288 | 394 |
+
+Vingtièmes sous la moitié de la médiane des références (sommets) : V1 6, V2 0.
+Le profil ne compte pas les objets par vingtième. Le critère utilisé est donc celui des sommets : un vingtième est vide sous la moitié de la médiane des références. V1 en avait 6 sur 20, V2 n'en a aucun ; aucun relecteur n'a vu de passage « route, mur et ciel ».
+
+## Revue finale (tour complet `pas=5`, deux relecteurs Sonnet séparés)
+
+- **Directeur artistique : 7/10** (6,5 au premier passage, puis corrections). Encore sous les références : rayons de la grotte trop discrets, sans pied cyan sur l'eau noire, et racines peu visibles ; marché qui se lit encore comme une rue ; broussaille de garrigue en volumes lisses ; arche du cénote anonyme ; flamants petits ; moitié mer des plans de plage peu remplie.
+- **Joueur testeur : 7/10** (6,5 au premier passage). Aucun passage vide. Reste : drapeaux de limite de la plage peu visibles (la limite se lit surtout par la teinte du sable), rien ne défile près de la route sur la plage (choix voulu : bande libre de 56 m), un seul chevron visible dans l'épingle, sol clair en bas d'image dans la grotte, lampadaire qui gêne à gauche sur la lagune.
+
+Notes de la boucle par secteur (Densité / Fidélité / Lisibilité / Lumière ; tour 1 → tour 3, critique Sonnet) : plage 4/6/7/7 → 5/6/7/6 ; muelle 6/7/7/8 → 7/7/7/8 ; rue 7/7/5/6 → 7/7/7/6 ; marché 5/6/6/5 → 5/5/6/5 ; garrigue 4/6/5/6 → 5/5/6/6 ; entrée du cénote 2/3/4/3 → 5/5/6/4 ; grotte 4/5/6/5 → 7/6/7/7 ; lagune 3/3/7/7 → 6/6/7/6. Quatre tours de boucle faits, la limite de la méthode : **plage, marché, garrigue, entrée du cénote et lagune n'ont pas atteint 7 sur chaque critère de la grille secteur**. La revue finale (7/10 des deux côtés) est faite après un cinquième passage de corrections sur leurs points.
+
+## Temps d'image
+
+Machine partagée (40 à 65 % de charge) : aucune carte ne tient la référence de 2 ms pendant les mesures, canal et paris compris. Mesures côte à côte, même charge : plage V2 **3,75 / 4,16 ms**, canal 5,17 / 3,91 ms, paris 4,58 / 4,18 ms. V1 : 2,89 / 2,60 ms à 50 % de charge.
+Passes de dessin : moyenne 160 par image (V1 117, canal environ 150, paris environ 170), pic **312 à 315** au-dessus du budget de 300 (V1 237 à 255, canal 268 à 281, paris 351 à 377). Le pic vient de la passe de reflets (120 passes). Sommets : 330 k par image (V1 147 k). Les petits lots ont été regroupés (62 → 46 instances), l'ombre portée est réservée aux gros volumes, et les racines des palétuviers à plus de 60 m de la route ont été retirées (1,7 M de sommets en trop).
+
+## Tests
+
+`node test.js` et `node test-cartes.js` verts. Trace or refaite (`node outils/traces-or.js plage` : 41,1 s, seuil 42,9 s) ; la place passe ses tests (traversée, pile, retour sur la piste).
+
+## Pas vérifié
+
+- Le mouvement : aucune capture `pas=2` n'a été relue. Clignotement, objets qui sautent ou ferry : pas vus en mouvement.
+- Les captures ont été lues en 480 × 270 par les relecteurs : les détails fins (racines, flamants, drapeaux) sont jugés au mieux.
+- Le temps d'image au calme : toutes les mesures ont été faites entre 40 et 65 % de charge machine.
+- La conduite libre sur la plage et dans la place, à la main : seuls les tests et le pilote automatique l'ont parcourue.
+- L'écran partagé (`--joueurs=2`).
+
+## Ce qui demanderait du code moteur (hors périmètre, non fait)
+
+- `tun` multiple ou une largeur de tunnel variable : la grotte fait la largeur de la route (2 × W) entre les parois du moteur. Une grande salle de cénote demanderait des parois à `s.w`, et un plafond plus haut que 8 m (`ribbon` du tunnel dans game.js).
+- Masquer les luminaires et les portails du tunnel par carte (`th.tun.sans: ['luminaires', 'portails']`) : aujourd'hui le décor les cache sous sa propre voûte et derrière des rochers.
+- Une surface « eau peu profonde » distincte du sable mou (`SURF`) : la place et la plage large partagent `surf.large: 'terre'`.
+- Le budget de 300 passes au pic : la passe de reflets redessine 120 objets ; un drapeau pour exclure le décor lointain des reflets (`userData.sansReflet`) le ferait passer sous 300.

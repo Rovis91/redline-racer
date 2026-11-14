@@ -10,7 +10,7 @@
     }, 6],
     // sable dur et humide du milieu de la plage (la piste) : plus foncé, lissé, traces de pneus le long, laisse de coquillages
     sableDur: () => [64, 256, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#93805c', 0, 0, 64, 256); grain(g, o, 1400, ['#857250', '#a08c68', '#7a6848'], 64, 256);
+      const { R, alea, voile } = o; R(g, '#7a6a4c', 0, 0, 64, 256); grain(g, o, 1400, ['#6e5e42', '#86765a', '#62543a'], 64, 256);
       voile(g, 0.3, () => { for (const x of [14, 22, 40, 49]) for (let y = 0; y < 256; y += 2) R(g, '#a8966c', x + (Math.sin(y * 0.05 + x) * 2 | 0), y, 3, 2); }); // ornières
       voile(g, 0.25, () => { for (let i = 0; i < 12; i++) R(g, '#fff4dc', alea() * 64 | 0, alea() * 256 | 0, 6 + (alea() * 14 | 0), 2); }); // reflets de l'eau restée
       for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#fff8f0' : '#e8a890', alea() * 64 | 0, alea() * 256 | 0, 1, 1); // coquillages
@@ -165,9 +165,9 @@
       voile(g, 0.3, () => { for (let i = 0; i < 12; i++) R(g, '#0a3a44', alea() * 60 | 0, alea() * 24 | 0, 6, 3); }); // roches immergées
     }],
     // racines qui pendent par le trou du plafond (fiche 6, Samula) : brins bruns et beiges, transparents entre deux ; le haut de la texture est le haut
-    racines: () => [32, 128, (g, o) => {
+    racines: () => [12, 128, (g, o) => {
       const { R, alea } = o;
-      for (let i = 0; i < 22; i++) { const x = alea() * 32, l = 50 + alea() * 78 | 0, c = ['#6a4a2a', '#8a6a44', '#c4a878', '#4a3420'][alea() * 4 | 0]; for (let y = 0; y < l; y++) R(g, c, x + Math.sin(y * 0.07 + i) * 2 | 0, y, alea() < 0.2 ? 2 : 1, 1); }
+      for (let i = 0; i < 22; i++) { const x = alea() * 12, l = 50 + alea() * 78 | 0, c = ['#6a4a2a', '#8a6a44', '#c4a878', '#4a3420'][alea() * 4 | 0]; for (let y = 0; y < l; y++) R(g, c, x + Math.sin(y * 0.07 + i) * 2 | 0, y, alea() < 0.2 ? 2 : 1, 1); }
     }],
     // rayon de lumière en volume (cône ouvert) : blanc chaud en haut, qui s'efface vers le bas, stries verticales (rendu en additif)
     rayonCone: () => [32, 64, (g) => {

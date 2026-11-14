@@ -502,7 +502,7 @@
         astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 200 }, hemi: [0xa8d0ee, 0x6a5a3e, 0.5], sun: [0xfff0d0, 0.78], phares: 0, bloom: 0.03, scan: 0, chaleur: 0.35,
         murH: 0, route: ['#5e5a52', '#6a665c', '#e8e0c8', '#f2c850', '#5e5a52', '#5e5a52', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xff3d7f, 0x1fb5a8, '#fff4e0'], // route de calcaire ; le décor repeint la plage, le muelle et la rue par-dessus
         tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], plafond: ['#3a3224', '#3a3224', '#3a3224', '#2a2418'],
-          fog: 0x0e3a3c, portail: 0x5a5040, neons: [0x40d8c0, 0xffcf8a], coque: 20, eclat: 1.15 }, // grotte du cénote : le décor pose sa voûte et ses parois par-dessus ; neons = la lumière des reflets de l'eau (turquoise) et des puits (chaude)
+          fog: 0x0e3a3c, portail: 0x5a5040, neons: [0x40d8c0, 0xffcf8a], coque: 20 }, // grotte du cénote : le décor pose sa voûte et ses parois par-dessus ; neons = la lumière des reflets de l'eau (turquoise) et des puits (chaude)
         hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', fond: 'rgba(10,70,90,.88)', style: 'panneau', split: 0, jp: null, sur: [null, 'RIVIERA MAYA · MIDI'], titre: ['PLAYA', '307'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
