@@ -174,8 +174,16 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
 - **Cônes et poubelles** : 3 objets à l'entrée de 14 virages, côté extérieur. Les poubelles ne sont posées qu'en ville (ville, paris, canal, perse). Un InstancedMesh par sorte ; ils volent au contact d'une voiture, qui n'en sait rien (fantômes et réseau intacts).
 - **Néons qui cassent** : pas faits, car ils sont fondus dans le décor de chaque carte. Il faudrait que chaque décor pose ses enseignes cassables à part.
 
+**Phase 3 (faite)** : saleté et huile dans game.js, section « saleté et huile ». Capture : `docs/avant-apres/casse/jeu-salete.jpg` (terre à 20 s, 1 min, 1 min 40, puis lavage dans le gué).
+- **Saleté** : chaque voiture a son niveau et sa couleur, et le shader de la saleté se greffe sur celui d'`eclaire` de chaque livrée.
+  - Vitesses : terre 0,025/s, neige 0,02/s, poussière du bitume sec 0,002/s. Plus vite et en travers, moins quand la caisse est déjà sale.
+  - Lavage : la pluie et le mouillé à 0,06/s, le gué à 0,5/s.
+  - Sous la saleté, la caisse perd son reflet (`specularStrength`).
+  - Sur la terre, la voiture est couverte au bout d'un tour et demi environ.
+- **Genre de surface** (`genre`) : neige si elle est glissante et roulante, terre si elle est roulante et peu glissante. Le fondu entre la terre et le bitume passait pour de la neige, dans la saleté comme dans les traces : corrigé.
+- **Huile** : au-delà de 0,6 d'usure à l'avant, des gouttes rondes et brillantes, sous le moteur, pour toutes les voitures. Un anneau de 1 200 gouttes, en un maillage.
+
 **Reste à faire** :
-- phase 3 : la saleté (injectée dans la livrée) et l'huile ;
 - phase 4 : le mode CASSE (menu, effets dans sim.js pour le réseau, score place + takedowns, IA qui cherche le contact) ;
 - capot et portières, qui demandent une livrée par flanc.
 

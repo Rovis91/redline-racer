@@ -633,7 +633,8 @@
   // traces au sol : un ruban par roue arrière, un point tous les GD mètres au plus, gardé toute la course (les GN derniers points de chaque roue)
   // TR : ce que chaque surface garde (docs/SPEC-CASSE.md) : gomme noire sur le bitume sec, sillons sur la terre et ornières dans la neige (même en roulant), rien sur la glace ni le mouillé
   const TR = { sec: { c: [0.02, 0.02, 0.025], a: 0.7, roule: 0, w: 1 }, terre: { c: [0.2, 0.12, 0.06], a: 0.8, roule: 0.38, w: 1.25 }, neige: { c: [0.55, 0.6, 0.7], a: 0.8, roule: 0.4, w: 1.35 } };
-  const trSol = q => q.vir >= 0.4 || q.aq > 0.05 ? null : q.roul >= 0.35 ? TR.terre : q.roul >= 0.15 ? TR.neige : TR.sec; // (la bruine de la ville, à 30 % du mouillé, garde la gomme)
+  const genre = q => q.vir >= 0.2 && q.vir < 0.4 && q.roul > 0.1 ? 'neige' : q.roul >= 0.2 && q.vir < 0.2 ? 'terre' : 'sec'; // neige : glissante et roulante ; terre : roulante, peu glissante (un fondu terre-bitume reste de la terre, pas de la neige)
+  const trSol = q => q.vir >= 0.4 || q.aq > 0.05 ? null : TR[genre(q)]; // rien sur la glace ni le mouillé (la bruine de la ville, à 30 % du mouillé, garde la gomme)
   const GN = 500, GD = 0.8, gmI = [], gmMat = new THREE.MeshBasicMaterial({ color: 0xffffff, vertexColors: true, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); // DoubleSide : les rubans tournent leur face vers le bas (gauche, droite, puis le point d'avant) ; sans lui, on ne les voyait jamais
   for (let l = 0; l < 2; l++) for (let k = 0; k < GN - 1; k++) { const a = (l * GN + k) * 2; gmI.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
 
@@ -764,9 +765,9 @@
   const opps = OPP.map(([, col]) => {
     const g = carG.clone(), m = reflete(livree(new THREE.Color(col).getHex())), b = brakeMat.clone(), u = { feu: b, roue: roueMat.clone(), sol: solMat.clone() }; m.emissive.setRGB(1, 1, 1); m.emissiveMap = m.map; m.emissiveIntensity = 0.3; // un peu lumineuse : lisible de nuit et de loin
     g.traverse(o => { if (o.material === carMat) o.material = m; else if (o.material === brakeMat) o.material = b; else if (o.material === roueMat) o.material = u.roue; else if (o.material === solMat) o.material = u.sol; });
-    g.visible = false; g.userData.y = 0; Object.assign(g.userData, u, { col: new THREE.Color(col) }); scene.add(g); return g;
+    g.visible = false; g.userData.y = 0; Object.assign(g.userData, u, { col: new THREE.Color(col), liv: m }); scene.add(g); return g;
   });
-  Object.assign(carG.userData, { feu: brakeMat, roue: roueMat, sol: solMat, col: new THREE.Color(L.col) }); // après les copies : Object3D.clone recopie userData en JSON
+  Object.assign(carG.userData, { feu: brakeMat, roue: roueMat, sol: solMat, col: new THREE.Color(L.col), liv: carMat }); // après les copies : Object3D.clone recopie userData en JSON
   // freinage d'une voiture (fr : force du frein, 0 à 1) sur son modèle g : feu stop, lueur au sol, et disques qui chauffent aux gros freinages (≈ 1,5 s à fond depuis la pointe) puis refroidissent en ~3 s
   const freins = (g, fr, sp, dt) => { const u = g.userData, h = u.ch = clamp((u.ch || 0) + (fr && sp > 12 ? fr * sp / TOP * 0.9 : -0.35) * dt, 0, 1); u.fr = fr;
     u.feu.color.setHex(fr ? 0xff7080 : 0x8a1020); u.sol.opacity = fr * (0.25 + 0.5 * Math.min(1, NUIT)); u.roue.emissive.setRGB(1.6 * h * h, 0.55 * h ** 3, 0.12 * h ** 4); }; // rouge sombre, puis orange quand ça cogne
@@ -834,7 +835,7 @@
       if (D.fis) { D.liv.map.image.getContext('2d').putImageData(D.fis, 0, 0); D.liv.map.needsUpdate = true; D.fis = null; } }
     for (const d of DEB) { scene.remove(d.m); d.m.geometry.dispose(); } DEB.length = 0;
     for (const vu of VUES) vu.hu.gR[0].length = vu.hu.gR[1].length = vu.hu.gOn[0] = vu.hu.gOn[1] = 0;
-    decorRaz();
+    decorRaz(); huileRaz();
   }
   // un choc sur le modèle g : (lx, lz) = d'où il vient, unitaire, dans le repère de la voiture (x vers l'avant) ; f = sa vitesse normale (m/s) ; (vx, vz) = vitesse de la voiture, que gardent les pièces qui tombent
   function dgChoc(g, lx, lz, f, vx = 0, vz = 0, type = 'mur') {
@@ -965,7 +966,7 @@
   function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg]) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
   function decorFrame(dt) {
     const cars = race ? race.cars : VUES.map(v => v.car), up = new V3(), dq = new THREE.Quaternion();
-    for (const c of cars) { const sp = Math.hypot(c.vx, c.vz); if (c.out || sp < 3) continue;
+    for (const c of cars) { if (!c.out) { saleFrame(c, dt); huileFrame(c, dt); } const sp = Math.hypot(c.vx, c.vz); if (c.out || sp < 3) continue;
       if (c.rub) marque(c, Math.sign(c.d) || 1, 0); // le long d'un mur : une traînée de peinture (les chocs francs passent par murChoc, à chaque pas)
       const fx = Math.cos(c.th), fz = Math.sin(c.th);
       for (const o of OBJ) for (const off of [1.3, -1.3]) { const dx = o.p.x - (c.x + fx * off), dz = o.p.z - (c.z + fz * off), d = Math.hypot(dx, dz); if (d > 1 + o.S.r || o.p.y > c.y + 1.4 || !(o.dort || o.v.length() < sp * 0.8)) continue;
@@ -977,6 +978,41 @@
       objEcrit(o); }
     // shortcut: un objet dort à la hauteur de sa place de départ et peut traverser le mur ; projeté loin dans une pente, il flotte ou s'enfonce un peu
   }
+
+  // ---------- saleté et huile (docs/SPEC-CASSE.md, prototype 3) : visuel ----------
+  // Saleté : chaque voiture a son niveau (0 à 1) et sa couleur, mêlée au fil des surfaces (terre : boue, neige : neige, bitume sec : poussière lente) ; la pluie, le mouillé et le gué la lavent.
+  // Dans la livrée (salePeint, après eclaire) : chaque cellule de la caisse a son seuil, éclaboussures fines puis plaques, plus vite en bas qu'au toit ; mate et sans reflet sous la saleté.
+  const SALES = { terre: [0.42, 0.28, 0.15, 0.025], neige: [0.92, 0.94, 0.97, 0.02], sec: [0.45, 0.43, 0.4, 0.002] }, TMP = new THREE.Color();
+  const saleDe = g => g.userData.sale || (g.userData.sale = { n: 0, c: new THREE.Color(0.45, 0.43, 0.4), u: { uSale: { value: 0 }, uSaleH: { value: VO.plan.bas }, uSaleC: { value: null } } });
+  function saleFrame(c, dt) { const g = modele(c), sl = saleDe(g), sp = Math.hypot(c.vx, c.vz); if (sp < 3 || c.air) return;
+    const q = T.surf[c.idx], k = Math.min(1, sp / 20) * (1 + Math.min(0.5, Math.abs(c.slide || 0))), lave = q.aq > 0.02 || pluieAt(c.idx) > 0; // plus vite et en travers, plus elle en prend
+    if (lave) sl.n = Math.max(0, sl.n - (q.aq > 0.12 ? 0.5 : 0.06) * k * dt); // le gué (beaucoup d'eau) lave d'un coup, la pluie et le mouillé doucement
+    else { const t = SALES[genre(q)], a = t[3] * k * dt * (1 - sl.n * 0.5); sl.c.lerp(TMP.setRGB(t[0], t[1], t[2]), a / (sl.n + a)); sl.n = Math.min(1, sl.n + a); }
+    sl.u.uSale.value = sl.n; }
+  const SALE_F = `float sHb = clamp((vSaleP.y - uSaleH) / 1.15, 0.0, 1.0), sL = uSale * (1.7 - 1.4 * sHb); // niveau local : le bas de caisse 1,7 fois plus vite, le toit 0,3 fois
+float sN = fract(sin(dot(floor(vSaleP * 7.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453), sN2 = fract(sin(dot(floor(vSaleP * 23.0), vec3(39.3, 11.1, 83.7))) * 43758.5453);
+float saleM = max(step(sN2, sL * 0.9) * 0.55, smoothstep(sN - 0.12, sN + 0.12, sL * 1.1 - 0.25)) * (0.55 + 0.45 * clamp(sL, 0.0, 1.0));
+diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
+  function salePeint(g) { const m = g.userData.liv; if (!m || m.userData.sale) return; m.userData.sale = 1; const sl = saleDe(g), f = m.onBeforeCompile, k = m.customProgramCacheKey; sl.u.uSaleC.value = sl.c;
+    m.onBeforeCompile = sh => { f && f(sh); Object.assign(sh.uniforms, sl.u);
+      sh.vertexShader = 'varying vec3 vSaleP;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\nvSaleP = position;');
+      sh.fragmentShader = 'varying vec3 vSaleP;\nuniform float uSale, uSaleH;\nuniform vec3 uSaleC;\n' + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>\n' + SALE_F)
+        .replace('#include <specularmap_fragment>', '#include <specularmap_fragment>\nspecularStrength *= 1.0 - saleM;'); }; // le reflet de la caisse (envMap) passe par specularStrength
+    m.customProgramCacheKey = () => (k ? k() : '') + 'sale'; m.needsUpdate = true; }
+  // huile : au-delà de 0,6 d'usure à l'avant, le moteur goutte ; des gouttes rondes, sombres et brillantes, de plus en plus serrées ; un anneau de HN, un maillage
+  const HN = 1200, hP = new Float32Array(HN * 12), hI = new Uint32Array(HN * 6), hGeo = new THREE.BufferGeometry(), hD = new WeakMap(); let hi = 0;
+  for (let k = 0; k < HN; k++) hI.set([k * 4, k * 4 + 1, k * 4 + 2, k * 4 + 1, k * 4 + 3, k * 4 + 2], k * 6);
+  hGeo.setAttribute('position', new THREE.BufferAttribute(hP, 3)); hGeo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(HN * 12).map((_, i) => i % 3 === 1 ? 1 : 0), 3));
+  hGeo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(HN * 8).map((_, i) => [0, 0, 0, 1, 1, 0, 1, 1][i % 8]), 2)); hGeo.setIndex(new THREE.BufferAttribute(hI, 1));
+  const goutte = tex(32, 32, g => { const d = g.createRadialGradient(16, 16, 2, 16, 16, 15); d.addColorStop(0, '#fff'); d.addColorStop(0.6, '#fff'); d.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = d; g.fillRect(0, 0, 32, 32); });
+  const hMesh = new THREE.Mesh(hGeo, gloss(new THREE.MeshPhongMaterial({ color: 0x060504, shininess: 90, transparent: true, opacity: 0.85, alphaMap: goutte, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 1));
+  hMesh.frustumCulled = false; hMesh.userData.dyn = 1; scene.add(hMesh);
+  function huileFrame(c, dt) { const z = modele(c).userData.dg.z[0]; if (z < 0.6 || c.air) return; const sp = Math.hypot(c.vx, c.vz), dd = (hD.get(c) || 0) + sp * dt + dt * 0.4, pas = Math.max(0.35, 1.6 - (z - 0.6) * 4); // à l'arrêt aussi, plus lentement
+    if (dd < pas) { hD.set(c, dd); return; } hD.set(c, 0);
+    const fx = Math.cos(c.th), fz = Math.sin(c.th), xm = VO.roues[1] * 0.6, x = c.x + fx * xm - fz * jit(0.4), zz = c.z + fz * xm + fx * jit(0.4), y = c.y + 0.02, w = 0.06 + Math.random() * 0.08 + (z - 0.6) * 0.15, a = Math.random() * 3.14, ca = Math.cos(a) * w, sa = Math.sin(a) * w, l = 1 + Math.random() * 0.8;
+    hP.set([x - ca * l - sa, y, zz - sa * l + ca, x - ca * l + sa, y, zz - sa * l - ca, x + ca * l - sa, y, zz + sa * l + ca, x + ca * l + sa, y, zz + sa * l - ca], hi * 12);
+    hGeo.attributes.position.addUpdateRange(hi * 12, 12); hGeo.attributes.position.needsUpdate = true; hi = (hi + 1) % HN; }
+  const huileRaz = () => { hP.fill(0); hGeo.attributes.position.clearUpdateRanges(); hGeo.attributes.position.needsUpdate = true; for (const g of [carG, ...opps]) { const sl = saleDe(g); sl.n = 0; sl.u.uSale.value = 0; } };
 
   fond && await souffle();
   // ---------- fusion du décor fixe : une passe de dessin par matière, au lieu d'une par objet ----------
@@ -1046,6 +1082,7 @@
     scene.traverse(o => { if (o.isLight) { o.layers.enable(OMBD); o.layers.enable(OMBI); } else if (o.castShadow && !fixe(o)) o.layers.set(o.isInstancedMesh ? OMBI : OMBD); }); } // les lumières aussi : sans elles, la passe des ombres mobiles changeait l'éclairage de three, qui recompilait alors la clé de chaque matière à chaque image
   const bouge = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn) return true; return false; };
   scene.traverse(o => { if (o.isInstancedMesh) { if (bouge(o)) o.frustumCulled = false; else o.computeBoundingSphere(); } if (o.material) eclaire(o.material); }); for (const sc of [scene, repliScene]) sc.traverse(o => { for (const m of [].concat(o.material || [])) m.forceSinglePass = true; }); // r149+ : une transparente double face se dessinait en deux passes (éclat doublé en additif) ; le décor posé en nombre est écarté hors champ sur l'étendue de ses instances (sphère calculée une fois) ; ce qui bouge reste toujours dessiné
+  for (const g of [carG, ...opps]) salePeint(g); // la saleté se greffe sur le shader d'eclaire de chaque livrée
 
   // ---------- audio : voir audio.js (window.SON) ; ici seulement ce que le jeu et le HUD lisent ----------
   let radioT = 0;
@@ -1923,7 +1960,7 @@
     const i0 = CARTES.indexOf(M), ordre = [...new Set(CARTES.flatMap((_, k) => [CARTES[(i0 + k) % CARTES.length], CARTES[(i0 - k + CARTES.length * 2) % CARTES.length]]))];
     window.__prep = (async () => { for (const c of ordre) { await construit(c); await souffle(); } })();
   };
-  const api = { get decor() { return { dz: MDZ, obj: OBJ, marques: mi, deb: DEB.length, tord: murTord, marque }; }, veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
+  const api = { get decor() { return { dz: MDZ, obj: OBJ, marques: mi, deb: DEB.length, tord: murTord, marque, huile: hi, sale: [carG, ...opps].map(g => +saleDe(g).n.toFixed(2)) }; }, veille, reprend, get enl() { return enl; }, get demo() { return demo; }, get inactif() { return inactif; }, frame, start, fin, libere, joueurs, places: PLACES, get ins() { return ins; }, get com() { return COM; }, carte: id => { cible = CARTES.find(m => m.id === id); changeCarte(); }, get tnFin() { return ses.tnFin; }, get defi() { return { DEFI, defiErr, dernier: ses.dernier }; }, get fantome() { return { nom: nomF(), visible: ghostM.visible, couleur: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VUES[0].cam, vues: VUES, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get accueil() { return accueil; }, get car() { return VUES[0].moi; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SON.ac; }, get out() { return SON.out; }, get smp() { return SON.smp; }, degats: x => { for (const g of [carG, ...opps]) { const D = g.userData.dg; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dgChoc(g, a, b, 12); } } }; // instance de la carte (et prise de test, en window.__g quand elle est affichée) ; degats(x) : chaque zone de chaque voiture abîmée à x (captures)
   if (fond) { // première image de la carte d'avance, dans sa cible : shaders compilés et textures envoyées au GPU maintenant, pas au moment où elle s'affiche
     await souffle(); const vu = VUES[0], caches = [], tri = [];
     scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { tri.push(o); o.frustumCulled = false; } });
