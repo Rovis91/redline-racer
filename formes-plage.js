@@ -151,6 +151,11 @@
     poteauElec: () => [['beton', 0.3, 9, 0.3, 0, 4.5, 0], ['beton', 2.2, 0.14, 0.14, 0, 8.4, 0]],
     // banc de bois
     banc: () => [['bois', 1.8, 0.1, 0.5, 0, 0.45, 0], ['bois', 1.8, 0.5, 0.08, 0, 0.75, 0.24], ...paire(a => ['fer', 0.08, 0.45, 0.5, a * 0.8, 0.22, 0])],
+    // ceiba (REFS §5, selva du Quintana Roo) : fût droit à contreforts, branches horizontales, houppier plat en parasol fait de plateaux de feuillage étagés ; 14 m, à mettre à l'échelle. Zone feuille teintée
+    ceiba: () => [['tronc', 0.9, 9.4, 0.9, 0, 4.7, 0, null, 1], ['tronc', 1.7, 1.5, 1.7, 0, 0.75, 0], ...paire(a => ['tronc', 5.2, 0.34, 0.34, a * 2.3, 9.7, 0, [0, 0, a * 0.32]]), ...paire(a => ['tronc', 0.34, 0.34, 5.2, 0, 9.9, a * 2.3, [-a * 0.32, 0, 0]]),
+      ['feuille', 11, 1.3, 9, 0, 11.3, 0, [0, 0.3, 0], 1], ['feuille', 8, 1.1, 10, 1, 12.3, -0.5, [0, 1.1, 0], 1], ['feuille', 6, 1, 5, -1.5, 13.2, 1, [0, 0.6, 0]], ['feuille', 4, 1.5, 4, 5, 10.5, 2, [0, 0.4, 0.1]], ['feuille', 4, 1.4, 4.4, -5, 10.6, -2.5, [0, 0.9, -0.1]]],
+    // arbre de la selva basse (chicozapote, chacá) : deux fûts fins qui penchent, houppiers anguleux étagés, pas de boule ; 12 m. Zone feuille teintée
+    arbreSelva: () => [['tronc', 0.5, 7.2, 0.5, 0.4, 3.6, 0, [0, 0, -0.1], 1], ['tronc', 0.36, 6, 0.36, -0.8, 3, 0.5, [0.15, 0, 0.2]], ['feuille', 6, 3, 5.5, 0.5, 8.5, 0, [0, 0.4, 0.1], 1], ['feuille', 4.5, 2.6, 4, -1.9, 7, 1.2, [0.1, 1, 0], 1], ['feuille', 4, 2.4, 4.5, 1.5, 10.5, -0.8, [0, 0.8, -0.1]], ['feuille', 3, 2, 3, -0.5, 11.7, 0.6, [0, 0.2, 0]]],
     // palmes en cône à quatre pans (toit de kiosque, de bar, de manège) : rayon 1, hauteur 1, base à y = 0
     toit4: () => { const g = new THREE.ConeGeometry(1, 1, 4, 1, true); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return g; },
     // arbre de la selva : houppier en boule aplatie à facettes, plus large que le buisson
