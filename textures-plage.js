@@ -10,7 +10,7 @@
     }, 6],
     // sable dur et humide du milieu de la plage (la piste) : plus foncé, lissé, traces de pneus le long, laisse de coquillages
     sableDur: () => [64, 256, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#7a6a4c', 0, 0, 64, 256); grain(g, o, 1400, ['#6e5e42', '#86765a', '#62543a'], 64, 256);
+      const { R, alea, voile } = o; R(g, '#665638', 0, 0, 64, 256); grain(g, o, 1400, ['#5a4c30', '#726244', '#4e422a'], 64, 256);
       voile(g, 0.3, () => { for (const x of [14, 22, 40, 49]) for (let y = 0; y < 256; y += 2) R(g, '#a8966c', x + (Math.sin(y * 0.05 + x) * 2 | 0), y, 3, 2); }); // ornières
       voile(g, 0.25, () => { for (let i = 0; i < 12; i++) R(g, '#fff4dc', alea() * 64 | 0, alea() * 256 | 0, 6 + (alea() * 14 | 0), 2); }); // reflets de l'eau restée
       for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#fff8f0' : '#e8a890', alea() * 64 | 0, alea() * 256 | 0, 1, 1); // coquillages
@@ -188,6 +188,6 @@
     // auvents des façades : toile rayée de trois couleurs selon la hauteur (rouge, turquoise, jaune) : chaque façade en montre une bande, sans passe de dessin de plus
     toldoMulti: () => [32, 96, (g, o) => { const { R } = o; ['#e8402a', '#1f9a96', '#e8a800'].forEach((c, k) => { for (let x = 0; x < 32; x += 8) { R(g, '#fff4e0', x, k * 32, 4, 32); R(g, c, x + 4, k * 32, 4, 32); } }); }, 2],
     // colonne de lumière douce (cône ouvert) : même voile sur tout le tour, s'efface vers le bas, sans stries qui dessinent des arêtes (rendu en additif)
-    rayonDoux: () => [8, 64, (g) => { for (let y = 0; y < 64; y++) { g.fillStyle = 'rgba(255,240,200,' + ((1 - y / 64) ** 1.4 * 0.28).toFixed(3) + ')'; g.fillRect(0, y, 8, 1); } }],
+    rayonDoux: () => [8, 64, (g) => { for (let y = 0; y < 64; y++) { g.fillStyle = 'rgba(255,240,200,' + ((1 - y / 64) ** 1.2 * 0.4).toFixed(3) + ')'; g.fillRect(0, y, 8, 1); } }],
   });
 })();
