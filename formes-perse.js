@@ -66,6 +66,8 @@
     // REFS §12 : module d'arcades du bazar à ciel ouvert, 12 m : mur de brique peint de deux arcs, corniche, coupole basse derrière (bulbe en deux boîtes)
     // V2 : toit plat à rebord, plus de coupole en gradins (lue comme un merlon, REFS §12) : les coupoles du quartier sont des calottes à part
     arcade: () => [['brique', 12, 5.5, 1.2, 0, 2.75, 0.6, null, 1], ['faience', 12.2, 0.6, 1.4, 0, 5.8, 0.6], ['crue', 12, 7, 9, 0, 3.5, 5.6], ['crue', 12.3, 0.4, 9.3, 0, 7.2, 5.6], ...[-3, 3].flatMap(x => [['bois', 3, 1.3, 0.9, x, 6.4, 0.75], ['bois', 3.2, 0.15, 1.1, x, 7.1, 0.75]])], // balcons de bois à claustras à l'étage
+    // module de rue du bazar ouvert, 12 m, X le long de la route, Z vers l'arrière : boutiques en niches au rez-de-chaussée, bandeau de faïence, un étage de brique crue, toit plat à rebord. Toujours un étage et un toit (9,6 m)
+    arcadeBazar: () => [['boutiques', 12, 5, 9, 0, 2.5, 4.5, null, 1], ['faience', 12.1, 0.5, 9.1, 0, 5.25, 4.5], ['etage', 12, 3.6, 9, 0, 7.3, 4.5], ['toit', 12.4, 0.5, 9.4, 0, 9.35, 4.5]],
     // REFS §12, §16 : étal à auvent (X le long de la route) : comptoir, deux montants, toile rayée penchée vers la route, marchandises
     etalPerse: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
       ['marchandise', 3, 0.5, 1, 0, 1.25, 1.2]],
