@@ -435,7 +435,7 @@ Base : fin de série 2 (da1bce4, 8,06). Fusion de `claude/moteur-options-cartes-
 | Tracé et décor (10 %) | 8,25 | 8,5 | 8,25 | 8,25 | 8 | 8,25 |
 | **Pondéré** | **7,96** | **7,78** | **7,79** | 6,88 | 6,73 | 6,71 |
 | **Écart B − A** | +1,09 | +1,05 | +1,08 | | | |
-| Commit | d6f11f4 | (tour 2) | (tour 3) | | | |
+| Commit | d6f11f4 | 91c7850 | 9e621f4 | | | |
 
 - **Tour 1** : `th.tun.rayonsK 0.9`, `ambiant 0.7`, `th.oeil { tun 0.6, noir 0.5, clair 0.12 }`, `th.frole 1` ; chaussée de la lagune en S (pts 37 à 39 : R48 69° puis R65 32°) avec 1,5 m de relief avant le pont, saut gardé en ligne droite ; enrochement qui descend jusqu'à l'eau ; allée de la plage recalée (`captures/piles.js`) ; tour d'observation reculée (sa passerelle touchait la route). Trace or 45,77 s (seuil 49,35 s). −0,10 : dans le bruit.
 - **Tour 2** : brouillard de grotte éclairci (0x4a7c7a, le ciel vu par la sortie et les trous est la couleur de ce brouillard), trois bandes de topes avant le saut, chapelle blanche dans la garrigue, liseré de galets plus clair. −0,18 : annulé.
