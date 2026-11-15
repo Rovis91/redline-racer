@@ -2139,47 +2139,47 @@
         boiteL(ecrit('MUELLE 307', '#1478d8'), 6, 1.4, 0.2, x, 7.6, z + 9, Math.PI); }
 
       // --- secteur 3, la rue (fiche 3) : dalles claires, trottoirs, façades crépies de couleur à tinacos sur le toit, second rang plus haut ; papel picado ; étals, vélos, mototaxis, passants, fils électriques ---
-      const rue = tranche(13, 17, 0, 4), dalles = h.mat('dallesRue', { side: D, c: 0xc4907c, ...OFF }); { const [m0, mn] = tranche(17, 20, -4, 8); couvre(m0, mn, -W, W, dalles, 8); } // les dalles continuent sous la halle
-      couvre(rue[0], rue[1], -W, W, dalles, 8); for (const sd of [-1, 1]) h.ribbon(rue[0], rue[1], sd * W, 0.15, sd * (W + 3.5), 0.15, h.mat('dallesRue', { side: D }), 8);
+      const rue = tranche(13, 17, 0, 4), dalles = h.mat('dallesRue', { side: D, c: 0xc4907c, ...OFF }); { const [m0, mn] = tranche(17, 20, -4, 8); couvre(m0, mn, s => -s.w, s => s.w, dalles, 8); } // les dalles continuent sous la halle
+      couvre(rue[0], rue[1], s => -s.w, s => s.w, dalles, 8); for (const sd of [-1, 1]) h.ribbon(rue[0], rue[1], s => sd * s.w, 0.15, s => sd * (s.w + 3.5), 0.15, h.mat('dallesRue', { side: D }), 8);
       const etals = [], fils = [], fanions = [], motos = [], poteauxE = [];
-      const facades = ([i0, n], off, L, sy, rang2 = 1) => chaque([i0, n], Math.round(L / 2), s => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, off); if (ecart(x, z) > off - W - 1) { const hh = sy * (0.85 + rnd() * 0.45); fac.push([x, -0.05, z, versRoute(s, sd), L / 10, hh, 1, FACADES[rnd() * FACADES.length | 0]]);
-        const [tx, tz] = bord(s, sd, off + 3 + rnd() * 3); tinacos.push([tx + rnd() * 2, hh * 8 + 0.3, tz, 0, 1, 1, 1]);
-        if (rang2) { const [rx, rz] = bord(s, sd, off + 11); fac.push([rx, -0.05, rz, versRoute(s, sd), L / 10, hh * (1.2 + rnd() * 0.5), 1, FACADES[rnd() * FACADES.length | 0]]); } } } });
+      const facades = ([i0, n], off, L, sy, rang2 = 1) => chaque([i0, n], Math.round(L / 2), s => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, off + s.w - W); if (ecart(x, z) > off - W - 1) { const hh = sy * (0.85 + rnd() * 0.45); fac.push([x, -0.05, z, versRoute(s, sd), L / 10, hh, 1, FACADES[rnd() * FACADES.length | 0]]);
+        const [tx, tz] = bord(s, sd, off + s.w - W + 3 + rnd() * 3); tinacos.push([tx + rnd() * 2, hh * 8 + 0.3, tz, 0, 1, 1, 1]);
+        if (rang2) { const [rx, rz] = bord(s, sd, off + s.w - W + 11); fac.push([rx, -0.05, rz, versRoute(s, sd), L / 10, hh * (1.2 + rnd() * 0.5), 1, FACADES[rnd() * FACADES.length | 0]]); } } } });
       facades(rue, W + 3.6, 10, 1);
-      chaque(rue, 9, (s, i, k) => { const sd = (k / 9) % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 2.1); etals.push([x, 0.15, z, versRoute(s, sd), 1, 1, 1, PAPEL[(k / 9) % 5]]); });
-      chaque(rue, 5, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 1 + rnd() * 2.2); if (rnd() < 0.5) figurant(x, z, rnd() * 6.28, 0.12); }
-        if (k % 15 === 5) { const sd = (k / 15 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 0.9); velos.push([x, 0.12, z, Math.atan2(-s.tz, s.tx)]); }
-        if (k % 25 === 10) { const sd = (k / 25 | 0) % 2 ? -1 : 1, [x, z] = bord(s, sd, W + 1.4); motos.push([x, 0.12, z, Math.atan2(-s.tz, s.tx), 1, 1, 1, [0xe8402a, 0x1fb5a8, 0xffb100][k % 3]]); }
-        if (k % 20 === 0) { const [x, z] = bord(s, 1, W + 3.3); poteauxE.push([x, 0, z, 0, 1.6, 8.5, 1.6]); }
-        for (const sd of [-1, 1]) { if ((k / 5 + (sd > 0 ? 1 : 0)) % 2 === 0) { const [x, z] = bord(s, sd, W + 3.2); CUB.push([x, 4.6, z, Math.atan2(-s.tz, s.tx), 3.2, 0.9, 0.8, 0x1a1a1a]); } // balcons de fer
-          if (k % 15 === (sd > 0 ? 10 : 0)) { const [x, z] = bord(s, sd, W + 2.9); CUB.push([x, 3.6, z, versRoute(s, sd), 0.12, 0.9, 1.3, [0xf2c850, 0x3c9ce4, 0xe8402a][k % 3]]); } } }); // enseignes en drapeau
-      for (const i of [P(12) + 6, P(13) - 6, P(13)]) { const s = S[i], [x, z] = bord(s, -1, W + 1.2); boiteL(ecrit('>>', '#e8302a', '#ffffff', 32), 2.2, 1.5, 0.15, x, 1.8, z, enFace(S[P(12)])); POT.push([x, -0.05, z, 0, 1.2, 1.2, 1.2]); } // chevrons du coude
-      chaque(rue, 14, s => fils.push([s.x, 7.6, s.z, h.across(s) + 0.15, 2 * W + 8, 1, 1])); // câbles en travers
+      chaque(rue, 9, (s, i, k) => { const sd = (k / 9) % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w + 2.1); etals.push([x, 0.15, z, versRoute(s, sd), 1, 1, 1, PAPEL[(k / 9) % 5]]); });
+      chaque(rue, 5, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 1 + rnd() * 2.2); if (rnd() < 0.5) figurant(x, z, rnd() * 6.28, 0.12); }
+        if (k % 15 === 5) { const sd = (k / 15 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w + 0.9); velos.push([x, 0.12, z, Math.atan2(-s.tz, s.tx)]); }
+        if (k % 25 === 10) { const sd = (k / 25 | 0) % 2 ? -1 : 1, [x, z] = bord(s, sd, s.w + 1.4); motos.push([x, 0.12, z, Math.atan2(-s.tz, s.tx), 1, 1, 1, [0xe8402a, 0x1fb5a8, 0xffb100][k % 3]]); }
+        if (k % 20 === 0) { const [x, z] = bord(s, 1, s.w + 3.3); poteauxE.push([x, 0, z, 0, 1.6, 8.5, 1.6]); }
+        for (const sd of [-1, 1]) { if ((k / 5 + (sd > 0 ? 1 : 0)) % 2 === 0) { const [x, z] = bord(s, sd, s.w + 3.2); CUB.push([x, 4.6, z, Math.atan2(-s.tz, s.tx), 3.2, 0.9, 0.8, 0x1a1a1a]); } // balcons de fer
+          if (k % 15 === (sd > 0 ? 10 : 0)) { const [x, z] = bord(s, sd, s.w + 2.9); CUB.push([x, 3.6, z, versRoute(s, sd), 0.12, 0.9, 1.3, [0xf2c850, 0x3c9ce4, 0xe8402a][k % 3]]); } } }); // enseignes en drapeau
+      for (const i of [P(12) + 6, P(13) - 6, P(13)]) { const s = S[i], [x, z] = bord(s, -1, s.w + 1.2); boiteL(ecrit('>>', '#e8302a', '#ffffff', 32), 2.2, 1.5, 0.15, x, 1.8, z, enFace(S[P(12)])); POT.push([x, -0.05, z, 0, 1.2, 1.2, 1.2]); } // chevrons du coude
+      chaque(rue, 14, s => fils.push([s.x, 7.6, s.z, h.across(s) + 0.15, 2 * s.w + 8, 1, 1])); // câbles en travers
       chaque([rue[0] + 3, rue[1] - 3], 6, (s, i, k) => { // un fil tous les 12 m, une quarantaine de fanions qui pendent en chaînette
-        const half = W + 3.5; fils.push([s.x, 6.6, s.z, h.across(s), 2 * half, 1, 1]);
+        const half = s.w + 3.5; fils.push([s.x, 6.6, s.z, h.across(s), 2 * half, 1, 1]);
         for (let u = -half + 0.3, j = 0; u < half; u += 0.55, j++) { const [x, z] = bord(s, 1, u); fanions.push([x, 6.55 - 0.7 * (1 - (u / half) ** 2), z, enFace(s), 1, 1, 1, PAPEL[(j + k) % 5]]); } });
-      chaque(rue, 40, s => { const [x, z] = bord(s, 1, W + 3.3); fils.push([x, 8.2, z, Math.atan2(-s.tz, s.tx), 80, 1, 1]); }); // la ligne électrique
+      chaque(rue, 40, s => { const [x, z] = bord(s, 1, s.w + 3.3); fils.push([x, 8.2, z, Math.atan2(-s.tz, s.tx), 80, 1, 1]); }); // la ligne électrique
        colore(inst(h, h.geo('fanion'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), fanions), fanions);
       
       insts(h, remap('mototaxi', { cadre: 'roue' }), { caisse: blancT, toit: h.mat('toldo', { side: D }, '#fff4e0', '#1fb5a8'), roue: noir }, motos, { teinte: 'caisse' }); POT.push(...poteauxE);
       [['TACOS', '#c85a2e'], ['MEZCAL', '#1f8a88'], ['HELADOS', '#d8306a'], ['FARMACIA', '#2f7a2a'], ['CERVEZA', '#d89a00'], ['ARTESANIAS', '#6a3bc6'], ['PALETAS', '#e8402a'], ['TORTILLERIA', '#1a4ab0'], ['HOTEL', '#3a2a1a']].forEach(([t, c], k) => {
-        const s = S[(rue[0] + 8 + k * 11) % N], sd = k % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 4.5), r = versRoute(s, sd); boiteL(ecrit(t, c), 4.2, 1, 0.2, x, 4.3, z, r); });
-      for (let k = 0; k < 30; k++) { const s = S[(rue[0] + 4 + k * 4) % N], sd = k % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 3.2); buisFleur.push([x, 2 + rnd() * 3, z, rnd() * 6, 1.2, 1, 0.6]); } // bougainvilliers sur les façades
+        const s = S[(rue[0] + 8 + k * 11) % N], sd = k % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w + 4.5), r = versRoute(s, sd); boiteL(ecrit(t, c), 4.2, 1, 0.2, x, 4.3, z, r); });
+      for (let k = 0; k < 30; k++) { const s = S[(rue[0] + 4 + k * 4) % N], sd = k % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w + 3.2); buisFleur.push([x, 2 + rnd() * 3, z, rnd() * 6, 1.2, 1, 0.6]); } // bougainvilliers sur les façades
 
       // --- secteur 4, le marché couvert (fiche 4) : piliers, toit de tôle et de paille (des jours en long laissent passer le soleil), étals de chapeaux et de hamacs, piñatas pendues ---
       const mar = tranche(18, 20, 6, 6), hamacs = [], sombreros = [], piliers = [], toits = [], pailles = [], toitsD = [], paillesD = [], fonds = [], etalsM = [], pinatas = [];
       chaque(mar, 5, (s, i, k) => {
-        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 1.2); piliers.push([x, -0.05, z]); if ((k / 5) % 2) { const [fx, fz] = bord(s, sd, W + 9); fonds.push([fx, 4.4, fz, versRoute(s, sd)]); } }
-        if ((k / 5) % 3 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 5 - 4.5); toitsD.push([x, 9.55, z, h.across(s)]); paillesD.push([x, 9.15, z, h.across(s)]); }
-        else for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, 6.4); boiteL(chaume, 13.6, 0.45, 10.8, x, 10.5, z, h.across(s), -sd * 0.33); } // toit de palmes à deux pans
+        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 1.2); piliers.push([x, -0.05, z]); if ((k / 5) % 2) { const [fx, fz] = bord(s, sd, s.w + 9); fonds.push([fx, 4.4, fz, versRoute(s, sd)]); } }
+        if ((k / 5) % 3 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 0.5); toitsD.push([x, 9.55, z, h.across(s)]); paillesD.push([x, 9.15, z, h.across(s)]); }
+        else for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w * 0.8); boiteL(chaume, s.w * 1.7, 0.45, 10.8, x, 10.5, z, h.across(s), -sd * 0.33); } // toit de palmes à deux pans
         if (k % 5 === 0) h.lum(i, s.x, s.y + 7.5, s.z, 0xffe0b0, 22, 1.1);
-        if (k % 3 === 0) CUB.push([s.x, 8.75, s.z, h.across(s), 2 * W + 4, 0.3, 0.3, 0x5a3a2a]); // poutres
-        if (k % 15 === 5) CUB.push([s.x, 9.85, s.z, h.across(s), 2 * W + 6, 0.06, 6, [0x2f6ad0, 0xe8a800][(k / 15 | 0) % 2]]); // bâches
-        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 2.9); CUB.push([x, 0.95, z, Math.atan2(-s.tz, s.tx), 0.55, 0.35, 0.45, [0xff7a1a, 0xe8302a, 0x5aa02a, 0xffd23a][(k + (sd > 0 ? 1 : 0)) % 4]]); if (k % 4 === 2) { const [gx, gz] = bord(s, sd, W + 0.9); figurant(gx, gz); } }
-        for (const sd of [-1, 1]) for (let j = 0; j < 3; j++) { const [x, z] = bord(s, sd, W + 1.9); hamacs.push([x + s.tx * (j - 1) * 1.6, 5.2, z + s.tz * (j - 1) * 1.6, Math.atan2(-s.tz, s.tx), 1.6, 3.4, 0.06, PAPEL[(k + j + (sd > 0 ? 2 : 0)) % 5]]); }
-        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 2.6); pinatas.push([x, 5 + rnd(), z, rnd() * 6, 1.1, 1.1, 1.1, PAPEL[rnd() * 5 | 0]]); if (rnd() < 0.5) pinatas.push([x + s.tx * 2, 5.6 + rnd(), z + s.tz * 2, rnd() * 6, 0.9, 0.9, 0.9, PAPEL[rnd() * 5 | 0]]); }
+        if (k % 3 === 0) CUB.push([s.x, 8.75, s.z, h.across(s), 2 * s.w + 4, 0.3, 0.3, 0x5a3a2a]); // poutres
+        if (k % 15 === 5) CUB.push([s.x, 9.85, s.z, h.across(s), 2 * s.w + 6, 0.06, 6, [0x2f6ad0, 0xe8a800][(k / 15 | 0) % 2]]); // bâches
+        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 2.9); CUB.push([x, 0.95, z, Math.atan2(-s.tz, s.tx), 0.55, 0.35, 0.45, [0xff7a1a, 0xe8302a, 0x5aa02a, 0xffd23a][(k + (sd > 0 ? 1 : 0)) % 4]]); if (k % 4 === 2) { const [gx, gz] = bord(s, sd, s.w + 0.9); figurant(gx, gz); } }
+        for (const sd of [-1, 1]) for (let j = 0; j < 3; j++) { const [x, z] = bord(s, sd, s.w + 1.9); hamacs.push([x + s.tx * (j - 1) * 1.6, 5.2, z + s.tz * (j - 1) * 1.6, Math.atan2(-s.tz, s.tx), 1.6, 3.4, 0.06, PAPEL[(k + j + (sd > 0 ? 2 : 0)) % 5]]); }
+        for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 2.6); pinatas.push([x, 5 + rnd(), z, rnd() * 6, 1.1, 1.1, 1.1, PAPEL[rnd() * 5 | 0]]); if (rnd() < 0.5) pinatas.push([x + s.tx * 2, 5.6 + rnd(), z + s.tz * 2, rnd() * 6, 0.9, 0.9, 0.9, PAPEL[rnd() * 5 | 0]]); }
       });
-      chaque(mar, 2, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 3.6); etalsM.push([x, -0.05, z, versRoute(s, sd), 1, 1, 1, PAPEL[(k / 2 + (sd > 0 ? 2 : 0)) % 5]]); for (let j = 0; j < 4; j++) { const [hx, hz] = bord(s, sd, W + 3.3 - j * 0.1); sombreros.push([hx + s.tx * (j - 1.5) * 0.7, 0.95 + (j % 2) * 0.3, hz + s.tz * (j - 1.5) * 0.7, 0, 0.45, 0.22, 0.45]); } const [gx, gz] = bord(s, sd, W + 5.6); if (rnd() < 0.6) figurant(gx, gz); } });
+      chaque(mar, 2, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 3.6); etalsM.push([x, -0.05, z, versRoute(s, sd), 1, 1, 1, PAPEL[(k / 2 + (sd > 0 ? 2 : 0)) % 5]]); for (let j = 0; j < 4; j++) { const [hx, hz] = bord(s, sd, s.w + 3.3 - j * 0.1); sombreros.push([hx + s.tx * (j - 1.5) * 0.7, 0.95 + (j % 2) * 0.3, hz + s.tz * (j - 1.5) * 0.7, 0, 0.45, 0.22, 0.45]); } const [gx, gz] = bord(s, sd, s.w + 5.6); if (rnd() < 0.6) figurant(gx, gz); } });
       insts(h, 'pilierHalle', { pilier: h.mat('peinture', { c: 0xb8482a }) }, piliers, { a: [9] }).forEach(m => m.userData.ombre = 1);
       const tole = h.mat('toleToit', { side: D }); inst(h, h.geo('boite', 9, 0.3, 10.6), tole, toitsD); inst(h, h.geo('boite', 8, 0.5, 10.6), chaume, paillesD);
       inst(h, h.geo('boite', 10, 8.8, 0.5), h.mat('facadePlaya', { c: 0xe8a040 }), fonds); BOU.push(...pinatas); colore(inst(h, h.geo('pan'), h.mat('toldo', { side: D }, '#ffffff', '#d8d0c0'), hamacs), hamacs); inst(h, h.geo('toitPalapa'), h.mat('peinture', { c: 0xd8b96a, side: D }), sombreros);
@@ -2237,8 +2237,8 @@
         const rr = [], cc = [], ts = [], tr = [], rac = [];
         for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -4.8, 2.2], [0.36, 4.8, 1.6], [0.47, -4.2, 2.8], [0.56, 4.6, 1.8], [0.67, -4.8, 2.2], [0.78, 4.8, 2], [0.86, -4.6, 2]]) {
           const i = (t0 + Math.round(nT * f)) % N, s = S[i], [x, z] = bord(s, 1, d), y = s.y + 7.58;
-          tr.push([x, y, z, 0, R * 1.5, 1, R * 1.5]); cc.push([x, y, z, rnd() * 6, R * 1.3, 7.6, R * 1.3]); cc.push([x, y, z, rnd() * 6, R * 0.8, 7.6, R * 0.8]); cc.push([x, y, z, rnd() * 6, R * 0.45, 7.6, R * 0.45]);
-          for (const a of [0, 1.05, 2.1]) rr.push([x, y, z, a, R * 1.6, 7.6, 1]);
+          tr.push([x, y, z, 0, R * 1.5, 1, R * 1.5]); cc.push([x, y, z, rnd() * 6, R * 1.2, 7.6, R * 1.2]); cc.push([x, y, z, rnd() * 6, R * 0.55, 7.6, R * 0.55]); // deux cônes : trois remplissaient l'écran de transparence (GPU)
+          for (const a of [0, 1.57]) rr.push([x, y, z, a, R * 1.4, 7.6, 1]);
           ts.push([x, s.y + 0.06, z, 0, R * 1.5, 1, R * 1.2, 0xc0b088]); for (const sd of [-1, 1]) { const [ex, ez] = bord(s, sd, W - 1.3); ts.push([ex, s.y + 0.07, ez, 0, R * 2.4, 1, R * 2.4, 0x50ffe0]); }
           for (let j = 0; j < 8; j++) rac.push([x + (rnd() - 0.5) * R * 1.4, y, z + (rnd() - 0.5) * R * 1.4, rnd() * 3.14, R * 1.3, 1.6 + rnd() * 1.4, 1]);
           h.lum(i, x, s.y + 6.2, z, 0xfff0c8, 24, 1.4 + R * 0.4);
@@ -2253,6 +2253,11 @@
         const s = S[(i - 70 + N) % N], [x, z] = bord(s, 1, s.w + 2); panneaux.push([x, -0.05, z, enFace(s) + Math.PI, 'PUENTE  TOPE', '#f7d36b', '#1a1a1a', 4]); }
       for (const [i, j] of [[P(43) - 6, P(42)], [P(43), P(42) + 10], [P(43) + 8, P(42) + 20]]) { const s = S[i], sd = s.k > 0 ? -1 : 1, [x, z] = bord(s, sd, s.w + 1.4); boiteL(ecrit('>>', '#e8302a', '#ffffff', 32), 3, 2, 0.15, x, 2.1, z, enFace(S[j])); POT.push([x, -0.05, z, 0, 1.4, 1.2, 1.4]); }
       { const g = new THREE.RingGeometry(PR - 1.4, PR, 96); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, h.mat('sableMouille', { side: D, ...OFF })); m.position.set(PX, 0.012, PZ); m.receiveShadow = true; h.scene.add(m); }
+      // une arche de roche 90 m avant la bouche du cénote (le repère de distance de l'entrée), panneau du cénote ; liseré de galets clairs entre le sable dur et le sable mou de la plage
+      { const s = S[(t0 - 45 + N) % N]; for (const sd of [-1, 1]) for (let j = 0; j < 5; j++) { const [x, z] = bord(s, sd, s.w + 2 + rnd()); rochers.push([x, s.y + j * 1.9, z, rnd() * 6, 1.8 + rnd() * 0.6, 1.5, 1.8 + rnd() * 0.6]); }
+        for (let u = -s.w - 2; u <= s.w + 2; u += 2.4) { const [x, z] = bord(s, 1, u); rochers.push([x, s.y + 9 + rnd() * 0.6, z, rnd() * 6, 2 + rnd(), 1.3, 2 + rnd()]); }
+        const s2 = S[(t0 - 70 + N) % N], [px, pz] = bord(s2, -1, s2.w + 3); panneaux.push([px, -0.05, pz, enFace(s2) + Math.PI, 'CENOTE 100 M', '#1f8a88', '#fff4e0', 3.4]); }
+      { const [g0, gn] = tranche(45, 2, 20, 20), galets = h.mat('bruit', { side: D, ...OFF }, '#d8d2c0', ['#bab4a4', '#ece6d6', '#a49e8e']); for (const sd of [-1, 1]) couvre(g0, gn, sd * W, sd * (W + 0.7), galets, 4, 0.03); }
       inst(h, h.geo('rocher'), calc, rochers);
 
       // --- secteur 8, la chaussée de la lagune de mangrove (fiche 7, remplace le lobby) : bordures blanches, enrochement, lampadaires ; palétuviers rouges en rideaux et en îlots,
@@ -2267,11 +2272,11 @@
         if (k % 15 === 0) { const sd = (k / 15 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w + 3.2); lampsL.push([x, 5, z]); const [ax, az] = bord(s, sd, s.w + 1.6); ampL.push([ax, 9.95, az, h.across(s)]); } });
       inst(h, h.geo('poteauBois'), h.mat('peinture', { c: 0xf4f0e8 }), bornes); CUB.push(...garde.map(p => [p[0], p[1], p[2], p[3] || 0, 1 * (p[4] || 1), 1 * (p[5] || p[4] || 1), 0.35 * (p[6] || p[4] || 1), 0xd8d4c8]));
       CUB.push(...lampsL.map(p => [p[0], p[1], p[2], p[3] || 0, 0.3 * (p[4] || 1), 10 * (p[5] || p[4] || 1), 0.3 * (p[6] || p[4] || 1), 0x6a6a6a])); CUB.push(...ampL.map(p => [p[0], p[1], p[2], p[3] || 0, 3.2 * (p[4] || 1), 0.25 * (p[5] || p[4] || 1), 0.7 * (p[6] || p[4] || 1), 0x6a6a6a]));
-      for (const r of LAG) for (let k = 0; k < (r[2] - r[0]) * (r[3] - r[1]) / 70; k++) { const x = r[0] + rnd() * (r[2] - r[0]), z = r[1] + rnd() * (r[3] - r[1]), e = ecartR(x, z), ilot = Math.sin(x * 0.045 + 1) * Math.cos(z * 0.05) > 0.45, rideau = e > 14 && e < 48 && Math.sin(z * 0.06 + (x < 0 ? 0 : 2)) > -0.2;
+      for (const r of LAG) for (let k = 0; k < (r[2] - r[0]) * (r[3] - r[1]) / 110; k++) { const x = r[0] + rnd() * (r[2] - r[0]), z = r[1] + rnd() * (r[3] - r[1]), e = ecartR(x, z), ilot = Math.sin(x * 0.045 + 1) * Math.cos(z * 0.05) > 0.45, rideau = e > 14 && e < 48 && Math.sin(z * 0.06 + (x < 0 ? 0 : 2)) > -0.2;
         if (e < 10 || x < -420 && rnd() < 0.6) continue; if ((rideau && z > 100 && !surPont(near(h, x, z))) || ilot || x < -260 || z > 360) { if (e > 90 && rnd() < 0.6) continue; const sc = 0.8 + rnd() * 0.6; if (e < 60) mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); // au-delà de 60 m les racines ne se voient plus : la couronne seule
           couronnes.push([x, 2.6 * sc - 0.4, z, rnd() * 6, 2.6 * sc, 1.6 * sc, 2.6 * sc]); if (rnd() < 0.08) aigrettes.push([x, 3.3 * sc, z, rnd() * 6, 0.6, 0.6, 0.6, 0xffffff]); } }
       for (const [cx, cz, nb] of [[-22, 125, 30], [-26, 205, 40], [24, 165, 22], [-90, 300, 40], [28, 255, 26], [-45, 85, 18]]) for (let k = 0; k < nb; k++) { const x = cx + (rnd() - 0.5) * nb * 0.9, z = cz + (rnd() - 0.5) * nb * 0.8, t = rnd() < 0.35 ? 1 : 0, sc = 1.8 + rnd() * 0.3; if (ecartR(x, z) > 5) flamants[t].push([x, -0.6, z, rnd() * 6.28, sc, sc, sc, [0xff9ab8, 0xff80a4, 0xffb4c4][rnd() * 3 | 0]]); }
-      chaque(lag, 2, (s, i) => { if (!surPont(i)) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 5.5 + rnd() * 4); if (z > 75) { const sc = 0.8 + rnd() * 0.4; mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); couronnes.push([x, 2.3 * sc - 0.4, z, rnd() * 6, 2.4 * sc, 1.5 * sc, 2.4 * sc]); } } });
+      chaque(lag, 3, (s, i) => { if (!surPont(i)) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 5.5 + rnd() * 4); if (z > 75) { const sc = 0.8 + rnd() * 0.4; mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); couronnes.push([x, 2.3 * sc - 0.4, z, rnd() * 6, 2.4 * sc, 1.5 * sc, 2.4 * sc]); } } });
       chaque(lag, 2, s => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, 36 + rnd() * 14); if (ecartR(x, z) > 30 && z > 75) { const sc = 1.1 + rnd() * 0.5; mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); couronnes.push([x, 2.4 * sc - 0.4, z, rnd() * 6, 3.6 * sc, 2.2 * sc, 3.6 * sc]); } } }); // le mur de mangrove, continu
       insts(h, 'mangle', { racine: h.mat('bruit', {}, '#5a4030', ['#4a3424', '#6e5440']) }, mangles); inst(h, h.geo('buisson'), mangleF, couronnes);
       flamants[0].push(...pelicans, ...aigrettes); flamants.forEach((l, t) => insts(h, remap('flamant', { patte: 'bec' }, t), { plume: blancT, bec: h.mat('peinture', { c: 0x3a2a2a }) }, l, { teinte: 'plume' })); // flamants, pélicans et aigrettes : une silhouette, la teinte par instance
