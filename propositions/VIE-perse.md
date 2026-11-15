@@ -1,6 +1,8 @@
 # Vie — « Route royale » (perse) : analyse et propositions
 
 Étape 2 de `METHODE-VIE.md`. Lecture seule : aucun code modifié. Les cases à cocher sont pour l'auteur.
+
+**Depuis l'analyse** : l'auteur a validé tous les points, et la réalisation est faite sur la branche `vie-perse` (voir « 7. Réalisation » à la fin). Les numéros de ligne ci-dessous datent d'avant le découpage de `decors.js` : le décor de perse est maintenant dans `decors-perse.js` (retirer 1707 aux lignes 1715 à 2049), ceux de paris, stade, wangan et chapada dans `decors-<carte>.js`.
 Sources : `decors.js:1715-2049` (décor de perse), `formes-perse.js`, `cartes.js:454-474`, `cahier-feedback/perse/CAHIER.md`, `docs/REFS-perse-inspiration.md`, et les planches de `captures/plans/perse/` (tour complet, 24 plans de course, 9 vues hautes, 4 vues de côté).
 
 ## Repères
@@ -339,3 +341,69 @@ Deux demandes propres à perse, hors de la liste du socle :
 - **La forme `pigeon`** est dans `formes-paris.js`, chargé par `index.html` pour toutes les cartes ; je n'ai pas vérifié que `h.pose` la trouve depuis le décor de perse.
 - **Le trafic** : lu en trois endroits seulement ; je n'ai pas vérifié comment un gabarit de véhicule est choisi.
 - **Les vues de côté** vers la droite : la planche a été écrasée par celle de gauche (même nom de fichier), je n'ai lu que la gauche.
+
+---
+
+## 7. Réalisation (branche `vie-perse`)
+
+L'auteur a validé tous les points ; ils ont été réalisés puis jugés un par un par un agent séparé, sur un duo avant/après pris à la caméra de course (`node outils/plan.js perse @idx`), et une rafale pour ce qui bouge. Règle appliquée ensuite, ajoutée par l'auteur à `METHODE-VIE.md` : ce qui ne se voit pas depuis la caméra par défaut, sur la trajectoire, est retiré. Le « vu depuis » ci-dessous est l'échantillon où est la voiture sur le duo validé.
+
+### Validé par un agent
+
+| Point | Ce qui est en place | Vu depuis `idx` |
+|---|---|---|
+| D1 | Départ : mur de terre et arbres jusqu'au portique, plus d'étal sur la ligne | 1166 |
+| D2 | Un tapis par mur de jardin au lieu de deux | 135 |
+| D3 | Deux trouées : un mur de jardin abaissé à 1,2 m sur toute sa longueur, côté extérieur d'une courbe | 72 (gauche), 176 (droite) |
+| D5 | Halte de nomades : tente noire, deux chameaux, à 12 m à gauche | 366 |
+| D7 | Huit étendards le long de l'escalier | 440 |
+| D9 | Cinq socles à taureau face à quatre étendards, ligne droite de la terrasse | 588 |
+| D10 | Plafond de la salle moins contrasté | 662 |
+| D11 | Jardin : un massif sur deux, une rangée à gauche, couleurs regroupées | 768 |
+| D13 | Un tapis pendu par travée sous la voûte | 918 |
+| D15 | Une façade sur deux à encadrement brique dans la rue du bazar | 1090 |
+| D18 | Portail et cour plantée d'orangers, à gauche | 1110 |
+| D19 | Placette au platane, à gauche | 1074 |
+| D20 | Linge entre deux toits | 1142 |
+| SOL1, SOL2 | Feuilles tombées au bord de la chaussée ; tapis au sol devant les boutiques | 140 ; 1068 |
+| 1-E1, 3-E1, 6-E1, 7-E1, 8-E1 | L'eau coule : rigole, escalier (à contresens), canal qui scintille | 300, 470, 772, 960, 1060 |
+| 2-L1, 3-L1 | Flammes ; les feux de l'escalier s'allument devant la voiture | 372, 456 |
+| 6-E2 | Cascades striées qui tombent, bouillon au pied | 790 |
+| 6-M2 | Pétales en travers de la route | 776 |
+| 7-L1, 7-L2 | Lanternes qui se balancent ; un puits de jour sous chaque lanterneau | 900, 906 |
+| 1-S1 à 8-S1 | Son par zone (mesure hors ligne au banc d'écoute et lecture du code) | — |
+
+### En place, refusé par l'agent (à juger en jouant)
+
+| Point | Ce que l'agent reproche |
+|---|---|
+| D4 | Les melons se lisent (rue du bazar, 1060) ; les poteries sont pâles ; l'étal du village est masqué par un mur |
+| D16, 8-M1 | Toiles en travers de la rue : vues presque par la tranche, un bout sans façade derrière lui |
+| 1-V1 | Pigeons sur la chaussée : trop petits, envol non démontré par la rafale |
+| 1-V2, 7-V1, 8-V2 | Silhouettes : présentes, mais peu nombreuses dans le village, de tons neutres sous la voûte, et lues comme des caisses de loin |
+| 2-V1 | Caravane : chameaux visibles mais petits, à demi masqués par un autel ; hommes non reconnus |
+| 8-V1 | Vol de pigeons : quatre oiseaux visibles sur vingt-cinq, haut dans le ciel (forme d'aile corrigée depuis, non revalidée) |
+| 8-V3, 6-E3, 8-M3 | Marcheurs, jets, linge : le mouvement ne se prouve pas sur une rafale prise voiture en marche |
+| 1-I1, 7-I1, 7-I2, 8-I1 | Objets percutables par tronçon : trop petits pour se distinguer sur une image |
+| 5-I1 | Poussière au choc dans la salle : défaut de logique trouvé par l'agent, corrigé, non revalidé |
+
+### Retiré (invisible depuis la caméra de course)
+
+D6 (bancs de roche, enceinte), D8 (bassin et bouquets de la terrasse), D12 (pavillon), les estrades de D14 (les taches de jour restent), D17 (ruelles latérales), la placette de droite, 1-M1 et 8-M2 (fumées), 1-M2 (tapis au vent), 2-M1 (filets de fumée), 3-V1 (rapace), 3-V2 (gardes), 4-M1 (poussière), 4-V1 et 6-V1 (colombes), 5-L1 (rais de la salle), 6-E4 (embruns), 6-M1 (palmes), 7-M1 (samovar), 8-L1 (four).
+
+### Non fait
+
+La charrette à âne en trafic réel (§2.3) : elle touche `sim.js` et change le jeu dans le secteur rapide ; à décider par l'auteur.
+
+### Ce qui a changé hors des fichiers de perse
+
+- `game.js` : `th.objets` accepte un tronçon, des éclats et un son par sorte ; `th.objetsTun` (objets sous la voûte) ; `th.nObjets` ; le son de l'objet percuté est passé à `SON.frame`.
+- `audio.js` : lits par zone (`AMBZ`), événements de perse selon l'endroit, `ESP.<carte>.lieux` (réverbération plus forte sous la Porte et dans la salle), ambiance maintenue sous la voûte pour une carte à zones.
+- `ecoute/ecoute.js` : cinq scènes d'ambiance de perse. `outils/plan.js` : `--ecart=n` (rafale espacée, pour voir ce qui bouge lentement).
+- Aucun de ces changements n'agit sur une autre carte tant qu'elle ne déclare pas les options ; ville, canal, stade, chapada, plage et barrage se chargent sans erreur.
+
+### Relevé en passant, non traité
+
+- `paris` : une erreur de page (`computeBoundingSphere … NaN`) existe déjà sur `main`.
+- `paris` : les pigeons qui s'envolent sont posés sans `userData.dyn` ; la fusion du décor les fige probablement.
+- La forme `tente` de `formes-chapada.js` écrasait celle de `formes-perse.js` (même nom) : celle de perse est renommée `tenteNomade`. D'autres collisions de noms entre fichiers de formes sont possibles.

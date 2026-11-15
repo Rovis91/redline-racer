@@ -9,6 +9,7 @@
 //                  et <nom>.duo.jpg : avant à gauche, après à droite.
 //   --vue=90,12,4  caméra d'inspection autour de la voiture (angle°, distance, hauteur) au lieu de la caméra de course
 //   --rafale=6     6 images de suite au même endroit (1/30 s entre deux), en planche : ce qui ondule ou clignote ne se voit qu'en mouvement
+//   --ecart=15     avec --rafale : 15 images de jeu sautées entre deux vues (une demi-seconde) : ce qui bouge lentement (une caravane, une toile, une fumée)
 //   --style=jeu    le rendu réel du jeu (270 lignes, avec l'interface) au lieu du rendu net      --taille=1920x1080   taille de l'image (960x540 par défaut)
 //   --hud          garde l'interface du jeu sur l'image (retirée par défaut : elle cache les coins du décor)
 //   --nom=porte    enregistre ce plan (échantillon et vue) sous ce nom dans outils/plans.json
@@ -35,11 +36,11 @@ const PAGE = `(() => {
   const image = c => c.toDataURL('image/jpeg', 0.85).slice(23);
   window.__plan = {
     // pose la voiture 30 échantillons (60 m) avant i, lancée dans l'axe, et laisse le pilote automatique arriver à i
-    va(i, vue, nom, rafale) {
+    va(i, vue, nom, rafale, ecart) {
       const c = g.car, i0 = ((i - 30) % n + n) % n, s = T.S[i0]; g.vue = vue || null;
       Object.assign(c, { x: s.x, y: s.y, z: s.z, th: Math.atan2(s.tz, s.tx), vx: s.tx * 22, vz: s.tz * 22, idx: i0, dist: i0, d: 0, yaw: 0, steer: 0, vy: 0, air: false, drift: false, slide: 0, hit: 0, stun: 0 });
       for (let k = 0; k < 300 && c.idx !== i && (i - c.idx + n) % n < 60; k++) g.frame(t += 100);
-      for (let k = 0; k < (rafale || 1); k++) prise(rafale ? nom + ' +' + k : nom);
+      for (let k = 0; k < (rafale || 1); k++) { if (k) for (let e = 0; e < (ecart || 0); e++) g.frame(t += 33); prise(rafale ? nom + ' +' + k : nom); }
       return { idx: c.idx, kmh: Math.round(Math.hypot(c.vx, c.vz) * 3.6) };
     },
     seule: () => image(vues[0].c),
@@ -60,7 +61,7 @@ const PAGE = `(() => {
 })()`;
 
 (async () => {
-  if (!ids.includes(carte) || !demandes.length) fin(2, 'usage : node outils/plan.js <carte> <plan…|tour|@échantillon|nom> [--avant] [--vue=a,d,h] [--rafale=n] [--style=jeu] [--hud] [--taille=LxH] [--nom=x]\ncartes : ' + ids.join(', ') + (noms[carte] ? '\nplans nommés de ' + carte + ' : ' + Object.keys(noms[carte]).join(', ') : ''));
+  if (!ids.includes(carte) || !demandes.length) fin(2, 'usage : node outils/plan.js <carte> <plan…|tour|@échantillon|nom> [--avant] [--vue=a,d,h] [--rafale=n] [--ecart=n] [--style=jeu] [--hud] [--taille=LxH] [--nom=x]\ncartes : ' + ids.join(', ') + (noms[carte] ? '\nplans nommés de ' + carte + ' : ' + Object.keys(noms[carte]).join(', ') : ''));
   if (!(await repond(BASE + 'index.html'))) { spawn('python', [path.join('outils', 'capture.py'), String(PORT)], { cwd: RACINE, stdio: 'ignore', detached: true }).unref(); if (!(await attends(BASE + 'index.html', 40))) fin(2, 'ÉCHEC : le serveur ne démarre pas sur le port ' + PORT); }
   if ((await req(BASE + 'outils/plan.js').catch(() => '')).replace(/\r/g, '') !== fs.readFileSync(__filename, 'utf8').replace(/\r/g, '')) fin(2, 'ÉCHEC : le serveur du port ' + PORT + ' sert une autre copie du jeu ; choisir un autre port (PORT=8995 node outils/plan.js …)');
   if (!(await repond('http://127.0.0.1:' + DBG + '/json/version'))) {
@@ -101,7 +102,7 @@ const PAGE = `(() => {
       throw new Error('plan inconnu : ' + p + ' (1 à 20, tour, @échantillon' + (noms[carte] ? ', ' + Object.keys(noms[carte]).join(', ') : '') + ')');
     });
     for (const p of plans) {
-      const r = await evalue(`__plan.va(${p.idx}, ${JSON.stringify(p.vue)}, ${JSON.stringify(p.nom + ' @' + p.idx)}, ${rafale})`);
+      const r = await evalue(`__plan.va(${p.idx}, ${JSON.stringify(p.vue)}, ${JSON.stringify(p.nom + ' @' + p.idx)}, ${rafale}, ${+val('ecart') || 0})`);
       console.log(('plan ' + p.nom).padEnd(14), ('échantillon ' + r.idx + '/' + n).padEnd(22), r.kmh + ' km/h');
     }
     const dossier = path.join(RACINE, 'captures', 'plans', carte), suf = opt('avant') ? '.avant' : '', ecrit = (nom, b64) => { fs.mkdirSync(dossier, { recursive: true }); const f = path.join(dossier, nom + '.jpg'); fs.writeFileSync(f, Buffer.from(b64, 'base64')); console.log(path.relative(RACINE, f).replace(/\\/g, '/')); };

@@ -26,7 +26,7 @@
   let mix = 0, inten = 0, driftL = 0, drums = 0, fin = false, wasIn = false, wasNear = false, wasBoost = false;
   let rubT = 0, satT = 0, platine = 0; // frottement bref entre voitures ; saturation de la musique après un choc ; ralenti de platine (1 → 0)
   const VX = [], UN = [], PANJ = 0.35; // voix moteur + boîte + pneus : VX[0] celle du solo (au centre, branchée comme toujours), VX[1] et VX[2] celles de l'écran partagé (joueur 1 à gauche, joueur 2 à droite) ; UN : liste d'un seul joueur, réutilisée quand le jeu n'en passe pas
-  let scrapeG, windG, windL, windF, nitroG, gbuf, esp, AU = [], pluie, ambBed, ambT = 2, inZone = false, uiF;
+  let scrapeG, windG, windL, windF, nitroG, gbuf, esp, AU = [], pluie, ambBed, ambT = 2, inZone = false, uiF, ambZG = [], ambEvG = null, ambPos = 0, ambSous = 0, ambAppel = 0;
   const auHasard = () => Math.random() * ST.length | 0; // à chaque carte, une de ses stations au hasard
   let station = auHasard(), S16 = 60 / ST[station].bpm / 4;
 
@@ -50,8 +50,16 @@
     canal: [['lowpass', 500, 0.5, 0.06, 0.06, 0.7], ['bandpass', 220, 0.7, 0.06]], // vent sec, autoroute lointaine (+ hélicoptère)
     stade: [['bandpass', 450, 0.6, 0.12, 0.09, 0.35], ['bandpass', 1100, 0.8, 0.05, 0.13, 0.5], ['lowpass', 120, 0.7, 0.1]], // la foule des tribunes, son brouhaha qui ondule (+ clameurs)
     givre: [['bandpass', 320, 3, 0.05, 0.07, 0.8], ['lowpass', 200, 0.7, 0.05, 0.04, 0.5]], // le vent qui siffle dans les sapins (+ grelots au loin)
+    perse: [['bandpass', 420, 0.6, 0.03, 0.07, 0.6], ['lowpass', 150, 0.7, 0.05]], // le vent tiède du couchant sur la plaine (+ les lits et les événements par zone : AMBZ)
   };
 
+  // Lits par zone, en plus du lit de la carte : de, a = fractions du tour entre lesquelles le lit sonne (à ciel ouvert) ; tun = le lit de la voûte, qui sonne en tunnel. c = couches, comme AMB.
+  // Une carte qui a des zones garde ses événements sous la voûte (ambEvent choisit selon l'endroit).
+  const AMBZ = {
+    perse: [{ de: 0.632, a: 0.72, c: [['highpass', 3200, 0.5, 0.02], ['bandpass', 1500, 0.8, 0.03, 0.9, 0.4]] }, // le jardin : l'eau vive des cascades et du canal
+      { tun: 1, c: [['bandpass', 520, 0.7, 0.07, 0.11, 0.4], ['bandpass', 1150, 0.9, 0.035, 0.17, 0.5], ['lowpass', 160, 0.7, 0.05]] }, // le bazar couvert : le brouhaha sous la voûte
+      { de: 0.872, a: 0.994, c: [['bandpass', 600, 0.8, 0.045, 0.13, 0.4], ['bandpass', 1300, 1, 0.02, 0.19, 0.5]] }], // la rue du bazar : le même, plus sec, à ciel ouvert
+  };
   const gain = (v, dest) => { const g = AC.createGain(); g.gain.value = v; g.connect(dest); return g; };
   const filt = (type, f, q, dest) => { const b = AC.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.connect(dest); return b; };
   const shaper = (k, dest) => { const s = AC.createWaveShaper(); s.curve = Float32Array.from({ length: 257 }, (_, i) => Math.tanh((i / 128 - 1) * k)); s.connect(dest); return s; };
@@ -505,6 +513,8 @@
       esp.conv.buffer = ir; esp.lp.frequency.value = P.lp; }
     if (ambBed) ambBed.disconnect();
     ambBed = gain(1, V.amb);
+    for (const z of ambZG) z.g.disconnect(); if (ambEvG) ambEvG.disconnect(); ambEvG = gain(0.6, V.amb); // les événements d'une carte à zones passent par ambEvG : ils sonnent aussi sous la voûte, où le lit de la carte se tait
+    ambZG = (AMBZ[M.id] || []).map(z => { const g = gain(0, V.amb); for (const [type, f, q, lv, rate, depth] of z.c) { const s = AC.createBufferSource(), gg = gain(lv, g); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, gg)); s.start(0, Math.random() * 2); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, gg.gain)); l.start(); } } return { z, g }; });
     for (const [type, f, q, lv, rate, depth] of AMB[M.id] || []) {
       const s = AC.createBufferSource(), g = gain(lv, ambBed); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, g)); s.start(0, Math.random() * 2);
       if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, g.gain)); l.start(); }
@@ -522,6 +532,17 @@
     if (id === 'stade') { const c = nz(t, 2.6, 0.22, ambBed, 'bandpass', 900, 0.6, nbuf, 0.5); c && c.frequency.linearRampToValueAtTime(1300, t + 0.8); // clameur qui monte et retombe
       for (let i = 0; i < 3; i++) { const f = rnd(1800, 2600), o = osc('sine', f, t + rnd(0.3, 1.5), 0.35, 0.025, ambBed); o && o.frequency.linearRampToValueAtTime(f * 1.25, t + 2); } return rnd(6, 12); } // + quelques sifflets
     if (id === 'givre') { joue((GREL && GREL.ac === AC ? GREL : GREL = Object.assign(grelots(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // grelots d'un traîneau, au loin
+    if (id === 'perse') { const p = ambPos, D = ambEvG; // l'endroit décide de l'événement : fractions du tour, ou la voûte (ambSous)
+      if (ambSous > 0.5) { if (Math.random() < 0.6) { const f = rnd(1900, 2700), n = 3 + Math.random() * 4 | 0; for (let i = 0; i < n; i++) osc('triangle', f * (i % 2 ? 1.5 : 1), t + i * 0.19, 0.09, 0.035, D); } // le marteau d'un dinandier
+        else { const o = osc('sawtooth', rnd(170, 230), t, 0.9, 0.03, filt('bandpass', 950, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(240, 300), t + 0.5); } return rnd(0.8, 2.2); } // ou l'appel d'un marchand
+      if (p > 0.3 && p < 0.365) { joue((GREL && GREL.ac === AC ? GREL : GREL = Object.assign(grelots(), { ac: AC }))[Math.random() * 4 | 0], t, D); return rnd(1.2, 2.5); } // les grelots de la caravane, quand on la longe
+      if (p > 0.632 && p < 0.72) { for (let i = 0, n = 2 + Math.random() * 4 | 0, f = rnd(2800, 4200); i < n; i++) { const o = osc('sine', f, t + i * 0.1, 0.07, 0.035, D); o && o.frequency.exponentialRampToValueAtTime(f * rnd(0.8, 1.4), t + i * 0.1 + 0.06); } return rnd(0.8, 2.5); } // les oiseaux du jardin
+      if (p > 0.872 && p < 0.994) { if (p > 0.94 && !ambAppel) { ambAppel = 1; [0, 2, 3, 2, 0, -2, 0].forEach((d, i) => { const f = 392 * 2 ** (d / 12), o = osc('sine', f, t + i * 0.8, 0.9, 0.022, D); o && o.frequency.linearRampToValueAtTime(f * 1.02, t + i * 0.8 + 0.7); }); return 6; } // l'appel lointain (une flûte), une fois par tour, au retour vers la ligne
+        const o = osc('sawtooth', rnd(180, 260), t, 0.6, 0.028, filt('bandpass', 1100, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(220, 320), t + 0.35); for (let i = 0; i < 4; i++) nz(t + 0.9 + i * 0.16, 0.05, 0.05, D, 'lowpass', 700, 0.7); return rnd(1.2, 3); } // un cri de marchand, des sabots
+      if (p < 0.28 || p >= 0.994) { ambAppel = 0; if (Math.random() < 0.5) for (let i = 0, n = 2 + (Math.random() * 2 | 0); i < n; i++) nz(t + i * 0.28, 0.12, 0.05, D, 'bandpass', rnd(420, 560), 3); // la plaine : un chien, loin
+        else { const o = osc('sawtooth', 420, t, 0.7, 0.012, filt('bandpass', 800, 3, D)); if (o) for (let i = 0; i < 8; i++) o.frequency.setValueAtTime(i % 2 ? 400 : 440, t + i * 0.09); } return rnd(4, 9); } // ou un bêlement
+      if (p > 0.369 && p < 0.52) { const c = nz(t, 2.4, 0.06, D, 'bandpass', 500, 0.8, nbuf, 1); c && c.frequency.linearRampToValueAtTime(900, t + 1.2); return rnd(3, 6); } // l'escalier et la terrasse : une rafale sur la hauteur
+      return 3; }
     return 10;
   }
   // ---------- passage DJ (piste MULTI-PISTE) : deux platines, comme un DJ qui enchaîne deux disques ----------
@@ -602,6 +623,7 @@
     stade: { slap: 0.09, sl: 0.25, mur: 0.5, rv: 0.45, dur: 3, lp: 3000 }, // arène couverte : grande salle
     givre: { slap: 0.06, sl: 0.04, mur: 0.2, rv: 0.03, dur: 0.8, lp: 2000 }, // la neige boit le son
     terre: { slap: 0.12, sl: 0.06, mur: 0, rv: 0.03, dur: 1, lp: 2500 }, // garrigue à découvert
+    perse: { slap: 0.045, sl: 0.22, mur: 0.7, rv: 0.09, dur: 2.6, lp: 3400, lieux: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // façades de terre ; lieux = [de, à, facteur] sur la salle du lieu, en fractions du tour : le passage sous la Porte des Nations, la salle aux cent colonnes
     essai: { slap: 0.04, sl: 0.1, mur: 0.5, rv: 0.05, dur: 1, lp: 3000 },
   };
   const MOTEUR_JS = `
@@ -903,7 +925,10 @@ registerProcessor('moteur', Moteur);`;
     wasBoost = car.boost > 0;
     // ambiance du lieu : seulement dans ses zones (e.amb, fondu fait par le jeu), jamais au menu ni en tunnel ; événements espacés au hasard, dans la zone
     const amb = state === 'title' ? 0 : (e.amb || 0) * (1 - tun);
-    k(ambBed.gain, 0.6 * amb, 0.4); if (amb > 0.5) { if (!inZone) ambT = Math.min(ambT, 1.2); if ((ambT -= dt) < 0) ambT = ambEvent(t + 0.05); } inZone = amb > 0.5;
+    const ambE = AMBZ[M.id] && state !== 'title' ? e.amb || 0 : amb; ambPos = car ? car.idx / N : 0; ambSous = tun; // carte à zones : les événements continuent sous la voûte
+    for (const { z, g } of ambZG) k(g.gain, state === 'title' ? 0 : (z.tun ? tun : ambPos >= z.de && ambPos < z.a ? 1 - tun : 0) * (e.amb || 0), 0.5);
+    if (e.objet === 'metal' && ambEvG) for (const f of [1320, 1985, 2710]) osc('triangle', f * (0.97 + Math.random() * 0.06), t, 0.6, 0.05, ambEvG); // un cuivre percuté (th.objets, son 'metal')
+    k(ambBed.gain, 0.6 * amb, 0.4); if (ambE > 0.5) { if (!inZone) ambT = Math.min(ambT, 1.2); if ((ambT -= dt) < 0) ambT = ambEvent(t + 0.05); } inZone = ambE > 0.5;
     // musique : sections et filtres suivent la course
     const a0 = (car.idx - T.h0 + N) % N, inside = a0 < T.h1 - T.h0, near = racing && !inside && N - a0 < 60;
     if (near && !wasNear) riser(t, clamp((N - a0) * 2 / Math.max(sp, 20), 0.5, 3));
@@ -927,7 +952,7 @@ registerProcessor('moteur', Moteur);`;
     // espace : les deux échos (le côté du mur qu'on serre répond plus fort et plus tôt), la salle du lieu ; en tunnel, écho court et fort des deux côtés
     { const P = ESP[M.id] || ESP.essai, mu = state === 'title' ? 0 : e.mur || 0, on = state === 'title' ? 0.3 : 1;
       for (const [s, cote] of [[-1, esp.L], [1, esp.R]]) { const pr = P.mur * Math.max(0, mu * s); k(cote.g.gain, on * (P.sl * (1 - tun) * (1 + 1.5 * pr) + 0.45 * tun), 0.1); k(cote.d.delayTime, lerp(lerp(P.slap, 0.008, pr), 0.014, tun) * (s > 0 ? 1.13 : 1), 0.1); }
-      k(esp.rvG.gain, on * P.rv * (1 - tun), 0.3); }
+      k(esp.rvG.gain, on * P.rv * (1 - tun) * (P.lieux || []).reduce((m, [a, b, kk]) => car && car.idx / N >= a && car.idx / N < b ? kk : m, 1), 0.3); }
     // les autres véhicules (e.autres, du plus proche au plus lointain : lat (+ à droite), fwd en m, dist, vr = vitesse de rapprochement, vrel = vitesse relative, rpm, camion, occ = 0..1 hors de vue directe),
     // relatifs à la voiture qu'on entend : l'auditeur reste à l'origine, regard vers -z, et chaque voix est placée en (lat, 0, -fwd)
     for (let i = 0; i < AU.length; i++) { const o = e.autres && e.autres[i], v = AU[i];

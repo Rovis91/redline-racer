@@ -53,7 +53,7 @@
     // REFS §9 : autel du feu achéménide (Naqsh-e Rostam) : socle à degrés, fût carré, coupe à degrés ; la flamme est posée à part
     autel: () => [['pierre', 1.4, 0.4, 1.4, 0, 0.2, 0], ['pierre', 0.8, 1.3, 0.8, 0, 1.05, 0], ['pierre', 1.2, 0.3, 1.2, 0, 1.85, 0], ['pierre', 1.5, 0.3, 1.5, 0, 2.15, 0], ['or', 1.55, 0.08, 1.55, 0, 2.34, 0]],
     // REFS §15 : tente noire des nomades : lés tendus en deux pans, rebord bas
-    tente: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
+    tenteNomade: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
     // REFS §12 : arc transversal brisé du bazar couvert (repère de la route) : deux piles et l'arc en six segments, de la naissance à 3,8 m jusqu'à la clé à 6,2 m ; entre deux arcs, la coupole monte à 7,9 m
     arcBazar: (W = 10) => { const n = 6, R0 = W - 0.45, pt = k => { const t = k / n, x = R0 * (1 - t); return [x, 3.8 + 2.4 * Math.pow(t, 0.62)]; }, segs = [];
       for (let k = 0; k < n; k++) { const [x0, y0] = pt(k), [x1, y1] = pt(k + 1), l = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0); for (const sd of [-1, 1]) segs.push(['brique', l + 0.3, 0.7, 1.1, sd * (x0 + x1) / 2, (y0 + y1) / 2, 0, [0, 0, sd > 0 ? a : -a]]); }
@@ -90,6 +90,8 @@
     etalPerse: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
       ['marchandise', 3, 0.5, 1, 0, 1.25, 1.2]],
     // REFS §16 : chameau de bât, X vers l'avant : pattes, corps, bosse, cou et tête ; bât rouge
+    // la vie : un oiseau en vol, X vers l'avant, ailes ouvertes (les vols qui tournent : pigeons du bazar, colombes du jardin, rapace)
+    oiseau: () => [['plume', 0.5, 0.12, 0.14, 0, 0, 0], ['plume', 0.24, 0.03, 0.62, -0.08, 0.03, 0.3, [0, 0.5, 0]], ['plume', 0.24, 0.03, 0.62, -0.08, 0.03, -0.3, [0, -0.5, 0]], ['tete', 0.12, 0.1, 0.1, 0.3, 0.02, 0]], // ailes en flèche : droites, elles faisaient une croix qu'on lisait comme un avion
     chameau: () => [...[[-0.75, -0.3], [-0.75, 0.3], [0.75, -0.3], [0.75, 0.3]].map(([x, z]) => ['poil', 0.22, 1.6, 0.22, x, 0.8, z]), ['poil', 2.1, 0.8, 0.8, 0, 1.95, 0], // pattes hautes, corps
       ['poil', 1.1, 0.5, 0.7, -0.1, 2.55, 0], ['poil', 0.6, 0.35, 0.5, -0.1, 2.9, 0], ['bat', 1.5, 0.25, 1.1, -0.1, 2.4, 0], ['bat', 0.5, 0.6, 1.3, -0.7, 2.2, 0], // bosse arrondie, tapis de bât rouge, ballots
       ['poil', 0.35, 1.2, 0.4, 1.25, 2.4, 0, [0, 0, -0.75]], ['poil', 0.3, 0.7, 0.35, 1.75, 3.05, 0, [0, 0, 0.2]], ['poil', 0.75, 0.35, 0.35, 2.05, 3.35, 0], ['poil', 0.3, 0.25, 0.25, -1.15, 1.9, 0, [0, 0, 0.6]]], // cou en S, tête allongée, queue
