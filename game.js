@@ -610,7 +610,6 @@
   reflete(carMat);
   // encombrement de la voiture : la boîte d'ombre de la lumière dynamique (BOITE) et le fantôme en prennent les dimensions
   const ENC = new THREE.Box3().setFromObject(carG), ENCt = ENC.getSize(new V3()), ENCc = ENC.getCenter(new V3());
-  if (L.neon) for (const z of [-1, 1]) box(3, 0.07, 0.05, new THREE.MeshBasicMaterial({ color: L.neon }), 0, VO.plan.bas - 0.02, z * (VO.plan.w / 2 - 0.05), body); // liserés néon sous le bas de caisse
 
   // traînées lumineuses des feux arrière : deux rubans tirés sur les dernières positions
   // freins : sur la roue, le disque et l'étrier (leurs teintes exactes dans la texture de textures-voitures.js) rougeoient quand ils chauffent ; au sol, derrière la voiture, une lueur rouge additive tant que les feux stop sont allumés
