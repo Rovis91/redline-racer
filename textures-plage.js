@@ -17,14 +17,14 @@
     }],
     // mer des Caraïbes vue de près : turquoise, rides claires, reflets du soleil
     merTurquoise: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#14aebe', 0, 0, 64, 64);
+      const { R, alea, voile } = o; R(g, '#10a2c0', 0, 0, 64, 64);
       voile(g, 0.5, () => { for (let i = 0; i < 60; i++) R(g, alea() < 0.5 ? '#12b0bc' : '#2fd8d4', alea() * 64 | 0, alea() * 64 | 0, 6 + (alea() * 16 | 0), 2 + (alea() * 2 | 0)); });
       for (let i = 0; i < 80; i++) R(g, '#7eeee6', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 6 | 0), 1);
       for (let i = 0; i < 26; i++) R(g, '#ffffff', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 3 | 0), 1);
     }, 10],
     // le large : bleu profond, moins de détails
     merLarge: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#0a5e94', 0, 0, 64, 64);
+      const { R, alea, voile } = o; R(g, '#0a4a86', 0, 0, 64, 64);
       voile(g, 0.5, () => { for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#0c6e98' : '#1592b8', alea() * 64 | 0, alea() * 64 | 0, 8 + (alea() * 18 | 0), 2); });
       for (let i = 0; i < 30; i++) R(g, '#8fd8ee', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1);
     }, 24],
@@ -116,7 +116,7 @@
     }, 6],
     // mer du bord, sur le sable blanc : aigue-marine claire, rides et taches de lumière
     merBord: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#8ee2cc', 0, 0, 64, 64);
+      const { R, alea, voile } = o; R(g, '#a4ecd8', 0, 0, 64, 64);
       voile(g, 0.5, () => { for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#74d6c0' : '#a8ecd8', alea() * 64 | 0, alea() * 64 | 0, 8 + (alea() * 14 | 0), 2); });
       for (let i = 0; i < 70; i++) R(g, '#c8fbf2', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1);
     }, 8],
