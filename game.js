@@ -22,6 +22,9 @@
   // zones d'ambiance sonore (champ amb de la carte, entre deux points du tracé) : 0 dehors, 1 dedans, fondu de 120 m à l'entrée et à la sortie
   const nearS = p => { let b = 0, bd = 1e18; for (let i = 0; i < N; i++) { const d = (S[i].x - p[0] * M.sc) ** 2 + (S[i].z - p[1] * M.sc) ** 2; if (d < bd) { bd = d; b = i; } } return b; };
   const ambZ = (M.amb || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)), ambAt = i => Math.max(0, ...ambZ.map(z => z(i, 60)));
+  // brouillard par zone (th.brume : [[point a, point b, début, fin en mètres], …]) : entre ces deux points du tracé, le brouillard de la carte se resserre, fondu de 180 m à l'entrée et à la sortie (docs/MOTEUR-OPTIONS-CARTES.md)
+  const brumeZ = (TH.brume || []).map(([a, b, n0, n1]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), n0, n1]);
+  const chevSauf = (TH.chevSauf || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)); // th.chevSauf : [[point a, point b], …], pas de panneaux de virage entre ces points du tracé
   // pluie (thème) : force par échantillon calculée dans sim.js (T.pluie : zones [point a, point b, force], fondu de 120 m) ; coupée en tunnel au dessin
   const pluieAt = i => T.pluie[i];
   let tTraf = 0; // temps écoulé depuis le départ : horloge du trafic
@@ -308,6 +311,9 @@
   const SD = new V3(...TH.astre.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('astre', TH.astre.col, TH.astre.ombre) }));
   sunDisc.scale.set(TH.astre.taille, TH.astre.taille, 1); scene.add(sunDisc);
+  // th.brume : un voile de la couleur du brouillard, à 700 m autour de la caméra, cache ce qui échappe au brouillard (ciel, astre, lointains posés hors brouillard) ; opacité = force de la zone
+  const voileBr = TH.brume ? new THREE.Mesh(new THREE.SphereGeometry(700, 16, 10), new THREE.MeshBasicMaterial({ color: TH.fog, side: THREE.BackSide, fog: false, transparent: true, depthWrite: false, opacity: 0 })) : null;
+  if (voileBr) { voileBr.renderOrder = 50; voileBr.visible = false; voileBr.frustumCulled = false; voileBr.userData.dyn = 1; scene.add(voileBr); }
 
   const hemi = new THREE.HemisphereLight(TH.hemi[0], TH.hemi[1], TH.hemi[2] * Math.PI); scene.add(hemi); // bleu d'en haut, rebond magenta de la ville
   const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const OMBD = 2, OMBI = 3; // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
@@ -543,7 +549,7 @@
   }
   { // chevrons à l'extérieur des virages, piles du viaduc, tubes néon en bord de route (repères de vitesse)
     const dummy = new THREE.Object3D();
-    const sg = [0, 1].map(f => new THREE.InstancedMesh(geo('chevron'), mat('chevron', { lum: 1, side: THREE.DoubleSide, retro: 1.5 }, f), 600)), cnt = [0, 0]; // rétroréfléchissants : ils s'allument dans les phares
+    const sg = [0, 1].map(f => new THREE.InstancedMesh(geo('chevron'), mat(TH.chevTex || 'chevron', { lum: 1, side: THREE.DoubleSide, retro: 1.5 }, f), 600)), cnt = [0, 0]; // rétroréfléchissants : ils s'allument dans les phares
     const poteaux = new THREE.InstancedMesh(geo('boite', 0.14, 5.4, 0.14), mat('matGris'), 1200); let npo = 0; // deux poteaux sous chaque panneau de virage : c'est un vrai panneau, pas un repère d'interface (en tunnel, il est fixé à la paroi)
     const piles = new THREE.InstancedMesh(habille(geo('pileViaduc'), concrete), concrete, Math.ceil(N / 30) + 1); let np = 0; // une pile tous les 30 échantillons au plus (60 places débordaient sur wangan : les piles en trop devenaient des pièces NaN dans la fusion)
     const tubes = [glowM, glowC].map(m => new THREE.InstancedMesh(geo('tubeNeon'), m, 200)), nt = [0, 0];
@@ -560,7 +566,7 @@
         dummy.rotation.order = 'XYZ'; dummy.rotation.set(0, across(s), 0); dummy.scale.set(1, 1, 1);
       }
       if (TH.piles != null && i % 30 === 0 && !inT) { const b = TH.piles + 1; dummy.position.set(s.x, (s.y - 1 + b) / 2, s.z); dummy.scale.set(1, Math.max(0.1, s.y - 1 - b), 1); dummy.updateMatrix(); piles.setMatrixAt(np++, dummy.matrix); dummy.scale.set(1, 1, 1); }
-      if (TH.chev && i % 6 === 0 && Math.abs(s.k) > 0.006 && cnt[s.k > 0 ? 0 : 1] < 600) {
+      if (TH.chev && i % 6 === 0 && Math.abs(s.k) > (TH.chevK || 0.006) && cnt[s.k > 0 ? 0 : 1] < 600 && !chevSauf.some(z => z(i, 1) >= 1)) {
         const f = s.k > 0 ? 0 : 1, side = s.k > 0 ? -1 : 1, off = inT ? W - 0.2 : W + 0.6;
         dummy.position.set(s.x + nx * side * off, s.y + 3, s.z + nz * side * off); dummy.lookAt(s.x, s.y + 3, s.z); dummy.updateMatrix();
         sg[f].setMatrixAt(cnt[f]++, dummy.matrix);
@@ -1932,6 +1938,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     sky.position.copy(cam.position); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000); const pasL = sunFollow(car);
     // brouillard et ciel : nuit néon ↔ tunnel ; éclairs : flash double sur le ciel et l'éclairage (le tonnerre part de fxFrame)
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN, 320, lm);
+    let kBr = 0; for (const [z, n0, n1] of brumeZ) { const k = z(car.idx, 90); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
+    if (voileBr) { voileBr.visible = kBr > 0.01; voileBr.position.copy(cam.position); voileBr.material.opacity = Math.min(1, kBr * 1.6); voileBr.material.color.copy(scene.fog.color); } // th.brume : un banc de brouillard sur une portion du tracé
     skyMat.color.copy(WHITE).lerp(FOG_IN, lm);
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;
     hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * lm) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - lm); // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);

@@ -138,3 +138,28 @@ Coût : nul.
 | perse avec `rayonsK`, `ambiant`, `oeil` et `frole` | — | 2,19 / 2,11 ms, 464 / 438 appels |
 
 Le nombre d'appels varie de ±30 d'une mesure à l'autre avec le même code (perse avant : 409, puis 436). Sans option, les anciennes cartes gardent les mêmes géométries et matières, vérifié par empreinte sur wangan, barrage et paris. Les shaders ne diffèrent que par le texte des blocs `#ifdef MOUVIS` inactifs.
+
+## 10. Brouillard par zone : `th.brume`
+
+```js
+th: { fogD: [70, 1000], brume: [[68, 75, 30, 380]] }   // entre les points 68 et 75 du tracé, le brouillard commence à 30 m et bouche tout à 380 m
+```
+Entre deux points de contrôle du tracé, le début et la fin du brouillard de la carte glissent vers les valeurs données, avec un fondu de 180 m à l'entrée et à la sortie de la zone. C'est le vrai brouillard de la scène (aucune texture plate posée dans le décor) : tout ce qui reçoit le brouillard y disparaît, ce qui est posé hors brouillard (`fog: false`, les lointains) reste net. La zone ne doit pas enjamber la ligne de départ. En écran partagé, chaque vue a le brouillard de sa voiture. La zone agit aussi sous un tunnel : si elle commence à la sortie d'un tunnel, son fondu de 180 m remplit la fin du tunnel et le brouillard est entier à la sortie (barrage : `[68, 79, 0, 55]`).
+Dans la zone, un voile de la couleur du brouillard est tendu à 700 m autour de la caméra : il cache ce qui échappe au brouillard (le ciel, l'astre, les lointains posés hors brouillard). Son opacité suit la force de la zone. Un brouillard serré (`[68, 73, 0, 55]` sur barrage : on voit à 55 m) est donc un vrai brouillard, sans horizon net au-dessus.
+Coût : une passe de dessin dans la zone seulement. Sans `th.brume`, rien ne change (le voile n'est pas créé).
+
+## 11. Texture des panneaux de virage : `th.chevTex`
+
+```js
+th: { chev: 1, chevTex: 'chevronGES' }
+```
+Les chevrons que le moteur pose à l'extérieur des virages prennent cette texture du catalogue au lieu de `chevron` (jaune et noir). Elle reçoit le même réglage (0 ou 1 : le sens). Barrage s'en sert pour des chevrons rouges sur fond blanc, ceux de la signalisation soviétique. Sans l'option, rien ne change.
+
+## 12. Portions sans panneaux de virage : `th.chevSauf`
+
+```js
+th: { chev: 1, chevSauf: [[27, 33]] }   // pas de chevrons entre les points 27 et 33 du tracé
+```
+Le moteur pose un chevron tous les 12 m dès que le rayon passe sous 167 m. Entre les points donnés, il n'en pose pas : pour un passage où le décor guide déjà (sur barrage, la salle des turbines et ses garde-corps orange). Sans l'option, rien ne change.
+
+`th.chevK` règle le seuil de courbure à partir duquel un chevron est posé (0,006 par défaut, soit un rayon de 167 m). Sur barrage, `chevK: 0.02` ne garde les panneaux que dans les virages de moins de 50 m de rayon.

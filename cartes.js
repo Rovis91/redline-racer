@@ -472,30 +472,40 @@
           fog: 0xa87c54, portail: 0x6a3a22, // voûte du bazar (docs/MOTEUR-OPTIONS-CARTES.md) : une coupole par travée de 8 m, naissances à 6 m, clé de 10 à 11,8 m ; un lanterneau toutes les trois travées : c'est le décor qui le pose (panneau clair dans sa voûte), la coque du moteur reste pleine — ses ouvertures (ouv) ne tombaient pas sur les travées et laissaient des croissants noirs au plafond
           h: 11, voute: 5, ambiant: 1, neons: [0xc88a3a, 0xbe8430] /* luminaires aux trois quarts : à pleine clarté le sol du bazar était brûlé, ses bords perdus */, reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 0.9 }, oeil: { tun: 0.65, noir: 0.5, clair: 0.2 }, frole: 1, // eclat : l'œil se fait à un bazar plus clair (tous les relecteurs le trouvaient trop sombre)
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
-    // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes ouvertes, au matin voilé (docs/SPEC-BARRAGE.md). Sens horaire, départ cap ouest dans la vallée,
-    // grand U, pont d'acier sous les embruns des gerbes (pts 10-11), rampe vers le portail (pt 15), salle des turbines en ligne droite (pts 17-21, à ciel fermé : c'est le décor qui la construit,
-    // le tunnel du moteur ne couvre que les galeries), galeries en zigzag dans le corps du barrage (pts 22-44 : trois épingles de 22,5 m de rayon, de 37 à 105 m), crête de 720 m au bord du vide (pts 44-49),
-    // lacets de la falaise est (trois épingles), retour dans la vallée. Tracé de la spec raccourci à l'ouest (vallée et galeries : 5,7 km → 5,0 km ; 130 s au tour, plus long que toutes les autres) et épingles redessinées en arcs (rayon 12 m au lieu de 15 mini).
-    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [190, 235], grip: 20, sc: 1, tun: [22, 44], chaud: [44, 58], sect: [22, 49], amb: [[8, 13], [17, 21], [44, 49]], anticipe: 1, trafic: 4,
-      sauts: [[48, 40, 1.2]], // tremplin au milieu de la crête : le « saut du bec » de la spec (fin de crête, fosse de 8 m) se recevait en pleine descente, réception dure du pilote automatique
-      surf: { zones: [[22, 44, 'mouille', 0.35]] }, // galeries suintantes (sous le tunnel, la pluie est coupée) ; le pont est mouillé par les embruns (th.pluie)
-      pts: [[300, 430, 10], [100, 430, 10], [-100, 430, 10], [-180, 425, 10], [-300, 405, 10], [-370, 355, 10], [-390, 300, 10], [-360, 250, 10], [-270, 232, 10], [-200, 238, 13], [-70, 245, 14], [70, 245, 14], [200, 240, 14], [310, 235, 21], [345, 210, 24],
-        [345, 170, 26], [330, 148, 28], [300, 135, 30], [220, 135, 35], [120, 135, 35], [20, 135, 35], [-70, 135, 35],
-        [-250, 135, 37], [-261, 132, 37.5], [-269, 124, 38], [-272, 113, 38.5], [-269, 101, 39], [-261, 93, 39.5], [-250, 90, 40], [-65, 90, 52], [120, 90, 64], [131, 87, 64.5], [139, 79, 65], [143, 68, 65.5], [139, 56, 66], [131, 48, 66.5], [120, 45, 67],
-        [-65, 45, 83], [-250, 45, 99], [-261, 42, 100], [-269, 34, 101], [-272, 23, 102], [-269, 11, 103.1], [-261, 3, 104], [-250, 0, 105],
-        [-100, 0, 105], [100, 0, 105], [250, 0, 105], [380, 0, 105], [470, 0, 105],
-        [560, 8, 98], [639, 14, 91.1], [656, 32, 88.9], [662, 55, 86.8], [656, 79, 84.6], [639, 96, 82.5], [615, 102, 80.3], [540, 112, 73.7], [499, 118, 70.1], [483, 134, 68.1], [477, 155, 66.2], [483, 177, 64.2], [499, 192, 62.3], [520, 198, 60.4],
-        [600, 208, 53.4], [674, 214, 46.9], [691, 232, 44.7], [697, 255, 42.6], [691, 279, 40.5], [674, 296, 38.4], [650, 302, 36.2], [580, 318, 30], [490, 340, 23], [430, 385, 17], [380, 420, 12]],
-      // voiture inventée : une berline d'État des années 70 réarmée, V8 de 5,5 L, environ 340 ch, 1480 kg, propulsion, boîte à 5 rapports (chiffres inventés)
-      car: car({ nom: 'VOLNA 24 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
-        tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'gtr', col: 0x3d6e8a, l: 1.05, w: 1.02, h: 1.04, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0, bandes: 0xe8761e } }),
+    // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes de fond ouvertes, au matin voilé (docs/SPEC-BARRAGE.md, sources : docs/REFS-barrage.md). Sens des points :
+    // départ sur la rive est de la rivière aval, cap nord vers le mur ; le pied du mur le long du bassin de dissipation (pts 3-5, embruns) ; la salle des machines au pied du mur (pts 6-12 : la voie, bordée de garde-corps,
+    // serpente entre trois groupes posés au milieu de la halle, en quinconce : un slalom) ; la montée de la culée est en trois lacets (pts 13-35), dont un court passage en galerie dans la roche (pts 22-27) ;
+    // la crête de 660 m cap ouest, retenue à droite, vide à gauche (pts 35-40) ; la corniche de la rive ouest qui descend au-dessus de la rivière (pts 41-49) ; le grand pont qui la traverse (pts 49-53).
+    // Barrage 74 : un barrage poids-voûte de montagne (Saïano-Chouchenskaïa au 1/2,5) début mai, retenue basse (85 m pour une crête à 105 m). x vers l'est, z vers le sud ; la rivière coule vers le sud.
+    // La cité traversée en zigzag entre les immeubles (départ dans la rue, cap au nord), S de la vallée entre la garnison et le poste, slalom entre les groupes de la salle des turbines, quai du bassin, pont sur la rivière (mouillé par les embruns), rampe du versant ouest et épingle du ravin, tunnel de la culée ouest qui débouche sur la crête,
+    // crête en arc de 600 m de rayon (d'ouest en est), S de la culée est, deux épingles sur l'épaule du versant est, descente sur la cité. Altitudes à pente constante par rampe (captures/gen-pts.js de la refonte).
+    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [63, 68], chaud: [68, 75], sect: [44, 75], corde: [68, 74], amb: [[27, 42], [68, 75]], anticipe: 1, // corde : sur la crête, frôler le garde-corps sans le toucher remplit la nitro
+      large: [[100, 9, 11.5]], // les rues de la cité, plus larges que la route (de l'entrée de la cité à sa sortie, par la ligne de départ)
+      surf: { zones: [[39, 42, 'mouille', 1]] }, // le pont du pied du mur, mouillé par les embruns des vidanges (pas d'averse : th.pluie n'y met que des gouttes)
+      pts: [[170,1036,16], [170,950,15.8], [170,860,15.6], [172,822,15.5], [190,794,15.4], [222,788,15.4], [256,790,15.3], [276,772,15.2], [282,740,15.2], [278,700,15.1],
+        [250,660,15], [205,638,14.8], [172,612,14.7], [150,575,14.6], [136,545,14.6], [126,512,14.5], [130,478,14.4], [150,448,14.3], [176,424,14.3], [184,392,14.2],
+        [170,355,14.1], [152,318,14], [148,270,14], [152,215,14], [159,150,14], [160,113,14], [150,91,14], [130,83,14], [105,83,14], [82,74,14],
+        [60,65,14], [38,74,14], [15,83,14], [-8,82,14], [-30,86,14], [-46,102,14], [-50,130,14], [-50,200,14], [-56,245,14], [-76,278,14],
+        [-110,288,14], [-150,288,14], [-192,298,14], [-210,332,16.8], [-218,385,20.7], [-240,440,25], [-236,500,29.4], [-252,560,33.9], [-280,615,38.3], [-272,680,43.1],
+        [-276,745,47.8], [-286,800,51.9], [-298,838,54.8], [-332,852,57.4], [-358,826,60.1], [-366,765,64.6], [-386,705,69.2], [-372,640,74], [-356,580,78.5], [-374,520,83.1],
+        [-372,455,87.8], [-352,400,92], [-350,335,96.7], [-336,250,103], [-336,170,103.6], [-336,92,104.1], [-326,54,104.4], [-298,29,104.7], [-252,12,105], [-180,-24,105],
+        [-90,-43,105], [0,-50,105], [90,-43,105], [180,-24,105], [240,0,105], [292,22,105], [330,44,102], [356,70,99.4], [352,112,96.5], [372,158,93],
+        [448,244,85.1], [508,312,78.8], [556,362,74], [574,392,71.6], [560,420,69.5], [526,412,67], [446,344,59.8], [372,276,52.8], [318,232,48], [286,216,45.5],
+        [262,230,43.6], [260,260,41.5], [278,292,39], [318,360,35.4], [356,410,32.6], [352,465,30.1], [378,520,27.3], [412,570,24.5], [402,630,21.8], [424,690,18.9],
+        [446,740,16.4], [452,800,16.4], [452,850,16.3], [446,882,16.3], [420,900,16.3], [370,902,16.3], [338,906,16.2], [314,926,16.2], [310,960,16.2], [310,1040,16.1],
+        [304,1072,16.1], [282,1094,16.1], [230,1100,16.1], [200,1098,16], [180,1088,16], [171,1070,16], [170,1054,16]],
+      // ZiL-111 (1958-1967), la limousine d'État soviétique : V8 de 6 L, trois volumes de plus de 6 m, calandre chromée, quatre phares, ailerons de queue. La caisse et le V8 sont les siens ;
+      // les chiffres de conduite sont ceux d'une voiture préparée, inventés pour le jeu (la vraie pèse 2,6 t, fait 200 ch et a deux rapports)
+      car: car({ nom: 'ZARIA 111 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
+        tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'zil', col: 0x14161a, l: 1.12, w: 1.04, h: 1.02, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0 } }),
       radio: RADIO.barrage,
-      th: { decor: 'barrage', pluie: [[8, 13, 3]], fog: 0xc3cdc9, fogD: [80, 900], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
-        astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c8d0, 0x8a8a80, 0.95], sun: [0xfff0d0, 0.55], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
-        chev: 1, murH: 1, route: ['#4a4d50', '#56595c', '#e8e4d8', '#e8e4d8', '#4a4d50', '#4a4d50', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
-        tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#f2b43a', '#f2b43a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#f2b43a', '#f2b43a', '#5a5e5a'],
-          fog: 0x2a2a24, portail: 0x8d918a, neons: [0xf2b43a, 0xf2b43a], coque: 6 }, // galeries : béton, néons sodium
-        hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VANNES OUVERTES · 6 H 10'], titre: ['BARRAGE', '74'] } } },
+      th: { decor: 'barrage', pluie: [[39, 42, 0.6]], mouilleVisible: 1, ombre: { doux: 1 }, frole: 1, oeil: { tun: 0.7, noir: 0.5, clair: 0.15 }, routeTex: 'chausseeGES', lisse: ['eauGES', 'ecumeGES', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin sans flaques (textures-barrage.js), eau lissée
+        fog: 0xb0babc, fogD: [40, 760], sky: [[0, '#62748a'], [0.3, '#97a6ae'], [0.47, '#d4ccb6'], [0.5, '#b0babc'], [1, '#b0babc']], stars: 0,
+        astre: { dir: [0.70, 0.38, 0.60], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c6d2, 0x55554c, 0.8], sun: [0xffecc8, 0.75], phares: 0, bloom: 0.04, scan: 0.05, // soleil du matin au sud-est, à 22° : le parement aval est éclairé en biais, le versant est reste à l'ombre
+        chev: 1, chevTex: 'chevronGES', chevSauf: [[27, 33]], chevK: 0.02, brume: [[68, 74, 0, 85]], murH: 0, route: ['#3a3c3e', '#46484a', '#f4f0e4', '#f4f0e4', '#3a3c3e', '#3a3c3e', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
+        tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#8d918a', '#7d817a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#8d918a', '#5fa89a', '#5a5e5a'],
+          fog: 0x55584f, portail: 0x8d918a, neons: [0xf2b43a, 0xf4c860], coque: 6, ambiant: 0.7, h: 7.5, voute: 3.2 }, // tunnel de la culée : voûte de béton, néons sodium, portails de béton sans couleur
+        hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VIDANGE DE PRINTEMPS · 6 H 40'], titre: ['BARRAGE', '74'] } } },
     // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
     // W = la voie unique du pont : large ne fait qu'élargir (sim.js), tout le reste est élargi à 7 m ; le gué à 13 m. Pts 20 et 23 : bornes de l'élargissement, à 60 m du pont (le raccord de sim.js).
