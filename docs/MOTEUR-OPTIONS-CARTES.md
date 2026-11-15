@@ -148,6 +148,9 @@ th: { depart: [accent, ossature, texte, 'departJungle'],   // 4e valeur : nom d'
       gloss: 0.02,                                          // brillance de la chaussée (0,08 par défaut, 0,2 sous la pluie) : moins de reflet du soleil
       cones: 0,                                             // ni cônes ni poubelles à l'entrée des virages
       brume: [[1, 4, 0.62], [29, 34, 0.68]],                // entre ces points de contrôle, portée du brouillard × k, fondue sur 120 m
-      tun: { gloss: 0.05 } }                                // brillance du sol du tunnel (0,3 par défaut)
+      tun: { gloss: 0.05,                                   // brillance du sol du tunnel (0,3 par défaut)
+             tex: ['rocheGrotte', 'rocheGrotte'] },         // textures des parois et de la voûte du tunnel, à la place de « paroi » et « plafond » (elles reçoivent les mêmes arguments, libres de les ignorer)
+      feuilles: [[0.6, 0.4, 0.12], [0.4, 0.24, 0.1]] }      // teintes des feuilles mortes que chaque voiture soulève derrière elle hors de l'eau et du tunnel (petits carrés nets, 260 au plus, une passe de dessin).
+                                                            // Demande th.poussiere (c'est dans sa boucle par voiture) ; sur une carte sans surface à poussière, th.poussiere ne fait qu'allumer la gerbe d'eau des zones mouillées
 ```
 

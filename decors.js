@@ -1933,10 +1933,10 @@
       const g = terrain(h, { pas: 6, marge: 230, loin: 100, chute: -0.2, creux, sol: s => solPont(IX.get(s)) ? 34 : enRiv(IX.get(s)) ? s.y - 1.6 : s.y, /* sous la rivière le terrain est plus bas que la route : il ne dépasse pas au pied des seuils */ mat: mat('litiereMousse'),
         couches: [{ tex: ['rocheMousse'], pente: [0.35, 0.6], rep: 0.7 }, { tex: ['vaseGalets'], poids: (x, z) => { const r = riv(x, z); return 1 - ss(r.p.w, r.p.w + 9, r.d); } }] });
       // ---------- la chaussée : la voie dallée du moteur (±W), prolongée par le décor jusqu'au bord roulable ; bordure de pierre basse et talus sous le sous-bois (O-1, O-3) ----------
-      { const cO = N - (t1 - t0), dalles = mat('dallesBord', DS), bordM = mat('bordureMousse', DS), talusM = mat('litiereMousse', DS), e = s => surPont(IX.get(s)) || gue(s) ? 0 : 1; // ni bordure ni talus sur le pont et dans l'eau
+      { const cO = N - (t1 - t0), dalles = mat('dallesBord', DS), bordM = mat('pierreClaire', DS), /* un rang de pierres claires : le bord de la route se lit jusqu'au fond de l'image */ talusM = mat('litiereMousse', DS), e = s => surPont(IX.get(s)) || gue(s) ? 0 : 1; // ni bordure ni talus sur le pont et dans l'eau
         for (const sd of [-1, 1]) { h.ribbon(t1, cO, sd * W, 0, s => sd * s.w, 0, dalles, 16);
-          h.ribbon(t1, cO, s => sd * s.w, 0, s => sd * (s.w + 0.5 * e(s)), s => 0.35 * e(s), bordM, 8);
-          h.ribbon(t1, cO, s => sd * (s.w + 0.5 * e(s)), s => 0.35 * e(s), s => sd * (s.w + 6 * e(s)), s => -1.1 * e(s), talusM, 8); } }
+          h.ribbon(t1, cO, s => sd * s.w, 0, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), bordM, 8); h.ribbon(t1, cO, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), bordM, 8);
+          h.ribbon(t1, cO, s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 6 * e(s)), s => -1.1 * e(s), talusM, 8); } }
       // ---------- l'eau : un seul ruban qui suit la rivière, plat par bief, incliné aux ressauts ----------
       { const pos = [], uv = [], idx = [];
         RIV.forEach((p, j) => { const q = RIV[Math.min(RIV.length - 1, j + 1)], o = RIV[Math.max(0, j - 1)], dx = q.x - o.x, dz = q.z - o.z, l = Math.hypot(dx, dz), nx = -dz / l, nz = dx / l, w = p.w + 2;
@@ -2017,6 +2017,7 @@
       const auBord = (nom, peau, i, sd, off, ...a) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, off); return pose(nom, peau, x, z, Math.atan2(s.x - x, s.z - z), s.y - 0.35, ...a); };
       // torches de l'expédition : elles marquent les freinages à la place des panneaux (O-5) : deux à 100 m, une à 50 m ; et les lieux
       const torches = [], torche = (i, sd, off = 1.1) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + off); torches.push([x, s.y - 0.3, z, rnd() * 6]); h.lum((i + N) % N, x, s.y + 2.6, z, 0xffa040, 13, 1.6); };
+      for (const k of [16, 22, 44, 47]) { const i = P(k), sd = S[i].k > 0 ? -1 : 1; for (const d of [-7, 0, 7]) torche(i + d, sd, 1.4); } // trois flammes à l'extérieur de chaque virage serré : les deux épingles, les deux équerres
       for (const k of [4, 14, 20, 42, 52]) { const i = P(k) - (k === 42 ? 12 : 0); torche(i - 52, -1); torche(i - 52, 1); torche(i - 26, S[i].k > 0 ? -1 : 1); }
 
       // ---------- Z1, le camp de base (O-10) : tentes, table à cartes, caisses, 4×4 bâché, mât radio, dans la clairière de gauche ; l'expédition est là ----------

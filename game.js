@@ -492,7 +492,7 @@
     const tw = FT ? s => s.w : () => W, hh = val(u.h, 8), vt = val(u.voute, 0), hm = s => hh(s) - vt(s), plaf = (s, x) => hm(s) + vt(s) * Math.sqrt(Math.max(0, 1 - (x / tw(s)) ** 2));
     const ouvert = k => (u.ouv || []).some(([a, b]) => k >= a * cT && k <= b * cT), pans = [] /* plafond : morceaux [début, longueur] hors des ouvertures */;
     for (let k = 0, a = -1; k <= cT; k++) { const o = ouvert(k) || k === cT; if (!o && a < 0) a = k; if (o && a >= 0) { pans.push([a, k - a + (k === cT && !ouvert(k))]); a = -1; } }
-    tunMats.push(mat('chaussee', { lum: 1, side: THREE.DoubleSide, gloss: u.gloss ?? 0.3 }, ...u.sol), mat('paroi', LUMI2, u.murs[0], u.paroi, u.carreaux), mat('paroi', LUMI2, u.murs[1], u.paroi, u.carreaux), mat('plafond', LUMI2, u.plafond));
+    tunMats.push(mat('chaussee', { lum: 1, side: THREE.DoubleSide, gloss: u.gloss ?? 0.3 }, ...u.sol), mat((u.tex || [])[0] || 'paroi', LUMI2, u.murs[0], u.paroi, u.carreaux), mat((u.tex || [])[0] || 'paroi', LUMI2, u.murs[1], u.paroi, u.carreaux), mat((u.tex || [])[1] || 'plafond', LUMI2, u.plafond)); /* th.tun.tex : autres textures des parois et de la voûte (chapada : la roche de la grotte) */
     tunMats.forEach((m, i) => m.color.setScalar(m.userData.amb = TH.alarme && (i === 1 || i === 2) ? 0.85 : u.ambiant ?? TUN_AMB)); // th.tun.ambiant : autre part d'ambiante sous la voûte ; ville : les parois gardent leurs bandes néon vives
     { // luminaires en quinconce, un à gauche, un à droite : la lumière et l'ombre de la voiture changent de côté à chaque luminaire franchi
       const d = new THREE.Object3D(), fx = u.neons.map(c => new THREE.InstancedMesh(geo('luminaireTunnel'), mat('peinture', { lum: 1, c, fog: false }), Math.ceil(cT / LUM_PAS))), nf = [0, 0];
@@ -710,7 +710,14 @@
       step(dt) { const fr = Math.exp(-frein * dt); for (let k = 0; k < N; k++) if (A[k] < 1) { const j = k * 3; A[k] += dt / vie; V[j] *= fr; V[j + 2] *= fr; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; }
         g.attributes.position.needsUpdate = g.attributes.age.needsUpdate = true; } };
   };
-  const POUS = TH.poussiere && flou(480, TH.poussiere, 0.5), GERBE = TH.poussiere && T.surf.some(q => q.aq) && flou(500, [0.92, 0.93, 0.9], 0.4, 0.35), GERBE1 = GERBE && flou(900, [0.86, 0.85, 0.78], 0.45, 0.35, 0, 0.18, 2.5), ECUME = GERBE && flou(700, [0.9, 0.89, 0.83], 0.9, 0.4, 0, 0.15, 2), FUM = flou(600, [0.68, 0.68, 0.72], 0.55), poussiere = (...a) => POUS.emit(...a);
+  const POUS = TH.poussiere && flou(480, TH.poussiere, 0.5), GERBE = TH.poussiere && T.surf.some(q => q.aq) && flou(500, [0.92, 0.93, 0.9], 0.4, 0.35), GERBE1 = GERBE && flou(900, [0.86, 0.85, 0.78], 0.45, 0.35, 0, 0.18, 2.5), ECUME = GERBE && flou(700, [0.9, 0.89, 0.83], 0.9, 0.4, 0, 0.15, 2), FUM = flou(600, [0.68, 0.68, 0.72], 0.55), poussiere = (...a) => POUS.emit(...a), FEU = TH.poussiere && TH.feuilles && (() => { /* th.feuilles : teintes des feuilles mortes que les voitures soulèvent (chapada). De petits carrés nets, opaques (les nuages flous se lisaient en halos) : ils montent, tournoient, retombent */
+    const n = 260, P = new Float32Array(n * 3).fill(-1e4), V = new Float32Array(n * 3), L = new Float32Array(n), C = new Float32Array(n * 3), g = new THREE.BufferGeometry(); let i = 0;
+    g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+    const d = new THREE.Points(g, new THREE.PointsMaterial({ size: 0.22, vertexColors: true })); d.frustumCulled = false; scene.add(d);
+    return { emit(x, y, z, vx, vy, vz) { const k = i++ % n; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); C.set(TH.feuilles[Math.random() * TH.feuilles.length | 0], k * 3); L[k] = 1 + Math.random() * 1.2; g.attributes.color.needsUpdate = true; },
+      step(dt) { const fr = Math.exp(-2.4 * dt); for (let k = 0; k < n; k++) if (L[k] > 0) { const j = k * 3; L[k] -= dt; V[j] *= fr; V[j + 2] *= fr; V[j + 1] = Math.max(-1.3, V[j + 1] - 7 * dt);
+          P[j] += (V[j] + Math.sin(L[k] * 9 + k) * 1.6) * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += (V[j + 2] + Math.cos(L[k] * 7 + k) * 1.6) * dt; if (L[k] <= 0) P[j + 1] = -1e4; }
+        g.attributes.position.needsUpdate = true; } }; })();
   if (GERBE) GERBE.d.renderOrder = -4; // le nuage des autres voitures passe sous la nappe d'eau du gué (renderOrder -2 dans decors.js), comme avant que la nappe ne passe sous les particules : vu de loin, elle en voile le pied
   // gerbe d'eau du gué (Spéciale des Ocres : seule carte en terre avec une zone mouillée) : derrière chaque roue avant, des gouttes en traits blancs projetées en éventail sur le côté, qui retombent, et un peu d'écume au ras de l'eau (disques à vie courte : plus longue, ils grossissent en brume) ; plus haute et plus large avec la vitesse
   //   Vue de sa propre caméra (moi : une vue la suit), la même gerbe bouchait l'écran : ses disques, freinés, restaient derrière la voiture et grossissaient devant l'objectif. Pour elle, l'effet est refait à l'échelle de la caméra de poursuite :
@@ -789,8 +796,9 @@
         const aq = j => T.surf[(c.idx + j) % N].aq > 0.099, dansEau = aq(0) || aq(1), moi = !window.__g.vue && VUES.some(u => u.car === c); // aq(1) : les roues avant, 2 m devant, y sont déjà
         c.eauT = dansEau ? (c.eauT || 0) + dt : 0; // temps passé dans l'eau (décor seulement, la simulation ne le lit pas)
         if (dansEau) gerbe(c, v, moi, dt, 1 + 2.5 * Math.max(0, 1 - c.eauT / 0.35) + (aq(4) ? 0 : 2)); // fort : le coup d'étrave à l'entrée, et la vague des 8 derniers mètres avant la sortie ; hors de l'eau, rien // le gué : une gerbe d'eau de chaque côté, là seulement où la zone mouillée est pleine ; sur la boue de ses bords, ni gerbe ni poussière (decors.js y pose la nappe), et rien dans la boue de ses bords ; allégée pour une voiture que suit une caméra de poursuite (pas en caméra d'inspection, __g.vue, qui regarde de loin)
-        else if (q.roul > 0.25 && !q.aq) for (let k = 0; k < 2; k++) poussiere(x + jit(0.6), c.y + 0.15, z + jit(0.6), c.vx * 0.7 + jit(2), 0.3 + Math.random() * 1.2, c.vz * 0.7 + jit(2)); }
-      POUS.step(dt); if (GERBE) { GERBE.step(dt); GERBE1.step(dt); ECUME.step(dt); } }
+        else if (q.roul > 0.25 && !q.aq) for (let k = 0; k < 2; k++) poussiere(x + jit(0.6), c.y + 0.15, z + jit(0.6), c.vx * 0.7 + jit(2), 0.3 + Math.random() * 1.2, c.vz * 0.7 + jit(2));
+        else if (FEU && !q.aq && !(T.tun && (c.idx - T.t0 + N) % N <= T.t1 - T.t0)) for (let k = Math.max(1, Math.round((c.drift ? 3 : 1.5) * dt * 60)); k--;) FEU.emit(x + jit(2), c.y + 0.12, z + jit(2), c.vx * 0.85 + jit(6), 1.5 + Math.random() * 4.5, c.vz * 0.85 + jit(6)); } // elles partent à la vitesse de la voiture puis freinent, comme la poussière : le sillage reste dans le champ de la caméra de poursuite
+      POUS.step(dt); if (FEU) FEU.step(dt); if (GERBE) { GERBE.step(dt); GERBE1.step(dt); ECUME.step(dt); } }
     dgFrame(dt); decorFrame(dt); FUM.step(dt); dEch.value = RH / 2;
     for (const p of VAPS) { for (p.t += dt; p.t > 0.12; p.t -= 0.12) p.f.emit(p.x + jit(0.6), p.y, p.z + jit(0.6), 0.3 + jit(0.4), 1 + Math.random() * 0.6, jit(0.4)); p.f.step(dt); } // vapeur : toujours, même loin (40 points par bouche)
     for (let i = 0; i < VN; i++) { const j = i * 6, s = i * VK; if (vS[s + 3] <= 0) { vCo.fill(0, j, j + 6); continue; }

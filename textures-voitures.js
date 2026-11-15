@@ -65,6 +65,14 @@
       if (K === 'r5') { grille(g, o, p.av, 0.38, 0.52, 0.66); ph(0.36, 0.68, 0.5, 0.68); plaque(g, o, p.av, 0.44); }
       if (K === 'gts') { grille(g, o, p.av, 0.5, 0.24, 0.4, 3); voile(g, 0.7, () => { for (const s of [-1, 1]) rv(g, p.dessus, 0.45, s * 0.42, 0.8, s * 0.58, SOMBRE); });
         for (let k = 0; k < 3; k++) rv(g, p.cote, xf - ra - 0.12 - k * 0.1, 0.42, xf - ra - 0.17 - k * 0.1, 0.62, SOMBRE); }
+      if (K === 'onca') { grille(g, o, p.av, 0.32, 0.26, 0.38); plaque(g, o, p.av, 0.46, 0.4); // l'Onça : une robe de jaguar. Capot noir mat, rosettes sur l'arrière des flancs, le pavillon et la poupe, qui s'espacent vers l'avant
+        voile(g, 0.9, () => rv(g, p.dessus, 0.52, -0.56, 1.86, 0.56, '#1b1a18'));
+        const ros = (v, a, b) => { const [px, py] = v(a, b); R(g, '#17120e', (px | 0) - 1, (py | 0) - 1, 3, 3); R(g, '#a8702a', px | 0, py | 0, 2, 2); }; // une rosette : un anneau sombre ouvert, le cœur fauve
+        for (let i = 0; i < 58; i++) { const t = alea() * alea(), x = cul + 0.1 + t * (0.7 - cul), y = p.bas + 0.14 + alea() * (belt - p.bas - 0.2); if (!p.xs.some(c => Math.hypot(x - c, y - p.r) < ra + 0.08)) ros(p.cote, x, y); }
+        for (let i = 0; i < 44; i++) { const t = alea() * alea(), x = cul + 0.1 + t * (0.4 - cul), z = (alea() * 2 - 1) * (W - 0.1); if (!(x > x3 && x < x0 && Math.abs(z) < hw) || (x < x1 && x > x2)) ros(p.dessus, x, z); }
+        for (let i = 0; i < 14; i++) ros(p.ar, (alea() * 2 - 1) * (W - 0.1), 0.42 + alea() * 0.4);
+        { const [cx, cy] = p.cote(-0.02, 0.56); g.beginPath(); g.arc(cx, cy, 5.5, 0, 7); g.fillStyle = '#f0ece0'; g.fill(); for (const [dx, w] of [[-3, 1], [-1, 2], [2, 2]]) R(g, '#17120e', (cx | 0) + dx, (cy | 0) - 2, w, 5); R(g, '#f0ece0', (cx | 0) - 1, (cy | 0) - 1, 1, 1); R(g, '#f0ece0', (cx | 0) + 3, (cy | 0) + 1, 1, 1); } // le numéro dans son rond blanc
+        voile(g, 0.5, () => { for (let i = 0; i < 260; i++) { const x = cul + alea() * (nez - cul), [px, py] = p.cote(x, p.bas + 0.04 + alea() * alea() * 0.42); R(g, '#4a3a22', px | 0, py | 0, 1 + (alea() * 2 | 0), 1); } }); } // la boue du marais
       voile(g, 0.5, () => { for (const s of [-1, 1]) rv(g, p.ar, s * 0.62, 0.24, s * 0.76, 0.3, SOMBRE); }); // sorties d'échappement
       plaque(g, o, p.ar, p.plaque);
       // usure légère : projections au bas de caisse et derrière les roues
@@ -78,7 +86,7 @@
       const disque = (r, c) => { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fillStyle = c; g.fill(); };
       disque(26, '#1a1a1e'); voile(g, 0.4, () => { g.strokeStyle = '#3a3a40'; g.beginPath(); g.arc(cx, cy, 23, 0, 7); g.stroke(); });
       disque(rj + 1, '#9a9ca4'); disque(rj - 1, '#26262c'); R(g, '#6a2024', 41, 20, 3, 5); // fond de jante, disque et étrier
-      const c = K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84';
+      const c = K === 'onca' ? '#e2ddcc' : K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84';
       const n = { gtr: 12, fd: 5, a80: 5, gts: 5 }[K] || 0;
       if (n) { g.strokeStyle = c; g.lineWidth = n > 6 ? 2 : K === 'a80' ? 5 : 3.5; for (let i = 0; i < n; i++) { const a = i * 2 * Math.PI / n; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * rj, cy + Math.sin(a) * rj); g.stroke(); } }
       else { disque(rj - 1, c); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.6; R(g, '#26262c', Math.round(cx + Math.cos(a) * 11) - 2, Math.round(cy + Math.sin(a) * 11) - 2, 4, 4); } }

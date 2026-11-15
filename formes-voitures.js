@@ -103,6 +103,17 @@
       pieces: (B, B2, R2, E2) => [B('caisse', 0.22, 0.06, 1.7, -2.14, 0.95, 0, 1), B2('phare', 0.3, 0.04, 0.34, 1.9, 0.7, 0.62), B2('phare', 0.04, 0.06, 0.3, 2.22, 0.5, 0.62),
         B2('noir', 1.0, 0.08, 0.06, -0.1, 0.24, 0.97), B2('feu', 0.04, 0.1, 0.46, -2.26, 0.7, 0.6), B('noir', 0.3, 0.16, 1.7, -2.12, 0.28, 0),
         B2('caisse', 0.14, 0.09, 0.14, -0.3, 0.9, 0.9, 1)]
+    },
+    // Onça 2000 Turbo (inventée, Manuscrit 512) : petit coupé brésilien en fibre des années 70, dans l'esprit des Puma GTB et SP2. Long capot plongeant, phares ronds en retrait, pavillon fuyant
+    // jusqu'à une poupe haute et tronquée, becquet moulé. En tenue d'expédition : deux longue-portée sur le bouclier, galerie de toit avec la roue de secours à plat, bavettes
+    onca: {
+      dessus: [[2.0, 0.22], [2.04, 0.42], [1.86, 0.58], [1.2, 0.74], [0.5, 0.8], [-1.0, 0.86], [-1.78, 0.9], [-1.98, 0.84], [-2.02, 0.6], [-1.98, 0.22]], bas: 0.22, w: 1.72,
+      cab: [[0.45, 0.78], [-0.25, 1.2], [-0.75, 1.21], [-1.86, 0.9]], wc: 1.34, roues: [-1.18, 1.2, 0.32, 0.25], portes: [0.45, -0.5], plaque: 0.4,
+      pieces: (B, B2, R2, E2) => [B('noir', 0.3, 0.14, 1.6, -1.9, 0.28, 0), B('noir', 0.26, 0.08, 1.66, 1.92, 0.22, 0),
+        R2('phare', 0.1, 1.93, 0.52, 0.6), B2('noir', 0.1, 0.2, 0.2, 2.03, 0.36, 0.3), R2('phare', 0.085, 2.09, 0.36, 0.3), // phares ronds, longue-portée dans leur boîtier
+        R2('feu', 0.07, -2.01, 0.72, 0.4), R2('feu', 0.07, -2.01, 0.72, 0.6), B('caisse', 0.22, 0.05, 1.56, -1.9, 0.93, 0, 1), // deux feux ronds de chaque côté, becquet
+        B('noir', 0.04, 0.05, 1.3, -0.15, 1.24, 0), B('noir', 0.04, 0.05, 1.3, -0.85, 1.25, 0), B2('noir', 0.8, 0.03, 0.04, -0.5, 1.27, 0.5), ['noir', new THREE.CylinderGeometry(0.3, 0.3, 0.17, 10), -0.5, 1.37, 0], // galerie et roue de secours
+        B2('noir', 0.03, 0.22, 0.24, -1.57, 0.2, 0.72), B2('caisse', 0.14, 0.09, 0.14, 0.4, 0.86, 0.8, 1)] // bavettes, rétroviseurs
     }
   };
 

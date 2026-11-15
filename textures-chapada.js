@@ -41,6 +41,13 @@
     chuteFil: () => [32, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#d4e6e2', 0, 0, 32, 64); // de l'eau qui tombe, pas un bloc de lumière : fond bleuté, mèches claires et sombres, trouées
       voile(g, 0.6, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#8fb4b4' : '#ffffff', alea() * 32 | 0, alea() * 50 | 0, 1 + (alea() * 2 | 0), 10 + alea() * 34 | 0); });
       voile(g, 0.7, () => { for (let i = 0; i < 12; i++) R(g, '#4a6a68', alea() * 32 | 0, alea() * 50 | 0, 1, 6 + alea() * 18 | 0); }); }],
+    // la roche de la grotte (th.tun.tex : parois et voûte du tunnel) : strates sombres, arêtes mouillées qui accrochent la lumière des torches, coulées d'eau, mousse ; les arguments du moteur (teintes du tunnel) ne servent pas
+    rocheGrotte: () => [64, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#39362e', 0, 0, 64, 64);
+      voile(g, 0.5, () => { for (let i = 0; i < 30; i++) R(g, alea() < 0.5 ? '#24221c' : '#4a463a', alea() * 56 | 0, alea() * 62 | 0, 8 + alea() * 22 | 0, 2 + alea() * 6 | 0); });
+      voile(g, 0.6, () => { for (let i = 0; i < 14; i++) R(g, '#15140f', alea() * 60 | 0, alea() * 56 | 0, 1 + (alea() * 2 | 0), 6 + alea() * 16 | 0); });
+      voile(g, 0.45, () => { for (let i = 0; i < 18; i++) R(g, '#8a8468', alea() * 58 | 0, alea() * 63 | 0, 3 + alea() * 9 | 0, 1); });
+      voile(g, 0.35, () => { for (let i = 0; i < 9; i++) R(g, '#7fa8a0', alea() * 63 | 0, alea() * 40 | 0, 1, 10 + alea() * 22 | 0); });
+      voile(g, 0.5, () => { for (let i = 0; i < 12; i++) R(g, '#3f5a2a', alea() * 58 | 0, alea() * 60 | 0, 3 + alea() * 6 | 0, 2 + alea() * 3 | 0); }); }],
     // l'eau qui tombe, faite pour défiler (decors.js fait glisser la texture vers le bas à chaque image) : mèches claires et bleutées sur un voile translucide, trouées par où l'on voit la roche ;
     // tout boucle en hauteur (chaque mèche est dessinée deux fois, à y et y - 64). trous : nombre de trouées (la nappe de devant en a plus : on voit la première à travers)
     eauChute: (trous = 6) => [32, 64, (g, o) => { const { R, alea, voile } = o, B = (c, x, y, w, h) => { R(g, c, x, y, w, h); R(g, c, x, y - 64, w, h); };
