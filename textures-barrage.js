@@ -149,6 +149,10 @@
       R(g, '#b5483c', 0, 104, 96, 16); g.fillStyle = '#f0e8d0'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('МИР ТРУД МАЙ', 48, 113);
       for (let y = 0; y < 120; y += 2) for (let x = 0; x < 96; x += 2) if (alea() < 0.5) R(g, 'rgba(0,0,0,0.1)', x + 1, y + 1, 1, 1); // joints des tesselles
     }],
+    // vantail du portail de la garnison : tôle verte, cadre, une étoile rouge à cinq branches (l'insigne des portails militaires soviétiques)
+    porteEtoile: () => [64, 32, (g, o) => { const { R, voile, alea } = o; R(g, '#4a6a4a', 0, 0, 64, 32); R(g, '#3a543a', 0, 0, 64, 2); R(g, '#3a543a', 0, 30, 64, 2); R(g, '#3a543a', 0, 0, 2, 32); R(g, '#3a543a', 62, 0, 2, 32);
+      g.fillStyle = '#c8281e'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k & 1 ? 4.2 : 10.5; g.lineTo(32 + Math.cos(a) * r, 16 + Math.sin(a) * r); } g.fill();
+      voile(g, 0.25, () => { for (let i = 0; i < 14; i++) R(g, '#2a2a20', alea() * 64 | 0, alea() * 20 | 0, 1, 3 + alea() * 9 | 0); }); }],
     // la chaussée fine sans ses flaques (sous le soleil bas, elles renvoyaient des plaques blanches) : le même dessin, les trous de l'alpha rebouchés à la couleur du bitume
     chausseeGES: (...a) => { const [w, ht, dessin, ...r] = TEXTURES.chausseeFine(...a); return [w, ht, (g, o) => { dessin(g, o); g.globalCompositeOperation = 'destination-over'; g.fillStyle = a[0]; g.fillRect(0, 0, w, ht); g.globalCompositeOperation = 'source-over'; }, ...r]; },
   });
