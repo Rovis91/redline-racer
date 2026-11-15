@@ -111,6 +111,8 @@
       if (humain) { R(g, S2, 2, 16, 9, 8); R(g, '#241f1c', 2, 23, 9, 9); for (let y = 24; y < 32; y += 2) R(g, '#7a7064', 3, y, 7, 1); R(g, '#f0b840', 1, 6, 11, 10); R(g, '#8a6a20', 1, 9, 11, 1); R(g, '#8a6a20', 1, 12, 11, 1); R(g, '#c4a478', 5, 19, 2, 1); } // tête de face, barbe en boucles, tiare d'or à cornes
       else { R(g, S2, 0, 20, 10, 8); R(g, S1, 0, 25, 5, 4); R(g, '#f0b840', 4, 13, 2, 7); R(g, '#f0b840', 8, 12, 2, 8); R(g, '#c4a478', 5, 22, 2, 1); } // tête de taureau, cornes d'or
     }],
+    // REFS §1 : joints de grandes dalles sur la chaussée de la route royale, transparents ailleurs (les marquages du moteur restent visibles) ; x en travers, y le long
+    joints: () => [32, 32, (g, { R }) => { g.clearRect(0, 0, 32, 32); R(g, '#4a3e32', 0, 0, 32, 1); R(g, '#4a3e32', 0, 16, 32, 1); for (const [x, y] of [[5, 1], [13, 17], [21, 1], [29, 17]]) R(g, '#4a3e32', x, y, 1, 15); }],
     // REFS §9 : calcaire du Kuh-e Rahmat, gris miel en strates horizontales, éboulis plus sombres au pied
     strates: () => [64, 64, (g, { R, alea }) => { R(g, '#8a7c6c', 0, 0, 64, 64); for (let y = 0; y < 64; y += 5 + (alea() * 4 | 0)) { R(g, '#5f5046', 0, y, 64, 1); R(g, '#a8987e', 0, y + 1, 64, 1); }
       for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#6e6052' : '#9a8a76', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1); R(g, '#5f5046', 0, 56, 64, 8); }, 40],

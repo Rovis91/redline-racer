@@ -14,7 +14,7 @@
       ['fut', 1.2, H - 6, 1.2, 0, 1.8 + (H - 6) / 2, 0, null, 1], ['fut', 1.2, H - 6, 1.2, 0, 1.8 + (H - 6) / 2, 0, R45], ['sculpte', 2.4, 1, 2.4, 0, H - 4.4, 0, R45], // couronne de palmes (REFS §4)
      
       ['pierre', 2.2, 1.4, 2.2, 0, H - 3.5, 0], ['pierre', 1.6, 1.2, 1.6, 0, H - 2.3, 0, R45],
-      ['sculpte', 7.6, 2.2, 2.4, 0, H - 1, 0, null, 1], ...[-1, 1].flatMap(sd => [['sculpte', 1.8, 1.9, 2, sd * 4.4, H - 0.4, 0], ['sculpte', 1.1, 1.1, 1.3, sd * 5.4, H - 0.7, 0], ['or', 0.3, 0.3, 1.9, sd * 4.9, H + 0.75, 0], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, 0.9], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, -0.9], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, 0.5], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, -0.5]])],
+      ['sculpte', 6.2, 2, 2.2, 0, H - 1, 0, null, 1], ...[-1, 1].flatMap(sd => [['sculpte', 1.8, 1.9, 2, sd * 4.4, H - 0.4, 0], ['sculpte', 1.1, 1.1, 1.3, sd * 5.4, H - 0.7, 0], ['or', 0.3, 0.3, 1.9, sd * 4.9, H + 0.75, 0], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, 0.9], ['or', 0.35, 1.1, 0.35, sd * 4.6, H + 1, -0.9], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, 0.5], ['sculpte', 0.9, 2.2, 1, sd * 3, H - 3, -0.5]])],
     // REFS §6 : la Porte des Nations restituée (zones lamTG/lamTD/lamHG/lamHD : reliefs du taureau et du lamassu, tête à gauche ou à droite de la texture), à cheval sur la route (repère de la route : Z vers la voiture qui arrive) : salle carrée de brique crue ocre à toit plat et corniche à gorge,
     // portes à chambranles de pierre, taureaux côté arrivée (ouest), lamassus à tête humaine côté sortie (est), quatre colonnes de 16,5 m à l'intérieur ; ni arc, ni créneau, ni tour
     porteNations: (W = 10) => { const L = 2 * W + 20; return [...[-1, 1].flatMap(sd => [['crue', 3, 18, 27, sd * (W + 8.5), 9, 0, null, 1], ['pierre', 3.2, 1.2, 27.4, sd * (W + 8.5), 0.6, 0],
@@ -54,8 +54,8 @@
     autel: () => [['pierre', 1.4, 0.4, 1.4, 0, 0.2, 0], ['pierre', 0.8, 1.3, 0.8, 0, 1.05, 0], ['pierre', 1.2, 0.3, 1.2, 0, 1.85, 0], ['pierre', 1.5, 0.3, 1.5, 0, 2.15, 0], ['or', 1.55, 0.08, 1.55, 0, 2.34, 0]],
     // REFS §15 : tente noire des nomades : lés tendus en deux pans, rebord bas
     tente: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
-    // REFS §12 : arc transversal brisé du bazar couvert (repère de la route) : deux piles et l'arc en six segments, de la naissance à 3,8 m jusqu'à la clé à 6,8 m
-    arcBazar: (W = 10) => { const n = 6, R0 = W - 0.45, pt = k => { const t = k / n, x = R0 * (1 - t); return [x, 3.8 + 3 * Math.pow(t, 0.62)]; }, segs = [];
+    // REFS §12 : arc transversal brisé du bazar couvert (repère de la route) : deux piles et l'arc en six segments, de la naissance à 3,8 m jusqu'à la clé à 6,2 m ; entre deux arcs, la coupole monte à 7,9 m
+    arcBazar: (W = 10) => { const n = 6, R0 = W - 0.45, pt = k => { const t = k / n, x = R0 * (1 - t); return [x, 3.8 + 2.4 * Math.pow(t, 0.62)]; }, segs = [];
       for (let k = 0; k < n; k++) { const [x0, y0] = pt(k), [x1, y1] = pt(k + 1), l = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0); for (const sd of [-1, 1]) segs.push(['brique', l + 0.3, 0.7, 1.1, sd * (x0 + x1) / 2, (y0 + y1) / 2, 0, [0, 0, sd > 0 ? a : -a]]); }
       return [...[-1, 1].flatMap(sd => [['brique', 0.9, 3.8, 1.2, sd * R0, 1.9, 0], ['faience', 1, 0.4, 1.3, sd * R0, 3.7, 0]]), ...segs]; },
     // REFS §13 : portail (pishtaq) à l'entrée du bazar couvert, à cheval sur la route : cadre de faïence plus haut que les toits, bandeau d'inscription, niche brisée à muqarnas au-dessus de la voûte
@@ -70,8 +70,9 @@
     etalPerse: () => [['bois', 3.4, 1, 1.4, 0, 0.5, 1.2], ...[-1.6, 1.6].map(x => ['bois', 0.15, 2.8, 0.15, x, 1.4, 0.3]), ['auvent', 3.8, 0.08, 2.4, 0, 2.6, 0.8, [-0.35, 0, 0]],
       ['marchandise', 3, 0.5, 1, 0, 1.25, 1.2]],
     // REFS §16 : chameau de bât, X vers l'avant : pattes, corps, bosse, cou et tête ; bât rouge
-    chameau: () => [...[[-0.8, -0.35], [-0.8, 0.35], [0.8, -0.35], [0.8, 0.35]].map(([x, z]) => ['poil', 0.25, 1.4, 0.25, x, 0.7, z]), ['poil', 2.2, 0.9, 0.9, 0, 1.75, 0],
-      ['poil', 0.9, 0.6, 0.7, -0.1, 2.4, 0], ['bat', 1, 0.4, 1, -0.1, 2.75, 0], ['poil', 0.35, 1.1, 0.35, 1.3, 2.3, 0, [0, 0, -0.5]], ['poil', 0.6, 0.35, 0.35, 1.65, 2.85, 0]],
+    chameau: () => [...[[-0.75, -0.3], [-0.75, 0.3], [0.75, -0.3], [0.75, 0.3]].map(([x, z]) => ['poil', 0.22, 1.6, 0.22, x, 0.8, z]), ['poil', 2.1, 0.8, 0.8, 0, 1.95, 0], // pattes hautes, corps
+      ['poil', 1.1, 0.5, 0.7, -0.1, 2.55, 0], ['poil', 0.6, 0.35, 0.5, -0.1, 2.9, 0], ['bat', 1.5, 0.25, 1.1, -0.1, 2.4, 0], ['bat', 0.5, 0.6, 1.3, -0.7, 2.2, 0], // bosse arrondie, tapis de bât rouge, ballots
+      ['poil', 0.35, 1.2, 0.4, 1.25, 2.4, 0, [0, 0, -0.75]], ['poil', 0.3, 0.7, 0.35, 1.75, 3.05, 0, [0, 0, 0.2]], ['poil', 0.75, 0.35, 0.35, 2.05, 3.35, 0], ['poil', 0.3, 0.25, 0.25, -1.15, 1.9, 0, [0, 0, 0.6]]], // cou en S, tête allongée, queue
     // REFS §16 : âne bâté, X vers l'avant
     ane: () => [...[[-0.4, -0.2], [-0.4, 0.2], [0.4, -0.2], [0.4, 0.2]].map(([x, z]) => ['poil', 0.14, 0.7, 0.14, x, 0.35, z]), ['poil', 1.1, 0.5, 0.5, 0, 0.95, 0],
       ['poil', 0.25, 0.5, 0.25, 0.6, 1.25, 0, [0, 0, -0.6]], ['poil', 0.45, 0.25, 0.25, 0.8, 1.5, 0], ['bat', 0.6, 0.45, 0.8, -0.05, 1.3, 0]],
