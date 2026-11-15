@@ -32,11 +32,13 @@
       const { R, alea, voile } = o; R(g, fond, 0, 0, 64, 64);
       for (let f = 0; f < 5; f++) { const y = 2 + f * 12.6 | 0; R(g, '#9a9484', 0, y + 11, 64, 1);
         for (let k = 0; k < 5; k++) { const x = 2 + k * 12.6 | 0, lo = k === 1 || k === 3;
-          R(g, alea() < 0.15 ? '#e8d8a0' : alea() < 0.5 ? '#4a5a64' : '#36424a', x + 2, y + 2, 6, 6); R(g, '#e8e4d8', x + 4, y + 2, 1, 6);
+          R(g, '1001000100010011000000110'[f * 5 + k] === '1' ? '#f0dc9c' : alea() < 0.5 ? '#4a5a64' : '#36424a', x + 2, y + 2, 6, 6); R(g, '#e8e4d8', x + 4, y + 2, 1, 6);
           if (lo) { R(g, '#7a7468', x, y + 7, 10, 3); voile(g, 0.6, () => R(g, '#5a3a2a', x + 1, y + 6, 8, 1)); } } }
       for (let x = 0; x < 64; x += 13) voile(g, 0.4, () => R(g, '#8a8474', x, 0, 1, 64));
       voile(g, 0.2, () => semis(g, o, 160, '#000'));
     }, 15],
+    // les fenêtres éclairées de panneauK, seules sur fond noir (même motif) : sa texture d'émission, à 6 h 40 une fenêtre sur trois est allumée
+    panneauKlum: () => [64, 64, (g, o) => { const { R } = o; R(g, '#000', 0, 0, 64, 64); for (let f = 0; f < 5; f++) for (let k = 0; k < 5; k++) if ('1001000100010011000000110'[f * 5 + k] === '1') { R(g, '#ffd27a', (2 + k * 12.6 | 0) + 2, (2 + f * 12.6 | 0) + 2, 6, 6); R(g, '#000', (2 + k * 12.6 | 0) + 4, (2 + f * 12.6 | 0) + 2, 1, 6); } }, 15],
     // REFS 7 — écorce de bouleau : blanc, traits noirs horizontaux ; feuillage clair du bouleau ; aiguilles du mélèze
     // REFS 3 — cuve d'un groupe : panneaux verticaux, bande de numéro claire, liseré sombre en bas
     cuveGroupe: (c = '#5fa89a') => [64, 32, (g, o) => { const { R, voile } = o; R(g, c, 0, 0, 64, 32); for (let x = 0; x < 64; x += 8) { R(g, '#3e7a6e', x, 0, 1, 32); voile(g, 0.3, () => R(g, '#fff', x + 1, 0, 1, 32)); } R(g, '#e8e4d8', 0, 6, 64, 3); R(g, '#2e4a44', 0, 29, 64, 3); }],

@@ -14,15 +14,15 @@ L'auteur a accepté toutes les propositions. Elles sont faites sur cette branche
 | A-03 garnison | Fait : sur le quai, barbelés côté route, portail à étoiles, missiles et radar au premier rang. |
 | A-04 grues | Fait : immeuble en chantier, deux grues KB rouge oxyde sur rails, plus de grue ailleurs. |
 | A-05 conduites | Fait : deux tubes le long du trottoir de droite, lyres, deux traversées. Pas de raccord dessiné jusqu'à la chaufferie. Les voitures garées et les kiosques sont passés à gauche. |
-| A-06 lumière | En partie : voile général (`fogD: [40, 760]`), sommets teintés. Lampadaires, fenêtres et projecteurs allumés : non faits. |
-| A-07 vallée | En partie : clôture d'un seul côté, rien dans les 150 m avant la halle. Les objets de droite n'ont pas été avancés. |
+| A-06 lumière | Fait : voile général (`fogD: [40, 760]`), sommets teintés, une fenêtre sur trois allumée dans les immeubles (texture d'émission `panneauKlum`), halo sur chaque lampadaire, projecteurs allumés sur les miradors de la garnison et sur trois mâts au poste électrique. Les lampes n'éclairent pas le sol (il fait jour). |
+| A-07 vallée | Fait : clôture d'un seul côté, rien dans les 150 m avant la halle, objets de droite à 4 m du bord. |
 | A-08 tracé | Fait : S de la culée resserré, freinage à 165 km/h à 3 809 m, tour lancé 117 s, trace or régénérée. `vit` et médailles non réglés. |
 | A-09 coût | En partie : 450 → 418 appels (sapins en un seul lot). La cible de 320 n'est pas atteinte. **Erratum** : le chargement de 8 s était celui d'un Chrome à froid ; à chaud barrage charge en 1,7 s comme `touge`. Il n'y a rien à corriger là. |
 | A-10 rivière, bouleaux | Fait. |
 | A-11 sommets | Fait : aplats, neige au-dessus d'une ligne nette. |
 | A-12 chevrons | Fait pour la halle (`th.chevSauf`). Gardés dans la cité, où ils aident à lire le zigzag. |
 
-Restent du ressort de l'auteur : tout ce qui se juge manette en main (le brouillard à 190 km/h, le nouveau freinage de la culée, la lecture de la garnison et de la carrière en passant). La montée en forêt (échantillons 864 à 1436) n'a pas été touchée et ressemble maintenant à ce qu'était la descente.
+Restent du ressort de l'auteur : tout ce qui se juge manette en main (le brouillard à 190 km/h, le nouveau freinage de la culée, la lecture de la garnison et de la carrière en passant). La montée en forêt (échantillons 864 à 1436) a reçu trois repères : une coupe de bois sur la rampe (clairière de souches, piles de grumes, camion, enseigne), un grand panneau rouge « СЛАВА ТРУДУ! » à l'extérieur de l'épingle du ravin, un arrêt d'autobus sur la traverse.
 
 ## Verdict
 

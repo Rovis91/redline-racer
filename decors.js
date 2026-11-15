@@ -1996,13 +1996,14 @@
       // ---------- le pont du pied du mur : tablier et piles de béton, lampadaires ----------
       tranche(iP0 + 6, iP1 - 6, (i, l) => { ruban(i, l, s => -(s.w + 1.2), -0.15, s => s.w + 1.2, -0.15, betS, 8); ruban(i, l, s => -(s.w + 1.2), -2.4, s => s.w + 1.2, -2.4, betS, 8); for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 1.2), -0.15, s => sd * (s.w + 1.2), -2.4, betS, 8); });
       for (let i = iP0 + 18; i < iP1 - 12; i += 22) { const s = S[i], m = h.pose('boite', betS, h.scene, [s.x, (s.y - 2.4 + 2) / 2, s.z], 2 * W + 1, s.y - 2.4 - 2, 2.6); m.rotation.y = h.across(s); }
+      const halos = [], clair = []; // halos des lampes allumées [x, y, z, 0, rayon ×3, couleur] ; clairières de la forêt [x, z, rayon]
       // lampadaires de sodium : le pont, la crête, la rue de la cité et ses abords
       { const lp = [], lampe = mat('lampe', LUMI); const pose1 = (i, sd, o = 1.6) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + o); lp.push([x, s.y, z, h.across(s) + (sd > 0 ? Math.PI : 0)]); };
         for (let i = iP0 + 4, k = 0; i < iP1; i += 14, k++) pose1(i, k & 1 ? 1 : -1, 0.6);
         for (let i = T0 - 30; i < T0; i += 14) pose1(i, -1);
         for (let i = iM0 + 6, k = 0; i < iM1 + 30; i += 14, k++) pose1(i, k & 1 ? 1 : -1, 0.6);
         for (let i = iV0 - 60, k = 0; ((i - iV0 + 60 + N) % N) < ((iV1 + 80 - iV0 + 60 + N) % N); i = (i + 14) % N, k++) pose1(i, k & 1 ? 1 : -1, 3.9);
-        insts(h, 'lampadaireGES', { fut: gris, lampe }, lp); }
+        insts(h, 'lampadaireGES', { fut: gris, lampe }, lp); for (const [x, y, z, r] of lp) halos.push([x + Math.cos(r) * 2.1, y + 8.6, z - Math.sin(r) * 2.1, 0, 1.5, 1.5, 1.5, 0xffb060]); }
 
       // ---------- le tunnel de la culée ouest : la chape de roche sous l'éperon (ses deux têtes de bunker sont plus bas) ----------
       const roche = mat('rocheGES', { ...DS, rep: [2, 1] });
@@ -2027,7 +2028,8 @@
         insts(h, 'portiquePoste', { treillis: treil, isol }, gant); insts(h, 'disjoncteur', { chassis: gris, isol }, disj);
         const c = [], add = (x0, z0, x1, z1) => { const l = Math.hypot(x1 - x0, z1 - z0); c.push([(x0 + x1) / 2, YP + 1.3, (z0 + z1) / 2, -Math.atan2(z1 - z0, x1 - x0), l, 2.6, 0.1]); };
         add(197, 421, 197, 611); add(197, 611, 301, 611); add(301, 611, 301, 421); add(197, 421, 301, 421); inst(h, h.geo('bloc'), mat('betonPO2', DS), c);
-        bloc(mat('panneauK', {}, '#b8b4a4'), 272, 298, 588, 606, YP, YP + 8); bloc(betS, 271, 299, 587, 607, YP + 8, YP + 8.6); }
+        bloc(mat('panneauK', {}, '#b8b4a4'), 272, 298, 588, 606, YP, YP + 8); bloc(betS, 271, 299, 587, 607, YP + 8, YP + 8.6);
+        for (const [x, z] of [[201, 426], [297, 426], [201, 606]]) { bloc(gris, x - 0.2, x + 0.2, z - 0.2, z + 0.2, YP, YP + 18); bloc(mat('lampe', LUMI), x - 0.9, x + 0.9, z - 0.3, z + 0.3, YP + 18, YP + 18.8); halos.push([x, YP + 18.4, z, 0, 2.6, 2.6, 2.6, 0xfff0d0]); } } // trois mâts de projecteurs, allumés
       // ---------- la cité ouvrière, traversée par la route : des barres grises de cinq étages alignées sur les rues (un rang de chaque côté, posé sur un sol pavé), un second rang derrière, des tours de neuf étages,
       //            des enseignes de rez-de-chaussée, des cours avec leurs aires de jeu, des kiosques, des voitures le long des trottoirs, les conduites de chauffage en portique ----------
       const YV = 16, peints = [], bl = (x, y, z, r, a, b, c, col) => peints.push([x, y, z, r, a, b, c, col]); // petits volumes peints, posés ensemble à la fin (une seule passe de dessin)
@@ -2051,13 +2053,13 @@
           if (place(x, z, r, hl, 6)) { rang1.push([x, s.y - 0.4, z, r, hl, sd, i]); break; } } }
         // second rang et tours : sur une trame, derrière le premier rang
         let k = 0; for (let z = 700; z < 1140; z += 44) for (let x = 112; x < 488; x += 76) { if (!cite(x, z)) continue; const r = (k++ & 1) * Math.PI / 2, tour = k % 6 === 0; if (place(x, z, r, tour ? 15 : 30, 6, 30)) (tour ? tours : rang2).push([x, YV - 0.4, z, r, tour ? 15 : 30]); }
-        const pk = [mat('panneauK', {}, '#9c9c96'), mat('panneauK', {}, '#8c9092'), mat('panneauK', {}, '#a8a498')], tous = [...rang1, ...rang2];
+        const pk = [mat('panneauK', {}, '#9c9c96'), mat('panneauK', {}, '#8c9092'), mat('panneauK', {}, '#a8a498')], tous = [...rang1, ...rang2]; { const lk = mat('panneauKlum').map; for (const m of pk) { m.emissiveMap = lk; m.emissive.setHex(0xffffff); m.emissiveIntensity = 0.9; } } // une fenêtre sur trois est allumée
         for (const hl of [30, 15]) pk.forEach((m, j) => { const l = tous.filter((b, q) => b[4] === hl && q % 3 === j).map(b => b.slice(0, 4)); if (l.length) insts(h, 'barre', { facade: m, toit: betS, auvent: betS }, l, { a: [hl * 2] }); });
         insts(h, 'barre', { facade: pk[1], toit: betS, auvent: betS }, tours.map(b => b.slice(0, 4)), { a: [30, 27] });
         inst(h, h.geo('bloc'), betS, [...tous, ...tours].map(b => [b[0], b[1] - 1.6, b[2], b[3], b[4] * 2 + 1, 3.4, 13])); // les soubassements : aucun immeuble ne montre son dessous
         // les enseignes de rez-de-chaussée d'un immeuble sur deux du premier rang, face à la rue
         const MOTS = ['ПРОДУКТЫ', 'ХЛЕБ', 'АПТЕКА', 'ПОЧТА', 'КНИГИ', 'МОЛОКО', 'ОБУВЬ', 'ГАСТРОНОМ'], FONDS = ['#3a5a7a', '#7a3a34', '#3a6a5a'];
-        rang1.forEach((b, q) => { if (q % 2) return; const [x, y, z, r] = b, m = new THREE.Mesh(h.geo('boite', 18, 1.5, 0.2), mat('lettres', {}, MOTS[(q >> 1) % MOTS.length], FONDS[(q >> 1) % 3], '#f0e8d0')); m.position.set(x + Math.sin(r) * 6.15, y + 3.9, z + Math.cos(r) * 6.15); m.rotation.y = r; h.scene.add(m); });
+        rang1.forEach((b, q) => { if (q % 2) return; const [x, y, z, r] = b, m = new THREE.Mesh(h.geo('boite', 18, 1.5, 0.2), mat('lettres', {}, MOTS[(q >> 1) % MOTS.length], FONDS[(q >> 1) % MOTS.length % 3], '#f0e8d0')); m.position.set(x + Math.sin(r) * 6.15, y + 3.9, z + Math.cos(r) * 6.15); m.rotation.y = r; h.scene.add(m); });
         // la seule fresque : le pignon de l'immeuble le plus proche de la ligne de départ, à droite, tourné vers les voitures qui arrivent
         { const s0 = S[30], cible = bord(s0, 1, s0.w + 12); let b = null, bd = 1e9; for (const q of rang1) { const d = Math.hypot(q[0] - cible[0], q[2] - cible[1]); if (q[5] > 0 && d < bd) { bd = d; b = q; } }
           if (b) { const [x, y, z, r, hl] = b, ax = Math.cos(r), az = -Math.sin(r), e = az > 0 ? 1 : -1, m = new THREE.Mesh(h.geo('boite', 11.4, 14.2, 0.2), mat('fresque')); m.position.set(x + ax * e * (hl + 0.15), y + 7.7, z + az * e * (hl + 0.15)); m.rotation.y = r + Math.PI / 2 + (e > 0 ? 0 : Math.PI); h.scene.add(m); } }
@@ -2123,7 +2125,7 @@
         { const tr = []; for (let k = 0; k < 7; k++) { const z = 183 + k * 5.4; tr.push([4.5, YB + 1.7, z, 0, 5.4, 2.2, 2.6, 0x5a6844], [-0.1, YB + 1.5, z, 0, 2.4, 2.4, 2.5, kaki], [3, YB + 0.5, z, 0, 7.4, 1, 2.7, 0x1e2020]); } // sept camions bâchés, le nez vers la route : bâche, cabine, châssis
           for (const z of [229, 240]) tr.push([-6, YB + 1.2, z, 0, 7, 1.5, 3.1, kaki], [-5.4, YB + 2.3, z, 0, 2.6, 0.8, 1.8, kaki], [-9.2, YB + 2.4, z, 0, 4.6, 0.25, 0.25, 0x2a2e26]); // deux blindés, tourelle et canon
           const m = inst(h, h.geo('bloc'), mat('peinture'), tr), c = new THREE.Color(); tr.forEach((q, k) => m.setColorAt(k, c.setHex(q[7]))); m.instanceColor.needsUpdate = true; }
-        for (const [x, z] of [[BX0 + 4, BZ0 + 4], [BX0 + 4, BZ1 - 4], [BX1 - 4, BZ1 - 4]]) { for (const dx of [-1.4, 1.4]) for (const dz of [-1.4, 1.4]) bloc(gris, x + dx - 0.15, x + dx + 0.15, z + dz - 0.15, z + dz + 0.15, YB, YB + 9); bloc(olive, x - 2, x + 2, z - 2, z + 2, YB + 9, YB + 11.4); bloc(betS, x - 2.6, x + 2.6, z - 2.6, z + 2.6, YB + 11.4, YB + 11.8); } // trois miradors
+        for (const [x, z] of [[BX0 + 4, BZ0 + 4], [BX0 + 4, BZ1 - 4], [BX1 - 4, BZ1 - 4]]) { for (const dx of [-1.4, 1.4]) for (const dz of [-1.4, 1.4]) bloc(gris, x + dx - 0.15, x + dx + 0.15, z + dz - 0.15, z + dz + 0.15, YB, YB + 9); bloc(olive, x - 2, x + 2, z - 2, z + 2, YB + 9, YB + 11.4); bloc(betS, x - 2.6, x + 2.6, z - 2.6, z + 2.6, YB + 11.4, YB + 11.8); bloc(mat('lampe', LUMI), x - 0.5, x + 0.5, z - 0.5, z + 0.5, YB + 11.8, YB + 12.4); halos.push([x, YB + 12.1, z, 0, 2.4, 2.4, 2.4, 0xfff0d0]); } // trois miradors, projecteur allumé
         // la défense antiaérienne, au premier rang devant la route : un radar sur sa butte, deux rampes et leurs missiles pointés vers le nord-ouest
         { const tre = mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide }, '#5a6652'), blancM = mat('peinture', { c: 0xd8dcd4 });
           bloc(olive, -31, -23, 254, 262, YB, YB + 3); bloc(tre, -28, -26, 257, 259, YB + 3, YB + 9); { const d = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.4, 14), tre); d.position.set(-27, YB + 11, 258); d.rotation.set(1.1, 0.6, 0); h.scene.add(d); }
@@ -2178,7 +2180,7 @@
         const camions = (x, y, z, r) => { for (let k = -1; k <= 1; k++) { const cx = x + Math.cos(r) * k * 4.4, cz = z - Math.sin(r) * k * 4.4; bl(cx - Math.sin(r) * 1.4, y + 1.9, cz - Math.cos(r) * 1.4, r, 2.5, 2.4, 5.2, k ? 0x7a8a8e : 0x5a6844); bl(cx + Math.sin(r) * 2.6, y + 1.6, cz + Math.cos(r) * 2.6, r, 2.4, 2.2, 2.2, k ? 0xd86a1e : 0x4a5a3a); bl(cx, y + 0.5, cz, r, 2.5, 0.9, 7.6, 0x1e2020); } };
         const citernes = (x, y, z, r) => { for (let k = -1; k <= 1; k++) { bl(x + Math.cos(r) * k * 8, y + 5, z - Math.sin(r) * k * 8, r + 0.4, 5.4, 10, 5.4, 0xa8aeaa); bl(x + Math.cos(r) * k * 8, y + 10.2, z - Math.sin(r) * k * 8, r + 0.4, 4.4, 0.5, 4.4, 0x7d817a); } };
         const TYPES = [[hangar, 17, 7, 0x7a8a90], [piles, 9, 3], [camions, 7, 5], [garages, 15, 3.5], [hangar, 17, 7, 0x8a8478], [citernes, 12, 4], [piles, 9, 3]]; let nt = 0;
-        for (let i = iZ0 + 6; i < iH0 - 75; i += 20) for (const sd of [-1, 1]) { if (!cote(i, sd)) continue; const s = S[i + (sd > 0 ? 10 : 0)], [f, hl, hp, c] = TYPES[nt % TYPES.length], [x, z] = bord(s, sd, s.w + 6.5 + hp), r = h.across(s) + Math.PI / 2 + (sd > 0 ? Math.PI : 0);
+        for (let i = iZ0 + 6; i < iH0 - 75; i += 20) for (const sd of [-1, 1]) { if (!cote(i, sd)) continue; const s = S[i + (sd > 0 ? 10 : 0)], [f, hl, hp, c] = TYPES[nt % TYPES.length], [x, z] = bord(s, sd, s.w + (sd > 0 ? 4 : 6.5) + hp), r = h.across(s) + Math.PI / 2 + (sd > 0 ? Math.PI : 0);
           if (!base(x, z) && !chantier(x, z) && !poste(x, z) && place(x, z, r, hl, hp, 5.5)) { f(x, hAt(x, z) + 0.05, z, r, c); nt++; } }
         // le poste de contrôle de la centrale, en travers de la route : deux piles, un linteau à l'enseigne, la guérite, la barrière levée
         { const s = S[P(K.sortieVille + 6)], r = h.across(s), o = s.w + 2.2; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, o); bl(x, s.y + 4.2, z, r, 2.4, 8.4, 2.4, 0x8d918a); bl(x, s.y + 0.6, z, r, 2.8, 1.2, 2.8, 0x6d726d); }
@@ -2194,6 +2196,18 @@
 
       // ---------- la montée et la descente : grumes, relais hertzien, camp de pionniers sur l'épaule, char sur son socle à l'entrée de la cité, belvédère, meules et palissades ----------
       for (const [k, sd] of [[K.rampe + 1, 1], [K.rampe + 5, -1], [K.traverse + 1, 1]]) { const s = S[P(k)], r = h.across(s) + Math.PI / 2; for (let j = 0; j < 3; j++) { const [x, z] = bord(s, sd, s.w + 5 + j * 1.5), y = hAt(x, z); bl(x, y + 0.6 + (j === 1 ? 1.1 : 0), z, r, 9, 1.1, 1.3, 0x7a5a3a); } } // des piles de grumes au bord de la rampe
+      { // la coupe de bois de la rampe : une clairière de souches du côté le plus plat, quatre piles de grumes, le camion grumier, l'enseigne
+        const i = P(K.rampe + 3), s = S[i], ec = sd => Math.abs(hAt(...bord(s, sd, s.w + 26)) - s.y), sd = ec(-1) < ec(1) ? -1 : 1, r = h.across(s) + Math.PI / 2, [cx, cz] = bord(s, sd, s.w + 26); clair.push([cx, cz, 34]);
+        for (let k = 0; k < 44; k++) { const a = rnd() * 6.28, d = 5 + rnd() * 27, x = cx + Math.cos(a) * d, z = cz + Math.sin(a) * d; if (dAt(x, z) < W + 4) continue; const y = hAt(x, z); bl(x, y + 0.3, z, a, 0.7, 0.7, 0.7, 0x6a4a2e); bl(x, y + 0.67, z, a, 0.6, 0.06, 0.6, 0xd8b888); }
+        for (let j = 0; j < 4; j++) { const q = S[i + (j % 2 ? 13 : -13)], [x, z] = bord(q, sd, q.w + (j < 2 ? 8 : 17)), y = hAt(x, z); for (let n = 0; n < 3; n++) bl(x, y + 0.6 + n * 1.2, z, r + (j % 2 ? 0.12 : -0.12), 11, 1.2, 3.6 - n * 1.1, 0x7a5a3a); }
+        { const q = S[i + 2], [x, z] = bord(q, sd, q.w + 4.6), y = q.y; bl(x, y + 0.6, z, r, 11, 0.8, 2.4, 0x1e2020); bl(x + q.tx * 4.3, y + 2, z + q.tz * 4.3, r, 2.3, 2.3, 2.4, 0x3a6a9a); bl(x - q.tx * 1.3, y + 1.9, z - q.tz * 1.3, r, 8.4, 1.6, 2.2, 0x7a5a3a); }
+        { const q = S[i - 26], [x, z] = bord(q, sd, q.w + 4.6), m = new THREE.Mesh(h.geo('boite', 7, 1.5, 0.15), mat('lettres', {}, 'ЛЕСПРОМХОЗ', '#3a5a3a', '#f0e8d0')); m.position.set(x, q.y + 3.4, z); m.rotation.y = h.across(q) + Math.PI; h.scene.add(m); for (const e of [-3, 3]) bl(x + Math.cos(h.across(q)) * e, q.y + 1.7, z - Math.sin(h.across(q)) * e, h.across(q), 0.2, 3.4, 0.2, 0x3a3e3c); } }
+      { // l'épingle du ravin : un grand panneau rouge dans l'axe de l'arrivée, à l'extérieur du virage, la forêt dégagée autour
+        let ia = P(K.ravin); for (let i = P(K.rampe + 4); i < P(K.traverse); i++) if (Math.abs(S[i].k) > Math.abs(S[ia].k)) ia = i;
+        const s = S[ia], e = S[ia - 45], [x, z] = bord(s, s.k > 0 ? -1 : 1, s.w + 15), y = Math.max(hAt(x, z), s.y), ry = Math.atan2(e.x - x, e.z - z), m = new THREE.Mesh(h.geo('boite', 26, 5, 0.3), mat('lettres', {}, 'СЛАВА ТРУДУ!', '#b5241c', '#f0e8d0')); clair.push([x, z, 20]);
+        m.position.set(x, y + 6.5, z); m.rotation.y = ry; h.scene.add(m); for (const u of [-10, 10]) bl(x + Math.cos(ry) * u, y + 2, z - Math.sin(ry) * u, ry, 0.5, 4, 0.5, 0x6d726d); }
+      { // l'arrêt d'autobus de la traverse, côté montagne
+        const s = S[P(K.traverse + 3)], [x, z] = bord(s, -1, s.w + 4.4); insts(h, 'abriBus', { beton: betS, mosaique: mat('peinture', { c: 0x3a6a9a }), banc: mat('peinture', { c: 0x6d726d }) }, [[x, s.y, z, h.across(s) + Math.PI / 2]]); clair.push([x, z, 9]); }
       { const x = -520, z = 330, y = hAt(x, z) - 1, tre = mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide }, '#b5483c'); bloc(tre, x - 2.5, x + 2.5, z - 2.5, z + 2.5, y, y + 22); bloc(mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide }, '#e8e4d8'), x - 1.8, x + 1.8, z - 1.8, z + 1.8, y + 22, y + 44); bloc(tre, x - 1.1, x + 1.1, z - 1.1, z + 1.1, y + 44, y + 62);
         bloc(mat('feuRouge', LUMI), x - 0.6, x + 0.6, z - 0.6, z + 0.6, y + 62, y + 63.2); } // le relais : treillis rouge et blanc, feu
       { // le camp de pionniers, sur le replat entre les deux lacets : portique d'entrée, cabanes sur socle, mât au drapeau, terrain de jeu
@@ -2221,12 +2235,13 @@
         { h.pose('boite', mat('lettres', {}, 'КАРЬЕР № 2', '#8d918a', '#2a2c2a'), gr, [-(sm.w + 5.5), 3.2, 30], 0.12, 1.5, 7); for (const dz of [-3, 3]) h.pose('boite', fer, gr, [-(sm.w + 5.5), 1.6, 30 + dz], 0.2, 3.2, 0.2); } }
 
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
+      { const m = inst(h, new THREE.SphereGeometry(1, 8, 6), mat('peinture', { lum: 1, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), halos), c = new THREE.Color(); halos.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; m.castShadow = m.receiveShadow = false; } // le halo des lampes allumées
 
       // ---------- la forêt : les arbres de touge (houppier en cône sur un fût nu), de jour ; mélèzes clairs et pins cembro sombres sur les versants, bouleaux dans le fond de vallée ----------
       { const cla = [], som = [], futs = [], bou = [];
-        const libre = (x, z, m) => dAt(x, z) > W + m && !carr(proche(x, z), x, z, 78) && riv(x, z) > 6 && !cite(x, z) && !poste(x, z) && !usine(x, z) && !base(x, z) && !chantier(x, z) && !dansBati(x, z, 3);
+        const libre = (x, z, m) => dAt(x, z) > W + m && !carr(proche(x, z), x, z, 78) && riv(x, z) > 6 && !cite(x, z) && !poste(x, z) && !usine(x, z) && !base(x, z) && !chantier(x, z) && !dansBati(x, z, 3) && !clair.some(([cx, cz, r]) => (x - cx) ** 2 + (z - cz) ** 2 < r * r);
         const arbre = (x, z, k) => { const y = hAt(x, z) - 0.4, dv = aval(x, z); if (dv < 30 && y < PLEIN + 1.5) return; if (dv > -30 && dv < 95 && Math.abs(x) < 262 && y < YC + 3) return; if (y > 250 && rnd() < (y - 250) / 90) return; // rien sous le niveau de la retenue pleine, rien sur le mur, la forêt s'éclaircit vers les crêtes
-          (rnd() < 0.62 ? cla : som).push([x, y + 11 * k, z, rnd() * 6, k]); futs.push([x, y + 2.6 * k, z, 0, k]); };
+          const loin = dAt(x, z) > 90; (rnd() < 0.62 ? cla : som).push([x, y + (loin ? 8.2 : 11) * k, z, rnd() * 6, k]); if (!loin) futs.push([x, y + 2.6 * k, z, 0, k]); };
         // le rang serré le long de la route, là où elle est en forêt ; ouvert côté vallée dans les trouées de la traverse haute, sur la descente est et face au mur
         const foret = i => (i > iP1 + 20 && i < T0 - 8) || (i > iM1 + 30 && i < iV0 - 25), vallee = i => i < T0 ? (dans(i, K.ravin + 2, K.tunnel) ? 1 : -1) : (dans(i, K.epingleHaute, K.belvedere) ? -1 : 1); // le côté de la vallée
         const ouvert = (i, sd) => sd === vallee(i) && (dans(i, K.culee, K.entreeVille) || [K.traverse + 2, K.traverse + 4, K.traverse + 6].some(k => Math.abs(i - P(k)) < 26));
