@@ -428,7 +428,7 @@
     // départ sur la rive est de la rivière aval, cap nord vers le mur ; le pied du mur le long du bassin de dissipation (pts 3-5, embruns) ; la salle des machines au pied du mur (pts 6-12 : la voie, bordée de garde-corps,
     // serpente entre trois groupes posés au milieu de la halle, en quinconce : un slalom) ; la montée de la culée est en trois lacets (pts 13-35), dont un court passage en galerie dans la roche (pts 22-27) ;
     // la crête de 660 m cap ouest, retenue à droite, vide à gauche (pts 35-40) ; la corniche de la rive ouest qui descend au-dessus de la rivière (pts 41-49) ; le grand pont qui la traverse (pts 49-53).
-    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [22, 27], chaud: [35, 46], sect: [13, 40], corde: [13, 40], large: [[22, 27, 12]], amb: [[3, 6], [6, 12], [36, 41]], anticipe: 1, trafic: 4, // corde : de la montée à la fin de la crête, frôler le mur sans le toucher remplit la nitro
+    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [22, 27], chaud: [35, 46], sect: [13, 40], corde: [36, 40], amb: [[3, 6], [6, 12], [36, 41]], anticipe: 1, trafic: 4, // corde : sur la crête, frôler le parapet sans le toucher remplit la nitro
       surf: { zones: [[3, 6, 'mouille', 1], [6, 12, 'mouille', 0.4], [22, 27, 'mouille', 0.35]] }, // le pied du mur, mouillé par les embruns des jets ; la galerie suinte (pas de th.pluie : ce sont des embruns, pas une averse)
       pts: [[146, 790, 12], [118, 600, 12], [100, 400, 12], [90, 290, 12], [88, 200, 12], [110, 138, 12],
         [145, 110, 12], [175, 99, 12], [200, 110, 12], [225, 121, 12], [250, 110, 12], [275, 99, 12], [305, 110, 12],
@@ -449,7 +449,7 @@
         astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xc8d4dc, 0x5a5a50, 0.95], sun: [0xfff0d0, 0.6], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
         chev: 0, murH: 0, route: ['#3a3c3e', '#46484a', '#f4f0e4', '#f4f0e4', '#3a3c3e', '#3a3c3e', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
         tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#8d918a', '#7d817a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#8d918a', '#5fa89a', '#5a5e5a'],
-          h: 9, fog: 0x55584f, portail: 0xe8761e, neons: [0xf2b43a, 0xf4c860], coque: 6 }, // galeries : béton, néons sodium
+          fog: 0x55584f, portail: 0xe8761e, neons: [0xf2b43a, 0xf4c860], coque: 6 }, // galeries : béton, néons sodium
         hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VANNES OUVERTES · 6 H 10'], titre: ['BARRAGE', '74'] } } },
     // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
