@@ -7,7 +7,7 @@ Règle de base : **on ne juge pas à l'œil du code, on juge sur des images du m
 ## 0. La barre de référence : mesurée avant de toucher au décor
 
 1. Choisir deux cartes de référence proches du sujet (par exemple paris et touge pour un décor dense, wangan pour un grand ouvrage, givre pour la nature).
-2. Les capturer : `captures.html?carte=<ref>&pas=5`. Garder une ou deux images par type de lieu (rue, forêt, ouvrage, tunnel, place) dans `captures/ref-<carte>/`.
+2. Les capturer : `node outils/plan.js <ref> tour`. Ces deux planches sont la référence donnée aux critiques.
 3. Les profiler : `node outils/banc-rapide.js --profil <ref>`. Noter, par vingtième de piste, les passes de dessin, les sommets et le nombre d'objets du décor. Cela donne la **densité cible** : la médiane des références.
 4. Faire de même sur la carte à refaire. Le tableau avant/après, par vingtième, va dans le rapport final.
 
@@ -31,10 +31,10 @@ On découpe la carte en secteurs (ceux de la spec) et on avance secteur par sect
 1. **Plan.** Lister ce qu'on voit à trois distances : au bord, de 0 à 15 m (ce qui défile et donne la vitesse) ; au plan moyen, de 15 à 80 m (les volumes, les repères) ; au fond, au-delà de 80 m (la silhouette, l'horizon). Ajouter un repère visuel par point de freinage. Aucun des trois plans ne reste vide.
 2. **Construction.**
 3. **Images du moteur.**
-   - En course : `idx=` à l'entrée, au milieu et à la sortie du secteur.
-   - Vu de près : `vue=` sous trois angles, sur les deux objets nouveaux les plus importants.
-   - En mouvement : `pas=2` sur le secteur, pour voir ce qui défile.
-4. **Critique**, par un sous-agent Sonnet. Il reçoit les captures du secteur, la capture de référence d'un lieu comparable, la fiche REFS et la grille ci-dessous. Il rend du texte, un constat par image.
+   - En course : une planche des plans du secteur (`node outils/plan.js <carte> 7 8 9`), prise avec `--avant` avant de construire.
+   - Vu de près : `--vue=` sous trois angles, sur les deux objets nouveaux les plus importants.
+   - En mouvement : `--rafale=6` sur un plan du secteur, pour voir ce qui défile, ondule ou clignote.
+4. **Critique**, par un seul sous-agent Sonnet pour le secteur. Il reçoit la planche du secteur, la planche de référence, la fiche REFS et la grille ci-dessous. Il rend du texte, un constat par vue.
 
 | Critère | Ce qu'il regarde | Seuil |
 |---|---|---|
@@ -44,18 +44,18 @@ On découpe la carte en secteurs (ceux de la spec) et on avance secteur par sect
 | Lumière et couleur | les valeurs (sombre, moyen, clair) sont séparées, rien n'est brûlé ni bouché | ≥ 7/10 |
 | Comparaison | même niveau de détail que la référence : oui ou non, et ce qui manque | oui |
 
-On corrige puis on recapture seulement les `idx=` du secteur. **Le secteur est fini quand tous les seuils sont atteints, au plus en quatre tours de boucle.** Au-delà, on le signale dans le rapport plutôt que de tourner en rond.
+On corrige puis on recapture seulement les plans du secteur. **Le secteur est fini quand tous les seuils sont atteints, au plus en quatre tours de boucle.** Au-delà, on le signale dans le rapport plutôt que de tourner en rond.
 
 ## 3. Contrôles chiffrés, sans œil humain
 
 - **Contraste** : avec Python et PIL, dans un script de la session, mesurer sur chaque capture la luminance moyenne d'une bande de route et d'une bande de bas-côté. Si l'écart est inférieur à celui des références, c'est illisible. On mesure aussi l'histogramme : plus de 5 % de pixels au-dessus de 245 veut dire que l'image est brûlée.
 - **Densité** : le profil par vingtième (section 0).
 - **Coût** : temps d'image sous la référence de 2 ms (`node outils/banc-rapide.js <carte>`), avec les passes de dessin et les sommets notés avant et après.
-- **Tests** : `node test.js` et `node test-cartes.js` sont verts. Le pilote automatique boucle sans taper. Si le tracé change, la trace or est refaite.
+- **Tests** : `sh outils/verifie.sh` est vert. Le pilote automatique boucle sans taper. Si le tracé change, la trace or est refaite.
 
 ## 4. La revue finale, comme le fera l'auteur
 
-Un tour complet `pas=5`. Deux sous-agents Sonnet, séparés, reçoivent les captures de la carte et celles d'une référence :
+Un tour complet : `node outils/plan.js <carte> tour`. Deux sous-agents Sonnet, séparés, reçoivent les deux planches de la carte et celles d'une référence :
 
 - **le directeur artistique** : fidélité aux références, identité, ambiance ;
 - **le joueur testeur** : lisibilité, repères, envie de rouler, ce qui est vide ou répétitif.

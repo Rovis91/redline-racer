@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "jeu",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["outils/capture.py"],
+      "port": 8123
+    }
+  ]
+}

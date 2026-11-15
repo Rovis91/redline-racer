@@ -105,7 +105,7 @@ Tout tourne dans le navigateur, sans étape de build ni dépendance à installer
 python outils/capture.py 8123
 ```
 
-(depuis la racine du dépôt ; ce serveur interdit le cache au navigateur. Avec `python -m http.server`, le navigateur peut garder un ancien `sim.js` à côté d'un `game.js` neuf, et la course plante à la fin du 3, 2, 1.)
+(ce serveur sert la copie du jeu où il se trouve et interdit le cache au navigateur. Avec `python -m http.server`, le navigateur peut garder un ancien `sim.js` à côté d'un `game.js` neuf, et la course plante à la fin du 3, 2, 1.)
 
 puis ouvrir l'une de ces pages (le même serveur les sert toutes) :
 
@@ -269,6 +269,8 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 | `three/` | three.js r187 (module ES : `three.module.js` + `three.core.js`), posé dans `window.THREE` par `index.html` ; les autres scripts sont `defer` |
 | `test.js` | tests de la physique |
 | `outils/perf.js` | banc de mesure : performances à une et à deux vues, mémoire sur un enchaînement de cartes (voir « Performances ») |
+| `outils/plan.js` | la capture d'un endroit d'une carte en deux secondes, avec avant/après et planches : `node outils/plan.js <carte> <plan>` (voir `METHODE-DECOR.md`) |
+| `outils/verifie.sh` | tous les tests en une commande ; `outils/hooks/pre-commit` le lance avant chaque commit de code |
 | `outils/banc.js` | le banc en une commande : `node outils/banc.js [carte]`, SUCCÈS ou ÉCHEC par carte (voir « Performances ») |
 | `outils/chocs.js` | mesure des chocs en vraie course, sans écran : `node outils/chocs.js [carte]`, et rejeu du modèle de dégâts de `docs/SPEC-CASSE.md` par profil de pilote |
 
@@ -277,6 +279,12 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 ## Tests
 
 Node 22.12 ou plus récent : les tests chargent three par `require` d'un module ES (`three/three.module.js`).
+
+```bash
+sh outils/verifie.sh
+```
+
+Lance tous les `test*.js` et s'arrête au premier rouge. Le crochet de pré-commit le fait avant chaque commit qui touche un fichier `.js` ; il se branche une fois par clone : `git config core.hooksPath outils/hooks`. Le détail de chaque test :
 
 ```bash
 node test.js

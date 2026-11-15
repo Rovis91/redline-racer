@@ -1,5 +1,5 @@
 # Serveur local pour les captures : http.server + POST /captures/<nom>.jpg|json, enregistré dans captures/ (ignoré par git).
-# Usage, depuis la racine du dépôt : python outils/capture.py 8801   puis ouvrir http://127.0.0.1:8801/outils/captures.html?carte=wangan
+# Usage : python outils/capture.py 8801 (sans argument : la variable PORT, sinon 8801)   puis ouvrir http://127.0.0.1:8801/outils/captures.html?carte=wangan
 import http.server, os, re, sys
 class H(http.server.SimpleHTTPRequestHandler):
     def do_POST(self):
@@ -11,4 +11,5 @@ class H(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store'); super().end_headers()  # toujours le code du disque, jamais celui du cache
     def log_message(self, *a): pass
-http.server.ThreadingHTTPServer(('127.0.0.1', int(sys.argv[1]) if len(sys.argv) > 1 else 8801), H).serve_forever()
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..'))  # sert toujours la copie du jeu où se trouve ce fichier (worktree compris), d'où qu'on le lance
+http.server.ThreadingHTTPServer(('127.0.0.1', int(sys.argv[1] if len(sys.argv) > 1 else os.environ.get('PORT', 8801))), H).serve_forever()

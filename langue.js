@@ -30,7 +30,7 @@
     // course et HUD
     'ARRIVEE': 'FINISH', 'TEMPS': 'TIME', 'ECART': 'GAP', 'MEIL. TOUR': 'BEST LAP', 'MEILLEUR TOUR': 'BEST LAP', 'SORT A': 'OUT AT', 'SORT': 'OUT', 'EN PISTE': 'ON TRACK', 'REVANCHE': 'REMATCH', 'GAGNE': 'WINS', 'EGALITE': 'DRAW',
     'HORS DELAI : SCORE NON COMPTE': 'TIME OUT : SCORE NOT COUNTED', 'HORS DELAI : SCORE NUL': 'TIME OUT : NO SCORE', 'HORS DELAI': 'TIME OUT', 'DELAI': 'TIME LIMIT', 'MURS': 'WALLS', 'PLACE': 'POS', 'ASPIRATION': 'SLIPSTREAM',
-    'GLACE': 'ICE', 'VIRAGE DROITE': 'RIGHT TURN', 'VIRAGE GAUCHE': 'LEFT TURN', 'DUEL FINAL': 'FINAL DUEL', 'DERNIER : DOUBLE AVANT LA LIGNE': 'LAST : OVERTAKE BEFORE THE LINE', 'ELIMINE · CAMERA SUR': 'ELIMINATED · WATCHING', 'ELIMINE': 'ELIMINATED', 'ELIMINATION': 'ELIMINATION',
+    'GLACE': 'ICE', 'VIRAGE DROITE': 'RIGHT TURN', 'VIRAGE GAUCHE': 'LEFT TURN', 'DUEL FINAL': 'FINAL DUEL', 'DERNIER : DOUBLE AVANT LA LIGNE': 'LAST : OVERTAKE BEFORE THE LINE', 'ELIMINE · CAMERA SUR': 'ELIMINATED · WATCHING', 'CAMERA SUR': 'WATCHING', 'ELIMINE': 'ELIMINATED', 'ELIMINATION': 'ELIMINATION',
     'SUR LA GRILLE': 'ON THE GRID', 'SUR': 'OF', 'DEPART': 'START', 'PREMIER TEMPS': 'FIRST TIME SET', 'EN TETE': 'LEADING', 'NOUVEAU RECORD': 'NEW RECORD', "L'AUTRE JOUEUR ROULE ENCORE": 'THE OTHER PLAYER IS STILL DRIVING', 'VOUS': 'YOU', 'CLASSEMENT GENERAL': 'STANDINGS',
     // mode CASSE
     'CASSE': 'WRECK', "HORS D'USAGE": 'WRECKED', 'TAKEDOWNS': 'TAKEDOWNS', 'TAKEDOWN PAR': 'TAKEN DOWN BY', 'TAKEDOWN': 'TAKEDOWN', 'VAINQUEUR AUX POINTS': 'WINNER ON POINTS', 'POINTS': 'POINTS', 'PTS': 'PTS',
@@ -45,12 +45,13 @@
     // cartes
     'VILLE A PLEIN REGIME': 'FULL THROTTLE CITY', 'PREMIER METRO': 'FIRST TRAIN', 'GRAND VACARME': 'GRAND ROAR', 'NUIT BLANCHE': 'WHITE NIGHT', 'SPECIALE DES OCRES': 'OCHRE STAGE', 'LIGNE DE BAIE': 'BAYSHORE LINE', 'DESCENTE DE NUIT': 'NIGHT DOWNHILL',
     'ARENE COUVERTE · COMPLET': 'INDOOR ARENA · SOLD OUT', 'COL FERME': 'PASS CLOSED', 'AUBE': 'DAWN', '5 H 30': '5:30 AM', 'SPECIALE 7 · FIN DE JOURNEE': 'STAGE 7 · LATE AFTERNOON', 'HEURE DOREE': 'GOLDEN HOUR',
+    'ROUTE ROYALE': 'ROYAL ROAD', 'COUCHANT': 'SUNSET', 'BARRAGE': 'DAM', 'VIDANGE DE PRINTEMPS': 'SPRING RELEASE', '6 H 40': '6:40 AM', 'MANUSCRIT': 'MANUSCRIPT', 'LA CITE PERDUE': 'THE LOST CITY', 'MIDI': 'NOON',
   };
   const EN_RX = new RegExp('(?<![A-Z0-9])(' + Object.keys(EN).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![A-Z])', 'g');
   const ORD = n => n + (n % 100 > 10 && n % 100 < 14 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
   const traduit = (s, langue) => langue !== 'en' || typeof s !== 'string' ? s : s.replace(/[À-ÖØ-Ýà-öø-ý]/g, c => c.normalize('NFD')[0]).replace(/(\d+)ER?(?![A-Z])/g, (_, n) => ORD(+n))
     .replace(EN_RX, k => EN[k]).replace(/ : /g, ': ').replace(/(\d),(\d)/g, '$1.$2'); // « 3E SUR 4 » -> « 3RD OF 4 » ; « 4,2 KM » -> « 4.2 KM »
-  const TITRE_EN = { ville: ['FULL THROTTLE', 'CITY'], paris: ['FIRST', 'TRAIN'], stade: ['GRAND', 'ROAR'], givre: ['WHITE', 'NIGHT'], terre: ['OCHRE', 'STAGE'] }; // titres sur deux lignes : l'ordre des mots change
+  const TITRE_EN = { ville: ['FULL THROTTLE', 'CITY'], paris: ['FIRST', 'TRAIN'], stade: ['GRAND', 'ROAR'], givre: ['WHITE', 'NIGHT'], terre: ['OCHRE', 'STAGE'], perse: ['ROYAL', 'ROAD'] }; // titres sur deux lignes : l'ordre des mots change
   const titreCarte = (id, fr, langue) => langue === 'en' && TITRE_EN[id] || fr; // titre du menu sur deux lignes ; fr = celui du thème de la carte
   Object.assign(G, { EN, EN_RX, TITRE_EN, traduit, titreCarte });
 })(typeof window !== 'undefined' ? window : globalThis);
