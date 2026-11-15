@@ -1970,7 +1970,8 @@
       // ---------- la route : chaussée à la demi-largeur réelle (s.w) ; au gué, des dalles sur les bords et l'eau au milieu ; au pont, des planches ----------
       const chaussee = h.mat('chaussee', { side: THREE.DoubleSide, gloss: 0.08, ...lisseBord }, ...h.TH.route), glis = h.mat('glissiere', DS, h.TH.mur);
       for (const [a, b] of [[g1, p0], [p1, g0]]) tranche(a, b, (i, l) => h.ribbon(i, l, s => -s.w, 0, s => s.w, 0, chaussee, 32));
-      const gueM = h.mat('eauGue', { ...DS, lum: 1, c: 0xf0e8dc, ...lisseBord }); // au centre du gué, l'eau peu profonde, ambre et plus claire que les berges tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
+      const gueM = h.mat('eauGue', { ...DS, lum: 1, c: 0xf0e8dc, ...lisseBord }); // au centre du gué, l'eau peu profonde, ambre et plus claire que les berges
+      tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
       tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0xb8b4a8 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
       { const ecu = h.mat('peinture', { lum: 1, c: 0xf2efe6, transparent: true, opacity: 0.75, depthWrite: false, ...lisseBord, side: THREE.DoubleSide }); // l'écume crème au bord du courant
         tranche(iF0, iF1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * (W - 0.25), 0.06, sd * (W + 0.45), 0.06, ecu, 6); }); }
@@ -1992,9 +1993,18 @@
       const surCorniche = sd => (i, s, o, y) => { const [x, z] = bord(s, sd, o); (rnd() < 0.6 ? corn : cornB).push([x, s.y + y, z, rnd() * 6, 0.6 + rnd() * 0.5]); };
       { const nH = bruit(); tranche(P(12) - 30, P(23) + 20, (i, l) => extrude(i, l, -1, falaise(s => s.w + 54, j => 52 + 14 * nH(j * 0.012), s => nivS(s) - 1, surCorniche(-1), 62), gres, 4)); }
       // REFS 2 : trois chutes fines qui descendent la paroi d'en face, chacune avec sa vasque de brume et ses blocs au pied
+      const blocsPo = [];
       const chutes = []; for (const [k, f] of [[12, 0.6], [17, 0.3], [20, 0.7]]) { const i = (P(k) + Math.round(((P(k + 1) - P(k) + N) % N) * f)) % N; h.ribbon(i, 5, s => -(s.w + 51), nivS, s => -(s.w + 51), 56, chuteM, 12); chutes.push(i); }
+      // REFS 3 et 4 : en forêt, une clairière avec un poço et une cascade vue de la route, pour casser la remontée sous les arbres
+      const iPo = (P(25) + Math.round(((P(26) - P(25) + N) % N) / 2)) % N, sPo = S[iPo], CL = bord(sPo, -1, sPo.w + 22); // côté gauche : à droite, la pente monte de 10 m et cachait tout
+      { const [x, z] = CL, y = g.hAt(x, z), a = h.across(sPo), vx = -sPo.tz, vz = sPo.tx; // (vx, vz) : du poço vers le fond, à l'opposé de la route
+        const po = new THREE.Mesh(new THREE.CircleGeometry(11, 20), eau); po.rotation.x = -Math.PI / 2; po.position.set(x, y + 0.15, z); h.scene.add(po);
+        const fx = x - vx * 12, fz = z - vz * 12, fy = g.hAt(fx, fz);
+        inst(h, h.geo('rocher'), gres, [[fx, fy + 9, fz, a + Math.PI / 2, 10, 14, 3.5], [fx - vz * 13, fy + 5, fz + vx * 13, a + Math.PI / 2 + 0.4, 6, 9, 4], [fx + vz * 13, fy + 4, fz - vx * 13, a + Math.PI / 2 - 0.3, 6, 7, 4]]); // la boîte « rocher » fait 2 × 1,6 × 2 : le bloc central a 7 m d'épaisseur, la cascade est posée devant sa face
+        const ch = new THREE.Mesh(new THREE.PlaneGeometry(7, 18), h.mat('chute', { ...DS, lum: 1, c: 0xe8f4f8, transparent: true, depthWrite: false, rep: [1, 2] })); // une seule bande d'eau (rep 6 la striait comme une façade) ch.position.set(fx + vx * 4.6, fy + 10, fz + vz * 3.2); ch.rotation.y = a + Math.PI / 2; h.scene.add(ch); // face à la route
+        for (let k = 0; k < 10; k++) blocsPo.push([x + (rnd() - 0.5) * 18, y - 0.2, z + (rnd() - 0.5) * 18, rnd() * 6, 1 + rnd() * 2, 0.6 + rnd(), 1 + rnd() * 2]); }
       // galets du gué (le mur de la simulation y est), blocs et dalles dans la rivière
-      const galets = [], blocs = [], coupes = [], fbas = []; for (let i = g0; entre(i, g0, g1); i = (i + 6) % N) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w + 0.5); galets.push([x, s.y, z, rnd() * 6, 0.6 + rnd() * 0.7, 0.25 + rnd() * 0.25]); } // galets espacés : en rangée serrée, ils faisaient un talus brun le long de la route
+      const galets = [], blocs = blocsPo, coupes = [], fbas = []; for (let i = g0; entre(i, g0, g1); i = (i + 6) % N) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w + 0.5); galets.push([x, s.y, z, rnd() * 6, 0.6 + rnd() * 0.7, 0.25 + rnd() * 0.25]); } // galets espacés : en rangée serrée, ils faisaient un talus brun le long de la route
       for (let k = 0; k < 260; k++) { const i = (P(12) + (rnd() * ((P(23) - P(12) + N) % N) | 0)) % N, s = S[i], o = s.w + 4 + rnd() * 49, [x, z] = bord(s, -1, o), t = rnd();
         (t < 0.7 ? galets : blocs).push([x, s.y + niv(i) + (t < 0.7 ? 0 : 0.3), z, rnd() * 6, ...(t < 0.7 ? [0.8 + rnd() * 2.5, 0.3 + rnd() * 0.5] : [1 + rnd() * 2.5, 0.6 + rnd() * 1.4, 1 + rnd() * 2.5])]); }
       for (const i of chutes) for (let k = 0; k < 14; k++) { const s = S[(i + (rnd() * 12 | 0)) % N], [x, z] = bord(s, -1, s.w + 44 + rnd() * 8); blocs.push([x, s.y + niv(i) - 0.5, z, rnd() * 6, 1.5 + rnd() * 3, 1 + rnd() * 2, 1.5 + rnd() * 3]); }
@@ -2102,7 +2112,7 @@
       const palmier = (x, y, z, t) => { const Ht = (5 + rnd() * 11) * t; palmT.push([x, y + Ht / 2, z, rnd() * 6, 0.6 * t, Ht, 0.6 * t]); palm.push([x, y + Ht, z, rnd() * 6, 0.55 * t]); }; // juçara : stipe fin, couronne de palmes
       for (let k = 0; k < 42000; k++) {
         const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), q = proche(x, z), d = q.d - q.s.w, zn = zone(q.i), r = rnd();
-        if (d < 1.2 || d > 140 || ravin(x, z) > 0.2 || (zn === 'gorge' && q.cote < 0 && d < 58) || (dF(q.i) < 24 && d < 47)) continue; // ni sur la route, ni dans la rivière
+        if (d < 1.2 || d > 140 || ravin(x, z) > 0.2 || Math.hypot(x - CL[0], z - CL[1]) < 24 || (zn === 'gorge' && q.cote < 0 && d < 58) || (dF(q.i) < 24 && d < 47)) continue; // ni sur la route, ni dans la rivière
         const a = acc(q.i, q.cote) || 0, y = d < a + 0.5 ? q.s.y + A(Math.min(d, a)) : g.hAt(x, z); // sur le bas-côté, sa hauteur (le terrain est 0,35 m dessous)
         if (d < a + 1 && (zn === 'lacets' && q.cote === amont(q.s) && paroiLacet(q.i))) continue; // le pied de la falaise
         if (zn === 'plateau') { // REFS 5 : campo rupestre
