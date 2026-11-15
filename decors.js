@@ -1737,8 +1737,8 @@
 
       // ================= Persépolis =================
       // --- REFS §1 : le mur de la terrasse, nu, en grands blocs, 15 m au-dessus de la plaine ; sur le bord, l'Apadana en ruine (colonnes debout) et des encadrements de portes (REFS §8) ---
-      boite(h, appareil, TX1 - TX0, 16.5, 6, (TX0 + TX1) / 2, 6.6, TZ - 3);
-      { const bord_ = []; for (let x = TX0 + 6; x < TX1 - 6; x += 9) if (libre(x, TZ + 4, 4)) bord_.push([x, sol(x, TZ + 4), TZ + 4, 0, 1, 0.9 + ((x * 7) % 3) * 0.05, 1]); Is('colonneRuine', { pierre, fut: h.mat('cannelure'), sculpte }, bord_); } // l'Apadana sur le bord de la terrasse : la colonnade qu'on voit de la plaine boite(h, pierre, TX1 - TX0 + 1, 0.8, 7, (TX0 + TX1) / 2, 15.1, TZ - 3);
+      boite(h, appareil, TX1 - TX0, 20, 6, (TX0 + TX1) / 2, 8.4, TZ - 3); // 18 m au-dessus de la plaine : on la voit depuis la fin de la plaine
+      { const bord_ = []; for (let x = TX0 + 6; x < TX1 - 6; x += 9) if (libre(x, TZ + 4, 4)) bord_.push([x, sol(x, TZ + 4), TZ + 4, 0, 1, 0.9 + ((x * 7) % 3) * 0.05, 1]); Is('colonneRuine', { pierre, fut: h.mat('cannelure'), sculpte }, bord_); } // l'Apadana sur le bord de la terrasse : la colonnade qu'on voit de la plaine boite(h, pierre, TX1 - TX0 + 1, 0.8, 7, (TX0 + TX1) / 2, 18.6, TZ - 3);
       { const ruines = [], portes = []; for (let x = TX0 + 12; x < TX1 - 8; x += 9) for (const z of [TZ + 8, TZ + 17, TZ + 26, TZ + 35]) { if (Math.abs(x - CX) < HX + 6 || !libre(x, z, 8) || (x * 7 + z) % 5 < 1) continue; const H = 19 - ((x * 13) % 5); ruines.push([x, sol(x, z), z, 0, 1, H / 19, 1]); }
         for (let x = CX + HX + 14; x < TX1 - 10; x += 22) { const z = TZ + 44; if (libre(x, z, 6)) portes.push([x, sol(x, z), z, 0]); }
         Is('colonneRuine', { pierre, fut: h.mat('cannelure'), sculpte }, ruines); Is('portail', { noir, pierre }, portes); }
@@ -1750,10 +1750,10 @@
         h.ribbon(i9, nr, s => s.w + 0.2, -0.6, s => s.w + 0.2, s => -s.y - 1, appareil, 4); // à droite, le flanc de la rampe en grand appareil
         h.ribbon(i9, nr, s => -(s.w + 15.4), MH.escalier + 0.45, s => -(s.w + 16.6), MH.escalier + 0.45, pierre, 4); }
       { const aut = [], fl = [], etendG = []; for (let i = i9 + 4; i < i12 + 2; i += 10) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w + 0.3), k = i > i12 - 20 ? 1.5 : 1; aut.push([x, s.y + MH.escalier + 0.45, z, h.across(s), k, k, k]); fl.push([x, s.y + MH.escalier + 0.45 + 2.6 * k, z, 0, 0.55 * k, 0.4 * k, 0.55 * k]); if ((i - i9) % 20 === 4) h.lum(i, x, s.y + 6, z, 0xff9a40, 16, 0.5); }
-        for (const sd of [-1, 1]) { const s = S[i12 - 26], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y + MH.escalier + 0.45, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xc8323c : 0x1d3a8a]); }
+        for (const ii of [i9 + 14, i12 - 26]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y + MH.escalier + 0.45, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xc8323c : 0x1d3a8a]); }
         Is('banniere', { mat: h.mat('peinture', { c: 0x4a3020 }), drap: h.mat('peinture', { c: 0xffffff }), or }, etendG, { teinte: 'drap' });
         Is('autel', { pierre, or }, aut); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xff9a3a }), fl); } // autels du feu (REFS §9, Naqsh-e Rostam) : le rythme de la montée ; les deux derniers, plus grands, annoncent l'épingle de la Porte
-      h.ribbon(i9, i12 - i9, -W + 0.4, 0.03, W - 0.4, 0.03, h.mat('marchesPerse', { ...DS, emissive: 0x2a2014 }), 1.2);
+      h.ribbon(i9, i12 - i9, s => -s.w + 0.4, 0.03, s => s.w - 0.4, 0.03, h.mat('marchesPerse', { ...DS, emissive: 0x2a2014 }), 1.2);
       { const lt = []; for (let i = i9 + 14; i < i12 - 6; i += 24) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w - 0.12); lt.push([x, s.y + 1.3, z, h.across(s)]); } I(h.geo('boite', 0.2, 2.4, 3.2), h.mat('lionTaureau'), lt); } // le lion et le taureau, de loin en loin sur les parapets
       for (const sd of [-1, 1]) { const s = S[i9 + 2], [x, z] = bord(s, sd, s.w + 0.5), m = boite(h, h.mat('lionTaureau'), 0.4, 4.4, 4.4, x, s.y + 1.6, z); m.rotation.y = h.across(s); } // le lion et le taureau, au pied de l'escalier
 
