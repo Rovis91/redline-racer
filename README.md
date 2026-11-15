@@ -260,7 +260,7 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 | `rythme.js` | **essai indépendant** : les aplats lumineux du décor battent avec la grosse caisse de la radio. Pour le retirer, supprimer sa ligne dans `index.html` ; pour comparer, ajouter `&rythme=0` à l'adresse. |
 | `traces-or.js` | trace de référence du fantôme or de chaque carte (produit par `outils/traces-or.js`) |
 | `test-cartes.js` | tests de toutes les cartes |
-| `propositions/` | la page de conception d'origine des cartes (historique) |
+| `propositions/` | pages de conception : celle d'origine des cartes (historique), et `casse.html`, le bac à sable des dégâts et du décor destructible (voir `docs/SPEC-CASSE.md`) |
 | `samples.js` | sons de batterie encodés en base64 (généré depuis `samples/`) |
 | `samples/` | sons de Roland TR-808 d'origine et leur note d'auteur |
 | `fonts/` | polices pixel |
@@ -268,6 +268,7 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 | `test.js` | tests de la physique |
 | `outils/perf.js` | banc de mesure : performances à une et à deux vues, mémoire sur un enchaînement de cartes (voir « Performances ») |
 | `outils/banc.js` | le banc en une commande : `node outils/banc.js [carte]`, SUCCÈS ou ÉCHEC par carte (voir « Performances ») |
+| `outils/chocs.js` | mesure des chocs en vraie course, sans écran : `node outils/chocs.js [carte]`, et rejeu du modèle de dégâts de `docs/SPEC-CASSE.md` par profil de pilote |
 
 `game.js` est un seul fichier découpé en sections repérées par `// ----------` : rendu et passe finale, outils des trois entités du décor (`tx`, `mat`, `geo`, `pose`), piste, ville, horizon, voiture et effets, état de jeu et commandes, interface, boucle.
 
