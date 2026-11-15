@@ -86,9 +86,9 @@
         for (const sd of [-1, 1]) { h.ribbon(t1, cO, sd * W, 0, s => sd * s.w, 0, dalles, 16);
           h.ribbon(t1, cO, s => sd * s.w, 0, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), bordM, 8); h.ribbon(t1, cO, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), bordM, 8);
           h.ribbon(t1, cO, s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 6 * e(s)), s => -1.1 * e(s), talusM, 8); } }
-      // la traînée mouillée à la sortie de chaque passage noyé : la chaussée (bandes du décor comprises) est sombre sur 64 m, de moins en moins ; le moteur n'y mouille que sa bande centrale, sur 20 m (th.mouilleVisible)
-      { const sortie = i => { while (gue(S[i % N])) i++; return i; }, voile = Array.from({ length: 10 }, (_, k) => h.mat('peinture', { c: 0x0a140e, transparent: true, opacity: 0.5 * (1 - k / 10), depthWrite: false, side: THREE.DoubleSide }));
-        for (const i0 of [sortie(P(3) - 6), sortie(iR1 - 4), sortie(P(64) - 4)]) voile.forEach((m, k) => { h.ribbon(i0 + k * 4, 4, s => -s.w, 0.045, s => s.w, 0.045, m, 8).userData.dyn = 1; }); }
+      // la traînée mouillée à la sortie de chaque passage noyé : la chaussée (bandes du décor comprises) est sombre sur 120 m, de moins en moins ; le moteur n'y mouille que sa bande centrale, sur 20 m (th.mouilleVisible)
+      { const sortie = i => { while (gue(S[i % N])) i++; return i; }, voile = Array.from({ length: 10 }, (_, k) => h.mat('peinture', { c: 0x0a140e, transparent: true, opacity: 0.56 * (1 - k / 10), depthWrite: false, side: THREE.DoubleSide }));
+        for (const i0 of [sortie(P(3) - 6), sortie(iR1 - 4), sortie(P(64) - 4)]) voile.forEach((m, k) => { h.ribbon(i0 + k * 6, 6, s => -s.w, 0.045, s => s.w, 0.045, m, 8).userData.dyn = 1; }); }
       // ---------- l'eau : un seul ruban qui suit la rivière, plat par bief, incliné aux ressauts ----------
       { const pos = [], uv = [], idx = [];
         RIV.forEach((p, j) => { const q = RIV[Math.min(RIV.length - 1, j + 1)], o = RIV[Math.max(0, j - 1)], dx = q.x - o.x, dz = q.z - o.z, l = Math.hypot(dx, dz), nx = -dz / l, nz = dx / l, w = p.w + 2;
@@ -159,7 +159,7 @@
         for (const tete of [0, 1]) { const bs = []; for (let k = 0; k < 12; k++) { const q = S[i0 + 2 + (alea() * 24 | 0)], sd = (k + tete) & 1 ? 1 : -1, [x, z] = bord(q, sd, q.w + 2.5 + alea() * 6), v = 2 + alea() * 2.5, av = 10 + alea() * 7;
             bs.push({ x, y: MAR - 0.2, z, r: alea() * 6.28, vx: -q.tz * sd * v + q.tx * av, vy: 0.7 + alea() * 0.9, vz: q.tx * sd * v + q.tz * av, e: [3.2, 3.2, 3.2] }); }
           const l = bs.map(q => [q.x, q.y, q.z, q.r, 3.2]); // posée : l'échassier de la plage, en blanc ; en vol : le corps à l'horizontale et deux ailes
-          envol(insts(h, 'flamant', peauA, l, { a: [tete] }), bs, i0, { vol: insts(h, 'aigretteVol', peauA, l), ailes: [inst(h, h.geo('ailesV', 1.5), blanc, l)], D: 28, T: 6, g: 0.07, bat: 8 }); } }
+          envol(insts(h, 'flamant', peauA, l, { a: [tete] }), bs, i0, { vol: insts(h, 'aigretteVol', peauA, l), ailes: [inst(h, h.geo('ailesV', 1.5, 2.2), blanc, l)], D: 28, T: 6, g: 0.07, bat: 8 }); } }
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: palme }, fougeres); insts(h, 'jucara', { stipe: ecorce, palme }, palmiers);
       inst(h, h.geo('cimeLoin'), mat('feuilleLoin'), rideau).castShadow = false;
       const feuilleG = mat('feuilleSoleil', DS), rouge = mat('peinture', { c: 0xd8362a });
@@ -183,7 +183,7 @@
       // une flamme qui vit (feu de camp, braseros des portails ; jamais les torches, qui marquent les freinages) : deux langues dont la hauteur change, penchées par le vent ; l = son luminaire, qui respire avec elle
       const coeurFeu = mat('peinture', { lum: 1, c: 0xffe890, fog: false });
       const flammeVive = (x, y, z, k = 1, l = null, lw = 1) => { const p = new THREE.Group(); p.position.set(x, y, z); p.userData.dyn = 1; h.scene.add(p); for (const [w, ht, y, dx] of [[0.62, 0.7, 0.35, 0], [0.42, 0.6, 0.95, 0.03], [0.22, 0.55, 1.45, 0.08]]) h.pose('boite', flamme, p, [dx * k, y * k, 0], w * k * lw, ht * k, w * k * lw); /* trois langues de plus en plus étroites : une pointe, pas un bloc */
-        for (const [wx, wz] of [[0.3, 0.66], [0.66, 0.3]]) h.pose('boite', coeurFeu, p, [0, 0.36 * k, 0], wx * k * lw, 0.5 * k, wz * k * lw); /* le cœur jaune */
+        h.pose('boite', coeurFeu, p, [0, 0.22 * k, 0], 0.7 * k * lw, 0.44 * k, 0.7 * k * lw); /* le cœur jaune */
         const ph = alea() * 9, c0 = l && l.c ? l.c.clone() : null; VIE.push((dt, car, t) => { const f = 1 + 0.24 * Math.sin(t * 11 + ph) + 0.16 * Math.sin(t * 27.3 + ph * 2); p.scale.set(1 + 0.22 * Math.sin(t * 19 + ph), f, 1 + 0.18 * Math.sin(t * 23 + ph * 3)); p.rotation.z = 0.14 + 0.08 * Math.sin(t * 7 + ph); if (c0) l.c.copy(c0).multiplyScalar(0.75 + 0.3 * f); }); };
       // au bord de la route, face à elle : échantillon i, côté sd, à off m de l'axe
       const auBord = (nom, peau, i, sd, off, ...a) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, off); return pose(nom, peau, x, z, Math.atan2(s.x - x, s.z - z), s.y - 0.35, ...a); };
@@ -287,10 +287,10 @@
           for (const sd of [-1, 1]) for (let k = 0; k < 16; k++) { const u = rnd(), d = w + 5 + u * 34; pose(sd * d, rnd() * rnd() * (40 - u * 22), 1 + rnd() * 5 + (1 - u) * 3, 6 + rnd() * 6); }
           for (let k = 0; k < 9; k++) pose((rnd() - 0.5) * 2 * (w + 5), H + 5 + rnd() * 22, 0.5 + rnd() * 2.5, 5 + rnd() * 5);
           inst(h, h.geo('rocher'), mat('rocheMousse'), rr); }
-        for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 2.2), 0, 5); b.scale.setScalar(1.7); r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
-        r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); flammeVive(q.x, q.y - 0.55, q.z, 1.7, h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2)); } } // les braseros des portails vacillent, et leur lueur avec eux
-      { const cs = Array.from({ length: 110 }, () => { const q = S[t0 + 1 + (alea() * 13 | 0)], [x, z] = bord(q, alea() < 0.5 ? -1 : 1, alea() * 5), v = 6 + alea() * 5, k = 0.7 + alea() * 0.5; return { x, y: q.y + 3.4 + alea() * 4.2, z, r: 0, vx: -q.tx * v + (alea() - 0.5) * 3, vy: -0.4 + alea() * 1.1, vz: -q.tz * v + (alea() - 0.5) * 3, e: [k, k, k] }; });
-        envol([], cs, t0 + 4, { ailes: [inst(h, h.geo('ailesV', 0.85), mat('peinture', { c: 0x2a1a14, ...DS }), cs.map(q => [q.x, q.y, q.z]))], D: 45, T: 5, g: 0.1, bat: 24 }); } // une nuée de chauves-souris sort de la grotte quand on y entre : au ras de la voûte, vers le jour
+        for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 1.6), 0, 17); b.scale.setScalar(1.7); /* 17 m devant le portail : à 5 m, l'éboulis les cachait */ r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
+        r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 1.6), 5, 17)); flammeVive(q.x, q.y - 0.55, q.z, 1.7, h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2)); } } // les braseros des portails vacillent, et leur lueur avec eux
+      { const cs = Array.from({ length: 110 }, () => { const q = S[t0 - 5 + (alea() * 17 | 0)], [x, z] = bord(q, alea() < 0.5 ? -1 : 1, alea() * 5), v = 6 + alea() * 5, k = 0.45 + alea() * 0.35; return { x, y: q.y + 2.4 + alea() * 4.6, z, r: 0, vx: -q.tx * v + (alea() - 0.5) * 3, vy: -0.4 + alea() * 1.1, vz: -q.tz * v + (alea() - 0.5) * 3, e: [k, k, k] }; });
+        envol([], cs, t0 + 4, { ailes: [inst(h, h.geo('ailesV', 0.85), mat('peinture', { lum: 1, c: 0x120c0a, ...DS }), cs.map(q => [q.x, q.y, q.z]))], D: 45, T: 5, g: 0.1, bat: 24 }); } // une nuée de chauves-souris sort de la grotte quand on y entre : au ras de la voûte, vers le jour
 
       const FUYARDS = []; // les singes qui fuient à l'approche : [échantillon, x, y, z, côté]
       // ---------- Z6, la descente des idoles (O-15, T-6) : des statues debout de plus en plus rapprochées jusqu'à l'arc ; la grande idole assise dans l'axe de l'équerre ----------
