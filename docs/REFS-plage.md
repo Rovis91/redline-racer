@@ -419,3 +419,33 @@ Base gardée : le tour 1 n'a pas franchi le seuil, mais ses changements corrigen
 4. **Le saut reste court.** Au-delà de 2 m, la réception dure (`c.land > 9`) casse la trace or (`sim.js`, `vole`, et `outils/traces-or.js`).
 5. **Tracé plat et chaussée droite.** Les relecteurs demandent 3 à 5 m de relief dans la garrigue et une courbe sur la chaussée de la lagune. Ce n'est pas un blocage moteur. Mais chaque essai de courbe déplace la trajectoire du pilote dans tout le rééchantillonnage, donc l'allée d'obstacles de la plage, qui doit alors être recalculée (`captures/piles.js`). Je ne l'ai pas tenté une deuxième fois.
 6. **Le bruit du panel**, même étalonné : la référence, inchangée, a bougé de 0,55 point en quatre tours. Le seuil de 0,3 est en dessous de ce bruit.
+
+## Rapport, série 3 (options moteur de la 2e série, lagune courbée, panel étalonné en aveugle sur ville)
+
+Base : fin de série 2 (da1bce4, 8,06). Fusion de `claude/moteur-options-cartes-31146a` jusqu'à 93d1383, tests verts. Mêmes règles : 4 relecteurs Sonnet neufs par tour, captures `taille=1920&jeu=1`, A = ville (référence, mêmes images à chaque tour), B = plage, un tour ne compte qu'au-delà de +0,3.
+
+| Critère (poids) | B t1 | B t2 | B t3 | A t1 | A t2 | A t3 |
+|---|---|---|---|---|---|---|
+| Rythme (20 %) | 8 | 8 | 8 | 5,5 | 5,5 | 6,5 |
+| Moments forts (15 %) | 8 | 8 | 8 | 6,5 | 6,5 | 7 |
+| Lisibilité (15 %) | 7,25 | 7 | 6,75 | 8,5 | 8 | 8,25 |
+| Profondeur (15 %) | 8 | 7,5 | 7 | 6 | 5,5 | 4,5 |
+| Identité (15 %) | 9 | 8 | 9 | 8 | 8,5 | 6,5 |
+| Dépassements (10 %) | 7 | 7,5 | 7,5 | 6 | 5,5 | 6,5 |
+| Tracé et décor (10 %) | 8,25 | 8,5 | 8,25 | 8,25 | 8 | 8,25 |
+| **Pondéré** | **7,96** | **7,78** | **7,79** | 6,88 | 6,73 | 6,71 |
+| **Écart B − A** | +1,09 | +1,05 | +1,08 | | | |
+| Commit | d6f11f4 | (tour 2) | (tour 3) | | | |
+
+- **Tour 1** : `th.tun.rayonsK 0.9`, `ambiant 0.7`, `th.oeil { tun 0.6, noir 0.5, clair 0.12 }`, `th.frole 1` ; chaussée de la lagune en S (pts 37 à 39 : R48 69° puis R65 32°) avec 1,5 m de relief avant le pont, saut gardé en ligne droite ; enrochement qui descend jusqu'à l'eau ; allée de la plage recalée (`captures/piles.js`) ; tour d'observation reculée (sa passerelle touchait la route). Trace or 45,77 s (seuil 49,35 s). −0,10 : dans le bruit.
+- **Tour 2** : brouillard de grotte éclairci (0x4a7c7a, le ciel vu par la sortie et les trous est la couleur de ce brouillard), trois bandes de topes avant le saut, chapelle blanche dans la garrigue, liseré de galets plus clair. −0,18 : annulé.
+- **Tour 3** : repart du tour 1 ; `rayonsK 0.6` (trois relecteurs du tour 2 : les colonnes écrasent la route), trait blanc lumineux de rive dans la salle. −0,17 contre le tour 1 : dans le bruit.
+- **Arrêt** : trois tours sans hausse au-delà de 0,3. Sur toute la série, la note de B reste entre 7,78 et 8,06 et l'écart avec la référence entre +1,05 et +1,10 : la carte est au plafond de ce que ce panel distingue. La version gardée est celle du tour 3 (tour 1 et un correctif de lisibilité, sans mécanique ajoutée).
+- **Temps d'image** (banc rapide, machine chargée à 73-82 %, millisecondes peu fiables) : plage 9,56 / 12,05 ms, 389 / 368 appels ; ville 9,66 / 9,61 ms, 348 / 355 appels.
+
+**Blocages restants**
+1. **La sortie et l'entrée du cénote se jugent noires dans les captures** (B-08 éch. 762, B-27 éch. 1000, tous les tours). `th.oeil` ne joue pas dans le style `net` des captures, et sous le tunnel le ciel prend la couleur `th.tun.fog` (`game.js` l. 1933, `skyMat.color…lerp(FOG_IN, lm)`) : le jour ne se voit pas par la bouche de sortie. Il faudrait au moteur un ciel qui garde sa couleur sous les ouvertures et vers la sortie, ou des captures qui montrent l'adaptation de l'œil.
+2. **Relief** : la lagune monte de 1,5 m, la garrigue reste plate. Son décor est posé en hauteurs absolues (murets, buissons, sol à −0,06) : la soulever demande de reprendre ce secteur entier.
+3. **Coupe et saut** : inchangés depuis la série 2 (`T.surfL` unique, `land > 9`).
+4. **Bruit du panel** : écarts de 1 à 2 points d'un tour à l'autre sur un même critère de la référence inchangée (Identité de A : 8 → 8,5 → 6,5 ; Profondeur : 6 → 5,5 → 4,5), plus grands que le seuil de 0,3.
+5. **Non vérifiés** : la conduite à la main, l'écran partagé, la dureté de la réception du saut avec le nouveau relief.
