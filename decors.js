@@ -1989,6 +1989,9 @@
       // ---------- la rivière, la paroi d'en face et ses chutes (gorge, pts 12 à 23) ----------
       tranche(P(12) - 20, iB0 - 8, (i, l) => h.ribbon(i, l, s => -(s.w + 1), nivS, s => -(s.w + 54), nivS, eau, 12));
       tranche(iF0 - 20, iF1 + 20, (i, l) => h.ribbon(i, l, s => s.w + 1, nivS, s => s.w + 45, nivS, eau, 12));
+      { const ciel = h.mat('eauCiel', { ...DS, lum: 1, rep: [4, 1], c: 0xe8ecec, ...lisseBord }), mousseG = h.mat('peinture', { lum: 1, c: 0xf4f2ea, transparent: true, opacity: 0.8, depthWrite: false, ...lisseBord, side: THREE.DoubleSide });
+        tranche(iF0 - 12, iF1 + 12, (i, l) => { for (const sd of [-1, 1]) { h.ribbon(i, l, s => sd * (s.w + 0.2), -0.04, s => sd * (s.w + 14), 0.1, ciel, 8); h.ribbon(i, l, s => sd * (s.w + 14), 0.1, s => sd * (s.w + 30), s => nivS(s) + 0.05, ciel, 8); // l'eau au ras de la route sur 14 m : le terrain (maille de 12 m) remontait au-dessus de la rivière près du bord // au gué, la rivière vue en rasant renvoie le ciel : on lit de l'eau des deux côtés de la chaussée
+          h.ribbon(i, l, s => sd * (s.w + 0.2), 0.02, s => sd * (s.w + 1.6), -0.02, mousseG, 6); } }); } // l'écume là où le courant bute sur la chaussée
       const corn = [], cornB = []; // fougères et broméliacées sur les replats des falaises
       const surCorniche = sd => (i, s, o, y) => { const [x, z] = bord(s, sd, o); (rnd() < 0.6 ? corn : cornB).push([x, s.y + y, z, rnd() * 6, 0.6 + rnd() * 0.5]); };
       { const nH = bruit(); tranche(P(12) - 30, P(23) + 20, (i, l) => extrude(i, l, -1, falaise(s => s.w + 54, j => 52 + 14 * nH(j * 0.012), s => nivS(s) - 1, surCorniche(-1), 62), gres, 4)); }
