@@ -182,8 +182,9 @@ console.log(`OK  fantômes or : ${orTxt.join(' · ')} ; lien de défi le plus lo
 const SRC = require('fs').readFileSync(__dirname + '/audio.js', 'utf8'), seen = new Set();
 new Function(SRC); // audio.js se lit sans erreur de syntaxe (sinon le jeu reste muet : SON n'existe pas)
 const GAMME = { mineur: [0, 2, 3, 5, 7, 8, 10], majeur: [0, 2, 4, 5, 7, 9, 11] }, NOMS = ['do', 'do#', 'ré', 'mib', 'mi', 'fa', 'fa#', 'sol', 'lab', 'la', 'sib', 'si'];
-for (const M of CARTES) {
-  assert(M.radio.length === 3 || M.radio.length === 4, M.id + ' : il faut trois stations (quatre au plus)');
+require('./essais-radio.js'); require('./instruments.js'); // les essais de stations (hors du jeu) passent les mêmes contrôles
+for (const M of [...CARTES, { id: 'essais', radio: MUS.ESSAIS }]) {
+  assert(M.id === 'essais' || M.radio.length === 3 || M.radio.length === 4, M.id + ' : il faut trois stations (quatre au plus)');
   for (const s of M.radio) {
     const w = s.name + ' : ';
     assert(!seen.has(s.name) && !seen.has(s.genre), w + 'nom ou genre en double'); seen.add(s.name); seen.add(s.genre);
@@ -191,8 +192,9 @@ for (const M of CARTES) {
     assert(s.form.length * 4 >= 32 && new Set(s.form).size >= 5, w + 'forme trop courte ou trop peu de sections');
     assert(s.sec[s.hot] && s.sec.e, w + 'refrain ou variation absents');
     assert(SRC.includes(' ' + s.kit + ': {'), w + 'kit inconnu ' + s.kit);
-    for (const p of ['b', 'c', 'g', 'a', 'l']) assert(!s[p] || SRC.includes(' ' + s[p].p + ': { o: [['), w + 'timbre inconnu ' + (s[p] && s[p].p));
-    assert(!s.d || SRC.includes(' ' + s.d[0] + ': { o: [['), w + 'nappe inconnue');
+    for (const p of ['b', 'c', 'g', 'a', 'l']) { if (!s[p]) continue; const m = SRC.match(new RegExp(' ' + s[p].p + ": [{] (?:smp: '([a-zA-Z0-9]+)', )?o: [[][[]")); // un timbre échantillonné doit aussi exister dans instruments.js
+      assert(m, w + 'timbre inconnu ' + s[p].p); assert(!m[1] || INS[m[1]], w + 'instrument absent de instruments.js : ' + m[1]); }
+    assert(!s.d || new RegExp(' ' + s.d[0] + ": [{] (?:smp: '[a-zA-Z0-9]+', )?o: [[][[]").test(SRC), w + 'nappe inconnue');
     for (const k in s.sec) for (const p in s.sec[k]) if ('kshpbdcgal'.includes(p)) { assert(s[p], w + 'section ' + k + ' : partie absente ' + p); const v = s[p].v || (p === 'd' ? [0] : s[p]); assert(s.sec[k][p].v < v.length, w + 'section ' + k + ' : variante inconnue ' + p + s.sec[k][p].v); }
     for (const v of (s.l || { v: [] }).v) for (const b of v) for (const n of b) assert(n == null || n === -99 || (n >= 55 && n <= 105), w + 'note de thème ' + n);
     // justesse : les accords hors gamme sont déclarés (emprunts) ; chaque note de thème, et chaque note de basse telle qu'audio.js la recale, appartient

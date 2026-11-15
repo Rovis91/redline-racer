@@ -113,9 +113,9 @@ puis ouvrir l'une de ces pages (le même serveur les sert toutes) :
 |---|---|---|
 | **Le jeu** | http://localhost:8123/ | jouer ; `?carte=ville`, `touge`, `wangan`, `paris` ou `canal` pour choisir la carte |
 | **Les sons** (banc d'écoute) | http://localhost:8123/ecoute.html | écouter chaque station, ambiance et bruitage seul, régler le mélange de course par famille, mesurer les niveaux |
-| **La musique** (éditeur) | http://localhost:8123/editeur.html | modifier une station : mixage, timbres, accords, arrangement, motifs, basse et thème en piano-roll |
+| **La musique** (éditeur) | http://localhost:8123/editeur.html | modifier une station comme dans un séquenceur : pistes et blocs du morceau, instrument de chaque piste, motifs en grille de pas, basse et thème en piano-roll, mixeur, accords |
 
-Les trois partagent le même moteur audio (`audio.js`). Les réglages de l'éditeur de musique sont enregistrés dans le navigateur : pour les entendre en course, ouvrir le jeu **à la même adresse** (même hôte, même port) que l'éditeur, puis recharger la page. « Exporter » dans l'éditeur donne le texte à conserver ou à inscrire dans `cartes.js`.
+Les trois partagent le même moteur audio (`audio.js`). Les réglages de l'éditeur de musique sont enregistrés dans le navigateur : pour les entendre en course, ouvrir le jeu **à la même adresse** (même hôte, même port) que l'éditeur, puis recharger la page. « Fichier → Copier mes réglages » dans l'éditeur donne le texte à conserver ou à inscrire dans `cartes.js`.
 
 Autres pages d'outils : `manette.html` (diagnostic de la manette) et `styles.html` (planche des styles visuels).
 
@@ -252,8 +252,9 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 | `sim.js` | **physique**, sans aucun rendu : piste, moteur et boîte, glisse, murs, pilote automatique, course contre IA à un ou deux humains, trafic, traces des fantômes et liens de défi. Partagé entre le jeu et les tests. |
 | `game.js` | rendu three.js, décor de la ville, effets, interface, commandes et périphériques, vues de l'écran partagé, boucle de jeu |
 | `audio.js` | tout le son, synthétisé : trois stations de radio par carte (données `RADIO` dans `cartes.js`), chacune avec ses timbres (`PATCH`), sa batterie (`KIT`), ses effets et sa forme en sections ; musique de menu, ambiance du lieu par zones, tunnels, moteur, boîte, pneus, bruitages. Exposé au jeu par `window.SON`. |
-| `editeur.html` | éditeur de musique : pour chaque station, mixage par partie, batterie et timbres, effets, accords, arrangement des sections, motifs, et basse et thème en piano-roll ; joue le vrai moteur, enregistre dans le navigateur (`vpr.musique`), le jeu reprend les réglages ; « Exporter » pour les inscrire dans `cartes.js` |
-| `ecoute.html` | banc d'écoute : chaque station, ambiance et bruitage joué seul (amplifié pour l'écoute, vumètre, « tout arrêter »), le mélange de course avec un curseur par famille, et trois vérifications : auto-test des boutons, niveaux (RMS et crête) et variété des stations (corrélation des spectres), par rendu hors ligne |
+| `editeur.html`, `editeur/` | éditeur de musique, sur un seul écran : en haut les pistes et le morceau bloc par bloc (clic sur une case : la piste joue ou non dans la section), en bas les outils en onglets. `editeur.html` n'est qu'une coquille ; le code est dans `editeur/` : `noyau.js` (état, annulation, enregistrement, catalogue des instruments), `arrangement.js` (pistes, blocs, sections), `motifs.js` (grille de pas), `rouleau.js` (piano-roll), `instrument.js` (instrument de la piste, volume, octave, stéréo, son sombre ↔ clair, réverbération, écho, clavier), `mixeur.js` (mixeur, réglages de la station, accords, situation de course), `principal.js` (barre du haut, raccourcis, horloge d'affichage), `editeur.css`. Joue le vrai moteur, enregistre dans le navigateur (`vpr.musique`), le jeu reprend les réglages ; « Fichier → Copier mes réglages » pour les inscrire dans `cartes.js` |
+| `ui.css` | style commun des deux outils (éditeur de musique, banc d'écoute) : police pixel du jeu pour les étiquettes, chasse fixe pour les valeurs, touches à rebord, curseurs carrés |
+| `ecoute.html`, `ecoute/` | banc d'écoute, sur un seul écran (familles de sons en onglets à gauche, situation de course à droite ; `ecoute.html` est la coquille, le code est dans `ecoute/ecoute.js`, le style dans `ecoute/ecoute.css`) : chaque station, ambiance et bruitage joué seul (amplifié pour l'écoute, vumètre, « tout arrêter »), le mélange de course avec un curseur par famille, et trois vérifications : auto-test des boutons, niveaux (RMS et crête) et variété des stations (corrélation des spectres), par rendu hors ligne |
 | `textures.js` | **catalogue des textures** : l'aspect de chaque surface, aplat (`nom: 0xrrggbb`) ou dessin sur canvas. Ni forme, ni emplacement. |
 | `formes.js` | **catalogue des formes** : la géométrie de chaque objet, forme simple ou assemblage de boîtes à zones nommées. Ni texture, ni emplacement. Un assemblage posé est fondu en une géométrie par zone ; `insts()` (decors.js) le pose en nombre, une passe de dessin par zone. |
 | `decors.js` | **placement** des décors des autres cartes (forêt, baie, Paris, canal), une fonction par carte : où poser quelle forme avec quelle texture, par `h.pose`, `h.geo`, `h.mat`. Le placement de la piste et de la ville est dans `game.js`. |
@@ -262,6 +263,7 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 | `test-cartes.js` | tests de toutes les cartes |
 | `propositions/` | pages de conception : celle d'origine des cartes (historique), et `casse.html`, le bac à sable des dégâts et du décor destructible (voir `docs/SPEC-CASSE.md`) |
 | `samples.js` | sons de batterie encodés en base64 (généré depuis `samples/`) |
+| `instruments.js` | instruments échantillonnés (FluidR3_GM, CC BY 3.0) et formes d'onde de synthés (AKWF, CC0), généré par `outils/instruments.py` |
 | `samples/` | sons de Roland TR-808 d'origine et leur note d'auteur |
 | `fonts/` | polices pixel |
 | `three/` | three.js r187 (module ES : `three.module.js` + `three.core.js`), posé dans `window.THREE` par `index.html` ; les autres scripts sont `defer` |
@@ -402,6 +404,8 @@ Dans `game.js` :
 Les records, le fantôme et les préférences sont stockés dans le navigateur sous les clés `vpr7.*` pour la ville et `vpr7.<carte>.*` pour les autres. Quand la physique change au point de rendre les anciens temps incomparables, incrémenter ce préfixe.
 
 Pour régénérer `samples.js` après avoir changé un son dans `samples/`, réencoder chaque fichier `.ogg` en base64 dans l'objet `window.SMP`.
+
+`instruments.js` se régénère avec `python -I outils/instruments.py <FluidR3_GM> <AKWF> <ffmpeg> > instruments.js` (les fichiers `*-mp3.js` de gleitz/midi-js-soundfonts et des `.wav` d'AKWF-FREE). Crédits : instruments FluidR3_GM de Frank Wen, licence CC BY 3.0 ; formes d'onde Adventure Kid Waveforms de Kristoffer Ekstrand, domaine public.
 
 ## État du code
 

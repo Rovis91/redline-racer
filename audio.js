@@ -11,7 +11,7 @@
   const hz = m => 440 * 2 ** ((m + TR - 69) / 12), R = -99, OUT = 0.56, CLAC = 0.6, LEV = 1; // R : silence dans un thème (voir mel() dans cartes.js)
   let M = CARTE, ST = M.radio, TH = M.th;
   // prises de l'éditeur de musique (editeur.html) : muet / solo par partie, section jouée en boucle, témoins (jusqu'à quand chaque partie sonne), section en cours
-  const EC = { mute: {}, solo: null, boucle: null, joue: {}, sec: '' }, jo = (p, t, d = 0.12) => { EC.joue[p] = t + d; };
+  const EC = { mute: {}, solo: null, boucle: null, joue: {}, sec: '', pause: false }, jo = (p, t, d = 0.12) => { EC.joue[p] = t + d; };
   const pv = (st, p) => (EC.solo ? EC.solo === p : !EC.mute[p]) ? (st.mx && st.mx[p] != null ? st.mx[p] : 1) : 0; // niveau d'une partie : st.mx, réglé dans l'éditeur
   let AC, live = true, timer, pret = Promise.resolve(), ana, master, musicG, tuneG, drumG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motSend, nbuf, outG, vu;
   let t0 = 0, nextT = 0, stp = 0, musicOn = true, lastHit = 0, lastMus = -9, lastN = 0, lastB = 0, menu = true;
@@ -92,6 +92,7 @@
       vox: mk(H(32, n => [7, 11, 13, 14].includes(n) ? 0 : Math.exp(-((n - 4) ** 2) / 6) + 0.6 * Math.exp(-((n - 9) ** 2) / 8) + 0.3 / n)), // voyelle : chœur, voix hachée (sans les partiels 7, 11, 13, 14, qui sonnent faux contre la gamme)
       reed: mk(H(24, n => (n % 2 ? 1 : 0.35) / n ** 0.8)), // anche : saxophone, contrôleur à vent
       glass: mk([1, 0, 0.3, 0.5, 0, 0.25, 0, 0.3, 0, 0, 0, 0.12]) }; // verre : octaves et quintes seulement
+    for (const [k, [re, im]] of Object.entries(window.ONDES || {})) W[k] = AC.createPeriodicWave(Float32Array.of(0, ...re), Float32Array.of(0, ...im)); // ak_… : formes d'onde de synthés relevées (instruments.js)
   }
   // Un timbre : o oscillateurs [onde, demi-tons, cents, niveau] · uni / sp unisson désaccordé · fm [rapport, indice, durée, reste] modulation de
   // fréquence · a d s r enveloppe · flt [type, départ, fin, durée, Q, suit la note] · form formants de talkbox · nz bruit [type, f, Q, niveau, durée] ·
@@ -137,7 +138,9 @@
     pno: { o: [['triangle'], ['sine', 12, 0, 0.45], ['sawtooth', 0, 4, 0.2]], fm: [2, 1.4, 0.12, 0.1], flt: ['lowpass', 4500, 1600, 0.3, 0.7], d: 0.45, s: 0.06, rv: 0.2, ch: 0.25, lv: 1.4, str: 0.007 }, // piano de house des années 90 (M1)
     bell: { o: [['sine']], fm: [3, 1.2, 0.3, 0.05], d: 0.9, ec: 0.4, rv: 0.3, lv: 1.2 },
     fmMetal: { o: [['sine']], fm: [1.41, 4, 0.2, 0.3], d: 0.25, rv: 0.3, lv: 1.2 }, // métal inharmonique
+    santour: { o: [['triangle']], ks: { b: 0.95, t: 1.6, pos: 0.07 }, avec: 0.3, flt: ['highpass', 400, 400, 1, 0.7], d: 0.4, s: 0.1, r: 0.3, ec: 0.35, rv: 0.3, pan: 0.2, lv: 1.3, str: 0.004 }, // santour persan : cordes frappées, brillantes et courtes, dans l'écho
     // thèmes
+    ldTar: { o: [['pulse'], ['sawtooth', 0, 5, 0.4]], ks: { b: 0.85, t: 1.8, pos: 0.06 }, avec: 0.6, flt: ['lowpass', 3000, 1500, 0.2, 1.5], a: 0.003, d: 0.4, s: 0.45, r: 0.12, vib: [6, 18, 0.25], gl: 0.04, ec: 0.25, rv: 0.3, lv: 0.14 }, // tar persan : corde pincée près du chevalet, nasale, vibrato large
     ldSaw: { o: [['sawtooth', 0, -10], ['sawtooth', 0, 10]], flt: ['lowpass', 5000, 5000, 1, 0.7], s: 0.8, vib: [5.5, 8, 0.2], ec: 0.3, rv: 0.2, lv: 0.08 },
     ldSync: { o: [['sawtooth'], ['square', 0, 5, 0.5]], flt: ['bandpass', 600, 3500, 0.25, 5], s: 0.8, vib: [6, 10, 0.15], ec: 0.25, rv: 0.15, lv: 0.2 }, // formant balayé, façon synchronisation
     ldEwi: { o: [['reed']], a: 0.03, flt: ['lowpass', 1500, 3200, 0.1, 3], s: 0.9, vib: [5.5, 12, 0.15], gl: 0.04, rv: 0.25, ch: 0.3, lv: 0.14 }, // contrôleur à vent
@@ -158,7 +161,32 @@
     ldSiren: { o: [['triangle'], ['square', 0, 0, 0.3]], flt: ['lowpass', 3000, 3000, 1, 0.7], s: 1, gl: 0.15, ec: 0.3, lv: 0.1 },
     ldVox: { o: [['vox']], uni: 2, sp: 8, a: 0.02, d: 0.2, s: 0.5, rv: 0.3, ec: 0.3, lv: 0.16 }, // voix hachée
     ldTri: { o: [['triangle']], a: 0.02, s: 0.8, vib: [5, 8, 0.2], rv: 0.35, ec: 0.3, lv: 0.14 },
-    ldStr: { o: [['sawtooth']], uni: 3, sp: 12, a: 0.08, s: 1, r: 0.15, flt: ['highpass', 500, 500, 1, 0.7], ch: 0.5, rv: 0.3, lv: 0.07 },
+    ldStr: { o: [['sawtooth']], uni: 3, sp: 12, a: 0.08, s: 1, r: 0.15, flt: ['highpass', 500, 500, 1, 0.7], ch: 0.5, rv: 0.3, lv: 0.07 },    // instruments échantillonnés (smp : nom dans instruments.js ; o : les oscillateurs joués tant que l'instrument n'est pas décodé ; smpLv : niveau de l'échantillon)
+    ldEwiDoux: { o: [['reed'], ['sine', 0, 0, 0.4]], a: 0.07, flt: ['lowpass', 1300, 2400, 0.25, 1.5], s: 0.9, r: 0.18, leg: 0.07, vib: [5, 9, 0.3], gl: 0.09, rv: 0.3, ch: 0.3, lv: 0.13 }, // contrôleur à vent assoupli : notes liées qui glissent, attaque et filtre plus lents
+    rhodesDoux: { smp: 'rhodes', o: [['sine']], flt: ['lowpass', 2600, 1800, 0.4, 0.7], d: 2, s: 0.6, r: 0.3, ch: 0.4, rv: 0.28, pan: -0.2, lv: 5, str: 0.012 }, // piano électrique enregistré, adouci
+    gtCocotte: { smp: 'gtMute', o: [['pulse']], flt: ['highpass', 300, 300, 1, 0.7], d: 0.3, s: 0.5, r: 0.06, pan: 0.35, lv: 2.8, str: 0.01 }, // vraie guitare étouffée
+    voixOohs: { smp: 'oohs', o: [['vox']], a: 0.05, s: 1, r: 0.25, leg: 0.06, gl: 0.06, vib: [5.2, 8, 0.35], rv: 0.4, ec: 0.25, lv: 1.85 }, // voix enregistrée sans paroles
+    ldGuitare: { smp: 'gtDist', o: [['sawtooth']], flt: ['lowpass', 4500, 3000, 0.3, 0.7], a: 0.005, s: 1, r: 0.12, vib: [5.5, 14, 0.3], gl: 0.03, ec: 0.25, rv: 0.25, lv: 1.13 }, // guitare saturée enregistrée
+    cuivreStab: { smp: 'synBrass', o: [['sawtooth']], flt: ['lowpass', 3200, 900, 0.15, 2], d: 0.25, s: 0.3, r: 0.08, rv: 0.2, pan: -0.15, lv: 8, str: 0.004 }, // accord de cuivres de synthé, court
+    pizzSeq: { smp: 'pizz', o: [['triangle']], d: 0.3, s: 0.6, ec: 0.3, rv: 0.25, pan: 0.2, lv: 3.75 }, // cordes pincées en séquence
+    gtSat: { smp: 'gtOver', o: [['sawtooth']], d: 0.2, s: 0.6, r: 0.06, pan: -0.3, lv: 10, str: 0.008 }, // guitare crunch enregistrée, en rythmique
+    gtClair: { smp: 'gtClean', o: [['triangle']], d: 0.6, s: 0.4, r: 0.1, ch: 0.4, rv: 0.25, pan: 0.3, lv: 14, str: 0.009 }, // guitare claire enregistrée
+    vibraArp: { smp: 'vibra', o: [['sine']], d: 0.5, s: 0.5, r: 0.2, ec: 0.25, rv: 0.25, pan: 0.25, lv: 11.5 }, // vibraphone en arpège
+    choeurLd: { smp: 'choeur', o: [['vox']], a: 0.06, s: 1, r: 0.3, leg: 0.07, gl: 0.06, rv: 0.4, ec: 0.2, lv: 1.67 }, // chœur enregistré, en thème lié
+    voixHachee: { smp: 'oohs', o: [['vox']], a: 0.005, d: 0.15, s: 0.4, r: 0.05, ec: 0.3, rv: 0.25, lv: 1.1 }, // voix enregistrée, hachée court
+    pianoAc: { smp: 'piano', o: [['triangle']], d: 2, s: 0.5, r: 0.25, rv: 0.22, ch: 0.15, lv: 13.8, str: 0.008 }, // piano à queue enregistré
+    cordesTenues: { smp: 'cordes', o: [['sawtooth']], a: 0.15, s: 1, r: 0.4, rv: 0.4, ch: 0.2, lv: 15.9 }, // ensemble de cordes enregistré
+    choeurPad: { smp: 'choeur', o: [['vox']], a: 0.3, s: 1, r: 0.5, rv: 0.5, lv: 15.5 }, // chœur enregistré en nappe
+    cuivresStab: { smp: 'cuivres', o: [['sawtooth']], a: 0.01, d: 0.3, s: 0.6, r: 0.1, rv: 0.2, lv: 14, str: 0.003 }, // section de cuivres enregistrée
+    slapS: { smp: 'slap', o: [['pulse']], d: 0.4, s: 0.6, r: 0.05, lv: 5.7 }, // vraie basse claquée
+    basseDoigtS: { smp: 'basseDoigt', o: [['triangle']], d: 0.5, s: 0.7, r: 0.06, lv: 15.2 }, // vraie basse électrique aux doigts
+    saxAltoLd: { smp: 'altoSax', o: [['reed']], a: 0.02, s: 1, r: 0.15, vib: [5, 12, 0.3], rv: 0.3, ec: 0.15, lv: 0.54 }, // saxophone alto enregistré
+    saxTenorLd: { smp: 'tenorSax', o: [['reed']], a: 0.02, s: 1, r: 0.15, vib: [5, 12, 0.3], rv: 0.28, ec: 0.12, lv: 0.53 }, // saxophone ténor enregistré
+    trompetteLd: { smp: 'trompette', o: [['sawtooth']], a: 0.02, s: 1, r: 0.12, vib: [5.5, 10, 0.3], rv: 0.28, ec: 0.15, lv: 1.15 }, // trompette enregistrée
+    fluteLd: { smp: 'flute', o: [['sine']], a: 0.04, s: 1, r: 0.2, vib: [5, 10, 0.35], rv: 0.35, ec: 0.25, lv: 1.15 }, // flûte enregistrée
+    panFluteLd: { smp: 'panFlute', o: [['sine']], a: 0.03, s: 1, r: 0.2, vib: [5, 8, 0.3], rv: 0.35, ec: 0.25, lv: 1.39 }, // flûte de pan enregistrée
+    steelLd: { smp: 'steel', o: [['sine']], d: 0.8, s: 0.5, r: 0.2, rv: 0.3, ec: 0.3, lv: 4.4 }, // steel drum enregistré
+    bNeuro: { o: [['ak_distorted_0015', 0, -10], ['ak_fmsynth_0022', 0, 10], ['sine', -12, 0, 0.8]], flt: ['lowpass', 350, 1400, 0.12, 5], d: 0.3, s: 0.8, r: 0.06, bus: 'sat', lv: 0.66 }, // basse de neurofunk : deux ondes relevées qui grincent, filtre qui s'ouvre sur chaque note
   };
   // voix chantée (sing) : une source riche passe par trois formants de voyelle, les syllabes (syl) se suivent d'une note à l'autre ; souffle à l'attaque
   const FORM = { F: { a: [800, 1150, 2900], e: [400, 2000, 2800], i: [300, 2300, 3000], o: [450, 800, 2830], u: [325, 700, 2700] }, H: { a: [700, 1220, 2600], e: [400, 1700, 2600], i: [300, 2200, 2900], o: [450, 800, 2600], u: [325, 700, 2530] } };
@@ -193,7 +221,11 @@
       mod.gain.setValueAtTime(dev, t); mod.gain.setTargetAtTime(dev * P.fm[3], t, P.fm[2] / 3); m.connect(mod); m.start(t); m.stop(fin); srcs.push(m); }
     const os = [], U = P.uni || 1, lv = 1 / Math.sqrt(P.o.length * U), drift = (Math.random() - 0.5) * 5;
     if (P.ks) { const c = corde(f, P.ks), o = AC.createBufferSource(); o.buffer = c.buf; o.playbackRate.value = c.rate; o.detune.value = drift; o.connect(gain(1, d)); o.start(t); o.stop(Math.min(fin, t + P.ks.t)); os.push(o); srcs.push(o); }
-    if (!P.ks || P.avec) for (const [w, semi = 0, cents = 0, olv0 = 1] of P.o) for (let u = 0; u < U; u++) { const olv = olv0 * (P.ks ? P.avec : 1); // avec : la corde pincée mêlée aux oscillateurs du timbre, à ce niveau
+    const B = P.smp && ins[P.smp], ks = Object.keys(B || {}); let smpOk = false;
+    if (ks.length) { const m = 69 + 12 * Math.log2(f / 440), k = ks.reduce((a, b) => Math.abs(b - m) < Math.abs(a - m) ? b : a), o = AC.createBufferSource(), rate = f / (440 * 2 ** ((k - 69) / 12)); // la note enregistrée la plus proche, transposée
+      o.buffer = B[k]; o.detune.value = drift; o.playbackRate.setValueAtTime(from && P.gl ? rate * from / f : sc ? rate * 2 ** (-sc / 1200) : rate, t); if ((from && P.gl) || sc) o.playbackRate.exponentialRampToValueAtTime(rate, t + (from && P.gl ? P.gl : sc > 60 ? 0.12 : 0.07));
+      o.connect(gain(P.smpLv || 1, d)); o.start(t); o.stop(fin); os.push(o); srcs.push(o); fr.push([{ frequency: o.playbackRate }, rate / f]); smpOk = true; }
+    if (!(P.ks || smpOk) || P.avec) for (const [w, semi = 0, cents = 0, olv0 = 1] of P.o) for (let u = 0; u < U; u++) { const olv = olv0 * (P.ks || smpOk ? P.avec : 1); // avec : la corde pincée (ou l'échantillon) mêlée aux oscillateurs du timbre, à ce niveau ; sans échantillon décodé, les oscillateurs seuls
       const o = AC.createOscillator(), fo = f * 2 ** (semi / 12); if (W[w]) o.setPeriodicWave(W[w]); else o.type = w;
       o.frequency.setValueAtTime(fo, t); o.detune.value = drift + cents + (U > 1 ? (u / (U - 1) - 0.5) * 2 * P.sp : 0);
       if (from && P.gl) { o.frequency.setValueAtTime(fo * from / f, t); o.frequency.exponentialRampToValueAtTime(fo, t + P.gl); }
@@ -227,7 +259,17 @@
     dnb: { kf: 165, ke: 62, ks: 0.025, kd: 0.11, kc: 0.5, sT: [220, 320], sTd: 0.05, sN: ['bandpass', 3600, 0.6], sNd: 0.1, rate: 1.35, crunch: 1, hM: 0, hF: 8000, hD: 0.025, hO: 0.16, fill: 'brk', room: 0.15 },
     disco: { kf: 120, ke: 55, ks: 0.02, kd: 0.12, kc: 0.45, kcf: 3500, sT: [210, 300], sTd: 0.05, sN: ['bandpass', 4800, 0.6], sNd: 0.14, hM: 1, hF: 9000, hD: 0.04, hO: 0.32, hum: 0.005, fill: 'toms', tom: [260, 200, 150], tomD: 0.15, room: 0.15 },
   };
+  // instruments enregistrés bruts, pour l'éditeur de musique : un timbre « e_<nom> » par instrument d'instruments.js. shortcut: niveaux (lv) non mesurés, à régler par timbre si une station du dépôt en adopte un
+  for (const n in window.INS || {}) PATCH['e_' + n] = { smp: n, o: [['triangle']], a: 0.005, d: 2, s: 0.7, r: 0.15, rv: 0.2, lv: 2.5 };
   const smp = {};
+  // instruments échantillonnés (timbre smp, voir instruments.js) : décodés seulement pour les stations en jeu (décodé, un instrument pèse ~6 Mo)
+  const ins = {}, insP = {};
+  function charger(...radios) {
+    if (!AC || !window.INS) return Promise.resolve(); const j = JSON.stringify(radios), noms = new Set(Object.keys(PATCH).filter(k => PATCH[k].smp && j.includes('"' + k + '"')).map(k => PATCH[k].smp));
+    if (radios.length === 1) for (const n of Object.keys(ins)) if (!noms.has(n)) { delete ins[n]; delete insP[n]; }
+    return Promise.all([...noms].filter(n => INS[n]).map(n => insP[n] || (insP[n] = Promise.all(Object.entries(INS[n]).map(([m, b64]) => new Promise(ok => // un décodage déjà lancé est attendu, pas relancé
+      AC.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer, b => { (ins[n] = ins[n] || {})[m] = b; ok(); }, ok)))))));
+  }
   function hitS(name, t, vol, dur = 0, rate = 1) { // dur : coupe le son en fondu (la grosse caisse de 808 résonne 1,5 s) ; rate : hauteur de lecture
     const b = smp[name]; if (!b || vol < 0.002) return !!b;
     vol *= 0.6; // les enregistrements sont plus forts que les sons synthétisés
@@ -243,8 +285,12 @@
     nz(t, 0.012, v * K.kc, drumG, 'lowpass', K.kcf || 5000);
   }
   function dClap(t, v) { for (let i = 0; i < 3; i++) nz(t + i * 0.011, 0.02, v * 0.6, drumG, 'bandpass', 1300, 1.5); nz(t + 0.033, 0.16, v * 0.7, drumG, 'bandpass', 1300, 1.2); }
+  // caisse claire et charleston enregistrés, choisis par station (st.bat, qui complète le kit) : sS caisse claire, sG sa note fantôme, cS clap, rS coup sur le cercle, sR hauteur de lecture ;
+  // hS charleston fermé, hA accentué, hOo ouvert, hR hauteur. Noms : ceux de PERC (instruments.js) ou de la 808 (sd, cp, ch, oh)
   function dSnare(t, v, K, c = 'x') { // x caisse claire · g note fantôme · c clap · r coup sur le cercle
     if (c === 'g') v *= 0.3;
+    const sn = c === 'c' ? K.cS : c === 'r' ? K.rS : c === 'g' ? K.sG || K.sS : K.sS;
+    if (sn && hitS(sn, t, v * (c === 'r' ? 0.5 : 0.9) * (K.sV || 1), 0, (K.sR || 1) * (1 + (Math.random() - 0.5) * 0.02))) return; // chaque coup un rien différent
     if (c === 'r') { osc('triangle', 1750, t, 0.03, v * 0.5, drumG); nz(t, 0.015, v * 0.4, drumG, 'bandpass', 3500, 2); return; }
     if (K.smp && hitS(c === 'c' ? 'cp' : 'sd', t, v * 0.9)) return;
     if (c === 'c') return dClap(t, v);
@@ -257,6 +303,8 @@
   }
   function dHat(t, v, K, c) { // x fermé · X accentué · o ouvert · r cymbale ride · b cloche de la ride
     const ride = c === 'r' || c === 'b', lv = v * (c === 'X' ? 0.36 : c === 'o' ? 0.4 : c === 'x' ? 0.21 : 0.2);
+    const hn = c === 'o' ? K.hOo : c === 'X' ? K.hA || K.hS : K.hS;
+    if (!ride && hn && hitS(hn, t, lv * 1.1 * (K.hV || 1), c === 'o' ? K.hO * 1.6 : 0, (K.hR || 1) * (1 + (Math.random() - 0.5) * 0.03))) return;
     if (K.smp && !ride && hitS(c === 'o' ? 'oh' : 'ch', t, lv * 1.1)) return;
     if (K.smp) K = KIT.k909;
     const dec = c === 'o' ? K.hO : c === 'r' ? 0.45 : c === 'b' ? 0.3 : K.hD, metal = K.hM || ride;
@@ -314,9 +362,11 @@
   // le refrain (hot), sauf la variation (e) ; relance de batterie à chaque fin de section.
   // Rien de brusque hors événement de course : les parties entrent en fondu, la batterie se retire avant un break et revient en fondu, le refrain
   // n'arrive qu'en début de mesure et ne repart qu'en fin de section, les filtres s'ouvrent lentement.
+  // jeu humain : DR[p] l'écart de la partie p, qui dérive lentement (un musicien est en avance ou en retard plusieurs notes de suite, jamais au hasard pur)
+  const DR = {};
   function sched(s, t) {
     if (menu) return schedMenu(s, t);
-    const st = ST[station], K = KIT[st.kit] || KIT.k909; t += (s & 1) * (st.sw || 0) * S16; // swing : les doubles-croches impaires traînent
+    const st = ST[station], K = st.bat ? st.Kb || (st.Kb = { ...(KIT[st.kit] || KIT.k909), ...st.bat }) : KIT[st.kit] || KIT.k909; t += (s & 1) * (st.sw || 0) * S16; // swing : les doubles-croches impaires traînent
     const bar = s >> 4, q = s % 16, d = drums, fi = (bar >> 2) % st.form.length, nxt = st.form[(fi + 1) % st.form.length];
     if ((q === 0 && ((bar & 3) === 0 || mix > 0.5 || fin || boostL)) || (boostL && !bigS && q % 4 === 0)) { const b = !entree && (mix > 0.5 || fin || boostL); if (bigS && !b) sortie = bar >> 2; bigS = b; } // la nitro est une action : elle ouvre le refrain dès le temps suivant // le refrain du secteur chaud entre à la mesure suivante et ne repart qu'en fin de section : jamais au milieu d'une mesure
     const big = bigS;
@@ -328,7 +378,11 @@
     curRoot = root;
     // premier tour du mode course : ni thème ni percussions hors du secteur chaud
     const on = p => { const x = st[p] && sec[p]; return x && (!x.big || big) && !(lap === 0 && !big && (p === 'l' || p === 'p')) ? x : null; }, pat = (v, x) => { const b = v[x.v % v.length]; return b[bar % b.length]; };
-    const hum = () => K.hum ? t + Math.random() * K.hum : t; // jeu humain : les batteries acoustiques ne tombent pas pile
+    // jeu humain (st.jeu, 1 par défaut, 0 : machine) : hj(p, place, j) l'instant d'une note de la partie p, à sa place autour du temps (s, la caisse claire et le thème un peu en arrière),
+    // plus sa dérive lente et un petit hasard (±j/2) ; arc : la section respire (elle monte peu à peu, sa première mesure appuyée)
+    const J = st.jeu == null ? 1 : st.jeu, hj = (p, place, j) => { DR[p] = (DR[p] || 0) * 0.85 + (Math.random() - 0.5) * j * 0.6; return Math.max(t - 0.004, t + J * (place + DR[p] + (Math.random() - 0.5) * j)); };
+    const arc = 1 + J * (0.1 * pos - 0.05 + ((bar & 3) === 0 && q === 0 ? 0.05 : 0));
+    const hum = (p, place, j) => hj(p, place, j) + (K.hum ? Math.random() * K.hum : 0); // les batteries acoustiques ne tombent pas pile, en plus
     // jeu humain des instruments : nuance qui suit la mesure (temps fort, contretemps), un peu de hasard sur la force (±), un peu de décalage (s, doublé avec une batterie acoustique)
     const acc = q % 4 === 0 ? 1.08 : q % 2 === 0 ? 0.97 : 0.88, jit = a => 1 + (Math.random() - 0.5) * 2 * a, lt = j => t + (Math.random() - 0.5) * 2 * (K.hum ? 2 * j : j);
     const vch = pr.V ? pr.V[bar % pr.V.length] : ch; // l'accord dans le renversement le plus proche du précédent (voir voix() dans cartes.js)
@@ -350,7 +404,7 @@
       const p = st.pump == null ? 0.35 : st.pump; // pompe : tout plonge sous la grosse caisse, plus ou moins selon le style
       if (p < 1) { duckG.gain.cancelScheduledValues(t); duckG.gain.setValueAtTime(p, t); duckG.gain.linearRampToValueAtTime(1, t + Math.min(st.pumpT || 0.24, S16 * 1.9)); }
     }
-    if (d && (x = on('s')) && !fill && (c = pat(st.s, x)[q]) !== '.') jo('s', t), dSnare(hum(), mxv('s') * (big ? 0.5 : st.sMin || 0.34) * jit(0.06), K, c);
+    if (d && (x = on('s')) && !fill && (c = pat(st.s, x)[q]) !== '.') jo('s', t), dSnare(hum('s', 0.005, 0.004), mxv('s') * (big ? 0.5 : st.sMin || 0.34) * jit(0.06 * (1 + J)), K, c);
     if (fill && mxv('s') > 0) dFill(t, q - 16 + fillN, fillN, K);
     if (d && sec.roll && !((bar & 3) === 3 && q >= 14) && q % ((bar & 3) < 2 ? 4 : (bar & 3) < 3 ? 2 : 1) === 0) dSnare(t, mxv('s') * (0.12 + 0.4 * pos), K); // montée : roulement qui se resserre
     if (d && sec.roll && (bar & 3) === 0 && q === 0) riser(t, S16 * 64, 0.18);
@@ -359,25 +413,32 @@
     if (d && (bar & 3) === 0 && q === 0 && key === st.hot && lastFill === bar - 1) crash(t, 0.35); // cymbale d'entrée de refrain, seulement au bout d'une relance de batterie
     if (fill) lastFill = bar;
     if (!d) { if (q % 4 === 2) dHat(t, 0.5, K, 'x'); } // seul tic-tac pendant le décompte
-    else if ((x = on('h')) && (c = pat(st.h, x)[q]) !== '.') jo('h', t), dHat(hum(), mxv('h') * (big || lap === 2 ? 1 : 0.8) * 0.63 * jit(0.12), K, c); // charlestons à −4 dB sur toutes les stations (ils dominaient)
-    if (d && (x = on('p')) && (c = pat(st.p, x)[q]) !== '.') jo('p', t), dPerc(hum(), mxv('p') * jit(0.15), K, c);
+    else if ((x = on('h')) && (c = pat(st.h, x)[q]) !== '.') jo('h', t), dHat(hum('h', q % 2 ? -0.002 : 0, 0.005), mxv('h') * (big || lap === 2 ? 1 : 0.8) * 0.63 * (st.hn ? lerp(1, st.hn[q % 4], J) : 1 - J * [0, 0.3, 0.12, 0.22][q % 4]) * jit(0.12 * (1 + J)), K, c); // charlestons à −4 dB sur toutes les stations (ils dominaient) ; accent du batteur : le temps plein, la double-croche entre deux plus légère (st.hn : les nuances relevées sur la référence, par double-croche du temps)
+    if (d && (x = on('p')) && (c = pat(st.p, x)[q]) !== '.') jo('p', t), dPerc(hum('p', 0.003, 0.008), mxv('p') * jit(0.15), K, c);
     if (d && (x = on('b'))) { const rif = pat(st.b.v, x), rf = rif[q];
       if (rf != null && rf !== R) { let n = 1; while (q + n < 16 && rif[q + n] == null) n++; // tenue jusqu'à la note suivante
-        const P = PATCH[st.b.p], f = hz(st.bPar ? root + rf : juste(root + rf, pr.OK[bar % pr.OK.length])); jo('b', t, S16 * n); tone(st.b.p, f, lt(0.002), S16 * n * (P.len || 0.9), mxv('b') * lerp(0.27, 0.38, mix) * (P.lv || 1), strip.b.in, lastB, acc * jit(0.06)); lastB = f; } }
+        const P = PATCH[st.b.p], f = hz((st.bO || 0) + (st.bPar ? root + rf : juste(root + rf, pr.OK[bar % pr.OK.length]))); jo('b', t, S16 * n); tone(st.b.p, f, hj('b', 0.003, 0.004), S16 * n * (P.len || 0.9) * jit(0.1 * J), mxv('b') * lerp(0.27, 0.38, mix) * (P.lv || 1), strip.b.in, lastB, acc * arc * (q % 2 ? 1 - 0.12 * J : 1) * jit(0.06 * (1 + J))); lastB = f; } }
     else if (!d && q % 8 === 0) tone(st.b.p, hz(root + 12), t, S16 * 6, 0.25, strip.b.in);
     if (st.d && (!d || on('d'))) { const P = PATCH[st.d[0]];
-      if (q === 0) { jo('d', t, S16 * 16); for (const n of vch) tone(st.d[0], hz(n + (st.d[1] || 0)), lt(0.006), S16 * 16.5, mxv('d') * 0.05 * (P.lv || 1), strip.d.in, 0, jit(0.05)); }
+      if (q === 0) { jo('d', t, S16 * 16); for (const [i, n] of vch.entries()) tone(st.d[0], hz(n + (st.d[1] || 0)), hj('d', i * 0.01 * J, 0.008), S16 * 16.5, mxv('d') * 0.05 * (P.lv || 1), strip.d.in, 0, jit(0.05)); }
       strip.d.gate.gain.setValueAtTime(d && sec.gate && st.gate[q] === '.' ? 0.06 : 1, t); } // nappe hachée (gate de trance)
     for (const p of ['c', 'g']) if (d && (x = on(p)) && (c = pat(st[p].v, x)[q]) !== '.') { const P = PATCH[st[p].p];
-      const up = q % 2 === 1, ts = lt(0.003), ex = acc * jit(0.08), ns = up ? [...vch].reverse() : vch; jo(p, t); // gratté : vers l'aigu sur les temps, vers le grave en contretemps, chaque corde un peu après l'autre (P.str)
-      ns.forEach((n, i) => tone(st[p].p, hz(n + 12 + (st[p + 'O'] || 0)), ts + i * (P.str || 0.004) * jit(0.3), S16 * (P.tenue || (P.s ? 1.6 : 3)), mxv(p) * (c === 'X' ? 0.065 : 0.045) * (P.lv || 1) * (1 - 0.06 * i), strip[p].in, 0, ex)); }
-    if ((x = on('a')) && (c = pat(st.a.v, x)[q]) !== '.' && (d || q % 2 === 0)) jo('a', t), tone(st.a.p, hz(ch[c % 4 % ch.length] + 12 + (c >= 4 ? 12 : 0) + (st.aO || 0)), lt(0.003), 0.2, mxv('a') * (q % 4 === 0 ? 0.05 : 0.038) * (PATCH[st.a.p].lv || 1), strip.a.in, 0, jit(0.1)); // 0-3 : notes de l'accord ; 4-7 : à l'octave
+      const roule = q === 0 && !(P.str > 0.008) && Math.random() < 0.35 * J, sp = roule ? 0.028 / (P.str || 0.004) : 0.7 + 0.6 * Math.random(); // égrené : l'accord en arpège rapide, de la basse vers l'aigu
+      const up = q % 2 === 1 && !roule, ts = hj(p, 0, 0.006), ex = acc * arc * jit(0.08 * (1 + J)), ns = up ? [...vch].reverse() : vch; jo(p, t); // gratté : vers l'aigu sur les temps, vers le grave en contretemps, chaque corde un peu après l'autre (P.str)
+      ns.forEach((n, i) => tone(st[p].p, hz(n + 12 + (st[p + 'O'] || 0)), ts + i * (P.str || 0.004) * sp * jit(0.3), S16 * (P.tenue || (P.s ? 1.6 : 3)), mxv(p) * (c === 'X' ? 0.065 : 0.045) * (P.lv || 1) * (1 - 0.06 * i), strip[p].in, 0, ex)); }
+    if ((x = on('a')) && (c = pat(st.a.v, x)[q]) !== '.' && (d || q % 2 === 0)) jo('a', t), tone(st.a.p, hz(ch[c % 4 % ch.length] + 12 + (c >= 4 ? 12 : 0) + (st.aO || 0)), hj('a', 0.002, 0.004), 0.2 * jit(0.15 * J), mxv('a') * (q % 4 === 0 ? 0.05 : 0.038) * (PATCH[st.a.p].lv || 1), strip.a.in, 0, arc * jit(0.1 * (1 + J))); // 0-3 : notes de l'accord ; 4-7 : à l'octave
     if (d && (x = on('l'))) { const L = pat(st.l.v, x), N = L[q];
       if (N != null && N !== R) { let n = 1; while (q + n < 16 && L[q + n] == null) n++;
         // chanté plutôt que tapé : un peu en arrière du temps, la première note d'une phrase appuyée, les notes longues plus pleines, attaquées par en dessous une fois sur deux
-        const No = N + (st.lO || 0), tl = t + Math.random() * 0.012, lv = mxv('l') * (PATCH[st.l.p].lv || 0.15) * (st.lV == null ? 1 : st.lV), ex = (q === 0 || L[q - 1] === R ? 1.1 : 1) * (0.9 + 0.1 * Math.min(1, n / 4)) * jit(0.06);
+        // et joué : la nuance suit la hauteur (l'aigu un peu plus fort) et la section ; une note suivie d'un silence est lâchée un peu avant, sinon elle se lie à la suivante
+        const No = N + (st.lO || 0), tl = hj('l', 0.008, 0.01), lv = mxv('l') * (PATCH[st.l.p].lv || 0.15) * (st.lV == null ? 1 : st.lV), ex = (q === 0 || L[q - 1] === R ? 1.1 : 1) * (0.9 + 0.1 * Math.min(1, n / 4)) * clamp(1 + J * 0.012 * (No - 74), 0.88, 1.12) * arc * jit(0.06 * (1 + J));
+        const ld = S16 * n * (q + n < 16 && L[q + n] === R ? 1 - J * (0.1 + 0.12 * Math.random()) : 1.05);
         const PL = PATCH[st.l.p], lie = PL.leg && voixL && voixL.pn === st.l.p && voixL.fin > tl - 0.03 && voixL.fin < tl + 1; jo('l', t, S16 * n); // sans silence entre deux notes, une voix liée ne se rattaque pas
-        voixL = lie ? voixL.lier(hz(No), tl, S16 * n * 1.05, lv * ex) : tone(st.l.p, hz(No), tl, S16 * n * 1.05, lv, strip.l.in, PL.leg ? 0 : lastN && hz(lastN), ex, !PL.sing && n >= 3 && Math.random() < 0.5 ? 35 : 0); lastN = No; // une voix chantée attaque juste : par en dessous, elle sonnait faux
+        // ornements : sur une note longue, parfois une note d'appui juste avant (la voisine du dessus, ou du dessous, prise dans la gamme et l'accord), ou une note attaquée par en dessous (une guitare tire sa corde d'un demi-ton)
+        const gt = PL.smp === 'gtDist' || PL.bus === 'sat' || PL.bus === 'fuzz', orn = !lie && !PL.sing && n >= 3 && Math.random() < 0.2 * J;
+        if (orn && Math.random() < 0.5) tone(st.l.p, hz(juste(No + (Math.random() < 0.65 ? 2 : -1), pr.OK[bar % pr.OK.length])), tl - 0.06, 0.055, lv * 0.7, strip.l.in, 0, ex * 0.85);
+        const sc = PL.sing || lie ? 0 : orn ? (gt ? 100 : 60) : n >= 3 && Math.random() < 0.5 ? 20 + 30 * Math.random() : 0;
+        voixL = lie ? voixL.lier(hz(No), tl, ld, lv * ex) : tone(st.l.p, hz(No), tl, ld, lv, strip.l.in, PL.leg ? 0 : lastN && hz(lastN), ex, sc); lastN = No; // une voix chantée attaque juste : par en dessous, elle sonnait faux
       } }
     if (driftL > 0.3) osc('sawtooth', hz(ch[(q * 2) % 3] + 24), t, 0.1, 0.07 * driftL, acid); // ligne acide tant qu'on glisse
     if (d && glisse) { // la glisse tend la musique avec sa durée : roulement qui se resserre et souffle qui monte, calés sur le tempo (le grave s'amincit dans audioFrame)
@@ -402,7 +463,7 @@
     eqL.gain.value = q[0]; eqM.frequency.value = q[1]; eqM.gain.value = q[2]; eqH.gain.value = q[3]; // couleur de la station : grave, médium, aigu
     mrevG.gain.value = menu ? 0.6 : st.rev == null ? 0.2 : st.rev; drumRv.gain.value = menu ? 0 : (KIT[st.kit] || KIT.k909).room;
     const parts = menu ? { d: mn.pad, a: mn.arp } : { b: st.b && st.b.p, d: st.d && st.d[0], c: st.c && st.c.p, g: st.g && st.g.p, a: st.a && st.a.p, l: st.l && st.l.p };
-    for (const k in strip) { const P = PATCH[parts[k]] || {}, s = strip[k]; s.pan.pan.value = P.pan || 0; s.fzIn.gain.value = 6 * (menu || st.fz == null ? 1 : st.fz); s.fzOut.gain.value = 0.3 * (!menu && st.mx && st.mx[k] != null ? st.mx[k] : 1); s.rv.gain.value = P.rv || 0; s.ec.gain.value = P.ec || 0; s.ch.gain.value = P.ch || 0; if (!garde) { s.gate.gain.cancelScheduledValues(t); s.gate.gain.setValueAtTime(1, t); } }
+    for (const k in strip) { const P = PATCH[parts[k]] || {}, s = strip[k]; const E = menu ? {} : st, fx = (E.fx && E.fx[k]) || {}, tn = (E.ton && E.ton[k]) || 0; s.pan.pan.value = E.pan && E.pan[k] != null ? E.pan[k] : P.pan || 0; s.lp.frequency.value = tn < 0 ? 20000 * 0.015 ** -tn : 20000; s.hp.frequency.value = tn > 0 ? 20 * 100 ** tn : 20; /* ton : −1 sombre (passe-bas à 300 Hz) … +1 mince (passe-haut à 2 kHz) */ s.fzIn.gain.value = 6 * (menu || st.fz == null ? 1 : st.fz); s.fzOut.gain.value = 0.3 * (!menu && st.mx && st.mx[k] != null ? st.mx[k] : 1); s.rv.gain.value = fx.rv != null ? fx.rv : P.rv || 0; s.ec.gain.value = fx.ec != null ? fx.ec : P.ec || 0; s.ch.gain.value = P.ch || 0; if (!garde) { s.gate.gain.cancelScheduledValues(t); s.gate.gain.setValueAtTime(1, t); } }
   }
   function quitter() { // on change de carte au menu : la musique s'efface vite ; renvoie où en est le morceau, pour reprendre()
     if (!AC || !menu) return null; const t = AC.currentTime; tuneG.gain.cancelScheduledValues(t); tuneG.gain.setTargetAtTime(0, t, 0.03);
@@ -428,7 +489,7 @@
   function carte(m, i) { // change de carte (banc d'écoute) : stations, ambiance et couleur du menu ; i : la station (sinon une au hasard)
     if (dk ? m === dk.M2 : m === mixFait && i == null) return; // un passage DJ y mène, ou vient d'y mener : rien à refaire
     if (dk) finMix(); mixFait = null;
-    M = m; ST = M.radio; TH = M.th; station = auHasard();
+    M = m; ST = M.radio; TH = M.th; station = auHasard(); charger(ST);
     if (i != null) station = clamp(i, 0, ST.length - 1);
     S16 = 60 / ST[station].bpm / 4;
     if (AC) { retune(AC.currentTime + 0.05, menu); if (menu) swF.frequency.setTargetAtTime((MENU[M.id] || MENU.ville).lp, AC.currentTime, 0.5); buildAmb(); } // au menu, le morceau commun continue : seule sa couleur change
@@ -479,7 +540,7 @@
     if (!AC || menu) return carte(M2, djSt(M2));
     if (dk) finMix();
     const now = AC.currentTime, A = sauve(), tS = nextT + ((16 - stp % 16) % 16) * S16, tE = Math.max(now + dur, tS + 8 * S16), L = tE - tS, bA = 60 / S16 / 4;
-    chaine(); ST = M2.radio; station = djSt(M2); entree = true; retune(tS); tuneG.gain.value = lvl(); S16 = A.S16; // la platine B, construite dans les variables du module
+    charger(ST, M2.radio); chaine(); ST = M2.radio; station = djSt(M2); entree = true; retune(tS); tuneG.gain.value = lvl(); S16 = A.S16; // la platine B, construite dans les variables du module
     const bB = ST[station].bpm, B = sauve(); pose(A);
     const lin = (p, pts) => { p.cancelScheduledValues(now); p.setValueAtTime(p.value, now); for (const [u, v, ex] of pts) p[ex ? 'exponentialRampToValueAtTime' : 'linearRampToValueAtTime'](v, tS + u * L); };
     const tX = 0.5; // échange des basses
@@ -504,6 +565,7 @@
     while (nextT < AC.currentTime + ah) { if (dk) S16 = 60 / bpmA(nextT) / 4; sched(stp++, nextT); nextT += S16 / (1 - 0.1 * platine); }
   }
   function pump() { // avance le séquenceur jusqu'à 0,25 s devant l'horloge audio (0,5 s pendant un passage DJ : la carte suivante se construit) : une image qui cale (pluie du port de WAN-9, ramasse-miettes, shader compilé) ne fait plus de trou ; la musique réagit aux événements de course jusqu'à 0,25 s plus tard
+    if (EC.pause) { nextT = Math.max(nextT, AC.currentTime + 0.05); return; } // éditeur de musique à l'arrêt : le séquenceur attend, le contexte reste ouvert pour essayer une note
     if (!dk) return avance(0.25);
     if (AC.currentTime >= dk.tE) { finMix(); return avance(0.25); }
     const A = sauve(); pose(dk.B); avance(0.5); dk.B = sauve(); pose(A); // la platine B
@@ -656,9 +718,9 @@ registerProcessor('moteur', Moteur);`;
     for (const sg of [-1, 1]) { const dl = AC.createDelay(0.1), p = AC.createStereoPanner(), l = AC.createOscillator(); dl.delayTime.value = 0.022 + 0.004 * sg; p.pan.value = 0.8 * sg; l.frequency.value = 0.6 + 0.15 * sg; l.connect(gain(0.0012, dl.delayTime)); l.start(); choIn.connect(dl); dl.connect(p); p.connect(duckG); }
     // une tranche par partie : hachage, panoramique, envois vers réverbération, écho et chorus (réglés par le timbre de la station)
     strip = {}; was = {};
-    for (const k of ['b', 'd', 'c', 'g', 'a', 'l']) { const pan = AC.createStereoPanner(), rv = gain(0, revIn), ec = gain(0, echoIn), ch = gain(0, choIn), gate = gain(1, pan); pan.connect(duckG); pan.connect(rv); pan.connect(ec); pan.connect(ch);
+    for (const k of ['b', 'd', 'c', 'g', 'a', 'l']) { const pan = AC.createStereoPanner(), rv = gain(0, revIn), ec = gain(0, echoIn), ch = gain(0, choIn), lp = filt('lowpass', 20000, 0.7, pan), hp = filt('highpass', 20, 0.7, lp), gate = gain(1, hp); pan.connect(duckG); pan.connect(rv); pan.connect(ec); pan.connect(ch);
       const fzOut = gain(0.3, gate), fe = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, fzOut)); fe.gain.value = 5; const fzIn = gain(6, shaper(8, fe)); // un ampli de guitare par partie, comme fuzz
-      strip[k] = { in: Object.assign(gain(MX[k], gate), { fz: fzIn }), fzIn, fzOut, gate, pan, rv, ec, ch }; }
+      strip[k] = { in: Object.assign(gain(MX[k], gate), { fz: fzIn }), fzIn, fzOut, gate, pan, rv, ec, ch, lp, hp }; }
   }
   function initAudio(ctx) { // ctx : contexte hors ligne pour la mesure des niveaux (banc d'écoute) ; sans argument, le contexte audio du navigateur
     if (AC && live && !ctx) return AC.resume();
@@ -688,13 +750,14 @@ registerProcessor('moteur', Moteur);`;
     waves();
     mbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // métal des cymbales : six carrés inharmoniques
     { const x = mbuf.getChannelData(0); for (let i = 0; i < x.length; i++) { let v = 0; for (const f of [410.6, 608.8, 739.2, 1045.4, 1080, 1600]) v += Math.sin(2 * Math.PI * f * i / AC.sampleRate) > 0 ? 1 : -1; x[i] = v / 6; } }
-    pret = Promise.all(Object.keys(window.SMP || {}).map(k => new Promise(ok => { // décodage des sons de TR-808 ; en cas d'échec la batterie reste synthétisée
-      const bin = atob(window.SMP[k]), u8 = Uint8Array.from(bin, ch => ch.charCodeAt(0));
+    const SP = { ...window.SMP, ...window.PERC }; // PERC : batterie acoustique enregistrée (instruments.js)
+    pret = Promise.all(Object.keys(SP).map(k => new Promise(ok => { // décodage des sons de TR-808 ; en cas d'échec la batterie reste synthétisée
+      const bin = atob(SP[k]), u8 = Uint8Array.from(bin, ch => ch.charCodeAt(0));
       AC.decodeAudioData(u8.buffer, b => { smp[k] = b; ok(); }, ok);
     })));
     modOk = false; const ac0 = AC, url = URL.createObjectURL(new Blob([MOTEUR_JS], { type: 'application/javascript' }));
     modP = AC.audioWorklet ? AC.audioWorklet.addModule(url).then(() => { if (AC !== ac0) return; modOk = true; for (const v of [...VX, ...AU]) brancher(v); }, () => { }) : Promise.resolve(); // sans AudioWorklet : pas de moteur, le reste joue
-    pret = Promise.all([pret, modP]);
+    pret = Promise.all([pret, modP, charger(ST)]);
     const ns = AC.createBufferSource(); ns.buffer = nbuf; ns.loop = true; ns.start();
     gbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // gravier : des impacts serrés de 7 ms, lus plus vite avec la vitesse
     { const x = gbuf.getChannelData(0); let a = 0; for (let i = 0; i < x.length; i++) { if (Math.random() < 0.012) a = 0.3 + 0.7 * Math.random(); x[i] = (Math.random() * 2 - 1) * a; a *= 0.997; } }
@@ -896,11 +959,12 @@ registerProcessor('moteur', Moteur);`;
     get beat() { return AC ? Math.max(0, (AC.currentTime - t0) / (4 * S16)) : 0; }, // temps écoulés depuis le début de la station, calés sur le kick
     get pulse() { return AC ? Math.exp(-(this.beat % 1) * 5) : 0; },
     get ana() { return ana; }, // analyseur de spectre, pour l'égaliseur du HUD
-    ecoute: EC, recale() { if (AC) { retune(AC.currentTime, 1); tuneG.gain.setTargetAtTime(lvl(), AC.currentTime, 0.05); } }, // éditeur de musique : applique un réglage de station sans relancer le morceau
-    note(p, n) { const st = ST[station]; if (!AC || menu || !st[p]) return; const P = PATCH[st[p].p] || {}; // fait entendre une note de la basse ou du thème (piano-roll de l'éditeur)
-      tone(st[p].p, hz(n), AC.currentTime, 0.25, p === 'l' ? (P.lv || 0.15) * (st.lV == null ? 1 : st.lV) : 0.3 * (P.lv || 1), strip[p].in); },
+    ecoute: EC, recale() { if (!AC) return Promise.resolve(); const p = charger(ST); retune(AC.currentTime, 1); tuneG.gain.setTargetAtTime(lvl(), AC.currentTime, 0.05); return p; }, // renvoie la promesse des instruments enregistrés décodés // éditeur de musique : applique un réglage de station sans relancer le morceau
+    note(p, n, pn) { const st = ST[station]; if (!AC || menu) return; pn = pn || (st[p] && (p === 'd' ? st.d[0] : st[p].p)); const P = PATCH[pn]; if (!P || !strip[p]) return; // fait entendre une note sur la tranche d'une partie (piano-roll, clavier et choix d'instrument de l'éditeur) ; pn : un autre timbre que celui de la partie
+      tone(pn, hz(n), AC.currentTime, P.s ? 0.4 : 0.25, pv(st, p) * (p === 'l' ? (P.lv || 0.15) * (st.lV == null ? 1 : st.lV) : p === 'b' ? 0.3 * (P.lv || 1) : 0.09 * (P.lv || 1)), strip[p].in); },
+    coup(p, c) { if (!AC || menu) return; const st = ST[station], K = KIT[st.kit] || KIT.k909, t = AC.currentTime, v = pv(st, p); if (p === 'k') dKick(t, v * 0.7 * (c === 'g' ? 0.5 : 1), K); else if (p === 's') dSnare(t, v * 0.4, K, c); else if (p === 'h') dHat(t, v * 0.63, K, c); else dPerc(t, v, K, c); }, // fait entendre un coup de batterie (éditeur)
     get fond() { return curRoot; }, // fondamentale de la mesure en cours
     get pas() { return stp; }, get timbres() { return Object.keys(PATCH); }, get kits() { return Object.keys(KIT); },
-    get ac() { return AC; }, get out() { return master; }, get patch() { return PATCH; }, get smp() { return Object.keys(smp); }, // prises de test
+    get ac() { return AC; }, get out() { return master; }, get patch() { return PATCH; }, get smp() { return Object.keys(smp); }, get tone() { return tone; }, get ins() { return Object.fromEntries(Object.entries(ins).map(([k, v]) => [k, Object.keys(v).length])); }, // prises de test
   };
 })();
