@@ -80,9 +80,10 @@ roughnessFactor = mix(roughnessFactor, 1.0, saleM);`)
 metalnessFactor *= 1.0 - saleM;`); };
 const salir = (a, c) => { if (a > 0) { const t = a / (SALE.n + a); SALE.c.lerp(new THREE.Color(c[0], c[1], c[2]), t); } SALE.n = Math.max(0, Math.min(1, SALE.n + a)); uSale.uSale.value = SALE.n; uSale.uSaleH.value = (VO ? VO.plan.bas : 0.2) ; }; // uSaleH : le bas de caisse, d'où la saleté part
 const car = new THREE.Group(), body = new THREE.Group(); car.add(body); scene.add(car);
-let VO, ZM, PIECES, NEZ, CUL, HX, HZ, XC, ROUES, PEND = null, CASSE = 0, OUV; const Z = [0, 0, 0, 0], DGM = 0.38, CAP = 0.7, TOUR = 0.4; let Z0 = [0, 0, 0, 0]; // Z0 : les zones au début du tour (hors CASSE, chacune prend au plus TOUR par tour)
+let VO, ZM, PIECES, NEZ, CUL, HX, HZ, XC, ROUES, PEND = null, CASSE = 0, OUV; const Z = [0, 0, 0, 0], DGM = 0.38, CAP = 0.7, TOUR = 0.4; // Z : usure [avant, arrière, gauche, droite] ; DGM : enfoncement maximal d'un sommet (m) ; CAP, TOUR : plafonds hors CASSE (total, par tour)
+ let Z0 = [0, 0, 0, 0]; // Z0 : les zones au début du tour (hors CASSE, chacune prend au plus TOUR par tour)
 const SEUIL = { mur: 6, camion: 6, voiture: 4 }, MULT = { mur: 1, camion: 1.5, voiture: 0.6 };
-// les pièces : nom, zone, pend à (null : tombe d'un coup), tombe à, charnière ; verre = éclats en plus
+// prof(x) : la hauteur du dessus de caisse en x (le profil du modèle)
 const prof = x => { const d = VO.plan.dessusCaisse; let y = 0; for (let i = 0; i < d.length - 1; i++) { const [x0, y0] = d[i], [x1, y1] = d[i + 1]; if (x0 !== x1 && (x - x0) * (x - x1) <= 0) y = Math.max(y, y0 + (y1 - y0) * (x - x0) / (x1 - x0)); } return y; };
 function monte(K) {
   if (PEND) { body.remove(PEND.piv); PEND = null; }
@@ -100,6 +101,7 @@ function monte(K) {
       for (let i = 0; i < P.length; i += 9) { a.fromArray(P, i); b.fromArray(P, i + 3); c.fromArray(P, i + 6); n.subVectors(c, b).cross(a.clone().sub(b)).normalize(); let ok = true; for (let k = 0; k < 9 && ok; k += 3) ok = test(P[i + k], P[i + k + 1], P[i + k + 2], n, i + k, zn); if (ok) tri.push(i); }
       if (tri.length) parts.push({ zn, tri }); }
     if (parts.length) PIECES.push({ nom, zi, parts, etat: 0, ...o }); };
+  // les pièces : nom, zone, puis { pend : seuil où elle pend (absent : tombe d'un coup), off : seuil où elle tombe, ch : charnière, verre : éclats (0 phare, 1 feu), s : côté }
   for (const s of [-1, 1]) {
     cherche('retro', s < 0 ? 2 : 3, [['caisse', (x, y, z, n, i) => uni(i) && z * s > p.wc / 2 && x > cab0 - 0.5 && x < cab0 + 0.3]], { off: 0.25, sg: [0, s], s });
     cherche('phare', 0, [['phare', (x, y, z) => z * s > 0]], { off: 0.25, sg: [1, s * 0.5], s, verre: 0 });
@@ -350,10 +352,11 @@ const K = (...c) => c.some(k => key[k]) ? 1 : 0;
 // mode CASSE : ce que les dégâts font à la conduite (hors CASSE, rien : tout reste visuel)
 //   moteur (usure avant) : −15 % de puissance à 0,6, −35 % et fumée à 0,85 ; direction : C.tire (rad de volant) ; roue crevée : −15 % d'adhérence et −10 % de vitesse maximale chacune, la voiture tire de son côté ;
 //   pare-chocs qui traîne : −1,5 % de vitesse maximale ; chaque pièce perdue : +1 % d'accélération (elle s'allège) ; hors d'usage : avant à 0,97 ou somme des zones à 3,4.
-function meca() { if (!CASSE) return { p: 1, vf: 1, grip: 1, tire: 0 };
+function meca() { if (!CASSE) return { p: 1, leger: 1, vf: 1, grip: 1, tire: 0 };
   const nc = C.creve.reduce((a, b) => a + b, 0), perdues = PIECES.filter(p => p.etat === 2).length, cote = (C.creve[1] + C.creve[3] - C.creve[0] - C.creve[2]) * 0.03;
   if (!C.mort && (Z[0] >= 0.97 || Z.reduce((a, b) => a + b, 0) >= 3.4)) C.mort = 1;
-  return { p: (Z[0] >= 0.85 ? 0.65 : Z[0] >= 0.6 ? 0.85 : 1) * (1 + perdues * 0.01) * (C.mort ? 0 : 1), vf: Math.pow(0.9, nc) * (PEND && PEND.p.nom === 'parechocs' ? 0.985 : 1), grip: Math.pow(0.85, nc), tire: C.tire + cote };
+  const leger = 1 + perdues * 0.01; // l'allègement multiplie la poussée et la traînée : plus d'accélération, même vitesse maximale
+  return { p: (Z[0] >= 0.85 ? 0.65 : Z[0] >= 0.6 ? 0.85 : 1) * leger * (C.mort ? 0 : 1), leger, vf: Math.pow(0.9, nc) * (PEND && PEND.p.nom === 'parechocs' ? 0.985 : 1), grip: Math.pow(0.85, nc), tire: C.tire + cote };
 }
 function pas(dt) {
   const MC = meca();
@@ -366,7 +369,8 @@ function pas(dt) {
     if (gaz) { vl += 15 * Math.min(1, g * 1.3) * MC.p * dt; C.lance = sp0 < 12 && gaz ? C.lance + dt : 0; patine = Math.max(0, 1 - sp0 / 12) * Math.min(1, C.lance * 3) * (C.lance < 1.4 ? 1 : 0); } else C.lance = 0;
     if (fr) { if (vl > 0.5) { vl = Math.max(0, vl - 20 * g * dt); bloque = vl > 3 ? 1 : 0; } else vl -= 8 * dt; } // sans ABS : les quatre roues bloquent
     if (fm) vl -= Math.sign(vl) * Math.min(Math.abs(vl), 5 * g * dt);
-    vl -= vl * 0.12 / MC.vf * dt; // (une vitesse maximale réduite = plus de traînée) vt *= Math.exp(-dt * 6 * g * (fm ? 0.1 : 1)); // l'adhérence latérale ramène la vitesse dans l'axe ; le frein à main la lâche à l'arrière
+    vl -= vl * 0.12 * MC.leger / MC.vf * dt; // (une vitesse maximale réduite = plus de traînée)
+    vt *= Math.exp(-dt * 6 * g * (fm ? 0.1 : 1)); // l'adhérence latérale ramène la vitesse dans l'axe ; le frein à main la lâche à l'arrière
     C.th += (C.st + MC.tire) * Math.min(1, Math.abs(vl) / 5) * Math.sign(vl) * 2.1 * (0.55 + 0.45 * g) * (fm ? 1.4 : 1) * dt;
   }
   C.vx = fx * vl + rx * vt; C.vz = fz * vl + rz * vt; C.x += C.vx * dt; C.z += C.vz * dt;

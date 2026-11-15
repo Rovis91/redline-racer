@@ -214,6 +214,24 @@
     if (wet === 2) { g.fillRect(27, 0, 3, 256); for (let y = 0; y < 256; y += 8) g.fillRect(25 + (rnd() * 3 | 0), y, 2 + (rnd() * 4 | 0), 8); }
     g.globalCompositeOperation = 'source-over';
   }],
+  // chaussée fine (option de carte th.routeTex = 'chausseeFine', mêmes réglages que chaussee) : 4 fois plus de pixels, grain fin et doux, aucune plaque claire ;
+  // à 270 lignes le grain se fond en un ton (mipmaps) au lieu de scintiller ; rapiéçages sombres et légers, peinture et bordures aux mêmes places que chaussee
+  chausseeFine: (asph, spk, edge, dash, k1, k2, wet) => [128, 512, (g, { R, alea: rnd, voile }) => {
+    R(g, asph, 0, 0, 128, 512);
+    const pts = (n, c, a) => voile(g, a, () => { for (let i = 0; i < n; i++) R(g, c, rnd() * 128 | 0, rnd() * 512 | 0, 1, 1); });
+    pts(5000, spk, 0.45); pts(2500, '#000', 0.1); pts(900, '#fff', 0.05);
+    voile(g, 0.07, () => {
+      for (let i = 0; i < 5; i++) { const x = 16 + rnd() * 70 | 0, y = rnd() * 440 | 0, w = 16 + rnd() * 24 | 0, h = 28 + rnd() * 60 | 0; R(g, '#000', x, y, w, h); } // rapiéçages : un peu plus sombres, jamais plus clairs
+      R(g, '#000', 14, 0, 100, 1); R(g, '#000', 14, 256, 100, 1); // joints de dalle
+    });
+    voile(g, 0.08, () => { for (const x of [34, 52, 72, 90]) R(g, '#000', x, 0, 4, 512); }); // passages de roues, continus : pas de tirets qui défilent
+    R(g, edge, 10, 0, 4, 512); R(g, edge, 114, 0, 4, 512);
+    for (let y = 0; y < 512; y += 128) { R(g, dash, 62, y, 4, 64); for (const x of [0, 120]) { R(g, k1, x, y, 8, 64); R(g, k2, x, y + 64, 8, 64); } }
+    g.globalCompositeOperation = 'destination-out'; g.fillStyle = 'rgba(0,0,0,.5)'; // flaques, comme chaussee
+    for (let i = wet ? 7 : 2; i > 0; i--) { const x = 16 + rnd() * 88, y = rnd() * 512, r = 6 + rnd() * 10; for (let k = 0; k < 9; k++) { const w = r * (0.5 + rnd()) | 0; g.fillRect(x + (rnd() - 0.5) * r * 2 | 0, y + (rnd() - 0.5) * r * 5 | 0, w, w * 2); } }
+    if (wet === 2) g.fillRect(54, 0, 6, 512);
+    g.globalCompositeOperation = 'source-over';
+  }],
   // paroi de tunnel — x : 0 = haut du mur, y : le long de la piste ; p = [fond, joint, filet, pied]
   paroi: (neonC, p, carreaux) => [32, 32, (g, { R, rnd, voile }) => {
     R(g, p[0], 0, 0, 32, 32);

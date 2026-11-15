@@ -58,7 +58,17 @@
       if (ix < nx - 1 && iz < nz - 1) idx.push(k, k + nx, k + 1, k + 1, k + nx, k + nx + 1);
     }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-    const mesh = new THREE.Mesh(g, o.mat); mesh.receiveShadow = true; h.scene.add(mesh);
+    // couches (o.couches, sinon th.couches ; docs/MOTEUR-OPTIONS-CARTES.md) : jusqu'à 4 textures par-dessus o.mat, chacune avec son poids par sommet (pente, distance à la route, altitude) ; même passe de dessin
+    const couches = o.couches || h.TH.couches; let mt = o.mat;
+    if (couches && mt.map) {
+      const N = g.attributes.normal.array, C = new Float32Array(nx * nz * 4), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+      for (let k = 0; k < nx * nz; k++) {
+        const p = 1 - N[k * 3 + 1], d = D[k], y = Y[k], x = pos[k * 3], z = pos[k * 3 + 2], hs = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453 % 1; // p : 0 à plat, 1 à la verticale
+        couches.slice(0, 4).forEach((c, i) => { C[k * 4 + i] = Math.max(0, Math.min(1, (c.pente ? ss(c.pente[0], c.pente[1], p) : 1) * (c.bord ? 1 - ss(c.bord[0], c.bord[1], d) : 1) * (c.haut ? ss(c.haut[0], c.haut[1], y) : 1) * (c.bas ? 1 - ss(c.bas[0], c.bas[1], y) : 1) * (c.poids ? c.poids(x, z, y, p, d) : 1) + (c.bruit || 0) * hs)); });
+      }
+      g.setAttribute('couche', new THREE.BufferAttribute(C, 4)); mt = mt.clone(); mt.userData.couches = couches.slice(0, 4).map(c => ({ map: c.map || h.tx(...c.tex), rep: c.rep || 1 }));
+    }
+    const mesh = new THREE.Mesh(g, mt); mesh.receiveShadow = true; h.scene.add(mesh);
     const lire = A => (x, z) => { // interpolation bilinéaire dans la grille
       const fx = Math.max(0, Math.min(nx - 1.001, (x - x0) / pas)), fz = Math.max(0, Math.min(nz - 1.001, (z - z0) / pas)), ix = fx | 0, iz = fz | 0, a = fx - ix, b = fz - iz, k = iz * nx + ix;
       return (A[k] * (1 - a) + A[k + 1] * a) * (1 - b) + (A[k + nx] * (1 - a) + A[k + nx + 1] * a) * b;
@@ -275,6 +285,16 @@
         inst(h, geo('lanterne'), mat('peinture', { lum: 1, c: 0xff2a30 }), lant);
         inst(h, geo('boite', 0.3, 0.12, 0.3), mat('peinture', { lum: 1, c: 0xffd05a }), lant.map(p => [p[0], p[1] - 0.46, p[2], p[3]])); // le gland doré sous chaque lanterne
         box(18, 3.2, 0.4, mat('ecrit', LUMI, 224, 40, '#2a0408', '#ffd05a', '夜市 MARCHE DE NUIT', 26), ...(s => [s.x, s.y + 9.2, s.z])(S[i0 + 2])).rotation.y = h.across(S[i0 + 2]); // l'enseigne d'entrée, posée sur le premier fil
+      }
+      { // l'entrée du tunnel dans un immeuble d'habitation, comme le métro de Chongqing : la voie rapide entre par un trou au milieu des étages
+        const T = h.T, K = 15, a = S[T.t0], b = S[T.t0 + K], L = Math.hypot(b.x - a.x, b.z - a.z), ux = (b.x - a.x) / L, uz = (b.z - a.z) / L; // axe : la corde des 30 premiers mètres du tunnel, qui tourne
+        let dev = 0; for (let k = 0; k <= K; k++) { const s = S[T.t0 + k]; dev = Math.max(dev, Math.abs((s.z - a.z) * ux - (s.x - a.x) * uz)); }
+        const tr = W + 2 + dev, w = 2 * tr + 28, d = L + 1, haut = 95, bas = -60, yl = b.y - 0.3, yh = a.y + 10.3, ry = Math.atan2(ux, uz), c = (L - 1) / 2; // trou : la route y passe sans toucher les murs malgré le virage et la descente
+        const fen = mat('fenetres', { emissive: 0xffffff, emissiveMap: tx('fenetresAllumees', ['#ffd27a', '#ffe9b0'], 0.45) });
+        const bloc = (x0, x1, y0, y1) => { const m = new THREE.Mesh(geo('immeuble', x1 - x0, y1 - y0, d), fen), x = (x0 + x1) / 2;
+          m.position.set(a.x + ux * c + uz * x, (y0 + y1) / 2, a.z + uz * c - ux * x); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; scene.add(m); };
+        bloc(-w / 2, -tr, bas, haut); bloc(tr, w / 2, bas, haut); bloc(-tr, tr, yh, haut); bloc(-tr, tr, bas, yl);
+        box(2 * tr, 4, 0.5, signMats[4], a.x - ux * 1.3, yh + 3, a.z - uz * 1.3).rotation.y = ry; // enseigne au-dessus du trou
       }
       h.beams.push(...beams); // game.js les tourne vers la caméra de chaque vue
       return (dt, now) => { // enseignes qui clignotent, grésillent ou défilent ; hologrammes, trafic, balises
