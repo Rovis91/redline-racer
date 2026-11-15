@@ -2019,8 +2019,8 @@
       insts(h, 'portailGES', { beton: bet, bande: mat('bandeOrange'), numero: mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), roche: mat('rocheGES') }, [[T0, 0], [T1, Math.PI]].map(([i, sens]) => [S[i].x, S[i].y, S[i].z, h.across(S[i]) + sens]), { a: [W] });
 
       // ---------- la crête (REFS 5) : rails, deux portiques roulants au-dessus de la route, cabane de garde, tour de commande, lettres ----------
-      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, sd * (W + 2.6), 0.05, sd * (W + 3.4), 0.05, mat('matGris'), 4));
-      insts(h, 'portiqueVanne', { acier: mat('toleOrange', {}, '#e8a01e'), roue: mat('matGris'), treuil: mat('peinture', { c: 0x5fa89a }), cabine: mat('peinture', { c: 0xe8e4d8 }), vitre: mat('vitreSombre') }, [225, -45].map(x => { const s = S[near(h, x, 0)]; return [s.x, s.y, s.z, h.across(s)]; }), { a: [W] }); // les deux portiques roulants en une passe par pièce
+      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, sd * (12 + 2.6), 0.05, sd * (12 + 3.4), 0.05, mat('matGris'), 4));
+      insts(h, 'portiqueVanne', { acier: mat('toleOrange', {}, '#e8a01e'), roue: mat('matGris'), treuil: mat('peinture', { c: 0x5fa89a }), cabine: mat('peinture', { c: 0xe8e4d8 }), vitre: mat('vitreSombre') }, [225, -45].map(x => { const s = S[near(h, x, 0)]; return [s.x, s.y, s.z, h.across(s)]; }), { a: [12] }); // les deux portiques roulants en une passe par pièce
       { const s = S[P(34) + 6], gr = repere(h, s); gr.position.y = hAt(...bord(s, -1, W + 5)); h.pose('cabane', { beton: mat('betonGES', {}, '#b8b4a4'), toit: mat('toleOrange', {}, '#b5483c'), vitre: mat('lampe', LUMI) }, gr, [-(W + 5), 0, 0]); } // la cabane de garde à l'entrée de la crête, sur le replat de la culée
       h.pose('tourControle', { beton: bet, vitre: mat('vitreSombre'), acier: mat('matGris') }, h.scene, [-374, hAt(-374, 18) - 1, 18]);
       // deux tours de prise d'eau dans le lac, reliées à la crête par une passerelle ; deux vedettes de service amarrées
