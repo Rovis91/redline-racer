@@ -1909,11 +1909,11 @@
       const hAt = g.hAt, dAt = g.dAt;
 
       // ---------- l'eau : la retenue (85 m), le bassin et la rivière ----------
-      const eau = mat('eauGES', { c: 0xb8cccc }, '#4f7f8c', 40), eauRiv = mat('eauGES', { c: 0x9fd0d8 }, '#6c9aa5', 40), ecume = mat('ecumeGES');
+      const eau = mat('eauGES', { c: 0xb8cccc }, '#4f7f8c', 40), eauRiv = mat('eauGES', { c: 0xa8bcbc }, '#4f7f8c', 40), ecume = mat('ecumeGES');
       { const P3 = [], UV = [], I = [], n = 24, a0 = AMAX + 0.28; // la retenue : un secteur qui part du parement amont ; les versants la découpent
         for (let k = 0; k <= n; k++) { const a = -a0 + 2 * a0 * k / n, A = arc(a, RA + 10.5), B = arc(a, RA + 1900); P3.push(A[0], LAC, A[1], B[0], LAC, B[1]); UV.push(A[0] / 16, A[1] / 16, B[0] / 16, B[1] / 16); if (k) { const c = k * 2 - 2; I.push(c, c + 2, c + 1, c + 1, c + 2, c + 3); } }
         maille(P3, UV, I, eau).material.side = THREE.DoubleSide; }
-      bande(RIV, eauRiv, 24); bande(FUITE, eauRiv, 24);
+      bande(RIV, eauRiv, 12); bande(FUITE, eauRiv, 12);
       bloc(ecume, BAS[0], BAS[1], BAS[2], BAS[3], 8, 10.1);
 
       // ---------- le mur : poids-voûte, parement aval incliné (0,72 m par mètre), parement amont vertical ; plots de 18 m en relief, fenêtres des galeries de visite ----------
@@ -2236,18 +2236,18 @@
           const p = proche(x, z); if (p.d < 60 && ouvert(p.i, vallee(p.i)) && (z - p.s.z) * p.s.tx - (x - p.s.x) * p.s.tz > 0 === vallee(p.i) > 0) continue; // les trouées restent ouvertes en profondeur
           arbre(x, z, 0.9 + rnd() * 0.8); }
         // bouleaux en allée le long de la rue et de la route de la vallée, et autour des immeubles
-        for (let i = iV0 - 40; ((i - iV0 + 40 + N) % N) < ((P(K.plat + 2) - iV0 + 40 + N) % N); i = (i + 9) % N) for (const sd of [-1, 1]) { const [x, z] = bord(S[i], sd, S[i].w + (enVille(i) ? 4.4 : 6.5)); if (dAt(x, z) > W + 3.5 && riv(x, z) > 6 && !dansBati(x, z, 1) && !poste(x, z) && !base(x, z) && !chantier(x, z)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.9 + rnd() * 0.4]); }
+        for (let i = iV0 - 40; ((i - iV0 + 40 + N) % N) < ((P(K.plat + 2) - iV0 + 40 + N) % N); i = (i + 9) % N) for (const sd of [-1, 1]) { if (enVille(i) && ((i / 9 | 0) + (sd > 0)) % 2) continue; const [x, z] = bord(S[i], sd, S[i].w + (enVille(i) ? 4.4 : 6.5)); if (dAt(x, z) > W + 3.5 && riv(x, z) > 6 && !dansBati(x, z, 1) && !poste(x, z) && !base(x, z) && !chantier(x, z)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.9 + rnd() * 0.4]); }
         inst(h, h.geo('cedre'), mat('conifere', {}, '#5e7a44'), cla); inst(h, h.geo('cedre'), mat('conifere', {}, '#33452f'), som); inst(h, h.geo('tronc'), h.mat('tronc'), futs);
-        inst(h, h.geo('futBouleau'), mat('ecorceB'), bou); inst(h, h.geo('houppierB'), mat('feuillesB'), bou.map(([x, y, z, r, s]) => [x, y, z, r, s * (0.9 + rnd() * 0.3)])); }
+        inst(h, h.geo('futBouleau'), mat('ecorceB'), bou); { const hp = bou.map(([x, y, z, r, s]) => [x, y, z, r, s * (0.8 + rnd() * 0.5)]); inst(h, h.geo('houppierB'), mat('feuillesB'), hp.filter((_, k) => k % 3)); inst(h, h.geo('houppierB'), mat('feuillesB', { c: 0xa8b890 }), hp.filter((_, k) => k % 3 === 0)); } }
       { const s = S[P(K.epingleHaute)], [x, z] = bord(s, -1, s.w + 16); inst(h, h.geo('rocherGES'), mat('rocheGES'), [[x, hAt(x, z) + 2, z, 0.7, 7, 5, 6], [x + 6, hAt(x + 6, z + 5) + 1, z + 5, 2, 3.5, 2.5, 3]]); } // le rocher de l'épingle haute, repère de freinage
       // enrochements des berges
       { const roc = []; for (let k = 0; k < 2200; k++) { const x = -420 + rnd() * 560, z = 190 + rnd() * 1150, rv = riv(x, z); if (rv < -2 || rv > 6 || dAt(x, z) < W + 4) continue; roc.push([x, hAt(x, z), z, rnd() * 6, 1.2 + rnd() * 2.2, 0.7 + rnd() * 1.2, 1.2 + rnd() * 2.2]); } inst(h, h.geo('rocherGES'), mat('rocheGES'), roc); }
 
       // ---------- le lointain : trois plans de sommets hors brouillard, de plus en plus pâles, neige sur les deux derniers (rien au-delà de 2 350 m de la route : le ciel est à 2 500 m) ----------
       { const P3 = [], C3 = [], I = [], n = 180, cx = 0, cz = 450, hz = v => { const s = Math.sin(v * 127.1) * 43758.5453; return s - Math.floor(s); };
-        for (const [R, roc, h0, h1, neige, gr] of [[1380, 0x5f7470, 190, 360, 1e9, 9], [1520, 0x8296a0, 330, 620, 520, 6], [1660, 0xa6b6c0, 480, 860, 560, 4]]) { const cr = new THREE.Color(roc), cn = new THREE.Color(0xeef2f4), b0 = P3.length / 3;
+        for (const [R, roc, h0, h1, neige, gr, voile] of [[1380, 0x5f7470, 190, 360, 1e9, 9, 0.3], [1520, 0x8296a0, 330, 620, 520, 6, 0.45], [1660, 0xa6b6c0, 480, 860, 560, 4, 0.6]]) { const br = new THREE.Color(h.TH.fog), cr = new THREE.Color(roc).lerp(br, voile), cn = new THREE.Color(0xeef2f4).lerp(br, voile * 0.6), b0 = P3.length / 3;
           for (let k = 0; k <= n; k++) { const a = k / n * Math.PI * 2, kk = k % n, t = 0.5 + 0.3 * Math.sin(a * gr + R) + 0.2 * Math.sin(a * gr * 2.7 + R * 2) + 0.12 * Math.sin(a * gr * 6.1 + R * 3) + 0.06 * (hz(kk + R) - 0.5), y = h0 + (h1 - h0) * Math.max(0, Math.min(1, t)), x = cx + Math.cos(a) * R, z = cz + Math.sin(a) * R, ym = Math.min(y, neige + 30 * Math.sin(a * 31 + R));
-            P3.push(x, -80, z, x, ym, z, x, y, z); for (const c of [cr, cr, y > ym ? cn : cr]) C3.push(c.r, c.g, c.b); if (k < n) { const b = b0 + k * 3; I.push(b, b + 1, b + 3, b + 1, b + 4, b + 3, b + 1, b + 2, b + 4, b + 2, b + 5, b + 4); } } }
+            P3.push(x, -80, z, x, ym, z, x, ym, z, x, y, z); for (const c of [cr, cr, cn, cn]) C3.push(c.r, c.g, c.b); if (k < n) { const b = b0 + k * 4; I.push(b, b + 1, b + 4, b + 1, b + 5, b + 4, b + 2, b + 3, b + 6, b + 3, b + 7, b + 6); } } }
         const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); g2.setAttribute('color', new THREE.Float32BufferAttribute(C3, 3)); g2.setIndex(I); const blancTx = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1); blancTx.needsUpdate = true; // une texture : rythme.js laisse alors ce grand plan d'horizon tranquille (sans elle, les sommets battaient avec la musique)
         h.scene.add(new THREE.Mesh(g2, new THREE.MeshBasicMaterial({ map: blancTx, vertexColors: true, fog: false, side: THREE.DoubleSide }))); }
 
