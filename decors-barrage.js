@@ -22,8 +22,8 @@
       const coule = (m, v, u = 0) => { TICK.push(dt => { const o = m.map.offset; o.y = (o.y - v * dt) % 1; o.x = (o.x + u * dt) % 1; }); return m; }; // l'eau qui coule : la texture avance le long de v (chaque réglage de mat() a sa propre texture)
       // panaches (embruns, fumées, poussière) : particules du jeu (h.flou), créées au premier tick ; [x, y, z, couleur, opacité, vie s, taille, par seconde, vitesse de montée, étalement]
       const PAN = [], panache = (...p) => { const q = { p, f: null, t: 0 }; PAN.push(q); return q; }, jit = a => (Math.random() - 0.5) * 2 * a;
-      TICK.push(dt => { for (const q of PAN) { const [x, y, z, col, op, vie, tl, par, vy, et] = q.p; if (!q.f) q.f = h.flou(Math.ceil(par * vie) + 4, col, op, vie, 0.25, tl);
-        if (!q.off) for (q.t += dt * par; q.t > 1; q.t--) q.f.emit(x + jit(et), y, z + jit(et), jit(0.6), vy * (0.7 + Math.random() * 0.6), 2.2 + jit(0.8)); q.f.step(dt); } }); // le vent pousse tout vers +z
+      TICK.push(dt => { for (const q of PAN) { const [x, y, z, col, op, vie, tl, par, vy, et, vz = 2.2] = q.p; if (!q.f) q.f = h.flou(Math.ceil(par * vie) + 4, col, op, vie, 0.25, tl);
+        if (!q.off) for (q.t += dt * par; q.t > 1; q.t--) q.f.emit(x + jit(et), y, z + jit(et), jit(0.6), vy * (0.7 + Math.random() * 0.6), vz + jit(0.8)); q.f.step(dt); } }); // le vent pousse tout vers +z
       // un drapeau : un cube mince accroché à sa hampe en (x, y, z), qui part dans le vent (vers +z) et bat ; r0 et amp : repos et débattement d'un calicot tenu par le haut
       const FLAGS = [], drapeau = (x, y, z, L, H, col = 0xb5241c, r0 = -Math.PI / 2, amp = 0.32) => { FLAGS.push([mb(mob(), L / 2, 0, 0, 0, L, H, 0.06, col), x, y, z, r0, amp, (x * 12.9898 + z * 78.233) % 6.28]); };
       TICK.push((dt, car, t) => { for (const [o, x, y, z, r0, amp, ph] of FLAGS) mobA(o, x, y, z, r0 + amp * Math.sin(t * 5 + ph) + amp * 0.4 * Math.sin(t * 11.3 + ph * 2)); });
@@ -152,6 +152,8 @@
         bloc(bet, HX0, HX1, HZ1 - 1, HZ1, YH - 12, YH + 4); bloc(verre, HX0 + 1, HX1 - 1, HZ1 - 0.8, HZ1 - 0.2, YH + 4, YH + HT - 3); bloc(bet, HX0, HX1, HZ1 - 1, HZ1, YH + HT - 3, YH + HT); // la façade sud : allège, grandes baies, bandeau
         bloc(betS, HX0 - 1, HX1 + 1, 20, HZ1 + 1.5, YH + HT, YH + HT + 1.2); // le toit
         for (const x of [15, 60, 105]) bloc(mat('vitreSombre'), x - 9, x + 9, HZ0 + 12, HZ1 - 12, YH + HT + 1.2, YH + HT + 2.2); // lanterneaux
+        { const P3 = [], UV = [], I = []; for (const x0 of [24, 52, 80, 108, 132]) { const b = P3.length / 3; P3.push(x0, YH + HT - 4, HZ1 - 1.2, x0 + 9, YH + HT - 4, HZ1 - 1.2, x0 - 40, YH + 0.15, HZ1 - 36, x0 - 31, YH + 0.15, HZ1 - 36); UV.push(0, 0, 1, 0, 0, 1, 1, 1); I.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } // V-47 : des rais de soleil obliques tombent des baies (le soleil est au sud-est), on les traverse
+          const m = maille(P3, UV, I, h.addMat(h.tx('degrade', '#fff0c8', 1), { opacity: 0.3 })); m.receiveShadow = false; }
         // les pignons, percés pour la route : la porte suit la chaussée qui les traverse
         for (const xw of [HX0, HX1]) { let bi = iH0, bd = 1e9; for (let i = iH0 - 12; i <= iH1 + 12; i++) { const d = Math.abs(S[i].x - xw); if (d < bd) { bd = d; bi = i; } } const s = S[bi], o = (s.w + 2.2) / Math.max(0.5, Math.abs(s.tx));
           bloc(bet, xw - 1.3, xw + 1.3, 20, s.z - o, YH - 12, YH + HT); bloc(bet, xw - 1.3, xw + 1.3, s.z + o, HZ1, YH - 12, YH + HT); bloc(bet, xw - 1.3, xw + 1.3, s.z - o, s.z + o, YH + 10, YH + HT);
@@ -197,6 +199,7 @@
       // ---------- le pont du pied du mur : tablier et piles de béton, lampadaires ----------
       tranche(iP0 + 6, iP1 - 6, (i, l) => { ruban(i, l, s => -(s.w + 1.2), -0.15, s => s.w + 1.2, -0.15, betS, 8); ruban(i, l, s => -(s.w + 1.2), -2.4, s => s.w + 1.2, -2.4, betS, 8); for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 1.2), -0.15, s => sd * (s.w + 1.2), -2.4, betS, 8); });
       for (let i = iP0 + 18; i < iP1 - 12; i += 22) { const s = S[i], m = h.pose('boite', betS, h.scene, [s.x, (s.y - 2.4 + 2) / 2, s.z], 2 * W + 1, s.y - 2.4 - 2, 2.6); m.rotation.y = h.across(s); }
+      for (const i of [iP0 + 14, iP0 + 22, iP0 + 30, iP0 + 38]) { const s = S[i], [x, z] = bord(s, 1, s.w + 4); panache(x, s.y + 1.4, z, [0.93, 0.96, 0.97], 0.2, 3.4, 9, 4, 0.8, 2.5, 6.5); } // V-53 : des paquets d'embruns traversent le pont, de l'amont vers l'aval
       const lampes = [], clair = []; // lampadaires, posés après la cité (aucun dans un mur) ; clairières de la forêt [x, z, rayon]
       // lampadaires de sodium : le pont, la crête, la rue de la cité et ses abords
       { const lp = lampes; const pose1 = (i, sd, o = 1.6) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + o); lp.push([x, s.y, z, h.across(s) + (sd > 0 ? Math.PI : 0)]); };
@@ -549,7 +552,8 @@
         const sm = S[(QA + QB) >> 1], gr = repere(h, sm), X = -(sm.w + 15), tole = mat('toleOrange', {}, '#a8623a'), fer = mat('peinture', { c: 0x3a3e3c }), P1 = (m, p, w, ht, d) => { const o = h.pose('boite', m, gr, p, w, ht, d); o.castShadow = true; return o; };
         for (const dx of [-2.6, 2.6]) for (const dz of [-2.2, 2.2]) P1(fer, [X + dx, 2.6, dz], 0.5, 5.2, 0.5); // le concasseur sur pilotis : caisse, trémie, bande inclinée vers le tas
         { const [px, pz] = bord(sm, -1, sm.w + 15); panache(px, sm.y + 14, pz, [0.8, 0.75, 0.64], 0.26, 8, 10, 4, 2.2, 1.5); } // V-77 : un nuage de poussière au-dessus du concasseur, lent et en hauteur (zone de virages)
-        P1(tole, [X, 8.2, 0], 6.4, 6, 5.4); P1(tole, [X, 12.2, 0], 8.6, 2, 7.4); P1(fer, [X, 5.6, -11], 1.5, 0.5, 19).rotation.x = -0.36;
+        P1(tole, [X, 8.2, 0], 6.4, 6, 5.4); P1(tole, [X, 12.2, 0], 8.6, 2, 7.4); { const bande = P1(fer, [X, 5.6, -11], 1.5, 0.5, 19); bande.rotation.x = -0.36; gr.updateMatrixWorld(true); bande.updateMatrix(); // V-79 : le granulat avance sur la bande (sept tas du lot mobile)
+          const Mb = new THREE.Matrix4().multiplyMatrices(gr.matrixWorld, bande.matrix), v3 = new THREE.Vector3(), tas = Array.from({ length: 7 }, () => mb(mob(), 0, 0, 0, 0.6, 0.9, 0.5, 0.9, 0xb4aa98)); TICK.push((dt, car, t) => tas.forEach((o, k) => { const u = (t * 0.12 + k / 7) % 1; v3.set(0, 0.5, (0.5 - u) * 18).applyMatrix4(Mb); mobA(o, v3.x, v3.y, v3.z, k); })); }
         for (const [z, r, ht] of [[-24, 7.5, 6.5], [22, 6, 5]]) { const c = new THREE.Mesh(new THREE.ConeGeometry(r, ht, 9), gravier); c.position.set(X + 1, ht / 2 - 0.2, z); c.castShadow = true; gr.add(c); }
         for (const [x, z, ry] of [[X + 7, 10, 0.25], [X + 5, 34, -0.5]]) { const b = new THREE.Group(); b.position.set(x, 0, z); b.rotation.y = ry; gr.add(b); // deux camions-bennes : cabine orange, benne grise
           h.pose('boite', mat('peinture', { c: 0xd8621e }), b, [0, 2.1, -2.7], 2.5, 2.3, 2.1); h.pose('boite', mat('peinture', { c: 0x7a7e7a }), b, [0, 2.5, 1.3], 2.7, 1.7, 4.8).castShadow = true; h.pose('boite', fer, b, [0, 0.8, 0], 2.5, 1, 7.4); }
@@ -640,8 +644,16 @@
         L.forEach(([, c], k) => im.setColorAt(k, col.setHex(c[7]))); if (im.instanceColor) im.instanceColor.needsUpdate = true;
         TICK.push(() => { let b = 0; L.forEach(([o], k) => { if (o.sale) { im.setMatrixAt(k, m4.multiplyMatrices(o.M, loc[k])); b = 1; } }); if (b) { im.instanceMatrix.needsUpdate = true; for (const o of MOB) o.sale = 0; } }); }
 
+      const VUE = []; // ce qui dépend de la voiture suivie, réglé pour chaque vue avant son rendu (tick.vue)
+      { // V-03 : dans le banc de brouillard de la crête, un halo orange sur chaque lampadaire, visible à 170 m : la chaîne des lampes dessine la route. Additif, hors brouillard, dessiné après le voile du banc (renderOrder 51)
+        const LP = lampes.filter(([x, y, z]) => y > YC - 6 && z < 120).map(([x, y, z, r]) => [x + Math.cos(r) * 2.1, y + 8.8, z - Math.sin(r) * 2.1]), g = new THREE.BufferGeometry(), C = new Float32Array(LP.length * 3), a = P(K.crete), b = P(74);
+        g.setAttribute('position', new THREE.Float32BufferAttribute(LP.flat(), 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+        const pts = new THREE.Points(g, new THREE.PointsMaterial({ map: h.tx('brumeGES'), size: 8, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); pts.frustumCulled = false; pts.renderOrder = 51; pts.userData.dyn = 1; h.scene.add(pts);
+        VUE.push(car => { const i = car.idx, d = i < a ? a - i : i > b ? i - b : 0, k = Math.max(0, 1 - d / 90); pts.visible = k > 0.01; if (!pts.visible) return;
+          LP.forEach(([x, , z], j) => { const f = k * Math.max(0, 1 - Math.hypot(x - car.x, z - car.z) / 170); C[j * 3] = 0.75 * f; C[j * 3 + 1] = 0.42 * f; C[j * 3 + 2] = 0.12 * f; }); g.attributes.color.needsUpdate = true; }); }
+
       fond();
-      let tv = 0; return (dt, now, car) => { dt = Math.min(dt, 0.1); tv += dt; for (const f of TICK) f(dt, car, tv); };
+      let tv = 0; const tick = (dt, now, car) => { dt = Math.min(dt, 0.1); tv += dt; for (const f of TICK) f(dt, car, tv); }; tick.vue = car => { for (const f of VUE) f(car); }; return tick;
     },
   });
 })();
