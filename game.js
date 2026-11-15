@@ -1027,12 +1027,13 @@
   }
   const NOIRP = new THREE.Color(0.3, 0.3, 0.32), MK = new WeakMap(); // MK : le dernier point de peinture de chaque voiture (hors de l'objet de sim.js)
   // cônes et poubelles : au bord extérieur des virages (là où l'on sort large), un InstancedMesh par sorte ; poubelles seulement en ville
-  const urbain = ['ville', 'paris', 'canal', 'perse'].includes(M.id), OBJ = [], SORTES = [
+  // th.objets : [[couleur, rayon haut, rayon bas, hauteur], …] remplace cônes et poubelles par les objets de la carte (perse : jarres et paniers), le second une fois sur trois
+  const urbain = ['ville', 'paris', 'canal', 'perse'].includes(M.id), OBJ = [], SORTES = TH.objets ? TH.objets.map(([c, r0, r1, ht], i) => ({ nom: 'objet' + i, geo: new THREE.CylinderGeometry(r0, r1, ht, 8), mat: new THREE.MeshLambertMaterial({ color: c }), r: Math.max(r0, r1), h: ht })) : [
     { nom: 'cone', geo: new THREE.ConeGeometry(0.22, 0.7, 8), mat: new THREE.MeshLambertMaterial({ color: 0xff6a10 }), r: 0.22, h: 0.7 },
     { nom: 'poubelle', geo: new THREE.CylinderGeometry(0.3, 0.26, 0.9, 8), mat: new THREE.MeshLambertMaterial({ color: 0x2c5a34 }), r: 0.3, h: 0.9 }];
   { let a = 12345; const alea = () => (a = (a * 16807) % 2147483647) / 2147483647, places = []; // tirage fixe : les mêmes à chaque course
     for (let i = 0; i < N; i += 3) { const k = S[i].k || 0, kp = S[(i + N - 6) % N].k || 0; if (Math.abs(k) > 0.012 && Math.abs(kp) <= 0.012 && murK(i) <= cO) places.push(i); } // l'entrée de chaque virage marqué
-    for (const i of places.slice(0, 14)) { const sg = -Math.sign(S[i].k); for (let j = 0; j < 3; j++) { const ii = (i + j * 3) % N, s = S[ii], o = sg * (OFF(s) - 0.7 - alea() * 0.4), sorte = SORTES[urbain && alea() < 0.35 ? 1 : 0];
+    for (const i of places.slice(0, 14)) { const sg = -Math.sign(S[i].k); for (let j = 0; j < 3; j++) { const ii = (i + j * 3) % N, s = S[ii], o = sg * (OFF(s) - 0.7 - alea() * 0.4), sorte = SORTES[urbain && SORTES.length > 1 && alea() < 0.35 ? 1 : 0];
       OBJ.push({ S: sorte, x0: s.x - s.tz * o, z0: s.z + s.tx * o, y0: s.y + (T.vert ? paroi(s, Math.abs(o)) : 0), p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), dort: 1 }); } } }
   for (const So of SORTES) { const l = OBJ.filter(o => o.S === So); So.im = new THREE.InstancedMesh(So.geo, So.mat, Math.max(1, l.length)); So.im.count = l.length; So.im.castShadow = true; So.im.userData.dyn = 1; scene.add(So.im); l.forEach((o, k) => { o.k = k; }); }
   // shortcut: le sens du virage (signe de S.k) donne l'extérieur ; si une carte définit k à l'envers, les objets seraient à l'intérieur : à vérifier carte par carte au premier passage

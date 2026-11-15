@@ -66,6 +66,18 @@
     // REFS §12 : module d'arcades du bazar à ciel ouvert, 12 m : mur de brique peint de deux arcs, corniche, coupole basse derrière (bulbe en deux boîtes)
     // V2 : toit plat à rebord, plus de coupole en gradins (lue comme un merlon, REFS §12) : les coupoles du quartier sont des calottes à part
     arcade: () => [['brique', 12, 5.5, 1.2, 0, 2.75, 0.6, null, 1], ['faience', 12.2, 0.6, 1.4, 0, 5.8, 0.6], ['crue', 12, 7, 9, 0, 3.5, 5.6], ['crue', 12.3, 0.4, 9.3, 0, 7.2, 5.6], ...[-3, 3].flatMap(x => [['bois', 3, 1.3, 0.9, x, 6.4, 0.75], ['bois', 3.2, 0.15, 1.1, x, 7.1, 0.75]])], // balcons de bois à claustras à l'étage
+    // îlot de rue de village, 30 m, X le long de la route, Z vers l'arrière, façades au ras de la chaussée : trois maisons de terre accolées, différentes
+    // (maison à balcon de bois de 9 m ; maison à boutique de 12 m, auvent et pièce sur le toit ; maison basse de 5,5 m à grand portail). Portes à cadre turquoise, fenêtres allumées ou volets clos, banc de terre au pied
+    ilot: () => [
+      ['crue', 10, 9, 8, -10, 4.5, 4, null, 1], ['toit', 10.4, 0.5, 8.4, -10, 9.25, 4], ['cadre', 2.3, 3.1, 0.2, -12.4, 1.55, -0.02], ['porte', 1.6, 2.6, 0.3, -12.4, 1.3, -0.06], ['fenetre', 1, 1.5, 0.25, -7.8, 6.3, -0.05], ['volet', 1, 1.5, 0.25, -12.4, 6.3, -0.05], ['fenetre', 0.9, 1.2, 0.25, -7.4, 2.4, -0.05],
+      ['bois', 3.4, 0.2, 1.3, -7.8, 5, -0.6], ['bois', 3.4, 0.9, 0.12, -7.8, 5.5, -1.2], ['crue', 3, 0.5, 0.7, -9.5, 0.25, -0.35],
+      ['crue', 10, 12, 8, 0, 6, 4, null, 1], ['toit', 10.4, 0.5, 8.4, 0, 12.25, 4], ['boutique', 7, 3.6, 0.3, -0.8, 1.8, -0.1], ['faience', 10.1, 0.5, 0.25, 0, 4.3, -0.05], ['auvent', 7.4, 0.12, 2.8, -0.8, 3.7, -1.4, [0.28, 0, 0]],
+      ...[[-3, 6.8, 1], [0, 6.8, 1], [3, 6.8, 0], [-3, 9.8, 0], [0, 9.8, 1], [3, 9.8, 1]].map(([x, y, a]) => [a ? 'fenetre' : 'volet', 1, 1.5, 0.25, x, y, -0.05]), ['porte', 1.2, 2.4, 0.3, 3.8, 1.2, -0.06], ['crue', 3.4, 3, 3.4, -2, 13.9, 5], ['toit', 3.8, 0.3, 3.8, -2, 15.5, 5],
+      ['crue', 10, 5.5, 8, 10, 2.75, 4, null, 1], ['toit', 10.4, 0.4, 8.4, 10, 5.7, 4], ['cadre', 3, 3.8, 0.2, 10, 1.9, -0.02], ['porte', 2.2, 3.2, 0.3, 10, 1.6, -0.06], ['fenetre', 0.8, 1, 0.25, 6.8, 3.6, -0.05], ['volet', 0.8, 1, 0.25, 13.2, 3.6, -0.05], ['crue', 4.6, 1.4, 4.6, 11.5, 6.4, 4.5], ['toit', 5, 0.3, 5, 11.5, 7.2, 4.5]],
+    // passage couvert en travers de la ruelle (sabat) : une pièce d'habitation qui enjambe la rue, d'une maison à l'autre, sur deux piles et deux consoles ; fenêtres allumées sur ses deux faces. W = demi-largeur de la rue
+    sabat: (W = 10) => [...[-1, 1].flatMap(sd => [['crue', 2.4, 6.4, 7, sd * (W + 0.6), 3.2, 0, null, 1], ['crue', 2.6, 1.4, 7, sd * (W - 1.6), 5.9, 0], ['crue', 2.6, 0.8, 7, sd * (W - 3.8), 6.4, 0]]),
+      ['crue', 2 * W + 3.6, 4.4, 7, 0, 9, 0, null, 1], ['toit', 2 * W + 4, 0.5, 7.4, 0, 11.45, 0], ['faience', 2 * W + 3.7, 0.4, 7.1, 0, 7, 0],
+      ...[-1, 1].flatMap(fz => [-0.55, -0.18, 0.18, 0.55].map((u, k) => [k % 3 ? 'fenetre' : 'volet', 1.2, 1.7, 0.25, u * W, 9.2, fz * 3.52]))],
     // module de rue du bazar ouvert, 12 m, X le long de la route, Z vers l'arrière : boutiques en niches au rez-de-chaussée, bandeau de faïence, un étage de brique crue, toit plat à rebord. Toujours un étage et un toit (9,6 m)
     arcadeBazar: () => [['boutiques', 12, 5, 9, 0, 2.5, 4.5, null, 1], ['faience', 12.1, 0.5, 9.1, 0, 5.25, 4.5], ['etage', 12, 3.6, 9, 0, 7.3, 4.5], ['toit', 12.4, 0.5, 9.4, 0, 9.35, 4.5]],
     // REFS §12, §16 : étal à auvent (X le long de la route) : comptoir, deux montants, toile rayée penchée vers la route, marchandises
