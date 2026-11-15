@@ -456,7 +456,7 @@
       // lacets des terrasses (14-24), pont de lianes au pied de la grande chute (32-33), temple-grotte (le tunnel, 34-40), saut de l'escalier écroulé, descente des idoles (équerres 43-48),
       // cité perdue (arc triple pt 53, place 54-58), gué (63-64), retour au camp. Proposition validée : propositions/PROPOSITION-chapada.md
       // largeur : W = le pont (file unique) ; partout ailleurs 6,5 m de demi-largeur, 9 au camp, 10 sur la place, 11 au gué
-      large: [[34, 30, 6.5], [66, 2, 9], [54, 62, 10], [63, 65, 11]], sauts: [[41, 40, 1.2]],
+      large: [[34, 30, 6.5], [66, 2, 9], [54, 62, 10], [63, 65, 11]], sauts: [[49, 40, 1.2]],
       surf: { zones: [[63, 64, 'mouille', 2.5], [34, 40, 'mouille', 0.5]], large: 'sec' }, // l'eau du gué freine au centre, ses bords de dalles sont secs ; la grotte suinte
       pts: [[0, 0, 15], [200, 0, 15], [360, -30, 17], [500, 20, 19], [555, 21, 20], [580, 19, 20.5], [598, 11, 21], [606, -7, 21.5], [606, -45, 22.5], [606, -83, 23.5], [614, -101, 24], [632, -109, 24.5], [700, -110, 25.5], [790, -112, 27],
         [880, -110, 30], [896, -103, 30.5], [903, -87, 31], [896, -71, 31.5], [880, -64, 32], [800, -62, 35], [730, -61, 38], [714, -54, 38.5], [707, -38, 39], [714, -22, 39.5], [730, -15, 40], [820, -15, 46], [900, -15, 52], [950, -14, 56],

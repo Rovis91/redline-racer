@@ -1896,6 +1896,7 @@
     // Contre « la vague » (D-9) : aucune crête qui suit le maillage du terrain, aucune grande surface à bandes horizontales, pas de grande facette de terrain nue.
     chapada(h) {
       const { THREE, S, N, W, rnd, T } = h, DS = { side: THREE.DoubleSide }, P = k => pt(h, k), IX = new Map(S.map((s, i) => [s, i]));
+      const cache = new Map(), mat = (n, o = {}) => { const k = n + JSON.stringify(o); return cache.get(k) || cache.set(k, h.mat(n, o)).get(k); }; // une matière par réglage : le moteur fond le décor fixe par matière
       const entre = (i, a, b) => ((i - a + N) % N) <= ((b - a + N) % N), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
       const t0 = T.t0, t1 = T.t1, enTunnel = i => entre(i, t0, t1), surPont = i => entre(i, P(32) - 4, P(33) + 4), gue = s => s.y < 14.32; // le gué : là où la chaussée passe sous le niveau de l'eau
       // ---------- la rivière : une ligne, un niveau par bief (les ressauts sont des cascades), une demi-largeur ----------
@@ -1912,10 +1913,10 @@
         if (x > 1050) c -= Math.min(70, (x - 1050) * 2.5) * ss(30, 42, Math.hypot(x - CIRQUE[0], z - CIRQUE[1]));
         return c; };
       const solPont = i => entre(i, P(32) + 6, P(33) - 6);
-      const g = terrain(h, { pas: 6, marge: 230, loin: 100, chute: -0.2, creux, sol: s => solPont(IX.get(s)) ? 34 : s.y, mat: h.mat('litiereMousse'),
+      const g = terrain(h, { pas: 6, marge: 230, loin: 100, chute: -0.2, creux, sol: s => solPont(IX.get(s)) ? 34 : s.y, mat: mat('litiereMousse'),
         couches: [{ tex: ['rocheMousse'], pente: [0.35, 0.6], rep: 0.7 }, { tex: ['vaseGalets'], poids: (x, z) => { const r = riv(x, z); return 1 - ss(r.p.w, r.p.w + 9, r.d); } }] });
       // ---------- la chaussée : la voie dallée du moteur (±W), prolongée par le décor jusqu'au bord roulable ; bordure de pierre basse et talus sous le sous-bois (O-1, O-3) ----------
-      { const cO = N - (t1 - t0), dalles = h.mat('dallesBord', DS), bordM = h.mat('bordureMousse', DS), talusM = h.mat('litiereMousse', DS), e = s => surPont(IX.get(s)) || gue(s) ? 0 : 1; // ni bordure ni talus sur le pont et dans l'eau
+      { const cO = N - (t1 - t0), dalles = mat('dallesBord', DS), bordM = mat('bordureMousse', DS), talusM = mat('litiereMousse', DS), e = s => surPont(IX.get(s)) || gue(s) ? 0 : 1; // ni bordure ni talus sur le pont et dans l'eau
         for (const sd of [-1, 1]) { h.ribbon(t1, cO, sd * W, 0, s => sd * s.w, 0, dalles, 16);
           h.ribbon(t1, cO, s => sd * s.w, 0, s => sd * (s.w + 0.5 * e(s)), s => 0.35 * e(s), bordM, 8);
           h.ribbon(t1, cO, s => sd * (s.w + 0.5 * e(s)), s => 0.35 * e(s), s => sd * (s.w + 6 * e(s)), s => -1.1 * e(s), talusM, 8); } }
@@ -1924,51 +1925,51 @@
         RIV.forEach((p, j) => { const q = RIV[Math.min(RIV.length - 1, j + 1)], o = RIV[Math.max(0, j - 1)], dx = q.x - o.x, dz = q.z - o.z, l = Math.hypot(dx, dz), nx = -dz / l, nz = dx / l, w = p.w + 2;
           pos.push(p.x + nx * w, p.y, p.z + nz * w, p.x - nx * w, p.y, p.z - nz * w); uv.push(0, j * 0.4, w / 5, j * 0.4); if (j) { const a = j * 2 - 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } });
         const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals();
-        const eau = new THREE.Mesh(ge, h.mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 })); eau.receiveShadow = true; h.scene.add(eau); }
+        const eau = new THREE.Mesh(ge, mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 })); eau.receiveShadow = true; h.scene.add(eau); }
       // ---------- la forêt, en trois épaisseurs (D-4) : le mur (une rangée de grands arbres de chaque côté, houppiers jointifs au-dessus de la route, sous-bois continu au pied),
       // la forêt (jusqu'à 90 m), le rideau (masses sans détail que la brume réduit à des silhouettes). Clairières voulues : le camp, la place de la cité, le cirque de la chute, la rivière ----------
       const cimes = [[], [], []], futs = [], buissons = [[], []], fougeres = [], palmiers = [], rideau = [], feuillesG = [], heliconias = [], lianes = [];
       const CLAIR = [[62, -30, 30], [84, 474, 30], [CIRQUE[0], CIRQUE[1], 46], [626, 22, 13], [512, 410, 9], [95, 378, 24], [918, -104, 7]]; // camp, place, cirque, fromager, idole, édifice, tête
       // couloirs de vue : rien ne pousse entre la route et le repère planté dans l'axe d'un freinage (fromager, tête colossale, porte ruinée, grande idole) [x1, z1, x2, z2, rayon]
-      const VUES = [[598, 20, 626, 22, 12], [884, -110, 922, -104, 12], [728, -61, 690, -52, 10], [556, 410, 510, 410, 12], [996, 92, 996, 238, 24]]; // … et le long du pont : la vue part vers la chute et vers l'aval
+      const VUES = [[598, 20, 626, 22, 12], [884, -110, 922, -104, 12], [728, -61, 690, -52, 10], [556, 410, 510, 410, 12], [996, 92, 996, 238, 24], [124, 510, 66, 512, 13], [95, 440, 95, 400, 13]]; // … et le long du pont : la vue part vers la chute et vers l'aval
       const segD = (x, z, [ax, az, bx, bz]) => { const ux = bx - ax, uz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * ux + (z - az) * uz) / (ux * ux + uz * uz))); return Math.hypot(x - ax - ux * t, z - az - uz * t); };
       const libre = (x, z) => { const r = riv(x, z); return r.d > r.p.w + 3 && CLAIR.every(([cx, cz, cr]) => (x - cx) ** 2 + (z - cz) ** 2 > cr * cr) && VUES.every(v => segD(x, z, v) > v[4]); };
       // un arbre de canopée : fût droit, houppier large en masses arrondies (k = taille, 1 = 14 m de fût ; vx, vz = vers où pencher le houppier ; n = nombre de masses)
       const arbre = (x, z, k, vx = 0, vz = 0, n = 3) => { const y = g.hAt(x, z) - 0.5, H = 14 * k, a = rnd() * 6.28, c = (dx, dy, dz, r, ap) => cimes[rnd() * 3 | 0].push([x + dx, y + H + dy, z + dz, rnd() * 6, r / 3.4, r * ap / 3.4, r / 3.4]);
         futs.push([x, y + H / 2, z, rnd() * 6, 3 * k, H / 5.2, 3 * k]); c(vx * 3, 2 * k, vz * 3, 8.5 * k, 0.62);
-        if (n > 1) { c(Math.cos(a) * 6 * k, -k, Math.sin(a) * 6 * k, 5.5 * k, 0.7); c(-Math.cos(a) * 5 * k + vx * 4, 0, -Math.sin(a) * 5 * k + vz * 4, 5 * k, 0.7); } };
+        if (n > 1) c(Math.cos(a) * 6 * k, -k, Math.sin(a) * 6 * k, 5.5 * k, 0.7); if (n > 2) c(-Math.cos(a) * 5 * k + vx * 4, 0, -Math.sin(a) * 5 * k + vz * 4, 5 * k, 0.7); };
       for (let i = 0; i < N; i += 3) { if (enTunnel(i) || surPont(i)) continue; const s = S[i];
         for (const sd of [-1, 1]) { const off = s.w + 3.5 + rnd() * 4, k = 0.85 + rnd() * 0.45, [x, z] = bord(s, sd, off), v = rnd() < 0.75 ? 1 : -0.6; // des trouées et des houppiers qui s'écartent : le soleil tombe en taches sur la route
           if (rnd() > 0.12 && g.dAt(x, z) > off - 1.5 && libre(x, z)) arbre(x, z, k, s.tz * sd * v, -s.tx * sd * v); } }
-      for (let k = 0; k < 9500; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), u = rnd(), t = 0.8 + rnd() * 0.7;
+      for (let k = 0; k < 6500; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), u = rnd(), t = 0.8 + rnd() * 0.7;
         if (d < 15 || d > 90 || !libre(x, z)) continue;
-        if (d < 40 && u < 0.1) palmiers.push([x, g.hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); else arbre(x, z, t, 0, 0, d < 45 ? 3 : 1); }
-      for (let k = 0; k < 2600; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), t = 3 + rnd() * 1.6;
+        if (d < 40 && u < 0.1) palmiers.push([x, g.hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); else arbre(x, z, t * (d < 32 ? 1 : 1.2), 0, 0, d < 32 ? 2 : 1); }
+      for (let k = 0; k < 1900; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), t = 3 + rnd() * 1.6;
         if (d > 85 && d < 215 && libre(x, z)) rideau.push([x, g.hAt(x, z) + 9 + rnd() * 6, z, rnd() * 6, t, t * 0.75, t]); }
       // le sous-bois : une bande continue au pied du mur d'arbres, deux rangs ; il cache le sol et les fûts du fond
       for (let i = 0; i < N; i += 2) { if (enTunnel(i) || surPont(i) || gue(S[i])) continue; const s = S[i];
-        for (const sd of [-1, 1]) for (const rang of [0, 1]) { const off = s.w + 2.6 + rang * 3.4 + rnd() * 2.4, [x, z] = bord(s, sd, off), u = rnd(), t = 0.4 + rnd() * 0.35 + rang * 0.3, y = rang ? g.hAt(x, z) : s.y - 0.5;
+        for (const sd of [-1, 1]) for (const rang of [0, 1]) { if (rang && (i & 2)) continue; const off = s.w + 2.6 + rang * 3.4 + rnd() * 2.4, [x, z] = bord(s, sd, off), u = rnd(), t = 0.4 + rnd() * 0.35 + rang * 0.3, y = rang ? g.hAt(x, z) : s.y - 0.5;
           if (g.dAt(x, z) < off - 1.5 || !libre(x, z)) continue;
           if (u < 0.16) fougeres.push([x, y, z, rnd() * 6, 0.6 + rnd() * 0.5]); else if (u < 0.46) (u < 0.2 ? heliconias : feuillesG).push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); else buissons[u < 0.55 ? 0 : 1].push([x, y + 1.9 * t, z, rnd() * 6, t, t * 0.72, t]); } }
-      const feuilles = ['feuilleOmbre', 'feuilleCanopee', 'feuilleSoleil'].map(n => h.mat(n)), ecorce = h.mat('ecorceJungle'), palme = h.mat('palmeJungle', DS);
+      const feuilles = ['feuilleOmbre', 'feuilleCanopee', 'feuilleSoleil'].map(n => mat(n)), ecorce = mat('ecorceJungle'), palme = mat('palmeJungle', DS);
       buissons.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k + 1], l));
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: palme }, fougeres); insts(h, 'jucara', { stipe: ecorce, palme }, palmiers);
-      inst(h, h.geo('cimeLoin'), h.mat('feuilleLoin'), rideau).castShadow = false;
-      const feuilleG = h.mat('feuilleSoleil', DS), rouge = h.mat('peinture', { c: 0xd8362a });
+      inst(h, h.geo('cimeLoin'), mat('feuilleLoin'), rideau).castShadow = false;
+      const feuilleG = mat('feuilleSoleil', DS), rouge = mat('peinture', { c: 0xd8362a });
       insts(h, 'grandeFeuille', { feuille: feuilleG }, feuillesG); insts(h, 'grandeFeuille', { feuille: feuilleG, fleur: rouge }, heliconias, { a: [1, 1] });
       // lianes : des rideaux qui pendent des branches au-dessus de la route, le bas à plus de 5,5 m de la chaussée (O-8)
       for (let i = 20; i < N; i += 17 + (rnd() * 12 | 0)) { if (enTunnel(i) || surPont(i) || !libre(S[i].x, S[i].z)) continue; const s = S[i], [x, z] = bord(s, 1, (rnd() - 0.5) * 2 * s.w); lianes.push([x, s.y + 12.5 + rnd() * 2, z, h.across(s) + (rnd() - 0.5), 1, 0.7 + rnd() * 0.4, 1]); }
-      insts(h, 'lianes', { liane: h.mat('ecorceJungle', { c: 0x8aa860 }) }, lianes);
+      insts(h, 'lianes', { liane: mat('ecorceJungle', { c: 0x8aa860 }) }, lianes);
       // ---------- la brume épaisse de la rivière et du cirque : des nappes basses, à plus de 22 m de la chaussée, jamais en l'air sur fond de ciel (D-6) ----------
       { const nappes = [], G = new THREE.PlaneGeometry(1, 1); G.rotateX(-Math.PI / 2);
         for (let j = 0; j < RIV.length; j += 5) { const p = RIV[j], x = p.x + (rnd() - 0.5) * 20, z = p.z + (rnd() - 0.5) * 20; if (g.dAt(x, z) > 45) nappes.push([x, p.y + 1.5 + rnd() * 4, z, rnd() * 6, 30 + rnd() * 30, 1, 22 + rnd() * 20]); }
         for (let k = 0; k < 12; k++) nappes.push([CIRQUE[0] + (rnd() - 0.5) * 50, 36 + rnd() * 34, CIRQUE[1] + (rnd() - 0.5) * 50, rnd() * 6, 40 + rnd() * 30, 1, 40 + rnd() * 30]);
-        const b = inst(h, G, h.mat('brume', { lum: 1, c: 0x343c24, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, ...DS }), nappes); b.castShadow = b.receiveShadow = false; }
+        const b = inst(h, G, mat('brume', { lum: 1, c: 0x343c24, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, ...DS }), nappes); b.castShadow = b.receiveShadow = false; }
 
       // ---------- matières et outils de pose des repères ----------
-      const pierre = h.mat('pierreCite'), ombre = h.mat('pierreOmbre'), clairM = h.mat('pierreClaire'), or = h.mat('peinture', { lum: 1, c: 0xe8b83a }), noir = h.mat('peinture', { c: 0x14120e }), flamme = h.mat('peinture', { lum: 1, c: 0xffb040, fog: false }),
-        bois = h.mat('ecorceJungle', { c: 0xc8a878 }), toile = h.mat('toileTente', DS), bambou = h.mat('bambou'), planche = h.mat('planchesPont'), lampe = h.mat('peinture', { lum: 1, c: 0xffd890 }), fer = h.mat('peinture', { c: 0x2a2a26 }),
-        CITE = { pierre, ombre, clair: clairM, or, noir, relief: ombre, socle: h.mat('socleNoir'), inscription: h.mat('inscription512') };
+      const pierre = mat('pierreCite'), ombre = mat('pierreOmbre'), clairM = mat('pierreClaire'), or = mat('peinture', { lum: 1, c: 0xe8b83a }), noir = mat('peinture', { c: 0x14120e }), flamme = mat('peinture', { lum: 1, c: 0xffb040, fog: false }),
+        bois = mat('ecorceJungle', { c: 0xc8a878 }), toile = mat('toileTente', DS), bambou = mat('bambou'), planche = mat('planchesPont'), lampe = mat('peinture', { lum: 1, c: 0xffd890 }), fer = mat('peinture', { c: 0x2a2a26 }),
+        CITE = { pierre, ombre, clair: clairM, or, noir, relief: ombre, socle: mat('socleNoir'), inscription: mat('inscription512') };
       // un objet posé en (x, z), tourné de ry (son +Z regarde alors vers (sin ry, cos ry)) ; y = le sol par défaut
       const pose = (nom, peau, x, z, ry = 0, y = g.hAt(x, z), ...a) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; h.scene.add(p); h.pose(nom, peau, p, [0, 0, 0], ...a); return p; };
       // au bord de la route, face à elle : échantillon i, côté sd, à off m de l'axe
@@ -1978,7 +1979,7 @@
       for (const k of [4, 14, 20, 42, 52]) { const i = P(k) - (k === 42 ? 12 : 0); torche(i - 52, -1); torche(i - 52, 1); torche(i - 26, S[i].k > 0 ? -1 : 1); }
 
       // ---------- Z1, le camp de base (O-10) : tentes, table à cartes, caisses, 4×4 bâché, mât radio, dans la clairière de gauche ; l'expédition est là ----------
-      { const P1 = { toile, bois, papier: h.mat('peinture', { c: 0xe8dcc0 }), lampe, fer, caisse: h.mat('peinture', { c: 0x5a6a3a }), vitre: noir, pneu: fer };
+      { const P1 = { toile, bois, papier: mat('peinture', { c: 0xe8dcc0 }), lampe, fer, caisse: mat('peinture', { c: 0x5a6a3a }), vitre: noir, pneu: fer };
         for (const [x, z, r] of [[24, -19, 0.2], [44, -27, -0.1], [72, -26, 0.15], [94, -19, -0.3]]) pose('tente', P1, x, z, r).scale.setScalar(1.5);
         pose('tableCartes', P1, 58, -17, 0.3); pose('caisses', P1, 38, -13, 0.5); pose('caisses', P1, 82, -14, 2.2); pose('quatreQuatre', P1, 106, -15, 1.25); pose('matRadio', P1, 62, -44);
         pose('caisses', P1, -30, -12, 1); pose('barque', P1, -82, 236, 0.9); pose('caisses', P1, -108, 120, 2); // T-8 : les traces de l'expédition depuis le gué
@@ -1989,7 +1990,7 @@
         for (let k = 0; k < 7; k++) { const a = k / 7 * 6.28, r = k ? 11 : 0, t = (k ? 11 : 15) / 3.4; cimes[k % 3].push([x + Math.cos(a) * r, y + 43 + (k ? rnd() * 4 - 3 : 3), z + Math.sin(a) * r, rnd() * 6, t, t * 0.6, t]); } }
 
       // ---------- Z3, les lacets des terrasses : murs de la cité le long de la montée (crête parallèle à la route, pas au terrain : D-9), la tête colossale dans l'axe de la première épingle, une porte ruinée dans l'axe de la seconde ----------
-      { const mur = (a, b, sd, H) => { const n = (b - a + N) % N; h.ribbon(a, n, s => sd * (s.w + 0.9), H, s => sd * (s.w + 0.9), -0.8, h.mat('pierreCite', DS), 8); h.ribbon(a, n, s => sd * (s.w + 0.9), H, s => sd * (s.w + 2.6), H - 0.3, h.mat('bordureMousse', DS), 8); };
+      { const mur = (a, b, sd, H) => { const n = (b - a + N) % N; h.ribbon(a, n, s => sd * (s.w + 0.9), H, s => sd * (s.w + 0.9), -0.8, mat('pierreCite', DS), 8); h.ribbon(a, n, s => sd * (s.w + 0.9), H, s => sd * (s.w + 2.6), H - 0.3, mat('bordureMousse', DS), 8); };
         mur(P(13) - 40, P(14) - 12, 1, 2.6); mur(P(18) + 14, P(20) - 12, -1, 3.2); mur(P(24) + 14, P(26), -1, 2.2);
         pose('teteColossale', CITE, 922, -104, -Math.PI / 2 + 0.25).scale.setScalar(1.8); h.lum(P(14), 912, g.hAt(912, -104) + 5, -104, 0xffa040, 26, 2.2); torche(P(16), -1, 2.5);
         const pr = pose('arc', CITE, 690, -52, Math.PI / 2 - 0.2, undefined, 3, 0.9, 2.2, 7, 4); for (const sd of [-1, 1]) h.pose('boite', pierre, pr, [sd * 3.6, 2.2, 0], 1.6, 4.4, 2.4); h.pose('boite', clairM, pr, [0, 8.4, 0], 9.4, 0.8, 2.8);
@@ -1997,8 +1998,8 @@
 
       // ---------- Z4, le pont de lianes (O-12) et la grande chute (O-13) ----------
       { const a = P(32) - 4, b = P(33) + 4, n = b - a, KI = new Map(); for (let k = 0; k <= n; k++) KI.set(S[a + k], k / n);
-        const yc = s => 1.5 + 8.8 * (2 * KI.get(s) - 1) ** 2, liane = h.mat('ecorceJungle', { ...DS, c: 0xa8b070 }), susp = [], poteaux = [];
-        h.ribbon(a, n, -W - 0.3, 0.06, W + 0.3, 0.06, h.mat('planchesPont', DS), 4); // le tablier : des planches à la place de la chaussée
+        const yc = s => 1.5 + 8.8 * (2 * KI.get(s) - 1) ** 2, liane = mat('ecorceJungle', { ...DS, c: 0xa8b070 }), susp = [], poteaux = [];
+        h.ribbon(a, n, -W - 0.3, 0.06, W + 0.3, 0.06, mat('planchesPont', DS), 4); // le tablier : des planches à la place de la chaussée
         for (const sd of [-1, 1]) { const x = sd * (W + 0.7);
           h.ribbon(a, n, x, s => yc(s) + 0.22, x, s => yc(s) - 0.22, liane, 3); h.ribbon(a, n, x - 0.22, yc, x + 0.22, yc, liane, 3); // les deux câbles porteurs en lianes tressées, en chaînette
           h.ribbon(a, n, x, 1.3, x, 1.12, liane, 3); h.ribbon(a, n, sd * (W + 0.3), 0.3, sd * (W + 0.3), -0.25, planche, 4); // main courante, rive du tablier
@@ -2007,8 +2008,8 @@
         inst(h, h.geo('bloc'), liane, susp); inst(h, h.geo('bloc'), planche, poteaux);
         for (const [i, rv] of [[a + 2, 0], [b - 2, Math.PI]]) { const r = repere(h, S[i]); h.pose('boite', ombre, r, [0, -9.2, rv ? -4.5 : 4.5], 2 * W + 6, 18, 9); } // les culées de pierre, dans la paroi de la gorge
         // la chute : un ruban blanc étroit et strié dans une entaille sombre de la falaise, qui se défait en nuage aux deux tiers ; pas de colonne ni de bloc translucide
-        const ch = (op) => h.mat('chuteFil', { lum: 1, transparent: op < 1, opacity: op, depthWrite: op === 1 });
-        h.pose('boite', h.mat('rocheMousse', { c: 0x4a4a44 }), h.scene, [1133, 72, 165], 3, 80, 15); h.pose('boite', ch(1), h.scene, [1130.5, 84, 165], 1, 54, 5.5); h.pose('boite', ch(0.7), h.scene, [1129.5, 50, 165], 1, 22, 8); h.pose('boite', ch(0.4), h.scene, [1128, 38, 165], 1, 12, 12); }
+        const ch = (op) => mat('chuteFil', { lum: 1, transparent: op < 1, opacity: op, depthWrite: op === 1 });
+        h.pose('boite', mat('rocheMousse', { c: 0x4a4a44 }), h.scene, [1133, 72, 165], 3, 80, 15); h.pose('boite', ch(1), h.scene, [1130.5, 84, 165], 1, 54, 5.5); h.pose('boite', ch(0.7), h.scene, [1129.5, 50, 165], 1, 22, 8); h.pose('boite', ch(0.4), h.scene, [1128, 38, 165], 1, 12, 12); }
 
       // ---------- Z5, le temple-grotte (O-14) : une façade taillée dans la falaise autour de chaque portail, braseros allumés ----------
       for (const [i, rv, H] of [[t0, 0, 9], [t1, Math.PI, 8]]) { const r = repere(h, S[i]); r.rotation.y += rv; h.pose('facadeTemple', CITE, r, [0, -0.3, 0.6], S[i].w, H);
@@ -2016,13 +2017,13 @@
         r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2); } }
 
       // ---------- Z6, la descente des idoles (O-15, T-6) : des statues debout de plus en plus rapprochées jusqu'à l'arc ; la grande idole assise dans l'axe de l'équerre ----------
-      { const st = []; let sd = 1; for (const d of [22, 42, 62, 84, 124, 164, 244, 324, 404, 484, 564]) { const i = P(52) - (d >> 1), s = S[i], [x, z] = bord(s, sd, s.w + 1.6); if (libre(x, z)) st.push([x, s.y - 0.4, z, Math.atan2(s.x - x, s.z - z), 1 + (d < 100 ? 0.25 : 0)]); sd = -sd; }
+      { const st = []; let sd = 1; for (const d of [22, 42, 62, 84, 124, 164, 244, 324, 404, 484, 564]) { const i = P(52) - (d >> 1), s = S[i], [x, z] = bord(s, sd, s.w + 1.6); if (libre(x, z)) st.push([x, s.y - 0.4, z, Math.atan2(s.x - x, s.z - z), 1.5 + (d < 100 ? 0.3 : 0)]); sd = -sd; }
         insts(h, 'statueDebout', CITE, st);
         pose('idoleAssise', CITE, 508, 410, Math.PI / 2).scale.setScalar(1.6); for (const dz of [-6, 6]) { const p = pose('torche', { bois: fer, fer, flamme }, 518, 410 + dz); p.scale.setScalar(1.6); h.lum(P(43), 518, g.hAt(518, 410) + 4.5, 410 + dz, 0xffa040, 20, 2); } }
 
       // ---------- Z7, la cité perdue (O-16) : l'arc triple, la place dallée au bord de la rivière, la statue qui montre le nord sur son socle noir, quatre obélisques, le grand édifice ; l'expédition y a monté ses échafaudages ----------
       { const ia = P(52), ra = repere(h, S[ia]); h.pose('arcTriple', CITE, ra, [0, -0.5, 0], 7.5); h.pose('echafaudage', { bambou, planche }, ra, [15.5, -0.3, 4.2], 8, 3);
-        h.pose('boite', h.mat('dallesBord', { c: 0x9a9c84 }), h.scene, [82, 16.62, 468], 96, 0.5, 132); // la place : un dallage plat, sous la chaussée
+        h.pose('boite', mat('dallesBord', { c: 0x9a9c84 }), h.scene, [82, 16.62, 468], 96, 0.5, 132); // la place : un dallage plat, sous la chaussée
         pose('statueNord', CITE, 68, 512, Math.PI, 16.85).scale.setScalar(1.7);
         for (const x of [42, 126]) { for (let k = 0; k < 5; k++) h.pose('boite', clairM, h.scene, [x, 20.6, 446 + k * 11], 1.5, 7.5, 1.5); h.pose('boite', pierre, h.scene, [x, 24.8, 468], 2, 1, 48); } // deux colonnades au bord de la place for (const [x, z] of [[124, 540], [36, 540], [36, 436], [126, 436]]) pose('obelisque', CITE, x, z, 0, 16.85, 12);
         pose('edifice', CITE, 95, 378, 0, 16.85); pose('echafaudage', { bambou, planche }, 62, 384, 0.1, 16.85, 6, 2);
@@ -2035,13 +2036,13 @@
         for (let j = 1; j < RIV.length; j++) if (RIV[j].y < RIV[j - 1].y - 1) for (let k = 0; k < 9; k++) { const p = RIV[j - 1], q = RIV[j], f = (k / 8 - 0.5) * 2 * p.w, nx = -(q.z - p.z) / 4, nz = (q.x - p.x) / 4; // un ressaut : une barre de rochers, l'eau blanche entre eux
           roches.push([p.x + nx * f, p.y - 0.4, p.z + nz * f, rnd() * 6, 1.6 + rnd() * 1.4, 1.2 + rnd(), 1.6 + rnd() * 1.4]); ecume.push([q.x + nx * f * 0.9, (p.y + q.y) / 2 + 0.3, q.z + nz * f * 0.9, Math.atan2(nx, nz), 2.2, 0.3 + (p.y - q.y) * 0.5, 3.4]); }
         for (let k = 0; k < 46; k++) { const x = -112 + rnd() * 104, z = 232 + rnd() * 76, r = riv(x, z); if (r.d < r.p.w && g.dAt(x, z) > 13.5) (rnd() < 0.6 ? dallesG : roches).push([x, 14.05, z, rnd() * 6, 2 + rnd() * 2.5, 0.6, 1.4 + rnd() * 2]); }
-        inst(h, h.geo('rocher'), h.mat('rocheMousse'), roches); inst(h, h.geo('bloc'), h.mat('chuteFil', { lum: 1 }), ecume); inst(h, h.geo('bloc'), h.mat('bordureMousse'), dallesG);
+        inst(h, h.geo('rocher'), mat('rocheMousse'), roches); inst(h, h.geo('bloc'), mat('chuteFil', { lum: 1 }), ecume); inst(h, h.geo('bloc'), mat('bordureMousse'), dallesG);
         const st = pose('statueDebout', CITE, -12, 306, -2.2, 12.2, 2.2); st.rotation.z = 0.16; }
       inst(h, h.geo('tronc'), ecorce, futs); cimes.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k], l)); // tous les arbres, ceux de la cité et le houppier du fromager compris
       insts(h, 'torche', { bois, fer, flamme }, torches);
       // ---------- Z5, dedans : des côtes de roche le long des parois de la grotte, pour qu'elle ne soit pas un couloir ----------
       { const cotes = []; for (let i = t0 + 6, k = 0; i < t1 - 4; i += 5, k++) { const s = S[i], sd = k & 1 ? 1 : -1, [x, z] = bord(s, sd, s.w + 0.9); cotes.push([x, s.y + 2.6 + rnd() * 2, z, rnd() * 6, 1.6 + rnd(), 4 + rnd() * 3, 1.6 + rnd()]); }
-        inst(h, h.geo('rocher'), h.mat('rocheMousse', { c: 0x8a8478 }), cotes); }
+        inst(h, h.geo('rocher'), mat('rocheMousse', { c: 0x8a8478 }), cotes); }
     },
     // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
     // Le nord (z < 0) est la mer. Intérieurs : la grotte est le tunnel du moteur ; le marché et le lobby sont des halles posées autour de la route (toit haut, ombre franche), sans mode tunnel.
