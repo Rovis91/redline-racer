@@ -86,6 +86,13 @@
         ...[0.32, 0.56, 0.8].map(z => R2('feu', 0.085, -2.29, 0.62, z)), B('noir', 0.3, 0.14, 1.66, -2.12, 0.28, 0), B('noir', 0.24, 0.07, 1.7, 2.14, 0.22, 0),
         B2('caisse', 0.14, 0.1, 0.14, 0.5, 0.92, 0.84, 1)]
     },
+    // berline iranienne de rallye des années 70 (inspirée de la Paykan, dérivée de la Hillman Hunter) : trois volumes carrés, quatre portes, phares ronds, pare-chocs fins, deux longue-portée de rallye
+    peykan: {
+      dessus: [[2.08, 0.26], [2.12, 0.62], [2.06, 0.84], [0.74, 0.9], [-1.24, 0.92], [-2.06, 0.9], [-2.12, 0.66], [-2.08, 0.26]], bas: 0.26, w: 1.58,
+      cab: [[0.76, 0.88], [0.3, 1.38], [-0.86, 1.38], [-1.28, 0.9]], wc: 1.42, roues: [-1.28, 1.3, 0.3, 0.2], portes: [0.62, -0.24], plaque: 0.44,
+      pieces: (B, B2, R2, E2) => [R2('phare', 0.115, 2.13, 0.66, 0.56), R2('phare', 0.1, 2.2, 0.46, 0.24), B('noir', 0.1, 0.09, 1.64, 2.15, 0.4, 0), B('noir', 0.1, 0.09, 1.64, -2.15, 0.42, 0),
+        B2('feu', 0.04, 0.3, 0.13, -2.13, 0.7, 0.63), B2('caisse', 0.12, 0.08, 0.1, 0.68, 0.98, 0.84, 1), B2('noir', 0.5, 0.03, 0.05, 2.0, 0.5, 0.24)]
+    },
     // Renault 5 Turbo : bicorps court à hayon, énormes ailes arrière en caisson (moteur central) percées d'une prise d'air, becquet de toit, rampe de quatre phares
     r5: {
       dessus: [[1.82, 0.22], [1.86, 0.6], [1.72, 0.76], [0.78, 0.8], [-1.82, 0.82], [-1.86, 0.66], [-1.84, 0.22]], bas: 0.22, w: 1.52,

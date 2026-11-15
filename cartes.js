@@ -451,26 +451,26 @@
         hud: { y: '#ffffff', c: '#ffb03a', r: '#e8482a', fond: 'rgba(70,36,16,.9)', style: 'rallye', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'SPECIALE 7 · FIN DE JOURNEE'], titre: ['SPECIALE', 'DES OCRES'] } } },
     // Route royale (spec : docs/SPEC-PERSE.md) : Persépolis au couchant. La plaine en S (la seule droite), le grand escalier de la terrasse (pavés, +14 m), la Porte des Nations et son épingle,
     // la salle aux cent colonnes (une place où l'on roule partout entre 15 colonnes), le jardin au canal turquoise qui redescend, puis les coudes à 90° du bazar couvert (pavés, voûte de briques).
-    { id: 'perse', nom: 'ROUTE ROYALE', rivaux: ['DARIUS', 'ROXANE', 'KAVEH'], W: 10, kmh: 0.8, vit: [150, 190], grip: 17, sc: 1, anticipe: 1, trafic: 0,
-      large: [[0, 8, 16], [20, 24, 16]],
-      surf: { zones: [[9, 12, 'paves', 0.8], [14, 19, 'mouille', 0.5], [20, 24, 'mouille', 0.3], [25, 38, 'paves', 1]] },
-      tun: [26, 34], chaud: [12, 24], amb: [[12, 20], [25, 38]], sect: [13, 25],
+    { id: 'perse', nom: 'ROUTE ROYALE', rivaux: ['DARIUS', 'ROXANE', 'KAVEH'], W: 8, kmh: 0.8, vit: [150, 190], grip: 17, sc: 1, anticipe: 1, trafic: 0,
+      large: [[0, 7, 11], [9, 12, 11], [20, 24, 13], [25, 28, 11], [32, 38, 12]], sauts: [[20, 30, 1.5]], // la plaine et l'escalier assez larges pour doubler avant les freinages ; on saute de la terrasse de la salle dans le jardin ; les coudes du bazar couvert élargis pour doubler (le tunnel suit s.w)
+      surf: { zones: [[9, 12, 'paves', 0.8], [14, 19, 'mouille', 0.5], [20, 24, 'mouille', 0.3], [25, 42, 'paves', 1]] },
+      tun: [26, 37], chaud: [12, 24], amb: [[12, 20], [25, 42]], sect: [13, 25],
       place: { c: [430, 460], r: 55, a: -Math.PI / 2, piles: [[-28, -18, 2.5, 2.5], [-28, 36, 2.5, 2.5], [-28, 18, 2.5, 2.5], [-28, 0, 2.5, 2.5], [-28, -36, 2.5, 2.5], [30, 27, 2.5, 2.5], [30, 9, 2.5, 2.5], [30, -9, 2.5, 2.5], [30, -27, 2.5, 2.5], [-44, 27, 2.5, 2.5], [-44, 9, 2.5, 2.5], [-44, -9, 2.5, 2.5], [-44, -27, 2.5, 2.5], [44, 18, 2.5, 2.5], [44, -18, 2.5, 2.5]] }, // a : l'axe de la salle suit la route (vers -x) ; piles dans ce repère : [z, -x] du monde autour du centre
-      pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [290, 80, 0], [370, 70, 0], [450, 20, 0], [540, 10, 0], [620, 50, 0], [660, 120, 0],
-        [665, 185, 0], [670, 250, 4], [670, 320, 9], [660, 380, 14], [640, 425, 14], [590, 450, 14],
-        [510, 455, 14], [470, 472, 14], [430, 452, 14], [390, 472, 14], [355, 455, 14], [315, 450, 13],
-        [270, 440, 12], [220, 440, 10], [170, 440, 9], [140, 442, 8],
-        [118, 418, 8], [104, 386, 7], [36, 374, 6], [36, 326, 6], [114, 314, 5], [114, 256, 4], [46, 244, 3], [46, 196, 3], [104, 184, 2], [104, 131, 1],
-        [10, 125, 1], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
-      // voiture inventée : une propulsion légère, 4 cylindres atmosphérique de 2,2 L, 290 ch, 1050 kg : faite pour glisser d'un coude à l'autre
-      car: car({ nom: 'SHAHIN 2.2', ratios: [3.1, 2.1, 1.55, 1.22, 1.0, 0.84], final: 4.1, wheel: 0.31, mass: 1125, idle: 950, red: 8200, cd: 0.36, area: 1.8,
-        tq: [0, 170, 230, 265, 285, 295, 290, 270, 230], trac: 10, son: 1.2, moteur: 'l4', look: { type: 'fd', col: 0x2aa39a, l: 0.95, w: 1, h: 1, nez: 0.6, cab: [-0.4, 2, 0.52], aileron: 1, bandes: 0xf0b840 } }),
+      pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [290, 80, 0], [372, 58, 0], [450, 20, 0], [540, 10, 0], [650, 6, 0], [670, 26, 0],
+        [665, 185, 0], [680, 250, 4.71], [670, 320, 9.7], [660, 380, 14], [661, 430, 14], [628, 452, 14],
+        [510, 455, 14], [474, 478, 14], [438, 458, 14], [398, 460, 14], [355, 455, 14], [315, 450, 14],
+        [270, 440, 11.5], [220, 440, 10.59], [172, 440, 9.71], [136, 446, 9.04], // altitudes : pentes constantes le long de la route (rampe 7 %, descente 1,8 %), jamais de palier dans une pente : des paliers d'un mètre faisaient tanguer la caméra (« effet de vague »)
+        [110, 422, 8.4], [92, 396, 7.82], [46, 380, 6.93], [36, 356, 6.46], [36, 300, 5.43], [38, 268, 4.85], [52, 246, 4.37], [58, 226, 3.99], [62, 208, 3.65], [80, 198, 3.28], [100, 196, 2.91], [110, 180, 2.56], [110, 152, 2.05], [98, 131, 1.61], [10, 125, 0], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
+      // voiture inventée, inspirée de la Paykan (la berline populaire d'Iran, dérivée de la Hillman Hunter) préparée pour le rallye : 4 cylindres de 1,7 L, 210 ch, 940 kg, propulsion, boîte 5 (chiffres inventés)
+      car: car({ nom: 'PEYKAR 1725 RALLYE', ratios: [3.35, 2.14, 1.39, 1.0, 0.8], final: 4.3, wheel: 0.3, mass: 940, idle: 950, red: 7400, cd: 0.42, area: 1.9,
+        tq: [0, 150, 190, 215, 228, 232, 228, 216, 180], trac: 10, son: 1.15, moteur: 'l4', look: { type: 'peykan', col: 0xf0e6cc, l: 0.95, w: 0.98, h: 1.06, nez: 0.5, cab: [-0.2, 2.2, 0.6], aileron: 0, bandes: 0x2aa39a } }),
       radio: RADIO.perse,
-      th: { decor: 'perse', fog: 0xe0a060, fogD: [140, 1600], sky: [[0, '#1d2a5a'], [0.22, '#1d2a5a'], [0.23, '#5a3a78'], [0.34, '#5a3a78'], [0.35, '#c8505a'], [0.42, '#c8505a'], [0.43, '#f08a3a'], [0.48, '#f08a3a'], [0.49, '#ffc860'], [0.5, '#e0a060'], [1, '#e0a060']], stars: 0,
-        astre: { dir: [-0.8, 0.08, 0.4], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0x8a78b8, 0xc89a6a, 0.8], sun: [0xffa850, 0.95], phares: 0.3, bloom: 0.04, scan: 0.05, chaleur: 0.4,
-        murH: 0, route: ['#c8b290', '#d4be9c', '#f4ead0', '#2aa39a', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
-        tun: { sol: ['#8a7860', '#968470', '#f4ead0', '#f0b840', '#c8323c', '#3a2418'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
-          fog: 0x5a3020, portail: 0xf0b840, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
+      th: { decor: 'perse', fog: 0xe6b07c, fogD: [140, 1600], sky: [[0, '#3a3f78'], [0.26, '#3a3f78'], [0.27, '#8a5a86'], [0.38, '#8a5a86'], [0.39, '#e08a62'], [0.45, '#e08a62'], [0.46, '#f6c98a'], [0.5, '#e6b07c'], [1, '#e6b07c']], stars: 0,
+        astre: { dir: [-0.8, 0.14, -0.35], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0xa8a8d8, 0xd0b890, 0.9], sun: [0xffc080, 0.85], phares: 0.3, bloom: 0.04, scan: 0.05,
+        chev: 0, murH: 0, objets: [[0xb5683c, 0.2, 0.3, 0.8], [0xc8a060, 0.34, 0.28, 0.5]], sansObjets: [[530, 610]], routeTex: 'chausseeFine', route: ['#8a7a66', '#938370', '#a89880', '#8a7a66', '#9a8a74', '#8a7a66', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
+        tun: { sol: ['#4a4644', '#54504c', '#8a8078', '#4a4644', '#c8323c', '#2a1a10'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#8a5234', '#a8643e', '#9a5a38', '#5a3420'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
+          fog: 0xa87c54, portail: 0x6a3a22, // voûte du bazar (docs/MOTEUR-OPTIONS-CARTES.md) : une coupole par travée de 8 m, naissances à 6 m, clé de 10 à 11,8 m ; un lanterneau toutes les trois travées : c'est le décor qui le pose (panneau clair dans sa voûte), la coque du moteur reste pleine — ses ouvertures (ouv) ne tombaient pas sur les travées et laissaient des croissants noirs au plafond
+          h: 11, voute: 5, ambiant: 1, neons: [0xc88a3a, 0xbe8430] /* luminaires aux trois quarts : à pleine clarté le sol du bazar était brûlé, ses bords perdus */, reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 0.9 }, oeil: { tun: 0.65, noir: 0.5, clair: 0.2 }, frole: 1, // eclat : l'œil se fait à un bazar plus clair (tous les relecteurs le trouvaient trop sombre)
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
     // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes ouvertes, au matin voilé (docs/SPEC-BARRAGE.md). Sens horaire, départ cap ouest dans la vallée,
     // grand U, pont d'acier sous les embruns des gerbes (pts 10-11), rampe vers le portail (pt 15), salle des turbines en ligne droite (pts 17-21, à ciel fermé : c'est le décor qui la construit,

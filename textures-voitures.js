@@ -63,6 +63,7 @@
       if (K === 'fd') { grille(g, o, p.av, 0.42, 0.26, 0.4); for (const s of [-1, 1]) rv(g, p.av, s * 0.55, 0.26, s * 0.72, 0.34, SOMBRE); voile(g, 0.5, () => rv(g, p.dessus, 1.0, -0.12, 1.2, 0.12, SOMBRE)); }
       if (K === 'a80') { grille(g, o, p.av, 0.38, 0.26, 0.42); for (const s of [-1, 1]) rv(g, p.av, s * 0.55, 0.26, s * 0.75, 0.36, SOMBRE); ph(0.42, 0.8, 0.46, 0.58); }
       if (K === 'r5') { grille(g, o, p.av, 0.38, 0.52, 0.66); ph(0.36, 0.68, 0.5, 0.68); plaque(g, o, p.av, 0.44); }
+      if (K === 'peykan') { grille(g, o, p.av, 0.4, 0.54, 0.78); ph(0.42, 0.72, 0.52, 0.8); plaque(g, o, p.av, 0.34); }
       if (K === 'gts') { grille(g, o, p.av, 0.5, 0.24, 0.4, 3); voile(g, 0.7, () => { for (const s of [-1, 1]) rv(g, p.dessus, 0.45, s * 0.42, 0.8, s * 0.58, SOMBRE); });
         for (let k = 0; k < 3; k++) rv(g, p.cote, xf - ra - 0.12 - k * 0.1, 0.42, xf - ra - 0.17 - k * 0.1, 0.62, SOMBRE); }
       voile(g, 0.5, () => { for (const s of [-1, 1]) rv(g, p.ar, s * 0.62, 0.24, s * 0.76, 0.3, SOMBRE); }); // sorties d'échappement
@@ -78,7 +79,7 @@
       const disque = (r, c) => { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fillStyle = c; g.fill(); };
       disque(26, '#1a1a1e'); voile(g, 0.4, () => { g.strokeStyle = '#3a3a40'; g.beginPath(); g.arc(cx, cy, 23, 0, 7); g.stroke(); });
       disque(rj + 1, '#9a9ca4'); disque(rj - 1, '#26262c'); R(g, '#6a2024', 41, 20, 3, 5); // fond de jante, disque et étrier
-      const c = K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84';
+      const c = K === 'peykan' ? '#e4dcc8' : K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84';
       const n = { gtr: 12, fd: 5, a80: 5, gts: 5 }[K] || 0;
       if (n) { g.strokeStyle = c; g.lineWidth = n > 6 ? 2 : K === 'a80' ? 5 : 3.5; for (let i = 0; i < n; i++) { const a = i * 2 * Math.PI / n; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * rj, cy + Math.sin(a) * rj); g.stroke(); } }
       else { disque(rj - 1, c); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.6; R(g, '#26262c', Math.round(cx + Math.cos(a) * 11) - 2, Math.round(cy + Math.sin(a) * 11) - 2, 4, 4); } }
