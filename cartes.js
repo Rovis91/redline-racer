@@ -468,7 +468,7 @@
     // la rue aux guirlandes de papel picado, le marché couvert, la route de garrigue, le cénote souterrain (le tunnel : voûte de calcaire, stalactites, eau turquoise, rayons de lumière par les trous du plafond),
     // la chaussée de la lagune de mangrove (flamants), retour à la plage. Mexique d'aujourd'hui, rien de maya. Sources : docs/REFS-plage.md
     { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], med: [1.06, 0.98, 0.9], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [26, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [26, 35]], anticipe: 1,
-      large: [[45, 2, 28]], // la plage : 56 m de sable roulable ; sable mou au-delà du sable dur (surf.large)
+      large: [[45, 2, 20]], // la plage : 40 m de sable roulable ; sable mou au-delà du sable dur (surf.large)
       surf: { zones: [[43, 2, 'mouille', 0.35], [14, 17, 'paves', 1], [30, 34, 'mouille', 0.6]], large: 'terre' }, // terre = sable mou de la plage et de sa place ; flaques au fond de la grotte
       place: { c: [300, 22], r: 60, a: Math.PI / 2, piles: [[-36, 12, 1.7, 1.7]] }, // la place de sable entre les palapas : on y roule partout ; la pile est la tour de maître-nageur (sim.js la heurte)
       pts: [[150, 0, 0], [300, 0, 0], [420, 0, 0], [470, -6, 0], [490, -40, 0], [490, -100, 0], [497, -118, 0], [515, -125, 0], [533, -118, 0], [540, -100, 0], [540, -40, 0], [550, -6, 0], [590, 2, 0], [640, 15, 0], [655, 45, 0], [660, 100, 0],
@@ -502,7 +502,7 @@
         astre: { dir: [-0.3, 0.85, 0.2], col: '#fffbe8', ombre: '#fffbe8', taille: 200 }, hemi: [0xa8d0ee, 0x6a5a3e, 0.5], sun: [0xfff0d0, 0.78], phares: 0, bloom: 0.03, scan: 0, chaleur: 0.35,
         murH: 0, route: ['#5e5a52', '#6a665c', '#e8e0c8', '#f2c850', '#5e5a52', '#5e5a52', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xff3d7f, 0x1fb5a8, '#fff4e0'], // route de calcaire ; le décor repeint la plage, le muelle et la rue par-dessus
         tun: { sol: ['#3a3a32', '#4a4a40', '#cbbf9c', '#cbbf9c', '#3a3a32', '#3a3a32'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], plafond: ['#3a3224', '#3a3224', '#3a3224', '#2a2418'],
-          fog: 0x0e3a3c, portail: 0x5a5040, neons: [0x40d8c0, 0xffcf8a], coque: 20 }, // grotte du cénote : le décor pose sa voûte et ses parois par-dessus ; neons = la lumière des reflets de l'eau (turquoise) et des puits (chaude)
+          fog: 0x0e3a3c, portail: 0x5a5040, neons: [0x2a9a8c, 0xc89a62], coque: 20 }, // grotte du cénote : le décor pose sa voûte et ses parois par-dessus ; neons = la lumière des reflets de l'eau (turquoise) et des puits (chaude)
         hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', fond: 'rgba(10,70,90,.88)', style: 'panneau', split: 0, jp: null, sur: [null, 'RIVIERA MAYA · MIDI'], titre: ['PLAYA', '307'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
