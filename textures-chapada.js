@@ -43,6 +43,14 @@
       for (let i = 0; i < 70; i++) R(g, ['#c8a070', '#b8c4c4', '#d8dcd4'][alea() * 3 | 0], alea() * 56 | 0, alea() * 63 | 0, 6 + (alea() * 9 | 0), 1); // reflets du ciel, en rides : c'est eux qui font lire de l'eau
       for (let i = 0; i < 10; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 63 | 0, 2 + (alea() * 2 | 0), 1); // écume
     }, 12],
+    // REFS 3 : l'eau vue en rasant : le ciel pâle du matin en miroir, des plages couleur thé là où l'on voit le fond, quelques rides sombres et de l'écume (matière lumineuse : un reflet ne dépend pas de l'ombre)
+    eauCiel: () => [64, 64, (g, o) => {
+      const { R, alea } = o; R(g, '#a8a898', 0, 0, 64, 64);
+      for (let i = 0; i < 9; i++) R(g, alea() < 0.6 ? '#8a6a3a' : '#9a7a48', alea() * 50 | 0, alea() * 50 | 0, 10 + (alea() * 16 | 0), 8 + (alea() * 12 | 0)); // le fond couleur thé
+      for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#c8ccc0' : '#e0d8b8', alea() * 56 | 0, alea() * 63 | 0, 6 + (alea() * 10 | 0), 1); // le ciel en rides
+      for (let i = 0; i < 20; i++) R(g, '#5a4a30', alea() * 58 | 0, alea() * 63 | 0, 4 + (alea() * 6 | 0), 1);
+      for (let i = 0; i < 10; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 63 | 0, 2, 1);
+    }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
     // t = 1 : dessin tourné d'un quart, pour un ruban vertical (u = la hauteur) : les assises restent horizontales
     pierreSeche: t => [64, 64, (g, o) => {
