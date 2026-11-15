@@ -2059,13 +2059,20 @@
 
       // --- le tertre du cénote : un champ de hauteur (terrain) sur la grotte et ses deux rampes ; au-dessus de la voûte, il couvre la coque du tunnel ---
       const t0 = T.t0, t1 = T.t1, nT = (t1 - t0 + N) % N, enTun = i => (i - t0 + N) % N <= nT;
+      const TU = h.TH.tun, IXG = new Map(); for (let k = 0; k <= nT; k++) IXG.set(S[(t0 + k) % N], k / nT);
+      const clef = v => f => { if (typeof v === 'number') return v; let j = 0; while (j < v.length - 1 && v[j + 1][0] < f) j++; const [fa, x0] = v[j], [fb, x1] = v[Math.min(j + 1, v.length - 1)]; return fb > fa ? x0 + (x1 - x0) * Math.max(0, Math.min(1, (f - fa) / (fb - fa))) : x0; };
+      const cleF = clef(TU.h || 8), fleF = clef(TU.voute || 0), TUNO = TU.ouv || [], cleG = s => cleF(IXG.get(s) ?? 0), fleG = s => fleF(IXG.get(s) ?? 0);
+      const plafG = (s, d) => cleG(s) - fleG(s) + fleG(s) * Math.sqrt(Math.max(0, 1 - (d / s.w) ** 2)), ouvG = k => TUNO.some(([a, b]) => k >= a * nT - 1 && k <= b * nT + 1);
       const sub = []; for (let k = -40; k <= nT + 40; k++) { const i = (t0 + k + N) % N; sub.push(Object.assign({}, S[i], { i })); }
       const bruit2 = (x, z) => Math.sin(x * 0.11) * Math.cos(z * 0.13) * 1.2 + Math.sin(x * 0.37 + z * 0.29) * 0.5;
       const haut = (x, z) => { let b = null, bd = 1e18; for (const s of sub) { const d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd) { bd = d; b = s; } } const d = Math.sqrt(bd), sm = u => { u = Math.max(0, Math.min(1, u)); return u * u * (3 - 2 * u); };
-        if (enTun(b.i)) { const top = b.y + 10.9 + Math.max(0, bruit2(x, z)) * 0.8; return d < W + 5 ? top : top + (-0.06 - top) * sm((d - W - 5) / 38) + bruit2(x, z) * (1 - sm((d - W - 5) / 38)); }
+        if (enTun(b.i)) { const top = b.y + cleF((b.i - t0 + N) % N / nT) + 2.6 + Math.max(0, bruit2(x, z)) * 0.8; return d < W + 5 ? top : top + (-0.06 - top) * sm((d - W - 5) / 38) + bruit2(x, z) * (1 - sm((d - W - 5) / 38)); }
         return d < b.w + 0.8 ? b.y - 0.7 : b.y - 0.2 + (-0.06 - b.y + 0.2) * sm((d - b.w - 0.8) / 9); };
       const tert = terrain(Object.assign({}, h, { S: sub }), { pas: 4, marge: 34, mat: h.mat('bruit', {}, '#5e6e3a', ['#4a5a2e', '#7a8048', '#6a6a4a', '#3e5028']), creux: (x, z, y) => y - haut(x, z) });
       const [mx0, mz0, mx1, mz1] = tert.box, MOUND = [mx0 + 0.5, mz0 + 0.5, mx1 - 0.5, mz1 - 0.5];
+      { const g = tert.mesh.geometry, P3 = g.attributes.position.array, I = g.index.array, garde = [], dedans = (x, z) => TUNO.some(([fa, fb]) => { for (let k = Math.ceil(fa * nT) - 1; k <= Math.floor(fb * nT) + 1; k++) { const q = S[(t0 + k) % N]; if (Math.hypot(q.x - x, q.z - z) < q.w + 1.6) return true; } return false; });
+        for (let j = 0; j < I.length; j += 3) { const cx = (P3[I[j] * 3] + P3[I[j + 1] * 3] + P3[I[j + 2] * 3]) / 3, cz = (P3[I[j] * 3 + 2] + P3[I[j + 1] * 3 + 2] + P3[I[j + 2] * 3 + 2]) / 3; if (!dedans(cx, cz)) garde.push(I[j], I[j + 1], I[j + 2]); }
+        g.setIndex(garde); } // les trous du tertre au-dessus des ouvertures de la voûte
 
       // --- le sol : mer en bandes (aigue-marine au bord, turquoise, bleu profond au large), sable mouillé, sable sec, garrigue ; la lagune et le tertre en trous (fiche 1, palette mesurée) ---
       const mMer = h.mat('merTurquoise', { gloss: 0.5 }), mBord = h.mat('merBord', { gloss: 0.5 }), mLarge = h.mat('merLarge', { gloss: 0.4 }), mLag = h.mat('eauLagune', { c: 0x9ab8b0 });
@@ -2230,45 +2237,43 @@
         panneaux.push([x2, -0.05, z2, enFace(s) + Math.PI, 'CENOTE  SOLO NADAR', '#1f8a88', '#fff4e0', 4]); figurant(x, z + 2); figurant(x + 1.5, z + 2.5);
         for (let k = 0; k < 8; k++) velos.push([x + 4 + k * 0.7, -0.05, z - 3, 1.57]); }
       for (const [i, sg] of [[t0, -1], [t1, 1]]) { const s = S[i % N], lian = []; // jambages de blocs empilés de part et d'autre de la bouche, linteau au-dessus, lianes qui pendent du linteau
-        for (const sd of [-1, 1]) for (let j = 0; j < 6; j++) { const [x, z] = bord(s, sd, W + 2 + rnd() * 1.5); rochers.push([x + s.tx * sg * (0.5 + rnd() * 2), s.y + j * 1.9, z + s.tz * sg * (0.5 + rnd() * 2), rnd() * 6, 2 + rnd(), 1.6 + rnd() * 0.6, 2 + rnd()]); }
-        for (let u = -W - 2; u <= W + 2; u += 2.6) { const [x, z] = bord(s, 1, u); rochers.push([x + s.tx * sg * 1.5, s.y + 10.2 + rnd() * 0.8, z + s.tz * sg * 1.5, rnd() * 6, 2.2 + rnd(), 1.4 + rnd() * 0.6, 2.2 + rnd()]); if (Math.abs(u) > W - 3) lian.push([x + s.tx * sg * 0.2, s.y + 9.6, z + s.tz * sg * 0.2, versX(s.tx, s.tz) + Math.PI / 2, 2.4, 1.5 + rnd() * 1.5, 1]); }
+        for (const sd of [-1, 1]) for (let j = 0; j < 6; j++) { const [x, z] = bord(s, sd, s.w + 2.5 + rnd() * 1.5); rochers.push([x + s.tx * sg * (0.5 + rnd() * 2), s.y + j * 1.9 * cleG(s) / 9, z + s.tz * sg * (0.5 + rnd() * 2), rnd() * 6, 2 + rnd(), 1.6 + rnd() * 0.6, 2 + rnd()]); }
+        for (let u = -s.w - 2; u <= s.w + 2; u += 2.6) { const [x, z] = bord(s, 1, u); rochers.push([x + s.tx * sg * 1.5, s.y + cleG(s) * 1.5 + 1 + rnd() * 0.8, z + s.tz * sg * 1.5, rnd() * 6, 2.2 + rnd(), 1.4 + rnd() * 0.6, 2.2 + rnd()]); if (Math.abs(u) > s.w - 3) lian.push([x + s.tx * sg * 0.2, s.y + cleG(s) * 1.5 + 0.4, z + s.tz * sg * 0.2, versX(s.tx, s.tz) + Math.PI / 2, 2.4, 1.5 + rnd() * 1.5, 1]); }
         inst(h, h.geo('pan'), h.mat('lianes', { side: D, alphaTest: 0.5 }), lian); }
       // sur le tertre : selva dense, troncs blancs, blocs de calcaire, et les trous de la voûte entourés d'une barrière
       for (let k = 0; k < 700; k++) { const x = mx0 + rnd() * (mx1 - mx0), z = mz0 + rnd() * (mz1 - mz0), y = tert.hAt(x, z); if (ecartR(x, z) < 3 || y < 0.3) { if (y > -0.3 && ecartR(x, z) > 3 && rnd() < 0.4) buissons.push([x, y - 0.1, z, rnd() * 6, 1.5 + rnd() * 2, 1 + rnd() * 2, 1.5 + rnd() * 2]); continue; }
         if (rnd() < 0.12) rochers.push([x, y, z, rnd() * 6, 1 + rnd() * 2, 0.6 + rnd(), 1 + rnd() * 2]); else if (rnd() < 0.1) palmier(x, z, 1, 0.5, y); else buissons.push([x, y - 0.2, z, rnd() * 6, 1.6 + rnd() * 3, 1.2 + rnd() * 2.6, 1.6 + rnd() * 3]); }
 
-      // --- secteur 7, la grotte du cénote (le tunnel, fiche 6 : Samula, Suytun, X'Keken, Dos Ojos) : voûte et parois de calcaire posées sur celles du moteur (elles cachent ses luminaires),
-      //     stalactites partout et plus longues près des parois, draperies, eau turquoise au pied des parois, et des puits de lumière : trou du plafond, racines qui pendent, rayon en volume, tache de soleil sur l'eau ---
-      { const pg = h.mat('paroiGrotte', { side: D, c: 0x5e5448 }), vt = h.mat('vouteGrotte', { side: D, c: 0x6a6258 }); pg.map.center.set(0.5, 0.5); pg.map.rotation = Math.PI / 2; // la hauteur de la paroi suit le haut de la texture
-        for (const sd of [-1, 1]) h.ribbon(t0, nT, sd * (W - 0.2), 0, sd * (W - 0.2), 7.6, pg, 4);
-        h.ribbon(t0, nT, -W + 0.2, 7.6, W - 0.2, 7.6, vt, 12); couvre(t0, nT, -W + 3.2, W - 3.2, h.mat('solGrotte', { side: D, c: 0xb4a890, ...OFF }), 16);
-        const eauG = h.mat('eauGrotte', { side: D, c: 0x3a5a6c, ...OFF }); eauG.map.center.set(0.5, 0.5); eauG.map.rotation = -Math.PI / 2; for (const sd of [-1, 1]) couvre(t0, nT, sd * (W - 0.2), sd * (W - 3.3), eauG, 6, 0.03);
+      // --- secteur 7, la grotte du cénote (le tunnel, fiche 6 : Samula, Suytun, X'Keken, Dos Ojos) : la salle voûtée du moteur (th.tun.h, voute, ouv, rayons ; parois à la largeur roulable),
+      //     habillée ici : parois de calcaire jusqu'aux naissances de la voûte, stalactites qui pendent de la voûte, eau turquoise au pied des parois, cordes de balisage,
+      //     et sous chaque ouverture (le moteur y pose sa colonne de lumière) des racines qui pendent du bord du trou et une tache de soleil sur le sol et sur l'eau ---
+      { const pg = h.mat('paroiGrotte', { side: D, c: 0x5e5448 }); pg.map.center.set(0.5, 0.5); pg.map.rotation = Math.PI / 2; // la hauteur de la paroi suit le haut de la texture
+        for (const sd of [-1, 1]) h.ribbon(t0, nT, s => sd * (s.w - 0.2), 0, s => sd * (s.w - 0.2), s => cleG(s) - fleG(s) + 0.3, pg, 4);
+        couvre(t0, nT, s => -(s.w - 4.2), s => s.w - 4.2, h.mat('solGrotte', { side: D, c: 0xb4a890, ...OFF }), 16);
+        const eauG = h.mat('eauGrotte', { side: D, c: 0x2e4a58, lisse: 1, ...OFF }); eauG.map.center.set(0.5, 0.5); eauG.map.rotation = -Math.PI / 2; for (const sd of [-1, 1]) couvre(t0, nT, s => sd * (s.w - 0.2), s => sd * (s.w - 4.3), eauG, 6, 0.03);
         const stal = [], stalm = [], cordesG = [], flot = [], plongeurs = [];
-        for (let k = 1; k < nT - 1; k += 2) { const i = (t0 + k) % N, s = S[i];
-          for (let j = 0; j < 7; j++) { const d = -W + 0.6 + rnd() * (2 * W - 1.2), pres = Math.abs(d) > W - 2.8, l = pres ? 2 + rnd() * 3 : 0.6 + rnd() * 1.6, r = pres ? 0.55 + rnd() * 0.6 : 0.35 + rnd() * 0.45, [x, z] = bord(s, 1, d); stal.push([x, s.y + 7.6, z, rnd() * 6, r, l, r]); }
-          if (k % 6 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W - 0.7); stalm.push([x, s.y, z, rnd() * 6, 0.35 + rnd() * 0.3, 0.4 + rnd() * 0.8, 0.35 + rnd() * 0.3]); }
-          if (k % 10 === 5) for (const sd of [-1, 1]) for (let j = 0; j < 5; j++) { const [x, z] = bord(s, sd, W - 0.5 - rnd() * 0.8); stal.push([x + rnd() - 0.5, s.y + 7.6, z + rnd() - 0.5, rnd() * 6, 0.5 + rnd() * 0.4, 3 + rnd() * 2.5, 0.5 + rnd() * 0.4]); } // grappes de grandes stalactites contre la paroi
-          if (k % 4 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W - 0.5); cordesG.push([x, s.y + 0.55, z, Math.atan2(-s.tz, s.tx), 8, 1, 1]); flot.push([x, s.y + 0.5, z, 0, 0.3, 0.3, 0.3, (k / 4 | 0) % 2 ? 0xff6a2b : 0xfff4e0]); }
-          if (k % 22 === 11) { const sd = (k / 22 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, W - 1.2); plongeurs.push([x, s.y + 0.05, z, 0, 0.15, 0.02, 0.15]); } }
+        for (let k = 1; k < nT - 1; k += 2) { const i = (t0 + k) % N, s = S[i]; if (ouvG(k)) continue;
+          for (let j = 0; j < 9; j++) { const d = -s.w + 0.6 + rnd() * (2 * s.w - 1.2), pres = Math.abs(d) > s.w - 3, l = pres ? 2 + rnd() * 3.5 : 0.8 + rnd() * 2.2, r = pres ? 0.55 + rnd() * 0.6 : 0.4 + rnd() * 0.5, [x, z] = bord(s, 1, d); stal.push([x, s.y + plafG(s, d) + 0.2, z, rnd() * 6, r, l, r]); }
+          if (k % 6 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w - 0.7); stalm.push([x, s.y, z, rnd() * 6, 0.35 + rnd() * 0.3, 0.5 + rnd() * 1, 0.35 + rnd() * 0.3]); }
+          if (k % 10 === 5) for (const sd of [-1, 1]) for (let j = 0; j < 5; j++) { const d = sd * (s.w - 0.5 - rnd() * 1.5), [x, z] = bord(s, 1, d); stal.push([x + rnd() - 0.5, s.y + plafG(s, d) + 0.2, z + rnd() - 0.5, rnd() * 6, 0.5 + rnd() * 0.4, 3 + rnd() * 3, 0.5 + rnd() * 0.4]); } // grappes de grandes stalactites contre la paroi
+          if (k % 4 === 1) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w - 0.5); cordesG.push([x, s.y + 0.55, z, Math.atan2(-s.tz, s.tx), 8, 1, 1]); flot.push([x, s.y + 0.5, z, 0, 0.3, 0.3, 0.3, (k / 4 | 0) % 2 ? 0xff6a2b : 0xfff4e0]); }
+          if (k % 22 === 11) { const sd = (k / 22 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w - 2); plongeurs.push([x, s.y + 0.05, z, 0, 0.15, 0.02, 0.15]); } }
+        // les luminaires du moteur (en quinconce sous la voûte, tous les 5 échantillons) : chacun noyé dans une grappe de roche, ce n'est pas un tunnel routier
+        for (let i = t0 + 2, k = 0; i < t1 - 1; i += 5, k++) { if (ouvG(i - t0)) continue; const s = S[i % N], sd = k & 1 ? 1 : -1, d = sd * (s.w - 1.7), [x, z] = bord(s, 1, d); for (let j = 0; j < 4; j++) stal.push([x + (rnd() - 0.5) * 1.6, s.y + plafG(s, s.w - 1.7) + 0.4, z + (rnd() - 0.5) * 2.4, rnd() * 6, 0.9 + rnd() * 0.4, 1.6 + rnd() * 1.2, 0.9 + rnd() * 0.4]); } // une grappe de stalactites autour de chaque luminaire
         inst(h, h.geo('stalactite'), h.mat('bruit', {}, '#a89870', ['#7a6e52', '#c4b890', '#8a5a2c']), stal); inst(h, h.geo('stalagmite'), h.mat('bruit', {}, '#8a7c5c', ['#6a5e46', '#a89870']), stalm);
-        inst(h, h.geo('corde'), h.mat('peinture', { c: 0xffb100 }), cordesG); BOU.push(...flot); inst(h, h.geo('disque'), h.mat('peinture', { lum: 1, c: 0xc8f0ff }), plongeurs); // lampes de plongeurs, sous l'eau
-        // les puits de lumière, de plus en plus serrés vers la grande salle (le milieu de la grotte)
-        const rayon = h.mat('rayonFort', ADD), cone = h.mat('rayonCone', ADD), trouM = h.mat('tache', { lum: 1, transparent: true, depthWrite: false, fog: false, side: D }, '255,252,235');
-        const rr = [], cc = [], ts = [], tr = [], rac = [];
-        for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -1.5, 2.6], [0.36, 4.8, 1.6], [0.47, 1.2, 3], [0.56, 4.6, 1.8], [0.67, -1.8, 2.6], [0.78, 4.8, 2], [0.86, -4.6, 2]]) {
-          const i = (t0 + Math.round(nT * f)) % N, s = S[i], [x, z] = bord(s, 1, d), y = s.y + 7.58;
-          tr.push([x, y, z, 0, R * 1.5, 1, R * 1.5]); cc.push([x, y, z, rnd() * 6, R * 1.2, 7.6, R * 1.2]); cc.push([x, y, z, rnd() * 6, R * 0.55, 7.6, R * 0.55]); // deux cônes : trois remplissaient l'écran de transparence (GPU)
-          for (const a of [0, 1.57]) rr.push([x, y, z, a, R * 1.4, 7.6, 1]);
-          ts.push([x, s.y + 0.06, z, 0, R * 1.5, 1, R * 1.2, 0xc0b088]); for (const sd of [-1, 1]) { const [ex, ez] = bord(s, sd, W - 1.3); ts.push([ex, s.y + 0.07, ez, 0, R * 2.4, 1, R * 2.4, 0x50ffe0]); }
-          for (let j = 0; j < 8; j++) rac.push([x + (rnd() - 0.5) * R * 1.4, y, z + (rnd() - 0.5) * R * 1.4, rnd() * 3.14, R * 1.3, 1.6 + rnd() * 1.4, 1]);
-          h.lum(i, x, s.y + 6.2, z, 0xfff0c8, 24, 1.4 + R * 0.4);
-          const tx = x, tz = z, ty = tert.hAt(tx, tz); trousHaut.push([tx, ty + 0.08, tz, 0, R * 1.2, 1, R * 1.2]); for (let a = 0; a < 6.28; a += 0.8) rochers.push([tx + Math.cos(a) * R * 1.5, ty, tz + Math.sin(a) * R * 1.5, rnd() * 6, 0.8, 0.5, 0.8]); }
-        inst(h, h.geo('disque'), trouM, tr).castShadow = false; inst(h, h.geo('coneRayon'), cone, cc).castShadow = false; inst(h, h.geo('pan'), rayon, rr).castShadow = false;
-        colore(inst(h, h.geo('disque'), h.mat('tache', ADD), ts), ts).castShadow = false; inst(h, h.geo('pan'), h.mat('racines', { side: D, transparent: true, alphaTest: 0.5 }), rac);
-        CUB.push(...trousHaut.map(([x, y, z, r, sx, sy, sz]) => [x, y, z, 0, sx * 1.7, 0.1, sz * 1.7, 0x0a1410])); }
+                inst(h, h.geo('corde'), h.mat('peinture', { c: 0xffb100 }), cordesG); BOU.push(...flot); inst(h, h.geo('disque'), h.mat('peinture', { lum: 1, c: 0xc8f0ff }), plongeurs); // lampes de plongeurs, sous l'eau
+        // sous chaque ouverture : racines qui pendent du bord du trou, tache de soleil au sol, eau illuminée ; autour du trou, sur le tertre, un parapet de pierres
+        const ts = [], rac = [];
+        for (const [fa, fb] of TUNO) { const ka = Math.ceil(fa * nT), kb = Math.floor(fb * nT), km = (ka + kb) >> 1, s = S[(t0 + km) % N];
+          for (let k = ka; k <= kb; k += 2) { const q = S[(t0 + k) % N]; for (const sd of [-1, 1]) for (let j = 0; j < 2; j++) { const d = sd * (q.w * (0.35 + rnd() * 0.5)), [x, z] = bord(q, 1, d); rac.push([x, q.y + cleG(q) - 0.2, z, rnd() * 3.14, 0.35 + rnd() * 0.3, 2 + rnd() * 3, 1]); } }
+          ts.push([s.x, s.y + 0.06, s.z, 0, s.w * 0.45, 1, (kb - ka) * 0.7, 0x8a7a58]); for (const sd of [-1, 1]) { const [ex, ez] = bord(s, sd, s.w - 2.2); ts.push([ex, s.y + 0.07, ez, 0, 4, 1, (kb - ka) * 0.9, 0x0e5a4a]); }
+          for (let k = ka - 2; k <= kb + 2; k += 2) { const q = S[(t0 + k) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(q, sd, q.w + 2.5); rochers.push([x, q.y + cleG(q) + 2, z, rnd() * 6, 1.4 + rnd(), 0.8, 1.4 + rnd()]); } } }
+        { const cc = TUNO.map(([fa, fb]) => { const km = Math.round((fa + fb) / 2 * nT), q = S[(t0 + km) % N], R = Math.min(q.w * 0.55, (fb - fa) * nT * 0.8); return [q.x, q.y + cleG(q), q.z, 0, R * 0.8, cleG(q), R * 0.8]; }); inst(h, h.geo('coneRayon'), h.mat('rayonDoux', ADD), cc).castShadow = false; } // renforce la colonne du moteur, droite jusqu'au sol
+        colore(inst(h, h.geo('disque'), h.mat('tache', ADD), ts), ts).castShadow = false; inst(h, h.geo('pan'), h.mat('racines', { lum: 1, c: 0x9a8a68, side: D, transparent: true, alphaTest: 0.5 }), rac); // racines éclairées par le jour qui tombe du trou
+        { const pu = h.mat('calcaire', { side: D, c: 0x8a826e }); for (const [fa, fb] of TUNO) { const ka = Math.ceil(fa * nT) - 1, kb = Math.floor(fb * nT) + 1; for (const sd of [-1, 1]) h.ribbon((t0 + ka) % N, kb - ka, q => sd * (q.w + 1.3), cleG, q => sd * (q.w + 1.3), q => cleG(q) + 2.8, pu, 4); } } } // la gorge du puits, en calcaire
       { for (let k = 4; k < 44; k += 3) { const s = S[(t1 + k) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 1.2); POT.push([x, -0.05, z, 0, 1.8, 6.2, 1.8]); } boiteL(chaume, 2 * W + 4, 0.25, 2.2, s.x, s.y + 6.2, s.z, h.across(s)); } } // pergola de palmes à la sortie : l'œil passe de la grotte au plein soleil sous une ombre rayée
       // les mécaniques, visibles : bandeau jaune lumineux au pied des parois là où frôler remplit la nitro (corde), rampe peinte et panneau du pont en dos d'âne, chevrons du virage de retour, anneau de sable mouillé au bord de la place
-      { const [c0, cn] = tranche(27, 33), jaune = h.mat('peinture', { lum: 1, c: 0xffc830, side: D }); for (const sd of [-1, 1]) h.ribbon(c0, cn, sd * (W - 0.24), 0.35, sd * (W - 0.24), 0.75, jaune, 4); }
+      { const [c0, cn] = tranche(27, 33), jaune = h.mat('peinture', { lum: 1, c: 0xffc830, side: D }); for (const sd of [-1, 1]) h.ribbon(c0, cn, s => sd * (s.w - 0.24), 0.35, s => sd * (s.w - 0.24), 0.75, jaune, 4); }
       { const i = P(40), sj = 17; couvre((i - sj + N) % N, 3, -W, W, h.mat('topes', { side: D, ...OFF }), 4); couvre((i - 2 + N) % N, 2, -W, W, h.mat('topes', { side: D, ...OFF }), 4);
         const s = S[(i - 70 + N) % N], [x, z] = bord(s, 1, s.w + 2); panneaux.push([x, -0.05, z, enFace(s) + Math.PI, 'PUENTE  TOPE', '#f7d36b', '#1a1a1a', 4]); }
       for (const [i, j] of [[P(43) - 6, P(42)], [P(43), P(42) + 10], [P(43) + 8, P(42) + 20]]) { const s = S[i], sd = s.k > 0 ? -1 : 1, [x, z] = bord(s, sd, s.w + 1.4); boiteL(ecrit('>>', '#e8302a', '#ffffff', 32), 3, 2, 0.15, x, 2.1, z, enFace(S[j])); POT.push([x, -0.05, z, 0, 1.4, 1.2, 1.4]); }

@@ -167,7 +167,7 @@
     // racines qui pendent par le trou du plafond (fiche 6, Samula) : brins bruns et beiges, transparents entre deux ; le haut de la texture est le haut
     racines: () => [12, 128, (g, o) => {
       const { R, alea } = o;
-      for (let i = 0; i < 22; i++) { const x = alea() * 12, l = 50 + alea() * 78 | 0, c = ['#c4a878', '#d8c098', '#a88a5c', '#8a6a44'][alea() * 4 | 0]; for (let y = 0; y < l; y++) R(g, c, x + Math.sin(y * 0.07 + i) * 2 | 0, y, alea() < 0.2 ? 2 : 1, 1); }
+      for (let i = 0; i < 22; i++) { const x = alea() * 12, l = 50 + alea() * 78 | 0, c = ['#c8b488', '#dcc8a0', '#b49c70', '#a08a5c'][alea() * 4 | 0]; for (let y = 0; y < l; y++) R(g, c, x + Math.sin(y * 0.07 + i) * 2 | 0, y, alea() < 0.2 ? 2 : 1, 1); }
     }],
     // rayon de lumière en volume (cône ouvert) : blanc chaud en haut, qui s'efface vers le bas, stries verticales (rendu en additif)
     rayonCone: () => [32, 64, (g) => {
@@ -187,5 +187,7 @@
     }],
     // auvents des façades : toile rayée de trois couleurs selon la hauteur (rouge, turquoise, jaune) : chaque façade en montre une bande, sans passe de dessin de plus
     toldoMulti: () => [32, 96, (g, o) => { const { R } = o; ['#e8402a', '#1f9a96', '#e8a800'].forEach((c, k) => { for (let x = 0; x < 32; x += 8) { R(g, '#fff4e0', x, k * 32, 4, 32); R(g, c, x + 4, k * 32, 4, 32); } }); }, 2],
+    // colonne de lumière douce (cône ouvert) : même voile sur tout le tour, s'efface vers le bas, sans stries qui dessinent des arêtes (rendu en additif)
+    rayonDoux: () => [8, 64, (g) => { for (let y = 0; y < 64; y++) { g.fillStyle = 'rgba(255,240,200,' + ((1 - y / 64) ** 1.4 * 0.28).toFixed(3) + ')'; g.fillRect(0, y, 8, 1); } }],
   });
 })();
