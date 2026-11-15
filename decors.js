@@ -1917,7 +1917,7 @@
           if ((zn === 'gorge' && q.cote < 0 && y < q.s.y + niv(q.i) - 0.5) || ravin(x, z) > 0.3) c = dalle; // le lit de la rivière et le ravin du pont
           c = mix(c, roc, lisse(0.85, 0.6, nr.getY(v))); const k = 0.85 + 0.3 * u; C.set([c[0] * k, c[1] * k, c[2] * k], v * 3); }
         ge.setAttribute('color', new THREE.BufferAttribute(C, 3)); }
-      const eau = h.mat('eauCiel', { ...DS, lum: 1, rep: [5, 1], c: 0xb8b4a8 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
+      const eau = h.mat('eauPoco', { ...DS, lum: 1, rep: [5, 1], c: 0xd0d0d0 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
       const gres = h.mat('grainGres', { vertexColors: true, emissive: 0x3a342c, ...DS }), pierre = h.mat('pierreSeche'), pierreR = h.mat('pierreSeche', { rep: [0.35, 1] }, 1);
       const chuteM = h.mat('chute', { ...DS, lum: 1, c: 0xccd8d8, transparent: true, depthWrite: false, rep: [6, 1] }), lisseBord = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
       const tranche = (a, b, f) => { const l = (b - a + N) % N; f((a + N) % N, l); }; // ruban de l'échantillon a à b
@@ -1949,8 +1949,8 @@
       // ---------- la route : chaussée à la demi-largeur réelle (s.w) ; au gué, des dalles sur les bords et l'eau au milieu ; au pont, des planches ----------
       const chaussee = h.mat('chaussee', { side: THREE.DoubleSide, gloss: 0.08, ...lisseBord }, ...h.TH.route), glis = h.mat('glissiere', DS, h.TH.mur);
       for (const [a, b] of [[g1, p0], [p1, g0]]) tranche(a, b, (i, l) => h.ribbon(i, l, s => -s.w, 0, s => s.w, 0, chaussee, 32));
-      const gueM = h.mat('eauCiel', { ...DS, lum: 1, c: 0xc4c0b4, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
-      tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0x9a9a92 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
+      const gueM = h.mat('eauPoco', { ...DS, lum: 1, c: 0xe0e0e0, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
+      tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0xb8b4a8 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
       { const ecu = h.mat('peinture', { lum: 1, c: 0xf2efe6, transparent: true, opacity: 0.75, depthWrite: false, ...lisseBord, side: THREE.DoubleSide }); // l'écume crème au bord du courant
         tranche(iF0, iF1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * (W - 0.25), 0.06, sd * (W + 0.45), 0.06, ecu, 6); }); }
       // le bas-côté, en pente douce depuis le bord de la chaussée, par tronçons de même largeur et de même sol
@@ -1973,7 +1973,7 @@
       // REFS 2 : trois chutes fines qui descendent la paroi d'en face, chacune avec sa vasque de brume et ses blocs au pied
       const chutes = []; for (const [k, f] of [[12, 0.6], [17, 0.3], [20, 0.7]]) { const i = (P(k) + Math.round(((P(k + 1) - P(k) + N) % N) * f)) % N; h.ribbon(i, 5, s => -(s.w + 51), nivS, s => -(s.w + 51), 56, chuteM, 12); chutes.push(i); }
       // galets du gué (le mur de la simulation y est), blocs et dalles dans la rivière
-      const galets = [], blocs = [], coupes = [], fbas = []; for (let i = g0; entre(i, g0, g1); i = (i + 2) % N) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w + 0.5); galets.push([x, s.y, z, rnd() * 6, 0.6 + rnd() * 0.7, 0.25 + rnd() * 0.25]); }
+      const galets = [], blocs = [], coupes = [], fbas = []; for (let i = g0; entre(i, g0, g1); i = (i + 6) % N) for (const sd of [-1, 1]) { // espacés : en rangée serrée, ils faisaient un talus brun le long de la route const s = S[i], [x, z] = bord(s, sd, s.w + 0.5); galets.push([x, s.y, z, rnd() * 6, 0.6 + rnd() * 0.7, 0.25 + rnd() * 0.25]); }
       for (let k = 0; k < 260; k++) { const i = (P(12) + (rnd() * ((P(23) - P(12) + N) % N) | 0)) % N, s = S[i], o = s.w + 4 + rnd() * 49, [x, z] = bord(s, -1, o), t = rnd();
         (t < 0.7 ? galets : blocs).push([x, s.y + niv(i) + (t < 0.7 ? 0 : 0.3), z, rnd() * 6, ...(t < 0.7 ? [0.8 + rnd() * 2.5, 0.3 + rnd() * 0.5] : [1 + rnd() * 2.5, 0.6 + rnd() * 1.4, 1 + rnd() * 2.5])]); }
       for (const i of chutes) for (let k = 0; k < 14; k++) { const s = S[(i + (rnd() * 12 | 0)) % N], [x, z] = bord(s, -1, s.w + 44 + rnd() * 8); blocs.push([x, s.y + niv(i) - 0.5, z, rnd() * 6, 1.5 + rnd() * 3, 1 + rnd() * 2, 1.5 + rnd() * 3]); }

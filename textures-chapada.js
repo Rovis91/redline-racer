@@ -51,6 +51,14 @@
       for (let i = 0; i < 20; i++) R(g, '#5a4a30', alea() * 58 | 0, alea() * 63 | 0, 4 + (alea() * 6 | 0), 1);
       for (let i = 0; i < 34; i++) R(g, '#f4efe0', alea() * 54 | 0, alea() * 63 | 0, 4 + (alea() * 10 | 0), 1); // l'écume en traînées : le courant
     }, 12],
+    // REFS 3 : l'eau couleur thé des poços, foncée et saturée (plus sombre que tout le sol autour : c'est ce qui la fait lire comme de l'eau),
+    // des plages ambre là où l'on voit le fond, le ciel en rides bleutées, de l'écume en traînées (matière lumineuse : un reflet ne dépend pas de l'ombre)
+    eauPoco: () => [64, 64, (g, o) => {
+      const { R, alea } = o; R(g, '#4a2614', 0, 0, 64, 64);
+      for (let i = 0; i < 8; i++) R(g, alea() < 0.6 ? '#7a3c18' : '#a8582a', alea() * 50 | 0, alea() * 50 | 0, 8 + (alea() * 14 | 0), 6 + (alea() * 10 | 0)); // l'ambre du fond
+      for (let i = 0; i < 46; i++) R(g, alea() < 0.6 ? '#8aa8b4' : '#c8d8dc', alea() * 54 | 0, alea() * 63 | 0, 5 + (alea() * 10 | 0), 1); // le ciel en rides
+      for (let i = 0; i < 22; i++) R(g, '#f4efe0', alea() * 56 | 0, alea() * 63 | 0, 3 + (alea() * 8 | 0), 1); // l'écume
+    }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
     // t = 1 : dessin tourné d'un quart, pour un ruban vertical (u = la hauteur) : les assises restent horizontales
     pierreSeche: t => [64, 64, (g, o) => {
