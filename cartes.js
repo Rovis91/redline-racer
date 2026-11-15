@@ -462,7 +462,7 @@
       car: car({ nom: 'ONCA 2000 TURBO', ratios: [3.2, 2.1, 1.52, 1.18, 0.95], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
         tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], son: 1.2, moteur: 'l4', turbo: 1, look: { col: 0x1f6a4a, l: 0.9, w: 0.98, h: 0.98, nez: 0.55, cab: [-0.3, 2, 0.55], aileron: 1, bandes: 0xe9b44c } }),
       radio: RADIO.chapada,
-      th: { decor: 'chapada', lisse: ['eauPoco', 'eauGue', 'chute'], routeTex: 'chausseeFine', ombre: { doux: 1 }, fog: 0xb8c6cc, fogD: [20, 340], sky: [[0, '#7a9cb4'], [0.36, '#b8cad0'], [0.48, '#e0c896'], [0.5, '#b8c6cc'], [1, '#b8c6cc']], stars: 0, // ciel et brume un ton sous la V1 : 16 captures sur 20 avaient plus de 5 % de pixels brûlés
+      th: { decor: 'chapada', lisse: ['eauPoco', 'eauGue', 'chute'], routeTex: 'chausseeFine', ombre: { doux: 1 }, mouilleVisible: 1, frole: 1, fog: 0xb8c6cc, fogD: [20, 340], sky: [[0, '#7a9cb4'], [0.36, '#b8cad0'], [0.48, '#e0c896'], [0.5, '#b8c6cc'], [1, '#b8c6cc']], stars: 0, // ciel et brume un ton sous la V1 : 16 captures sur 20 avaient plus de 5 % de pixels brûlés
         astre: { dir: [0.8, 0.25, 0.4], col: '#f8cc8c', ombre: '#ffd9a0', taille: 150 }, hemi: [0xc8dce0, 0x3a4a58, 0.72], sun: [0xffe2b0, 0.95], phares: 0.3, bloom: 0.05, scan: 0.05,
         chev: 0, murH: 0, route: ['#34383a', '#44484a', '#f6f2e4', '#e8c860', '#34383a', '#34383a', false], mur: ['#6e6656', '#c8c4b0', '#6c7075', '#3a3428'], depart: [0xe9b44c, 0x4b5359, '#ede6cf'],
         hud: { y: '#f2f0dc', c: '#ffb94a', r: '#ff5a4a', fond: 'rgba(10,22,18,.82)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'CHAPADA DIAMANTINA · 7 H'], titre: ['MATIN SUR', 'LA CHAPADA'] } } },
