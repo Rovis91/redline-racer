@@ -61,6 +61,8 @@
     // l'écume du bassin : des paquets blancs sur du vide, qui bouclent ; decors-chapada.js la fait s'écarter du pied de la chute
     ecumeBassin: () => [32, 32, (g, o) => { const { R, alea, voile } = o;
       voile(g, 0.9, () => { for (let i = 0; i < 26; i++) { const x = alea() * 32 | 0, y = alea() * 32 | 0, w = 2 + (alea() * 5 | 0), h = 1 + (alea() * 3 | 0); for (const dx of [0, -32]) for (const dy of [0, -32]) R(g, alea() < 0.3 ? '#cfe6e0' : '#ffffff', x + dx, y + dy, w, h); } }); }],
+    // les paillettes du soleil sur l'eau : quelques éclats blancs sur du vide, qui bouclent ; deux couches qui se croisent les font scintiller (decors-chapada.js)
+    paillettes: () => [32, 32, (g, o) => { const { R, alea } = o; for (let i = 0; i < 9; i++) { const x = alea() * 32 | 0, y = alea() * 32 | 0, w = 1 + (alea() * 2 | 0); for (const dx of [0, -32]) R(g, alea() < 0.4 ? '#fff6d8' : '#ffffff', x + dx, y, w, 1); } }],
     // la voie dallée de la cité (th.routeTex, mêmes réglages que chaussee : dalle, joint foncé, dalle claire, mousse) : grandes dalles de quartzite usées, joints moussus,
     // ni peinture ni flaque (l'alpha reste plein : rien ne reflète le ciel en plaques blanches), passages de roues polis plus clairs
     dallesJungle: (dalle, sombre, clair, mousse) => [128, 512, (g, o) => { const { R, alea, voile } = o; R(g, dalle, 0, 0, 128, 512);

@@ -22,6 +22,8 @@
   // zones d'ambiance sonore (champ amb de la carte, entre deux points du tracé) : 0 dehors, 1 dedans, fondu de 120 m à l'entrée et à la sortie
   const nearS = p => { let b = 0, bd = 1e18; for (let i = 0; i < N; i++) { const d = (S[i].x - p[0] * M.sc) ** 2 + (S[i].z - p[1] * M.sc) ** 2; if (d < bd) { bd = d; b = i; } } return b; };
   const ambZ = (M.amb || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)), ambAt = i => Math.max(0, ...ambZ.map(z => z(i, 60)));
+  // th.embruns : [[point a, point b, force], …] : entre ces points du tracé, des gouttes se posent sur l'objectif comme sous la pluie (les embruns d'une chute, d'une rivière) ; absent : rien
+  const embZ = (TH.embruns || []).map(([a, b, k]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), k]), embAt = i => Math.max(0, ...embZ.map(([z, k]) => k * z(i, 30)));
   // brouillard par zone (th.brume : [[point a, point b, début, fin en mètres], …]) : entre ces deux points du tracé, le brouillard de la carte se resserre, fondu de 180 m à l'entrée et à la sortie (docs/MOTEUR-OPTIONS-CARTES.md)
   const brumeZ = (TH.brume || []).filter(z => z.length > 3).map(([a, b, n0, n1]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), n0, n1]);
   const chevSauf = (TH.chevSauf || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)); // th.chevSauf : [[point a, point b], …], pas de panneaux de virage entre ces points du tracé
@@ -331,7 +333,7 @@
   // NL luminaires ponctuels (les plus proches le long de la piste + feux des voitures), le faisceau des phares à coupure nette,
   // l'ombre de la voiture par lancer de rayon sur sa boîte (elle balaie route et murs à chaque luminaire franchi),
   // et sur les surfaces brillantes (route mouillée, flaques = alpha de la texture, carrosserie) le reflet étiré de chaque source.
-  const LUMS = [], lum = (i, x, y, z, col, r, k = 1, tun = 0) => LUMS.push({ i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun });
+  const LUMS = [], lum = (i, x, y, z, col, r, k = 1, tun = 0) => { const l = { i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun }; LUMS.push(l); return l; }; // rend le luminaire : un décor peut faire respirer sa couleur (l.c) dans son tick (feu de camp de chapada)
   const NUIT = TH.phares / 2.6; // force des feux de voiture : pleine de nuit, faible à l'aube et au couchant
   const SUNC = new THREE.Color(TH.sun[0]).multiplyScalar(TH.sun[1]);
   const LUX = { uLP: { value: Float32Array.from({ length: NL * 4 }, (_, i) => i % 4 === 3 ? 1 : 0) }, uLC: { value: new Float32Array(NL * 3) }, // à plat : three envoie le tableau tel quel au lieu de recopier 20 vecteurs à chaque passe de dessin
@@ -800,6 +802,7 @@
   function fxFrame(dt, now) {
     const { lm, moi: car } = VUES[0]; // le tonnerre est celui du joueur 1 (un seul son, comme SON.frame)
     if (TH.poussiere) { for (const c of race ? race.cars : [car]) { const q = T.surf[c.idx], v = Math.hypot(c.vx, c.vz), sd = Math.random() < 0.5 ? -0.8 : 0.8, x = c.x - Math.cos(c.th) * 1.6 - Math.sin(c.th) * sd, z = c.z - Math.sin(c.th) * 1.6 + Math.cos(c.th) * sd; // chaque voiture lève un panache derrière elle ; dans le gué, une gerbe d'eau. La poussière part à la vitesse de la voiture puis freine : le panache reste dans le champ de la caméra de poursuite
+        if (c.air) c.eauT = 0; // en l'air, on n'est plus dans l'eau : la réception d'un saut dans une zone noyée refait le coup d'étrave (seuils de chapada)
         if (v < 8 || c.air || c.out || !(VUES.some(v => v.car === c) || c.drift || Math.random() < 0.5)) continue;
         const aq = j => T.surf[(c.idx + j) % N].aq > 0.099, dansEau = aq(0) || aq(1), moi = !window.__g.vue && VUES.some(u => u.car === c); // aq(1) : les roues avant, 2 m devant, y sont déjà
         c.eauT = dansEau ? (c.eauT || 0) + dt : 0; // temps passé dans l'eau (décor seulement, la simulation ne le lit pas)
@@ -2030,7 +2033,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // flou de vitesse : rien sous 130 km/h, il monte ensuite jusqu'à la pointe ; l'aberration chromatique suit
     post.uniforms.amt.value = 1.1 * rv * rv; post.uniforms.ab.value = 0.002 + 0.016 * rv * rv + (stun > 0 ? stun * 0.04 : 0);
     // gouttes sur l'objectif (voir AIR) : la pluie en dépose, pas la neige ; elles glissent, puis le vent de la course les remonte en les étirant, et au-delà de M.vit[0] il les chasse
-    const gt = vu.gt || (vu.gt = Array.from({ length: 8 }, () => ({ x: 0, y: 0, r: 0, a: 0, vie: 0 }))), ve = Math.min(1, sp / V0), chasse = clamp((sp - V0) / (V1 - V0), 0, 1), pg = NG ? 0 : pl;
+    const gt = vu.gt || (vu.gt = Array.from({ length: 8 }, () => ({ x: 0, y: 0, r: 0, a: 0, vie: 0 }))), ve = Math.min(1, sp / V0), chasse = clamp((sp - V0) / (V1 - V0), 0, 1), pg = NG ? 0 : Math.max(pl, embAt(car.idx));
     for (let i = 0; i < 8; i++) { const g = gt[i], u = U.gt.value[i];
       if (g.a >= g.vie) { u.z = 0; if (pg > 0.02 && i < 6 && Math.random() < dt * 0.9 * pg * (1 - 0.6 * chasse)) Object.assign(g, { x: Math.random(), y: 0.15 + 0.85 * Math.random(), r: 0.004 + 0.006 * Math.random(), a: 0, vie: 2 + 4 * Math.random() }); else continue; }
       g.a += dt; g.y += dt * (-0.015 + 0.12 * ve * ve + 1.6 * chasse); if (g.y > 1.15 || g.y < -0.1) g.a = g.vie;

@@ -12,7 +12,31 @@
       const { THREE, S, N, W, rnd, T } = h, DS = { side: THREE.DoubleSide }, P = k => pt(h, k), IX = new Map(S.map((s, i) => [s, i]));
       const cache = new Map(), mat = (n, o = {}) => { const k = n + JSON.stringify(o); return cache.get(k) || cache.set(k, h.mat(n, o)).get(k); }; // une matière par réglage : le moteur fond le décor fixe par matière
       const entre = (i, a, b) => ((i - a + N) % N) <= ((b - a + N) % N), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-      let VAP = null; const COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
+      let graine = 512; const alea = () => (graine = (graine * 1664525 + 1013904223) >>> 0) / 4294967296; // le hasard de la vie : il ne tire pas dans rnd, le décor fixe reste le même au caillou près
+      const VIE = [], BRUME = h.mat('brume', { lum: 1 }).map; // VIE : ce que le tick anime, (dt, car, t) ; t = temps de jeu (figé en pause). Le vent de la carte souffle vers l'ouest (-x) : vapeur, fumée, flammes, feuilles
+      // des bouffées qui montent et s'effacent (vapeur de la chute, embruns, brume du matin) : un nuage de points additif. Hors brouillard : le brouillard, ajouté par chaque point, brûlait le nuage en tache claire ;
+      // à la place, chaque bouffée s'éteint avec la distance (port). nait() = [x, y, z] d'une naissance
+      const bouffees = (n, nait, { vie = 9, vx = -1.2, vy = 5.2, taille = 14, f = 0.06, c = [1, 1, 1], port = 230 } = {}) => { const PP = new Float32Array(n * 3), CC = new Float32Array(n * 3), A = new Float32Array(n), gv = new THREE.BufferGeometry();
+        gv.setAttribute('position', new THREE.BufferAttribute(PP, 3)); gv.setAttribute('color', new THREE.BufferAttribute(CC, 3));
+        const o = new THREE.Points(gv, new THREE.PointsMaterial({ size: taille, map: BRUME, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false })); o.frustumCulled = false; o.userData.dyn = 1; o.renderOrder = 5; h.scene.add(o);
+        const ne = k => { const p = nait(); PP[k * 3] = p[0]; PP[k * 3 + 1] = p[1]; PP[k * 3 + 2] = p[2]; A[k] = 0; };
+        for (let k = 0; k < n; k++) { ne(k); A[k] = alea(); PP[k * 3] += A[k] * vie * vx; PP[k * 3 + 1] += A[k] * vie * vy; }
+        VIE.push((dt, car) => { dt = Math.min(dt, 0.1); for (let k = 0; k < n; k++) { A[k] += dt / vie; if (A[k] > 1) ne(k); PP[k * 3] += vx * dt; PP[k * 3 + 1] += vy * dt;
+          const d = car ? Math.hypot(PP[k * 3] - car.x, PP[k * 3 + 2] - car.z) : 0, g = f * Math.sin(Math.PI * Math.sqrt(A[k])) * Math.max(0, 1 - d / port); CC[k * 3] = c[0] * g; CC[k * 3 + 1] = c[1] * g; CC[k * 3 + 2] = c[2] * g; }
+          gv.attributes.position.needsUpdate = gv.attributes.color.needsUpdate = true; }); return o; };
+      // une bête ou un objet posé à part : un groupe hors de la fusion du décor fixe (il bouge) ; fixe = 1 : il ne bouge pas, la fusion le prend
+      const mobile = (nom, peau, x, y, z, ry = 0, k = 1, fixe = 0, ...a) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; p.scale.setScalar(k); if (!fixe) p.userData.dyn = 1; h.scene.add(p); h.pose(nom, peau, p, [0, 0, 0], ...a); return p; };
+      const vers = (x, z, q) => Math.atan2(z - q.z, q.x - x); // l'angle qui tourne le +X d'une forme, posée en (x, z), vers l'échantillon q
+      // un envol déclenché à l'approche (le modèle : les pigeons de decors-paris.js) : les bêtes posées partent quand la voiture est à moins de D échantillons de i0, puis sont reposées quand elle est loin.
+      // ms = leurs lots instanciés ; bête = { x, y, z, r, vx, vy, vz, e: [échelle] } ; g = gravité (positive : elles montent toujours plus ; négative : elles retombent) ; bat = battement ; cache = invisibles au repos
+      const d3 = new THREE.Object3D(), ENVOLS = [], placeEnvol = (v, b) => { v.betes.forEach((q, k) => { const t = b === 1 ? v.t : 0, vu = b === 2 ? !v.cache : t < v.T - 0.25, f = v.bat && t ? 0.35 + 0.65 * Math.abs(Math.sin(t * v.bat + k * 1.7)) : 1;
+          d3.position.set(q.x + q.vx * t, q.y + q.vy * t + v.g * t * t, q.z + q.vz * t); d3.rotation.set(0, t ? Math.atan2(-q.vz, q.vx) : q.r, 0); d3.scale.set(vu ? q.e[0] : 1e-4, vu ? q.e[1] * f : 1e-4, vu ? q.e[2] : 1e-4); d3.updateMatrix(); for (const m of v.ms) m.setMatrixAt(k, d3.matrix); });
+        for (const m of v.ms) m.instanceMatrix.needsUpdate = true; };
+      const envol = (ms, betes, i0, o = {}) => { const v = { ms: [].concat(ms), betes, i0, D: 22, T: 5, g: 0.3, bat: 0, cache: 0, en: 0, t: 0, ...o }; for (const m of v.ms) m.userData.dyn = 1; ENVOLS.push(v); placeEnvol(v, 2); }; // dyn : sans lui, la fusion du décor fixe fige une copie de chaque bête à sa place de repos
+      VIE.push((dt, car) => { if (car) for (const v of ENVOLS) { const e = (v.i0 - car.idx + N) % N;
+        if (!v.en && e < v.D && e > 0) { v.en = 1; v.t = 0; } else if (v.en && e > 300 && e < N - 300) { v.en = 0; placeEnvol(v, 2); }
+        if (v.en && v.t < v.T) { v.t += dt; placeEnvol(v, 1); } } });
+      const COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
       const tombe = (trous, op, v, c = 0xc4d8d4) => coule(h.mat('eauChute', { lum: 1, c, side: THREE.DoubleSide, transparent: true, opacity: op, depthWrite: false, lisse: 1 }, trous), 0, v); // de l'eau qui tombe : la texture glisse vers le bas
       // une nappe d'eau : une bande courbe qui suit la chute. secs, de haut en bas : [x du milieu, y, z, largeur] ; u en travers, v = la hauteur (une répétition tous les 16 m) ; sens : de quel côté (z) elle bombe, vers qui regarde
       // Toutes les nappes d'une même matière sont fondues en une seule géométrie à la fin (une passe de dessin par matière, pas une par nappe) : NAP les accumule, en coordonnées du monde
@@ -24,7 +48,9 @@
       const plat = (m, parent, [x, y, z], w, d) => { const b = tas(m), base = b.P.length / 3; parent.updateMatrixWorld();
         for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { V3.set(x + sx * w / 2, y, z + sz * d / 2).applyMatrix4(parent.matrixWorld); b.P.push(V3.x, V3.y, V3.z); b.U.push((sx + 1) * w / 16, (sz + 1) * d / 16); }
         b.I.push(base, base + 2, base + 1, base + 1, base + 2, base + 3); };
-      const e1 = tombe(5, 1, 0.55), e2 = tombe(11, 0.8, 0.9), ec = coule(h.mat('ecumeBassin', { lum: 1, side: THREE.DoubleSide, transparent: true, opacity: 0.85, depthWrite: false }), 0, 0.35); // les deux couches de toute chute, l'écume de tout bassin
+      const e1 = tombe(5, 1, 0.55), e2 = tombe(11, 0.8, 0.9), ec = coule(h.mat('ecumeBassin', { lum: 1, side: THREE.DoubleSide, transparent: true, opacity: 0.85, depthWrite: false }), 0, 0.35), // les deux couches de toute chute, l'écume de tout bassin
+        e3 = tombe(26, 0.5, 1.25, 0xe4f0ec), ecV = coule(h.mat('ecumeBassin', { lum: 1, side: THREE.DoubleSide, transparent: true, opacity: 0.7, depthWrite: false, rep: [1.4, 1.4] }), 0.04, 0.95), // le voile troué du bas de la chute ; l'écume vive des rouleaux (sa propre texture : elle va plus vite que le courant)
+        pail = (ru, rv, u, v) => coule(h.mat('paillettes', { lum: 1, side: THREE.DoubleSide, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending, fog: false, rep: [ru, rv] }), u, v); // les paillettes du soleil sur l'eau : deux couches qui se croisent scintillent
       const t0 = T.t0, t1 = T.t1, enTunnel = i => entre(i, t0, t1), surPont = i => entre(i, P(32) - 4, P(33) + 4), MAR = 14.9;
       // le marais tropical (Z2) : la plaine inondée entre le camp et la chicane, de part et d'autre de la chaussée ; routeZ = l'axe de la chaussée, marais(x, z) = 0 dehors, 1 dedans
       const routeZ = x => x < 200 ? 0 : x < 360 ? -30 * (x - 200) / 160 : x < 500 ? -30 + 50 * (x - 360) / 140 : 20, marais = (x, z) => ss(135, 175, x) * ss(560, 520, x) * ss(-70, -40, z - routeZ(x)) * ss(125, 95, z - routeZ(x));
@@ -56,6 +82,9 @@
         for (const sd of [-1, 1]) { h.ribbon(t1, cO, sd * W, 0, s => sd * s.w, 0, dalles, 16);
           h.ribbon(t1, cO, s => sd * s.w, 0, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), bordM, 8); h.ribbon(t1, cO, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), bordM, 8);
           h.ribbon(t1, cO, s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 6 * e(s)), s => -1.1 * e(s), talusM, 8); } }
+      // la traînée mouillée à la sortie de chaque passage noyé : la chaussée (bandes du décor comprises) est sombre sur 64 m, de moins en moins ; le moteur n'y mouille que sa bande centrale, sur 20 m (th.mouilleVisible)
+      { const sortie = i => { while (gue(S[i % N])) i++; return i; }, voile = Array.from({ length: 8 }, (_, k) => h.mat('peinture', { c: 0x0a140e, transparent: true, opacity: 0.36 * (1 - k / 8), depthWrite: false }));
+        for (const i0 of [sortie(P(3) - 6), sortie(iR1 - 4), sortie(P(64) - 4)]) voile.forEach((m, k) => { h.ribbon(i0 + k * 4, 4, s => -s.w, 0.045, s => s.w, 0.045, m, 8).userData.dyn = 1; }); }
       // ---------- l'eau : un seul ruban qui suit la rivière, plat par bief, incliné aux ressauts ----------
       { const pos = [], uv = [], idx = [];
         RIV.forEach((p, j) => { const q = RIV[Math.min(RIV.length - 1, j + 1)], o = RIV[Math.max(0, j - 1)], dx = q.x - o.x, dz = q.z - o.z, l = Math.hypot(dx, dz), nx = -dz / l, nz = dx / l, w = p.w + 2;
@@ -65,6 +94,7 @@
         for (const [k, op, vit] of [[0, 0.86, 1], [1, 0.5, 1], [2, 0.9, 2.2]]) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(tri[k]); ge.computeVertexNormals();
           const eau = new THREE.Mesh(ge, coule(mat('eauJade', { ...DS, transparent: true, opacity: op, gloss: 0.5, c: k === 2 ? 0xb8d8cc : 0xffffff }), 0, -0.5 * vit)); eau.receiveShadow = true; eau.userData.dyn = 1; h.scene.add(eau);
           // le courant : une seconde couche, plus rapide et plus claire, 4 cm au-dessus (deux couches qui défilent à des vitesses différentes : l'eau, pas un tapis roulant)
+          if (k === 1) for (const [dy, ru, rv, su, sv] of [[0.07, 5, 5, 0.05, -0.4], [0.09, 3.7, 6.1, -0.07, -0.25]]) { const gp = ge.clone(); gp.translate(0, dy, 0); const p = new THREE.Mesh(gp, pail(ru, rv, su, sv)); p.userData.dyn = 1; h.scene.add(p); } // le gué scintille au soleil
           if (!k) continue; const g2 = ge.clone(); g2.translate(0, 0.04, 0); const e2 = new THREE.Mesh(g2, coule(h.mat('eauJade', { ...DS, transparent: true, opacity: op * 0.5, depthWrite: false, rep: [1.7, 0.6], c: 0xd8f0e0 }), 0.03, -0.85 * vit)); e2.userData.dyn = 1; h.scene.add(e2); } }
       h.pose('boite', coule(mat('eauMarais', { transparent: true, opacity: 0.85, c: 0x6a7a70 }), 0.012, 0.008), h.scene, [345, MAR - 0.05, 25], 440, 0.1, 250).userData.dyn = 1; // l'eau du marais : une nappe plate, le terrain en sort autour ; elle dérive à peine
       h.pose('boite', coule(h.mat('eauMarais', { transparent: true, opacity: 0.35, depthWrite: false, c: 0x9ab0a0, rep: [0.7, 0.7] }), -0.009, 0.014), h.scene, [345, MAR, 25], 440, 0.02, 250).userData.dyn = 1; // une seconde nappe qui dérive en sens croisé : les taches de ciel glissent
@@ -78,11 +108,15 @@
           bouil.push([x, S[i + 4].y + 0.24, z, h.across(S[i + 4]), 2 * w, 0.02, 11]);
           for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) { const [rx, rz] = bord(S[i - 1], sd, s.w + 1.6 + k * 1.6); rives.push([rx, S[i - 1].y + 0.3, rz, rnd() * 6, 1.8 + rnd(), 1.4 + rnd(), 1.8 + rnd()]); } }
         { const s = S[P(49) + 6], [x, z] = bord(s, 0, 0); bouil.push([x, s.y + 0.24, z, h.across(s), 2 * s.w + 3, 0.02, 14]); } // là où l'on retombe du saut
-        inst(h, h.geo('rocher'), mat('rocheMousse'), rives); inst(h, h.geo('bloc'), ec, [...sill, ...bouil]).userData.dyn = 1;
+        inst(h, h.geo('rocher'), mat('rocheMousse'), rives); inst(h, h.geo('bloc'), ec, sill).userData.dyn = 1; inst(h, h.geo('bloc'), ecV, bouil).userData.dyn = 1;
+        { const pieds = [S[P(49) + 6], S[P(50) + 4], S[P(51) + 4]]; bouffees(70, () => { const q = pieds[alea() * 3 | 0], [x, z] = bord(q, alea() < 0.5 ? -1 : 1, alea() * q.w); return [x, q.y + 0.3, z]; }, { vie: 2.4, vy: 1.7, taille: 6, f: 0.28, port: 150 }); } // un nuage d'embruns au pied de chaque seuil et à la réception du saut
+        { const bois = mat('ecorceJungle'), br = Array.from({ length: 5 }, (_, k) => ({ g: mobile('troncCouche', { bois }, 0, 0, 0, 0, 0.3, 0, 8), u: iR0 + (iR1 - iR0) * k / 5, sd: k & 1 ? 1 : -1, r: alea() * 6 })); // des branches descendent le courant, le long des rives (hors de la trajectoire) : purement visuelles, rien à percuter
+          VIE.push((dt, car, t) => { for (const b of br) { b.u += dt * 4.5; if (b.u > iR1) b.u = iR0; const q = S[b.u | 0], [x, z] = bord(q, b.sd, q.w - 1.8); b.g.position.set(x, q.y + 0.12, z); b.g.rotation.y = Math.atan2(-q.tz, q.tx) + 0.4 * Math.sin(t * 0.7 + b.r); } }); }
         // la rivière quitte la route par la droite : un grand tronc couché en travers de sa sortie, le long de la chaussée, pour qu'on ne la suive pas (la route file tout droit vers l'arc)
         { const s = S[P(52) - 8], sd = [-1, 1].sort((a, b) => Math.hypot(...bord(s, a, 20).map((v, k) => v - [190, 490][k])) - Math.hypot(...bord(s, b, 20).map((v, k) => v - [190, 490][k])))[0], [x, z] = bord(s, sd, s.w + 2.2), ax = new THREE.Vector3(s.tx, 0.03, s.tz).normalize(), bois = mat('ecorceJungle');
           const pos = (g, d, y) => { const o = new THREE.Mesh(g, bois); o.position.set(x + s.tx * d, s.y + y, z + s.tz * d); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ax); h.scene.add(o); };
-          pos(new THREE.CylinderGeometry(1.3, 1.7, 46, 7), 0, 1.3); pos(new THREE.CylinderGeometry(3.6, 3.2, 1.2, 7), -23.5, 1.8); } }
+          pos(new THREE.CylinderGeometry(1.3, 1.7, 46, 7), 0, 1.3); pos(new THREE.CylinderGeometry(3.6, 3.2, 1.2, 7), -23.5, 1.8);
+          mobile('onca', { robe: mat('peinture', { c: 0xe9b44c }), tache: mat('peinture', { c: 0x14120e }), museau: mat('peinture', { c: 0xf2e6c8 }) }, x - s.tx * 8, s.y + 2.72, z - s.tz * 8, Math.atan2(s.tz, -s.tx) - sd * 0.5, 1.7, 1); } /* l'onça couchée sur le tronc, la tête vers qui arrive : la voiture porte son nom */ }
       // ---------- la forêt, en trois épaisseurs (D-4) : le mur (une rangée de grands arbres de chaque côté, houppiers jointifs au-dessus de la route, sous-bois continu au pied),
       // la forêt (jusqu'à 90 m), le rideau (masses sans détail que la brume réduit à des silhouettes). Clairières voulues : le camp, la place de la cité, le cirque de la chute, la rivière ----------
       const racines = [], cimes = [[], [], []], futs = [], buissons = [[], []], fougeres = [], palmiers = [], rideau = [], feuillesG = [], heliconias = [], lianes = [];
@@ -115,6 +149,11 @@
       insts(h, 'racinesEchasses', { bois: ecorce }, racines);
       { const nen = [], fl = []; for (let k = 0; k < 420; k++) { const x = 150 + rnd() * 400, z = routeZ(x) - 60 + rnd() * 180, t = 1.3 + rnd() * 1.5; if (marais(x, z) > 0.85 && g.dAt(x, z) > 8.5 && g.dAt(x, z) < 40) { nen.push([x, MAR + 0.02, z, rnd() * 6, t, 1, t]); if (rnd() < 0.3) fl.push([x + t * 0.5, MAR + 0.2, z, rnd() * 6, 0.45, 0.4, 0.45]); } }
         inst(h, h.geo('nenuphar'), mat('peinture', { c: 0xa6d24a }), nen).castShadow = false; inst(h, h.geo('bloc'), mat('peinture', { c: 0xf0a8c8 }), fl); }
+      // un vol d'aigrettes blanches posées dans l'eau du marais, de part et d'autre du passage noyé : elles décollent à l'approche et partent sur le côté (avant le freinage de la chicane)
+      { const peauA = { patte: mat('peinture', { c: 0x2a2a26 }), plume: mat('peinture', { c: 0xf6f6ee }), bec: mat('peinture', { c: 0xe8b83a }) }, i0 = P(2) + 8;
+        for (const tete of [0, 1]) { const bs = []; for (let k = 0; k < 12; k++) { const q = S[i0 + 2 + (alea() * 24 | 0)], sd = (k + tete) & 1 ? 1 : -1, [x, z] = bord(q, sd, q.w + 3 + alea() * 10), v = 3 + alea() * 3, av = 3 + alea() * 5;
+            bs.push({ x, y: MAR - 0.2, z, r: alea() * 6.28, vx: -q.tz * sd * v + q.tx * av, vy: 1.8 + alea() * 1.4, vz: q.tx * sd * v + q.tz * av, e: [2.2, 2.2, 2.2] }); }
+          envol(insts(h, 'flamant', peauA, bs.map(q => [q.x, q.y, q.z, q.r, 2.2]), { a: [tete] }), bs, i0, { D: 40, T: 6, g: 0.25, bat: 9 }); } }
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: palme }, fougeres); insts(h, 'jucara', { stipe: ecorce, palme }, palmiers);
       inst(h, h.geo('cimeLoin'), mat('feuilleLoin'), rideau).castShadow = false;
       const feuilleG = mat('feuilleSoleil', DS), rouge = mat('peinture', { c: 0xd8362a });
@@ -126,12 +165,18 @@
         for (let k = 0; k < 5; k++) nappes.push([CIRQUE[0] + 4 + (rnd() - 0.5) * 26, 35 + rnd() * 7, CIRQUE[1] + 16 + (rnd() - 0.5) * 16, rnd() * 6, 26 + rnd() * 14, 1, 22 + rnd() * 10]); // le nuage au pied de la chute seulement
         const b = inst(h, G, mat('brume', { lum: 1, c: 0x343c24, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, ...DS }), nappes); b.castShadow = b.receiveShadow = false; }
 
+      bouffees(70, () => { for (let k = 0; k < 30; k++) { const x = 150 + alea() * 320, dz = -60 + alea() * 180, z = routeZ(x) + dz; if (marais(x, z) > 0.85 && Math.abs(dz) > 16) return [x, MAR + 0.6, z]; } return [300, MAR + 0.6, 60]; },
+        { vie: 12, vy: 0.55, taille: 22, f: 0.16, c: [0.92, 1, 0.84], port: 170 }); // la brume du matin se lève du marais, loin de la chaussée, et dérive vers l'ouest
+
       // ---------- matières et outils de pose des repères ----------
       const pierre = mat('pierreCite'), ombre = mat('pierreOmbre'), clairM = mat('pierreClaire'), or = mat('peinture', { lum: 1, c: 0xe8b83a }), noir = mat('peinture', { c: 0x14120e }), flamme = mat('peinture', { lum: 1, c: 0xffb040, fog: false }),
         bois = mat('ecorceJungle', { c: 0xc8a878 }), toile = mat('toileTente', DS), bambou = mat('bambou'), planche = mat('planchesPont'), lampe = mat('peinture', { lum: 1, c: 0xffd890 }), fer = mat('peinture', { c: 0x2a2a26 }),
         CITE = { pierre, ombre, clair: clairM, or, noir, relief: ombre, socle: mat('socleNoir'), inscription: mat('inscription512') };
       // un objet posé en (x, z), tourné de ry (son +Z regarde alors vers (sin ry, cos ry)) ; y = le sol par défaut
       const pose = (nom, peau, x, z, ry = 0, y = g.hAt(x, z), ...a) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; h.scene.add(p); h.pose(nom, peau, p, [0, 0, 0], ...a); return p; };
+      // une flamme qui vit (feu de camp, braseros des portails ; jamais les torches, qui marquent les freinages) : deux langues dont la hauteur change, penchées par le vent ; l = son luminaire, qui respire avec elle
+      const flammeVive = (x, y, z, k = 1, l = null) => { const p = new THREE.Group(); p.position.set(x, y, z); p.userData.dyn = 1; h.scene.add(p); h.pose('boite', flamme, p, [0, 0.4 * k, 0], 0.46 * k, 0.8 * k, 0.46 * k); h.pose('boite', flamme, p, [0.05 * k, 0.95 * k, 0], 0.22 * k, 0.6 * k, 0.22 * k);
+        const ph = alea() * 9, c0 = l && l.c ? l.c.clone() : null; VIE.push((dt, car, t) => { const f = 1 + 0.24 * Math.sin(t * 11 + ph) + 0.16 * Math.sin(t * 27.3 + ph * 2); p.scale.set(1 + 0.12 * Math.sin(t * 17 + ph), f, 1); p.rotation.z = 0.14 + 0.08 * Math.sin(t * 7 + ph); if (c0) l.c.copy(c0).multiplyScalar(0.75 + 0.3 * f); }); };
       // au bord de la route, face à elle : échantillon i, côté sd, à off m de l'axe
       const auBord = (nom, peau, i, sd, off, ...a) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, off); return pose(nom, peau, x, z, Math.atan2(s.x - x, s.z - z), s.y - 0.35, ...a); };
       // torches de l'expédition : elles marquent les freinages à la place des panneaux (O-5) : deux à 100 m, une à 50 m ; et les lieux
@@ -139,13 +184,40 @@
       for (const k of [16, 22, 44, 47]) { const i = P(k), sd = S[i].k > 0 ? -1 : 1; for (const d of [-7, 0, 7]) torche(i + d, sd, 1.4); } // trois flammes à l'extérieur de chaque virage serré : les deux épingles, les deux équerres
       for (const k of [4, 14, 20, 42, 52]) { const i = P(k) - (k === 42 ? 12 : 0); torche(i - 52, -1); torche(i - 52, 1); torche(i - 26, S[i].k > 0 ? -1 : 1); }
 
+      // ---------- la faune (propositions/VIE-chapada.md §3) : décor pur, rien ne se percute, rien ne bouge dans l'axe d'un freinage ----------
+      const SINGES = [], noirDS = mat('peinture', { c: 0x1a1816, ...DS });
+      // un oiseau en vol : un corps et deux ailes sur pivot (elles battent, ou planent en V)
+      const oiseau = (peau, k = 1, l = 1) => { const p = mobile('oiseauVol', peau, 0, 0, 0, 0, k, 0, l), ailes = [-1, 1].map(sd => { const a = new THREE.Group(); a.position.set(0.05, 0.08, sd * 0.12); a.scale.z = sd; p.add(a); h.pose('aileOiseau', peau, a); return a; }); p.rotation.order = 'YXZ'; return { p, ailes }; };
+      { const vaut = { plume: noirDS, bec: mat('peinture', { c: 0xb0a890, ...DS }), queue: noirDS }; // des vautours (urubus) planent en cercles dans la gorge, à droite du pont (l'aval) ; deux autres sont posés au sommet du temple à degrés
+        const vols = [[962, 78, 172, 26, 0], [968, 85, 150, 34, 2.1], [950, 72, 198, 20, 4.2]].map(([x, y, z, r, ph]) => ({ o: oiseau(vaut, 1.9, 0.7), x, y, z, r, ph }));
+        VIE.push((dt, car, t) => { for (const v of vols) { const a = t * 6.5 / v.r + v.ph; v.o.p.position.set(v.x + v.r * Math.cos(a), v.y + 1.5 * Math.sin(a * 0.6), v.z + v.r * Math.sin(a)); v.o.p.rotation.set(0.3, -a - Math.PI / 2, 0); v.o.ailes.forEach((w, k) => { w.rotation.x = (k ? -1 : 1) * (0.22 + 0.05 * Math.sin(t * 0.9 + v.ph)); }); } });
+        for (const dx of [-2.6, 3]) mobile('oiseauVol', vaut, 86 + dx, 16.6 + 44.4, 366.4, dx, 2.3, 1, 0.5).rotation.z = 1.1; }
+      { const ara = { plume: mat('peinture', { c: 0xd8281c, ...DS }), bec: mat('peinture', { c: 0xf0e8d0, ...DS }), queue: mat('peinture', { c: 0x2a5ad0, ...DS }) }, deux = [oiseau(ara, 2.8, 1.5), oiseau(ara, 2.8, 1.5)]; // deux aras rouges traversent le ciel au-dessus de la route à la sortie de la chicane, de droite à gauche
+        const i0 = P(8) + 2, sA = S[P(10) + 12], sB = S[P(10) + 26], A = bord(sA, 1, 42), B = bord(sB, -1, 60), T = 6.5; let en = 0, tt = 99;
+        VIE.push((dt, car) => { if (!car) return; const e = (i0 - car.idx + N) % N; if (!en && e < 12 && e > 0) { en = 1; tt = 0; } else if (en && e > 300 && e < N - 300) en = 0; tt += dt;
+          deux.forEach(({ p, ailes }, k) => { const u = (tt - k * 0.35) / T; p.visible = u > 0 && u < 1; if (!p.visible) return; p.position.set(A[0] + (B[0] - A[0]) * u, sA.y + 6.5 + 2.5 * u - k * 1.2, A[1] + (B[1] - A[1]) * u + k * 3); p.rotation.set(0, Math.atan2(-(B[1] - A[1]), B[0] - A[0]), 0);
+            ailes.forEach((w, j) => { w.rotation.x = (j ? -1 : 1) * 0.6 * Math.sin(tt * 9 + k); }); }); }); }
+      { const q = S[150], [x, z] = bord(q, 1, q.w + 6), jc = mobile('jacare', { peau: mat('peinture', { c: 0x5a6a38 }), oeil: or }, x, MAR, z, Math.atan2(-q.tz, q.tx) + 0.5, 1.8); let fond = 0; // un caïman au ras de l'eau du marais : il s'enfonce quand on arrive
+        VIE.push((dt, car) => { if (car) { const e = (150 - car.idx + N) % N; if (e < 16 && e > 0) fond = 1; else if (e > 300 && e < N - 300) fond = 0; } jc.position.y += ((fond ? MAR - 0.8 : MAR) - jc.position.y) * Math.min(1, dt * 1.2); }); }
+      { const n = 150, PP = new Float32Array(n * 3).fill(-999), CC = new Float32Array(n * 3), gv = new THREE.BufferGeometry(), cols = h.TH.feuilles || [[0.5, 0.4, 0.15]], ZF = [[P(18) + 2, P(20) - 12], [P(24) + 2, P(28)]]; // des feuilles tombent de la canopée dans la montée des lacets, portées par le vent ; pas aux freinages des deux épingles
+        for (let k = 0; k < n; k++) CC.set(cols[k % cols.length], k * 3); gv.setAttribute('position', new THREE.BufferAttribute(PP, 3)); gv.setAttribute('color', new THREE.BufferAttribute(CC, 3));
+        const o = new THREE.Points(gv, new THREE.PointsMaterial({ size: 0.42, vertexColors: true })); o.frustumCulled = false; o.userData.dyn = 1; h.scene.add(o);
+        VIE.push((dt, car, t) => { if (!car) return; const on = ZF.some(([a, b]) => entre(car.idx, a, b)), fx = Math.cos(car.th), fz = Math.sin(car.th);
+          for (let k = 0; k < n; k++) { const j = k * 3; if (PP[j + 1] > -900) { PP[j] += (-1.2 + 0.8 * Math.sin(t * 2 + k)) * dt; PP[j + 1] -= (1.3 + (k % 5) * 0.2) * dt; PP[j + 2] += 0.8 * Math.cos(t * 1.7 + k) * dt;
+              const dx = PP[j] - car.x, dz = PP[j + 2] - car.z; if (PP[j + 1] < car.y - 0.5 || dx * fx + dz * fz < -8 || dx * dx + dz * dz > 8100) PP[j + 1] = -999; }
+            if (PP[j + 1] < -900 && on && Math.random() < dt * 1.5) { const a = 20 + Math.random() * 60, l = (Math.random() - 0.5) * 22; PP[j] = car.x + fx * a - fz * l; PP[j + 1] = car.y + 2 + Math.random() * 11; PP[j + 2] = car.z + fz * a + fx * l; } }
+          gv.attributes.position.needsUpdate = true; }); }
+
       // ---------- Z1, le camp de base (O-10) : tentes, table à cartes, caisses, 4×4 bâché, mât radio, dans la clairière de gauche ; l'expédition est là ----------
       { const P1 = { toile, bois, papier: mat('peinture', { c: 0xe8dcc0 }), lampe, fer, caisse: mat('peinture', { c: 0x5a6a3a }), vitre: noir, pneu: fer };
         for (const [x, z, r] of [[24, -19, 0.2], [44, -27, -0.1], [72, -26, 0.15], [94, -19, -0.3]]) pose('tente', P1, x, z, r).scale.setScalar(1.5);
         pose('tableCartes', P1, 58, -17, 0.3); pose('caisses', P1, 38, -13, 0.5); pose('caisses', P1, 82, -14, 2.2); pose('quatreQuatre', P1, 106, -15, 1.25); pose('matRadio', P1, 62, -44);
-        pose('feuCamp', { pierre, bois, flamme }, 50, -11); h.lum(25, 50, 16, -11, 0xffa040, 14, 1.8); pose('echafaudage', { bambou, planche }, 8, -22, 1.57, undefined, 4, 3); pose('tableCartes', P1, 84, -22, -0.4); pose('caisses', P1, 16, -12, 2.6); pose('caisses', P1, 66, -11, 0.2); pose('quatreQuatre', P1, 122, -18, 1.9);
-        for (const x of [20, 36, 52, 68, 84, 100]) { h.pose('boite', lampe, h.scene, [x, 19.2 - Math.abs(x - 60) * 0.004, -10.5], 0.3, 0.4, 0.3); } h.pose('boite', fer, h.scene, [60, 19.6, -10.5], 84, 0.05, 0.05); for (const x of [18, 102]) h.pose('boite', bois, h.scene, [x, 17.4, -10.5], 0.16, 4.6, 0.16); // une guirlande de lanternes le long de la route
-        pose('caisses', P1, -30, -12, 1); pose('barque', P1, -82, 236, 0.9); pose('caisses', P1, -108, 120, 2); // T-8 : les traces de l'expédition depuis le gué
+        pose('feuCamp', { pierre, bois, flamme }, 50, -11); flammeVive(50, g.hAt(50, -11) + 0.45, -11, 1.7, h.lum(25, 50, 16, -11, 0xffa040, 14, 1.8)); h.vapeur(50, g.hAt(50, -11) + 2.2, -11); /* le feu vit, sa lueur respire, il fume */ pose('echafaudage', { bambou, planche }, 8, -22, 1.57, undefined, 4, 3); pose('tableCartes', P1, 84, -22, -0.4); pose('caisses', P1, 16, -12, 2.6); pose('caisses', P1, 66, -11, 0.2); pose('quatreQuatre', P1, 122, -18, 1.9);
+        { const lant = [20, 36, 52, 68, 84, 100].map(x => { const p = new THREE.Group(); p.position.set(x, 19.6, -10.5); p.userData.dyn = 1; h.scene.add(p); h.pose('boite', lampe, p, [0, -0.4 - Math.abs(x - 60) * 0.004, 0], 0.3, 0.4, 0.3); return p; }); let souffle = 0; // les lanternes pendent à leur fil : elles se balancent, plus fort au passage des voitures
+          VIE.push((dt, car, t) => { if (car && car.x > -10 && car.x < 130 && Math.abs(car.z + 10.5) < 22 && Math.hypot(car.vx, car.vz) > 15) souffle = 1; souffle = Math.max(0, souffle - dt * 0.35); lant.forEach((p, k) => { p.rotation.x = (0.07 + 0.45 * souffle) * Math.sin(t * 2.6 + k * 1.3); }); });
+          const y0 = g.hAt(62, -44), feuR = h.mat('peinture', { lum: 1, c: 0xff5030 }), feux = [4, 7.5, 11].map(y => { const m = h.pose('boite', feuR, h.scene, [62.3, y0 + y, -44], 0.5, 0.6, 0.5); m.userData.dyn = 1; return m; }); VIE.push((dt, car, t) => feux.forEach((m, k) => { m.visible = (t / 0.45 | 0) % 3 === k; })); // les trois feux du mât radio s'allument tour à tour (visible alterné : rythme.js réécrit les couleurs)
+          mobile('toucan', { plume: noir, face: mat('peinture', { c: 0xf2ecd8 }), bec: mat('peinture', { c: 0xff8a1c }) }, 8, g.hAt(8, -22) + 8.25, -20.6, -Math.PI / 2, 1.7, 1); } /* un toucan perché sur l'échafaudage, tourné vers la route */ h.pose('boite', fer, h.scene, [60, 19.6, -10.5], 84, 0.05, 0.05); for (const x of [18, 102]) h.pose('boite', bois, h.scene, [x, 17.4, -10.5], 0.16, 4.6, 0.16); // une guirlande de lanternes le long de la route
+        pose('caisses', P1, -30, -12, 1); { const bq = pose('barque', P1, -82, 236, 0.9, 14.02); bq.userData.dyn = 1; VIE.push((dt, car, t) => { bq.rotation.z = 0.06 * Math.sin(t * 1.3); bq.position.y = 14.02 + 0.04 * Math.sin(t * 1.7); }); } /* la barque flotte au bord du gué (elle était posée sur le fond, sous l'eau) et tangue */ pose('caisses', P1, -108, 120, 2); // T-8 : les traces de l'expédition depuis le gué
         for (const [x, z] of [[58, -17], [30, -18], [90, -18]]) h.lum(30, x, 17.5, z, 0xffd890, 16, 1.4); torche(8, -1, 2); torche(60, -1, 2); torche(-40, -1); torche(-40, 1); }
 
       // ---------- Z2, le fromager (O-11) : dans l'axe du freinage de la chicane, la route le contourne ; échelle de corde et plateforme d'observation ----------
@@ -169,7 +241,7 @@
           h.ribbon(a, n, x, s => yc(s) + 0.22, x, s => yc(s) - 0.22, liane, 3); h.ribbon(a, n, x - 0.22, yc, x + 0.22, yc, liane, 3); // les deux câbles porteurs en lianes tressées, en chaînette
           h.ribbon(a, n, x, 1.3, x, 1.12, liane, 3); h.ribbon(a, n, sd * (W + 0.3), 0.3, sd * (W + 0.3), -0.25, planche, 4); // main courante, rive du tablier
           for (let k = 1; k < n; k++) { const s = S[a + k], [px, pz] = bord(s, sd, W + 0.7), hh = yc(s); susp.push([px, s.y + hh / 2, pz, 0, 0.09, hh, 0.09]); if (k % 3 === 0) poteaux.push([px, s.y + 0.65, pz, 0, 0.14, 1.3, 0.14]); }
-          for (const i of [a, b]) auBord('obelisque', CITE, i, sd, W + 1.9, 10.6); }
+          for (const i of [a, b]) { auBord('obelisque', CITE, i, sd, W + 1.9, 10.6); if (i === a || sd < 0) { const q = S[i], [x, z] = bord(q, sd, W + 1.9); SINGES.push([x, q.y + 11.05, z, vers(x, z, S[i - 24]), 1.8]); } } } // un singe assis au sommet de trois des obélisques (fixes : on arrive dans un goulet)
         inst(h, h.geo('bloc'), liane, susp); inst(h, h.geo('bloc'), planche, poteaux);
         for (const [i, rv] of [[a + 2, 0], [b - 2, Math.PI]]) { const r = repere(h, S[i]); h.pose('boite', ombre, r, [0, -9.2, rv ? -4.5 : 4.5], 2 * W + 6, 18, 9); } // les culées de pierre, dans la paroi de la gorge
         // la chute : un ruban blanc étroit et strié dans une entaille sombre de la falaise, qui se défait en nuage aux deux tiers ; pas de colonne ni de bloc translucide
@@ -184,21 +256,21 @@
             bas = [[cx + 0.6, 61, cz - 0.2, 10], [cx + 0.8, 59.4, cz - 2, 12], [cx + 1, 54, cz - 3, 14], [cx + 1, 44, cz - 3.4, 16], [cx + 1, 33.2, cz - 3.6, 18.5]],
             filet = [[cx + 9.4, 104, cz + 1.4, 1.6], [cx + 9.6, 90, cz + 0.6, 2.2], [cx + 9.8, 72, cz + 0.4, 2.8], [cx + 10, 61, cz + 0.4, 3.2]], filet2 = [[cx - 9, 86, cz + 1.4, 1.4], [cx - 9.2, 74, cz + 0.8, 2], [cx - 9.4, 61, cz + 0.6, 2.4]];
           for (const l of [haut, bas]) for (const q of l) q[3] *= 3; for (const q of filet) q[0] += 14; for (const q of filet2) q[0] -= 14; /* la grande chute de la carte : beaucoup d'eau, trois fois la largeur du prototype */
-          nappe(haut, e1, 3); nappe(haut, e2, 2.4, -0.4); nappe(bas, e1, 4.2); nappe(bas, e2, 3.3, -0.5); nappe(filet, e2, 0.2); nappe(filet2, e2, 0.2);
+          nappe(haut, e1, 3); nappe(haut, e2, 2.4, -0.4); nappe(bas, e1, 4.2); nappe(bas, e2, 3.3, -0.5);
+          nappe(bas.map(([x, y, z, w], k) => [x - 1.5 * k, y, z - 1 - 0.5 * k, w * (1.1 + 0.07 * k)]), e3, 5, -0.6); plat(ec, h.scene, [cx - 1, 111.5, cz + 1.6], 23, 3.4); /* à mi-hauteur la chute se défait : un voile troué, plus rapide, que le vent écarte vers l'ouest ; la lèvre bouillonne */ nappe(filet, e2, 0.2); nappe(filet2, e2, 0.2);
           // la chute prend toute la paroi du cirque : deux autres pans, au sud-est et à l'est (le mur de gauche vu du pont), chacun avec sa paroi de roche derrière
           for (const th of [Math.PI / 4, Math.PI / 2, Math.PI * 0.72]) { const G = new THREE.Group(); G.position.set(CIRQUE[0] + 30 * Math.sin(th), 0, CIRQUE[1] + 30 * Math.cos(th)); G.rotation.y = th; h.scene.add(G); const w = 27;
             h.pose('boite', mat('rocheMousse', { c: 0x4a4a44 }), G, [0, 72, 4.5], w + 8, 82, 3);
             const pan = [[0, 112, 3, w * 0.8], [0, 110.5, 1.4, w * 0.84], [0, 104, 0.4, w * 0.88], [0, 84, 0, w * 0.94], [0, 60, -0.6, w], [0, 33.2, -2.6, w * 1.1]]; nappe(pan, e1, 3, 0, G); nappe(pan, e2, 2.4, -0.45, G); }
           // la vapeur au pied : des bouffées rondes et douces qui montent du bassin, grossissent et s'effacent (un seul nuage de points, additif : chaque bouffée s'éteint en fonçant sa couleur)
-          { const n = 90, PP = new Float32Array(n * 3), CC = new Float32Array(n * 3), A = new Float32Array(n), gv = new THREE.BufferGeometry(); gv.setAttribute('position', new THREE.BufferAttribute(PP, 3)); gv.setAttribute('color', new THREE.BufferAttribute(CC, 3));
-            const o = new THREE.Points(gv, new THREE.PointsMaterial({ size: 28, map: h.mat('brume', { lum: 1 }).map, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); o.frustumCulled = false; o.userData.dyn = 1; o.renderOrder = 5; h.scene.add(o);
-            const nait = k => { const a = rnd() * Math.PI * 0.9 - 0.1, r = 12 + rnd() * 16; PP[k * 3] = CIRQUE[0] + r * Math.sin(a); PP[k * 3 + 1] = 33 + rnd() * 6; PP[k * 3 + 2] = CIRQUE[1] + r * Math.cos(a); A[k] = 0; };
-            for (let k = 0; k < n; k++) { nait(k); A[k] = rnd(); PP[k * 3 + 1] += A[k] * 46; }
-            VAP = dt => { for (let k = 0; k < n; k++) { A[k] += dt / 9; if (A[k] > 1) nait(k); PP[k * 3 + 1] += 5.2 * dt; PP[k * 3] -= 1.2 * dt; const f = 0.075 * Math.sin(Math.PI * Math.sqrt(A[k])); CC[k * 3] = CC[k * 3 + 1] = CC[k * 3 + 2] = f; } gv.attributes.position.needsUpdate = gv.attributes.color.needsUpdate = true; }; }
+          // la vapeur : beaucoup de petites bouffées chaudes (à contre-jour) qui montent du bassin, un panache qui dépasse la falaise, et des embruns que le vent pousse en travers du tablier du pont
+          { const nc = () => { const a = alea() * Math.PI * 0.9 - 0.1, r = 12 + alea() * 16; return [CIRQUE[0] + r * Math.sin(a), 33 + alea() * 6, CIRQUE[1] + r * Math.cos(a)]; };
+            bouffees(200, nc, { vie: 10, vy: 5.6, taille: 14, f: 0.24, c: [1, 0.95, 0.82] }); bouffees(40, () => { const p = nc(); p[1] += 50; return p; }, { vie: 11, vy: 4.4, vx: -2.2, taille: 24, f: 0.12, c: [1, 0.97, 0.88] });
+            bouffees(130, () => [1001 + alea() * 24, 62.5 + alea() * 8, 168 + alea() * 78], { vie: 4, vx: -7.5, vy: 0.7, taille: 7, f: 0.17, port: 160 }); }
           { const P = [], U = [], I = [], NA = 14; for (let j = 0; j <= NA; j++) { const a = Math.PI * j / NA, c = Math.cos(a), sn = Math.sin(a); P.push(cx + 1 + c * 24, 33.12, cz - 3.2 - sn * 2, cx + 1 + c * 34, 33.12, cz - 3.2 - sn * 26); U.push(j / NA * 5, 0, j / NA * 5, -1.6);
               if (j) { const a0 = (j - 1) * 2; I.push(a0, a0 + 1, a0 + 2, a0 + 2, a0 + 1, a0 + 3); } }
             const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); ge.setIndex(I); ge.computeVertexNormals();
-            const o = new THREE.Mesh(ge, ec); o.userData.dyn = 1; h.scene.add(o); } }
+            const o = new THREE.Mesh(ge, ec); o.userData.dyn = 1; h.scene.add(o); const o2 = new THREE.Mesh(ge.clone().translate(0, 0.06, 0), ecV); o2.userData.dyn = 1; h.scene.add(o2); } /* une seconde couronne, plus rapide : le bassin bouillonne */ }
         inst(h, h.geo('rocher'), mat('rocheMousse'), [[cx - 7, 88, cz + 1, 0.4, 3.2, 2.2, 2], [cx + 3, 74, cz + 0.8, 1.9, 3.6, 2, 2], [cx - 2, 58, cz + 0.4, 2.7, 4.4, 2.4, 2.4], [cx + 7, 96, cz + 1, 0.9, 2.6, 1.8, 2], [cx - 6, 36, cz - 3, 1, 4, 2.4, 3], [cx + 5, 35.5, cz - 4, 2.2, 3.4, 2, 3]]); }
 
       // ---------- Z5, le temple-grotte (O-14) : une façade taillée dans la falaise autour de chaque portail, braseros allumés ----------
@@ -208,15 +280,21 @@
           for (let k = 0; k < 9; k++) pose((rnd() - 0.5) * 2 * (w + 5), H + 5 + rnd() * 22, 0.5 + rnd() * 2.5, 5 + rnd() * 5);
           inst(h, h.geo('rocher'), mat('rocheMousse'), rr); }
         for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 2.2), 0, 5); b.scale.setScalar(1.7); r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
-        r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2); } }
+        r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); flammeVive(q.x, q.y - 0.55, q.z, 1.5, h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2)); } } // les braseros des portails vacillent, et leur lueur avec eux
+      { const cs = Array.from({ length: 56 }, () => { const q = S[t0 + 1 + (alea() * 11 | 0)], [x, z] = bord(q, alea() < 0.5 ? -1 : 1, alea() * 4), v = 6 + alea() * 4; return { x, y: q.y + 4.6 + alea() * 2.4, z, r: 0, vx: -q.tx * v + (alea() - 0.5) * 2.4, vy: -0.3 + alea() * 0.8, vz: -q.tz * v + (alea() - 0.5) * 3, e: [0.45, 0.22, 1.5] }; });
+        envol(inst(h, h.geo('bloc'), mat('peinture', { c: 0x0c0a0a }), cs.map(q => [q.x, q.y, q.z])), cs, t0 + 4, { D: 45, T: 5, g: 0.12, bat: 30, cache: 1 }); } // une nuée de chauves-souris sort de la grotte quand on y entre : au ras de la voûte, vers le jour
 
+      const FUYARDS = []; // les singes qui fuient à l'approche : [échantillon, x, y, z, côté]
       // ---------- Z6, la descente des idoles (O-15, T-6) : des statues debout de plus en plus rapprochées jusqu'à l'arc ; la grande idole assise dans l'axe de l'équerre ----------
-      { const st = []; let sd = 1; for (const d of [22, 42, 62, 84, 124, 164, 244, 324, 404, 484, 564]) { const i = P(52) - (d >> 1), s = S[i], [x, z] = bord(s, sd, s.w + 1.6); if (libre(x, z)) st.push([x, s.y - 0.4, z, Math.atan2(s.x - x, s.z - z), 1.5 + (d < 100 ? 0.3 : 0)]); sd = -sd; }
+      { const st = []; let sd = 1; for (const d of [22, 42, 62, 84, 124, 164, 244, 324, 404, 484, 564]) { const i = P(52) - (d >> 1), s = S[i], [x, z] = bord(s, sd, s.w + 1.6); if (libre(x, z)) { st.push([x, s.y - 0.4, z, Math.atan2(s.x - x, s.z - z), 1.5 + (d < 100 ? 0.3 : 0)]); if (d === 324) FUYARDS.push([i, x, s.y - 0.4 + 5.32, z, sd]); } sd = -sd; }
         const yB = g.hAt(BASSIN[0], BASSIN[1]) + 1.5; for (const [dx, dz, a, t] of [[-17, 0, 0.5, 2.6], [-9, -15, 0.3, 1.5], [-9, 15, 0.7, 1.5]]) st.push([BASSIN[0] + dx, g.hAt(BASSIN[0] + dx, BASSIN[1] + dz) - 0.3, BASSIN[1] + dz, Math.PI * a, t]); // les gardiens du bassin
         { const rr = []; for (let k = 0; k < 12; k++) { const a = k / 12 * 6.283 + rnd() * 0.3, t = 1.4 + rnd() * 1.6; rr.push([BASSIN[0] + 13.5 * Math.cos(a), g.hAt(BASSIN[0] + 13.5 * Math.cos(a), BASSIN[1] + 13.5 * Math.sin(a)) + 0.2, BASSIN[1] + 13.5 * Math.sin(a), rnd() * 6, t * 1.3, t, t * 1.2]); } inst(h, h.geo('rocher'), mat('rocheMousse'), rr);
-          h.pose('boite', coule(h.mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 }), 0.015, 0.03), h.scene, [BASSIN[0], yB, BASSIN[1]], 30, 0.1, 30).userData.dyn = 1; }
+          h.pose('boite', coule(h.mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 }), 0.015, 0.03), h.scene, [BASSIN[0], yB, BASSIN[1]], 30, 0.1, 30).userData.dyn = 1;
+          h.pose('boite', pail(2, 2, 0.03, -0.05), h.scene, [BASSIN[0], yB + 0.09, BASSIN[1]], 30, 0.02, 30).userData.dyn = 1; h.pose('boite', pail(1.5, 2.6, -0.04, -0.02), h.scene, [BASSIN[0], yB + 0.11, BASSIN[1]], 30, 0.02, 30).userData.dyn = 1; } // le bassin sacré scintille
         insts(h, 'statueDebout', CITE, st);
-        pose('idoleAssise', CITE, 508, 410, Math.PI / 2).scale.setScalar(1.6); for (const dz of [-6, 6]) { const p = pose('torche', { bois: fer, fer, flamme }, 518, 410 + dz); p.scale.setScalar(1.6); h.lum(P(43), 518, g.hAt(518, 410) + 4.5, 410 + dz, 0xffa040, 20, 2); } }
+        pose('idoleAssise', CITE, 508, 410, Math.PI / 2).scale.setScalar(1.6); for (const dz of [-6, 6]) { const p = pose('torche', { bois: fer, fer, flamme }, 518, 410 + dz); p.scale.setScalar(1.6); h.lum(P(43), 518, g.hAt(518, 410) + 4.5, 410 + dz, 0xffa040, 20, 2); }
+        { const gv = new THREE.BufferGeometry(); gv.setAttribute('position', new THREE.Float32BufferAttribute([510.4, g.hAt(508, 410) + 5.6, 410], 3)); const m = new THREE.PointsMaterial({ size: 7, map: BRUME, color: 0, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), o = new THREE.Points(gv, m); o.frustumCulled = false; o.userData.dyn = 1; h.scene.add(o);
+          VIE.push((dt, car) => { if (!car) return; const d = Math.hypot(car.x - 510, car.z - 410), k = ss(210, 120, d) * ss(30, 70, d) * (car.x > 510 ? 1 : 0); m.color.setRGB(k, 0.72 * k, 0.24 * k); }); } } // l'or de l'idole accroche le soleil : un éclat qui monte et retombe avec la distance, sans clignoter
 
       // ---------- Z7, la cité perdue (O-16) : l'arc triple, la place dallée au bord de la rivière, la statue qui montre le nord sur son socle noir, quatre obélisques, le grand édifice ; l'expédition y a monté ses échafaudages ----------
       { const ia = P(52), ra = repere(h, S[ia]); h.pose('arcTriple', CITE, ra, [0, -0.5, 0], 7.5); h.pose('echafaudage', { bambou, planche }, ra, [15.5, -0.3, 4.2], 8, 3);
@@ -239,6 +317,9 @@
           roches.push([p.x + nx * f, p.y - 0.4, p.z + nz * f, rnd() * 6, 1.6 + rnd() * 1.4, 1.2 + rnd(), 1.6 + rnd() * 1.4]); ecume.push([q.x + nx * f * 0.9, (p.y + q.y) / 2 + 0.3, q.z + nz * f * 0.9, Math.atan2(nx, nz), 2.2, 0.3 + (p.y - q.y) * 0.5, 3.4]); }
         for (let k = 0; k < 46; k++) { const x = -112 + rnd() * 104, z = 232 + rnd() * 76, r = riv(x, z); if (r.d < r.p.w && g.dAt(x, z) > 13.5) (rnd() < 0.6 ? dallesG : roches).push([x, 14.05, z, rnd() * 6, 2 + rnd() * 2.5, 0.6, 1.4 + rnd() * 2]); }
         inst(h, h.geo('rocher'), mat('rocheMousse'), roches); inst(h, h.geo('bloc'), tombe(8, 0.95, 0.7, 0xe8f4f0), ecume); inst(h, h.geo('bloc'), mat('bordureMousse'), dallesG);
+        { const ux = -0.9, uz = -0.43, ry = Math.atan2(ux, uz), sl = dallesG.map(([x, , z, , w]) => [x + ux * (w / 2 + 2.2), 14.3, z + uz * (w / 2 + 2.2), ry, 1.4, 0.02, 4.4]); for (const d of [-1, 1]) sl.push([-12 + ux * 3 - uz * d * 0.9, 14.3, 306 + uz * 3 + ux * d * 0.9, ry + d * 0.3, 1.3, 0.02, 5.5]);
+          inst(h, h.geo('bloc'), ec, sl).userData.dyn = 1; } // un sillage d'écume derrière chaque dalle et derrière la statue : on voit que la rivière traverse
+        { const cp = [0, 1, 2, 3].map(k => { const q = S[P(63) + 10 + k * 3], [x, z] = bord(q, 1, q.w + 2.5 + (k & 1) * 2); return [x, 14.25 - 0.28, z, Math.atan2(-q.tz, q.tx) + (k & 1 ? 0.5 : -0.3), k === 3 ? 0.8 : 1.3]; }); insts(h, 'capivara', { poil: mat('peinture', { c: 0x8a6a42 }) }, cp); } // une famille de capybaras dans l'eau peu profonde, au bord amont du gué
         const st = pose('statueDebout', CITE, -12, 306, -2.2, 12.2, 2.2); st.rotation.z = 0.16; }
       inst(h, h.geo('tronc'), ecorce, futs); cimes.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k], l)); // tous les arbres, ceux de la cité et le houppier du fromager compris
       insts(h, 'torche', { bois, fer, flamme }, torches);
@@ -248,9 +329,15 @@
       // ---------- le saut de la descente (C-6) : les degrés écroulés d'un escalier de la cité, de part et d'autre du tremplin ----------
       { const deg = []; for (let k = 0; k < 7; k++) for (const sd of [-1, 1]) { const s = S[P(49) - 18 + k * 3], [x, z] = bord(s, sd, s.w + 2.2); deg.push([x, s.y - 0.6 + k * 0.12, z, h.across(s) + (rnd() - 0.5) * 0.3, 2.6, 1.2 + k * 0.25, 5.2]); }
         inst(h, h.geo('bloc'), pierre, deg); for (const sd of [-1, 1]) auBord('obelisque', CITE, P(49) + 2, sd, S[P(49)].w + 2.4, 8); }
+      // les singes (macacos-prego) : assis sur les obélisques du pont (fixes) ; sur une statue de la descente, sur les degrés et les obélisques du saut, ils bondissent vers les arbres quand la voiture arrive
+      { const peauS = { poil: mat('peinture', { c: 0x4a3626 }), face: mat('peinture', { c: 0xd0b890 }) }, iS = P(49); insts(h, 'singe', peauS, SINGES);
+        for (const sd of [-1, 1]) { const q = S[iS + 2], [x, z] = bord(q, sd, S[iS].w + 2.4); FUYARDS.push([iS + 2, x, q.y - 0.35 + 8.85, z, sd]); const q2 = S[iS - 6], [x2, z2] = bord(q2, sd, q2.w + 2.2); FUYARDS.push([iS - 6, x2, q2.y + 0.98, z2, sd]); }
+        for (const [lot, i0] of [[FUYARDS.filter(f => f[0] < iS - 10), iS - 28], [FUYARDS.filter(f => f[0] >= iS - 10), iS - 4]]) { if (!lot.length) continue;
+          const bs = lot.map(([i, x, y, z, sd]) => { const q = S[i], v = 4 + alea() * 2; return { x, y, z, r: vers(x, z, S[i - 16]), vx: -q.tz * sd * v, vy: 6.5 + alea() * 2, vz: q.tx * sd * v, e: [1.8, 1.8, 1.8] }; });
+          envol(insts(h, 'singe', peauS, bs.map(q => [q.x, q.y, q.z, q.r, 1.8])), bs, i0, { D: 26, T: 1.5, g: -4 }); } }
       for (const [m, b] of NAP) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(b.P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(b.U, 2)); ge.setIndex(b.I); ge.computeVertexNormals();
         const o = new THREE.Mesh(ge, m); o.userData.dyn = 1; o.frustumCulled = false; o.renderOrder = m === e1 ? 1 : m === e2 ? 2 : 3; h.scene.add(o); } // la nappe de derrière d'abord, puis celle de devant, puis voiles et écume
-      let tv = 0; return dt => { tv += dt; if (VAP) VAP(Math.min(dt, 0.1)); for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
+      let tv = 0; return (dt, now, car) => { tv += dt; for (const f of VIE) f(dt, car, tv); for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
     },
   });
 })();

@@ -97,5 +97,21 @@
       return [...paire(sd => [['pierre', 26, T, 4, sd * (R + 13), T / 2, 0], ['ombre', 2.2, 2.6, 3.6, sd * (R - 1.1), H - 0.9, 0], ['clair', 2.2, 17, 1, sd * (R + 3.4), 8.5, 2.3], ['clair', 3, 1, 1.6, sd * (R + 3.4), 17.5, 2.3]]).flat(),
         ['pierre', 2 * R, T - H - 0.4, 4, 0, H + 0.4 + (T - H - 0.4) / 2, 0], ...FORMES.arc(R, 1.3, 1.2, 11, y0, 0, 2.3), ['clair', 2 * R + 12, 1, 1.4, 0, 18.5, 2.3],
         ['relief', 2.6, 4.2, 0.5, 0, 12.6, 2.2], ['relief', 1.5, 1.5, 0.5, 0, 15.5, 2.2], ['or', 1.9, 0.3, 0.55, 0, 16.25, 2.2], ['relief', 5.4, 0.7, 0.5, 0, 13.8, 2.2], ...paire(sd => ['relief', 0.7, 2, 0.5, sd * 2.6, 12.9, 2.2])]; },
+    // ---------- la faune (propositions/VIE-chapada.md §3) : des silhouettes qui se lisent en roulant, la tête vers +X, origine au sol ou aux pattes ----------
+    // un oiseau en vol (ara, vautour) : corps, tête, bec, longue queue ; les ailes sont à part (aileOiseau, sur un pivot à l'épaule, pour battre). l = longueur de la queue
+    oiseauVol: (l = 1) => [['plume', 0.9, 0.3, 0.32, 0, 0, 0], ['plume', 0.3, 0.28, 0.28, 0.55, 0.06, 0], ['bec', 0.2, 0.14, 0.12, 0.76, 0.02, 0], ['queue', l, 0.08, 0.24, -0.4 - l / 2, 0, 0]],
+    aileOiseau: (e = 1.5) => [['plume', 0.55, 0.06, e, 0, 0, e / 2], ['queue', 0.4, 0.05, e * 0.5, -0.1, 0, e * 1.2]], // origine à l'épaule, l'aile part vers +Z
+    // singe capucin assis : tronc, tête, museau clair, queue en crochet
+    singe: () => [['poil', 0.5, 0.6, 0.45, 0, 0.3, 0], ['poil', 0.34, 0.34, 0.34, 0.1, 0.78, 0], ['face', 0.14, 0.16, 0.2, 0.28, 0.74, 0], ['poil', 0.1, 0.7, 0.1, -0.32, 0.5, 0, [0, 0, 0.3]], ['poil', 0.3, 0.1, 0.1, -0.5, 0.86, 0],
+      ...paire(sd => ['poil', 0.14, 0.4, 0.14, 0.22, 0.2, sd * 0.22])],
+    // l'onça (jaguar) couchée, la tête relevée : la voiture porte son nom et sa robe
+    onca: () => [['robe', 1.7, 0.5, 0.6, 0, 0.3, 0], ['robe', 0.5, 0.42, 0.46, 1, 0.6, 0], ['museau', 0.2, 0.2, 0.3, 1.3, 0.52, 0], ...paire(sd => ['tache', 0.1, 0.14, 0.1, 0.92, 0.86, sd * 0.16]),
+      ['robe', 1.1, 0.1, 0.1, -1.3, 0.12, 0.2, [0, 0.4, 0]], ...paire(sd => ['robe', 0.6, 0.16, 0.16, 0.75, 0.1, sd * 0.24]), ['tache', 1.2, 0.06, 0.4, -0.1, 0.57, 0]],
+    // toucan perché : corps noir, plastron blanc, grand bec orange
+    toucan: () => [['plume', 0.3, 0.5, 0.3, 0, 0.3, 0], ['plume', 0.26, 0.26, 0.26, 0.06, 0.66, 0], ['face', 0.1, 0.3, 0.24, 0.14, 0.42, 0], ['bec', 0.5, 0.14, 0.12, 0.42, 0.66, 0], ['plume', 0.34, 0.06, 0.16, -0.26, 0.14, 0]],
+    // caïman (jacaré) au ras de l'eau : le dos, la tête, la queue ; origine à la surface
+    jacare: () => [['peau', 1.6, 0.16, 0.5, 0, 0.02, 0], ['peau', 0.8, 0.14, 0.36, 1.1, 0.02, 0], ['peau', 1.4, 0.1, 0.22, -1.4, 0, 0], ...paire(sd => ['oeil', 0.1, 0.1, 0.1, 0.86, 0.12, sd * 0.14])],
+    // capybara debout : un tonneau sur quatre pattes courtes
+    capivara: () => [['poil', 1.1, 0.55, 0.5, 0, 0.5, 0], ['poil', 0.42, 0.4, 0.4, 0.66, 0.62, 0], ...paire(a => paire(b => ['poil', 0.14, 0.3, 0.14, a * 0.36, 0.15, b * 0.16])).flat()],
   });
 })();
