@@ -71,6 +71,8 @@
     berline: () => [['caisse', 4.7, 0.9, 1.8, 0, 0.75, 0, null, 1], ['caisse', 2.4, 0.6, 1.6, -0.3, 1.5, 0], ['vitre', 2.3, 0.45, 1.65, -0.3, 1.45, 0], ['pneu', 3.4, 0.6, 1.7, 0, 0.3, 0]],
     // REFS 7 — panneau de route sur deux poteaux (face vers -Z), 4 × 2 m
     panneauGES: () => [...paire(sd => ['poteau', 0.15, 3.6, 0.15, sd * 1.6, 1.8, 0]), ['plaque', 4, 2, 0.08, 0, 3.4, 0]],
+    // cabane du camp de pionniers (X = le long) : socle, murs de planches peintes, toit à deux pentes, pignons, deux fenêtres
+    cabanePio: () => [['socle', 9, 4, 6, 0, -1.9, 0], ['mur', 8.4, 2.8, 5.4, 0, 1.4, 0, null, 1], ...paire(sd => ['toit', 9.4, 0.25, 3.7, 0, 3.55, sd * 1.5, [sd * 0.52, 0, 0], 1]), ...paire(sd => ['mur', 0.2, 1.5, 3.2, sd * 4.1, 3.2, 0]), ...paire(sd => ['vitre', 1.4, 1, 0.1, sd * 2, 1.7, 2.72])],
     // REFS 7 — abri de bus en béton, mosaïque au fond (face vers +Z)
     abriBus: () => [['beton', 7, 0.4, 3, 0, 3, 0], ['mosaique', 7, 2.8, 0.3, 0, 1.4, -1.3], ...paire(sd => ['beton', 0.3, 2.8, 2.6, sd * 3.4, 1.4, 0]), ['banc', 4, 0.5, 0.6, 0, 0.5, -0.8]],
   });
