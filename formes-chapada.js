@@ -4,7 +4,7 @@
   const paire = f => [-1, 1].map(f);
   Object.assign(FORMES, {
     // REFS 4 : fougère arborescente (Cyathea) : stipe fin et brun, couronne de huit frondes arquées (h = taille)
-    fougereArbo: (h = 1) => [['stipe', 0.35 * h, 5 * h, 0.35 * h, 0, 2.5 * h, 0], ...Array.from({ length: 6 }, (_, k) => { const a = k / 6 * 6.2832;
+    fougereArbo: (h = 1) => [['stipe', 0.35 * h, 5 * h, 0.35 * h, 0, 2.5 * h, 0], ...Array.from({ length: 5 }, (_, k) => { const a = k / 5 * 6.2832;
       return ['fronde', 3.4 * h, 0.08, 0.9 * h, Math.cos(a) * 1.5 * h, 4.9 * h, Math.sin(a) * 1.5 * h, [0, -a, -0.35 - (k % 2) * 0.25]]; })],
     // REFS 4 et 5 : broméliacée : rosette de feuilles raides en étoile, une hampe rouge au centre
     bromelia: () => [...Array.from({ length: 6 }, (_, k) => ['feuille', 1.1, 0.06, 0.22, 0, 0.3, 0, [0, k * 0.5236, 0.55]]), ...Array.from({ length: 6 }, (_, k) => ['feuille', 1.1, 0.06, 0.22, 0, 0.3, 0, [0, k * 0.5236 + 3.1416, 0.55]]),
@@ -31,7 +31,7 @@
         p.setXYZ(i, x * (y > 0 ? 0.7 + 0.3 * u : 1 - 0.2 * u), y * (0.8 + 0.4 * u), z * (y > 0 ? 0.65 + 0.35 * (1 - u) : 1)); }
       g.computeVertexNormals(); return g; },
     // REFS 4 : fougère basse du sous-bois : six frondes en rosette qui s'ouvrent vers le haut
-    fougereBasse: () => Array.from({ length: 6 }, (_, k) => { const a = k / 6 * 6.2832; return ['fronde', 1.8, 0.05, 0.45, Math.cos(a) * 0.8, 0.45, Math.sin(a) * 0.8, [0, -a, 0.55]]; }),
+    fougereBasse: () => Array.from({ length: 4 }, (_, k) => { const a = k / 4 * 6.2832 + 0.4; return ['fronde', 1.8, 0.05, 0.45, Math.cos(a) * 0.8, 0.45, Math.sin(a) * 0.8, [0, -a, 0.55]]; }),
     // REFS 5 : maison de garimpeiro d'Igatu, en pierre sèche (w × d, murs de ht). ruine = 1 : sans toit, murs écroulés en marches, ouvertures vides ;
     // ruine = 0 : murs entiers, pignon, toit de tuiles à deux pans, porte de bois. Face vers -Z (la route)
     maisonIgatu: (w = 6, d = 5, ht = 3.2, ruine = 1) => { const e = 0.5, L = [], m = (x, y, z, a, b, c) => L.push(['pierre', a, b, c, x, y, z]);

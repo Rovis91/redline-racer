@@ -60,6 +60,7 @@ Sources générales :
   2. Des lianes qui pendent des branches basses au-dessus de la route ; des broméliacées épiphytes sur les troncs.
   3. Les verts : sombre `#2c4a2a`, moyen `#4f7a3a`, jeune `#8db04f` en contre-jour ; les troncs noirs et humides `#2a2420`, certains pâles (`#a8a08a`).
   4. Une brume rasante et des rayons de soleil entre les troncs.
+  5. Deux accents de couleur, réels : l'ipê en fleur (*Handroanthus*, jaune ou rose, en fin de saison sèche, sur les lisières et dans les vallées) et l'embaúba (*Cecropia*, pionnière de la forêt atlantique : fût pâle, couronne en parasol argentée). Sources : https://pt.wikipedia.org/wiki/Ipê-amarelo (l'arbre et sa floraison) ; https://pt.wikipedia.org/wiki/Embaúba (le genre *Cecropia*, sa silhouette).
 - **Anti-référence** : pas de mur de troncs identiques alignés (la V1), pas de jungle amazonienne géante et noire, pas de forêt de pins.
 - **Réserve** : les espèces précises (juçara, *Cyathea*) sont des choix plausibles de forêt atlantique de galerie ; aucune flore locale ne les confirme pour ce site.
 
