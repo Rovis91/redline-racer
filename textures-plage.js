@@ -191,3 +191,17 @@
     rayonDoux: () => [8, 64, (g) => { for (let y = 0; y < 64; y++) { g.fillStyle = 'rgba(255,240,200,' + ((1 - y / 64) ** 1.2 * 0.4).toFixed(3) + ')'; g.fillRect(0, y, 8, 1); } }],
   });
 })();
+
+// Textures de la refonte (propositions/PROPOSITION-plage.md). Règle DA-10 : aucune ligne sinusoïdale ni rayure périodique dans le sens de la marche sur une grande surface.
+(() => {
+  Object.assign(TEXTURES, {
+    // fil de banderoles de la feria (T-2) : triangles pointe en bas aux trois accents (rose, turquoise, jaune), fond transparent ; se répète le long du fil
+    banderole: () => [96, 16, (g, { R }) => { g.clearRect(0, 0, 96, 16); ['#e8468c', '#1fb5a8', '#f2c230', '#e8468c', '#f2c230', '#1fb5a8'].forEach((c, k) => { g.fillStyle = c; g.beginPath(); g.moveTo(k * 16 + 1, 1); g.lineTo(k * 16 + 15, 1); g.lineTo(k * 16 + 8, 15); g.fill(); }); R(g, '#4a3a2c', 0, 0, 96, 1); }],
+    // guirlande d'ampoules de couleur (grotte, muelle) : un fil et des ampoules aux trois accents, fond transparent
+    ampoules: () => [96, 8, (g, { R }) => { g.clearRect(0, 0, 96, 8); R(g, '#2a2420', 0, 1, 96, 1); ['#ffd070', '#e8468c', '#1fb5a8', '#ffd070', '#f2c230', '#e8468c'].forEach((c, k) => { R(g, c, k * 16 + 6, 2, 3, 4); }); }],
+    // dallage de la Quinta (REFS §3) : pavés rose brique de tailles inégales, bandes de pierre claire en travers tous les 8 m ; teintes voisines, pas de motif périodique fin
+    dallageQuinta: () => [64, 64, (g, { R, alea }) => { R(g, '#b9776a', 0, 0, 64, 64); for (let y = 0; y < 64; y += 4) for (let x = (y / 4 & 1) * 3; x < 64; x += 6 + (alea() * 3 | 0)) R(g, ['#ad6c60', '#c58476', '#b47266', '#bd7d70'][alea() * 4 | 0], x, y, 5 + (alea() * 2 | 0), 3); R(g, '#cfc8b8', 0, 0, 64, 4); for (let i = 0; i < 60; i++) R(g, '#9a5e54', alea() * 64 | 0, alea() * 64 | 0, 1, 1); }, 8],
+    // façade crépie : grain léger, salissure au pied, pour la zone teintée des maisons et des resorts
+    crepiClair: () => [64, 64, (g, { R, alea, voile }) => { R(g, '#f4f0e8', 0, 0, 64, 64); for (let i = 0; i < 260; i++) R(g, alea() < 0.5 ? '#e8e2d8' : '#fffdf6', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1); voile(g, 0.12, () => R(g, '#6a5a44', 0, 56, 64, 8)); }, 8],
+  });
+})();
