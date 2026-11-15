@@ -58,7 +58,17 @@
       if (ix < nx - 1 && iz < nz - 1) idx.push(k, k + nx, k + 1, k + 1, k + nx, k + nx + 1);
     }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-    const mesh = new THREE.Mesh(g, o.mat); mesh.receiveShadow = true; h.scene.add(mesh);
+    // couches (o.couches, sinon th.couches ; docs/MOTEUR-OPTIONS-CARTES.md) : jusqu'à 4 textures par-dessus o.mat, chacune avec son poids par sommet (pente, distance à la route, altitude) ; même passe de dessin
+    const couches = o.couches || h.TH.couches; let mt = o.mat;
+    if (couches && mt.map) {
+      const N = g.attributes.normal.array, C = new Float32Array(nx * nz * 4), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+      for (let k = 0; k < nx * nz; k++) {
+        const p = 1 - N[k * 3 + 1], d = D[k], y = Y[k], x = pos[k * 3], z = pos[k * 3 + 2], hs = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453 % 1; // p : 0 à plat, 1 à la verticale
+        couches.slice(0, 4).forEach((c, i) => { C[k * 4 + i] = Math.max(0, Math.min(1, (c.pente ? ss(c.pente[0], c.pente[1], p) : 1) * (c.bord ? 1 - ss(c.bord[0], c.bord[1], d) : 1) * (c.haut ? ss(c.haut[0], c.haut[1], y) : 1) * (c.bas ? 1 - ss(c.bas[0], c.bas[1], y) : 1) * (c.poids ? c.poids(x, z, y, p, d) : 1) + (c.bruit || 0) * hs)); });
+      }
+      g.setAttribute('couche', new THREE.BufferAttribute(C, 4)); mt = mt.clone(); mt.userData.couches = couches.slice(0, 4).map(c => ({ map: c.map || h.tx(...c.tex), rep: c.rep || 1 }));
+    }
+    const mesh = new THREE.Mesh(g, mt); mesh.receiveShadow = true; h.scene.add(mesh);
     const lire = A => (x, z) => { // interpolation bilinéaire dans la grille
       const fx = Math.max(0, Math.min(nx - 1.001, (x - x0) / pas)), fz = Math.max(0, Math.min(nz - 1.001, (z - z0) / pas)), ix = fx | 0, iz = fz | 0, a = fx - ix, b = fz - iz, k = iz * nx + ix;
       return (A[k] * (1 - a) + A[k + 1] * a) * (1 - b) + (A[k + nx] * (1 - a) + A[k + nx + 1] * a) * b;
