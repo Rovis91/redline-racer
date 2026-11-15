@@ -2212,7 +2212,7 @@
       //     stalactites partout et plus longues près des parois, draperies, eau turquoise au pied des parois, et des puits de lumière : trou du plafond, racines qui pendent, rayon en volume, tache de soleil sur l'eau ---
       { const pg = h.mat('paroiGrotte', { side: D, c: 0x5e5448 }), vt = h.mat('vouteGrotte', { side: D, c: 0x6a6258 }); pg.map.center.set(0.5, 0.5); pg.map.rotation = Math.PI / 2; // la hauteur de la paroi suit le haut de la texture
         for (const sd of [-1, 1]) h.ribbon(t0, nT, sd * (W - 0.2), 0, sd * (W - 0.2), 7.6, pg, 4);
-        h.ribbon(t0, nT, -W + 0.2, 7.6, W - 0.2, 7.6, vt, 12); couvre(t0, nT, -W + 3.2, W - 3.2, h.mat('solGrotte', { side: D, c: 0xd4c8ac, ...OFF }), 16);
+        h.ribbon(t0, nT, -W + 0.2, 7.6, W - 0.2, 7.6, vt, 12); couvre(t0, nT, -W + 3.2, W - 3.2, h.mat('solGrotte', { side: D, c: 0xb4a890, ...OFF }), 16);
         const eauG = h.mat('eauGrotte', { side: D, c: 0x3a5a6c, ...OFF }); eauG.map.center.set(0.5, 0.5); eauG.map.rotation = -Math.PI / 2; for (const sd of [-1, 1]) couvre(t0, nT, sd * (W - 0.2), sd * (W - 3.3), eauG, 6, 0.03);
         const stal = [], stalm = [], cordesG = [], flot = [], plongeurs = [];
         for (let k = 1; k < nT - 1; k += 2) { const i = (t0 + k) % N, s = S[i];
@@ -2226,7 +2226,7 @@
         // les puits de lumière, de plus en plus serrés vers la grande salle (le milieu de la grotte)
         const rayon = h.mat('rayonFort', ADD), cone = h.mat('rayonCone', ADD), trouM = h.mat('tache', { lum: 1, transparent: true, depthWrite: false, fog: false, side: D }, '255,252,235');
         const rr = [], cc = [], ts = [], tr = [], rac = [];
-        for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -4.8, 2.2], [0.36, 4.8, 1.6], [0.47, -4.2, 2.8], [0.56, 4.6, 1.8], [0.67, -4.8, 2.2], [0.78, 4.8, 2], [0.85, -4.6, 2.4], [0.91, 4.6, 2.6]]) {
+        for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -4.8, 2.2], [0.36, 4.8, 1.6], [0.47, -4.2, 2.8], [0.56, 4.6, 1.8], [0.67, -4.8, 2.2], [0.78, 4.8, 2], [0.86, -4.6, 2]]) {
           const i = (t0 + Math.round(nT * f)) % N, s = S[i], [x, z] = bord(s, 1, d), y = s.y + 7.58;
           tr.push([x, y, z, 0, R * 1.2, 1, R * 1.2]); cc.push([x, y, z, rnd() * 6, R * 1.1, 7.6, R * 1.1]); cc.push([x, y, z, rnd() * 6, R * 0.6, 7.6, R * 0.6]);
           for (const a of [0, 1.05, 2.1]) rr.push([x, y, z, a, R * 1.6, 7.6, 1]);
