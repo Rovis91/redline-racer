@@ -287,3 +287,25 @@ Passes de dessin : moyenne 160 par image (V1 117, canal environ 150, paris envir
 - Masquer les luminaires et les portails du tunnel par carte (`th.tun.sans: ['luminaires', 'portails']`) : aujourd'hui le décor les cache sous sa propre voûte et derrière des rochers.
 - Une surface « eau peu profonde » distincte du sable mou (`SURF`) : la place et la plage large partagent `surf.large: 'terre'`.
 - Le budget de 300 passes au pic : la passe de reflets redessine 120 objets ; un drapeau pour exclure le décor lointain des reflets (`userData.sansReflet`) le ferait passer sous 300.
+
+## Boucle vers 10/10 (demande de l'auteur après la revue finale)
+
+Chaque tour est noté par deux nouveaux relecteurs Sonnet (jamais les mêmes), sur un tour `pas=5` et un tour `pas=2` (le mouvement), avec les captures de canal et paris. Captures : `captures/t1-pas*` à `captures/t4-pas*`.
+
+| Tour | Commit | DA | Testeur | Ce qui a changé |
+|---|---|---|---|---|
+| A | 79bed1d | 6 | 7 | lots regroupés et écartés du champ, drapeaux et piquets de plage, chevrons de l'épingle, rayons et racines, garrigue au ras de la route |
+| B | db2d01f | 6,5 | 6,5 | bande roulable de 40 m bordée au ras, lianes et puits hors de la caméra, lagune mate à glissière, selva haute, nuages |
+| C | f41e4de | 6 | 6,5 | toit de palmes à deux pans, chevrons aux virages, bornes et cocotiers de la lagune, talus des bouches, mer en bandes, ciel en dégradé |
+| D | daa9702, 3474f3a | 6,5 | 6,5 | paravents sur la limite de la plage, pergola d'ombre et puits rapprochés à la sortie de la grotte, sol de grotte clair, broussaille plus claire, bourg sur dalles |
+
+**Arrêt** : trois tours de suite (B, C, D) sans faire monter la somme des deux notes au-dessus de celle du tour A (13).
+
+### Ce qui bloque
+
+1. **La plage libre contre la densité au ras de la route.** Chaque relecteur demande des objets entre 8 et 25 m de la route sur la plage, comme les murs et tribunes des références. Mais c'est justement la bande de sable roulable demandée par l'auteur : y poser des objets, c'est la boucher, ou en faire des fantômes qu'on traverse. Il faut que l'auteur tranche : bande plus étroite, ou obstacles réels (des piles de `place` en nombre, ce que sim.js gère pour un monument, pas pour un semis d'objets).
+2. **La grotte est le tunnel du moteur.** Elle fait 16 m de large et 8 m de haut, avec un plafond plat, des parois verticales, et ses propres luminaires et portails à cacher. Les relecteurs veulent une salle ouverte, une plateforme et un vrai cône de lumière sur l'eau noire : il faut un tunnel à largeur et hauteur variables dans game.js, hors de mon périmètre. Le muelle hérite de la même limite : il a la largeur de la route (16 m), alors que la fiche donne 8 à 10 m.
+3. **La lecture des images.** Les relecteurs voient les captures en 480 × 270. À cette taille, les détails bas-poly disparaissent : murets, topes, guichet, cordes, mouettes, racines. Plusieurs les réclament alors qu'ils existent. Les notes varient d'un demi-point d'un relecteur neuf à l'autre, et tous n'ouvrent qu'une partie des références et des images.
+4. **Le temps d'image.** La cible de 2 ms ne peut pas être vérifiée sur cette machine : la charge reste entre 50 et 80 %, et aucune carte n'y tient, canal et paris compris. Mesures côte à côte : plage 3,6 / 6,4 ms, canal 3,5 / 4,6 ms, paris 3,4 / 4,0 ms. Le budget de passes, lui, est tenu : pic à 286–288. Une mesure isolée a donné 303, prise à 74 % de charge.
+
+Densité au dernier profil : aucun vingtième vide ; le plus maigre est à 1,05 fois la médiane des références (sommets).
