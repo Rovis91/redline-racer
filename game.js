@@ -303,7 +303,7 @@
 
   // ciel en bandes (nuit, aube ou couchant selon la carte), étoiles, lune ou soleil
   const skyMat = mat('ciel', { lum: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars);
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, 16, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.cielSeg || 16, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
   const SD = new V3(...TH.astre.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('astre', TH.astre.col, TH.astre.ombre) }));
   sunDisc.scale.set(TH.astre.taille, TH.astre.taille, 1); scene.add(sunDisc);
@@ -486,6 +486,7 @@
     const val = (v, d) => s => { const f = FI.get(s) ?? 0; if (v == null) return d; if (typeof v === 'number') return v; if (typeof v === 'function') return v(f, s);
       let j = 0; while (j < v.length - 1 && v[j + 1][0] < f) j++; const [fa, a] = v[j], [fb, b] = v[Math.min(j + 1, v.length - 1)]; return fb > fa ? a + (b - a) * clamp((f - fa) / (fb - fa), 0, 1) : a; };
     const tw = FT ? s => s.w : () => W, hh = val(u.h, 8), vt = val(u.voute, 0), hm = s => hh(s) - vt(s), plaf = (s, x) => hm(s) + vt(s) * Math.sqrt(Math.max(0, 1 - (x / tw(s)) ** 2));
+    const SANS = new Set(u.sans || []); // th.tun.sans : ce que le moteur ne pose pas ('portails', 'luminaires' : les lumières restent, sans leurs boîtiers ; 'parois' : ni parois, ni voûte, ni coque, le décor de la carte les fait)
     const ouvert = k => (u.ouv || []).some(([a, b]) => k >= a * cT && k <= b * cT), pans = [] /* plafond : morceaux [début, longueur] hors des ouvertures */;
     for (let k = 0, a = -1; k <= cT; k++) { const o = ouvert(k) || k === cT; if (!o && a < 0) a = k; if (o && a >= 0) { pans.push([a, k - a + (k === cT && !ouvert(k))]); a = -1; } }
     tunMats.push(mat('chaussee', { lum: 1, side: THREE.DoubleSide, gloss: 0.3 }, ...u.sol), mat('paroi', LUMI2, u.murs[0], u.paroi, u.carreaux), mat('paroi', LUMI2, u.murs[1], u.paroi, u.carreaux), mat('plafond', LUMI2, u.plafond));
@@ -496,6 +497,7 @@
         const s = S[i % N], sd = k & 1 ? 1 : -1, x = s.x - s.tz * sd * (tw(s) - 1.7), z = s.z + s.tx * sd * (tw(s) - 1.7), yl = FT ? plaf(s, tw(s) - 1.7) - 0.15 : 7.85;
         if (FT && ouvert(i - T.t0)) continue;
         lum(i % N, x, s.y + yl - 0.65, z, u.neons[k & 1], 21, 3, 1);
+        if (SANS.has('luminaires')) continue;
         d.position.set(x, s.y + yl, z); d.rotation.set(0, across(s), 0); d.updateMatrix(); fx[k & 1].setMatrixAt(nf[k & 1]++, d.matrix);
         if (k % 6 === 3) pose('boitierSecours', mat('peinture', { lum: 1, c: u.portail }), scene, [s.x - s.tz * (tw(s) - 0.1), s.y + 2.6, s.z + s.tx * (tw(s) - 0.1)]).rotation.y = across(s); // boîtier de secours lumineux sur la paroi de droite
       }
@@ -508,9 +510,9 @@
     } else {
       const ng = s => -tw(s), ps = tw, dh = s => hh(s) + 2, NV = 10; // voûte : NV facettes d'une demi-ellipse, des naissances (hm) à la clé (hh)
       sol = ribbon(T.t0, cT, ng, 0, ps, 0, tunMats[0], 32);
-      ribbon(T.t0, cT, ng, hm, ng, 0, tunMats[1]); ribbon(T.t0, cT, ps, hm, ps, 0, tunMats[2]);
-      for (const sg of [-1, 1]) ribbon(T.t0, cT, s => sg * (tw(s) + 1.5), dh, s => sg * (tw(s) + 1.5), -u.coque, concrete).castShadow = true;
-      for (const [a, n] of pans) { // (chaque facette est un ruban à part, fondu ensuite avec ceux de sa matière : voir « fusion du décor fixe »)
+      if (!SANS.has('parois')) { ribbon(T.t0, cT, ng, hm, ng, 0, tunMats[1]); ribbon(T.t0, cT, ps, hm, ps, 0, tunMats[2]); }
+      if (!SANS.has('parois')) for (const sg of [-1, 1]) ribbon(T.t0, cT, s => sg * (tw(s) + 1.5), dh, s => sg * (tw(s) + 1.5), -u.coque, concrete).castShadow = true;
+      if (!SANS.has('parois')) for (const [a, n] of pans) { // (chaque facette est un ruban à part, fondu ensuite avec ceux de sa matière : voir « fusion du décor fixe »)
         for (let j = 0; j < NV; j++) { const x = q => s => -tw(s) * Math.cos(Math.PI * q / NV), y = q => s => hm(s) + vt(s) * Math.sin(Math.PI * q / NV); ribbon(T.t0 + a, n, x(j), y(j), x(j + 1), y(j + 1), tunMats[3]); }
         ribbon(T.t0 + a, n, s => -tw(s) - 1.5, dh, s => tw(s) + 1.5, dh, concrete).castShadow = true;
       }
@@ -524,7 +526,7 @@
     }
     if (MV) { tunMats[0].userData.mo = 1; tunMats[0].userData.mo0 = T.t0; if (SSR) { tunMats[0].userData.mou = 1; sol.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cT + 1) * 2 }, (_, j) => mouAt((T.t0 + (j >> 1)) % N)), 1)); } } // th.mouilleVisible : le sol du tunnel lit aussi MOT
     const pm = mat('peinture', { lum: 1, c: u.portail });
-    for (const i of [T.t0, T.t1]) { // portails lumineux
+    if (!SANS.has('portails')) for (const i of [T.t0, T.t1]) { // portails lumineux
       const s = S[i], g = new THREE.Group(); g.position.set(s.x, s.y, s.z); g.rotation.y = across(s); scene.add(g);
       pose('portailTunnel', { portail: pm }, g, [0, 0, 0], tw(s)); if (FT) g.scale.y = hh(s) / 8;
     }
@@ -1930,7 +1932,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     sky.position.copy(cam.position); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000); const pasL = sunFollow(car);
     // brouillard et ciel : nuit néon ↔ tunnel ; éclairs : flash double sur le ciel et l'éclairage (le tonnerre part de fxFrame)
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN, 320, lm);
-    skyMat.color.copy(WHITE).lerp(FOG_IN, lm);
+    skyMat.color.copy(WHITE).lerp(FOG_IN, TH.tun && TH.tun.cielJour ? 0 : lm); // th.tun.cielJour : le ciel garde sa couleur sous le tunnel (on voit le jour par la bouche et par les ouvertures)
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;
     hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * lm) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - lm); // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
     beams.forEach((b, i) => b.rotation.set(0, Math.atan2(cam.position.x - b.position.x, cam.position.z - b.position.z), Math.sin(now * 0.0004 * (i % 3 + 1) + i) * 0.5)); // les faisceaux de projecteurs font face à la caméra
