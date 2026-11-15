@@ -6,7 +6,7 @@
 //   --joueurs=2 : écran partagé (budget(2))      --fenetre : Chrome avec une fenêtre hors de l'écran au lieu de sans fenêtre      --fermer : ferme le Chrome gardé, puis sort
 // Bruit : la machine partagée fausse les temps (pas les passes de dessin ni les sommets). Une carte en échec est remesurée une fois : SUCCÈS, ÉCHEC (deux fois), ou INSTABLE (une sur deux),
 // avec la charge de la machine pendant la mesure. Au-delà de 40 % de charge, les millisecondes ne sont pas fiables.
-// Code de sortie 0 = tout passe. Variables : CHROME, PORT (8851, serveur outils/capture.py), DBG (9400, port de débogage du Chrome gardé).
+// Code de sortie 0 = tout passe. Variables : OPT (options de carte à essayer, JSON fusionné dans la carte : docs/MOTEUR-OPTIONS-CARTES.md), CHROME, PORT (8851, serveur outils/capture.py), DBG (9400, port de débogage du Chrome gardé).
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
 const RACINE = path.join(__dirname, '..'), PORT = +process.env.PORT || 8851, DBG = +process.env.DBG || 9400, BASE = 'http://127.0.0.1:' + PORT + '/index.html';
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));
@@ -47,7 +47,7 @@ const sortie = n => path.join(RACINE, 'captures', n);
     if (avecOrigines && !crochet) crochet = (await cmd('Page.addScriptToEvaluateOnNewDocument', { source: origines })).result.identifier;
     if (!avecOrigines && crochet) { await cmd('Page.removeScriptToEvaluateOnNewDocument', { identifier: crochet }); crochet = null; }
     for (let essai = 0; essai < 2; essai++) {
-      erreurs = []; const t0 = Date.now(); await cmd('Page.navigate', { url: BASE + '?auto&joueurs=' + J + '&carte=' + c });
+      erreurs = []; const t0 = Date.now(); await cmd('Page.navigate', { url: BASE + '?auto&joueurs=' + J + '&carte=' + c + (process.env.OPT ? '&opt=' + encodeURIComponent(process.env.OPT) : '') });
       for (let i = 0; i < 240; i++) { await dort(250); if (await evalue('!!(window.__g && __g.M && __g.M.id === ' + JSON.stringify(c) + ')', 5000).catch(() => false)) return Date.now() - t0; if (erreurs.length && i > 8) break; }
     }
     throw new Error('la carte ne se charge pas : ' + (erreurs[0] || 'délai'));
