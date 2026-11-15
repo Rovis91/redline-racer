@@ -1895,7 +1895,7 @@
     // Aucun ruban n'est posé à plat sur le terrain : ses mailles de 8 m le perçaient en festons (les « vagues » de la V1). Le bas-côté est un ruban en pente douce
     // depuis la chaussée, et le terrain est tenu 0,35 m sous lui (creux) ; les parois sont des maillages en strates, au sommet plat.
     chapada(h) {
-      const { THREE, S, N, W, rnd } = h, P = k => pt(h, k >= 32 ? k + 3 : k >= 2 ? k + 2 : k), // deux points ajoutés après le point 1 (la chicane du plateau) : le décor garde la numérotation d'avant
+      const { THREE, S, N, W, rnd } = h, P = k => pt(h, k >= 2 ? k + 2 : k), // deux points ajoutés après le point 1 (la chicane du plateau) : le décor garde la numérotation d'avant
          DS = { side: THREE.DoubleSide }, IX = new Map(S.map((s, i) => [s, i]));
       const dans = (i, a, b) => ((i - P(a) + N) % N) <= ((P(b) - P(a) + N) % N); // échantillon i entre les points a et b
       const entre = (i, a, b) => ((i - a + N) % N) <= ((b - a + N) % N); // idem, entre deux échantillons
