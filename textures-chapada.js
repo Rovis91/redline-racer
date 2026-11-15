@@ -48,6 +48,9 @@
       voile(g, 0.45, () => { for (let i = 0; i < 18; i++) R(g, '#8a8468', alea() * 58 | 0, alea() * 63 | 0, 3 + alea() * 9 | 0, 1); });
       voile(g, 0.35, () => { for (let i = 0; i < 9; i++) R(g, '#7fa8a0', alea() * 63 | 0, alea() * 40 | 0, 1, 10 + alea() * 22 | 0); });
       voile(g, 0.5, () => { for (let i = 0; i < 12; i++) R(g, '#3f5a2a', alea() * 58 | 0, alea() * 60 | 0, 3 + alea() * 6 | 0, 2 + alea() * 3 | 0); }); }],
+    // la voûte de la grotte : la même roche, mais calme (de grandes taches peu contrastées, aucun trait fin) ; les strates de rocheGrotte, étirées par la voûte et vues en rasant, scintillaient
+    vouteGrotte: () => [32, 32, (g, o) => { const { R, alea, voile } = o; R(g, '#2c2a24', 0, 0, 32, 32);
+      voile(g, 0.35, () => { for (let i = 0; i < 9; i++) R(g, alea() < 0.5 ? '#24221c' : '#36332b', alea() * 24 | 0, alea() * 24 | 0, 8 + alea() * 8 | 0, 8 + alea() * 8 | 0); }); }],
     // l'eau qui tombe, faite pour défiler (decors.js fait glisser la texture vers le bas à chaque image) : mèches claires et bleutées sur un voile translucide, trouées par où l'on voit la roche ;
     // tout boucle en hauteur (chaque mèche est dessinée deux fois, à y et y - 64). trous : nombre de trouées (la nappe de devant en a plus : on voit la première à travers)
     eauChute: (trous = 6) => [32, 64, (g, o) => { const { R, alea, voile } = o, B = (c, x, y, w, h) => { R(g, c, x, y, w, h); R(g, c, x, y - 64, w, h); };

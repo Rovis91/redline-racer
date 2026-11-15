@@ -1898,7 +1898,7 @@
       const { THREE, S, N, W, rnd, T } = h, DS = { side: THREE.DoubleSide }, P = k => pt(h, k), IX = new Map(S.map((s, i) => [s, i]));
       const cache = new Map(), mat = (n, o = {}) => { const k = n + JSON.stringify(o); return cache.get(k) || cache.set(k, h.mat(n, o)).get(k); }; // une matière par réglage : le moteur fond le décor fixe par matière
       const entre = (i, a, b) => ((i - a + N) % N) <= ((b - a + N) % N), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-      const COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
+      const VAP = [], COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
       const tombe = (trous, op, v, c = 0xc4d8d4) => coule(h.mat('eauChute', { lum: 1, c, side: THREE.DoubleSide, transparent: true, opacity: op, depthWrite: false, lisse: 1 }, trous), 0, v); // de l'eau qui tombe : la texture glisse vers le bas
       // une nappe d'eau : une bande courbe qui suit la chute. secs, de haut en bas : [x du milieu, y, z, largeur] ; u en travers, v = la hauteur (une répétition tous les 16 m) ; sens : de quel côté (z) elle bombe, vers qui regarde
       // Toutes les nappes d'une même matière sont fondues en une seule géométrie à la fin (une passe de dessin par matière, pas une par nappe) : NAP les accumule, en coordonnées du monde
@@ -1953,19 +1953,23 @@
           if (!k) continue; const g2 = ge.clone(); g2.translate(0, 0.04, 0); const e2 = new THREE.Mesh(g2, coule(h.mat('eauJade', { ...DS, transparent: true, opacity: op * 0.5, depthWrite: false, rep: [1.7, 0.6], c: 0xd8f0e0 }), 0.03, -0.85 * vit)); e2.userData.dyn = 1; h.scene.add(e2); } }
       h.pose('boite', coule(mat('eauMarais', { transparent: true, opacity: 0.85, c: 0x6a7a70 }), 0.012, 0.008), h.scene, [345, MAR - 0.05, 25], 440, 0.1, 250).userData.dyn = 1; // l'eau du marais : une nappe plate, le terrain en sort autour ; elle dérive à peine
       h.pose('boite', coule(h.mat('eauMarais', { transparent: true, opacity: 0.35, depthWrite: false, c: 0x9ab0a0, rep: [0.7, 0.7] }), -0.009, 0.014), h.scene, [345, MAR, 25], 440, 0.02, 250).userData.dyn = 1; // une seconde nappe qui dérive en sens croisé : les taches de ciel glissent
-      { const bornes = []; for (let i = 0; i < N; i += 3) if (gue(S[i]) && !enTunnel(i)) for (const sd of [-1, 1]) { const [x, z] = bord(S[i], sd, S[i].w + 0.5); bornes.push([x, S[i].y + 0.45, z, h.across(S[i]), 0.7, 1.5, 0.7]); } // des bornes de pierre des deux côtés de chaque passage dans l'eau
+      { const bornes = []; for (let i = 0; i < N; i += 3) if (gue(S[i]) && !enRiv(i) && !enTunnel(i)) for (const sd of [-1, 1]) { const [x, z] = bord(S[i], sd, S[i].w + 0.5); bornes.push([x, S[i].y + 0.45, z, h.across(S[i]), 0.7, 1.5, 0.7]); } // des bornes de pierre des deux côtés de chaque passage dans l'eau
         inst(h, h.geo('bloc'), mat('pierreCite'), bornes); }
       // ---------- la descente de la rivière : des rives de roche de part et d'autre du lit, un sillage d'écume derrière chaque borne, l'eau blanche qui tombe à chaque seuil et bouillonne au pied ----------
       { const rives = [], sill = [], bouil = [];
-        for (let i = iR0 - 6; i < iR1 + 8; i += 2) for (const sd of [-1, 1]) { const s = S[i], t = 1.3 + rnd() * 1.5, [x, z] = bord(s, sd, s.w + 3.4 + rnd() * 1.6); rives.push([x, s.y + 0.2 + rnd() * 0.4, z, rnd() * 6, t * 1.3, t, t * 1.2]);
-          if (rnd() < 0.5) { const [x2, z2] = bord(s, sd, s.w + 7.5 + rnd() * 3); rives.push([x2, s.y + 1 + rnd(), z2, rnd() * 6, 3 + rnd() * 2, 2.4 + rnd() * 2, 3 + rnd() * 2]); } }
+        for (let i = iR0 - 6; i < iR1 + 8; i += 2) for (const sd of [-1, 1]) { const s = S[i], t = 1.3 + rnd() * 1.5, [x, z] = bord(s, sd, s.w + 1.9 + rnd() * 1.2); rives.push([x, s.y + 0.2 + rnd() * 0.4, z, rnd() * 6, t * 1.3, t, t * 1.2]);
+          if (rnd() < 0.5) { const [x2, z2] = bord(s, sd, s.w + 6 + rnd() * 3); rives.push([x2, s.y + 1 + rnd(), z2, rnd() * 6, 3 + rnd() * 2, 2.4 + rnd() * 2, 3 + rnd() * 2]); } }
         for (let i = iR0; i < iR1; i += 3) for (const sd of [-1, 1]) { const s = S[i + 2], [x, z] = bord(s, sd, s.w - 0.3); sill.push([x, s.y + 0.2, z, h.across(s), 1.5, 0.02, 4.2]); }
         for (const p of [50, 51]) { const i = P(p) + 1, s = S[i], w = s.w + 2;
           { const a = S[i - 1], b = S[i + 1]; bouil.push([a.x, a.y + 0.12, a.z, h.across(a), 2 * w, 0.3, 1.8], [b.x, b.y + 0.5, b.z, h.across(b), 2 * w, 0.9, 2.6]); } const [x, z] = bord(S[i + 4], 0, 0); // l'eau blanche sur l'arête, le rouleau au pied
           bouil.push([x, S[i + 4].y + 0.24, z, h.across(S[i + 4]), 2 * w, 0.02, 11]);
           for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) { const [rx, rz] = bord(S[i - 1], sd, s.w + 1.6 + k * 1.6); rives.push([rx, S[i - 1].y + 0.3, rz, rnd() * 6, 1.8 + rnd(), 1.4 + rnd(), 1.8 + rnd()]); } }
         { const s = S[P(49) + 6], [x, z] = bord(s, 0, 0); bouil.push([x, s.y + 0.24, z, h.across(s), 2 * s.w + 3, 0.02, 14]); } // là où l'on retombe du saut
-        inst(h, h.geo('rocher'), mat('rocheMousse'), rives); inst(h, h.geo('bloc'), ec, [...sill, ...bouil]).userData.dyn = 1; }
+        inst(h, h.geo('rocher'), mat('rocheMousse'), rives); inst(h, h.geo('bloc'), ec, [...sill, ...bouil]).userData.dyn = 1;
+        // la rivière quitte la route par la droite : un grand tronc couché en travers de sa sortie, le long de la chaussée, pour qu'on ne la suive pas (la route file tout droit vers l'arc)
+        { const s = S[P(52) - 8], sd = [-1, 1].sort((a, b) => Math.hypot(...bord(s, a, 20).map((v, k) => v - [190, 490][k])) - Math.hypot(...bord(s, b, 20).map((v, k) => v - [190, 490][k])))[0], [x, z] = bord(s, sd, s.w + 2.2), ax = new THREE.Vector3(s.tx, 0.03, s.tz).normalize(), bois = mat('ecorceJungle');
+          const pos = (g, d, y) => { const o = new THREE.Mesh(g, bois); o.position.set(x + s.tx * d, s.y + y, z + s.tz * d); o.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), ax); h.scene.add(o); };
+          pos(new THREE.CylinderGeometry(1.3, 1.7, 46, 7), 0, 1.3); pos(new THREE.CylinderGeometry(3.6, 3.2, 1.2, 7), -23.5, 1.8); } }
       // ---------- la forêt, en trois épaisseurs (D-4) : le mur (une rangée de grands arbres de chaque côté, houppiers jointifs au-dessus de la route, sous-bois continu au pied),
       // la forêt (jusqu'à 90 m), le rideau (masses sans détail que la brume réduit à des silhouettes). Clairières voulues : le camp, la place de la cité, le cirque de la chute, la rivière ----------
       const racines = [], cimes = [[], [], []], futs = [], buissons = [[], []], fougeres = [], palmiers = [], rideau = [], feuillesG = [], heliconias = [], lianes = [];
@@ -2059,7 +2063,7 @@
         for (const [i, rv] of [[a + 2, 0], [b - 2, Math.PI]]) { const r = repere(h, S[i]); h.pose('boite', ombre, r, [0, -9.2, rv ? -4.5 : 4.5], 2 * W + 6, 18, 9); } // les culées de pierre, dans la paroi de la gorge
         // la chute : un ruban blanc étroit et strié dans une entaille sombre de la falaise, qui se défait en nuage aux deux tiers ; pas de colonne ni de bloc translucide
         const ch = (op) => mat('chuteFil', { lum: 1, c: 0xb4ccc8, transparent: op < 1, opacity: op, depthWrite: op === 1 }), cx = CIRQUE[0] + 3, cz = CIRQUE[1] + 28; // juste devant la paroi sud du cirque (elle monte à 30 m du centre)
-        h.pose('boite', mat('rocheMousse', { c: 0x4a4a44 }), h.scene, [cx, 72, cz + 3], 26, 80, 3);
+        h.pose('boite', mat('rocheMousse', { c: 0x4a4a44 }), h.scene, [cx, 72, cz + 3], 60, 80, 3);
         // des mèches d'eau de largeurs et de longueurs inégales, entrecoupées de ressauts de roche moussue ; en bas, l'eau se défait (mèches translucides) : de l'eau éclairée par le jour, pas un pavé lumineux
         // PROTOTYPE (propositions/OEIL-NEUF-chapada.md, modification 1) : l'eau coule. Des nappes courbes à la place des boîtes : la lame se décolle de la lèvre, tombe en s'élargissant sur le ressaut,
         // rebondit et s'étale jusqu'au bassin. Chaque nappe est doublée d'une seconde, plus trouée, plus rapide, 40 cm devant (le principe des deux couches défilantes de l'eau des exemples three.js, Water2,
@@ -2068,8 +2072,13 @@
           const haut = [[cx - 1, 111, cz + 2.6, 7], [cx - 1, 109.6, cz + 1.2, 7.6], [cx - 0.8, 106, cz + 0.4, 8.4], [cx - 0.5, 96, cz + 0.1, 9.4], [cx, 80, cz, 10.6], [cx + 0.4, 66, cz, 11.6], [cx + 0.6, 60, cz + 0.2, 12.4]],
             bas = [[cx + 0.6, 61, cz - 0.2, 10], [cx + 0.8, 59.4, cz - 2, 12], [cx + 1, 54, cz - 3, 14], [cx + 1, 44, cz - 3.4, 16], [cx + 1, 33.2, cz - 3.6, 18.5]],
             filet = [[cx + 9.4, 104, cz + 1.4, 1.6], [cx + 9.6, 90, cz + 0.6, 2.2], [cx + 9.8, 72, cz + 0.4, 2.8], [cx + 10, 61, cz + 0.4, 3.2]], filet2 = [[cx - 9, 86, cz + 1.4, 1.4], [cx - 9.2, 74, cz + 0.8, 2], [cx - 9.4, 61, cz + 0.6, 2.4]];
-          nappe(haut, e1, 1); nappe(haut, e2, 0.8, -0.4); nappe(bas, e1, 1.4); nappe(bas, e2, 1.1, -0.5); nappe(filet, e2, 0.2); nappe(filet2, e2, 0.2);
-          { const P = [], U = [], I = [], NA = 14; for (let j = 0; j <= NA; j++) { const a = Math.PI * j / NA, c = Math.cos(a), sn = Math.sin(a); P.push(cx + 1 + c * 9, 33.12, cz - 3.2 - sn * 2, cx + 1 + c * 26, 33.12, cz - 3.2 - sn * 22); U.push(j / NA * 5, 0, j / NA * 5, -1.6);
+          for (const l of [haut, bas]) for (const q of l) q[3] *= 3; for (const q of filet) q[0] += 14; for (const q of filet2) q[0] -= 14; /* la grande chute de la carte : beaucoup d'eau, trois fois la largeur du prototype */
+          nappe(haut, e1, 3); nappe(haut, e2, 2.4, -0.4); nappe(bas, e1, 4.2); nappe(bas, e2, 3.3, -0.5); nappe(filet, e2, 0.2); nappe(filet2, e2, 0.2);
+          { const V = new THREE.PlaneGeometry(1, 1), H = new THREE.PlaneGeometry(1, 1), deb = [], cou = []; H.rotateX(-Math.PI / 2); // la vapeur au pied : des bouffées debout qui montent du bassin, des nappes couchées par-dessus (on les voit d'en haut, du pont)
+            for (let k = 0; k < 26; k++) { const t = rnd(), ht = 40 + rnd() * 40 * (1 - t); deb.push([cx - 6 + (rnd() - 0.5) * 54, 31 + ht * 0.45, cz - 4 - t * 30, (rnd() - 0.5) * 0.8, 22 + rnd() * 16, ht, 1]); }
+            for (let k = 0; k < 9; k++) cou.push([cx - 2 + (rnd() - 0.5) * 36, 36 + k * 3.4, cz - 8 - rnd() * 18, rnd() * 6, 52 - k * 3, 1, 36 - k * 2]);
+            const vm = mat('brume', { lum: 1, c: 0xf0f6f0, transparent: true, opacity: 0.7, depthWrite: false, ...DS }); for (const [G, l] of [[V, deb], [H, cou]]) { const o = inst(h, G, vm, l); o.castShadow = o.receiveShadow = false; o.userData.dyn = 1; o.renderOrder = 4; VAP.push(o); } }
+          { const P = [], U = [], I = [], NA = 14; for (let j = 0; j <= NA; j++) { const a = Math.PI * j / NA, c = Math.cos(a), sn = Math.sin(a); P.push(cx + 1 + c * 24, 33.12, cz - 3.2 - sn * 2, cx + 1 + c * 34, 33.12, cz - 3.2 - sn * 26); U.push(j / NA * 5, 0, j / NA * 5, -1.6);
               if (j) { const a0 = (j - 1) * 2; I.push(a0, a0 + 1, a0 + 2, a0 + 2, a0 + 1, a0 + 3); } }
             const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); ge.setIndex(I); ge.computeVertexNormals();
             const o = new THREE.Mesh(ge, ec); o.userData.dyn = 1; h.scene.add(o); } }
@@ -2077,15 +2086,6 @@
 
       // ---------- Z5, le temple-grotte (O-14) : une façade taillée dans la falaise autour de chaque portail, braseros allumés ----------
       for (const [i, rv, H] of [[t0, 0, 9], [t1, Math.PI, 8]]) { const r = repere(h, S[i]); r.rotation.y += rv; h.pose('facadeTemple', CITE, r, [0, -0.3, 0.6], S[i].w, H);
-        if (!rv) { const w = S[i].w, eauB = coule(h.mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 }), 0, 0.25), voile = tombe(15, 0.5, 1.1, 0xe4f0ec);
-          // la grande chute du temple : elle tombe de toute la falaise au-dessus du portail, dans l'axe du pont. Elle se partage sur le fronton : deux nappes épaisses de part et d'autre, jusqu'à deux bassins ;
-          // au milieu elle se brise sur le fronton (la façade reste visible) et il n'en reste qu'un voile mince et troué devant l'ouverture, que les voitures traversent
-          for (const sd of [-1, 1]) { const x = sd * (w + 9.5), cote = [[x, 43, -9, 15], [x, 41.6, -6.4, 15.4], [x - sd * 0.3, 36, -3.6, 16], [x - sd * 0.5, 20, 0.6, 17], [x - sd * 0.6, 0.3, 3.2, 18]];
-            nappe(cote, e1, 2.2, 0, r, 1); nappe(cote, e2, 1.7, 0.45, r, 1); plat(eauB, r, [sd * (w + 11), 0.3, 10], 21, 16); plat(ec, r, [sd * (w + 10), 0.36, 7.2], 18, 9);
-            h.pose('boite', pierre, r, [sd * (w + 11), 0.1, 18.4], 22, 0.9, 1); h.pose('boite', pierre, r, [sd * (w + 0.9), 0.1, 10], 1, 0.9, 17); }
-          const milieu = [[0, 44, -9, 2 * w + 5], [0, 42.4, -6.2, 2 * w + 5], [0, 36, -3.4, 2 * w + 5], [0, 22, 0.4, 2 * w + 5], [0, 10.4, 2.2, 2 * w + 5]]; nappe(milieu, e1, 2, 0, r, 1); nappe(milieu, e2, 1.5, 0.45, r, 1);
-          nappe([[0, 10.6, 2.4, 2 * w], [0, 5, 2.9, 2 * w], [0, 0.1, 3.1, 2 * w]], voile, 1.3, 0, r, 1);
-          nappe([[0, 11, 2.7, 2 * w + 6], [0, 10, 2.7, 2 * w + 6]], ec, 4, 0, r, 1, 1); } // l'eau blanche qui se brise sur le fronton
         for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 2.2), 0, 5); b.scale.setScalar(1.7); r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
         r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2); } }
 
@@ -2126,7 +2126,7 @@
         inst(h, h.geo('bloc'), pierre, deg); for (const sd of [-1, 1]) auBord('obelisque', CITE, P(49) + 2, sd, S[P(49)].w + 2.4, 8); }
       for (const [m, b] of NAP) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(b.P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(b.U, 2)); ge.setIndex(b.I); ge.computeVertexNormals();
         const o = new THREE.Mesh(ge, m); o.userData.dyn = 1; o.frustumCulled = false; o.renderOrder = m === e1 ? 1 : m === e2 ? 2 : 3; h.scene.add(o); } // la nappe de derrière d'abord, puis celle de devant, puis voiles et écume
-      return dt => { for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
+      let tv = 0; return dt => { tv += dt; VAP.forEach((o, k) => o.position.y = 1.5 * Math.sin(tv * 0.6 + k * 2)); for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
     },
     // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
     // Le nord (z < 0) est la mer. Intérieurs : la grotte est le tunnel du moteur ; le marché et le lobby sont des halles posées autour de la route (toit haut, ombre franche), sans mode tunnel.

@@ -182,3 +182,11 @@ Auto-critique, ce qui reste en dessous :
 - La carte n'a pas été regardée en continu dans un navigateur : tout est jugé sur des suites d'images du pilote automatique (une image toutes les 0,1 à 3 s).
 - Le prototype n'a pas été vu de face ni de près : la caméra d'inspection de l'outil regarde la voiture, pas le décor.
 - Les temps d'image ont été pris sur une machine chargée à environ 30 % : les écarts entre cartes tiennent, les valeurs absolues non.
+
+## Retour de l'auteur (15 novembre), corrigé
+
+- **Chute du portail retirée.** À la place, la chute du cirque, à gauche du pont, est triplée en largeur (jusqu'à 55 m au pied) et noyée dans un nuage de vapeur qui monte du bassin jusqu'au-dessus du tablier. [Capture](img-chapada/retour-chute-vapeur.jpg).
+- **Voûte de la grotte** : texture à part (`vouteGrotte`, grandes taches, aucun trait fin, filtrage lissé). Les strates de `rocheGrotte`, étirées par la voûte et vues en rasant, scintillaient.
+- **Descente** : les bornes de pierre plantées dans le lit sont retirées, les rochers de rive ramenés au ras de la chaussée (ce qu'on voit comme lit est ce qui se roule). Un grand tronc couché barre la sortie de la rivière à droite, avant l'arc. [Capture](img-chapada/retour-descente-tronc.jpg).
+
+Pilote automatique : 79,2 s, aucun contact. Tests verts. Banc non exploitable ce jour-là (machine chargée à 40–47 %, touge lui-même à 5,9 ms).
