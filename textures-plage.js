@@ -128,8 +128,8 @@
     }],
     // eau de la lagune de mangrove : vert d'eau plus sombre que la mer, reflets du ciel en bandes
     eauLagune: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#3e7f76', 0, 0, 64, 64);
-      voile(g, 0.5, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#346a62' : '#4a8a80', alea() * 64 | 0, alea() * 64 | 0, 10 + (alea() * 20 | 0), 2); });
+      const { R, alea, voile } = o; R(g, '#4a7464', 0, 0, 64, 64);
+      voile(g, 0.5, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#3e6656' : '#58806e', alea() * 64 | 0, alea() * 64 | 0, 10 + (alea() * 20 | 0), 2); });
       for (let i = 0; i < 40; i++) R(g, '#a8e0e0', alea() * 64 | 0, alea() * 64 | 0, 3 + (alea() * 6 | 0), 1);
     }, 12],
     // enrochement de calcaire au pied de la chaussée de la lagune : blocs gris clair, ombres entre eux
