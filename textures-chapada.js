@@ -51,7 +51,16 @@
       for (let y = 0; y < 128; y += 16) for (let x = -(y & 16) / 2; x < 64; x += 16) { voile(g, 0.1 + alea() * 0.14, () => R(g, alea() < 0.5 ? '#5e5a4c' : '#8a8672', x, y, 16, 16)); voile(g, 0.75, () => { R(g, '#2c3a20', x, y, 1, 16); R(g, '#2c3a20', x, y, 16, 1); }); }
       voile(g, 0.55, () => semis(g, o, 220, ['#4d6a34', '#7fa83a', '#7a5a30'], 2, 2, 64, 128)); voile(g, 0.3, () => R(g, '#b0aa94', 56, 0, 8, 128)); }],
     // bordure de pierre basse et talus : pierre moussue ; pierre de la cité : quartzite rosé, à l'ombre, socle noir
-    bordureMousse: pierre('#6a6656', 0.8), pierreCite: pierre('#b09a86', 0.45), pierreOmbre: pierre('#6a5e56', 0.6), socleNoir: pierre('#26221f', 0.25),
+    bordureMousse: pierre('#6a6656', 0.8), pierreCite: pierre('#b09a86', 0.45), pierreClaire: pierre('#cbb8a0', 0.3), pierreOmbre: pierre('#6a5e56', 0.6), socleNoir: pierre('#26221f', 0.25),
+    // l'attique de l'arc triple : des lignes de signes inconnus gravés (Manuscrit 512)
+    inscription512: () => [128, 16, (g, o) => { const { R, alea, voile } = o; R(g, '#b8a48e', 0, 0, 128, 16); voile(g, 0.2, () => semis(g, o, 120, ['#000', '#fff'], 1, 1, 128, 16));
+      for (const y of [3, 10]) for (let x = 3; x < 124; x += 4 + (alea() * 2 | 0)) { const k = alea() * 5 | 0; R(g, '#3a2e26', x, y, k === 0 ? 3 : 1, 4); if (k > 1) R(g, '#3a2e26', x, y + (k === 2 ? 0 : 3), 3, 1); if (k === 4) R(g, '#3a2e26', x + 2, y, 1, 4); } }],
+    // toile écrue des tentes, planches inégales du pont, bambou
+    toileTente: () => [32, 32, (g, o) => { const { R, voile } = o; R(g, '#d8c89a', 0, 0, 32, 32); voile(g, 0.14, () => semis(g, o, 80, ['#000', '#fff'], 2, 1, 32, 32)); voile(g, 0.3, () => { R(g, '#8a7a50', 0, 15, 32, 1); R(g, '#8a7a50', 15, 0, 1, 32); }); }],
+    planchesPont: () => [64, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#6a5236', 0, 0, 64, 64);
+      for (let y = 0; y < 64; y += 8) { voile(g, 0.1 + alea() * 0.25, () => R(g, alea() < 0.5 ? '#000' : '#e8c890', 0, y, 64, 8)); voile(g, 0.8, () => R(g, '#1c140c', 0, y + 7, 64, 1)); const e = alea() * 5 | 0; voile(g, 0.8, () => { R(g, '#1c140c', 0, y, e, 8); R(g, '#1c140c', 64 - (alea() * 5 | 0), y, 5, 8); }); }
+      voile(g, 0.2, () => semis(g, o, 160, ['#000', '#fff'], 3, 1)); voile(g, 0.5, () => semis(g, o, 14, ['#4d6a34'], 3, 2)); }],
+    bambou: () => [16, 32, (g, o) => { const { R, voile } = o; R(g, '#b0a45a', 0, 0, 16, 32); voile(g, 0.2, () => semis(g, o, 40, ['#000', '#fff'], 1, 3, 16, 32)); voile(g, 0.5, () => { for (let y = 5; y < 32; y += 8) R(g, '#5a5028', 0, y, 16, 1); }); }],
   });
 })();
 

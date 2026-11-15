@@ -1925,19 +1925,19 @@
           pos.push(p.x + nx * w, p.y, p.z + nz * w, p.x - nx * w, p.y, p.z - nz * w); uv.push(0, j * 0.4, w / 5, j * 0.4); if (j) { const a = j * 2 - 2; idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } });
         const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals();
         const eau = new THREE.Mesh(ge, h.mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 })); eau.receiveShadow = true; h.scene.add(eau); }
-      h.pose('boite', h.mat('chuteFil'), h.scene, [1129, 33 + 38, 165], 2, 76, 7); // la grande chute (provisoire : un ruban blanc)
       // ---------- la forêt, en trois épaisseurs (D-4) : le mur (une rangée de grands arbres de chaque côté, houppiers jointifs au-dessus de la route, sous-bois continu au pied),
       // la forêt (jusqu'à 90 m), le rideau (masses sans détail que la brume réduit à des silhouettes). Clairières voulues : le camp, la place de la cité, le cirque de la chute, la rivière ----------
-      const cimes = [[], [], []], futs = [], buissons = [[], []], fougeres = [], palmiers = [], rideau = [];
-      const CLAIR = [[62, -30, 30], [85, 465, 52], [CIRQUE[0], CIRQUE[1], 46]];
+      const cimes = [[], [], []], futs = [], buissons = [[], []], fougeres = [], palmiers = [], rideau = [], feuillesG = [], heliconias = [], lianes = [];
+      const CLAIR = [[62, -30, 30], [80, 470, 56], [CIRQUE[0], CIRQUE[1], 46], [626, 22, 13], [512, 410, 9], [95, 378, 24], [918, -104, 7]]; // camp, place, cirque, fromager, idole, édifice, tête
       const libre = (x, z) => { const r = riv(x, z); return r.d > r.p.w + 3 && CLAIR.every(([cx, cz, cr]) => (x - cx) ** 2 + (z - cz) ** 2 > cr * cr); };
       // un arbre de canopée : fût droit, houppier large en masses arrondies (k = taille, 1 = 14 m de fût ; vx, vz = vers où pencher le houppier ; n = nombre de masses)
       const arbre = (x, z, k, vx = 0, vz = 0, n = 3) => { const y = g.hAt(x, z) - 0.5, H = 14 * k, a = rnd() * 6.28, c = (dx, dy, dz, r, ap) => cimes[rnd() * 3 | 0].push([x + dx, y + H + dy, z + dz, rnd() * 6, r / 3.4, r * ap / 3.4, r / 3.4]);
         futs.push([x, y + H / 2, z, rnd() * 6, 3 * k, H / 5.2, 3 * k]); c(vx * 3, 2 * k, vz * 3, 8.5 * k, 0.62);
         if (n > 1) { c(Math.cos(a) * 6 * k, -k, Math.sin(a) * 6 * k, 5.5 * k, 0.7); c(-Math.cos(a) * 5 * k + vx * 4, 0, -Math.sin(a) * 5 * k + vz * 4, 5 * k, 0.7); } };
       for (let i = 0; i < N; i += 3) { if (enTunnel(i) || surPont(i)) continue; const s = S[i];
-        for (const sd of [-1, 1]) { const off = s.w + 3.5 + rnd() * 4, k = 0.85 + rnd() * 0.45, [x, z] = bord(s, sd, off); if (g.dAt(x, z) > off - 1.5 && libre(x, z)) arbre(x, z, k, s.tz * sd, -s.tx * sd); } }
-      for (let k = 0; k < 12000; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), u = rnd(), t = 0.8 + rnd() * 0.7;
+        for (const sd of [-1, 1]) { const off = s.w + 3.5 + rnd() * 4, k = 0.85 + rnd() * 0.45, [x, z] = bord(s, sd, off), v = rnd() < 0.75 ? 1 : -0.6; // des trouées et des houppiers qui s'écartent : le soleil tombe en taches sur la route
+          if (rnd() > 0.12 && g.dAt(x, z) > off - 1.5 && libre(x, z)) arbre(x, z, k, s.tz * sd * v, -s.tx * sd * v); } }
+      for (let k = 0; k < 9500; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), u = rnd(), t = 0.8 + rnd() * 0.7;
         if (d < 15 || d > 90 || !libre(x, z)) continue;
         if (d < 40 && u < 0.1) palmiers.push([x, g.hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); else arbre(x, z, t, 0, 0, d < 45 ? 3 : 1); }
       for (let k = 0; k < 2600; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]), d = g.dAt(x, z), t = 3 + rnd() * 1.6;
@@ -1946,16 +1946,95 @@
       for (let i = 0; i < N; i += 2) { if (enTunnel(i) || surPont(i) || gue(S[i])) continue; const s = S[i];
         for (const sd of [-1, 1]) for (const rang of [0, 1]) { const off = s.w + 2.6 + rang * 3.4 + rnd() * 2.4, [x, z] = bord(s, sd, off), u = rnd(), t = 0.55 + rnd() * 0.45 + rang * 0.25, y = rang ? g.hAt(x, z) : s.y - 0.5;
           if (g.dAt(x, z) < off - 1.5 || !libre(x, z)) continue;
-          if (u < 0.16) fougeres.push([x, y, z, rnd() * 6, 0.6 + rnd() * 0.5]); else buissons[u < 0.55 ? 0 : 1].push([x, y + 1.9 * t, z, rnd() * 6, t, t * 0.72, t]); } }
+          if (u < 0.14) fougeres.push([x, y, z, rnd() * 6, 0.6 + rnd() * 0.5]); else if (u < 0.34) (u < 0.2 ? heliconias : feuillesG).push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); else buissons[u < 0.55 ? 0 : 1].push([x, y + 1.9 * t, z, rnd() * 6, t, t * 0.72, t]); } }
       const feuilles = ['feuilleOmbre', 'feuilleCanopee', 'feuilleSoleil'].map(n => h.mat(n)), ecorce = h.mat('ecorceJungle'), palme = h.mat('palmeJungle', DS);
-      inst(h, h.geo('tronc'), ecorce, futs); cimes.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k], l)); buissons.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k + 1], l));
+      buissons.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k + 1], l));
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: palme }, fougeres); insts(h, 'jucara', { stipe: ecorce, palme }, palmiers);
       inst(h, h.geo('cimeLoin'), h.mat('feuilleLoin'), rideau).castShadow = false;
+      const feuilleG = h.mat('feuilleSoleil', DS), rouge = h.mat('peinture', { c: 0xd8362a });
+      insts(h, 'grandeFeuille', { feuille: feuilleG }, feuillesG); insts(h, 'grandeFeuille', { feuille: feuilleG, fleur: rouge }, heliconias, { a: [1, 1] });
+      // lianes : des rideaux qui pendent des branches au-dessus de la route, le bas à plus de 5,5 m de la chaussée (O-8)
+      for (let i = 20; i < N; i += 17 + (rnd() * 12 | 0)) { if (enTunnel(i) || surPont(i) || !libre(S[i].x, S[i].z)) continue; const s = S[i], [x, z] = bord(s, 1, (rnd() - 0.5) * 2 * s.w); lianes.push([x, s.y + 12.5 + rnd() * 2, z, h.across(s) + (rnd() - 0.5), 1, 0.7 + rnd() * 0.4, 1]); }
+      insts(h, 'lianes', { liane: h.mat('ecorceJungle', { c: 0x8aa860 }) }, lianes);
       // ---------- la brume épaisse de la rivière et du cirque : des nappes basses, à plus de 22 m de la chaussée, jamais en l'air sur fond de ciel (D-6) ----------
       { const nappes = [], G = new THREE.PlaneGeometry(1, 1); G.rotateX(-Math.PI / 2);
         for (let j = 0; j < RIV.length; j += 5) { const p = RIV[j], x = p.x + (rnd() - 0.5) * 20, z = p.z + (rnd() - 0.5) * 20; if (g.dAt(x, z) > 22) nappes.push([x, p.y + 1.5 + rnd() * 4, z, rnd() * 6, 30 + rnd() * 30, 1, 22 + rnd() * 20]); }
         for (let k = 0; k < 12; k++) nappes.push([CIRQUE[0] + (rnd() - 0.5) * 50, 36 + rnd() * 34, CIRQUE[1] + (rnd() - 0.5) * 50, rnd() * 6, 40 + rnd() * 30, 1, 40 + rnd() * 30]);
         const b = inst(h, G, h.mat('brume', { lum: 1, c: 0x56603c, transparent: true, opacity: 0.55, depthWrite: false, blending: THREE.AdditiveBlending, ...DS }), nappes); b.castShadow = b.receiveShadow = false; }
+
+      // ---------- matières et outils de pose des repères ----------
+      const pierre = h.mat('pierreCite'), ombre = h.mat('pierreOmbre'), clairM = h.mat('pierreClaire'), or = h.mat('peinture', { lum: 1, c: 0xe8b83a }), noir = h.mat('peinture', { c: 0x14120e }), flamme = h.mat('peinture', { lum: 1, c: 0xffb040, fog: false }),
+        bois = h.mat('ecorceJungle', { c: 0xc8a878 }), toile = h.mat('toileTente', DS), bambou = h.mat('bambou'), planche = h.mat('planchesPont'), lampe = h.mat('peinture', { lum: 1, c: 0xffd890 }), fer = h.mat('peinture', { c: 0x2a2a26 }),
+        CITE = { pierre, ombre, clair: clairM, or, noir, relief: ombre, socle: h.mat('socleNoir'), inscription: h.mat('inscription512') };
+      // un objet posé en (x, z), tourné de ry (son +Z regarde alors vers (sin ry, cos ry)) ; y = le sol par défaut
+      const pose = (nom, peau, x, z, ry = 0, y = g.hAt(x, z), ...a) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; h.scene.add(p); h.pose(nom, peau, p, [0, 0, 0], ...a); return p; };
+      // au bord de la route, face à elle : échantillon i, côté sd, à off m de l'axe
+      const auBord = (nom, peau, i, sd, off, ...a) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, off); return pose(nom, peau, x, z, Math.atan2(s.x - x, s.z - z), s.y - 0.35, ...a); };
+      // torches de l'expédition : elles marquent les freinages à la place des panneaux (O-5) : deux à 100 m, une à 50 m ; et les lieux
+      const torches = [], torche = (i, sd, off = 1.1) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + off); torches.push([x, s.y - 0.3, z, rnd() * 6]); h.lum((i + N) % N, x, s.y + 2.6, z, 0xffa040, 13, 1.6); };
+      for (const k of [4, 14, 20, 42, 52]) { const i = P(k) - (k === 42 ? 12 : 0); torche(i - 52, -1); torche(i - 52, 1); torche(i - 26, S[i].k > 0 ? -1 : 1); }
+
+      // ---------- Z1, le camp de base (O-10) : tentes, table à cartes, caisses, 4×4 bâché, mât radio, dans la clairière de gauche ; l'expédition est là ----------
+      { const P1 = { toile, bois, papier: h.mat('peinture', { c: 0xe8dcc0 }), lampe, fer, caisse: h.mat('peinture', { c: 0x5a6a3a }), vitre: noir, pneu: fer };
+        for (const [x, z, r] of [[26, -24, 0.2], [46, -36, -0.1], [72, -34, 0.15], [94, -24, -0.3]]) pose('tente', P1, x, z, r);
+        pose('tableCartes', P1, 58, -17, 0.3); pose('caisses', P1, 38, -13, 0.5); pose('caisses', P1, 82, -14, 2.2); pose('quatreQuatre', P1, 106, -15, 1.25); pose('matRadio', P1, 62, -44);
+        pose('caisses', P1, -30, -12, 1); pose('barque', P1, -82, 236, 0.9); pose('caisses', P1, -108, 120, 2); // T-8 : les traces de l'expédition depuis le gué
+        for (const [x, z] of [[58, -17], [30, -18], [90, -18]]) h.lum(30, x, 17.5, z, 0xffd890, 16, 1.4); torche(8, -1, 2); torche(60, -1, 2); torche(-40, -1); torche(-40, 1); }
+
+      // ---------- Z2, le fromager (O-11) : dans l'axe du freinage de la chicane, la route le contourne ; échelle de corde et plateforme d'observation ----------
+      { const [x, z] = [626, 22], y = g.hAt(x, z) - 0.6; pose('fromager', { bois: ecorce, planche, corde: bambou }, x, z, 2.2, y);
+        for (let k = 0; k < 7; k++) { const a = k / 7 * 6.28, r = k ? 11 : 0, t = (k ? 11 : 15) / 3.4; cimes[k % 3].push([x + Math.cos(a) * r, y + 43 + (k ? rnd() * 4 - 3 : 3), z + Math.sin(a) * r, rnd() * 6, t, t * 0.6, t]); } }
+
+      // ---------- Z3, les lacets des terrasses : murs de la cité le long de la montée (crête parallèle à la route, pas au terrain : D-9), la tête colossale dans l'axe de la première épingle, une porte ruinée dans l'axe de la seconde ----------
+      { const mur = (a, b, sd, H) => { const n = (b - a + N) % N; h.ribbon(a, n, s => sd * (s.w + 0.9), H, s => sd * (s.w + 0.9), -0.8, h.mat('pierreCite', DS), 8); h.ribbon(a, n, s => sd * (s.w + 0.9), H, s => sd * (s.w + 2.6), H - 0.3, h.mat('bordureMousse', DS), 8); };
+        mur(P(13) - 40, P(14) - 12, 1, 2.6); mur(P(18) + 14, P(20) - 12, -1, 3.2); mur(P(24) + 14, P(26), -1, 2.2);
+        pose('teteColossale', CITE, 919, -104, -Math.PI / 2 + 0.25); torche(P(16), -1, 2.5);
+        const pr = pose('arc', CITE, 690, -52, Math.PI / 2 - 0.2, undefined, 3, 0.9, 2.2, 7, 4); for (const sd of [-1, 1]) h.pose('boite', pierre, pr, [sd * 3.6, 2.2, 0], 1.6, 4.4, 2.4); h.pose('boite', clairM, pr, [0, 8.4, 0], 9.4, 0.8, 2.8);
+        pose('statueDebout', CITE, 694, -60, Math.PI / 2, undefined, 1.2); pose('statueDebout', CITE, 692, -44, Math.PI / 2, undefined, 1.2); }
+
+      // ---------- Z4, le pont de lianes (O-12) et la grande chute (O-13) ----------
+      { const a = P(32) - 4, b = P(33) + 4, n = b - a, KI = new Map(); for (let k = 0; k <= n; k++) KI.set(S[a + k], k / n);
+        const yc = s => 1.5 + 8.8 * (2 * KI.get(s) - 1) ** 2, liane = h.mat('ecorceJungle', { ...DS, c: 0xa8b070 }), susp = [], poteaux = [];
+        h.ribbon(a, n, -W - 0.3, 0.06, W + 0.3, 0.06, h.mat('planchesPont', DS), 4); // le tablier : des planches à la place de la chaussée
+        for (const sd of [-1, 1]) { const x = sd * (W + 0.7);
+          h.ribbon(a, n, x, s => yc(s) + 0.22, x, s => yc(s) - 0.22, liane, 3); h.ribbon(a, n, x - 0.22, yc, x + 0.22, yc, liane, 3); // les deux câbles porteurs en lianes tressées, en chaînette
+          h.ribbon(a, n, x, 1.3, x, 1.12, liane, 3); h.ribbon(a, n, sd * (W + 0.3), 0.3, sd * (W + 0.3), -0.25, planche, 4); // main courante, rive du tablier
+          for (let k = 1; k < n; k++) { const s = S[a + k], [px, pz] = bord(s, sd, W + 0.7), hh = yc(s); susp.push([px, s.y + hh / 2, pz, 0, 0.09, hh, 0.09]); if (k % 3 === 0) poteaux.push([px, s.y + 0.65, pz, 0, 0.14, 1.3, 0.14]); }
+          for (const i of [a, b]) auBord('obelisque', CITE, i, sd, W + 1.9, 10.6); }
+        inst(h, h.geo('bloc'), liane, susp); inst(h, h.geo('bloc'), planche, poteaux);
+        for (const [i, rv] of [[a + 2, 0], [b - 2, Math.PI]]) { const r = repere(h, S[i]); h.pose('boite', ombre, r, [0, -9.2, rv ? -4.5 : 4.5], 2 * W + 6, 18, 9); } // les culées de pierre, dans la paroi de la gorge
+        // la chute : un ruban blanc étroit et strié dans une entaille sombre de la falaise, qui se défait en nuage aux deux tiers ; pas de colonne ni de bloc translucide
+        const ch = (op) => h.mat('chuteFil', { lum: 1, transparent: op < 1, opacity: op, depthWrite: op === 1 });
+        h.pose('boite', h.mat('rocheMousse', { c: 0x4a4a44 }), h.scene, [1133, 72, 165], 3, 80, 15); h.pose('boite', ch(1), h.scene, [1130.5, 84, 165], 1, 54, 5.5); h.pose('boite', ch(0.7), h.scene, [1129.5, 50, 165], 1, 22, 8); h.pose('boite', ch(0.4), h.scene, [1128, 38, 165], 1, 12, 12); }
+
+      // ---------- Z5, le temple-grotte (O-14) : une façade taillée dans la falaise autour de chaque portail, braseros allumés ----------
+      for (const [i, rv, H] of [[t0, 0, 9], [t1, Math.PI, 8]]) { const r = repere(h, S[i]); r.rotation.y += rv; h.pose('facadeTemple', CITE, r, [0, -0.3, 0.6], S[i].w, H);
+        for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 2.2), 0, 5); b.scale.setScalar(1.7); r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
+        r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2); } }
+
+      // ---------- Z6, la descente des idoles (O-15, T-6) : des statues debout de plus en plus rapprochées jusqu'à l'arc ; la grande idole assise dans l'axe de l'équerre ----------
+      { const st = []; let sd = 1; for (const d of [22, 42, 62, 84, 124, 164, 244, 324, 404, 484, 564]) { const i = P(52) - (d >> 1), s = S[i], [x, z] = bord(s, sd, s.w + 1.6); if (libre(x, z)) st.push([x, s.y - 0.4, z, Math.atan2(s.x - x, s.z - z), 1 + (d < 100 ? 0.25 : 0)]); sd = -sd; }
+        insts(h, 'statueDebout', CITE, st);
+        pose('idoleAssise', CITE, 512, 410, Math.PI / 2); for (const dz of [-6, 6]) { const p = pose('torche', { bois: fer, fer, flamme }, 518, 410 + dz); p.scale.setScalar(1.6); h.lum(P(43), 518, g.hAt(518, 410) + 4.5, 410 + dz, 0xffa040, 20, 2); } }
+
+      // ---------- Z7, la cité perdue (O-16) : l'arc triple, la place dallée au bord de la rivière, la statue qui montre le nord sur son socle noir, quatre obélisques, le grand édifice ; l'expédition y a monté ses échafaudages ----------
+      { const ia = P(52), ra = repere(h, S[ia]); h.pose('arcTriple', CITE, ra, [0, -0.5, 0], 7.5); h.pose('echafaudage', { bambou, planche }, ra, [15.5, -0.3, 4.2], 8, 3);
+        h.pose('boite', h.mat('dallesBord'), h.scene, [80, 16.62, 472], 104, 0.5, 152); // la place : un dallage plat, sous la chaussée
+        pose('statueNord', CITE, 70, 512, Math.PI, 16.85); for (const [x, z] of [[124, 540], [36, 540], [36, 436], [126, 436]]) pose('obelisque', CITE, x, z, 0, 16.85, 12);
+        pose('edifice', CITE, 95, 378, 0, 16.85); pose('echafaudage', { bambou, planche }, 62, 384, 0.1, 16.85, 6, 2);
+        for (const [x, z] of [[84, 505], [84, 519], [110, 398], [80, 398]]) { const p = pose('torche', { bois: fer, fer, flamme }, x, z, 0, 16.85); p.scale.setScalar(1.5); h.lum(P(55), x, 21, z, 0xffa040, 18, 1.8); }
+        arbre(128, 388, 1.3); arbre(44, 396, 1.1); arbre(34, 500, 1.2); // les arbres ont poussé dans les murs
+        for (const [x, z, r, t] of [[150, 536, 0.3, 1.2], [20, 470, 1.6, 1], [130, 470, -1.2, 1]]) pose('statueDebout', CITE, x, z, r, undefined, t); }
+
+      // ---------- Z8, le gué (O-17) : dalles affleurantes hors de la trajectoire, galets, une statue à demi immergée en amont ; ressauts de la rivière : rochers et écume ----------
+      { const roches = [], ecume = [], dallesG = [];
+        for (let j = 1; j < RIV.length; j++) if (RIV[j].y < RIV[j - 1].y - 1) for (let k = 0; k < 9; k++) { const p = RIV[j - 1], q = RIV[j], f = (k / 8 - 0.5) * 2 * p.w, nx = -(q.z - p.z) / 4, nz = (q.x - p.x) / 4; // un ressaut : une barre de rochers, l'eau blanche entre eux
+          roches.push([p.x + nx * f, p.y - 0.4, p.z + nz * f, rnd() * 6, 1.6 + rnd() * 1.4, 1.2 + rnd(), 1.6 + rnd() * 1.4]); ecume.push([q.x + nx * f * 0.9, (p.y + q.y) / 2 + 0.3, q.z + nz * f * 0.9, Math.atan2(nx, nz), 2.2, 0.3 + (p.y - q.y) * 0.5, 3.4]); }
+        for (let k = 0; k < 46; k++) { const x = -112 + rnd() * 104, z = 232 + rnd() * 76, r = riv(x, z); if (r.d < r.p.w && g.dAt(x, z) > 13.5) (rnd() < 0.6 ? dallesG : roches).push([x, 14.05, z, rnd() * 6, 2 + rnd() * 2.5, 0.6, 1.4 + rnd() * 2]); }
+        inst(h, h.geo('rocher'), h.mat('rocheMousse'), roches); inst(h, h.geo('bloc'), h.mat('chuteFil', { lum: 1 }), ecume); inst(h, h.geo('bloc'), h.mat('bordureMousse'), dallesG);
+        const st = pose('statueDebout', CITE, -12, 306, -2.2, 12.2, 2.2); st.rotation.z = 0.16; }
+      inst(h, h.geo('tronc'), ecorce, futs); cimes.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k], l)); // tous les arbres, ceux de la cité et le houppier du fromager compris
+      insts(h, 'torche', { bois, fer, flamme }, torches);
     },
     // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
     // Le nord (z < 0) est la mer. Intérieurs : la grotte est le tunnel du moteur ; le marché et le lobby sont des halles posées autour de la route (toit haut, ombre franche), sans mode tunnel.

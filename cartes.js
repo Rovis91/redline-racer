@@ -456,7 +456,7 @@
       // lacets des terrasses (14-24), pont de lianes au pied de la grande chute (32-33), temple-grotte (le tunnel, 34-40), saut de l'escalier écroulé, descente des idoles (équerres 43-48),
       // cité perdue (arc triple pt 53, place 54-58), gué (63-64), retour au camp. Proposition validée : propositions/PROPOSITION-chapada.md
       // largeur : W = le pont (file unique) ; partout ailleurs 6,5 m de demi-largeur, 9 au camp, 10 sur la place, 11 au gué
-      large: [[34, 30, 6.5], [66, 2, 9], [53, 62, 10], [63, 65, 11]], sauts: [[41, 40, 1.2]],
+      large: [[34, 30, 6.5], [66, 2, 9], [54, 62, 10], [63, 65, 11]], sauts: [[41, 40, 1.2]],
       surf: { zones: [[63, 64, 'mouille', 2.5], [34, 40, 'mouille', 0.5]], large: 'sec' }, // l'eau du gué freine au centre, ses bords de dalles sont secs ; la grotte suinte
       pts: [[0, 0, 15], [200, 0, 15], [360, -30, 17], [500, 20, 19], [555, 21, 20], [580, 19, 20.5], [598, 11, 21], [606, -7, 21.5], [606, -45, 22.5], [606, -83, 23.5], [614, -101, 24], [632, -109, 24.5], [700, -110, 25.5], [790, -112, 27],
         [880, -110, 30], [896, -103, 30.5], [903, -87, 31], [896, -71, 31.5], [880, -64, 32], [800, -62, 35], [730, -61, 38], [714, -54, 38.5], [707, -38, 39], [714, -22, 39.5], [730, -15, 40], [820, -15, 46], [900, -15, 52], [950, -14, 56],
@@ -470,11 +470,11 @@
       radio: RADIO.chapada,
       th: { decor: 'chapada', lisse: ['eauJade', 'chuteFil'], routeTex: 'dallesJungle', ombre: { doux: 1, champ: 250 }, frole: 1, fog: 0xa9bb7e, fogD: [18, 190], // brume vert-or de la couleur du fond : à 190 m il ne reste qu'elle (le procédé de touge, de jour)
         sky: [[0, '#5f9aa0'], [0.36, '#9cc0a0'], [0.47, '#b6c68c'], [0.5, '#a9bb7e'], [1, '#a9bb7e']], stars: 0,
-        astre: { dir: [0.5, 0.62, 0.6], col: '#fff0c0', ombre: '#ffe6b0', taille: 150 }, hemi: [0xcfe6a8, 0x1c3a22, 0.62], sun: [0xffe6b0, 1.15], phares: 0.3, bloom: 0.18, scan: 0.05,
-        chev: 0, murH: 0, route: ['#77725f', '#5e5a4c', '#8a8672', '#4d6a34', '#77725f', '#77725f', false], mur: ['#5a5646', '#8a8672', '#4d6a34', '#2a2a20'], depart: [0xe8b83a, 0x4a3a24, '#f2ecd0'],
+        astre: { dir: [0.42, 0.82, 0.39], col: '#fff0c0', ombre: '#ffe6b0', taille: 150 }, hemi: [0xdcefb0, 0x2a4a2a, 0.8], sun: [0xffe6b0, 1.15], phares: 0.3, bloom: 0.18, scan: 0.05,
+        chev: 0, murH: 0, route: ['#77725f', '#5e5a4c', '#8a8672', '#4d6a34', '#77725f', '#77725f', false], mur: ['#5a5646', '#8a8672', '#4d6a34', '#2a2a20'], depart: [0xe8b83a, 0x6a5630, '#f2ecd0', 'departJungle'],
         // la grotte : voûte de roche, salle haute à mi-parcours avec deux puits de lumière ; torches chaudes ; l'œil s'y fait vite (ni noir à l'entrée, ni blanc à la sortie)
-        tun: { sol: ['#5e5a4c', '#77725f', '#8a8672', '#8a8672', '#5e5a4c', '#5e5a4c'], murs: ['#ffb040', '#ffb040'], paroi: ['#4a443a', '#6a6052', '#8a7c68', '#1c1a16'], plafond: ['#2a2620', '#ffb040', '#ffb040', '#3a342c'],
-          fog: 0x2a3a2a, portail: 0x6a5e56, neons: [0xffb040, 0xffb040], coque: 80, h: [[0, 9], [0.35, 14], [0.55, 20], [0.75, 13], [1, 8]], voute: [[0, 4], [0.35, 8], [0.55, 12], [0.75, 7], [1, 3.5]], ouv: [[0.5, 0.54], [0.6, 0.63]], rayons: '#fff0c0', rayonsK: 0.35, ambiant: 0.7 },
+        tun: { sol: ['#5e5a4c', '#77725f', '#8a8672', '#8a8672', '#5e5a4c', '#5e5a4c'], murs: ['#4a443a', '#4a443a'], paroi: ['#4a443a', '#6a6052', '#8a7c68', '#1c1a16'], plafond: ['#2a2620', '#3a342c', '#3a342c', '#3a342c'],
+          fog: 0x2a3a2a, portail: 0x3a342c, neons: [0xffa030, 0xffa030], coque: 80, h: [[0, 9], [0.35, 14], [0.55, 20], [0.75, 13], [1, 8]], voute: [[0, 4], [0.35, 8], [0.55, 12], [0.75, 7], [1, 3.5]], ouv: [[0.5, 0.54], [0.6, 0.63]], rayons: '#fff0c0', rayonsK: 0.35, ambiant: 0.55 },
         oeil: { tun: 0.7, noir: 0.5, clair: 0.15 },
         hud: { y: '#f2ecd0', c: '#ffc247', r: '#ff5a3a', fond: 'rgba(8,20,12,.84)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'BAHIA · LA CITE PERDUE'], titre: ['MANUSCRIT', '512'] } } },
     // Playa 307 (Riviera Maya, midi) : la ligne droite de la plage (sable dur au milieu, sable mou de part et d'autre), l'épingle au bout du ponton, la rue aux guirlandes de papel picado, le marché couvert,
