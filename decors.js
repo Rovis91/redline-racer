@@ -2071,7 +2071,7 @@
       { const m = inst(h, h.geo('meleze'), mat('aiguilles', {}, '#ffffff'), mel), c = new THREE.Color(); mel.forEach((_, k) => m.setColorAt(k, c.setHSL(0.27 + rnd() * 0.1, 0.25 + rnd() * 0.25, 0.16 + rnd() * 0.14))); m.instanceColor.needsUpdate = true; } // des verts différents : la forêt ne fait plus bloc inst(h, h.geo('futBouleau'), mat('ecorceB'), bou); inst(h, h.geo('houppierB'), mat('feuillesB'), bou.map(([x, y, z, r, s]) => [x, y, z, r, s * (0.9 + rnd() * 0.3)]));
       inst(h, h.geo('rocherGES'), mat('rocheGES'), roc);
       // la falaise de la corniche : une paroi taillée à droite de la route, puis la pente de la falaise
-      tranche(P(41), P(49) - 10, (i, l) => { ruban(i, l, s => s.w + 1.6, -1, s => s.w + 1.6, s => 7 + 4 * Math.sin(IX.get(s) * 0.05), roche, 14); });
+      tranche(P(42) + 15, P(49) - 10, (i, l) => { ruban(i, l, s => s.w + 1.6, -1, s => s.w + 1.6, s => 7 + 4 * Math.sin(IX.get(s) * 0.05), roche, 14); });
 
       // ---------- au fond : deux rangées de crêtes de taïga dans la brume, de plus en plus pâles (hors brouillard : leur teinte fait la distance) ----------
       { const P3 = [], C3 = [], I = [], n = 96, cx = 230, cz = 455;
