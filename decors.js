@@ -1913,7 +1913,7 @@
         for (let x = X0; x <= X1 + 0.1; x += 13) { pil.push([x, 98, -13, 0, 3, 8, 6]); if (x < X1) van.push([(x + 6.5), 107.5, -13, 0, 10, 2.2, 1.2]); } // piles côté lac, vannes relevées au-dessus du parapet
         peint(pil, 0x8d918a); peint(van, 0xe8761e);
         prisme([[zF(YC - 1) + 0.35, YC - 1], [zF(12) + 0.35, 12]], X0, X1, gerbe, 18, 30).renderOrder = 2; // la lame d'eau sur la face, jusqu'au coursier
-        inst(h, h.geo('brume'), brume, [[-128, 106, 2, 0.4, 46, 10, 22], [-110, 110, 8, 1.1, 34, 12, 18], [-140, 104, 12, 2, 40, 8, 20]]).renderOrder = 3; } // l'embrun qui passe sur la crête
+        inst(h, h.geo('brume'), brume, [[-128, 108, 0, 0.4, 70, 18, 34], [-105, 114, 10, 1.1, 56, 22, 30], [-150, 106, 16, 2, 60, 14, 32], [-128, 80, 40, 0, 80, 40, 40], [-120, 50, 60, 0.7, 70, 36, 40]]).renderOrder = 3; } // l'embrun qui passe sur la crête
       // les bajoyers du bassin et le seuil de sortie
       bloc(bet, -164, -158, zF(20), 250, 0, 11); bloc(bet, 58, 64, zF(20), 250, 0, 6.5); bloc(betS, -158, 58, 246, 252, 0, 3.6);
 
@@ -1967,7 +1967,8 @@
       // ---------- les lignes à 500 kV (REFS 4) : vers le sud le long de la vallée, à travers la rivière vers la falaise ouest, vers l'est par-dessus la culée ----------
       const LIGNES = [[[300, 300], [190, 420], [168, 610], [178, 800], [150, 1010], [120, 1250], [80, 1520]],
         [[180, 300], [55, 390], [-160, 430], [-430, 470], [-700, 520], [-980, 560]],
-        [[320, 300], [470, 290], [660, 300], [860, 330], [1080, 360], [1320, 380]]];
+        [[320, 300], [470, 290], [660, 300], [860, 330], [1080, 360], [1320, 380]],
+        [[250, 300], [200, 520], [60, 780], [-120, 805], [-330, 815], [-560, 830], [-800, 850]]]; // la quatrième passe au-dessus du bas de la corniche : le dernier tiers retrouve la ligne
       const pyl = [], fils = [];
       for (const L of LIGNES) { const tops = [];
         L.forEach(([x, z], k) => { if (!k) return; const a = L[k - 1], b = L[Math.min(L.length - 1, k + 1)], ang = Math.atan2(b[0] - a[0], b[1] - a[1]), y = hAt(x, z), c = Math.cos(ang), s = Math.sin(ang);
