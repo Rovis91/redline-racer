@@ -125,5 +125,31 @@
       voile(g, 0.25, () => { for (let i = 0; i < 18; i++) R(g, '#6a3010', alea() * 64 | 0, alea() * 40 | 0, 1, 4 + alea() * 18 | 0); semis(g, o, 120, '#000'); });
       voile(g, 0.5, () => { for (let x = 4; x < 64; x += 8) { R(g, '#5a2a10', x, 2, 1, 1); R(g, '#5a2a10', x, 61, 1, 1); } });
     }, 4],
+    // ---- refonte : conifère de jour (mêmes nappes de rameaux que le cèdre de touge), garde-corps ajouré, fresque, chaussée sans flaques ----
+    conifere: (c = '#5e7a44') => [64, 64, (g, o) => {
+      const { R, alea, voile } = o; R(g, c, 0, 0, 64, 64);
+      voile(g, 0.14, () => { for (let i = 0; i < 150; i++) R(g, alea() < 0.55 ? '#000' : '#fff', alea() * 64 | 0, alea() * 64 | 0, 2 + alea() * 3 | 0, 1 + alea() * 2 | 0); });
+      voile(g, 0.2, () => { for (let y = 5; y < 64; y += 8) for (let x = 0; x < 64; x += 2) { const d = alea() * 3 | 0; R(g, '#000', x, y + d, 2, 2); R(g, '#fff', x, y + d - 2, 2, 1); } });
+    }],
+    // garde-corps d'acier à barreaux (côté vide de la crête) : lisse haute, lisse basse, un barreau tous les 25 cm, un montant tous les 2 m ; le reste est à jour
+    gardeCorps: (c = '#e8761e') => [32, 16, (g, o) => { const { R } = o; g.clearRect(0, 0, 32, 16); for (let x = 0; x < 32; x += 4) R(g, c, x, 0, 1, 16); R(g, c, 0, 0, 32, 2); R(g, c, 0, 13, 32, 1); R(g, '#8a4a14', 0, 0, 2, 16); }, 2],
+    // la fresque du premier immeuble (mosaïque de pignon, années 70) : soleil et rayons, le mur du barrage, une ligne à haute tension, un ouvrier et une ouvrière de profil, le mot d'ordre du 1er mai
+    fresque: () => [96, 120, (g, o) => {
+      const { R, alea } = o, poly = (c, ...p) => { g.fillStyle = c; g.beginPath(); g.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) g.lineTo(p[k], p[k + 1]); g.fill(); };
+      R(g, '#d8c9a0', 0, 0, 96, 120);
+      for (let k = 0; k < 9; k++) { const a = -0.15 + k * 0.2; poly(k & 1 ? '#e0b060' : '#c9603c', 24, 26, 24 + Math.cos(a) * 130, 26 + Math.sin(a) * 130, 24 + Math.cos(a + 0.2) * 130, 26 + Math.sin(a + 0.2) * 130); } // rayons
+      g.fillStyle = '#b5483c'; g.beginPath(); g.arc(24, 26, 15, 0, 7); g.fill(); g.fillStyle = '#e8d8a8'; g.beginPath(); g.arc(24, 26, 9, 0, 7); g.fill(); // soleil
+      poly('#7f9aa8', 0, 62, 96, 50, 96, 104, 0, 104); // l'eau de la retenue
+      poly('#9aa09a', 30, 104, 44, 44, 96, 40, 96, 104); for (let x = 50; x < 96; x += 9) R(g, '#6d726d', x, 44, 1, 60); // le mur et ses plots
+      poly('#3a4a5a', 70, 40, 73, 8, 76, 40); R(g, '#3a4a5a', 64, 14, 18, 2); R(g, '#3a4a5a', 66, 22, 14, 1); for (const x of [65, 73, 81]) R(g, '#3a4a5a', x, 14, 1, 5); // un pylône
+      // l'ouvrière (foulard) et l'ouvrier (casque), de profil, tournés vers le soleil
+      poly('#8a3428', 18, 104, 20, 74, 26, 66, 34, 66, 38, 76, 38, 104); g.fillStyle = '#e8c8a0'; g.beginPath(); g.arc(29, 59, 6, 0, 7); g.fill(); poly('#c9603c', 23, 56, 29, 51, 36, 57, 34, 61, 24, 61);
+      poly('#3a4a5a', 40, 104, 42, 68, 50, 60, 60, 60, 64, 72, 64, 104); g.fillStyle = '#e8c8a0'; g.beginPath(); g.arc(54, 52, 7, 0, 7); g.fill(); poly('#e0b060', 46, 49, 54, 43, 62, 49, 62, 51, 46, 51);
+      poly('#3a4a5a', 58, 66, 78, 52, 80, 55, 62, 72); // le bras tendu
+      R(g, '#b5483c', 0, 104, 96, 16); g.fillStyle = '#f0e8d0'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('МИР ТРУД МАЙ', 48, 113);
+      for (let y = 0; y < 120; y += 2) for (let x = 0; x < 96; x += 2) if (alea() < 0.5) R(g, 'rgba(0,0,0,0.1)', x + 1, y + 1, 1, 1); // joints des tesselles
+    }],
+    // la chaussée fine sans ses flaques (sous le soleil bas, elles renvoyaient des plaques blanches) : le même dessin, les trous de l'alpha rebouchés à la couleur du bitume
+    chausseeGES: (...a) => { const [w, ht, dessin, ...r] = TEXTURES.chausseeFine(...a); return [w, ht, (g, o) => { dessin(g, o); g.globalCompositeOperation = 'destination-over'; g.fillStyle = a[0]; g.fillRect(0, 0, w, ht); g.globalCompositeOperation = 'source-over'; }, ...r]; },
   });
 })();
