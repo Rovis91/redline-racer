@@ -1939,7 +1939,7 @@
       bloc(mat('panneauK', {}, '#b8b4a4'), 300, 336, 306, 322, YH, YH + 9); bloc(betS, 299, 337, 305, 323, YH + 9, YH + 9.6); // bâtiment de commande
 
       // ---------- les lignes à 500 kV (REFS 4) : vers le sud le long de la vallée, à travers la rivière vers la falaise ouest, vers l'est par-dessus la culée ----------
-      const LIGNES = [[[300, 300], [190, 420], [168, 610], [178, 800], [150, 1010], [120, 1250], [80, 1520]],
+      const LIGNES = [[[300, 300], [190, 420], [172, 610], [205, 800], [150, 1010], [120, 1250], [80, 1520]],
         [[180, 300], [55, 390], [-160, 430], [-430, 470], [-700, 520], [-980, 560]],
         [[320, 300], [470, 290], [660, 300], [860, 330], [1080, 360], [1320, 380]]];
       const pyl = [], fils = [];
@@ -1974,7 +1974,7 @@
           else if (i % 8 === 0 && dans(i, 13, 32) && !(i >= T0 && i <= T1)) { const [x, z] = bord(s, sd, s.w + 0.45); ca.push([x, s.y + 0.95, z, h.across(s), 0.3, 0.3, 0.3]); } } }
         inst(h, h.geo('bloc'), mat('parapet'), mo); inst(h, h.geo('bloc'), mat('catadioptre', LUMI), ca); }
       // chevrons à l'extérieur des épingles (le jeu n'en pose pas : th.chev = 0, ils tomberaient dans la halle)
-      { const cv = [[], []]; for (let i = 0; i < N; i += 5) { const s = S[i], co = dans(i, 41, 49), k = (co ? [0, 10, 20, 30] : [0, 8, 15]).map(j => S[(i + j) % N].k).reduce((a, b) => Math.abs(b) > Math.abs(a) ? b : a); if (Math.abs(k) < (co ? 0.0025 : 0.007) || dans(i, 6, 12)) continue; const f = k > 0 ? 0 : 1, sd = k > 0 ? -1 : 1, tu = i >= T0 && i <= T1, [x, z] = bord(s, sd, tu ? s.w - 0.08 : s.w + 2.4); cv[f].push([x, s.y + (tu ? 3 : 2.2), z, h.across(s) - Math.PI / 2 * sd, tu ? 0.7 : co ? 1.6 : 1.2]); } // face (+Z) vers la route, comme ceux du jeu // dans la galerie : plaqués sur la paroi
+      { const cv = [[], []]; for (let i = 0; i < N; i += 5) { const s = S[i], co = dans(i, 41, 49), k = (co ? [0, 10, 20, 30] : [0, 8, 15]).map(j => S[(i + j) % N].k).reduce((a, b) => Math.abs(b) > Math.abs(a) ? b : a); if (Math.abs(k) < (co ? 0.0025 : 0.007) || dans(i, 6, 12)) continue; const f = k > 0 ? 0 : 1, sd = k > 0 ? -1 : 1, tu = i >= T0 && i <= T1, [x, z] = bord(s, sd, tu ? s.w - 0.08 : s.w + 2.4); cv[f].push([x, s.y + (tu ? 3 : 2.2), z, h.across(s) - Math.PI / 2 * sd, tu ? 0.7 : co ? 1.2 : 1]); } // face (+Z) vers la route, comme ceux du jeu // dans la galerie : plaqués sur la paroi
         cv.forEach((l, f) => inst(h, h.geo('chevron'), mat('chevron', { lum: 1, side: THREE.DoubleSide, retro: 1.5 }, f), l)); }
 
       // ---------- la culée est (REFS 1, 7) : parois de roche taillée côté amont des lacets, filets pare-pierres ; la galerie (REFS 8) sous une chape de roche, deux portails ----------
@@ -2042,7 +2042,7 @@
         h.pose('boite', txt ? mat('lettres', {}, txt, '#8d918a', '#b5483c') : mat('mosaique'), g2, [0, 9, 0.62], 5.4, txt ? 2.4 : 10, 0.05); }
       // poteaux télégraphiques de bois le long de la corniche et de la vallée, avec leurs fils
       { const po = [], fi = []; let prev = null;
-        for (let i = P(41); dans(i, 41, 4); i = (i + 16) % N) { if (pontI.has(i)) { prev = null; continue; } const s = S[i], [x, z] = bord(s, dans(i, 41, 49) ? 1 : -1, s.w + 6.5); const y = hAt(x, z); po.push([x, y + 4, z, h.across(s)]);
+        for (let i = P(49) - 30; dans(i, 49, 4); i = (i + 16) % N) { if (pontI.has(i)) { prev = null; continue; } const s = S[i], [x, z] = bord(s, dans(i, 41, 49) ? 1 : -1, s.w + 6.5); const y = hAt(x, z); po.push([x, y + 4, z, h.across(s)]);
           if (prev) for (const dy of [7.4, 6.8]) fi.push(prev[0], prev[1] + dy, prev[2], x, y + dy, z); prev = [x, y, z]; }
         inst(h, h.geo('boite', 0.35, 8, 0.35), mat('tronc'), po); inst(h, h.geo('boite', 1.8, 0.15, 0.15), mat('tronc'), po.map(([x, y, z, r]) => [x, y + 3.2, z, r]));
         const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(fi, 3)); h.scene.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x2a2a28 }))); }
@@ -2061,10 +2061,19 @@
         (s.y < 30 && rnd() < 0.6 ? bou : mel).push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5, 0.8 + rnd() * 0.5]); } }
       for (let k = 0; k < 2600; k++) { const x = -400 + rnd() * 700, z = 220 + rnd() * 1500, rv = riv(x, z); if (rv < -3 || rv > 5 || dAt(x, z) < W + 4) continue; roc.push([x, Math.max(2.4, hAt(x, z)), z, rnd() * 6, 1.4 + rnd() * 2.6, 0.8 + rnd() * 1.4, 1.4 + rnd() * 2.6]); }
 
+      // des arbres serrés sur les versants entre les lacets et au-dessus de la corniche (les grands aplats verts et bruns)
+      for (let k = 0; k < 2600; k++) { const z = -40 + rnd() * 200, x = 440 + rnd() * 380; if (dAt(x, z) > W + 6 && !lac(x, z) && !mur(x, z)) mel.push([x, hAt(x, z) - 0.5, z, rnd() * 6, 0.6 + rnd() * 0.6, 0.6 + rnd() * 0.7]); }
+      for (let i = P(41); dans(i, 41, 49); i += 2) { const s = S[i]; for (let j = 0; j < 2; j++) { const [x, z] = bord(s, 1, s.w + 12 + rnd() * 50); if (dAt(x, z) > W + 9) mel.push([x, hAt(x, z) - 0.5, z, rnd() * 6, 0.7 + rnd() * 0.6, 0.7 + rnd() * 0.7]); } }
+      // panneaux triangulaires « virage » à 120 m avant chaque virage serré ; plaques cyrilliques dans la galerie
+      { const pv = [], pg = []; let der = -99; for (let i = 0; i < N; i++) { const j = (i + 60) % N, k = S[j].k; if (Math.abs(k) > 0.025 && i - der > 80 && !dans(j, 5, 13)) { der = i; if (i >= T0 && i <= T1) continue; const s = S[i], [x, z] = bord(s, 1, s.w + 3); pv.push([x, s.y + 2.4, z, h.across(s), 1.4, 1.4, 0.08]); peints.push([x, s.y + 1, z, 0, 0.1, 2.2, 0.1, 0x4a4e4a]); } }
+        for (let i = T0 + 10; i < T1; i += 25) { const s = S[i], sd = (i / 25 | 0) & 1 ? 1 : -1, [x, z] = bord(s, sd, s.w - 0.06); pg.push([x, s.y + 4.2, z, h.across(s), 0.05, 0.9, 2.6]); }
+        inst(h, h.geo('bloc'), mat('virageGES'), pv); inst(h, h.geo('bloc'), mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), pg); }
+      // le mât de la radio de la centrale sur la colline est, rayé rouge et blanc, feux d'obstacle : le repère qu'on voit de partout
+      { const x = 600, z = 520, y = hAt(x, z), B = []; for (let k = 0; k < 12; k++) B.push([x, y + 6 + k * 12, z, 0, 2.6 - k * 0.12, 12, 2.6 - k * 0.12, k & 1 ? 0xe8e4d8 : 0xc8302a]); peints.push(...B); h.lum(near(h, x, z), x, y + 150, z, 0xff2030, 20, 1); }
       inst(h, h.geo('boite', 10, 11, 0.3), mat('mosaique'), [[152, 455], [152, 545], [156, 635], [165, 722]].map(([x, z]) => [x, hAt(x, z) + 7, z + 30.2])); // la mosaïque des pignons, vue en remontant la vallée
       { const ar = [], pa = [];
         for (let i = 0; i < N; i += 19) { if (dansHalle(i) || (i >= T0 && i <= T1) || pontI.has(i) || dans(i, 35, 41)) continue; const s = S[i], sd = (i / 19 | 0) & 1 ? 1 : -1; if (sd < 0 && dans(i, 32, 49)) continue; const [x, z] = bord(s, sd, s.w + 3.2 + rnd() * 2); ar.push([x, hAt(x, z) + 0.8, z, h.across(s), 0.9, 1.6, 0.6]); }
-        for (let i = 11; i < N; i += 61) { if (dansHalle(i) || (i >= T0 && i <= T1)) continue; const s = S[i], [x, z] = bord(s, 1, s.w + 2.8); pa.push([x, s.y + 2.6, z, h.across(s), 0.08, 1.2, 1.2]); }
+        for (let i = 11; i < N; i += 61) { if (dansHalle(i) || (i >= T0 && i <= T1)) continue; const s = S[i], [x, z] = bord(s, 1, s.w + 2.8); pa.push([x, s.y + 2.6, z, h.across(s), 1.2, 1.2, 0.08]); peints.push([x, s.y + 1.1, z, 0, 0.1, 2.2, 0.1, 0x4a4e4a]); }
         for (let k = 0; k < 2600; k++) { const i = rnd() * N | 0, s = S[i]; if (dansHalle(i) || dans(i, 35, 41) || pontI.has(i)) continue; const [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 5 + rnd() * 40); if (libre(x, z, 4.5)) mel.push([x, hAt(x, z) - 0.4, z, rnd() * 6, 0.25 + rnd() * 0.3, 0.2 + rnd() * 0.25]); } // jeunes mélèzes sur les talus
         peint(ar, 0x8a9488); // armoires électriques et bornes de service
         inst(h, h.geo('bloc'), mat('panneauVit'), pa); } // panneaux « 60 » cerclés de rouge
