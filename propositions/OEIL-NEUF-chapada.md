@@ -190,3 +190,16 @@ Auto-critique, ce qui reste en dessous :
 - **Descente** : les bornes de pierre plantées dans le lit sont retirées, les rochers de rive ramenés au ras de la chaussée (ce qu'on voit comme lit est ce qui se roule). Un grand tronc couché barre la sortie de la rivière à droite, avant l'arc. [Capture](img-chapada/retour-descente-tronc.jpg).
 
 Pilote automatique : 79,2 s, aucun contact. Tests verts. Banc non exploitable ce jour-là (machine chargée à 40–47 %, touge lui-même à 5,9 ms).
+
+## Second retour de l'auteur (15 novembre), corrigé
+
+Tour complet, une image toutes les 2,5 s : [0](img-chapada/retour2-tour-0.jpg), [1](img-chapada/retour2-tour-1.jpg), [2](img-chapada/retour2-tour-2.jpg), [3](img-chapada/retour2-tour-3.jpg), [4](img-chapada/retour2-tour-4.jpg), [5](img-chapada/retour2-tour-5.jpg). [Bassin et chute](img-chapada/retour2-bassin-chute.jpg).
+
+- **Lianes** : retirées partout. Le modèle était une barre de 5 m et six brins, suspendue en l'air au-dessus de la chaussée.
+- **Zone nue après le fromager** : un bassin sacré à gauche de la ligne droite (eau qui dérive, rochers, trois statues gardiennes) ; le couloir de vue de la seconde épingle est raccourci, la forêt revient à droite.
+- **Chute** : elle prend toute la paroi du cirque, le mur de face et le mur de gauche (quatre pans). La vapeur est refaite en bouffées rondes qui montent du bassin et s'effacent.
+- **Portails de la grotte** : pris dans un éboulis de gros rochers, de part et d'autre et au-dessus de la façade.
+- **Voûte** : les deux puits de jour (`th.tun.ouv`) sont supprimés ; c'étaient les deux trous, et les éclairs au passage.
+- **Poteaux** : les bornes de pierre du gué et du marais sont retirées (elles étaient à l'intérieur de la chaussée roulable).
+
+Pilote automatique : 79,2 s, aucun contact. `node test.js` et `node test-cartes.js` verts. Temps d'image non remesuré.

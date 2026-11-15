@@ -1898,7 +1898,7 @@
       const { THREE, S, N, W, rnd, T } = h, DS = { side: THREE.DoubleSide }, P = k => pt(h, k), IX = new Map(S.map((s, i) => [s, i]));
       const cache = new Map(), mat = (n, o = {}) => { const k = n + JSON.stringify(o); return cache.get(k) || cache.set(k, h.mat(n, o)).get(k); }; // une matière par réglage : le moteur fond le décor fixe par matière
       const entre = (i, a, b) => ((i - a + N) % N) <= ((b - a + N) % N), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-      const VAP = [], COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
+      let VAP = null; const COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
       const tombe = (trous, op, v, c = 0xc4d8d4) => coule(h.mat('eauChute', { lum: 1, c, side: THREE.DoubleSide, transparent: true, opacity: op, depthWrite: false, lisse: 1 }, trous), 0, v); // de l'eau qui tombe : la texture glisse vers le bas
       // une nappe d'eau : une bande courbe qui suit la chute. secs, de haut en bas : [x du milieu, y, z, largeur] ; u en travers, v = la hauteur (une répétition tous les 16 m) ; sens : de quel côté (z) elle bombe, vers qui regarde
       // Toutes les nappes d'une même matière sont fondues en une seule géométrie à la fin (une passe de dessin par matière, pas une par nappe) : NAP les accumule, en coordonnées du monde
@@ -1924,13 +1924,14 @@
         for (let k = 0; k < A.length - 1; k++) { const [ax, az, ay, aw] = A[k], [bx, bz] = A[k + 1], n = Math.max(1, Math.ceil(Math.hypot(bx - ax, bz - az) / 4)); for (let j = 0; j < n; j++) { const x = ax + (bx - ax) * j / n;
           RIV.push({ x, z: az + (bz - az) * j / n, y: ay !== undefined ? ay : NIV(x), w: ay !== undefined ? aw : LARG(x), r: ay !== undefined }); } } } // sur la route (r), un lit étroit entre deux rives de roche : pas une forêt inondée
       const riv = (x, z) => { let b = RIV[0], bd = 1e18; for (const p of RIV) { const d = (p.x - x) ** 2 + (p.z - z) ** 2; if (d < bd) { bd = d; b = p; } } return { d: Math.sqrt(bd), p: b }; };
-      const CIRQUE = [1036, 215]; // le bassin au pied de la chute, dans un cirque de la falaise, au sud-est du pont : la chute tombe face à qui traverse, à gauche du temple
+      const BASSIN = [583, -55]; /* un bassin sacré à gauche de la ligne droite qui suit le fromager (la zone était nue) */ const CIRQUE = [1036, 215]; // le bassin au pied de la chute, dans un cirque de la falaise, au sud-est du pont : la chute tombe face à qui traverse, à gauche du temple
       // ---------- le relief : la route donne les versants ; on y creuse le lit, on y lève l'éperon de la grotte (au-dessus du tunnel) et la falaise du plateau (à l'est) ----------
       const creux = (x, z, y) => { let c = 0;
         const r = riv(x, z), lit = r.p.y - 1.2; if (y > lit) c += (y - lit) * (1 - ss(r.p.w, r.p.w + 5 + (y - lit) * (x > 930 ? 0.4 : 0.8), r.d)); // la gorge du pont : des parois raides
         if (x > 660 && z > 230) { let bd = 1e18, bi = t0; for (let i = t0; i <= t1; i++) { const d = (S[i].x - x) ** 2 + (S[i].z - z) ** 2; if (d < bd) { bd = d; bi = i; } } // l'éperon : coupé net au plan des deux portails
           if (bi > t0 + 3 && bi < t1 - 3) { const d = Math.sqrt(bd); c -= Math.min(44, Math.max(0, d - S[bi].w - 1) * 6) * (1 - ss(80, 140, d)); } }
         { const x0 = 1012 + 1.7 * Math.max(0, 152 - z); if (x > x0) c -= Math.min(70, (x - x0) * 3) * ss(30, 38, Math.hypot(x - CIRQUE[0], z - CIRQUE[1])); } // au nord du cirque la falaise recule en biais : dès l'entrée du pont, la chute est dans le champ, à gauche // la falaise du plateau, à 70 m du pont : la chute se voit de près
+        c += 2.4 * (1 - ss(8, 15, Math.hypot(x - BASSIN[0], z - BASSIN[1]))); /* le bassin sacré */
         const m = marais(x, z); if (m > 0 && y > MAR - 1) c += (y - MAR + 1) * m; // le marais : un fond plat, un mètre sous l'eau
         return c; };
       const solPont = i => entre(i, P(32) + 6, P(33) - 6);
@@ -1953,8 +1954,6 @@
           if (!k) continue; const g2 = ge.clone(); g2.translate(0, 0.04, 0); const e2 = new THREE.Mesh(g2, coule(h.mat('eauJade', { ...DS, transparent: true, opacity: op * 0.5, depthWrite: false, rep: [1.7, 0.6], c: 0xd8f0e0 }), 0.03, -0.85 * vit)); e2.userData.dyn = 1; h.scene.add(e2); } }
       h.pose('boite', coule(mat('eauMarais', { transparent: true, opacity: 0.85, c: 0x6a7a70 }), 0.012, 0.008), h.scene, [345, MAR - 0.05, 25], 440, 0.1, 250).userData.dyn = 1; // l'eau du marais : une nappe plate, le terrain en sort autour ; elle dérive à peine
       h.pose('boite', coule(h.mat('eauMarais', { transparent: true, opacity: 0.35, depthWrite: false, c: 0x9ab0a0, rep: [0.7, 0.7] }), -0.009, 0.014), h.scene, [345, MAR, 25], 440, 0.02, 250).userData.dyn = 1; // une seconde nappe qui dérive en sens croisé : les taches de ciel glissent
-      { const bornes = []; for (let i = 0; i < N; i += 3) if (gue(S[i]) && !enRiv(i) && !enTunnel(i)) for (const sd of [-1, 1]) { const [x, z] = bord(S[i], sd, S[i].w + 0.5); bornes.push([x, S[i].y + 0.45, z, h.across(S[i]), 0.7, 1.5, 0.7]); } // des bornes de pierre des deux côtés de chaque passage dans l'eau
-        inst(h, h.geo('bloc'), mat('pierreCite'), bornes); }
       // ---------- la descente de la rivière : des rives de roche de part et d'autre du lit, un sillage d'écume derrière chaque borne, l'eau blanche qui tombe à chaque seuil et bouillonne au pied ----------
       { const rives = [], sill = [], bouil = [];
         for (let i = iR0 - 6; i < iR1 + 8; i += 2) for (const sd of [-1, 1]) { const s = S[i], t = 1.3 + rnd() * 1.5, [x, z] = bord(s, sd, s.w + 1.9 + rnd() * 1.2); rives.push([x, s.y + 0.2 + rnd() * 0.4, z, rnd() * 6, t * 1.3, t, t * 1.2]);
@@ -1973,9 +1972,9 @@
       // ---------- la forêt, en trois épaisseurs (D-4) : le mur (une rangée de grands arbres de chaque côté, houppiers jointifs au-dessus de la route, sous-bois continu au pied),
       // la forêt (jusqu'à 90 m), le rideau (masses sans détail que la brume réduit à des silhouettes). Clairières voulues : le camp, la place de la cité, le cirque de la chute, la rivière ----------
       const racines = [], cimes = [[], [], []], futs = [], buissons = [[], []], fougeres = [], palmiers = [], rideau = [], feuillesG = [], heliconias = [], lianes = [];
-      const CLAIR = [[62, -30, 30], [84, 474, 30], [CIRQUE[0], CIRQUE[1], 40], [626, 22, 13], [512, 410, 9], [95, 372, 29], [918, -104, 7]]; // camp, place, cirque, fromager, idole, édifice, tête
+      const CLAIR = [[62, -30, 30], [84, 474, 30], [CIRQUE[0], CIRQUE[1], 40], [BASSIN[0], BASSIN[1], 15], [626, 22, 13], [512, 410, 9], [95, 372, 29], [918, -104, 7]]; // camp, place, cirque, fromager, idole, édifice, tête
       // couloirs de vue : rien ne pousse entre la route et le repère planté dans l'axe d'un freinage (fromager, tête colossale, porte ruinée, grande idole) [x1, z1, x2, z2, rayon]
-      const VUES = [[598, 20, 626, 22, 12], [884, -110, 922, -104, 12], [728, -61, 600, -58, 20], [556, 410, 510, 410, 12], [996, 92, 996, 238, 24], [996, 238, 996, 298, 27], [124, 510, 66, 512, 13], [95, 440, 88, 374, 19]]; // la seconde épingle s'ouvre sur la vallée en contrebas ; le parvis du temple-grotte est dégagé (la grande chute) ; le temple à degrés au bout de sa ligne droite // … et le long du pont : la vue part vers la chute et vers l'aval
+      const VUES = [[598, 20, 626, 22, 12], [884, -110, 922, -104, 12], [728, -61, 642, -58, 20], [556, 410, 510, 410, 12], [996, 92, 996, 238, 24], [996, 238, 996, 298, 27], [124, 510, 66, 512, 13], [95, 440, 88, 374, 19]]; // la seconde épingle s'ouvre sur la vallée en contrebas ; le parvis du temple-grotte est dégagé (la grande chute) ; le temple à degrés au bout de sa ligne droite // … et le long du pont : la vue part vers la chute et vers l'aval
       const segD = (x, z, [ax, az, bx, bz]) => { const ux = bx - ax, uz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * ux + (z - az) * uz) / (ux * ux + uz * uz))); return Math.hypot(x - ax - ux * t, z - az - uz * t); };
       const libre = (x, z) => { const r = riv(x, z); return r.d > r.p.w + (r.p.r ? 7 : 3) && CLAIR.every(([cx, cz, cr]) => (x - cx) ** 2 + (z - cz) ** 2 > cr * cr) && VUES.every(v => segD(x, z, v) > v[4]); };
       // un arbre de canopée : fût droit, houppier large en masses arrondies (k = taille, 1 = 14 m de fût ; vx, vz = vers où pencher le houppier ; n = nombre de masses)
@@ -2006,9 +2005,7 @@
       inst(h, h.geo('cimeLoin'), mat('feuilleLoin'), rideau).castShadow = false;
       const feuilleG = mat('feuilleSoleil', DS), rouge = mat('peinture', { c: 0xd8362a });
       insts(h, 'grandeFeuille', { feuille: feuilleG }, feuillesG); insts(h, 'grandeFeuille', { feuille: feuilleG, fleur: rouge }, heliconias, { a: [1, 1] });
-      // lianes : des rideaux qui pendent des branches au-dessus de la route, le bas à plus de 5,5 m de la chaussée (O-8)
-      for (let i = 20; i < N; i += 17 + (rnd() * 12 | 0)) { if (enTunnel(i) || surPont(i) || !libre(S[i].x, S[i].z)) continue; const s = S[i], [x, z] = bord(s, 1, (rnd() - 0.5) * 2 * s.w); lianes.push([x, s.y + 12.5 + rnd() * 2, z, h.across(s) + (rnd() - 0.5), 1, 0.7 + rnd() * 0.4, 1]); }
-      insts(h, 'lianes', { liane: mat('ecorceJungle', { c: 0x8aa860 }) }, lianes);
+
       // ---------- la brume épaisse de la rivière et du cirque : des nappes basses, à plus de 22 m de la chaussée, jamais en l'air sur fond de ciel (D-6) ----------
       { const nappes = [], G = new THREE.PlaneGeometry(1, 1); G.rotateX(-Math.PI / 2);
         for (let j = 0; j < RIV.length; j += 5) { const p = RIV[j], x = p.x + (rnd() - 0.5) * 20, z = p.z + (rnd() - 0.5) * 20; if (g.dAt(x, z) > 45) nappes.push([x, p.y + 1.5 + rnd() * 4, z, rnd() * 6, 30 + rnd() * 30, 1, 22 + rnd() * 20]); }
@@ -2074,10 +2071,16 @@
             filet = [[cx + 9.4, 104, cz + 1.4, 1.6], [cx + 9.6, 90, cz + 0.6, 2.2], [cx + 9.8, 72, cz + 0.4, 2.8], [cx + 10, 61, cz + 0.4, 3.2]], filet2 = [[cx - 9, 86, cz + 1.4, 1.4], [cx - 9.2, 74, cz + 0.8, 2], [cx - 9.4, 61, cz + 0.6, 2.4]];
           for (const l of [haut, bas]) for (const q of l) q[3] *= 3; for (const q of filet) q[0] += 14; for (const q of filet2) q[0] -= 14; /* la grande chute de la carte : beaucoup d'eau, trois fois la largeur du prototype */
           nappe(haut, e1, 3); nappe(haut, e2, 2.4, -0.4); nappe(bas, e1, 4.2); nappe(bas, e2, 3.3, -0.5); nappe(filet, e2, 0.2); nappe(filet2, e2, 0.2);
-          { const V = new THREE.PlaneGeometry(1, 1), H = new THREE.PlaneGeometry(1, 1), deb = [], cou = []; H.rotateX(-Math.PI / 2); // la vapeur au pied : des bouffées debout qui montent du bassin, des nappes couchées par-dessus (on les voit d'en haut, du pont)
-            for (let k = 0; k < 26; k++) { const t = rnd(), ht = 40 + rnd() * 40 * (1 - t); deb.push([cx - 6 + (rnd() - 0.5) * 54, 31 + ht * 0.45, cz - 4 - t * 30, (rnd() - 0.5) * 0.8, 22 + rnd() * 16, ht, 1]); }
-            for (let k = 0; k < 9; k++) cou.push([cx - 2 + (rnd() - 0.5) * 36, 36 + k * 3.4, cz - 8 - rnd() * 18, rnd() * 6, 52 - k * 3, 1, 36 - k * 2]);
-            const vm = mat('brume', { lum: 1, c: 0xf0f6f0, transparent: true, opacity: 0.7, depthWrite: false, ...DS }); for (const [G, l] of [[V, deb], [H, cou]]) { const o = inst(h, G, vm, l); o.castShadow = o.receiveShadow = false; o.userData.dyn = 1; o.renderOrder = 4; VAP.push(o); } }
+          // la chute prend toute la paroi du cirque : deux autres pans, au sud-est et à l'est (le mur de gauche vu du pont), chacun avec sa paroi de roche derrière
+          for (const th of [Math.PI / 4, Math.PI / 2, Math.PI * 0.72]) { const G = new THREE.Group(); G.position.set(CIRQUE[0] + 30 * Math.sin(th), 0, CIRQUE[1] + 30 * Math.cos(th)); G.rotation.y = th; h.scene.add(G); const w = 27;
+            h.pose('boite', mat('rocheMousse', { c: 0x4a4a44 }), G, [0, 72, 4.5], w + 8, 82, 3);
+            const pan = [[0, 112, 3, w * 0.8], [0, 110.5, 1.4, w * 0.84], [0, 104, 0.4, w * 0.88], [0, 84, 0, w * 0.94], [0, 60, -0.6, w], [0, 33.2, -2.6, w * 1.1]]; nappe(pan, e1, 3, 0, G); nappe(pan, e2, 2.4, -0.45, G); }
+          // la vapeur au pied : des bouffées rondes et douces qui montent du bassin, grossissent et s'effacent (un seul nuage de points, additif : chaque bouffée s'éteint en fonçant sa couleur)
+          { const n = 90, PP = new Float32Array(n * 3), CC = new Float32Array(n * 3), A = new Float32Array(n), gv = new THREE.BufferGeometry(); gv.setAttribute('position', new THREE.BufferAttribute(PP, 3)); gv.setAttribute('color', new THREE.BufferAttribute(CC, 3));
+            const o = new THREE.Points(gv, new THREE.PointsMaterial({ size: 28, map: h.mat('brume', { lum: 1 }).map, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); o.frustumCulled = false; o.userData.dyn = 1; o.renderOrder = 5; h.scene.add(o);
+            const nait = k => { const a = rnd() * Math.PI * 0.9 - 0.1, r = 12 + rnd() * 16; PP[k * 3] = CIRQUE[0] + r * Math.sin(a); PP[k * 3 + 1] = 33 + rnd() * 6; PP[k * 3 + 2] = CIRQUE[1] + r * Math.cos(a); A[k] = 0; };
+            for (let k = 0; k < n; k++) { nait(k); A[k] = rnd(); PP[k * 3 + 1] += A[k] * 46; }
+            VAP = dt => { for (let k = 0; k < n; k++) { A[k] += dt / 9; if (A[k] > 1) nait(k); PP[k * 3 + 1] += 5.2 * dt; PP[k * 3] -= 1.2 * dt; const f = 0.075 * Math.sin(Math.PI * Math.sqrt(A[k])); CC[k * 3] = CC[k * 3 + 1] = CC[k * 3 + 2] = f; } gv.attributes.position.needsUpdate = gv.attributes.color.needsUpdate = true; }; }
           { const P = [], U = [], I = [], NA = 14; for (let j = 0; j <= NA; j++) { const a = Math.PI * j / NA, c = Math.cos(a), sn = Math.sin(a); P.push(cx + 1 + c * 24, 33.12, cz - 3.2 - sn * 2, cx + 1 + c * 34, 33.12, cz - 3.2 - sn * 26); U.push(j / NA * 5, 0, j / NA * 5, -1.6);
               if (j) { const a0 = (j - 1) * 2; I.push(a0, a0 + 1, a0 + 2, a0 + 2, a0 + 1, a0 + 3); } }
             const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); ge.setIndex(I); ge.computeVertexNormals();
@@ -2086,11 +2089,18 @@
 
       // ---------- Z5, le temple-grotte (O-14) : une façade taillée dans la falaise autour de chaque portail, braseros allumés ----------
       for (const [i, rv, H] of [[t0, 0, 9], [t1, Math.PI, 8]]) { const r = repere(h, S[i]); r.rotation.y += rv; h.pose('facadeTemple', CITE, r, [0, -0.3, 0.6], S[i].w, H);
+        { const rr = [], w = S[i].w, V = new THREE.Vector3(); r.updateMatrixWorld(); const pose = (x, y, z, t) => { V.set(x, y, z).applyMatrix4(r.matrixWorld); rr.push([V.x, V.y, V.z, rnd() * 6, t * 1.3, t, t * 1.2]); };
+          for (const sd of [-1, 1]) for (let k = 0; k < 16; k++) { const u = rnd(), d = w + 5 + u * 34; pose(sd * d, rnd() * rnd() * (40 - u * 22), 1 + rnd() * 5 + (1 - u) * 3, 6 + rnd() * 6); }
+          for (let k = 0; k < 9; k++) pose((rnd() - 0.5) * 2 * (w + 5), H + 5 + rnd() * 22, 0.5 + rnd() * 2.5, 5 + rnd() * 5);
+          inst(h, h.geo('rocher'), mat('rocheMousse'), rr); }
         for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 2.2), 0, 5); b.scale.setScalar(1.7); r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
         r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2); } }
 
       // ---------- Z6, la descente des idoles (O-15, T-6) : des statues debout de plus en plus rapprochées jusqu'à l'arc ; la grande idole assise dans l'axe de l'équerre ----------
       { const st = []; let sd = 1; for (const d of [22, 42, 62, 84, 124, 164, 244, 324, 404, 484, 564]) { const i = P(52) - (d >> 1), s = S[i], [x, z] = bord(s, sd, s.w + 1.6); if (libre(x, z)) st.push([x, s.y - 0.4, z, Math.atan2(s.x - x, s.z - z), 1.5 + (d < 100 ? 0.3 : 0)]); sd = -sd; }
+        const yB = g.hAt(BASSIN[0], BASSIN[1]) + 1.5; for (const [dx, dz, a, t] of [[-17, 0, 0.5, 2.6], [-9, -15, 0.3, 1.5], [-9, 15, 0.7, 1.5]]) st.push([BASSIN[0] + dx, g.hAt(BASSIN[0] + dx, BASSIN[1] + dz) - 0.3, BASSIN[1] + dz, Math.PI * a, t]); // les gardiens du bassin
+        { const rr = []; for (let k = 0; k < 12; k++) { const a = k / 12 * 6.283 + rnd() * 0.3, t = 1.4 + rnd() * 1.6; rr.push([BASSIN[0] + 13.5 * Math.cos(a), g.hAt(BASSIN[0] + 13.5 * Math.cos(a), BASSIN[1] + 13.5 * Math.sin(a)) + 0.2, BASSIN[1] + 13.5 * Math.sin(a), rnd() * 6, t * 1.3, t, t * 1.2]); } inst(h, h.geo('rocher'), mat('rocheMousse'), rr);
+          h.pose('boite', coule(h.mat('eauJade', { ...DS, transparent: true, opacity: 0.86, gloss: 0.5 }), 0.015, 0.03), h.scene, [BASSIN[0], yB, BASSIN[1]], 30, 0.1, 30).userData.dyn = 1; }
         insts(h, 'statueDebout', CITE, st);
         pose('idoleAssise', CITE, 508, 410, Math.PI / 2).scale.setScalar(1.6); for (const dz of [-6, 6]) { const p = pose('torche', { bois: fer, fer, flamme }, 518, 410 + dz); p.scale.setScalar(1.6); h.lum(P(43), 518, g.hAt(518, 410) + 4.5, 410 + dz, 0xffa040, 20, 2); } }
 
@@ -2126,7 +2136,7 @@
         inst(h, h.geo('bloc'), pierre, deg); for (const sd of [-1, 1]) auBord('obelisque', CITE, P(49) + 2, sd, S[P(49)].w + 2.4, 8); }
       for (const [m, b] of NAP) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(b.P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(b.U, 2)); ge.setIndex(b.I); ge.computeVertexNormals();
         const o = new THREE.Mesh(ge, m); o.userData.dyn = 1; o.frustumCulled = false; o.renderOrder = m === e1 ? 1 : m === e2 ? 2 : 3; h.scene.add(o); } // la nappe de derrière d'abord, puis celle de devant, puis voiles et écume
-      let tv = 0; return dt => { tv += dt; VAP.forEach((o, k) => o.position.y = 1.5 * Math.sin(tv * 0.6 + k * 2)); for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
+      let tv = 0; return dt => { tv += dt; if (VAP) VAP(Math.min(dt, 0.1)); for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
     },
     // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
     // Le nord (z < 0) est la mer. Intérieurs : la grotte est le tunnel du moteur ; le marché et le lobby sont des halles posées autour de la route (toit haut, ombre franche), sans mode tunnel.
