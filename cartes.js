@@ -403,15 +403,15 @@
     // Route royale (spec : docs/SPEC-PERSE.md) : Persépolis au couchant. La plaine en S (la seule droite), le grand escalier de la terrasse (pavés, +14 m), la Porte des Nations et son épingle,
     // la salle aux cent colonnes (une place où l'on roule partout entre 15 colonnes), le jardin au canal turquoise qui redescend, puis les coudes à 90° du bazar couvert (pavés, voûte de briques).
     { id: 'perse', nom: 'ROUTE ROYALE', rivaux: ['DARIUS', 'ROXANE', 'KAVEH'], W: 10, kmh: 0.8, vit: [150, 190], grip: 17, sc: 1, anticipe: 1, trafic: 0,
-      large: [[0, 7, 18], [9, 14, 13], [20, 24, 16]], sauts: [[20, 30, 2, 16, 2.5]], // la plaine et l'escalier assez larges pour doubler avant les freinages ; on saute de la terrasse de la salle dans le jardin
+      large: [[0, 7, 18], [9, 12, 13], [20, 24, 16], [25, 28, 13], [32, 37, 13]], sauts: [[20, 30, 2, 16, 2.5]], // la plaine et l'escalier assez larges pour doubler avant les freinages ; on saute de la terrasse de la salle dans le jardin ; les coudes du bazar couvert élargis pour doubler (le tunnel suit s.w)
       surf: { zones: [[9, 12, 'paves', 0.8], [14, 19, 'mouille', 0.5], [20, 24, 'mouille', 0.3], [25, 42, 'paves', 1]] },
       tun: [26, 37], chaud: [12, 24], amb: [[12, 20], [25, 42]], sect: [13, 25],
       place: { c: [430, 460], r: 55, a: -Math.PI / 2, piles: [[-28, -18, 2.5, 2.5], [-28, 36, 2.5, 2.5], [-28, 18, 2.5, 2.5], [-28, 0, 2.5, 2.5], [-28, -36, 2.5, 2.5], [30, 27, 2.5, 2.5], [30, 9, 2.5, 2.5], [30, -9, 2.5, 2.5], [30, -27, 2.5, 2.5], [-44, 27, 2.5, 2.5], [-44, 9, 2.5, 2.5], [-44, -9, 2.5, 2.5], [-44, -27, 2.5, 2.5], [44, 18, 2.5, 2.5], [44, -18, 2.5, 2.5]] }, // a : l'axe de la salle suit la route (vers -x) ; piles dans ce repère : [z, -x] du monde autour du centre
-      pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [300, 62, 0], [385, 40, 0], [450, 20, 0], [540, 10, 0], [650, 6, 0], [670, 26, 0],
-        [665, 185, 0], [680, 250, 4], [670, 320, 9], [660, 380, 14], [664, 434, 14], [634, 450, 14],
+      pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [290, 80, 0], [372, 58, 0], [450, 20, 0], [540, 10, 0], [650, 6, 0], [670, 26, 0],
+        [665, 185, 0], [680, 250, 4], [670, 320, 9], [660, 380, 14], [661, 430, 14], [628, 452, 14],
         [510, 455, 14], [474, 478, 14], [438, 458, 14], [398, 460, 14], [355, 455, 14], [315, 450, 13],
-        [270, 440, 12], [220, 440, 10], [175, 442, 9], [140, 434, 8],
-        [112, 410, 8], [96, 394, 7], [66, 372, 6], [50, 340, 6], [42, 304, 5], [38, 268, 5], [40, 236, 4], [46, 218, 4], [58, 206, 3], [82, 198, 3], [100, 196, 2], [110, 180, 2], [110, 152, 1], [98, 131, 1], [10, 125, 1], [-60, 116, 0], [-98, 86, 0], [-96, 30, 0]],
+        [270, 440, 12], [220, 440, 10], [170, 440, 9], [140, 442, 8],
+        [118, 418, 8], [96, 394, 7], [46, 380, 6], [36, 356, 6], [36, 300, 5], [38, 268, 5], [52, 246, 4], [58, 226, 4], [62, 208, 3], [80, 198, 3], [100, 196, 2], [110, 180, 2], [110, 152, 1], [98, 131, 1], [10, 125, 1], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
       // voiture inventée : une propulsion légère, 4 cylindres atmosphérique de 2,2 L, 290 ch, 1050 kg : faite pour glisser d'un coude à l'autre
       car: car({ nom: 'SHAHIN 2.2', ratios: [3.1, 2.1, 1.55, 1.22, 1.0, 0.84], final: 4.1, wheel: 0.31, mass: 1125, idle: 950, red: 8200, cd: 0.36, area: 1.8,
         tq: [0, 170, 230, 265, 285, 295, 290, 270, 230], trac: 10, son: 1.2, moteur: 'l4', look: { type: 'fd', col: 0x2aa39a, l: 0.95, w: 1, h: 1, nez: 0.6, cab: [-0.4, 2, 0.52], aileron: 1, bandes: 0xf0b840 } }),
@@ -421,7 +421,8 @@
         astre: { dir: [-0.8, 0.08, 0.4], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0x8a78b8, 0xc89a6a, 0.8], sun: [0xffa850, 0.95], phares: 0.3, bloom: 0.04, scan: 0.05, chaleur: 0.4,
         chev: 1, murH: 0, route: ['#857664', '#918270', '#f4ead0', '#f4ead0', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
         tun: { sol: ['#4a4644', '#54504c', '#f4ead0', '#d8c8a8', '#c8323c', '#2a1a10'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
-          fog: 0x5a3020, portail: 0x6a3a22, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
+          fog: 0x5a3020, portail: 0x6a3a22, // voûte du bazar (docs/MOTEUR-OPTIONS-CARTES.md) : une coupole par travée de 8 m, naissances à 6 m, clé de 10 à 11,8 m ; un lanterneau toutes les trois travées, sa colonne de lumière
+          h: f => 10 + 1.8 * Math.abs(Math.sin(Math.PI * f * 161 / 4)), voute: f => 4 + 1.8 * Math.abs(Math.sin(Math.PI * f * 161 / 4)), ouv: Array.from({ length: 13 }, (_, k) => [(12 * k + 5) / 161, (12 * k + 7) / 161]), rayons: '#f0c878', neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
     // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes ouvertes, au matin voilé (docs/SPEC-BARRAGE.md). Sens horaire, départ cap ouest dans la vallée,
     // grand U, pont d'acier sous les embruns des gerbes (pts 10-11), rampe vers le portail (pt 15), salle des turbines en ligne droite (pts 17-21, à ciel fermé : c'est le décor qui la construit,
