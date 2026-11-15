@@ -92,3 +92,49 @@ captures.html?carte=chapada&pas=10&taille=1920x1080&jeu=1&opt=<JSON encodé>
 
 Avec `outils/capture.sh`, `jeu=1` et une grande `taille` dépassent les 240 s d'attente par défaut. Il faut alors monter `ATTENTE=300` (en pas de 2 s).
 Les captures ne se reproduisent pas au pixel près d'une passe à l'autre (secousses et particules aléatoires). Pour prouver qu'une carte n'a pas changé, il vaut mieux comparer les shaders et les géométries que les JPEG.
+
+## 7. Tunnel et salle, deuxième série : `th.tun.rayonsK`, `th.tun.ambiant`, `th.oeil`
+
+```js
+th: { tun: { ...tunnelHabituel, rayonsK: 0.35, ambiant: 0.7 },   // colonnes plus sourdes, voûte plus claire
+      oeil: { tun: 0.7, noir: 0.5, clair: 0.15 } }               // grotte peu sombre, œil qui se refait vite au jour
+```
+- `rayonsK` : l'opacité des colonnes de lumière sous les ouvertures (`th.tun.rayons`). Elle vaut 0,55 par défaut, et comme les colonnes sont additives, c'est leur éclat.
+- `ambiant` : la part de lumière ambiante sur le sol, les parois et la voûte du tunnel (0,55 par défaut, `TUN_AMB`). Le reste vient des luminaires. Les parois de la ville (`th.alarme`) gardent leur 0,85.
+- `oeil` : l'adaptation de l'œil, sans style seulement (le style `net` des captures ne la montre pas). `tun` est la lumière vraie du tunnel par rapport au dehors (0,4) : plus près de 1, l'entrée noircit moins et la sortie éblouit moins. `noir` et `clair` sont les constantes de temps en secondes vers le noir (0,5) et vers le clair (0,35). Une sortie de grotte trop longue à retrouver le jour se règle avec `clair` plus petit, et une salle trop noire en entrant avec `tun` plus grand. `th.tun.eclat` garde son rôle.
+Coût : nul (des constantes).
+
+**La voûte coûte déjà une seule passe.** La demande supposait environ 40 passes, une par facette. En réalité, la « fusion du décor fixe » de `game.js` fond déjà chaque facette, opaque et immobile, avec les autres rubans de sa matière, par pavé de 500 m. Sur perse, la scène compte 341 objets avec ou sans fusion préalable des facettes. Je n'ai donc rien changé à ce sujet.
+
+## 8. Chaussée mouillée visible : `th.mouilleVisible`
+
+```js
+surf: { zones: [[14, 19, 'mouille', 0.5]] },
+th: { mouilleVisible: 1 }     // ou une force : 0.5 = moitié moins marqué
+```
+Les zones `surf` « mouille » se voient comme le bitume sous la pluie, là même où il ne pleut pas. La chaussée y est plus brillante (le soleil, la lune, les phares et les néons y laissent des reflets étirés), les reflets de l'écran (ssr) y sont calculés, et le bitume est un peu plus sombre (de 30 % pour un mouillé plein). La mouillure suit `T.surf` de `sim.js` : ce qu'on voit est ce qu'on roule, fondu sur 20 m aux bords. Le sol du tunnel la reçoit aussi (galeries suintantes), mais pas la pluie, qui est coupée sous le tunnel comme dans la physique. La ligne sèche que trace la course (`MO`) y est visible comme sous la pluie.
+Coût : sur une carte sans pluie, l'option allume la passe de reflets (ssr), avec sa profondeur, et le repli des reflets, comme une carte de pluie. Sur chapada, on a mesuré 2,62 / 2,37 ms (210 / 201 appels) contre 2,30 / 2,18 ms (201 / 198 appels) sans l'option, soit environ +0,3 ms et +5 appels, dans une machine chargée à 50 %. Sur une carte qui pleut déjà, elle ne coûte rien.
+**À l'essai :**
+- Sur touge, avec une zone `mouille` posée par `?opt=`, la chaussée change bien (écart moyen de 2,4 niveaux de gris sur l'image).
+- Sur barrage, le sol du tunnel mouillé est vu « plus sombre et brillant, reflets des luminaires plus marqués », surtout dans le rendu réel.
+- **Sur chapada, rien ne se voit** (écart de 0,08) : dans ses zones mouillées, le décor de la carte pose ses propres surfaces par-dessus la chaussée (à 4 cm au-dessus aux échantillons 1450 et 1550, au même niveau à 1300, vérifié par lancer de rayon). Ces surfaces ne lisent pas la mouillure. Une carte qui recouvre sa route doit soit laisser la chaussée visible dans ses zones mouillées, soit donner ce rendu à ses propres surfaces.
+
+## 9. Retour au frôlement du mur : `th.frole`
+
+```js
+th: { frole: 1 }
+```
+Quand la voiture frotte le mur à plus de 15 m/s (le moment où `sim.js` remplit la jauge, `NI.mur`), la jauge de nitro du HUD s'éclaircit et le segment qui se remplit passe en blanc, un peu plus haut, pendant le frottement et 0,3 s après. Les étincelles du frottement existaient déjà, sur toutes les cartes. Le calcul de la sim n'est pas touché.
+Coût : nul.
+**À l'essai (wangan poussé au mur) :** le segment blanc est bien lu dans les deux rendus. Dans le rendu réel à 270 lignes, la jauge éclaircie reste terne, « gris-beige », quand elle est peu remplie.
+
+## Mesures de la deuxième série (banc rapide, machine chargée de 30 à 57 %)
+
+| Carte | Avant | Après |
+|---|---|---|
+| wangan | 3,65 / 3,66 ms, 477 / 458 appels | 3,57 / 3,06 ms, 466 / 466 appels |
+| wangan, tunnel voûté par `?opt=` | 3,62 / 4,88 ms, 475 / 459 appels | 2,99 / 3,05 ms, 464 / 467 appels |
+| perse (branche `claude/carte-perse-v2-48e1b0`) | 4,24 / 3,11 ms (408 / 416 appels), puis 2,03 / 1,99 ms (409 / 436 appels) | 2,17 / 2,09 ms, 438 / 442 appels |
+| perse avec `rayonsK`, `ambiant`, `oeil` et `frole` | — | 2,19 / 2,11 ms, 464 / 438 appels |
+
+Le nombre d'appels varie de ±30 d'une mesure à l'autre avec le même code (perse avant : 409, puis 436). Sans option, les anciennes cartes gardent les mêmes géométries et matières, vérifié par empreinte sur wangan, barrage et paris. Les shaders ne diffèrent que par le texte des blocs `#ifdef MOUVIS` inactifs.
