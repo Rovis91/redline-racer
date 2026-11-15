@@ -429,25 +429,28 @@
     // serpente entre trois groupes posés au milieu de la halle, en quinconce : un slalom) ; la montée de la culée est en trois lacets (pts 13-35), dont un court passage en galerie dans la roche (pts 22-27) ;
     // la crête de 660 m cap ouest, retenue à droite, vide à gauche (pts 35-40) ; la corniche de la rive ouest qui descend au-dessus de la rivière (pts 41-49) ; le grand pont qui la traverse (pts 49-53).
     // Barrage 74 : un barrage poids-voûte de montagne (Saïano-Chouchenskaïa au 1/2,5) début mai, retenue basse (85 m pour une crête à 105 m). x vers l'est, z vers le sud ; la rivière coule vers le sud.
-    // Rue de la cité (départ, cap au nord), route de la vallée, traversée de la salle des turbines au pied du mur, quai du bassin, pont sur la rivière (mouillé par les embruns), rampe du versant ouest et épingle du ravin, tunnel de la culée ouest qui débouche sur la crête,
+    // La cité traversée en zigzag entre les immeubles (départ dans la rue, cap au nord), S de la vallée entre la garnison et le poste, slalom entre les groupes de la salle des turbines, quai du bassin, pont sur la rivière (mouillé par les embruns), rampe du versant ouest et épingle du ravin, tunnel de la culée ouest qui débouche sur la crête,
     // crête en arc de 600 m de rayon (d'ouest en est), S de la culée est, deux épingles sur l'épaule du versant est, descente sur la cité. Altitudes à pente constante par rampe (captures/gen-pts.js de la refonte).
-    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [35, 40], chaud: [40, 47], sect: [22, 47], corde: [40, 46], amb: [[8, 20], [40, 47]], anticipe: 1, trafic: 4, // corde : sur la crête, frôler le garde-corps sans le toucher remplit la nitro
-      surf: { zones: [[16, 20, 'mouille', 1]] }, // le pont du pied du mur, mouillé par les embruns des vidanges (pas d'averse : th.pluie n'y met que des gouttes)
-      pts: [[170,930,16], [170,820,15.6], [168,700,15.2], [160,580,14.8], [152,460,14.4], [150,340,14], [150,220,14], [148,130,14], [136,90,14],
-        [108,70,14], [50,70,14], [14,70,14], [-8,76,14], [-20,96,14], [-22,160,14], [-23,225,14], [-34,266,14], [-60,286,14],
-        [-100,288,14], [-150,288,14], [-192,298,14], [-210,332,16.8], [-216,390,21.1], [-232,480,27.9], [-252,590,36.2], [-268,700,44.4], [-280,790,51.1],
-        [-298,838,54.9], [-332,852,57.6], [-358,826,60.3], [-364,760,65.2], [-368,650,73.3], [-366,540,81.5], [-358,430,89.6], [-346,330,97], [-336,250,103],
-        [-336,170,103.6], [-336,92,104.1], [-326,54,104.4], [-298,29,104.7], [-252,12,105], [-180,-24,105], [-90,-43,105], [0,-50,105], [90,-43,105],
-        [180,-24,105], [240,0,105], [292,22,105], [330,44,101.9], [352,80,99], [366,124,95.8], [400,180,91.2], [448,244,85.6], [508,312,79.3],
-        [556,362,74.4], [574,392,72], [560,420,69.8], [526,412,67.3], [446,344,60], [372,276,53], [318,232,48.1], [286,216,45.6], [262,230,43.7],
-        [260,260,41.6], [278,292,39], [322,366,35.3], [368,480,30.1], [404,595,25], [434,702,20.2], [452,800,16], [456,930,16], [455,1048,16],
-        [445,1077,16], [416,1090,16], [224,1090,16], [191,1080,16], [174,1052,16], [171,1008,16]],
+    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [63, 68], chaud: [68, 75], sect: [44, 75], corde: [68, 74], amb: [[27, 42], [68, 75]], anticipe: 1, trafic: 4, // corde : sur la crête, frôler le garde-corps sans le toucher remplit la nitro
+      surf: { zones: [[39, 42, 'mouille', 1]] }, // le pont du pied du mur, mouillé par les embruns des vidanges (pas d'averse : th.pluie n'y met que des gouttes)
+      pts: [[170,1036,16], [170,950,15.8], [170,860,15.6], [172,822,15.5], [190,794,15.4], [222,788,15.4], [256,790,15.3], [276,772,15.2], [282,740,15.2], [278,700,15.1],
+        [250,660,15], [205,638,14.8], [172,612,14.7], [150,575,14.6], [136,545,14.6], [126,512,14.5], [130,478,14.4], [150,448,14.3], [176,424,14.3], [184,392,14.2],
+        [170,355,14.1], [152,318,14], [148,270,14], [152,215,14], [159,150,14], [160,113,14], [150,91,14], [130,83,14], [105,83,14], [82,74,14],
+        [60,65,14], [38,74,14], [15,83,14], [-8,82,14], [-30,86,14], [-46,102,14], [-50,130,14], [-50,200,14], [-56,245,14], [-76,278,14],
+        [-110,288,14], [-150,288,14], [-192,298,14], [-210,332,16.8], [-218,385,20.7], [-240,440,25], [-236,500,29.4], [-252,560,33.9], [-280,615,38.3], [-272,680,43.1],
+        [-276,745,47.8], [-286,800,51.9], [-298,838,54.8], [-332,852,57.4], [-358,826,60.1], [-366,765,64.6], [-386,705,69.2], [-372,640,74], [-356,580,78.5], [-374,520,83.1],
+        [-372,455,87.8], [-352,400,92], [-350,335,96.7], [-336,250,103], [-336,170,103.6], [-336,92,104.1], [-326,54,104.4], [-298,29,104.7], [-252,12,105], [-180,-24,105],
+        [-90,-43,105], [0,-50,105], [90,-43,105], [180,-24,105], [240,0,105], [292,22,105], [330,44,101.9], [352,80,99], [366,124,95.8], [400,180,91.2],
+        [448,244,85.6], [508,312,79.3], [556,362,74.4], [574,392,72], [560,420,69.8], [526,412,67.3], [446,344,60], [372,276,53], [318,232,48.1], [286,216,45.6],
+        [262,230,43.7], [260,260,41.6], [278,292,39], [318,360,35.4], [356,410,32.6], [352,465,30.1], [378,520,27.3], [412,570,24.5], [402,630,21.8], [424,690,18.9],
+        [446,740,16.4], [452,800,16.4], [452,850,16.3], [446,882,16.3], [420,900,16.3], [370,902,16.3], [338,906,16.2], [314,926,16.2], [310,960,16.2], [310,1040,16.1],
+        [304,1072,16.1], [282,1094,16.1], [230,1100,16.1], [200,1098,16], [180,1088,16], [171,1070,16], [170,1054,16]],
       // ZiL-111 (1958-1967), la limousine d'État soviétique : V8 de 6 L, trois volumes de plus de 6 m, calandre chromée, quatre phares, ailerons de queue. La caisse et le V8 sont les siens ;
       // les chiffres de conduite sont ceux d'une voiture préparée, inventés pour le jeu (la vraie pèse 2,6 t, fait 200 ch et a deux rapports)
       car: car({ nom: 'ZARIA 111 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'zil', col: 0x14161a, l: 1.12, w: 1.04, h: 1.02, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0 } }),
       radio: RADIO.barrage,
-      th: { decor: 'barrage', pluie: [[16, 20, 0.6]], mouilleVisible: 1, ombre: { doux: 1 }, frole: 1, oeil: { tun: 0.7, noir: 0.5, clair: 0.15 }, routeTex: 'chausseeGES', lisse: ['eauGES', 'ecumeGES', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin sans flaques (textures-barrage.js), eau lissée
+      th: { decor: 'barrage', pluie: [[39, 42, 0.6]], mouilleVisible: 1, ombre: { doux: 1 }, frole: 1, oeil: { tun: 0.7, noir: 0.5, clair: 0.15 }, routeTex: 'chausseeGES', lisse: ['eauGES', 'ecumeGES', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin sans flaques (textures-barrage.js), eau lissée
         fog: 0xb0babc, fogD: [70, 1000], sky: [[0, '#62748a'], [0.3, '#97a6ae'], [0.47, '#d4ccb6'], [0.5, '#b0babc'], [1, '#b0babc']], stars: 0,
         astre: { dir: [0.70, 0.38, 0.60], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c6d2, 0x55554c, 0.8], sun: [0xffecc8, 0.75], phares: 0, bloom: 0.04, scan: 0.05, // soleil du matin au sud-est, à 22° : le parement aval est éclairé en biais, le versant est reste à l'ombre
         chev: 1, murH: 0, route: ['#3a3c3e', '#46484a', '#f4f0e4', '#f4f0e4', '#3a3c3e', '#3a3c3e', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
