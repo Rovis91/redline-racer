@@ -418,7 +418,7 @@
       // shortcut: les stations du canal sous d'autres noms (test-cartes exige noms et genres uniques), en attendant une radio perse composée (daf, tar, santour : spec §4.5)
       radio: RADIO.canal.map((s, i) => ({ ...s, name: ['RADIO SHIRAZ', 'BAZAR 122', 'MARVDASHT FM'][i], fq: ['99.2', '122.0', '70.7'][i], genre: ['FUNK ROYAL', 'ELECTRO DU BAZAR', 'ROCK DES DUNES'][i] })),
       th: { decor: 'perse', fog: 0xe6b07c, fogD: [140, 1600], sky: [[0, '#3a3f78'], [0.26, '#3a3f78'], [0.27, '#8a5a86'], [0.38, '#8a5a86'], [0.39, '#e08a62'], [0.45, '#e08a62'], [0.46, '#f6c98a'], [0.5, '#e6b07c'], [1, '#e6b07c']], stars: 0,
-        astre: { dir: [-0.8, 0.14, -0.35], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0x8a78b8, 0xc89a6a, 0.8], sun: [0xffa850, 0.95], phares: 0.3, bloom: 0.04, scan: 0.05,
+        astre: { dir: [-0.8, 0.14, -0.35], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0xa8a8d8, 0xd0b890, 0.9], sun: [0xffc080, 0.85], phares: 0.3, bloom: 0.04, scan: 0.05,
         chev: 0, murH: 0, routeTex: 'chausseeFine', route: ['#857664', '#8d7e6c', '#f4ead0', '#f4ead0', '#d8c8a8', '#6a5c4e', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
         tun: { sol: ['#4a4644', '#54504c', '#f4ead0', '#d8c8a8', '#c8323c', '#2a1a10'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
           fog: 0x5a3020, portail: 0x6a3a22, // voûte du bazar (docs/MOTEUR-OPTIONS-CARTES.md) : une coupole par travée de 8 m, naissances à 6 m, clé de 10 à 11,8 m ; un lanterneau toutes les trois travées, sa colonne de lumière

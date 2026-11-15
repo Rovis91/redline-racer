@@ -22,6 +22,11 @@
       voile(g, 0.15, () => { for (let i = 0; i < 40; i++) R(g, '#5a5048', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 6 | 0), 1); });
       voile(g, 0.35, () => { for (let k = 0; k < 64; k += 16) { R(g, '#3a3028', 0, k, 64, 1); R(g, '#3a3028', k, 0, 1, 64); } });
     }, 8],
+    // dallage de la terrasse : grandes dalles de calcaire de 2 × 4 m, deux tons proches, joints fins (REFS §1) ; sobre, pour que la route et les monuments s'y détachent
+    dallesPerse: () => [64, 64, (g, { R, alea }) => {
+      R(g, '#a89478', 0, 0, 64, 64); for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) if (alea() < 0.45) R(g, alea() < 0.5 ? '#b09c80' : '#a08c72', x * 32 + (y & 1) * 16, y * 16, 32, 16);
+      for (let y = 0; y < 64; y += 16) R(g, '#8a7862', 0, y, 64, 1); for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) R(g, '#8a7862', (x * 32 + (y & 1) * 16) % 64, y * 16, 1, 16);
+    }, 8],
     // frise des Immortels sur pierre dorée : rangée de gardes de profil (lance, carquois, robe lapis ou rouge), cyprès entre eux, bandeau de rosettes en haut (REFS §3) ; étirée en hauteur sur un mur de 3 m
     frise: () => [64, 32, (g, { R }) => {
       R(g, PIERRE, 0, 0, 64, 32); R(g, '#a88a58', 0, 26, 64, 6); R(g, '#a88a58', 0, 4, 64, 1);
