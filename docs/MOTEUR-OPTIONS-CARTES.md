@@ -161,3 +161,5 @@ Les chevrons que le moteur pose à l'extérieur des virages prennent cette textu
 th: { chev: 1, chevSauf: [[27, 33]] }   // pas de chevrons entre les points 27 et 33 du tracé
 ```
 Le moteur pose un chevron tous les 12 m dès que le rayon passe sous 167 m. Entre les points donnés, il n'en pose pas : pour un passage où le décor guide déjà (sur barrage, la salle des turbines et ses garde-corps orange). Sans l'option, rien ne change.
+
+`th.chevK` règle le seuil de courbure à partir duquel un chevron est posé (0,006 par défaut, soit un rayon de 167 m). Sur barrage, `chevK: 0.02` ne garde les panneaux que dans les virages de moins de 50 m de rayon.

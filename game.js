@@ -566,7 +566,7 @@
         dummy.rotation.order = 'XYZ'; dummy.rotation.set(0, across(s), 0); dummy.scale.set(1, 1, 1);
       }
       if (TH.piles != null && i % 30 === 0 && !inT) { const b = TH.piles + 1; dummy.position.set(s.x, (s.y - 1 + b) / 2, s.z); dummy.scale.set(1, Math.max(0.1, s.y - 1 - b), 1); dummy.updateMatrix(); piles.setMatrixAt(np++, dummy.matrix); dummy.scale.set(1, 1, 1); }
-      if (TH.chev && i % 6 === 0 && Math.abs(s.k) > 0.006 && cnt[s.k > 0 ? 0 : 1] < 600 && !chevSauf.some(z => z(i, 1) >= 1)) {
+      if (TH.chev && i % 6 === 0 && Math.abs(s.k) > (TH.chevK || 0.006) && cnt[s.k > 0 ? 0 : 1] < 600 && !chevSauf.some(z => z(i, 1) >= 1)) {
         const f = s.k > 0 ? 0 : 1, side = s.k > 0 ? -1 : 1, off = inT ? W - 0.2 : W + 0.6;
         dummy.position.set(s.x + nx * side * off, s.y + 3, s.z + nz * side * off); dummy.lookAt(s.x, s.y + 3, s.z); dummy.updateMatrix();
         sg[f].setMatrixAt(cnt[f]++, dummy.matrix);

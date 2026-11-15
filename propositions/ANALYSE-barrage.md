@@ -29,6 +29,13 @@ Retour de l'auteur après essai, appliqué :
 - Cité : sept lieux réservés au bord de la rue avant les barres (cinéma, marché, grande roue, statue sur sa place, patinoire, station-service), puis, dans l'intérieur de chaque virage, fontaine, avion sur pylône, kiosque à musique ou parterre. Mobilier de trottoir entre les voitures garées (banc, tableau d'honneur, colonne d'affiches, cabine). Les voitures sont posées sur le sol réel et agrandies de 20 %.
 - Garnison : grande parabole pleine sur sa tour, quatre lance-roquettes sur camion, rails levés, au premier rang.
 
+Troisième retour, appliqué : voitures garées posées sur le parvis (le sol de la cité reste au niveau de la rue sous les dalles, et la dalle de gauche ne s'affichait pas) ; cité en rangs parallèles derrière chaque immeuble de la rue, avec école, jardins d'enfants et boxes de garages dans les cours, bouleaux trois fois plus nombreux ; plus de souches ni de petites piles de grumes dans la montée ; chevrons seulement dans les virages de moins de 50 m de rayon (`th.chevK`).
+
+À faire plus tard (noté à la demande de l'auteur, pas commencé) :
+- Une gare animée à la place du train de marchandises à l'arrêt, peu visible depuis la route.
+- Le reflet brillant de la chaussée sous la pluie ne se voit plus quand la texture de route est lissée (`th.lisse`, `routeTex`), ni quand la route est en côte. C'est dans le moteur, à reprendre avec les lumières dynamiques.
+- Les lumières dynamiques des lampadaires (les halos ont été retirés).
+
 Restent du ressort de l'auteur : tout ce qui se juge manette en main (le brouillard à 190 km/h, le nouveau freinage de la culée, la lecture de la garnison et de la carrière en passant). La montée en forêt (échantillons 864 à 1436) a reçu trois repères : une coupe de bois sur la rampe (clairière de souches, piles de grumes, camion, enseigne), un grand panneau rouge « СЛАВА ТРУДУ! » à l'extérieur de l'épingle du ravin, un arrêt d'autobus sur la traverse.
 
 ## Verdict
