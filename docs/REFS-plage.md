@@ -449,3 +449,5 @@ Base : fin de série 2 (da1bce4, 8,06). Fusion de `claude/moteur-options-cartes-
 3. **Coupe et saut** : inchangés depuis la série 2 (`T.surfL` unique, `land > 9`).
 4. **Bruit du panel** : écarts de 1 à 2 points d'un tour à l'autre sur un même critère de la référence inchangée (Identité de A : 8 → 8,5 → 6,5 ; Profondeur : 6 → 5,5 → 4,5), plus grands que le seuil de 0,3.
 5. **Non vérifiés** : la conduite à la main, l'écran partagé, la dureté de la réception du saut avec le nouveau relief.
+
+**Retour à la meilleure version.** La série 3 n'a pas dépassé la série 2 (8,06). Le commit suivant rétablit `cartes.js`, `decors.js` et `traces-or.js` tels qu'au tour 3 de la série 2 (da1bce4), sur le moteur fusionné. De la série 3, il ne garde que `th.oeil` et `th.frole` : ces deux options ne se voient pas dans les captures, donc elles ne peuvent rien faire baisser. `rayonsK`, `ambiant`, la lagune courbée et l'allée recalée sont retirés, faute d'avoir pu les isoler du recul du tour 1. Trace or : 45,91 s (seuil 49,55 s).
