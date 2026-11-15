@@ -410,8 +410,8 @@
       pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [290, 80, 0], [372, 58, 0], [450, 20, 0], [540, 10, 0], [650, 6, 0], [670, 26, 0],
         [665, 185, 0], [680, 250, 4], [670, 320, 9], [660, 380, 14], [661, 430, 14], [628, 452, 14],
         [510, 455, 14], [474, 478, 14], [438, 458, 14], [398, 460, 14], [355, 455, 14], [315, 450, 13],
-        [270, 440, 12], [220, 440, 10], [170, 440, 9], [140, 442, 8],
-        [118, 418, 8], [96, 394, 7], [46, 380, 6], [36, 356, 6], [36, 300, 5], [38, 268, 5], [52, 246, 4], [58, 226, 4], [62, 208, 3], [80, 198, 3], [100, 196, 2], [110, 180, 2], [110, 152, 1], [98, 131, 1], [10, 125, 1], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
+        [270, 440, 12], [220, 440, 10], [172, 440, 9], [136, 446, 8],
+        [110, 422, 8], [92, 396, 7], [46, 380, 6], [36, 356, 6], [36, 300, 5], [38, 268, 5], [52, 246, 4], [58, 226, 4], [62, 208, 3], [80, 198, 3], [100, 196, 2], [110, 180, 2], [110, 152, 1], [98, 131, 1], [10, 125, 1], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
       // voiture inventée : une propulsion légère, 4 cylindres atmosphérique de 2,2 L, 290 ch, 1050 kg : faite pour glisser d'un coude à l'autre
       car: car({ nom: 'SHAHIN 2.2', ratios: [3.1, 2.1, 1.55, 1.22, 1.0, 0.84], final: 4.1, wheel: 0.31, mass: 1125, idle: 950, red: 8200, cd: 0.36, area: 1.8,
         tq: [0, 170, 230, 265, 285, 295, 290, 270, 230], trac: 10, son: 1.2, moteur: 'l4', look: { type: 'fd', col: 0x2aa39a, l: 0.95, w: 1, h: 1, nez: 0.6, cab: [-0.4, 2, 0.52], aileron: 1, bandes: 0xf0b840 } }),
@@ -422,7 +422,7 @@
         chev: 1, murH: 0, route: ['#857664', '#918270', '#f4ead0', '#f4ead0', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
         tun: { sol: ['#4a4644', '#54504c', '#f4ead0', '#d8c8a8', '#c8323c', '#2a1a10'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
           fog: 0x5a3020, portail: 0x6a3a22, // voûte du bazar (docs/MOTEUR-OPTIONS-CARTES.md) : une coupole par travée de 8 m, naissances à 6 m, clé de 10 à 11,8 m ; un lanterneau toutes les trois travées, sa colonne de lumière
-          h: f => 10 + 1.8 * Math.abs(Math.sin(Math.PI * f * 161 / 4)), voute: f => 4 + 1.8 * Math.abs(Math.sin(Math.PI * f * 161 / 4)), ouv: Array.from({ length: 13 }, (_, k) => [(12 * k + 5) / 161, (12 * k + 7) / 161]), rayons: '#b08850', neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1.1 }, // eclat : l'œil se fait à un bazar plus clair (tous les relecteurs le trouvaient trop sombre)
+          h: f => 10 + 1.8 * Math.abs(Math.sin(Math.PI * f * 161 / 4)), voute: f => 4 + 1.8 * Math.abs(Math.sin(Math.PI * f * 161 / 4)), ouv: Array.from({ length: 13 }, (_, k) => [(12 * k + 5) / 161, (12 * k + 7) / 161]), rayons: '#d8b070', rayonsK: 0.32, ambiant: 0.75, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1.1 }, oeil: { tun: 0.65, noir: 0.5, clair: 0.2 }, frole: 1, // eclat : l'œil se fait à un bazar plus clair (tous les relecteurs le trouvaient trop sombre)
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },
     // Barrage 74 : une centrale hydroélectrique soviétique des années 70, vannes ouvertes, au matin voilé (docs/SPEC-BARRAGE.md). Sens horaire, départ cap ouest dans la vallée,
     // grand U, pont d'acier sous les embruns des gerbes (pts 10-11), rampe vers le portail (pt 15), salle des turbines en ligne droite (pts 17-21, à ciel fermé : c'est le décor qui la construit,
