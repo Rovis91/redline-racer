@@ -232,15 +232,16 @@
       }`;
   }
   const grille = n => n > 2 ? [2, 2] : [1, n]; // colonnes × lignes de vues ; à 3, la case en bas à droite reste noire
-  let RH = 270; const HH = 270; // vu.w × HH : grille du HUD d'une vue ; vu.rw × RH : sa cible (la même sans style) ; toutes les vues ont les mêmes lignes
+  let RH = 270; const HH = 270, KL = ST ? 1 : 2; // KL : lignes de la scène par ligne de la grille du HUD (540 lignes ; le HUD et les effets de la passe finale restent sur la grille de 270)
+  // vu.w × HH : grille du HUD d'une vue ; vu.rw × RH : sa cible (la même sans style) ; toutes les vues ont les mêmes lignes
   const resize = () => {
-    const OW = Math.round(innerWidth * devicePixelRatio), OH = Math.round(innerHeight * devicePixelRatio), k = ST ? (ST.h || OH) / HH * AA : 1, n = VUES.length; RH = Math.round(HH * k);
+    const OW = Math.round(innerWidth * devicePixelRatio), OH = Math.round(innerHeight * devicePixelRatio), k = ST ? (ST.h || OH) / HH * AA : KL, n = VUES.length; RH = Math.round(HH * k);
     const [cols, rows] = grille(n);
     for (const vu of VUES) { // chaque vue prend une case de la grille (à 2 : bandes superposées ; à 3 ou 4 : 2 × 2) : sa largeur de grille suit le rapport de cette case, dans les bornes du solo, la haute multipliée par l'allongement de la case (une bande est n fois plus allongée que l'écran : bornée à 960, elle s'étirait dès que l'écran dépassait le 16/9)
       vu.w = clamp(Math.round(HH * rows / cols * innerWidth / (innerHeight || 1)), 360, 960 * rows / cols); vu.rw = Math.round(vu.w * k);
       vu.rt.setSize(vu.rw, RH); if (vu.rs) vu.rs.setSize(vu.rw, RH); vu.hudC.width = vu.w; vu.hudC.height = HH; vu.hg.f_ = null; vu.cam.aspect = vu.w / HH; vu.cam.updateProjectionMatrix();
     }
-    if (ST) { renderer.setSize(OW, OH, false); post.uniforms.ecr.value.set(OW, OH); } else if (n) renderer.setSize(VUES[0].w * cols, HH * rows, false);
+    if (ST) { renderer.setSize(OW, OH, false); post.uniforms.ecr.value.set(OW, OH); } else if (n) renderer.setSize(VUES[0].w * cols * KL, HH * rows * KL, false);
     renderer.setScissorTest(n > 1); // à deux, la passe finale de chaque vue ne touche que sa bande (voir vueFrame)
     if (COM) { COM.c.width = clamp(Math.round(HH * innerWidth / (innerHeight || 1)), 360, 960); COM.c.height = HH; COM.g.f_ = null; } // la couche commune garde la grille du solo, étirée sur tout l'écran : menu et pause y sont dessinés comme en solo
   };
@@ -1892,7 +1893,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (state !== 'title') radioT -= dt; // l'annonce de la station clignote 2,5 s (une radio pour toutes les vues)
     for (const vu of VUES) vueFrame(vu, dt, now);
     if (COM) { // à deux : un trait net de 2 pixels à cheval sur les deux vues, puis la couche commune
-      renderer.setScissor(0, HH - 1, VUES[0].w, 2); renderer.setClearColor(C); renderer.clear(true, false, false); renderer.setClearColor(0);
+      renderer.setScissor(0, (HH - 1) * KL, VUES[0].w * KL, 2 * KL); renderer.setClearColor(C); renderer.clear(true, false, false); renderer.setClearColor(0);
       couche();
     }
   }
@@ -2002,7 +2003,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       for (; n < 4; n++) RC[n].setScalar(0);
     }
     drawHUD(vu, dt, sp, state === 'race' ? alerteVirage(T, car.idx, sp) || (surGlace && { glace: surGlace }) : 0);
-    const U = post.uniforms; U.t.value = (vu.rs || vu.rt).texture; U.h.value = vu.hudT; if (U.dz) U.dz.value = vu.rt.depthTexture; U.px.value.set(AA / vu.rw, AA / RH); post.uniforms.vig.value = 0.6 * nitE + 1.3 * rv * rv; // vignette resserrée par la vitesse et la nitro ; la passe finale est commune : ses entrées sont celles de la vue
+    const U = post.uniforms; U.t.value = (vu.rs || vu.rt).texture; U.h.value = vu.hudT; if (U.dz) U.dz.value = vu.rt.depthTexture; U.px.value.set(AA * KL / vu.rw, AA * KL / RH); post.uniforms.vig.value = 0.6 * nitE + 1.3 * rv * rv; // vignette resserrée par la vitesse et la nitro ; la passe finale est commune : ses entrées sont celles de la vue
     // flou de vitesse : rien sous 130 km/h, il monte ensuite jusqu'à la pointe ; l'aberration chromatique suit
     post.uniforms.amt.value = 1.1 * rv * rv; post.uniforms.ab.value = 0.002 + 0.016 * rv * rv + (stun > 0 ? stun * 0.04 : 0);
     // gouttes sur l'objectif (voir AIR) : la pluie en dépose, pas la neige ; elles glissent, puis le vent de la course les remonte en les étirant, et au-delà de M.vit[0] il les chasse
@@ -2031,7 +2032,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     { const OE = TH.oeil || {}, OEIL_NOIR = OE.noir ?? OEIL_N, OEIL_CLAIR = OE.clair ?? OEIL_C, vrai = Math.log(1 - (1 - (OE.tun ?? TUN)) * lm), cible = vrai - Math.log(T.tun && TH.tun.eclat || 1) * lm; // l'œil : vrai = log de la lumière vraie ; th.tun.eclat : l'œil se fait à un tunnel plus clair que sa peinture
       vu.oeil += (cible - vu.oeil) * (1 - Math.exp(-dt / (cible > vu.oeil ? OEIL_CLAIR : OEIL_NOIR))); U.ex.value = Math.min(Math.exp(vrai - vu.oeil), Math.max(1.6, T.tun && TH.tun.eclat || 1)); } // éblouissement au plus ×1,6
     renderer.setRenderTarget(null);
-    if (COM) { const [cols, rows] = grille(VUES.length), x = (vu.n % cols) * vu.w, y = (rows - 1 - (vu.n / cols | 0)) * HH; renderer.setViewport(x, y, vu.w, HH); renderer.setScissor(x, y, vu.w, HH); } // à deux : la passe finale de la vue dans sa bande (y compté du bas : le joueur 1 en haut) ; le shader ne change pas, son centre de flou et sa vignette sont relatifs à la bande
+    if (COM) { const [cols, rows] = grille(VUES.length), x = (vu.n % cols) * vu.w, y = (rows - 1 - (vu.n / cols | 0)) * HH; renderer.setViewport(x * KL, y * KL, vu.w * KL, HH * KL); renderer.setScissor(x * KL, y * KL, vu.w * KL, HH * KL); } // à deux : la passe finale de la vue dans sa bande (y compté du bas : le joueur 1 en haut) ; le shader ne change pas, son centre de flou et sa vignette sont relatifs à la bande
     renderer.render(postScene, postCam);
   }
   let chaud = false;
