@@ -1875,7 +1875,8 @@
     // Aucun ruban n'est posé à plat sur le terrain : ses mailles de 8 m le perçaient en festons (les « vagues » de la V1). Le bas-côté est un ruban en pente douce
     // depuis la chaussée, et le terrain est tenu 0,35 m sous lui (creux) ; les parois sont des maillages en strates, au sommet plat.
     chapada(h) {
-      const { THREE, S, N, W, rnd } = h, P = k => pt(h, k), DS = { side: THREE.DoubleSide }, IX = new Map(S.map((s, i) => [s, i]));
+      const { THREE, S, N, W, rnd } = h, P = k => pt(h, k >= 2 ? k + 2 : k), // deux points ajoutés après le point 1 (la chicane du plateau) : le décor garde la numérotation d'avant
+         DS = { side: THREE.DoubleSide }, IX = new Map(S.map((s, i) => [s, i]));
       const dans = (i, a, b) => ((i - P(a) + N) % N) <= ((P(b) - P(a) + N) % N); // échantillon i entre les points a et b
       const entre = (i, a, b) => ((i - a + N) % N) <= ((b - a + N) % N); // idem, entre deux échantillons
       const lisse = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
@@ -2062,7 +2063,7 @@
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
       const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches'), lanterne = h.mat('peinture', { lum: 1, c: 0xffb45a });
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + (k < 12 ? 5 + rnd() * 6 : 7 + rnd() * rnd() * 40), [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
-        if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9)) continue; const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
+        if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9) || g.dAt(x, z) < 12) continue; // ni l'une sur l'autre, ni sur une autre portion de route (la chicane) const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
         maisons.push([x, g.hAt(x, z) - 0.2, z, a, w, d, ru]); }
       for (const [x, y, z, a, w, d, ru] of maisons) { const gr = new THREE.Group(); gr.position.set(x, y, z); gr.rotation.y = a; h.scene.add(gr);
         h.pose('maisonIgatu', { pierre, tuile, porte }, gr, [0, 0, 0], w, d, rnd() < 0.35 ? 5.5 + rnd() * 2 : 3.4 + rnd() * 0.8, ru);
