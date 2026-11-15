@@ -17,7 +17,7 @@ L'auteur a accepté toutes les propositions. Elles sont faites sur cette branche
 | A-06 lumière | Fait : voile général (`fogD: [40, 760]`), sommets teintés, une fenêtre sur trois allumée dans les immeubles (texture d'émission `panneauKlum`), halo sur chaque lampadaire, projecteurs allumés sur les miradors de la garnison et sur trois mâts au poste électrique. Les lampes n'éclairent pas le sol (il fait jour). |
 | A-07 vallée | Fait : clôture d'un seul côté, rien dans les 150 m avant la halle, objets de droite à 4 m du bord. |
 | A-08 tracé | Fait : S de la culée resserré, freinage à 165 km/h à 3 809 m, tour lancé 117 s, trace or régénérée. `vit` et médailles non réglés. |
-| A-09 coût | En partie : 450 → 418 appels (sapins en un seul lot). La cible de 320 n'est pas atteinte. **Erratum** : le chargement de 8 s était celui d'un Chrome à froid ; à chaud barrage charge en 1,7 s comme `touge`. Il n'y a rien à corriger là. |
+| A-09 coût | En partie : 450 → 389 appels au pire, 198 → 183 en moyenne (sapins en un seul lot, fûts seulement à moins de 90 m de la route, enseignes identiques regroupées). La cible de 320 n'est pas atteinte : le pire est une image où le cube des reflets (125 appels) se redessine en plus de la scène (231), et cette cadence est celle du moteur. **Erratum** : le chargement de 8 s était celui d'un Chrome à froid ; à chaud barrage charge en 1,7 s comme `touge`. Il n'y a rien à corriger là. |
 | A-10 rivière, bouleaux | Fait. |
 | A-11 sommets | Fait : aplats, neige au-dessus d'une ligne nette. |
 | A-12 chevrons | Fait pour la halle (`th.chevSauf`). Gardés dans la cité, où ils aident à lire le zigzag. |
