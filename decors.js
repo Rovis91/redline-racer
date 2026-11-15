@@ -2195,7 +2195,7 @@
       chaque(gar, 3, s => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 2.4 + rnd() * 2); if (rnd() < 0.5) buissons.push([x, -0.1, z, rnd() * 6, 0.7 + rnd() * 0.6, 0.6 + rnd() * 0.5, 0.7 + rnd() * 0.6, [0xb8b070, 0xa0a860, 0xc8b878][rnd() * 3 | 0]]); else CUB.push([x, -0.02, z, rnd() * 6, 0.6 + rnd(), 0.18, 0.5 + rnd() * 0.8, 0xd4ccb4]); } }); // herbes sèches et pierres calcaires au bord
       chaque(gar, 10, s => { const sd = rnd() < 0.5 ? 1 : -1; for (let j = 0; j < 3; j++) { const [x, z] = bord(s, sd, s.w + 4 + rnd() * 8); buissons.push([x + rnd() * 2, -0.1, z + rnd() * 2, rnd() * 6, 0.9, 1.2, 0.9, 0x6a9a8a]); }
         for (const sd2 of [-1, 1]) { const [x, z] = bord(s, sd2, s.w + 3 + rnd() * 10); CUB.push([x, -0.04, z, rnd() * 6, 3 + rnd() * 4, 0.04, 2 + rnd() * 3, 0x9a9050]); } }); // agaves et plaques d'herbe sèche
-      insts(h, 'muret', { pierre: h.mat('calcaire', { c: 0xf0e8d8 }) }, murets.map(m => [...m, 1, 1.35, 1.2]), { a: [7] });
+      insts(h, 'muret', { pierre: h.mat('calcaire', { c: 0xf8f2e6 }) }, murets.map(m => [...m, 1, 1.7, 1.3]), { a: [7] });
       for (const [i, j] of [[P(21) + 8, P(21) - 10], [P(22), P(21)], [P(23) - 6, P(22)], [P(25) + 6, P(25) - 12], [P(25) + 16, P(25)], [P(26) - 8, P(25) + 6]]) { const s = S[i], sd = s.k > 0 ? -1 : 1, [x, z] = bord(s, sd, s.w + 1.4); boiteL(ecrit('>>', '#e8302a', '#ffffff', 32), 3, 2, 0.15, x, 2.1, z, enFace(S[j])); POT.push([x, -0.05, z, 0, 1.4, 1.2, 1.4]); } // chevrons des virages de la garrigue for (const sd of [-1, 1]) h.ribbon(gar[0], gar[1], sd * W, 0.006, s => sd * s.w, 0.006, h.mat('bruit', { side: D }, '#5e5a52', ['#56524a', '#66625a']), 8); for (const sd of [-1, 1]) couvre(gar[0], gar[1], s => sd * s.w, s => sd * (s.w + 2.2), h.mat('bruit', { side: D, ...OFF }, '#d0c8b0', ['#b8b098', '#e4dcc8', '#a09880']), 4, 0.03); // accotement de gravier calcaire POT.push(...pot); fils.push(...filsG);
       for (const i of [P(21) - 12, P(23) + 10]) { couvre(i, 2, -W, W, h.mat('topes', { side: D, ...OFF }), 4); const s = S[(i - 40 + N) % N], [x, z] = bord(s, 1, s.w + 2); panneaux.push([x, -0.05, z, enFace(s) + Math.PI, 'TOPE', '#f7d36b', '#1a1a1a', 1.6]); }
       { const s = S[P(22)], [x, z] = bord(s, -1, s.w + 3); panneaux.push([x, -0.05, z, enFace(s) + Math.PI, 'TULUM 45  CANCUN 68', '#1f6a3a', '#ffffff', 5]); }
@@ -2235,7 +2235,7 @@
         // les puits de lumière, de plus en plus serrés vers la grande salle (le milieu de la grotte)
         const rayon = h.mat('rayonFort', ADD), cone = h.mat('rayonCone', ADD), trouM = h.mat('tache', { lum: 1, transparent: true, depthWrite: false, fog: false, side: D }, '255,252,235');
         const rr = [], cc = [], ts = [], tr = [], rac = [];
-        for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -4.8, 2.2], [0.36, 4.8, 1.6], [0.47, -4.2, 2.8], [0.56, 4.6, 1.8], [0.67, -4.8, 2.2], [0.78, 4.8, 2], [0.86, -4.6, 2]]) {
+        for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -1.5, 2.6], [0.36, 4.8, 1.6], [0.47, 1.2, 3], [0.56, 4.6, 1.8], [0.67, -1.8, 2.6], [0.78, 4.8, 2], [0.86, -4.6, 2]]) {
           const i = (t0 + Math.round(nT * f)) % N, s = S[i], [x, z] = bord(s, 1, d), y = s.y + 7.58;
           tr.push([x, y, z, 0, R * 1.5, 1, R * 1.5]); cc.push([x, y, z, rnd() * 6, R * 1.2, 7.6, R * 1.2]); cc.push([x, y, z, rnd() * 6, R * 0.55, 7.6, R * 0.55]); // deux cônes : trois remplissaient l'écran de transparence (GPU)
           for (const a of [0, 1.57]) rr.push([x, y, z, a, R * 1.4, 7.6, 1]);
