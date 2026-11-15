@@ -1,5 +1,5 @@
 // Éditeur de musique — noyau : constantes, état de la station, annulation, enregistrement, sélection, petits composants.
-// Les fichiers de editeur/ sont des scripts classiques qui partagent leurs noms globaux ; ordre de chargement : noyau, arrangement, motifs, rouleau, instrument, mixeur, principal.
+// Les fichiers de editeur/ sont des scripts classiques qui partagent leurs noms globaux ; ordre de chargement : noyau, arrangement, motifs, rouleau, instrument, reglages, principal.
 const $ = id => document.getElementById(id), R = MUS.R, EC = SON.ecoute, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const el = (tag, cls = '', html = '') => { const e = document.createElement(tag); e.className = cls; e.innerHTML = html; return e; };
 const bouton = (txt, title, fn, cls = '') => { const b = el('button', cls, txt); b.type = 'button'; if (title) { b.title = title; b.setAttribute('aria-label', title); } b.onclick = fn; return b; };
@@ -32,6 +32,12 @@ const LIB = {
   e_piano: 'Piano', e_rhodes: 'Piano électrique Rhodes', e_choeur: 'Chœur « ah »', e_oohs: 'Voix « ooh »', e_gtMute: 'Guitare étouffée', e_gtClean: 'Guitare claire', e_gtDist: 'Guitare saturée', e_gtOver: 'Guitare crunch', e_cordes: 'Cordes', e_cuivres: 'Cuivres',
   e_synBrass: 'Cuivres de synthé', e_slap: 'Basse slap', e_basseDoigt: 'Basse électrique', e_altoSax: 'Saxophone alto', e_flute: 'Flûte', e_sitar: 'Sitar', e_kalimba: 'Kalimba', e_steel: 'Steel drum', e_marimba: 'Marimba', e_vibra: 'Vibraphone', e_pizz: 'Cordes pincées',
   e_trompette: 'Trompette', e_tenorSax: 'Saxophone ténor', e_panFlute: 'Flûte de pan' };
+// sons de batterie enregistrés (samples.js : TR-808 ; instruments.js : VCSL) qu'on peut donner à un coup de caisse claire ou de charleston ; SONS_BAT : [signe, clé de st.bat, texte du choix par défaut]
+const SONLIB = { sd: 'Caisse claire TR-808', cp: 'Clap TR-808', sn1: 'Caisse claire acoustique 1', sn1g: 'Caisse claire acoustique 1, douce', sn2: 'Caisse claire acoustique 2', sn2g: 'Caisse claire acoustique 2, douce',
+  sn3: 'Caisse claire acoustique 3', rim: 'Coup sur le cercle (rimshot)', xs: 'Cross-stick', clp: 'Clap 1', clp2: 'Clap 2', ch: 'Charleston fermé TR-808', oh: 'Charleston ouvert TR-808',
+  hhc: 'Charleston acoustique fermé', hhcp: 'Charleston acoustique fermé, doux', hho: 'Charleston acoustique ouvert', hhl: 'Charleston entrouvert', shk: 'Shaker', shk2: 'Shaker léger', tmb: 'Tambourin', cb: 'Cloche TR-808' };
+const SONS_BAT = { s: [['x', 'sS', 'Celui de la boîte à rythmes'], ['g', 'sG', 'Comme la caisse claire, plus doux'], ['c', 'cS', 'Celui de la boîte à rythmes'], ['r', 'rS', 'Celui de la boîte à rythmes']],
+  h: [['x', 'hS', 'Celui de la boîte à rythmes'], ['X', 'hA', 'Comme le fermé, plus fort'], ['o', 'hOo', 'Celui de la boîte à rythmes']] };
 const KITN = { k808: 'TR-808 (enregistrée)', k909: 'TR-909', dur: 'Années 80, sèche', lin: 'LinnDrum', ind: 'Industrielle', acou: 'Acoustique', rock: 'Rock', brk: 'Breakbeat', dnb: 'Drum and bass', disco: 'Disco' };
 const libelle = t => LIB[t] || t, famille = t => (SON.patch[t] || {}).smp ? 'e' : /^b[A-Z]/.test(t) ? 'b' : /^ld/.test(t) ? 'l' : 'c';
 
@@ -71,12 +77,12 @@ const niveau = (p, s = st) => s.mx && s.mx[p] != null ? s.mx[p] : 1;
 const dB = v => v <= 0 ? 'coupé' : (v >= 1 ? '+' : '') + (20 * Math.log10(v)).toFixed(1) + ' dB';
 
 // ---------- sélection : la piste, la section et l'onglet affichés ----------
-const sel = { p: 'l', sec: 'c', tab: 'motifs' }, rollV = {}, rollX = {}; // rollV : motif affiché dans le rouleau, par piste ; rollX : son défilement
-function choisir(p, k, tab) { // choisit une piste (et une section) et ouvre l'outil qui lui convient
-  sel.p = p; if (k) { sel.sec = k; if (EC.boucle) EC.boucle = k; }
-  const x = st.sec[sel.sec][p]; if (ROUL(p) && x) rollV[p] = x.v % nVar(p);
-  sel.tab = tab || (p === 'd' ? 'instrument' : ROUL(p) ? 'notes' : 'motifs'); build();
+const sel = { p: 'l', sec: 'c', tab: 'motif' }, rollX = {}; // rollX : défilement du rouleau, par piste
+function choisir(p, k, tab) { // choisit une piste (et une section : un bloc cliqué ouvre son motif) ; sans onglet demandé, on garde celui affiché
+  sel.p = p; if (k) choisirSection(k, true);
+  sel.tab = tab || (k ? 'motif' : sel.tab); build();
 }
+function choisirSection(k, sansBuild) { sel.sec = k; if (EC.boucle) EC.boucle = k; if (!sansBuild) build(); } // la boucle suit la section choisie
 
 // ---------- composants ----------
 // une ligne « libellé · curseur · valeur » ; get(s) lit dans la station s (en cours ou d'origine), set(v) écrit dans la station en cours ; fmt : affichage de la valeur
@@ -109,7 +115,7 @@ function selVariante(p, k) {
     if (s.value === '') delete sec[p];
     else if (s.value === 'n') { for (const j in st.sec) if (st.sec[j][p]) st.sec[j][p].v %= V.length; V.push(JSON.parse(JSON.stringify(V[cur < 0 ? V.length - 1 : cur]))); sec[p] = { v: V.length - 1, big }; } // les numéros des sections sont d'abord ramenés dans l'intervalle, pour qu'aucune ne change de motif
     else sec[p] = { v: +s.value, big };
-    if (ROUL(p) && sec[p]) rollV[p] = sec[p].v; touch(); build(); };
+    touch(); build(); };
   return s;
 }
 function mesures(p, bars) { // boutons « − mesure / ＋ mesure » d'un motif (la mesure ajoutée copie la dernière)
@@ -121,9 +127,9 @@ function mesures(p, bars) { // boutons « − mesure / ＋ mesure » d'un motif 
 
 // ---------- reconstruction de l'écran (après un changement de structure, une annulation, un changement de station) ----------
 const VUES = {}; // onglet → fonction qui remplit le panneau du bas ; chaque fichier y inscrit les siens
-const ONGLETS = [['motifs', 'Motifs'], ['notes', 'Notes'], ['instrument', 'Instrument'], ['mixeur', 'Mixeur']];
+const ONGLETS = [['motif', 'Motif'], ['son', 'Son de la piste']]; // le panneau du bas montre toujours la piste choisie, dans la section choisie
 // dialogues : ce qui ne sert pas en permanence ; identifiant → titre. Le contenu vient de VUES, et il est refait à chaque build() tant que le dialogue est ouvert
-const DLG = { accords: () => 'Accords', station: () => 'Réglages de la station', course: () => 'Situation de course', section: () => `Section ${sel.sec}${sel.sec === st.hot ? ' ★ refrain' : ''}`, banque: () => `Instrument : ${NOM[sel.p]}` };
+const DLG = { accords: () => 'Accords', station: () => 'Réglages de la station', section: () => `Section ${sel.sec}${sel.sec === st.hot ? ' ★ refrain' : ''}`, banque: () => `Instrument : ${NOM[sel.p]}` };
 let dlgVue = null;
 function remplirDlg() { if (!dlgVue) return; const C = $('dlgC'), h = C.scrollTop; $('dlgT').textContent = DLG[dlgVue](); C.textContent = ''; VUES[dlgVue](C); C.scrollTop = h; }
 function ouvrir(id) { dlgVue = id; remplirDlg(); if (!$('dlg').open) $('dlg').showModal(); }
@@ -137,11 +143,11 @@ function build() {
   if (!st[sel.p]) sel.p = PISTES.find(p => st[p]);
   if (EC.boucle && !st.sec[EC.boucle]) EC.boucle = null;
   arrangement();
-  const N = $('onglets'); N.textContent = '';
+  const N = $('onglets'); N.textContent = ''; const t = el('b', 'titre', `${NOM[sel.p]} <small>· section ${sel.sec}${sel.sec === st.hot ? ' ★' : ''}</small>`); t.style.color = COUL[sel.p]; N.append(t);
   for (const [id, txt] of ONGLETS) { const b = bouton(txt, '', () => { sel.tab = id; build(); }); b.setAttribute('aria-pressed', sel.tab === id); N.append(b); }
   N.append(el('span', 'pousse'), bouton(`Section ${sel.sec}${sel.sec === st.hot ? ' ★' : ''} : options`, 'Suite d\'accords, montée, filtre de la section choisie ; la dupliquer', () => ouvrir('section'), 'opt'));
   D.textContent = ''; VUES[sel.tab](D); D.scrollTop = haut; remplirDlg();
-  $('bpm').value = st.bpm; $('boucle').setAttribute('aria-pressed', !!EC.boucle); muets(); marques();
+  $('bpm').value = st.bpm; $('boucle').setAttribute('aria-pressed', !!EC.boucle); $('boucle').textContent = EC.boucle ? `⟲ Boucle : section ${EC.boucle}` : '⟲ Boucle'; muets(); marques();
   try { sessionStorage.setItem('ed.sel', JSON.stringify(sel)); } catch (e) { }
   if (foc) for (const e of document.querySelectorAll('[aria-label]')) if (e.getAttribute('aria-label') === foc) { e.focus({ preventScroll: true }); break; }
 }

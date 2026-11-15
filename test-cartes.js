@@ -193,6 +193,7 @@ for (const M of [...CARTES, { id: 'essais', radio: MUS.ESSAIS }]) {
     assert(s.sec[s.hot] && s.sec.e, w + 'refrain ou variation absents');
     assert(SRC.includes(' ' + s.kit + ': {'), w + 'kit inconnu ' + s.kit);
     for (const p of ['b', 'c', 'g', 'a', 'l']) { if (!s[p]) continue; const m = SRC.match(new RegExp(' ' + s[p].p + ": [{] (?:smp: '([a-zA-Z0-9]+)', )?o: [[][[]")); // un timbre échantillonné doit aussi exister dans instruments.js
+      const e = /^e_(\w+)$/.exec(s[p].p); if (e) { assert(INS[e[1]], w + 'instrument absent de instruments.js : ' + e[1]); continue; } // e_… : un timbre par instrument enregistré, fait par audio.js
       assert(m, w + 'timbre inconnu ' + s[p].p); assert(!m[1] || INS[m[1]], w + 'instrument absent de instruments.js : ' + m[1]); }
     assert(!s.d || new RegExp(' ' + s.d[0] + ": [{] (?:smp: '[a-zA-Z0-9]+', )?o: [[][[]").test(SRC), w + 'nappe inconnue');
     for (const k in s.sec) for (const p in s.sec[k]) if ('kshpbdcgal'.includes(p)) { assert(s[p], w + 'section ' + k + ' : partie absente ' + p); const v = s[p].v || (p === 'd' ? [0] : s[p]); assert(s.sec[k][p].v < v.length, w + 'section ' + k + ' : variante inconnue ' + p + s.sec[k][p].v); }

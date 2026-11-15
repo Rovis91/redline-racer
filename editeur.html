@@ -10,15 +10,14 @@
 </head>
 <body>
 <!-- Éditeur de musique : le vrai moteur du jeu (audio.js) ; chaque réglage est enregistré dans ce navigateur (vpr.musique) et repris par le jeu au prochain chargement.
-     La page n'est qu'une coquille : le logiciel est dans editeur/ (noyau, arrangement, motifs, rouleau, instrument, mixeur, principal). -->
+     La page n'est qu'une coquille : le logiciel est dans editeur/ (noyau, arrangement, motifs, rouleau, instrument, reglages, principal). -->
 <header id="barre">
   <button id="play" title="Barre d'espace">Lecture</button>
-  <button id="boucle" aria-pressed="false" title="Fait tourner en boucle la section choisie, au lieu de dérouler le morceau">Boucle</button>
+  <button id="boucle" aria-pressed="false" title="Fait tourner en boucle la section choisie (clique l'en-tête d'une section, en haut des colonnes, pour la choisir), au lieu de dérouler le morceau">⟲ Boucle</button>
   <select id="station" aria-label="Station" title="Station"></select>
   <label>Tempo <input type="number" id="bpm" min="60" max="200" step="1"></label>
   <button id="bAccords" title="Les accords de la station, mesure par mesure">Accords</button>
   <button id="bStation" title="Tempo, swing, réverbération, écho, graves et aigus de toute la station">Réglages</button>
-  <button id="bCourse" title="La situation de course simulée : la musique du jeu suit la conduite">Course</button>
   <span id="now">à l'arrêt</span>
   <div id="vu" role="img" aria-label="Niveau de sortie"><i></i></div><span id="db">—</span>
   <button id="undo" title="Annuler (Ctrl+Z)" disabled>↶</button>
@@ -40,6 +39,6 @@
 <dialog id="dlg" aria-labelledby="dlgT"><header><b id="dlgT" class="pix"></b><button id="dlgX" aria-label="Fermer" title="Fermer (Échap)">×</button></header><div id="dlgC"></div></dialog>
 
 <script>/* le serveur local laisse le navigateur garder d'anciens fichiers : on charge toujours les scripts du jour */
-for (const f of ["cartes.js", "samples.js", "instruments.js", "audio.js", ...["noyau", "arrangement", "motifs", "rouleau", "instrument", "mixeur", "principal"].map(n => "editeur/" + n + ".js")]) document.write('<script src="' + f + "?v=" + Date.now() + '"><\/script>');</script>
+for (const f of ["cartes.js", "samples.js", "instruments.js", "audio.js", ...["noyau", "arrangement", "motifs", "rouleau", "instrument", "reglages", "principal"].map(n => "editeur/" + n + ".js")]) document.write('<script src="' + f + "?v=" + Date.now() + '"><\/script>');</script>
 </body>
 </html>

@@ -1,24 +1,13 @@
-// Éditeur de musique — onglet « Notes » : le piano-roll de la basse et du thème (temps en X, notes en Y).
+// Éditeur de musique — le piano-roll de la basse et du thème (temps en X, notes en Y), affiché par l'onglet « Motif ».
 // Clic dans le vide : poser une note (elle se fait entendre) ; glisser une note : la déplacer ; tirer son bord droit : l'allonger ; clic droit : l'effacer.
 // Au clavier, sur la note choisie : flèches pour déplacer, Maj + gauche / droite pour la longueur, Suppr pour effacer.
-VUES.notes = H => {
-  const dispo = ['b', 'l'].filter(p => st[p]), p = ROUL(sel.p) && st[sel.p] ? sel.p : dispo[dispo.length - 1];
-  if (!p) return H.append(el('p', '', 'Cette station n\'a ni basse ni thème : ajoute une de ces pistes dans la liste des pistes.'));
-  const bar = el('div', 'bar');
-  for (const q of dispo) { const b = bouton(NOM[q], `Notes de la piste ${NOM[q]}`, () => choisir(q, null, 'notes')); b.setAttribute('aria-pressed', q === p); b.style.setProperty('--c', COUL[q]); b.className = 'onglet'; bar.append(b); }
-  H.append(bar); roll(H, p);
-};
-
-function roll(host, p) {
-  const part = st[p], rel = p === 'b', vi = rollV[p] = Math.min(rollV[p] || 0, part.v.length - 1), bars = part.v[vi], n = bars.length * 16;
+function roll(host, p, vi) {
+  const part = st[p], rel = p === 'b', bars = part.v[vi], n = bars.length * 16;
   const all = part.v.flat(2).filter(x => x != null && x !== R);
   const lo = rel ? Math.min(-12, ...all) : (all.length ? Math.min(...all) : st.key + 12) - 12, hi = rel ? Math.max(24, ...all) : (all.length ? Math.max(...all) : st.key + 24) + 12;
   const CW = clamp(Math.floor(1100 / n), 12, 30), CH = 14, HEAD = 16, KW = 56, H = HEAD + (hi - lo + 1) * CH, W = n * CW;
   const gamme = new Set(MUS.GAMME[st.gamme].map(i => (st.key + i) % 12)), pc = v => ((v % 12) + 12) % 12;
-  const tabs = el('div', 'bar'); tabs.style.margin = '8px 0';
-  part.v.forEach((_, i) => { const b = bouton(`Motif ${i + 1} <small>· sections ${sectionsDe(p, i).join(' ') || 'aucune'}</small>`, '', () => { rollV[p] = i; build(); }); b.setAttribute('aria-pressed', i === vi); b.setAttribute('aria-label', `${NOM[p]}, motif ${i + 1}`); tabs.append(b); });
-  tabs.append(el('label', '', `Dans la section ${sel.sec} : `), selVariante(p, sel.sec), mesures(p, bars));
-  const wrap = el('div', 'roll'), keys = el('canvas'), sc = el('div', 'scroll'), cv = el('canvas'); sc.append(cv); sc.dataset.p = p; wrap.append(keys, sc); host.append(tabs, wrap);
+  const wrap = el('div', 'roll'), keys = el('canvas'), sc = el('div', 'scroll'), cv = el('canvas'); sc.append(cv); sc.dataset.p = p; wrap.append(keys, sc); host.append(wrap);
   const dpr = window.devicePixelRatio || 1, prep = (c, w) => { c.width = w * dpr; c.height = H * dpr; c.style.width = w + 'px'; c.style.height = H + 'px'; const x = c.getContext('2d'); x.scale(dpr, dpr); return x; };
   const kx = prep(keys, KW), x = prep(cv, W);
   cv.title = 'Clic dans le vide : poser une note · glisser : déplacer · bord droit : allonger · clic droit : effacer'; cv.tabIndex = 0; cv.setAttribute('role', 'application'); cv.setAttribute('aria-label', `${NOM[p]}, motif ${vi + 1} : rouleau de notes`);

@@ -10,9 +10,9 @@ const jouerPause = () => { // à l'arrêt, le séquenceur attend mais le son res
   $('play').textContent = playing ? 'Pause' : 'Lecture'; $('play').classList.toggle('joue', playing); if (!playing) $('now').textContent = 'à l\'arrêt';
 };
 $('play').onclick = jouerPause;
-$('boucle').onclick = () => { EC.boucle = EC.boucle ? null : sel.sec; $('boucle').setAttribute('aria-pressed', !!EC.boucle); };
+$('boucle').onclick = () => { EC.boucle = EC.boucle ? null : sel.sec; build(); };
 $('bpm').onchange = () => { st.bpm = clamp(Math.round(+$('bpm').value) || st.bpm, 60, 200); touch(); build(); };
-$('bAccords').onclick = () => ouvrir('accords'); $('bStation').onclick = () => ouvrir('station'); $('bCourse').onclick = () => ouvrir('course');
+$('bAccords').onclick = () => ouvrir('accords'); $('bStation').onclick = () => ouvrir('station');
 $('undo').onclick = () => remonter(hist, futur); $('redo').onclick = () => remonter(futur, hist);
 
 // stations : celle que le jeu a mémorisée ne doit pas bouger
@@ -53,12 +53,12 @@ $('resetSt').onclick = () => effacer(false); $('resetAll').onclick = () => effac
 
 // départ
 try { Object.assign(sel, JSON.parse(sessionStorage.getItem('ed.sel')) || {}); } catch (e) { }
-if (!ONGLETS.some(o => o[0] === sel.tab)) sel.tab = 'motifs';
+if (!ONGLETS.some(o => o[0] === sel.tab)) sel.tab = 'motif';
 let depart = CARTES.indexOf(CARTE) + ':' + SON.station; try { depart = sessionStorage.getItem('ed.station') || depart; } catch (e) { }
 if (![...selSt.options].some(o => o.value === depart)) depart = selSt.options[0].value;
 aller(depart);
 
-// le rôle de la course : la situation choisie part au vrai moteur à chaque image, comme dans le jeu
+// la situation de course (fixe, reglages.js) part au vrai moteur à chaque image, comme dans le jeu
 setInterval(() => { if (SON.ac && SON.ac.state === 'running') SON.frame(1 / 60, etatCourse()); }, 16);
 const vuBuf = new Float32Array(2048); let crete = 0;
 setInterval(() => { // vumètre, témoins, bloc en cours, pas en cours
@@ -69,7 +69,7 @@ setInterval(() => { // vumètre, témoins, bloc en cours, pas en cours
   if (!playing) return;
   const pas = SON.pas - 1; if (pas === shown) return; shown = pas;
   const mes = pas >> 4, fi = (mes >> 2) % st.form.length, suit = st.form[fi] === EC.sec; // suit : la forme se déroule ; sinon une section tourne en boucle (ou le refrain du secteur chaud)
-  $('now').textContent = `▶ section ${EC.sec}${EC.sec === st.hot ? ' ★' : ''} · mesure ${(mes & 3) + 1}/4`;
+  $('now').textContent = `${EC.boucle ? '⟲' : '▶'} section ${EC.sec}${EC.sec === st.hot ? ' ★' : ''} · mesure ${(mes & 3) + 1}/4`;
   for (const b of document.querySelectorAll('#arr [data-i]')) b.classList.toggle('joue', suit ? +b.dataset.i === fi : b.dataset.k === EC.sec);
   for (const g of document.querySelectorAll('.mes')) { const x = g.dataset, joue = enJeu(x.p) === +x.v && mes % +x.n === +x.b; g.classList.toggle('joue', joue); // seule la mesure qui joue montre le pas en cours
     for (const c of g.children) c.classList.toggle('on', joue && +c.dataset.q === (pas & 15)); }

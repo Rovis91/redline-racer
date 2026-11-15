@@ -13,7 +13,7 @@
   // prises de l'éditeur de musique (editeur.html) : muet / solo par partie, section jouée en boucle, témoins (jusqu'à quand chaque partie sonne), section en cours
   const EC = { mute: {}, solo: null, boucle: null, joue: {}, sec: '', pause: false }, jo = (p, t, d = 0.12) => { EC.joue[p] = t + d; };
   const pv = (st, p) => (EC.solo ? EC.solo === p : !EC.mute[p]) ? (st.mx && st.mx[p] != null ? st.mx[p] : 1) : 0; // niveau d'une partie : st.mx, réglé dans l'éditeur
-  let AC, live = true, timer, pret = Promise.resolve(), ana, master, musicG, tuneG, drumG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motSend, nbuf, outG, vu;
+  let AC, live = true, timer, pret = Promise.resolve(), ana, master, musicG, tuneG, drumG, hatG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motSend, nbuf, outG, vu;
   let t0 = 0, nextT = 0, stp = 0, musicOn = true, lastHit = 0, lastMus = -9, lastN = 0, lastB = 0, menu = true;
   const vol = { mus: 1, mot: 1, pneu: 1, vent: 1, amb: 1, choc: 1, ui: 1, pluie: 1 }, V = {}; // volume par famille (banc d'écoute) et leurs nœuds
   // état musical piloté par la course : mix = secteur chaud, inten = vitesse, driftL = glisse, drums = batterie, fin = dernier secteur
@@ -262,6 +262,8 @@
   // instruments enregistrés bruts, pour l'éditeur de musique : un timbre « e_<nom> » par instrument d'instruments.js. shortcut: niveaux (lv) non mesurés, à régler par timbre si une station du dépôt en adopte un
   for (const n in window.INS || {}) PATCH['e_' + n] = { smp: n, o: [['triangle']], a: 0.005, d: 2, s: 0.7, r: 0.15, rv: 0.2, lv: 2.5 };
   const smp = {};
+  // le kit d'une station : sa boîte à rythmes, complétée par ses propres sons (st.bat : caisse claire, charleston…), refait si l'éditeur change l'un ou l'autre
+  const kitDe = st => { if (!st.bat) return KIT[st.kit] || KIT.k909; const de = st.kit + JSON.stringify(st.bat); return st.Kb && st.Kb.de === de ? st.Kb : (st.Kb = { ...(KIT[st.kit] || KIT.k909), ...st.bat, de }); };
   // instruments échantillonnés (timbre smp, voir instruments.js) : décodés seulement pour les stations en jeu (décodé, un instrument pèse ~6 Mo)
   const ins = {}, insP = {};
   function charger(...radios) {
@@ -270,10 +272,10 @@
     return Promise.all([...noms].filter(n => INS[n]).map(n => insP[n] || (insP[n] = Promise.all(Object.entries(INS[n]).map(([m, b64]) => new Promise(ok => // un décodage déjà lancé est attendu, pas relancé
       AC.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer, b => { (ins[n] = ins[n] || {})[m] = b; ok(); }, ok)))))));
   }
-  function hitS(name, t, vol, dur = 0, rate = 1) { // dur : coupe le son en fondu (la grosse caisse de 808 résonne 1,5 s) ; rate : hauteur de lecture
+  function hitS(name, t, vol, dur = 0, rate = 1, dest = drumG) { // dur : coupe le son en fondu (la grosse caisse de 808 résonne 1,5 s) ; rate : hauteur de lecture
     const b = smp[name]; if (!b || vol < 0.002) return !!b;
-    vol *= 0.6; // les enregistrements sont plus forts que les sons synthétisés
-    const s = AC.createBufferSource(), gn = gain(vol, drumG); s.buffer = b; s.playbackRate.value = rate; s.connect(gn); s.start(t);
+    vol *= 0.6 * (/^(cp|clp)/.test(name) ? 0.6 : 1); // les enregistrements sont plus forts que les sons synthétisés ; les claps, encore plus présents
+    const s = AC.createBufferSource(), gn = gain(vol, dest); s.buffer = b; s.playbackRate.value = rate; s.connect(gn); s.start(t);
     if (dur) { gn.gain.setValueAtTime(vol, t + dur * 0.6); gn.gain.linearRampToValueAtTime(0, t + dur); s.stop(t + dur + 0.02); }
     return true;
   }
@@ -304,11 +306,12 @@
   function dHat(t, v, K, c) { // x fermé · X accentué · o ouvert · r cymbale ride · b cloche de la ride
     const ride = c === 'r' || c === 'b', lv = v * (c === 'X' ? 0.36 : c === 'o' ? 0.4 : c === 'x' ? 0.21 : 0.2);
     const hn = c === 'o' ? K.hOo : c === 'X' ? K.hA || K.hS : K.hS;
-    if (!ride && hn && hitS(hn, t, lv * 1.1 * (K.hV || 1), c === 'o' ? K.hO * 1.6 : 0, (K.hR || 1) * (1 + (Math.random() - 0.5) * 0.03))) return;
-    if (K.smp && !ride && hitS(c === 'o' ? 'oh' : 'ch', t, lv * 1.1)) return;
+    const hd = K.crunch ? kdrv : hatG;
+    if (!ride && hn && hitS(hn, t, lv * 1.1 * (K.hV || 1), c === 'o' ? K.hO * 1.6 : 0, (K.hR || 1) * (1 + (Math.random() - 0.5) * 0.03), hd)) return;
+    if (K.smp && !ride && hitS(c === 'o' ? 'oh' : 'ch', t, lv * 1.1, 0, 1, hd)) return;
     if (K.smp) K = KIT.k909;
     const dec = c === 'o' ? K.hO : c === 'r' ? 0.45 : c === 'b' ? 0.3 : K.hD, metal = K.hM || ride;
-    nz(t, dec, lv * (metal ? 0.7 : 1.3), ride ? drumG : dd(K), 'highpass', ride ? (c === 'b' ? 3500 : 5200) : K.hF, 0.8, metal ? mbuf : nbuf);
+    nz(t, dec, lv * (metal ? 0.7 : 1.3), ride ? drumG : hd, 'highpass', ride ? (c === 'b' ? 3500 : 5200) : K.hF, 0.8, metal ? mbuf : nbuf);
     if (c === 'b') osc('triangle', 3900, t, 0.25, lv * 0.25, drumG);
   }
   function dTom(t, v, f, d) { const o = osc('sine', f * 1.5, t, d, v, drumG); o && o.frequency.exponentialRampToValueAtTime(f, t + d * 0.4); nz(t, 0.02, v * 0.3, drumG, 'bandpass', 1200, 1); }
@@ -366,7 +369,7 @@
   const DR = {};
   function sched(s, t) {
     if (menu) return schedMenu(s, t);
-    const st = ST[station], K = st.bat ? st.Kb || (st.Kb = { ...(KIT[st.kit] || KIT.k909), ...st.bat }) : KIT[st.kit] || KIT.k909; t += (s & 1) * (st.sw || 0) * S16; // swing : les doubles-croches impaires traînent
+    const st = ST[station], K = kitDe(st); t += (s & 1) * (st.sw || 0) * S16; // swing : les doubles-croches impaires traînent
     const bar = s >> 4, q = s % 16, d = drums, fi = (bar >> 2) % st.form.length, nxt = st.form[(fi + 1) % st.form.length];
     if ((q === 0 && ((bar & 3) === 0 || mix > 0.5 || fin || boostL)) || (boostL && !bigS && q % 4 === 0)) { const b = !entree && (mix > 0.5 || fin || boostL); if (bigS && !b) sortie = bar >> 2; bigS = b; } // la nitro est une action : elle ouvre le refrain dès le temps suivant // le refrain du secteur chaud entre à la mesure suivante et ne repart qu'en fin de section : jamais au milieu d'une mesure
     const big = bigS;
@@ -382,7 +385,7 @@
     // plus sa dérive lente et un petit hasard (±j/2) ; arc : la section respire (elle monte peu à peu, sa première mesure appuyée)
     const J = st.jeu == null ? 1 : st.jeu, hj = (p, place, j) => { DR[p] = (DR[p] || 0) * 0.85 + (Math.random() - 0.5) * j * 0.6; return Math.max(t - 0.004, t + J * (place + DR[p] + (Math.random() - 0.5) * j)); };
     const arc = 1 + J * (0.1 * pos - 0.05 + ((bar & 3) === 0 && q === 0 ? 0.05 : 0));
-    const hum = (p, place, j) => hj(p, place, j) + (K.hum ? Math.random() * K.hum : 0); // les batteries acoustiques ne tombent pas pile, en plus
+    const hum = (p, place, j) => K.hum ? hj(p, place, j) + Math.random() * K.hum : t + J * (Math.random() - 0.5) * 0.002; // une batterie acoustique se joue autour du temps ; une boîte à rythmes tombe pile
     // jeu humain des instruments : nuance qui suit la mesure (temps fort, contretemps), un peu de hasard sur la force (±), un peu de décalage (s, doublé avec une batterie acoustique)
     const acc = q % 4 === 0 ? 1.08 : q % 2 === 0 ? 0.97 : 0.88, jit = a => 1 + (Math.random() - 0.5) * 2 * a, lt = j => t + (Math.random() - 0.5) * 2 * (K.hum ? 2 * j : j);
     const vch = pr.V ? pr.V[bar % pr.V.length] : ch; // l'accord dans le renversement le plus proche du précédent (voir voix() dans cartes.js)
@@ -436,7 +439,7 @@
         const PL = PATCH[st.l.p], lie = PL.leg && voixL && voixL.pn === st.l.p && voixL.fin > tl - 0.03 && voixL.fin < tl + 1; jo('l', t, S16 * n); // sans silence entre deux notes, une voix liée ne se rattaque pas
         // ornements : sur une note longue, parfois une note d'appui juste avant (la voisine du dessus, ou du dessous, prise dans la gamme et l'accord), ou une note attaquée par en dessous (une guitare tire sa corde d'un demi-ton)
         const gt = PL.smp === 'gtDist' || PL.bus === 'sat' || PL.bus === 'fuzz', orn = !lie && !PL.sing && n >= 3 && Math.random() < 0.2 * J;
-        if (orn && Math.random() < 0.5) tone(st.l.p, hz(juste(No + (Math.random() < 0.65 ? 2 : -1), pr.OK[bar % pr.OK.length])), tl - 0.06, 0.055, lv * 0.7, strip.l.in, 0, ex * 0.85);
+        if (orn && Math.random() < 0.5) { const ok = pr.OK[bar % pr.OK.length], dir = Math.random() < 0.65 ? 1 : -1; let g = No + dir; while (!ok.has(((g % 12) + 12) % 12)) g += dir; tone(st.l.p, hz(g), tl - 0.06, 0.055, lv * 0.7, strip.l.in, 0, ex * 0.85); } // la voisine prise dans la gamme et l'accord
         const sc = PL.sing || lie ? 0 : orn ? (gt ? 100 : 60) : n >= 3 && Math.random() < 0.5 ? 20 + 30 * Math.random() : 0;
         voixL = lie ? voixL.lier(hz(No), tl, ld, lv * ex) : tone(st.l.p, hz(No), tl, ld, lv, strip.l.in, PL.leg ? 0 : lastN && hz(lastN), ex, sc); lastN = No; // une voix chantée attaque juste : par en dessous, elle sonnait faux
       } }
@@ -704,6 +707,7 @@ registerProcessor('moteur', Moteur);`;
   function chaine() {
     fad = gain(1, musIn); eqH = filt('highshelf', 5000, 0.7, fad); eqM = filt('peaking', 1000, 0.9, eqH); eqL = filt('lowshelf', 130, 0.7, eqM); hpF = filt('highpass', 20, 0.9, eqL); djF = filt('highpass', 10, 0.7, hpF); djL = filt('lowpass', 20000, 0.7, djF); secG = gain(1, djL); gritDry = gain(1, secG); tuneG = gain(1, gritDry); gritWet = gain(0, secG); tuneG.connect(gain(2.5, shaper(6, gritWet))); // couleur de la station ; niveau de la section ; voie saturée, dosée par la proximité du mur
     drumF = gain(1, tuneG); drumG = gain(1, drumF); kdrv = shaper(3, gain(0.8, drumG)); // drumF : fondus de la batterie aux entrées et sorties
+    { const pn = AC.createStereoPanner(); pn.pan.value = 0.2; pn.connect(drumG); const pk = filt('peaking', 3800, 1, pn); pk.gain.value = -3; const hs = filt('highshelf', 8000, 0.7, pk); hs.gain.value = -6; hatG = gain(0.7, hs); } // charlestons : leur tranche, plus bas, aigus adoucis, un peu à droite (au centre et brillants, ils couvraient tout)
     swF = filt('lowpass', 20000, 0.7, tuneG); busDry = gain(1, swF); busDrv = gain(0, swF);
     duckG = gain(1, busDry); duckG.connect(gain(2.5, shaper(4, busDrv))); // tout sauf la batterie passe par ce bus pompé
     bsat = shaper(5, gain(0.5, duckG));
@@ -962,7 +966,7 @@ registerProcessor('moteur', Moteur);`;
     ecoute: EC, recale() { if (!AC) return Promise.resolve(); const p = charger(ST); retune(AC.currentTime, 1); tuneG.gain.setTargetAtTime(lvl(), AC.currentTime, 0.05); return p; }, // renvoie la promesse des instruments enregistrés décodés // éditeur de musique : applique un réglage de station sans relancer le morceau
     note(p, n, pn) { const st = ST[station]; if (!AC || menu) return; pn = pn || (st[p] && (p === 'd' ? st.d[0] : st[p].p)); const P = PATCH[pn]; if (!P || !strip[p]) return; // fait entendre une note sur la tranche d'une partie (piano-roll, clavier et choix d'instrument de l'éditeur) ; pn : un autre timbre que celui de la partie
       tone(pn, hz(n), AC.currentTime, P.s ? 0.4 : 0.25, pv(st, p) * (p === 'l' ? (P.lv || 0.15) * (st.lV == null ? 1 : st.lV) : p === 'b' ? 0.3 * (P.lv || 1) : 0.09 * (P.lv || 1)), strip[p].in); },
-    coup(p, c) { if (!AC || menu) return; const st = ST[station], K = KIT[st.kit] || KIT.k909, t = AC.currentTime, v = pv(st, p); if (p === 'k') dKick(t, v * 0.7 * (c === 'g' ? 0.5 : 1), K); else if (p === 's') dSnare(t, v * 0.4, K, c); else if (p === 'h') dHat(t, v * 0.63, K, c); else dPerc(t, v, K, c); }, // fait entendre un coup de batterie (éditeur)
+    coup(p, c) { if (!AC || menu) return; const st = ST[station], K = kitDe(st), t = AC.currentTime, v = pv(st, p); if (p === 'k') dKick(t, v * 0.7 * (c === 'g' ? 0.5 : 1), K); else if (p === 's') dSnare(t, v * 0.4, K, c); else if (p === 'h') dHat(t, v * 0.63, K, c); else dPerc(t, v, K, c); }, // fait entendre un coup de batterie (éditeur)
     get fond() { return curRoot; }, // fondamentale de la mesure en cours
     get pas() { return stp; }, get timbres() { return Object.keys(PATCH); }, get kits() { return Object.keys(KIT); },
     get ac() { return AC; }, get out() { return master; }, get patch() { return PATCH; }, get smp() { return Object.keys(smp); }, get tone() { return tone; }, get ins() { return Object.fromEntries(Object.entries(ins).map(([k, v]) => [k, Object.keys(v).length])); }, // prises de test

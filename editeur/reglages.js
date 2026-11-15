@@ -1,26 +1,13 @@
-// Éditeur de musique — onglets « Mixeur » (une tranche par piste, puis les réglages de toute la station), « Accords » et « Situation de course ».
-function poserVolume(p, v, src) { // le volume d'une piste, affiché à plusieurs endroits (liste des pistes, mixeur, onglet Instrument) : tous suivent
+// Éditeur de musique — volume des pistes, dialogues « Réglages de la station » et « Accords », situation de course envoyée au moteur.
+function poserVolume(p, v, src) { // le volume d'une piste, affiché dans la liste des pistes
   (st.mx = st.mx || {})[p] = v;
   for (const e of document.querySelectorAll(`[data-vol="${p}"]`)) { if (e !== src) e.value = v; const o = e.parentNode.querySelector('output'); if (o) o.textContent = dB(v); }
 }
 
-VUES.mixeur = H => {
-  const T = el('div', 'tranches'); H.append(T);
-  const tranche = (nom, coul, get, set, max, p) => { // curseur vertical
-    const t = el('div', 'tranche'), f = el('input'), o = el('output'); Object.assign(f, { type: 'range', min: 0, max, step: 0.05, value: get(st), title: 'Double-clic : valeur d\'origine' }); f.className = 'vert'; f.setAttribute('aria-label', 'Volume : ' + nom); o.textContent = dB(get(st));
-    f.oninput = () => { set(+f.value, f); o.textContent = dB(+f.value); touch(); }; f.ondblclick = () => { set(get(orig)); f.value = get(orig); o.textContent = dB(get(orig)); touch(); };
-    const led = el('i', 'led'); if (p) { led.dataset.k = p; f.dataset.vol = p; }
-    t.append(led, f, o); if (p) { const ms = el('div'); ms.append(boutonsMS(p)); t.append(ms); } else t.append(el('div', 'doux', '&nbsp;'));
-    const n = p ? bouton(nom, `Choisir la piste ${nom}`, () => choisir(p, null, 'instrument'), 'nomp') : el('b', '', nom); n.style.color = coul; t.append(n);
-    if (p === sel.p) t.classList.add('sel'); T.append(t);
-  };
-  tranche('Station', '#e8e8e4', s => s.vol == null ? 1 : s.vol, v => { st.vol = v; }, 3);
-  for (const p of PISTES.filter(p => st[p])) tranche(NOM[p], COUL[p], s => niveau(p, s), (v, src) => poserVolume(p, v, src), 2, p);
-};
-
 // dialogue « Réglages de la station »
 VUES.station = S => {
   const arr = (k, def) => st[k] = st[k] || def;
+  slider(S, 'Volume de la station', s => s.vol == null ? 1 : s.vol, v => { st.vol = v; }, 0, 3, 0.05, dB);
   slider(S, 'Tempo', s => s.bpm, v => { st.bpm = v; $('bpm').value = v; }, 60, 200, 1);
   slider(S, 'Swing', s => s.sw || 0, v => { st.sw = v; }, 0, 0.3, 0.01);
   slider(S, 'Réverbération', s => s.rev == null ? 0.2 : s.rev, v => { st.rev = v; }, 0, 1, 0.05);
@@ -51,14 +38,8 @@ VUES.accords = H => {
   });
 };
 
-// la course simulée : la musique du jeu change selon la conduite ; ces réglages ne sont pas enregistrés
+// la situation de course envoyée au moteur, fixe : en course, vitesse de croisière, hors secteur chaud (les pistes marquées « chaud » ne jouent donc pas ici)
 const course = { on: true, vit: 0.85, chaud: 0, fin: false, glisse: false };
-VUES.course = H => {
-  const B = el('div', 'bar'); H.append(B);
-  const coche = (k, txt) => { const l = el('label', '', `<input type="checkbox"> ${txt}`); l.firstChild.checked = course[k]; l.firstChild.onchange = e => { course[k] = e.target.checked; }; B.append(l); };
-  const curseur = (k, txt) => { const l = el('label', '', `${txt} <input type="range" min="0" max="1" step="0.01" style="width:140px">`); l.lastChild.value = course[k]; l.lastChild.oninput = e => { course[k] = +e.target.value; }; B.append(l); };
-  coche('on', 'En course'); curseur('vit', 'Vitesse'); curseur('chaud', 'Secteur chaud'); B.lastChild.title = 'Au-dessus de 50 %, le refrain ★ joue en continu, avec les pistes marquées « chaud »'; coche('fin', 'Dernier secteur'); coche('glisse', 'Glisse');
-};
 // envoyée au vrai moteur (format de SON.frame), comme le fait le jeu
 const etatCourse = () => { const gl = course.glisse, r = course.vit;
   return { state: course.on ? 'race' : 'count', tour: 0, tours: 0, T: { h0: 500, h1: 600, n: 1000 }, hot: course.chaud, tun: 0, amb: 0, pluie: 0, r, sp: r * 80, rpm: 0.6, load: 1, gas: 1, spool: 0, hit: 0, bump: 0,
