@@ -1982,6 +1982,9 @@
       const dalles = []; for (let k = 0; k < 70; k++) { const i = (g0 + (rnd() * ((g1 - g0 + N) % N) | 0)) % N, s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w + 2 + rnd() * 35); dalles.push([x, s.y + niv(i) - 0.05, z, rnd() * 6, 2 + rnd() * 5, 0.3, 2 + rnd() * 4]); }
       for (let k = 0; k < 60; k++) { const i = (g0 + (rnd() * ((g1 - g0 + N) % N) | 0)) % N, s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w + 2 + rnd() * 14), t = rnd(); // rochers et îlots de rive, avec leurs fougères
         blocs.push([x, s.y + niv(i) - 0.3, z, rnd() * 6, 0.8 + rnd() * 2, 0.6 + rnd() * 1.2, 0.8 + rnd() * 2]); if (t < 0.4) fbas.push([x, s.y + niv(i) + 0.6, z, rnd() * 6, 0.8]); else if (t < 0.55) coupes.push([x, s.y + niv(i) + 0.6, z, rnd() * 6, 0.9]); }
+      for (let i = iF0; entre(i, iF0, iF1); i = (i + 3) % N) for (const sd of [-1, 1]) { const s = S[i]; // REFS 3 : au bord du courant, des dalles pâles en marches basses et des galets
+        if (rnd() < 0.7) { const [x, z] = bord(s, sd, W + 0.6 + rnd() * 1.5); dalles.push([x, s.y + 0.02, z, h.across(s) + (rnd() - 0.5) * 0.6, 1.2 + rnd() * 1.6, 0.12, 0.8 + rnd() * 1.2]); }
+        if (rnd() < 0.5) { const [x, z] = bord(s, sd, W - 0.4 - rnd() * 1.2); galets.push([x, s.y + 0.02, z, rnd() * 6, 0.3 + rnd() * 0.4, 0.12 + rnd() * 0.1]); } }
       inst(h, h.geo('boite', 1, 1, 1), h.mat('lajedo', { c: 0x9a8070 }), dalles);
       const rive = []; for (let i = g0; entre(i, g0, g1); i = (i + 3) % N) for (const sd of [-1, 1]) { const s = S[i], o = sd > 0 ? s.w + 44 + rnd() * 3 : s.w + 50 + rnd() * 3, [x, z] = bord(s, sd, o); blocs.push([x, s.y + niv(i) - 0.2, z, rnd() * 6, 1 + rnd() * 2, 0.8 + rnd() * 1.2, 1 + rnd() * 2]); if (rnd() < 0.6) (rnd() < 0.5 ? fbas : coupes).push([x, s.y + niv(i) + 0.8, z, rnd() * 6, 1 + rnd() * 0.6]); if (rnd() < 0.15) rive.push([x, s.y + niv(i), z]); } // les rives du gué
 
