@@ -309,3 +309,79 @@ Chaque tour est noté par deux nouveaux relecteurs Sonnet (jamais les mêmes), s
 4. **Le temps d'image.** La cible de 2 ms ne peut pas être vérifiée sur cette machine : la charge reste entre 50 et 80 %, et aucune carte n'y tient, canal et paris compris. Mesures côte à côte : plage 3,6 / 6,4 ms, canal 3,5 / 4,6 ms, paris 3,4 / 4,0 ms. Le budget de passes, lui, est tenu : pic à 286–288. Une mesure isolée a donné 303, prise à 74 % de charge.
 
 Densité au dernier profil : aucun vingtième vide ; le plus maigre est à 1,05 fois la médiane des références (sommets).
+
+## Barème complet de propositions/revue-circuits.html (demande de l'orchestrateur)
+
+Chaque tour est noté par un panel de quatre nouveaux relecteurs Sonnet : game designer, expert du tracé, directeur artistique et joueur testeur. Ils s'appuient sur des captures réelles du moteur (`pas=5`, `pas=2`, `idx=` sur les moments forts, vues de près au tour 5). Ils disposent aussi de mesures réelles sur `buildTrack` et la simulation (`captures/mesures-trace.js` : virages, freinages, part à fond, pilote automatique, pied au plancher, glisse et nitro, coupe par la place). La note de la carte est la somme pondérée ; un critère noté par deux relecteurs prend leur moyenne.
+
+| Critère (poids) | Tour 0 | Tour 1 | Tour 2 | Tour 3 | Tour 4 | Tour 5 |
+|---|---|---|---|---|---|---|
+| Rythme (20 %) | 7,5 | 7,5 | 7 | 7,5 | 7 | 7 |
+| Moments forts (15 %) | 7 | 8 | 7,5 | 6,5 | 7,5 | 6,5 |
+| Lisibilité (15 %) | 7,5 | 7,5 | 7,5 | 7,25 | 7,5 | 7,5 |
+| Profondeur (15 %) | 6,5 | 7 | 7,5 | 7 | 6,5 | 7,5 |
+| Identité (15 %) | 7,5 | 6,5 | 7,5 | 8 | 7 | 7,5 |
+| Dépassements (10 %) | 6,5 | 6,5 | 6,5 | 6 | 6,5 | 7,5 |
+| Tracé et décor (10 %) | 8 | 8 | 7,75 | 7,75 | 7,5 | 7,5 |
+| **Note pondérée** | **7,23** | **7,30** | **7,33** | **7,19** | **7,08** | **7,25** |
+| Commit | 3474f3a | f9796d4 | e6fadb7 | 4c6ce9e | 3018d1a | fe48a28 |
+
+**Arrêt** : les tours 3, 4 et 5 ne dépassent pas le tour 2 (7,33).
+
+### Ce qui a changé, tour par tour
+
+- **Tour 1** :
+  - obstacles réels sur la plage (piles de la place que `sim.js` heurte : barques, cocotiers, postes de sauveteur, parasols, filet), avec des allées roulables ;
+  - chaussée de la lagune élargie, et virage freiné vers la plage ;
+  - garrigue resserrée ;
+  - `corde` dans la grotte ;
+  - pont en dos d'âne (`sauts`) ;
+  - rayons plus francs.
+- **Tour 2** :
+  - la route contourne la place côté terre : on peut la couper en sable mou ;
+  - obstacles placés à plus de 6 m de la trajectoire du pilote ;
+  - sorties de l'épingle et entrée de la grotte élargies ;
+  - virage de retour plus serré ;
+  - rampe peinte, bandeau de corde, chevrons, anneau de la place.
+- **Tour 3** :
+  - courbes rapides dans la rue (R102, R66) ;
+  - muelle allongé de 30 m ;
+  - arc de plage plus profond ;
+  - saut plus long ;
+  - garrigue élargie avec son décor.
+- **Tour 4** :
+  - allée à frôler sur la ligne du pilote ;
+  - 1,4 s en l'air au pont ;
+  - rue et marché élargis avec leur décor ;
+  - arche de roche avant le cénote ;
+  - galets entre sable dur et sable mou ;
+  - rayons allégés (le GPU de la grotte passait de 6,4 à 4,0 ms).
+- **Tour 5** : grands puits près de l'axe de la grotte, murets de garrigue plus visibles.
+
+### Chiffres finaux (tour 5, `captures/t5-mesures.txt`)
+
+| Mesure | Plage | Références |
+|---|---|---|
+| Longueur | 2 575 m | |
+| Freinages | 7 | ville 1, paris 2, canal 3 |
+| Virages de plus de 20° | 15, de R19 à R102 | |
+| Part à fond | 76 % | 89 à 92 % |
+| Pilote automatique | 54,8 s | |
+| Pied au plancher sans freiner | 65,0 s (+18,6 %) | ville +11 %, canal +7,6 %, paris +1,8 % |
+| Glisse et nitro | −10,1 % | ville −11,4 %, canal −11,3 %, paris −3,8 % |
+| Coupe par la place | +0,55 s à 101 km/h, 0 à 121 km/h, −0,38 s à 141 km/h | |
+| Saut | 1,4 s en l'air | |
+
+Tests verts à chaque tour, trace or refaite à chaque changement de tracé. Passes de dessin : pic à 290–296 (budget 300). Temps d'image : au niveau de canal, mesuré côte à côte sur la machine chargée (tour 5 : plage 3,5 / 3,6 ms, canal 4,7 / 5,4 ms).
+
+### Ce qui bloque, et où
+
+1. **La salle du cénote et ses rayons** (Identité, Moments forts). C'est la demande la plus répétée des relecteurs : une salle ouverte, un cône de lumière net sur l'eau noire. Elle est bloquée par le tunnel du moteur, dans `game.js`, bloc « tunnel » vers les lignes 454–480 :
+   - `ribbon(T.t0, cT, -W, 0, W, 0, …)` et les parois à `±W` sur 8 m de haut : la largeur est fixe (2 W) et le plafond plat ;
+   - les luminaires (`luminaireTunnel`) et les portails (`portailTunnel`) sont posés d'office.
+
+   Il faudrait des parois à `s.w`, une hauteur par carte (`th.tun.haut`), et une option pour ne pas poser luminaires et portails. La session « moteur commun » ajoute un tunnel ou une salle de taille variable : à brancher dès sa fusion.
+2. **La coupe par la place ne peut pas rapporter beaucoup** (Profondeur, Moments forts). `surf.large` est une seule surface hors bitume pour toute la carte (`sim.js`, `route()` et `T.surfL`), et la place n'est qu'un cercle. Faute de surface par zone, le gain plafonne à 0,4 s : le sable mou freine autant sur la plage que dans la coupe. Il faudrait une surface propre à la place (`place.surf`) dans `sim.js`.
+3. **Le saut** (Moments forts). Au-delà de 2 m de haut, la réception dépasse le seuil de réception dure (`c.land > 9`). Cela élimine le pilote en glisse de `outils/traces-or.js` et casse la trace or. Un vrai envol (3 s en l'air) demanderait une réception adoucie en pente descendante (`sauts` avec une rampe de réception, dans `sim.js` près de la ligne 115).
+4. **La nitro au ras des parois ne se voit pas** (Profondeur, Lisibilité). Le pilote automatique ne frôle jamais (`autopilot` dans `sim.js`), et aucun effet à l'image ne montre la jauge qui se remplit par la `corde` (pas d'étincelles dans `game.js`). Les relecteurs ne peuvent juger que sur le bandeau jaune.
+5. **Le bruit de notation.** D'un relecteur neuf à l'autre, un même critère varie de 0,5 à 1 point sur des changements mineurs (Moments forts 8 → 6,5 → 7,5 → 6,5). Les relecteurs voient aussi les captures en 480 × 270 et ouvrent rarement toutes les images. Les captures en haute résolution prévues par la session « moteur commun » aideraient.
