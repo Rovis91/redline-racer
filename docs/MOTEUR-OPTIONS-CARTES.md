@@ -101,6 +101,7 @@ th: { tun: { ...tunnelHabituel, rayonsK: 0.35, ambiant: 0.7 },   // colonnes plu
 ```
 - `rayonsK` : l'opacité des colonnes de lumière sous les ouvertures (`th.tun.rayons`). Elle vaut 0,55 par défaut, et comme les colonnes sont additives, c'est leur éclat.
 - `ambiant` : la part de lumière ambiante sur le sol, les parois et la voûte du tunnel (0,55 par défaut, `TUN_AMB`). Le reste vient des luminaires. Les parois de la ville (`th.alarme`) gardent leur 0,85.
+- `tun.jour` (0 par défaut) : part du soleil et du ciel gardée quand la voiture est sous le tunnel (1 = rien ne s'éteint). Pour une grotte ouverte dont le décor fait la roche (`sans: ['parois']`) : le dehors vu par les porches et les puits, les arbres et le bois restent éclairés. Sans elle, tout ce qui n'est pas auto-éclairé passe au noir sous le tunnel.
 - `oeil` : l'adaptation de l'œil, sans style seulement (le style `net` des captures ne la montre pas). `tun` est la lumière vraie du tunnel par rapport au dehors (0,4) : plus près de 1, l'entrée noircit moins et la sortie éblouit moins. `noir` et `clair` sont les constantes de temps en secondes vers le noir (0,5) et vers le clair (0,35). Une sortie de grotte trop longue à retrouver le jour se règle avec `clair` plus petit, et une salle trop noire en entrant avec `tun` plus grand. `th.tun.eclat` garde son rôle.
 Coût : nul (des constantes).
 
@@ -127,6 +128,30 @@ th: { frole: 1 }
 Quand la voiture frotte le mur à plus de 15 m/s (le moment où `sim.js` remplit la jauge, `NI.mur`), la jauge de nitro du HUD s'éclaircit et le segment qui se remplit passe en blanc, un peu plus haut, pendant le frottement et 0,3 s après. Les étincelles du frottement existaient déjà, sur toutes les cartes. Le calcul de la sim n'est pas touché.
 Coût : nul.
 **À l'essai (wangan poussé au mur) :** le segment blanc est bien lu dans les deux rendus. Dans le rendu réel à 270 lignes, la jauge éclaircie reste terne, « gris-beige », quand elle est peu remplie.
+
+## 10. Tunnel nu, ciel de jour, ciel plus fin : `th.tun.sans`, `th.tun.cielJour`, `th.cielSeg`
+
+```js
+th: { cielSeg: 48,
+      tun: { ...tunnelHabituel, cielJour: 1, sans: ['portails', 'luminaires', 'parois'] } }
+```
+- `tun.sans` : ce que le moteur ne pose pas dans le tunnel. `'portails'` : les deux portails. `'luminaires'` : les boîtiers des luminaires et les boîtiers de secours (les lumières restent). `'lumieres'` : aucune lumière de luminaire ; il ne reste que le jour des ouvertures (`ouv`, `rayons`). `'parois'` (tunnel de forme libre seulement) : ni parois, ni voûte, ni coque ; il reste le sol, les lumières, le noir et les colonnes de lumière, et le décor de la carte fait la salle.
+- `tun.cielJour: 1` : sous le tunnel, le ciel garde sa couleur au lieu de prendre celle du brouillard du tunnel. On voit le jour par la bouche de sortie et par les ouvertures.
+- `cielSeg` : nombre de facettes de la sphère du ciel (16 par défaut). Sur un ciel de jour à paliers serrés près de l'horizon, 16 facettes cassent les paliers en éventail.
+- `astre.rayons` (1 par défaut) : force du halo de l'astre dans la passe finale. À baisser quand un sol clair en plein midi blanchit (plage : 0,3).
+Coût : nul. Sans ces options, rien ne change (ville, wangan, paris : mêmes géométries, même ciel).
+
+## 11. Pas de cônes : `th.sansCones`
+
+`th: { sansCones: 1 }` : le moteur ne pose ni cônes ni poubelles à l'entrée des virages. Désactivé par défaut ; les autres cartes gardent les leurs.
+
+## 12. Piste plus étroite que `W` : `M.large` avec une demi-largeur inférieure à `W`
+
+```js
+{ id: 'plage', W: 8, tun: [26, 34], large: [[27, 33, 5]] }   // passerelle de 10 m dans la grotte du cénote
+```
+
+`M.large` ne savait qu'élargir (`sim.js` gardait le maximum). Une entrée dont la demi-largeur est inférieure à `W` resserre maintenant la piste entre ses deux points, avec le même raccord de 60 m de part et d'autre. Aucune autre carte ne pose de valeur inférieure à `W` : rien ne change pour elles. À n'utiliser que sous un tunnel de forme libre (section 5), où le sol du moteur suit `s.w` : à ciel ouvert, le ruban de chaussée et les glissières du moteur restent à `W`, le décor devrait couvrir la bande en trop. Contrôle sur plage : `node test-cartes.js` (tour du pilote automatique, 0 choc).
 
 ## Mesures de la deuxième série (banc rapide, machine chargée de 30 à 57 %)
 

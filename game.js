@@ -310,7 +310,7 @@
 
   // ciel en bandes (nuit, aube ou couchant selon la carte), étoiles, lune ou soleil
   const skyMat = mat('ciel', { lum: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars);
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, 16, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.cielSeg || 16, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
   const SD = new V3(...TH.astre.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('astre', TH.astre.col, TH.astre.ombre) }));
   sunDisc.scale.set(TH.astre.taille, TH.astre.taille, 1); scene.add(sunDisc);
@@ -496,6 +496,7 @@
     const val = (v, d) => s => { const f = FI.get(s) ?? 0; if (v == null) return d; if (typeof v === 'number') return v; if (typeof v === 'function') return v(f, s);
       let j = 0; while (j < v.length - 1 && v[j + 1][0] < f) j++; const [fa, a] = v[j], [fb, b] = v[Math.min(j + 1, v.length - 1)]; return fb > fa ? a + (b - a) * clamp((f - fa) / (fb - fa), 0, 1) : a; };
     const tw = FT ? s => s.w : () => W, hh = val(u.h, 8), vt = val(u.voute, 0), hm = s => hh(s) - vt(s), plaf = (s, x) => hm(s) + vt(s) * Math.sqrt(Math.max(0, 1 - (x / tw(s)) ** 2));
+    const SANS = new Set(u.sans || []); // th.tun.sans : ce que le moteur ne pose pas ('portails', 'luminaires' : les lumières restent, sans leurs boîtiers ; 'lumieres' : aucune lumière de luminaire, seulement le jour des ouvertures ; 'parois' : ni parois, ni voûte, ni coque, le décor de la carte les fait)
     const ouvert = k => (u.ouv || []).some(([a, b]) => k >= a * cT && k <= b * cT), pans = [] /* plafond : morceaux [début, longueur] hors des ouvertures */;
     for (let k = 0, a = -1; k <= cT; k++) { const o = ouvert(k) || k === cT; if (!o && a < 0) a = k; if (o && a >= 0) { pans.push([a, k - a + (k === cT && !ouvert(k))]); a = -1; } }
     tunMats.push(mat('chaussee', { lum: 1, side: THREE.DoubleSide, gloss: u.gloss ?? 0.3 }, ...u.sol), mat((u.tex || [])[0] || 'paroi', LUMI2, u.murs[0], u.paroi, u.carreaux), mat((u.tex || [])[0] || 'paroi', LUMI2, u.murs[1], u.paroi, u.carreaux), mat((u.tex || [])[1] || 'plafond', LUMI2, u.plafond)); /* th.tun.tex : autres textures des parois et de la voûte (chapada : la roche de la grotte) */
@@ -505,7 +506,8 @@
       for (let i = T.t0 + 2, k = 0; i < T.t1 - 1; i += LUM_PAS, k++) {
         const s = S[i % N], sd = k & 1 ? 1 : -1, x = s.x - s.tz * sd * (tw(s) - 1.7), z = s.z + s.tx * sd * (tw(s) - 1.7), yl = FT ? plaf(s, tw(s) - 1.7) - 0.15 : 7.85;
         if (FT && ouvert(i - T.t0)) continue;
-        lum(i % N, x, s.y + yl - 0.65, z, u.neons[k & 1], 21, 3, 1);
+        if (!SANS.has('lumieres')) lum(i % N, x, s.y + yl - 0.65, z, u.neons[k & 1], 21, 3, 1);
+        if (SANS.has('luminaires')) continue;
         d.position.set(x, s.y + yl, z); d.rotation.set(0, across(s), 0); d.updateMatrix(); fx[k & 1].setMatrixAt(nf[k & 1]++, d.matrix);
         if (k % 6 === 3) pose('boitierSecours', mat('peinture', { lum: 1, c: u.portail }), scene, [s.x - s.tz * (tw(s) - 0.1), s.y + 2.6, s.z + s.tx * (tw(s) - 0.1)]).rotation.y = across(s); // boîtier de secours lumineux sur la paroi de droite
       }
@@ -518,9 +520,9 @@
     } else {
       const ng = s => -tw(s), ps = tw, dh = s => hh(s) + 2, NV = 10; // voûte : NV facettes d'une demi-ellipse, des naissances (hm) à la clé (hh)
       sol = ribbon(T.t0, cT, ng, 0, ps, 0, tunMats[0], 32);
-      ribbon(T.t0, cT, ng, hm, ng, 0, tunMats[1]); ribbon(T.t0, cT, ps, hm, ps, 0, tunMats[2]);
-      for (const sg of [-1, 1]) ribbon(T.t0, cT, s => sg * (tw(s) + 1.5), dh, s => sg * (tw(s) + 1.5), -u.coque, concrete).castShadow = true;
-      for (const [a, n] of pans) { // (chaque facette est un ruban à part, fondu ensuite avec ceux de sa matière : voir « fusion du décor fixe »)
+      if (!SANS.has('parois')) { ribbon(T.t0, cT, ng, hm, ng, 0, tunMats[1]); ribbon(T.t0, cT, ps, hm, ps, 0, tunMats[2]); }
+      if (!SANS.has('parois')) for (const sg of [-1, 1]) ribbon(T.t0, cT, s => sg * (tw(s) + 1.5), dh, s => sg * (tw(s) + 1.5), -u.coque, concrete).castShadow = true;
+      if (!SANS.has('parois')) for (const [a, n] of pans) { // (chaque facette est un ruban à part, fondu ensuite avec ceux de sa matière : voir « fusion du décor fixe »)
         for (let j = 0; j < NV; j++) { const x = q => s => -tw(s) * Math.cos(Math.PI * q / NV), y = q => s => hm(s) + vt(s) * Math.sin(Math.PI * q / NV); ribbon(T.t0 + a, n, x(j), y(j), x(j + 1), y(j + 1), tunMats[3]); }
         ribbon(T.t0 + a, n, s => -tw(s) - 1.5, dh, s => tw(s) + 1.5, dh, concrete).castShadow = true;
       }
@@ -534,7 +536,7 @@
     }
     if (MV) { tunMats[0].userData.mo = 1; tunMats[0].userData.mo0 = T.t0; if (SSR) { tunMats[0].userData.mou = 1; sol.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cT + 1) * 2 }, (_, j) => mouAt((T.t0 + (j >> 1)) % N)), 1)); } } // th.mouilleVisible : le sol du tunnel lit aussi MOT
     const pm = mat('peinture', { lum: 1, c: u.portail });
-    for (const i of [T.t0, T.t1]) { // portails lumineux
+    if (!SANS.has('portails')) for (const i of [T.t0, T.t1]) { // portails lumineux
       const s = S[i], g = new THREE.Group(); g.position.set(s.x, s.y, s.z); g.rotation.y = across(s); scene.add(g);
       pose('portailTunnel', { portail: pm }, g, [0, 0, 0], tw(s)); if (FT) g.scale.y = hh(s) / 8;
     }
@@ -1051,6 +1053,7 @@
     { nom: 'poubelle', geo: new THREE.CylinderGeometry(0.3, 0.26, 0.9, 8), mat: new THREE.MeshLambertMaterial({ color: 0x2c5a34 }), r: 0.3, h: 0.9 }];
   { let a = 12345; const alea = () => (a = (a * 16807) % 2147483647) / 2147483647, places = []; // tirage fixe : les mêmes à chaque course
     for (let i = 0; i < N; i += 3) { const k = S[i].k || 0, kp = S[(i + N - 6) % N].k || 0; if (Math.abs(k) > 0.012 && Math.abs(kp) <= 0.012 && murK(i) <= cO && !(TH.sansObjets || []).some(([a, b]) => i >= a && i < b)) places.push(i); } // l'entrée de chaque virage marqué
+    if (TH.sansCones) places.length = 0; // th.sansCones : ni cônes ni poubelles au bord des virages (plage : des plots de chantier n'ont pas de sens sur un ponton ni dans un cénote)
     for (const i of places.slice(0, TH.cones === 0 ? 0 : 14)) { const sg = -Math.sign(S[i].k); for (let j = 0; j < 3; j++) { const ii = (i + j * 3) % N, s = S[ii], o = sg * (OFF(s) - 0.7 - alea() * 0.4), sorte = SORTES[urbain && SORTES.length > 1 && alea() < 0.35 ? 1 : 0];
       OBJ.push({ S: sorte, x0: s.x - s.tz * o, z0: s.z + s.tx * o, y0: s.y + (T.vert ? paroi(s, Math.abs(o)) : 0), p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), dort: 1 }); } } }
   for (const So of SORTES) { const l = OBJ.filter(o => o.S === So); So.im = new THREE.InstancedMesh(So.geo, So.mat, Math.max(1, l.length)); So.im.count = l.length; So.im.castShadow = true; So.im.userData.dyn = 1; scene.add(So.im); l.forEach((o, k) => { o.k = k; }); }
@@ -1951,9 +1954,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN * (BRUME ? BRUME[car.idx] : 1), 320, lm);
     let kBr = 0; for (const [z, n0, n1] of brumeZ) { const k = z(car.idx, 90); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
     if (voileBr) { voileBr.visible = kBr > 0.01; voileBr.position.copy(cam.position); voileBr.material.opacity = Math.min(1, kBr * 1.6); voileBr.material.color.copy(scene.fog.color); } // th.brume : un banc de brouillard sur une portion du tracé
-    skyMat.color.copy(WHITE).lerp(FOG_IN, lm);
+    skyMat.color.copy(WHITE).lerp(FOG_IN, TH.tun && TH.tun.cielJour ? 0 : lm); // th.tun.cielJour : le ciel garde sa couleur sous le tunnel (on voit le jour par la bouche et par les ouvertures)
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;
-    hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * lm) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - lm); // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
+    { const nuit = lm * (1 - (TH.tun && TH.tun.jour || 0)); hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * nuit) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - nuit); } // th.tun.jour : part du jour gardée sous le tunnel (grotte ouverte : ce qu'on voit par les porches et les puits reste au soleil) // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
     beams.forEach((b, i) => b.rotation.set(0, Math.atan2(cam.position.x - b.position.x, cam.position.z - b.position.z), Math.sin(now * 0.0004 * (i % 3 + 1) + i) * 0.5)); // les faisceaux de projecteurs font face à la caméra
     // lumière dynamique : phares, boîte d'ombre de la voiture, reflets, puis la liste des luminaires
     const cp = Math.cos(pitch);
@@ -2018,7 +2021,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
         tmp.lerp(cam.position, rw ? Math.min(0.5, 1.5 / dc) : 0).project(cam); // 1,5 m vers la caméra : la lanterne ne cache pas sa propre lumière
         if (tmp.z > 1 || Math.abs(tmp.x) > 1.4 || Math.abs(tmp.y) > 1.4) return false;
         const r = rw ? rw / (2 * dc * th) : 0.08; RY[n].set(tmp.x * 0.5 + 0.5, tmp.y * 0.5 + 0.5, tmp.z * 0.5 + 0.5, 1 / (r * r)); RC[n++].copy(col).multiplyScalar(k); return true; };
-      if (TH.astre.taille > 1) { const p = cam.position; src(p.x + SD.x * 1800, p.y + SD.y * 1800, p.z + SD.z * 1800, ASTRE, 1.3 * RAYS * TH.sun[1] * (1 - lm), 0); } // tout ce qui est à moins de 1 800 m cache l'astre ; le ciel (2 500 m), non
+      if (TH.astre.taille > 1) { const p = cam.position; src(p.x + SD.x * 1800, p.y + SD.y * 1800, p.z + SD.z * 1800, ASTRE, 1.3 * RAYS * TH.sun[1] * (1 - lm) * (TH.astre.rayons ?? 1), 0); } // th.astre.rayons : force du halo de l'astre (1 par défaut) // tout ce qui est à moins de 1 800 m cache l'astre ; le ciel (2 500 m), non
       const c = veh[0]; if (c && Math.cos(c.th) * (cam.position.x - c.x) + Math.sin(c.th) * (cam.position.z - c.z) > 0) { const av = c.lane === undefined ? 6.5 : 10; src(c.x + Math.cos(c.th) * av, c.y + 0.8, c.z + Math.sin(c.th) * av, PHARE, brume * NUIT, 2); }
       for (; n < 4; n++) RC[n].setScalar(0);
     }
