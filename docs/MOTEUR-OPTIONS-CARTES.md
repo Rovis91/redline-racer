@@ -163,3 +163,19 @@ th: { chev: 1, chevSauf: [[27, 33]] }   // pas de chevrons entre les points 27 e
 Le moteur pose un chevron tous les 12 m dès que le rayon passe sous 167 m. Entre les points donnés, il n'en pose pas : pour un passage où le décor guide déjà (sur barrage, la salle des turbines et ses garde-corps orange). Sans l'option, rien ne change.
 
 `th.chevK` règle le seuil de courbure à partir duquel un chevron est posé (0,006 par défaut, soit un rayon de 167 m). Sur barrage, `chevK: 0.02` ne garde les panneaux que dans les virages de moins de 50 m de rayon.
+
+## 13. Options ajoutées pour chapada (Manuscrit 512)
+
+Toutes absentes par défaut : sans elles, le code suit le même chemin qu'avant.
+
+```js
+th: { depart: [accent, ossature, texte, 'departJungle'],   // 4e valeur : nom d'une autre forme de portique de départ (mêmes zones que « depart »)
+      gloss: 0.02,                                          // brillance de la chaussée (0,08 par défaut, 0,2 sous la pluie) : moins de reflet du soleil
+      cones: 0,                                             // ni cônes ni poubelles à l'entrée des virages
+      brume: [[1, 4, 0.62], [29, 34, 0.68]],                // (3 valeurs : autre forme que le banc du §10) entre ces points de contrôle, portée du brouillard × k, fondue sur 120 m
+      tun: { gloss: 0.05,                                   // brillance du sol du tunnel (0,3 par défaut)
+             tex: ['rocheGrotte', 'rocheGrotte'] },         // textures des parois et de la voûte du tunnel, à la place de « paroi » et « plafond » (elles reçoivent les mêmes arguments, libres de les ignorer)
+      feuilles: [[0.6, 0.4, 0.12], [0.4, 0.24, 0.1]] }      // teintes des feuilles mortes que chaque voiture soulève derrière elle hors de l'eau et du tunnel (petits carrés nets, 260 au plus, une passe de dessin).
+                                                            // Demande th.poussiere (c'est dans sa boucle par voiture) ; sur une carte sans surface à poussière, th.poussiere ne fait qu'allumer la gerbe d'eau des zones mouillées
+```
+
