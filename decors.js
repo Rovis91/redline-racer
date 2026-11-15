@@ -2302,7 +2302,7 @@
       const lag = tranche(36, 43, 2, 0), pont = [P(39) - 8, P(40) + 8], surPont = i => ((i - pont[0] + N) % N) <= ((pont[1] - pont[0] + N) % N);
       const bordure = h.mat('peinture', { c: 0xe8e4d8 }), enro = h.mat('enrochement', { side: D });
       const bitume = h.mat('bruit', { side: D }, '#5a564e', ['#4e4a44', '#66625a']); for (const sd of [-1, 1]) { h.ribbon(lag[0], lag[1], sd * W, 0.005, s => sd * s.w, 0.005, bitume, 8); h.ribbon(lag[0], lag[1], s => sd * (W - 0.4), 0.012, s => sd * (W - 0.2), 0.012, bordure, 8); // la ligne de rive de la route du moteur, et le bas-côté bitumé jusqu'à la bordure
-        h.ribbon(lag[0], lag[1], s => sd * (s.w + 0.35), 0.95, s => sd * (s.w + 0.35), 0.55, h.mat('peinture', { c: 0xf2f2ea, side: D }), 4); h.ribbon(lag[0], lag[1], s => sd * s.w, 0.18, s => sd * (s.w + 0.45), 0.18, bordure, 4); h.ribbon(lag[0], lag[1], s => sd * (s.w + 0.45), 0.18, s => sd * (s.w + 4.5), -0.45, enro, 6); }
+        h.ribbon(lag[0], lag[1], s => sd * (s.w + 0.35), 0.95, s => sd * (s.w + 0.35), 0.55, h.mat('peinture', { c: 0xf2f2ea, side: D }), 4); h.ribbon(lag[0], lag[1], s => sd * s.w, 0.18, s => sd * (s.w + 0.45), 0.18, bordure, 4); h.ribbon(lag[0], lag[1], s => sd * (s.w + 0.45), 0.18, s => sd * (s.w + 4.5), s => -0.45 - s.y, enro, 6); }
       const bornes = [], lampsL = [], ampL = [], garde = [], mangles = [], couronnes = [], flamants = [[], []], aigrettes = [], kayaks = [];
       chaque(lag, 3, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 0.3); if (surPont(i)) garde.push([x, s.y + 0.55, z, Math.atan2(-s.tz, s.tx), 6.2, 1, 1]); else if (k % 2 === 0) { bornes.push([x, s.y, z, 0, 2.4, 1.0, 2.4]); CUB.push([x, s.y + 0.85, z, 0, 0.5, 0.14, 0.5, 0xe8302a]); } }
         if (k % 7 === 3) { const sd = (k / 7 | 0) % 2 ? 1 : -1, [px, pz] = bord(s, sd, s.w + 3.2); palmier(px, pz, 0, 0.9, -0.2); }
@@ -2319,7 +2319,7 @@
       insts(h, 'mangle', { racine: h.mat('bruit', {}, '#5a4030', ['#4a3424', '#6e5440']) }, mangles); inst(h, h.geo('buisson'), mangleF, couronnes);
       flamants[0].push(...pelicans, ...aigrettes); flamants.forEach((l, t) => insts(h, remap('flamant', { patte: 'bec' }, t), { plume: blancT, bec: h.mat('peinture', { c: 0x3a2a2a }) }, l, { teinte: 'plume' })); // flamants, pélicans et aigrettes : une silhouette, la teinte par instance
       
-      { const x = -44, z = 232; h.pose('tourObs', { bois }, h.scene, [x, -0.6, z]); PAL.push(...[[x, 9.1, z, 0.4, 3.6, 2.2, 3.6]]); const pas = []; for (let u = 4; u < 32; u += 2.4) pas.push([x + u, -0.1, z - 3, 0, 2.4, 0.2, 2.2]); CUB.push(...pas.map(p => [p[0], p[1], p[2], p[3] || 0, 1 * (p[4] || 1), 1 * (p[5] || p[4] || 1), 1 * (p[6] || p[4] || 1), 0xa08458]));
+      { const x = -60, z = 232; h.pose('tourObs', { bois }, h.scene, [x, -0.6, z]); PAL.push(...[[x, 9.1, z, 0.4, 3.6, 2.2, 3.6]]); const pas = []; for (let u = 4; u < 32; u += 2.4) pas.push([x + u, -0.1, z - 3, 0, 2.4, 0.2, 2.2]); CUB.push(...pas.map(p => [p[0], p[1], p[2], p[3] || 0, 1 * (p[4] || 1), 1 * (p[5] || p[4] || 1), 1 * (p[6] || p[4] || 1), 0xa08458]));
         for (let k = 0; k < 6; k++) kayaks.push([x + 8 + k * 3, -0.75, z - 7, 0.2, 1, 1, 1, [0xffb100, 0xe8402a, 0x1fb5a8][k % 3]]); figurant(x + 20, z - 3, 0, 0.05); figurant(x + 30, z - 3, 2, 0.05); }
       for (let k = 0; k < 4; k++) kayaks.push([-140 + k * 30, -0.75, 150 + k * 40, rnd() * 6, 1, 1, 1, [0xffb100, 0xe8402a, 0x1fb5a8][k % 3]]);
       insts(h, remap('kayak', { siege: 'coque' }), { coque: blancT }, kayaks, { teinte: 'coque' });
