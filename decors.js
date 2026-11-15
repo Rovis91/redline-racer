@@ -2052,7 +2052,7 @@
 
       // ---------- la nature (REFS 7) : mélèzes et bouleaux à tous les plans, enrochements des berges, éboulis au pied des parois ----------
       const mel = [], bou = [], roc = [];
-      const vue = (x, z) => (x > -175 && x < 100 && z > 55 && z < 330) || (z < 900 && x > -60 && x < 140 && riv(x, z) < 28); // dégagé : le bassin et les jets depuis la route, la berge est le long de la rivière
+      const vue = (x, z) => (x > -175 && x < 100 && z > 55 && z < 330) || (z > 300 && z < 960 && x > -60 && x < 150 && riv(x, z) < 70); // dégagé : le bassin et les jets depuis la route, la berge est le long de la rivière
       const libre = (x, z, m) => dAt(x, z) > W + m && riv(x, z) > 3 && !lac(x, z) && !mur(x, z) && !halle(x, z) && !poste(x, z) && !vue(x, z);
       for (let k = 0; k < 17000; k++) { const x = -1050 + rnd() * 2400, z = -720 + rnd() * 2400; if (!libre(x, z, 9)) continue; const y = hAt(x, z), c = cite(x, z);
         if (c && rnd() < 0.85) continue; if (y < 30 && rnd() < 0.45 || c) bou.push([x, y - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); else mel.push([x, y - 0.5, z, rnd() * 6, 0.7 + rnd() * 0.7, 0.7 + rnd() * 0.8]); }
@@ -2061,7 +2061,7 @@
         (s.y < 30 && rnd() < 0.6 ? bou : mel).push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5, 0.8 + rnd() * 0.5]); } }
       for (let k = 0; k < 2600; k++) { const x = -400 + rnd() * 700, z = 220 + rnd() * 1500, rv = riv(x, z); if (rv < -3 || rv > 5 || dAt(x, z) < W + 4) continue; roc.push([x, Math.max(2.4, hAt(x, z)), z, rnd() * 6, 1.4 + rnd() * 2.6, 0.8 + rnd() * 1.4, 1.4 + rnd() * 2.6]); }
 
-      inst(h, h.geo('boite', 10, 11, 0.3), mat('mosaique'), [[152, 455], [152, 545], [156, 635], [165, 722]].map(([x, z]) => [x, hAt(x, z) + 7, z + 30.2])); // la mosaïque des pignons, vue en remontant la vallée
+      inst(h, h.geo('boite', 10, 11, 0.3), mat('mosaique'), [[152, 455], [152, 545], [156, 635], [165, 722]].filter(([x, z]) => dAt(x, z) > 30).map(([x, z]) => [x, hAt(x, z) + 7, z + 30.2])); // (seulement sous les barres posées) // la mosaïque des pignons, vue en remontant la vallée
       { const ar = [], pa = [];
         for (let i = 0; i < N; i += 19) { if (dansHalle(i) || (i >= T0 && i <= T1) || pontI.has(i) || dans(i, 35, 41)) continue; const s = S[i], sd = (i / 19 | 0) & 1 ? 1 : -1; if (sd < 0 && dans(i, 32, 49)) continue; const [x, z] = bord(s, sd, s.w + 3.2 + rnd() * 2); ar.push([x, hAt(x, z) + 0.8, z, h.across(s), 0.9, 1.6, 0.6]); }
         for (let i = 11; i < N; i += 61) { if (dansHalle(i) || (i >= T0 && i <= T1)) continue; const s = S[i], [x, z] = bord(s, 1, s.w + 2.8); pa.push([x, s.y + 2.6, z, h.across(s), 0.08, 1.2, 1.2]); }
@@ -2079,6 +2079,9 @@
           for (let k = 0; k <= n; k++) { const a = k / n * Math.PI * 2, r = R + Math.sin(a * gr) * 90, y = h0 + (h1 - h0) * (0.5 + 0.3 * Math.sin(a * gr * 1.7 + R) + 0.2 * Math.sin(a * 23 + R)); P3.push(cx + Math.cos(a) * r, -60, cz + Math.sin(a) * r, cx + Math.cos(a) * (r + 40), y, cz + Math.sin(a) * (r + 40)); C3.push(col.r, col.g, col.b, col.r, col.g, col.b); if (k < n) { const b = b0 + k * 2; I.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } } }
         const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); g2.setAttribute('color', new THREE.Float32BufferAttribute(C3, 3)); g2.setIndex(I); h.scene.add(new THREE.Mesh(g2, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }))); } // les deux rangées en une passe
 
+      // balises de freinage à 150, 100 et 50 m de chaque virage serré : trois, deux, une bande rouge sur un poteau blanc, des deux côtés
+      { let der = -99; for (let i = 0; i < N; i++) { const j = (i + 75) % N; if (Math.abs(S[j].k) > 0.025 && i - der > 90 && !dans(j, 5, 13)) { der = i; for (const [o, nb] of [[0, 3], [25, 2], [50, 1]]) { const q = (i + o) % N; if (q >= T0 && q <= T1) continue; const s = S[q];
+          for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 1, z, h.across(s), 0.3, 2, 0.3, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 1.75 - b * 0.4, z, h.across(s), 0.34, 0.2, 0.34, 0xc8302a]); } } } } }
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
       fond();
       // les jets coulent, l'écume du bassin bouillonne, la rivière file vers le sud, l'embrun ondule
