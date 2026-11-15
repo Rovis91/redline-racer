@@ -45,8 +45,8 @@
     }, 12],
     // REFS 3 : l'eau vue en rasant : le ciel pâle du matin en miroir, des plages couleur thé là où l'on voit le fond, quelques rides sombres et de l'écume (matière lumineuse : un reflet ne dépend pas de l'ombre)
     eauCiel: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#a8a898', 0, 0, 64, 64);
-      for (let i = 0; i < 9; i++) R(g, alea() < 0.6 ? '#8a6a3a' : '#9a7a48', alea() * 50 | 0, alea() * 50 | 0, 10 + (alea() * 16 | 0), 8 + (alea() * 12 | 0)); // le fond couleur thé
+      const { R, alea } = o; R(g, '#b8bcb2', 0, 0, 64, 64);
+      for (let i = 0; i < 6; i++) R(g, alea() < 0.6 ? '#9a7a48' : '#a8885a', alea() * 50 | 0, alea() * 50 | 0, 8 + (alea() * 14 | 0), 6 + (alea() * 10 | 0)); // le fond couleur thé, par plages
       for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#c8ccc0' : '#e0d8b8', alea() * 56 | 0, alea() * 63 | 0, 6 + (alea() * 10 | 0), 1); // le ciel en rides
       for (let i = 0; i < 20; i++) R(g, '#5a4a30', alea() * 58 | 0, alea() * 63 | 0, 4 + (alea() * 6 | 0), 1);
       for (let i = 0; i < 10; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 63 | 0, 2, 1);

@@ -1901,7 +1901,7 @@
         if (zn === 'plateau') return 6; if (zn === 'lacets') return sd === amont(S[i]) ? (paroiLacet(i) ? 1.5 : 4) : 5; if (zn === 'gorge') return sd > 0 ? 6 : 0; return 10; };
       const A = e => -0.04 - 0.05 * e; // hauteur du bas-côté sous la chaussée, à e m du bord
       const creux = (x, z, y) => { const { i, s, d, cote } = proche(x, z), w = s.w; let r = 0;
-        if (dans(i, 12, 23) && (cote < 0 || dF(i) < 20) && d > w + 3) { r = Math.max(0, y - (s.y + niv(i) - 1.2)) * lisse(w + 3, w + 9, d); // le lit de la rivière
+        if (dans(i, 12, 23) && (cote < 0 || dF(i) < 20) && d > w + 0.5) { r = Math.max(0, y - (s.y + niv(i) - 1.2)) * lisse(w + 0.5, w + 2.5, d); // le lit de la rivière, creusé dès le bord : à 9 m, le terrain passait au-dessus de l'eau et la cachait
           if (cote < 0 && d > w + 52) r -= Math.min(75, (d - w - 52) * 2.2); } // au-delà, la paroi d'en face
         else if (dedans(x, z) && d > 30) r -= Math.min(45, (d - 30) * 0.8); // le massif du centre
         if (x > xEst - 40) r += Math.min(90, (x - xEst + 40) * 0.9) * lisse(w + 4, w + 14, d); // à l'est des épingles, le vide
@@ -2046,13 +2046,13 @@
       { const fl = [h.mat('ecrit', {}, 64, 32, '#e9b44c', '#1a1a16', '▶▶', 22), h.mat('ecrit', {}, 64, 32, '#e9b44c', '#1a1a16', '◀◀', 22)], pl = [[], []], po = [];
         for (let i = 0; i < N; i += 6) { const s = S[i]; if (Math.abs(s.k) < 0.006 || entre(i, g0, g1) || entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue;
           const side = s.k > 0 ? -1 : 1, [x, z] = bord(s, side, s.w + 1.4); pl[side < 0 ? 0 : 1].push([x, s.y + 2.4, z, h.across(s) + Math.PI / 2, 2.4, 2.4, 2.4]); for (const u of [-1.2, 1.2]) { const [px, pz] = bord(s, side, s.w + 1.4 + u); po.push([px, s.y + 0.8, pz, 0, 1.2, 2.6, 1.2]); } }
-        pl.forEach((l, k) => inst(h, h.geo('boite', 0.08, 0.9, 1.7), fl[k], l)); inst(h, h.geo('boite', 0.12, 1, 0.12), bois, po); }
+        pl.forEach((l, k) => { inst(h, h.geo('boite', 0.08, 0.9, 1.7), fl[k], l).castShadow = false; }); inst(h, h.geo('boite', 0.12, 1, 0.12), bois, po).castShadow = false; }
       { const bal = [], ref = [], dist = [[], [], []];
         for (let i = 0; i < N; i += 8) { const s = S[i]; if (entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue; const gue = entre(i, iF0, iF1);
           for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, gue ? W + 0.3 : s.w + 0.9), y = gue ? s.y + niv(i) : s.y; bal.push([x, y + 0.7, z, h.across(s), 1.8, 1.2, 1.8]); ref.push([x, y + 1.35, z, h.across(s), 1.8, 1.6, 1.8]); } }
         for (const k of [3, 5, 8, 11, 15, 21]) { const side = k === 15 || k === 21 ? 1 : -amont(S[P(k)]); [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.2, z, h.across(s) + Math.PI / 2, 2.4, 2.4, 2.4]); }); }
-        inst(h, h.geo('boite', 0.18, 1.2, 0.18), h.mat('peinture', { c: 0xe8e4d8 }), bal); inst(h, h.geo('boite', 0.2, 0.18, 0.2), h.mat('peinture', { lum: 1, c: 0xff6a2a }), ref);
-        ['150', '100', '50'].forEach((t, j) => inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j])); }
+        for (const m of [inst(h, h.geo('boite', 0.18, 1.2, 0.18), h.mat('peinture', { c: 0xe8e4d8 }), bal), inst(h, h.geo('boite', 0.2, 0.18, 0.2), h.mat('peinture', { lum: 1, c: 0xff6a2a }), ref)]) m.castShadow = false; // au soleil rasant, leurs ombres barraient la route en damier
+        ['150', '100', '50'].forEach((t, j) => { inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j]).castShadow = false; }); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
       const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches'), lanterne = h.mat('peinture', { lum: 1, c: 0xffb45a });
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + 7 + rnd() * rnd() * 40, [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
