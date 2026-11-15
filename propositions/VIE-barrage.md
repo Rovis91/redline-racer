@@ -366,3 +366,45 @@ Ce que je ne propose pas : un arc-en-ciel sur les embruns (retiré à la demande
 - **Écran partagé et jeu en ligne** : non essayés.
 - **Performance** : non analysée, par décision.
 - **Numéros de ligne** : repris sur `19bd9dd` après le découpage de `decors.js` ; à refaire au `grep` si le dépôt bouge encore.
+
+---
+
+## 8. Réalisation, validation et caméra par défaut (16 novembre 2026)
+
+L'auteur a validé tous les points et demandé un agent de validation par point, avec capture avant et après. La réalisation est sur la branche `vie-barrage` (worktree `.claude/worktrees/vie-barrage`), en cinq commits, rien de poussé. 79 agents ont jugé chacun un point sur les captures de la caméra de course et sur le code : 44 validés, 35 à revoir. Le cinquième commit corrige ce qu'ils ont refusé.
+
+Règle ajoutée par l'auteur ensuite : **on juge depuis la caméra par défaut du jeu, sur la trajectoire de course**. Une idée masquée, hors champ ou visible seulement de très loin est retirée ou déclassée. Plusieurs de mes jugements de la section 3 venaient de vues de côté : ils sont repris ici.
+
+### Depuis quels `idx` les quatre demandes sont dans le champ
+
+| Demande | Dans le champ de la caméra de course | Hors champ |
+|---|---|---|
+| Trains | À droite, à 10 m, de **225 à 537** : la motrice à quai puis en marche de 225 à 330, le train de marchandises de 440 à 537 | Depuis la descente (2343 – 2594) : la voie est en bord d'image, derrière le poste électrique |
+| Gare | De **208 à 250**, à droite : bâtiment, enseigne, quai, passerelle | Depuis la descente (2500 – 2594) : absente de l'image |
+| Radars | La parabole, à gauche devant soi, de **690 à 745** ; l'antenne en râteau est déplacée à côté d'elle | Tout ce qui est au nord de z = 200 (état-major, drapeau, portail) : par le travers, à plus de 60° de l'axe |
+| Turbines | Dans l'axe, à 4 m, aux **idx 583, 608 et 632** | — |
+| Jets des vidanges | De loin seulement : trouée de la traverse (**1298**) et traverse du belvédère (**2139 – 2288**) | Sur le pont (776 – 818) : ils sont à droite, la caméra regarde la route. Du quai : cachés par les murs du bassin |
+
+Conséquence pour le tracé de voie : il passe bien là où la caméra regarde (le long de la ligne droite de la vallée). La seconde rencontre prévue depuis la descente ne tient pas ; les rames ne font plus qu'un aller par tour côté vallée.
+
+### État de chaque point
+
+| État | Points |
+|---|---|
+| **Validé par son agent, inchangé** | V-03, V-05, V-08, V-09, V-10, V-12, V-15, V-16, V-17, V-18, V-19, V-22, V-27, V-30, V-32, V-33, V-35, V-36, V-37, V-40, V-41, V-42, V-46, V-52, V-56, V-57, V-60, V-64, V-65, V-66, V-68, V-69, V-72, V-73, V-74, V-77, V-78, V-82 |
+| **Validé à tort, corrigé depuis** | V-24, V-28, V-43, V-70, V-71 : les sons brefs ne sortaient pas (clé `SON.coup` écrasée dans `audio.js`). Corrigé (`SON.bref`), non réécouté |
+| **Refusé, corrigé, pas encore revalidé** | V-01 (points rouges trop gros), V-02 (faisceaux à arêtes vives), V-06 (nappes qui sautaient), V-07 (feu caché dans le portique), V-20 (chute hors de portée), V-21 (bouleau sur la voie), V-26 (gare posée droite sur une voie courbe), V-39 (compte des tours faux en contre-la-montre), V-50 et V-51 (panache en mur blanc devant les jets), V-53, V-54, V-59, V-62, V-75, V-76, V-81 (cité muette), V-84 |
+| **Refusé, déplacé dans le champ, pas encore revalidé** | V-11 (antenne), V-47 (rais de la halle), V-58 (arbre abattu), V-61 et V-80 (rapaces) |
+| **Retiré : invisible depuis la caméra de course** | V-14 (sentinelles), V-23 (rames vues de la descente), V-44 (soudure), V-45 (corneilles), V-48 (ouvriers), V-55 (mouettes), V-79 (tas de la bande) |
+| **Gardé avec un défaut connu** | V-04 : les halos ne se reflètent pas, et le reflet d'un portique noyé dans la brume fait un rectangle pâle sur la chaussée. V-13 : drapeau hors champ. V-25 : phares des trains non lumineux. V-85 : une seule couche. V-31 : la grande roue tourne, mais elle est dans le coin de l'image à l'idx 2800 (validée sur le code, à déclasser selon la règle de la caméra) |
+| **Non fait** | V-34, V-38, V-63, V-83 ; V-67 à moitié (rien n'assourdit le son dans le brouillard) |
+
+Encore à vérifier après corrections : les rais de la halle et l'arbre abattu ne se distinguent toujours pas sur mon dernier contrôle (idx 600 et 955).
+
+### Ce qui reste non vérifié
+
+- Le son : personne ne l'a écouté. Vérifié seulement : le niveau de chaque source continue aux endroits prévus, et l'absence d'erreur au déclenchement.
+- Les points corrigés n'ont pas été rejugés par un agent.
+- Aucune capture avec des rivaux (feux arrière dans le brouillard) ni en course réelle (horaire des trains).
+- `vit` et médailles non retouchés ; les zones mouillées coûtent 0,3 s au tour de référence.
+- Performance : non mesurée.
