@@ -93,7 +93,7 @@
     panneau: () => new THREE.PlaneGeometry(1, 1),
     // REFS §12, §10, §15 : calotte de coupole (toits du bazar), houppier rond (orangers), cône de qanat, jet de fontaine, cône (épices, Zagros)
     calotte: () => new THREE.SphereGeometry(1, 12, 5, 0, Math.PI * 2, 0, Math.PI / 2),
-    houppierRond: () => new THREE.IcosahedronGeometry(1, 1),
+    houppierRond: () => new THREE.IcosahedronGeometry(1, 0), // 20 faces : les vergers en comptent un millier
     qanat: () => { const g = new THREE.CylinderGeometry(0.8, 2.6, 1.2, 8); g.translate(0, 0.6, 0); return g; },
     jet: () => { const g = new THREE.CylinderGeometry(0.06, 0.25, 1, 6); g.translate(0, 0.5, 0); return g; },
     rai: () => { const g = new THREE.CylinderGeometry(1, 2.4, 1, 10, 1, true); g.translate(0, -0.5, 0); return g; }, // puits de lumière du bazar : cône ouvert sous l'oculus, pointe en haut

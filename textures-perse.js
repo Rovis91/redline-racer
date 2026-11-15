@@ -102,7 +102,7 @@
     // REFS §6-7 : taureau ailé en haut-relief sur le montant de la Porte, de profil, pierre sombre sur pierre dorée ; humain = tête barbue à tiare (lamassu), sinon tête de taureau ; droite = tête à droite de l'image
     lamassuRelief: (humain, droite) => [48, 64, (g, { R }) => { // aux proportions du montant (7,6 × 10,5 m)
       if (droite) { g.translate(48, 0); g.scale(-1, 1); }
-      const S1 = '#3e3834', S2 = '#5a524a', AI = '#d8ccb0', AI2 = '#6a6050';
+      const S1 = '#5a524a', S2 = '#7a7064', AI = '#e0d4b8', AI2 = '#2e5e9e';
       R(g, '#c4a478', 0, 0, 48, 64); R(g, '#8a6e48', 0, 0, 48, 2); R(g, '#8a6e48', 0, 62, 48, 2);
       for (let r = 0; r < 7; r++) { const y = 6 + r * 3.5 | 0, x = 14 + r * 2; R(g, AI2, x - 1, y - 1, 46 - x, 4); R(g, AI, x, y, 45 - x, 2); for (let k = x + 2; k < 46; k += 4) R(g, AI2, k, y, 1, 2); } // la grande aile claire, plume à plume, qui monte vers l'arrière
       R(g, S1, 12, 31, 33, 12); R(g, S2, 14, 33, 28, 2); R(g, S1, 44, 31, 3, 11); // corps, queue
@@ -113,6 +113,9 @@
     }],
     // REFS §1 : joints de grandes dalles sur la chaussée de la route royale, transparents ailleurs (les marquages du moteur restent visibles) ; x en travers, y le long
     joints: () => [32, 32, (g, { R }) => { g.clearRect(0, 0, 32, 32); R(g, '#7a6a58', 0, 0, 32, 1); R(g, '#7a6a58', 0, 16, 32, 1); }], // joints en travers seulement, clairs : sans damier ni taches
+    // REFS §15 : façade de pisé d'une maison : enduit ocre, deux petites fenêtres à grille de bois, porte basse, bandeau de faïence sous le toit ; 8 m
+    facadeCrue: () => [32, 32, (g, { R, alea }) => { R(g, '#c49a5e', 0, 0, 32, 32); for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#d4aa70' : '#b08850', alea() * 32 | 0, alea() * 32 | 0, 2, 1);
+      R(g, TURQ, 0, 2, 32, 1); for (const x of [4, 22]) { R(g, '#3a2418', x, 8, 6, 7); R(g, '#8a5a30', x, 11, 6, 1); R(g, '#8a5a30', x + 3, 8, 1, 7); } R(g, '#5a3a20', 13, 20, 6, 12); R(g, '#3a2418', 14, 21, 4, 11); R(g, '#a07040', 12, 19, 8, 1); }, 8],
     // REFS §9 : calcaire du Kuh-e Rahmat, gris miel en strates horizontales, éboulis plus sombres au pied
     strates: () => [64, 64, (g, { R, alea }) => { R(g, '#8a7c6c', 0, 0, 64, 64); for (let y = 0; y < 64; y += 5 + (alea() * 4 | 0)) { R(g, '#5f5046', 0, y, 64, 1); R(g, '#a8987e', 0, y + 1, 64, 1); }
       for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#6e6052' : '#9a8a76', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1); R(g, '#5f5046', 0, 56, 64, 8); }, 40],
