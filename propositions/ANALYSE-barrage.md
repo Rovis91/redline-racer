@@ -22,6 +22,13 @@ L'auteur a accepté toutes les propositions. Elles sont faites sur cette branche
 | A-11 sommets | Fait : aplats, neige au-dessus d'une ligne nette. |
 | A-12 chevrons | Fait pour la halle (`th.chevSauf`). Gardés dans la cité, où ils aident à lire le zigzag. |
 
+Retour de l'auteur après essai, appliqué :
+- Halos des lampes retirés (ils rendaient mal ; les lumières dynamiques sont remises à plus tard). Les fenêtres et les têtes de lampe restent allumées.
+- Plus de lampadaires avant le tunnel. Sur le pont et la crête, ils sont hors du parapet ; dans la cité, aucun n'est posé dans un immeuble.
+- Brouillard : zone des points 68 à 79. Il est entier à la sortie du tunnel (le moteur ne l'efface plus en tunnel) et ne se lève qu'en forêt, après le S de la culée.
+- Cité : sept lieux réservés au bord de la rue avant les barres (cinéma, marché, grande roue, statue sur sa place, patinoire, station-service), puis, dans l'intérieur de chaque virage, fontaine, avion sur pylône, kiosque à musique ou parterre. Mobilier de trottoir entre les voitures garées (banc, tableau d'honneur, colonne d'affiches, cabine). Les voitures sont posées sur le sol réel et agrandies de 20 %.
+- Garnison : grande parabole pleine sur sa tour, quatre lance-roquettes sur camion, rails levés, au premier rang.
+
 Restent du ressort de l'auteur : tout ce qui se juge manette en main (le brouillard à 190 km/h, le nouveau freinage de la culée, la lecture de la garnison et de la carrière en passant). La montée en forêt (échantillons 864 à 1436) a reçu trois repères : une coupe de bois sur la rampe (clairière de souches, piles de grumes, camion, enseigne), un grand panneau rouge « СЛАВА ТРУДУ! » à l'extérieur de l'épingle du ravin, un arrêt d'autobus sur la traverse.
 
 ## Verdict

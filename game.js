@@ -1937,7 +1937,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     sky.position.copy(cam.position); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000); const pasL = sunFollow(car);
     // brouillard et ciel : nuit néon ↔ tunnel ; éclairs : flash double sur le ciel et l'éclairage (le tonnerre part de fxFrame)
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN, 320, lm);
-    let kBr = 0; for (const [z, n0, n1] of brumeZ) { const k = z(car.idx, 90) * (1 - lm); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
+    let kBr = 0; for (const [z, n0, n1] of brumeZ) { const k = z(car.idx, 90); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
     if (voileBr) { voileBr.visible = kBr > 0.01; voileBr.position.copy(cam.position); voileBr.material.opacity = Math.min(1, kBr * 1.6); voileBr.material.color.copy(scene.fog.color); } // th.brume : un banc de brouillard sur une portion du tracé
     skyMat.color.copy(WHITE).lerp(FOG_IN, lm);
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;

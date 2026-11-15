@@ -1996,14 +1996,13 @@
       // ---------- le pont du pied du mur : tablier et piles de béton, lampadaires ----------
       tranche(iP0 + 6, iP1 - 6, (i, l) => { ruban(i, l, s => -(s.w + 1.2), -0.15, s => s.w + 1.2, -0.15, betS, 8); ruban(i, l, s => -(s.w + 1.2), -2.4, s => s.w + 1.2, -2.4, betS, 8); for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 1.2), -0.15, s => sd * (s.w + 1.2), -2.4, betS, 8); });
       for (let i = iP0 + 18; i < iP1 - 12; i += 22) { const s = S[i], m = h.pose('boite', betS, h.scene, [s.x, (s.y - 2.4 + 2) / 2, s.z], 2 * W + 1, s.y - 2.4 - 2, 2.6); m.rotation.y = h.across(s); }
-      const halos = [], clair = []; // halos des lampes allumées [x, y, z, 0, rayon ×3, couleur] ; clairières de la forêt [x, z, rayon]
+      const lampes = [], clair = []; // lampadaires, posés après la cité (aucun dans un mur) ; clairières de la forêt [x, z, rayon]
       // lampadaires de sodium : le pont, la crête, la rue de la cité et ses abords
-      { const lp = [], lampe = mat('lampe', LUMI); const pose1 = (i, sd, o = 1.6) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + o); lp.push([x, s.y, z, h.across(s) + (sd > 0 ? Math.PI : 0)]); };
-        for (let i = iP0 + 4, k = 0; i < iP1; i += 14, k++) pose1(i, k & 1 ? 1 : -1, 0.6);
-        for (let i = T0 - 30; i < T0; i += 14) pose1(i, -1);
-        for (let i = iM0 + 6, k = 0; i < iM1 + 30; i += 14, k++) pose1(i, k & 1 ? 1 : -1, 0.6);
+      { const lp = lampes; const pose1 = (i, sd, o = 1.6) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, s.w + o); lp.push([x, s.y, z, h.across(s) + (sd > 0 ? Math.PI : 0)]); };
+        for (let i = iP0 + 4, k = 0; i < iP1; i += 14, k++) pose1(i, k & 1 ? 1 : -1, 1.2);
+        for (let i = iM0 + 6, k = 0; i < iM1 + 30; i += 14, k++) pose1(i, k & 1 ? 1 : -1, 1.2);
         for (let i = iV0 - 60, k = 0; ((i - iV0 + 60 + N) % N) < ((iV1 + 80 - iV0 + 60 + N) % N); i = (i + 14) % N, k++) pose1(i, k & 1 ? 1 : -1, 3.9);
-        insts(h, 'lampadaireGES', { fut: gris, lampe }, lp); for (const [x, y, z, r] of lp) halos.push([x + Math.cos(r) * 2.1, y + 8.6, z - Math.sin(r) * 2.1, 0, 1.5, 1.5, 1.5, 0xffb060]); }
+        }
 
       // ---------- le tunnel de la culée ouest : la chape de roche sous l'éperon (ses deux têtes de bunker sont plus bas) ----------
       const roche = mat('rocheGES', { ...DS, rep: [2, 1] });
@@ -2029,7 +2028,7 @@
         const c = [], add = (x0, z0, x1, z1) => { const l = Math.hypot(x1 - x0, z1 - z0); c.push([(x0 + x1) / 2, YP + 1.3, (z0 + z1) / 2, -Math.atan2(z1 - z0, x1 - x0), l, 2.6, 0.1]); };
         add(197, 421, 197, 611); add(197, 611, 301, 611); add(301, 611, 301, 421); add(197, 421, 301, 421); inst(h, h.geo('bloc'), mat('betonPO2', DS), c);
         bloc(mat('panneauK', {}, '#b8b4a4'), 272, 298, 588, 606, YP, YP + 8); bloc(betS, 271, 299, 587, 607, YP + 8, YP + 8.6);
-        for (const [x, z] of [[201, 426], [297, 426], [201, 606]]) { bloc(gris, x - 0.2, x + 0.2, z - 0.2, z + 0.2, YP, YP + 18); bloc(mat('lampe', LUMI), x - 0.9, x + 0.9, z - 0.3, z + 0.3, YP + 18, YP + 18.8); halos.push([x, YP + 18.4, z, 0, 2.6, 2.6, 2.6, 0xfff0d0]); } } // trois mâts de projecteurs, allumés
+        for (const [x, z] of [[201, 426], [297, 426], [201, 606]]) { bloc(gris, x - 0.2, x + 0.2, z - 0.2, z + 0.2, YP, YP + 18); bloc(mat('lampe', LUMI), x - 0.9, x + 0.9, z - 0.3, z + 0.3, YP + 18, YP + 18.8); } } // trois mâts de projecteurs, allumés
       // ---------- la cité ouvrière, traversée par la route : des barres grises de cinq étages alignées sur les rues (un rang de chaque côté, posé sur un sol pavé), un second rang derrière, des tours de neuf étages,
       //            des enseignes de rez-de-chaussée, des cours avec leurs aires de jeu, des kiosques, des voitures le long des trottoirs, les conduites de chauffage en portique ----------
       const YV = 16, peints = [], bl = (x, y, z, r, a, b, c, col) => peints.push([x, y, z, r, a, b, c, col]); // petits volumes peints, posés ensemble à la fin (une seule passe de dessin)
@@ -2048,6 +2047,44 @@
       // le sol des rues : un parvis de dalles de chaque côté de la chaussée, du trottoir au pied des immeubles
       { const dalle = mat('bruit', {}, '#7a7c7c', ['#868888', '#6c6e6e', '#8e8c86']); tranche(iV0, iV1, (i, l) => { for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 3.6), 0.06, s => sd * (s.w + 20), 0.06, dalle, 6); }); }
       const rang1 = [], rang2 = [], tours = [];
+      { // un lieu = une emprise prise au bord de la rue, près de l'échantillon i0 (côté préféré sd0), dessinée dans son repère : u le long de la rue, v vers la chaussée
+        const lieu = (i0, sd0, hl, hp, f, off = 6.4, DI = [0, 8, -8, 16, -16, 24, -24, 32, -32]) => { for (const di of DI) for (const sd of [sd0, -sd0]) { const s = S[(i0 + di + N) % N], [x, z] = bord(s, sd, s.w + off + hp), r = h.across(s) + Math.PI / 2 + (sd > 0 ? Math.PI : 0); if (!place(x, z, r, hl, hp)) continue;
+          const c = Math.cos(r), sn = Math.sin(r), Y = Math.max(s.y, hAt(x, z)) + 0.05, B = (u, y, v, a, b, d, col, dr = 0) => bl(x + c * u + sn * v, Y + y, z - sn * u + c * v, r + dr, a, b, d, col);
+          const mot = (t, fond, u, y, v, w, ht) => { const m = new THREE.Mesh(h.geo('boite', w, ht, 0.2), mat('lettres', {}, t, fond, '#f0e8d0')); m.position.set(x + c * u + sn * v, Y + y, z - sn * u + c * v); m.rotation.y = r; h.scene.add(m); };
+          f(B, mot, { x, z, r, Y, c, sn }); return true; } };
+        const iF = k => (iV0 + k + N) % N; // k échantillons après l'entrée de la cité
+        // le cinéma : portique de six colonnes blanches, fronton, enseigne rouge, affiches
+        lieu(iF(40), 1, 13, 8, (B, mot) => { B(0, 0.03, 0, 30, 0.06, 18, 0x8e8c86); B(0, 4.5, -1.5, 26, 9, 12, 0xd8d0b8); B(0, 9.3, -1.5, 27, 0.6, 13, 0x6d726d); for (let k = 0; k < 6; k++) B(-10 + k * 4, 4, 5.6, 0.9, 8, 0.9, 0xf0ece0);
+          B(0, 8.7, 5.4, 24, 1.4, 2.4, 0xf0ece0); B(0, 0.25, 7, 24, 0.5, 2.6, 0x9a9890); mot('КИНО', '#b5241c', 0, 10.6, 5.4, 10, 2.4); [0xc8281e, 0x2a6aa8, 0xd0a020].forEach((col, k) => B(-6 + k * 6, 3.4, 4.56, 3, 4, 0.12, col)); });
+        // le marché : deux rangs d'étals sous des auvents de couleur, cageots, portique d'entrée
+        lieu(iF(100), -1, 11, 7, (B, mot) => { B(0, 0.03, 0, 24, 0.06, 15, 0x9a8f78); for (let k = 0; k < 10; k++) { const u = -8 + (k % 5) * 4, v = k < 5 ? -3 : 2.4, col = [0xc8281e, 0xe8e4d8, 0x2a6aa8, 0xd0a020, 0x3a8a4a][(k + (k > 4)) % 5];
+            B(u, 0.5, v, 3, 1, 1.4, 0x7a5a3a); B(u, 2.7, v, 3.6, 0.14, 2.6, col); for (const du of [-1.6, 1.6]) B(u + du, 1.35, v - 1.1, 0.12, 2.7, 0.12, 0x55585a); B(u - 0.7, 1.15, v, 1, 0.3, 0.9, [0xd86a1e, 0x4a8a3a, 0xc8281e][k % 3]); B(u + 0.7, 1.15, v, 1, 0.3, 0.9, [0xe8c83a, 0xc8281e, 0x8a5a3a][k % 3]); }
+          for (const du of [-4.4, 4.4]) B(du, 2, 6.6, 0.3, 4, 0.3, 0x55585a); mot('РЫНОК', '#3a6a5a', 0, 4.6, 6.6, 9.4, 1.6); });
+        // l'avion sur son pylône : un chasseur à ailes en flèche, de profil vers la rue
+        const avion = (B) => { B(0, 0.4, 0, 14, 0.8, 9, 0x8d918a); B(-1, 3.4, 0, 1.2, 5.4, 1.6, 0xb8bbb4); B(0, 7, 0, 11, 1.4, 1.4, 0xc8ccd0); B(5.7, 7, 0, 0.4, 1.2, 1.2, 0xb5241c); B(2.2, 7.9, 0, 1.8, 0.6, 0.8, 0x3a5a7a);
+          for (const e of [-1, 1]) { B(-0.8, 6.9, e * 3.2, 2.4, 0.16, 5.6, 0xc8ccd0, e * 0.5); B(-4.9, 8.6, e * 1.5, 1.2, 0.12, 2.8, 0xc8ccd0, e * 0.4); } B(-4.6, 8.5, 0, 2.2, 2.4, 0.16, 0xc8ccd0); B(-4.9, 9.3, 0, 1.2, 0.8, 0.2, 0xb5241c);
+          for (const e of [-1, 1]) B(e * 5.5, 0.95, 4, 2.4, 0.3, 0.8, 0xc8281e); };
+        // la grande roue du parc : 22 m, nacelles de couleur, guérite
+        lieu(iF(220), -1, 12, 5, (B, mot, o) => { const g = new THREE.Group(); g.position.set(o.x, o.Y, o.z); g.rotation.y = o.r; h.scene.add(g); const jaune = mat('peinture', { c: 0xd8b820 }), fer = mat('peinture', { c: 0x3a5a7a });
+          const t = new THREE.Mesh(new THREE.TorusGeometry(10, 0.22, 5, 28), jaune); t.position.set(0, 12.6, 0); g.add(t); for (let k = 0; k < 6; k++) h.pose('boite', jaune, g, [0, 12.6, 0], 20, 0.16, 0.16).rotation.z = k * Math.PI / 6;
+          for (const e of [-1, 1]) for (const f of [-1, 1]) { const p = h.pose('boite', fer, g, [e * 2.4, 6.3, f * 1.1], 0.4, 13.6, 0.4); p.rotation.z = e * 0.37; } h.pose('boite', fer, g, [0, 12.6, 0], 1, 1, 2.6);
+          for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + 0.26; B(Math.cos(a) * 10, 12.6 + Math.sin(a) * 10 - 0.9, 0, 1.5, 1.5, 1.3, [0xc8281e, 0x2a6aa8, 0xe8e4d8, 0x3a8a4a][k % 4]); }
+          B(8, 1.3, 3.4, 2.4, 2.6, 2.4, 0xd8d0b8); B(8, 2.75, 3.4, 3, 0.3, 3, 0xc8281e); B(0, 0.03, 0, 26, 0.06, 11, 0x8a8468); });
+        // la statue sur sa place : socle de granit rouge, bronze le bras levé, parterres, trois drapeaux
+        lieu(iF(280), 1, 9, 8, (B) => { B(0, 0.03, 0, 20, 0.06, 17, 0xa8a49a); B(0, 0.3, 0, 6, 0.6, 6, 0x6d726d); B(0, 2.4, 0, 2.8, 3.6, 2.8, 0x7a3a34); B(0, 5.9, 0, 1.3, 3.4, 0.9, 0x3e4038); B(0, 8, 0, 0.75, 0.8, 0.75, 0x3e4038); B(0.2, 6.9, 1, 0.34, 0.34, 1.8, 0x3e4038);
+          for (const e of [-1, 1]) { B(e * 6, 0.25, 4, 5, 0.5, 2, 0xb5241c); B(e * 6, 0.25, -4, 5, 0.5, 2, 0xb5241c); } for (let k = -1; k <= 1; k++) { B(k * 3, 5, -6.5, 0.16, 10, 0.16, 0x8a8e88); B(k * 3 + 1.1, 8.8, -6.5, 2.2, 1.5, 0.06, 0xb5241c); } });
+        // la patinoire de la cour : bande blanche à liseré bleu, deux cages
+        lieu(iF(385), -1, 14, 8, (B) => { B(0, 0.05, 0, 27, 0.1, 15, 0xdce4e8); for (const e of [-1, 1]) { B(0, 0.6, e * 7.5, 27, 1.2, 0.2, 0xf0f0ec); B(0, 1.25, e * 7.5, 27, 0.14, 0.24, 0x2a6aa8); B(e * 13.5, 0.6, 0, 0.2, 1.2, 15, 0xf0f0ec); B(e * 13.5, 1.25, 0, 0.24, 0.14, 15, 0x2a6aa8);
+            B(e * 11, 0.6, 0, 0.1, 1.2, 1.8, 0xc8281e); B(e * 11.5, 1.2, 0, 1, 0.08, 1.8, 0xc8281e); B(e * 12.6, 4, 7.9, 0.2, 8, 0.2, 0x55585a); } B(0, 0.11, 0, 0.3, 0.02, 15, 0xc8281e); });
+        // la station-service de la sortie : auvent blanc à bande rouge, trois pompes, guérite, camion-citerne
+        lieu(iF(450), 1, 9, 6, (B, mot) => { B(0, 0.03, 0, 20, 0.06, 13, 0x6c6e6e); B(0, 4.6, 1, 15, 0.5, 7, 0xf0f0ec); B(0, 4.6, 4.52, 15, 0.52, 0.06, 0xc8281e); for (const e of [-1, 1]) B(e * 6, 2.2, 1, 0.5, 4.4, 0.5, 0xb8bbb4);
+          for (let k = -1; k <= 1; k++) { B(k * 3, 0.9, 1, 0.8, 1.8, 0.6, k ? 0xc8281e : 0xd8b820); B(k * 3, 0.15, 1, 1.6, 0.3, 1.2, 0x8d918a); } B(0, 1.6, -3.6, 7, 3.2, 3, 0xd8d0b8); B(0, 3.35, -3.6, 7.6, 0.3, 3.6, 0x6d726d); mot('БЕНЗИН', '#2a4a6a', 0, 5.5, 4.4, 8, 1.3);
+          B(-5.5, 1.9, 4.4, 5, 1.8, 2, 0xd86a1e); B(-1.9, 1.5, 4.4, 2, 2, 2.2, 0x3a6a9a); B(-4.4, 0.55, 4.4, 7.4, 0.7, 2.2, 0x1e2020); });
+        // l'intérieur des virages de la rue, que les barres laissent en pelouse : fontaine, avion, kiosque à musique, parterre en étoile, à tour de rôle
+        const fontaine = B => { for (const dr of [0, Math.PI / 4]) { B(0, 0.4, 0, 9, 0.8, 9, 0xb8bbb4, dr); B(0, 0.76, 0, 7.8, 0.1, 7.8, 0x6aa8c0, dr); } B(0, 1.6, 0, 1.1, 2.4, 1.1, 0x8d918a); B(0, 3.3, 0, 2.4, 0.3, 2.4, 0x8d918a); B(0, 4.4, 0, 0.5, 2, 0.5, 0xe8f4f8); for (const e of [-1, 1]) { B(e * 6.6, 0.45, 0, 0.5, 0.1, 2.2, 0x6a4a2a); B(0, 0.45, e * 6.6, 2.2, 0.1, 0.5, 0x6a4a2a); } };
+        const kiosque = B => { for (const dr of [0, Math.PI / 4]) { B(0, 0.4, 0, 7, 0.8, 7, 0xe8e4d8, dr); B(0, 4.2, 0, 7.8, 0.3, 7.8, 0x3a6a5a, dr); B(0, 4.7, 0, 4.6, 0.7, 4.6, 0x3a6a5a, dr); } B(0, 5.6, 0, 1.4, 1.2, 1.4, 0x3a6a5a); for (const e of [-1, 1]) for (const f of [-1, 1]) B(e * 3, 2.5, f * 3, 0.25, 3.4, 0.25, 0xf0f0ec); for (const e of [-1, 1]) B(e * 3, 1.3, 0, 0.12, 0.9, 6, 0xf0f0ec); };
+        const parterre = B => { for (let k = 0; k < 3; k++) B(0, 0.25, 0, 12, 0.5, 2.6, 0xb5241c, k * Math.PI / 3); B(0, 0.4, 0, 3, 0.8, 3, 0xd8b820, 0.4); B(0, 4.5, 0, 0.3, 9, 0.3, 0x8a8e88); B(1.4, 7.9, 0, 2.6, 1.8, 0.06, 0xb5241c); };
+        { const L = [fontaine, avion, kiosque, parterre]; let n = 0, der = -99; for (let q = 4; q < ((iV1 - iV0 + N) % N) - 4; q++) { const i = iF(q), k = Math.abs(S[i].k); if (k < 0.008 || q - der < 36 || k < Math.abs(S[iF(q + 1)].k)) continue; const ok = lieu(i, S[i].k > 0 ? 1 : -1, 5, 5, L[n % 4], 6.5, [0, 6, -6, 12, -12, 18, -18]); if (ok) { n++; der = q; } } } }
       { // premier rang : le long de chaque rue, façade vers la chaussée, à 6 m du trottoir
         for (let i = iV0 + 4, n = 0; n < ((iV1 - iV0 + N) % N) - 8; i = (i + 4) % N, n += 4) { const s = S[i]; for (const sd of [-1, 1]) for (const hl of [30, 15]) { const [x, z] = bord(s, sd, s.w + 3.6 + 2.2 + 6), r = h.across(s) + Math.PI / 2 + (sd > 0 ? Math.PI : 0);
           if (place(x, z, r, hl, 6)) { rang1.push([x, s.y - 0.4, z, r, hl, sd, i]); break; } } }
@@ -2064,9 +2101,15 @@
         { const s0 = S[30], cible = bord(s0, 1, s0.w + 12); let b = null, bd = 1e9; for (const q of rang1) { const d = Math.hypot(q[0] - cible[0], q[2] - cible[1]); if (q[5] > 0 && d < bd) { bd = d; b = q; } }
           if (b) { const [x, y, z, r, hl] = b, ax = Math.cos(r), az = -Math.sin(r), e = az > 0 ? 1 : -1, m = new THREE.Mesh(h.geo('boite', 11.4, 14.2, 0.2), mat('fresque')); m.position.set(x + ax * e * (hl + 0.15), y + 7.7, z + az * e * (hl + 0.15)); m.rotation.y = r + Math.PI / 2 + (e > 0 ? 0 : Math.PI); h.scene.add(m); } }
         // des voitures garées sur le parvis, le long du trottoir ; des kiosques à journaux bleus aux coins
-        const vo = []; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { if (rnd() < 0.55) continue; const s = S[i], sd = (rnd(), -1), [x, z] = bord(s, sd, s.w + 5); vo.push([x, s.y + 0.06, z, h.across(s) + Math.PI / 2, 1, 1, 1, [0xb5483c, 0x3d6e8a, 0xe8e4d8, 0x8a9488, 0xc8b47a, 0x4a4d50][vo.length % 6]]); }
+        const vo = []; let nm = 0; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { const u = rnd(), s = S[i], sd = (rnd(), -1), [x, z] = bord(s, sd, s.w + 4.8), y = Math.max(s.y, hAt(x, z)) + 0.06, r = h.across(s); if (u < 0.3 || dansBati(x, z, 0.4)) continue;
+          if (u >= 0.6) { vo.push([x, y, z, r + Math.PI / 2, 1.2, 1.2, 1.2, [0xb5483c, 0x3d6e8a, 0xe8e4d8, 0x8a9488, 0xc8b47a, 0x4a4d50][vo.length % 6]]); continue; }
+          const t = nm++ % 4; // le mobilier du trottoir : banc et corbeille, tableau d'honneur rouge, colonne d'affiches, cabine téléphonique
+          if (t === 0) { bl(x, y + 0.45, z, r + Math.PI / 2, 2.2, 0.1, 0.5, 0x6a4a2a); bl(x, y + 0.85, z, r + Math.PI / 2, 2.2, 0.5, 0.08, 0x6a4a2a); bl(x, y + 0.22, z, r + Math.PI / 2, 2, 0.44, 0.12, 0x55585a); bl(x + s.tx * 1.8, y + 0.4, z + s.tz * 1.8, r, 0.5, 0.8, 0.5, 0x3a5a3a); }
+          else if (t === 1) { bl(x, y + 2, z, r + Math.PI / 2, 5, 2.2, 0.16, 0xb5241c); bl(x, y + 3.25, z, r + Math.PI / 2, 5.3, 0.3, 0.3, 0xd0a020); for (const e of [-2.2, 2.2]) bl(x + s.tx * e, y + 0.5, z + s.tz * e, r, 0.2, 1, 0.2, 0x55585a); for (let k = -1; k <= 1; k++) bl(x + s.tx * k * 1.5, y + 2, z + s.tz * k * 1.5, r + Math.PI / 2, 1, 1.3, 0.2, 0xe8e0c8); }
+          else if (t === 2) { bl(x, y + 1.6, z, r + 0.4, 1.2, 3.2, 1.2, 0xc8b47a); bl(x, y + 3.3, z, r + 0.4, 1.5, 0.3, 1.5, 0x4a5a50); bl(x, y + 1.8, z, r + 0.4, 1.24, 1.2, 1.24, [0xc8281e, 0x2a6aa8, 0xe8e4d8][nm % 3]); }
+          else { bl(x, y + 1.25, z, r, 1, 2.5, 1, 0xc8281e); bl(x, y + 1.5, z, r, 1.04, 1.2, 1.04, 0xd8e4e8); bl(x, y + 2.6, z, r, 1.1, 0.2, 1.1, 0xf0f0ec); } }
         insts(h, 'berline', { caisse: mat('peinture'), vitre: mat('vitreSombre'), pneu: gris }, vo, { teinte: 'caisse' });
-        for (const k of [K.depart + 2, K.depart + 5, K.entreeVille + 3, K.entreeVille + 8, K.rueSud]) { const s = S[P(k)], [x, z] = bord(s, -1, s.w + 4.6), r = h.across(s); bl(x, s.y + 1.3, z, r, 2.4, 2.6, 2.4, 0x3a6a9a); bl(x, s.y + 2.75, z, r, 3, 0.3, 3, 0x2a4a6a); bl(x, s.y + 1.6, z, r, 2.46, 0.9, 1.6, 0xd8e4e8); } }
+        for (const k of [K.depart + 2, K.depart + 5, K.entreeVille + 3, K.entreeVille + 8, K.rueSud]) { const s = S[P(k)], [x, z] = bord(s, -1, s.w + 4.6), r = h.across(s), y = Math.max(s.y, hAt(x, z)); if (dansBati(x, z, 0.5)) continue; bl(x, y + 1.3, z, r, 2.4, 2.6, 2.4, 0x3a6a9a); bl(x, y + 2.75, z, r, 3, 0.3, 3, 0x2a4a6a); bl(x, y + 1.6, z, r, 2.46, 0.9, 1.6, 0xd8e4e8); } }
       // les aires de jeu, dans les cours derrière le premier rang, là où il reste de la place
       const aire = (x, z, Y) => {
         bl(x - 8, Y + 0.08, z - 6, 0, 4, 0.16, 4, 0xd8c890); for (const [dx, dz, a, c] of [[0, -2, 4.2, 0.2], [0, 2, 4.2, 0.2], [-2, 0, 0.2, 4.2], [2, 0, 0.2, 4.2]]) bl(x - 8 + dx, Y + 0.2, z - 6 + dz, 0, a, 0.4, c, 0xd0a020); // le bac à sable
@@ -2125,10 +2168,13 @@
         { const tr = []; for (let k = 0; k < 7; k++) { const z = 183 + k * 5.4; tr.push([4.5, YB + 1.7, z, 0, 5.4, 2.2, 2.6, 0x5a6844], [-0.1, YB + 1.5, z, 0, 2.4, 2.4, 2.5, kaki], [3, YB + 0.5, z, 0, 7.4, 1, 2.7, 0x1e2020]); } // sept camions bâchés, le nez vers la route : bâche, cabine, châssis
           for (const z of [229, 240]) tr.push([-6, YB + 1.2, z, 0, 7, 1.5, 3.1, kaki], [-5.4, YB + 2.3, z, 0, 2.6, 0.8, 1.8, kaki], [-9.2, YB + 2.4, z, 0, 4.6, 0.25, 0.25, 0x2a2e26]); // deux blindés, tourelle et canon
           const m = inst(h, h.geo('bloc'), mat('peinture'), tr), c = new THREE.Color(); tr.forEach((q, k) => m.setColorAt(k, c.setHex(q[7]))); m.instanceColor.needsUpdate = true; }
-        for (const [x, z] of [[BX0 + 4, BZ0 + 4], [BX0 + 4, BZ1 - 4], [BX1 - 4, BZ1 - 4]]) { for (const dx of [-1.4, 1.4]) for (const dz of [-1.4, 1.4]) bloc(gris, x + dx - 0.15, x + dx + 0.15, z + dz - 0.15, z + dz + 0.15, YB, YB + 9); bloc(olive, x - 2, x + 2, z - 2, z + 2, YB + 9, YB + 11.4); bloc(betS, x - 2.6, x + 2.6, z - 2.6, z + 2.6, YB + 11.4, YB + 11.8); bloc(mat('lampe', LUMI), x - 0.5, x + 0.5, z - 0.5, z + 0.5, YB + 11.8, YB + 12.4); halos.push([x, YB + 12.1, z, 0, 2.4, 2.4, 2.4, 0xfff0d0]); } // trois miradors, projecteur allumé
+        for (const [x, z] of [[BX0 + 4, BZ0 + 4], [BX0 + 4, BZ1 - 4], [BX1 - 4, BZ1 - 4]]) { for (const dx of [-1.4, 1.4]) for (const dz of [-1.4, 1.4]) bloc(gris, x + dx - 0.15, x + dx + 0.15, z + dz - 0.15, z + dz + 0.15, YB, YB + 9); bloc(olive, x - 2, x + 2, z - 2, z + 2, YB + 9, YB + 11.4); bloc(betS, x - 2.6, x + 2.6, z - 2.6, z + 2.6, YB + 11.4, YB + 11.8); bloc(mat('lampe', LUMI), x - 0.5, x + 0.5, z - 0.5, z + 0.5, YB + 11.8, YB + 12.4); } // trois miradors, projecteur allumé
         // la défense antiaérienne, au premier rang devant la route : un radar sur sa butte, deux rampes et leurs missiles pointés vers le nord-ouest
         { const tre = mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide }, '#5a6652'), blancM = mat('peinture', { c: 0xd8dcd4 });
-          bloc(olive, -31, -23, 254, 262, YB, YB + 3); bloc(tre, -28, -26, 257, 259, YB + 3, YB + 9); { const d = new THREE.Mesh(new THREE.CylinderGeometry(5, 5, 0.4, 14), tre); d.position.set(-27, YB + 11, 258); d.rotation.set(1.1, 0.6, 0); h.scene.add(d); }
+          bloc(olive, -31, -23, 254, 262, YB, YB + 3); bloc(tre, -28, -26, 257, 259, YB + 3, YB + 12); { const d = new THREE.Mesh(new THREE.SphereGeometry(11, 14, 5, 0, Math.PI * 2, 0, 0.75), mat('peinture', { c: 0xc8ccc0, side: THREE.DoubleSide })); d.position.set(-27, YB + 16, 258); d.rotation.order = 'YXZ'; d.rotation.set(Math.PI - 1, -1.2, 0); d.castShadow = true; h.scene.add(d); h.pose('boite', olive, h.scene, [-27, YB + 12.6, 258], 2.4, 1.2, 2.4); }
+          for (const z of [177, 186, 214, 223]) { const k = new THREE.Group(); k.position.set(-27, YB, z); k.scale.setScalar(1.3); h.scene.add(k); const rk = new THREE.Group(); rk.position.set(0.8, 3.1, 0); rk.rotation.z = -0.62; k.add(rk); // lance-roquettes sur camion, cabine vers la route, seize roquettes sur leurs rails
+            h.pose('boite', noir, k, [0, 0.55, 0], 7, 0.9, 2.4); h.pose('boite', olive, k, [-2.5, 1.7, 0], 2, 1.6, 2.4); h.pose('boite', olive, k, [-3.8, 1.3, 0], 1, 0.9, 2.3); h.pose('boite', olive, k, [1.2, 1.5, 0], 3.6, 1, 2.3); h.pose('boite', olive, k, [2, 2.4, 0], 0.3, 1.6, 1.8);
+            h.pose('boite', olive, rk, [0, 0, 0], 5.8, 0.2, 2.4).castShadow = true; for (let q = 0; q < 8; q++) for (const e of [-1, 1]) h.pose('boite', blancM, rk, [0.2, e * 0.26, -0.98 + q * 0.28], 5, 0.2, 0.16); }
           for (const [x, z] of [[-27, 165], [-27, 236]]) { const bu = new THREE.Mesh(new THREE.CylinderGeometry(5, 6.5, 1.2, 10), mat('bruit', {}, '#5e6a4c', ['#6c7858', '#505c40'])); bu.position.set(x, YB + 0.6, z); h.scene.add(bu); bloc(olive, x - 2.4, x + 2.4, z - 2.4, z + 2.4, YB + 1.2, YB + 2.6); const r = new THREE.Group(); r.position.set(x, YB + 2.6, z); r.rotation.order = 'YXZ'; r.rotation.set(-0.8, 2.3, 0); h.scene.add(r);
             h.pose('boite', olive, r, [0, 0, 1.5], 0.6, 0.5, 9); const mi = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 10.5, 8), blancM); mi.rotation.x = Math.PI / 2; mi.position.set(0, 0.7, 1.8); mi.castShadow = true; r.add(mi);
             const og = new THREE.Mesh(new THREE.ConeGeometry(0.32, 1.6, 8), mat('peinture', { c: 0x4a5a3a })); og.rotation.x = -Math.PI / 2; og.position.set(0, 0.7, -4.2); r.add(og); h.pose('boite', olive, r, [0, 0.7, 5.6], 2.2, 0.08, 1.6); h.pose('boite', olive, r, [0, 0.7, 5.6], 0.08, 2.2, 1.6); } // butte, rampe, missile, ogive, empennage
@@ -2235,7 +2281,7 @@
         { h.pose('boite', mat('lettres', {}, 'КАРЬЕР № 2', '#8d918a', '#2a2c2a'), gr, [-(sm.w + 5.5), 3.2, 30], 0.12, 1.5, 7); for (const dz of [-3, 3]) h.pose('boite', fer, gr, [-(sm.w + 5.5), 1.6, 30 + dz], 0.2, 3.2, 0.2); } }
 
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
-      { const m = inst(h, new THREE.SphereGeometry(1, 8, 6), mat('peinture', { lum: 1, transparent: true, opacity: 0.5, depthWrite: false, blending: THREE.AdditiveBlending, fog: false }), halos), c = new THREE.Color(); halos.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; m.castShadow = m.receiveShadow = false; } // le halo des lampes allumées
+      insts(h, 'lampadaireGES', { fut: gris, lampe: mat('lampe', LUMI) }, lampes.filter(([x, , z]) => !dansBati(x, z, 1.2)));
 
       // ---------- la forêt : les arbres de touge (houppier en cône sur un fût nu), de jour ; mélèzes clairs et pins cembro sombres sur les versants, bouleaux dans le fond de vallée ----------
       { const cla = [], som = [], futs = [], bou = [];
