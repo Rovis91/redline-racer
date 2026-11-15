@@ -63,7 +63,7 @@
     // auvent rayé des étals : bandes de deux couleurs, frange festonnée
     auvent: (a, b) => [32, 16, (g, { R }) => { R(g, b, 0, 0, 32, 16); for (let x = 0; x < 32; x += 8) { R(g, a, x, 0, 4, 16); R(g, b, x + 4, 0, 4, 16); } R(g, IVOIRE, 0, 13, 32, 1); for (let x = 0; x < 32; x += 4) R(g, a, x, 14, 2, 2); }, 4], // bandes de 0,5 m : plus fines, elles se fondaient en blanc à distance
     // nez des marches du grand escalier, posé sur la chaussée
-    marchesPerse: () => [8, 16, (g, { R }) => { R(g, '#a88e73', 0, 0, 8, 16); R(g, '#9c846c', 0, 9, 8, 7); R(g, '#3e342d', 0, 0, 8, 2); R(g, '#e8d8b8', 0, 2, 8, 1); }], // REFS §2 : marches basses de pierre, nez d'ombre et arête claire
+    marchesPerse: () => [32, 16, (g, { R }) => { R(g, '#b8a07c', 0, 0, 32, 16); R(g, '#a88e70', 0, 9, 32, 7); R(g, '#3e342d', 0, 0, 32, 2); R(g, '#f0e0c0', 0, 2, 32, 1); for (const x of [0, 11, 22]) R(g, '#6a5a48', x, 3, 1, 13); }], // grandes dalles : joints de marche et joints en long // REFS §2 : marches basses de pierre, nez d'ombre et arête claire
     // façade de palais vue de loin (fond, à contre-jour) : iwan central, arcades sur deux niveaux, frise de faïence, toit plat
     palais: () => [64, 32, (g, { R }) => {
       R(g, '#b0905a', 0, 0, 64, 32); R(g, TURQ, 0, 4, 64, 2); R(g, '#8a6a40', 0, 0, 64, 2);
@@ -99,6 +99,18 @@
     }],
     // REFS §2-3 : bandeau de rosettes à huit pétales (couronnement de l'escalier)
     rosettes: () => [8, 32, (g, { R }) => { R(g, '#8a7050', 0, 0, 8, 32); for (let y = 4; y < 32; y += 8) { R(g, '#d8c098', 2, y - 2, 5, 5); R(g, '#d8c098', 1, y - 1, 7, 3); R(g, '#d8c098', 3, y - 3, 3, 7); R(g, OR, 3, y, 3, 1); R(g, OR, 4, y - 1, 1, 3); } }], // posé sur un ruban vertical : x en hauteur, y le long
+    // REFS §6-7 : taureau ailé en haut-relief sur le montant de la Porte, de profil, pierre sombre sur pierre dorée ; humain = tête barbue à tiare (lamassu), sinon tête de taureau ; droite = tête à droite de l'image
+    lamassuRelief: (humain, droite) => [48, 64, (g, { R }) => { // aux proportions du montant (7,6 × 10,5 m)
+      if (droite) { g.translate(48, 0); g.scale(-1, 1); }
+      const S1 = '#3e3834', S2 = '#5a524a', AI = '#d8ccb0', AI2 = '#6a6050';
+      R(g, '#c4a478', 0, 0, 48, 64); R(g, '#8a6e48', 0, 0, 48, 2); R(g, '#8a6e48', 0, 62, 48, 2);
+      for (let r = 0; r < 7; r++) { const y = 6 + r * 3.5 | 0, x = 14 + r * 2; R(g, AI2, x - 1, y - 1, 46 - x, 4); R(g, AI, x, y, 45 - x, 2); for (let k = x + 2; k < 46; k += 4) R(g, AI2, k, y, 1, 2); } // la grande aile claire, plume à plume, qui monte vers l'arrière
+      R(g, S1, 12, 31, 33, 12); R(g, S2, 14, 33, 28, 2); R(g, S1, 44, 31, 3, 11); // corps, queue
+      for (const x of [13, 18, 35, 40]) { R(g, S1, x, 43, 4, 16); R(g, '#241f1c', x - 1, 58, 6, 3); } // pattes, sabots
+      R(g, S1, 7, 22, 9, 17); // poitrail
+      if (humain) { R(g, S2, 2, 16, 9, 8); R(g, '#241f1c', 2, 23, 9, 9); for (let y = 24; y < 32; y += 2) R(g, '#7a7064', 3, y, 7, 1); R(g, '#f0b840', 1, 6, 11, 10); R(g, '#8a6a20', 1, 9, 11, 1); R(g, '#8a6a20', 1, 12, 11, 1); R(g, '#c4a478', 5, 19, 2, 1); } // tête de face, barbe en boucles, tiare d'or à cornes
+      else { R(g, S2, 0, 20, 10, 8); R(g, S1, 0, 25, 5, 4); R(g, '#f0b840', 4, 13, 2, 7); R(g, '#f0b840', 8, 12, 2, 8); R(g, '#c4a478', 5, 22, 2, 1); } // tête de taureau, cornes d'or
+    }],
     // REFS §9 : calcaire du Kuh-e Rahmat, gris miel en strates horizontales, éboulis plus sombres au pied
     strates: () => [64, 64, (g, { R, alea }) => { R(g, '#8a7c6c', 0, 0, 64, 64); for (let y = 0; y < 64; y += 5 + (alea() * 4 | 0)) { R(g, '#5f5046', 0, y, 64, 1); R(g, '#a8987e', 0, y + 1, 64, 1); }
       for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#6e6052' : '#9a8a76', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1); R(g, '#5f5046', 0, 56, 64, 8); }, 40],

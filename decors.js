@@ -1707,7 +1707,7 @@
         quad(a, b, c, d, u0 = 0, u1 = 1) { const k = pos.length / 3; [a, b, c, d].forEach((p, j) => { pos.push(p[0], p[1], p[2]); if (tuile) uv.push(p[0] / tuile, p[2] / tuile); else uv.push(j < 2 ? u0 : u1, j & 1 ? 0 : 1); }); idx.push(k, k + 1, k + 2, k + 1, k + 3, k + 2); },
         fin() { const q = new THREE.BufferGeometry(); q.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); q.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); q.setIndex(idx); q.computeVertexNormals(); const m = new THREE.Mesh(q, mat); m.receiveShadow = true; h.scene.add(m); return m; } }; };
       const DS = { side: THREE.DoubleSide }, pierre = h.mat('pierre'), sculpte = h.mat('sculpte'), or = h.mat('peinture', { c: 0xf0b840 }), frise = h.mat('frise', DS), faience = h.mat('faience', DS);
-      const crue = h.mat('briqueCrue'), sombre = h.mat('peinture', { c: 0x2a1c14 }), noir = h.mat('sculpte', { c: 0x8a8480 }), appareil = h.mat('appareil', DS), relief = h.mat('relief', DS), bois = h.mat('planches'), cedre = h.mat('peinture', { c: 0xa8743c });
+      const crue = h.mat('briqueCrue'), sombre = h.mat('peinture', { c: 0x2a1c14 }), noir = h.mat('sculpte', { c: 0x8a8480 }), appareil = h.mat('appareil', { ...DS, emissive: 0x3a2a18 }), relief = h.mat('relief', DS), bois = h.mat('planches'), cedre = h.mat('peinture', { c: 0xa8743c });
       const eau = h.mat('bruit', { lum: 1, ...DS }, '#3aa8a8', ['#5ab6b9', '#2a8a8a', '#f4ead0']), feuille = h.mat('bruit', {}, '#2f5a2e', ['#3a6a34', '#24442a']);
       const secteur = i => { for (const [a, b, k] of [[9, 12, 'escalier'], [14, 20, 'salle'], [20, 25, 'jardin'], [25, 38, 'bazar']]) { const i0 = P0(a), l = (P0(b) - i0 + N) % N; if ((i - i0 + N) % N <= l) return k; } return 'plaine'; };
       const libre = (x, z, m = 6) => g.dAt(x, z) > W + m && !dansSalle(x, z, 8), sol = (x, z) => g.hAt(x, z);
@@ -1723,7 +1723,7 @@
       h.ribbon(i14 + 10, (i20 - i14 + N) % N - 20, -3.5, 0.03, 3.5, 0.03, h.mat('tapisAllee', DS), 7); // l'allée de tapis de la salle : la ligne rapide
 
       // --- les murets de bord : bordure de tapis (plaine), frise des Immortels (escalier), faïence (jardin), arcades (bazar ouvert) ; ni dans la salle, ni dans le tunnel ---
-      const MH = { plaine: 0.75, escalier: 2.6, jardin: 0.6, bazar: 0.9 }, murs = { plaine: nappe(h.mat('tapisBord', DS)), escalier: nappe(frise), jardin: nappe(faience), bazar: nappe(h.mat('arcades', DS)) };
+      const MH = { plaine: 0.75, escalier: 2.6, jardin: 0.25, bazar: 0.9 }, murs = { plaine: nappe(h.mat('tapisBord', DS)), escalier: nappe(frise), jardin: nappe(faience), bazar: nappe(h.mat('arcades', DS)) };
       for (let i = 0; i < N; i++) { if (enTunnel(i)) continue; const k = secteur(i), m = murs[k === 'salle' ? 'plaine' : k], ht = MH[k] || 1.2;
         for (const sd of [-1, 1]) { const a = S[i], b = S[(i + 1) % N], p = au(a, sd * a.w), q = au(b, sd * b.w), o = au(a, sd * (a.w + 2.2));
           if (dansSalle(p[0], p[2], -0.4) && dansSalle(q[0], q[2], -0.4) || dansSalle(o[0], o[2], -1.1)) continue;
@@ -1747,13 +1747,13 @@
         h.ribbon(i9, nr, s => -(s.w + 16), MH.escalier, s => -(s.w + 16), s => -s.y - 1, relief, 3); // son mur extérieur, à reliefs, jusqu'au sol de la plaine
         h.ribbon(i9, nr, s => s.w + 0.2, -0.6, s => s.w + 0.2, s => -s.y - 1, appareil, 4); // à droite, le flanc de la rampe en grand appareil
         h.ribbon(i9, nr, s => -(s.w + 15.4), MH.escalier + 0.45, s => -(s.w + 16.6), MH.escalier + 0.45, pierre, 4); }
-      { const aut = [], fl = []; for (let i = i9 + 4; i < i12 + 2; i += 10) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w + 0.3), k = i > i12 - 20 ? 1.5 : 1; aut.push([x, s.y + MH.escalier + 0.45, z, h.across(s), k, k, k]); fl.push([x, s.y + MH.escalier + 0.45 + 2.3 * k, z, 0, 0.6 * k, 1.1 * k, 0.6 * k]); if ((i - i9) % 20 === 4) h.lum(i, x, s.y + 6, z, 0xff9a40, 16, 0.5); }
-        Is('autel', { pierre, or }, aut); I(h.geo('cone'), h.mat('peinture', { lum: 1, c: 0xff8a2a }), fl); } // autels du feu (REFS §9, Naqsh-e Rostam) : le rythme de la montée ; les deux derniers, plus grands, annoncent l'épingle de la Porte
+      { const aut = [], fl = []; for (let i = i9 + 4; i < i12 + 2; i += 10) for (const sd of [-1, 1]) { const s = S[i], [x, z] = bord(s, sd, s.w + 0.3), k = i > i12 - 20 ? 1.5 : 1; aut.push([x, s.y + MH.escalier + 0.45, z, h.across(s), k, k, k]); fl.push([x, s.y + MH.escalier + 0.45 + 2.6 * k, z, 0, 0.55 * k, 0.4 * k, 0.55 * k]); if ((i - i9) % 20 === 4) h.lum(i, x, s.y + 6, z, 0xff9a40, 16, 0.5); }
+        Is('autel', { pierre, or }, aut); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xff9a3a }), fl); } // autels du feu (REFS §9, Naqsh-e Rostam) : le rythme de la montée ; les deux derniers, plus grands, annoncent l'épingle de la Porte
       h.ribbon(i9, i12 - i9, -W + 0.4, 0.03, W - 0.4, 0.03, h.mat('marchesPerse', { ...DS, emissive: 0x2a2014 }), 1.2);
       for (const sd of [-1, 1]) { const s = S[i9 + 2], [x, z] = bord(s, sd, s.w + 0.5), m = boite(h, h.mat('lionTaureau'), 0.4, 4.4, 4.4, x, s.y + 1.6, z); m.rotation.y = h.across(s); } // le lion et le taureau, au pied de l'escalier
 
       // --- REFS §6-7 : la Porte des Nations, à cheval sur la route avant l'épingle (pts 12-13), à contre-jour : salle carrée à toit plat, taureaux à l'arrivée, lamassus à la sortie ---
-      { const i = i12 + 12, s = S[i]; h.pose('porteNations', { crue, pierre, sculpte: h.mat('sculpte', { c: 0x6a625a, emissive: 0x1a1410 }), ailes: h.mat('ailes', { c: 0xb8ac98, emissive: 0x2a2018 }), or, fut: h.mat('cannelure'), relief, cedre: h.mat('plafondCedre') }, repere(h, s), [0, 0, 0], s.w); h.lum(i, s.x, s.y + 12, s.z, 0xffc070, 30, 0.3); }
+      { const i = i12 + 12, s = S[i]; h.pose('porteNations', { crue, pierre, sculpte: h.mat('sculpte', { c: 0x6a625a, emissive: 0x1a1410 }), ailes: h.mat('ailes', { c: 0xb8ac98, emissive: 0x2a2018 }), or, fut: h.mat('cannelure'), relief, cedre: h.mat('plafondCedre'), lamTG: h.mat('lamassuRelief', {}, false, false), lamTD: h.mat('lamassuRelief', {}, false, true), lamHG: h.mat('lamassuRelief', {}, true, false), lamHD: h.mat('lamassuRelief', {}, true, true) }, repere(h, s), [0, 0, 0], s.w); h.lum(i, s.x, s.y + 12, s.z, 0xffc070, 30, 0.3); }
 
       // --- REFS §4-5 : la salle aux cent colonnes : les 15 colonnes de M.place (on les percute), la forêt au-delà, poutres de cèdre ; murs de brique crue à fenêtres de pierre noire, portes à reliefs, toit plat ouvert au-dessus de l'allée ---
       const ca = Math.cos(PL.a), sa = Math.sin(PL.a), cols = PL.piles.map(([x, z]) => [CX + x * ca + z * sa, YS, CZ - x * sa + z * ca, 0]);
@@ -1770,7 +1770,7 @@
         if (trou.length) { const [xa, za] = trou[0], [xb, zb] = trou[trou.length - 1], lx = Math.abs(xb - xa) + 6, lz = Math.abs(zb - za) + 6; // la porte où passe la route : chambranles de pierre noire, linteau, mur au-dessus
           boite(h, crue, ax === 'z' ? lx : 3, HM - 15, ax === 'z' ? 3 : lz, (xa + xb) / 2, YS + 15 + (HM - 15) / 2 - 0.5, (za + zb) / 2); boite(h, noir, ax === 'z' ? lx : 3.6, 1.6, ax === 'z' ? 3.6 : lz, (xa + xb) / 2, YS + 15.3, (za + zb) / 2);
           for (const [x, z] of [[xa - dx / 2 - (ax === 'z' ? 0 : 0), za - dz / 2], [xb + dx / 2, zb + dz / 2]]) boite(h, noir, 3.6, 15, 3.6, x, YS + 7, z); } }
-      boite(h, h.mat('plafondCedre'), 2 * HX, 0.8, CZ - 14 - (CZ - HZ), CX, YS + HM + 0.1, (CZ - 14 + CZ - HZ) / 2); boite(h, h.mat('plafondCedre'), 2 * HX, 0.8, CZ + HZ - (CZ + 30), CX, YS + HM + 0.1, (CZ + 30 + CZ + HZ) / 2); // le toit plat, ouvert sur l'allée
+      boite(h, h.mat('plafondCedre'), 2 * HX, 0.8, 2 * HZ, CX, YS + HM + 0.1, CZ); // le toit plat de cèdre, plein (REFS §5)
       { const pp = []; for (let x = CX - HX + 20; x < CX + HX - 10; x += 30) for (const sd of [-1, 1]) pp.push([x, YS + 6.5, CZ + sd * (HZ - 1.7), sd > 0 ? Math.PI : 0]); I(h.geo('boite', 7, 13, 0.5), h.mat('portePierre'), pp); } // portes à reliefs du roi sur son trône
       { const la = []; for (let i = i14 + 6; i < i20 - 4; i += 12) { const s = S[i]; la.push([s.x, YS + 12, CZ, 0, 2, 2, 2]); h.lum(i, s.x, YS + 9, s.z, 0xffb060, 34, 0.9); } I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xffb850 }), la); I(h.geo('boite', 0.14, HC - 12, 0.14), h.mat('matGris'), la.map(p => [p[0], YS + 12.4 + (HC - 12.4) / 2, p[2], 0])); } // lanternes pendues aux poutres
 
@@ -1822,7 +1822,7 @@
       // une crête = une bande verticale à sommet dentelé (lignes de crête du Zagros), suivant une ligne ou un cercle ; plate, sans brouillard
       const crete = (pts, dx, dz, mat, vTuile) => { const n = nappe(mat); let u = 0; for (let k = 0; k < pts.length - 1; k++) { const [x0, z0, y0] = pts[k], [x1, z1, y1] = pts[k + 1], l = Math.hypot(x1 - x0, z1 - z0); n.quad([x0, y0, z0], [x0 + dx, -30, z0 + dz], [x1, y1, z1], [x1 + dx, -30, z1 + dz], u, u + l / vTuile); u += l / vTuile; } return n.fin(); }; // dx, dz : où le pied s'avance (pente)
       const dent = (k, base, amp) => base + amp * (0.5 * Math.abs(Math.sin(k * 0.71 + 1.3)) + 0.3 * Math.abs(Math.sin(k * 1.93)) + 0.2 * ((k * 0.618) % 1));
-      for (const [r, base, amp, c, n] of [[2150, 150, 230, 0x6c5a74, 170], [1650, 60, 140, 0x7a6c5e, 150]]) crete(Array.from({ length: n + 1 }, (_, k) => { const a = k / n * 6.2832; return [300 + Math.cos(a) * r, 250 + Math.sin(a) * r, dent(k + r, base, amp)]; }), 0, 0, h.mat('peinture', { lum: 1, c, fog: false, side: THREE.DoubleSide }), 1e9);
+      for (const [r, base, amp, c, n] of [[2150, 80, 150, 0x8a6a80, 170], [1650, 50, 110, 0x8a7468, 150]]) crete(Array.from({ length: n + 1 }, (_, k) => { const a = k / n * 6.2832; return [300 + Math.cos(a) * r, 250 + Math.sin(a) * r, dent(k + r, base, amp)]; }), 0, 0, h.mat('peinture', { lum: 1, c, fog: false, side: THREE.DoubleSide }), 1e9);
       // REFS §9 : le Kuh-e Rahmat juste derrière la terrasse, à l'est : falaise claire en strates, tombeaux rupestres en croix
       crete(Array.from({ length: 49 }, (_, k) => [940 + 14 * Math.sin(k * 0.45), 40 + k * 14, dent(k * 1.1, 60, 55) + 25 * Math.sin(k * 0.21)]), -130, 0, h.mat('strates', { side: THREE.DoubleSide }), 40);
 
@@ -1837,11 +1837,11 @@
         for (let i = i20; i < iJ1; i++) { const a = S[i], b = S[i + 1], onC = pres(i); herbe.quad(P(a, sd * (a.w + 5.1)), P(b, sd * (b.w + 5.1)), P(a, sd * (a.w + 62)), P(b, sd * (b.w + 62)));
           if (!onC) { const q = [P(a, sd * (a.w + 8)), P(b, sd * (b.w + 8)), P(a, sd * (a.w + 32)), P(b, sd * (b.w + 32))]; q.forEach(v => v[1] += 0.05); parterre.quad(...q); }
           const p = P(a, sd * (a.w + 62)), q = P(b, sd * (b.w + 62)); murJ.quad([p[0], p[1] + 4.5, p[2]], [p[0], p[1] - 1, p[2]], [q[0], q[1] + 4.5, q[2]], [q[0], q[1] - 1, q[2]], i / 4, (i + 1) / 4);
-          if (i % 4 === 0 && !(Math.abs(i - iC) < 10)) for (const d of [6.5, 34]) { const [x, y, z] = P(a, sd * (a.w + d)); cypJ.push([x, y, z, 0, 0.62, 1.15, 0.62]); }
+          if (i % 2 === 0 && !(Math.abs(i - iC) < 10)) for (const d of [6.5, 34]) { const [x, y, z] = P(a, sd * (a.w + d)); cypJ.push([x, y, z, 0, 0.62, 0.85 + ((i * 7 + d) % 5) * 0.1, 0.62]); }
           if (i % 4 === 2 && !onC) { const [x, y, z] = P(a, sd * (a.w + 7.2)); fleurs.push([x, y + 0.2, z, Math.atan2(-a.tz, a.tx), 3.6, 0.8, 1, (i >> 2) & 1 ? 0xf0c020 : 0xc8323c]); }
           if (i % 5 === 0 && !(Math.abs(i - iC) < 12) && !croix.some(c => Math.abs(i - c) < 4)) for (const d of [40, 47, 54]) { const [x, y, z] = P(a, sd * (a.w + d + ((i / 5) & 1) * 3)); tron.push([x, y + 1.2, z, 0, 0.35, 2.4, 0.35]); orang.push([x, y + 3.6, z, 0, 2.2, 1.9, 2.2]); } }
         for (const c of croix) { const s = S[c], large = c === iC ? 4 : 1.5, d1 = c === iC ? 30 : 60;
-          for (let dd = 10; dd < d1; dd += 7) for (const u of [-large - 2.2, large + 2.2]) { const [x, y, z] = P(s, sd * (s.w + dd), u); cypJ.push([x, y, z, 0, 0.55, 0.8, 0.55]); }
+          for (let dd = 10; dd < d1; dd += 7) { for (const u of [-large - 2.2, large + 2.2]) { const [x, y, z] = P(s, sd * (s.w + dd), u); cypJ.push([x, y, z, 0, 0.55, 0.8, 0.55]); } if (c !== iC && dd % 14 === 3) { const [x, y, z] = P(s, sd * (s.w + dd)); jets.push([x, y, z, 0, 0.5, 1.8, 0.5]); } }
           { const [x, y, z] = P(s, sd * (s.w + 20), large + 1.2); gens.push([x, y, z, rnd() * 6, 1, 1, 1, [0xf4ead0, 0x2aa39a, 0xc8323c, 0xf0b840][(c + sd + 2) % 4]]); } // un canal en travers (le bassin long sur l'axe du pavillon) et sa margelle
           eauJ.quad(P(s, sd * (s.w + 4.5), -large, 0.1), P(s, sd * (s.w + 4.5), large, 0.1), P(s, sd * (s.w + d1), -large), P(s, sd * (s.w + d1), large));
           for (const u of [-large - 0.4, large]) bordJ.quad(P(s, sd * (s.w + 4.5), u, 0.3), P(s, sd * (s.w + 4.5), u + 0.4, 0.3), P(s, sd * (s.w + d1), u), P(s, sd * (s.w + d1), u + 0.4));
@@ -1856,16 +1856,18 @@
       // ================= le bazar (pts 25-38) : REFS §12-14 =================
       // --- couvert (tunnel de game.js, pts 26-34) : boutiques en niches des deux côtés, arcs transversaux brisés, coupoles en enfilade percées d'un oculus, puits de lumière, tapis pendus, lanternes, épices ---
       if (T.tun) { const cT = (T.t1 - T.t0 + N) % N, BAY = 6, NF = 8, rise = j => 3 + 1 * Math.sin(Math.PI * (j % BAY) / BAY), Y = (o, j) => 3.8 + rise(j) * Math.pow(Math.max(0, 1 - Math.abs(o) / W), 0.62);
-        const anneaux = [], lanT = [], coudes = [], comptoirs = [], sacs = [], voute = nappe(h.mat('voute', DS)), boutiques = nappe(h.mat('hojreh', DS)), dehors = nappe(h.mat('briqueCrue', DS)), arcs = [], ocul = [], taches = [], lan = [], chaines = [], tap = [[], [], [], []], cones = [], cuivres = [], domes = [], lanternons = [];
+        const anneaux = [], lanT = [], coudes = [], oculL = [], raisL = [], guirB = [], comptoirs = [], sacs = [], voute = nappe(h.mat('voute', DS)), boutiques = nappe(h.mat('hojreh', DS)), boutiquesD = nappe(h.mat('hojreh', DS)), dehors = nappe(h.mat('briqueCrue', DS)), arcs = [], ocul = [], taches = [], lan = [], chaines = [], tap = [[], [], [], []], cones = [], cuivres = [], domes = [], lanternons = [];
         for (let j = 0; j < cT; j++) { const i = (T.t0 + j) % N, a = S[i], b = S[(i + 1) % N];
           for (let k = 0; k < NF; k++) { const o0 = -W + 2 * W * k / NF, o1 = -W + 2 * W * (k + 1) / NF; voute.quad(au(a, o0, Y(o0, j)), au(a, o1, Y(o1, j)), au(b, o0, Y(o0, j + 1)), au(b, o1, Y(o1, j + 1)), j / 3, (j + 1) / 3); }
           for (const sd of [-1, 1]) { const p = au(a, sd * (W - 0.05)), q = au(b, sd * (W - 0.05)); boutiques.quad([p[0], p[1] + 3.8, p[2]], [p[0], p[1] - 0.1, p[2]], [q[0], q[1] + 3.8, q[2]], [q[0], q[1] - 0.1, q[2]], j / 4, (j + 1) / 4);
-            const e = au(a, sd * (W + 1.6)), f = au(b, sd * (W + 1.6)); dehors.quad([e[0], e[1] + 10.3, e[2]], [e[0], e[1] - 3, e[2]], [f[0], f[1] + 10.3, f[2]], [f[0], f[1] - 3, f[2]], j / 2, (j + 1) / 2); } // le dehors : murs de brique crue sur la coque
+            const e = au(a, sd * (W + 1.6)), f = au(b, sd * (W + 1.6)); boutiquesD.quad([e[0], e[1] + 3.8, e[2]], [e[0], e[1] - 1, e[2]], [f[0], f[1] + 3.8, f[2]], [f[0], f[1] - 1, f[2]], j / 4, (j + 1) / 4); dehors.quad([e[0], e[1] + 10.3, e[2]], [e[0], e[1] + 3.8, e[2]], [f[0], f[1] + 10.3, f[2]], [f[0], f[1] + 3.8, f[2]], j / 2, (j + 1) / 2); } // le dehors : murs de brique crue sur la coque
           dehors.quad(au(a, -W - 1.7, 10.3), au(a, W + 1.7, 10.3), au(b, -W - 1.7, 10.3), au(b, W + 1.7, 10.3), j / 2, (j + 1) / 2);
           const ph = j % BAY, ry = h.across(a);
           if (ph === 0) arcs.push([a.x, a.y, a.z, ry]);
           if (ph === BAY / 2) { const yA = a.y + 3.8 + rise(j) - 0.03; ocul.push([a.x, yA, a.z, 0, 2.1, 1, 2.1]); anneaux.push([a.x, yA - 0.04, a.z, 0, 3, 1, 3]); taches.push([a.x, a.y + 0.05, a.z, 0, 2.2, 1, 2.2]); domes.push([a.x, a.y + 10.3, a.z, ry, 8.5, 3.6, 5.5]); lanternons.push([a.x, a.y + 13.7, a.z, 0, 1.1, 1.4, 1.1]);
-            if ((j / BAY | 0) % 2 === 0) h.lum(i, a.x, a.y + 5, a.z, 0xffd890, 18, 0.7, 1); }
+            if ((j / BAY | 0) % 2 === 0) h.lum(i, a.x, a.y + 5, a.z, 0xffd890, 14, 0.45, 1);
+            for (const sd of [-1, 1]) { const o = sd * 6.2, [x, z] = bord(a, sd, 6.2), y0 = a.y + Y(o, j) - 0.05; oculL.push([x, y0, z, 0, 0.8, 1, 0.8]); raisL.push([x, y0, z, 0, 0.35, y0 - a.y, 0.35]); } }
+          if (j % 2 === 0) for (const sd of [-1, 1]) { const [x, z] = bord(a, sd, W - 0.6); guirB.push([x, a.y + 4.1, z, 0, 0.35, 0.45, 0.35]); }
           if (ph === 0) { lan.push([a.x, a.y + 6.05, a.z, 0, 1.4, 1, 1.4]); chaines.push([a.x, a.y + 6.6, a.z, 0, 0.18, 0.6, 0.18]); } // une lanterne de cuivre pendue à la clé de chaque arc
           if (ph === 2 || ph === 5) { const sd = ph === 2 ? 1 : -1, [x, z] = bord(a, sd, W - 0.3); comptoirs.push([x, a.y + 0.4, z, ry]); const [cx, cz] = bord(a, sd, W - 0.3); sacs.push([cx + a.tx * 0.6, a.y + 1.0, cz + a.tz * 0.6, 0, 0.32, 0.5, 0.32, [0xd9a21b, 0xb5391e, 0x6a8a3a, 0xc8742e][(j + ph) % 4]]); sacs.push([cx - a.tx * 0.6, a.y + 1.0, cz - a.tz * 0.6, 0, 0.32, 0.5, 0.32, [0xb5391e, 0xd9a21b, 0xc8742e, 0x6a8a3a][(j + ph) % 4]]); }
           if (ph === 2 || ph === 4) { const sd = (j / BAY | 0) % 2 ? 1 : -1, [x, z] = bord(a, ph === 2 ? sd : -sd, W - 0.18); tap[(j * 7 + ph) % 4].push([x, a.y + 2.2, z, ry]); }
@@ -1873,10 +1875,11 @@
           if (j % 3 === 0 && Math.abs(a.k) > 0.035) { const sd = a.k > 0 ? -1 : 1, [x, z] = bord(a, sd, W - 0.12); coudes.push([x, a.y + 2.4, z, ry]); } // le mur extérieur du coude : faïence qui luit, repère de freinage
           if (ph === 3) for (const sd of [-1, 1]) for (let u = -1; u <= 1; u++) { const [x, z] = bord(a, sd, W - 0.55); const xx = x + a.tx * u * 0.9, zz = z + a.tz * u * 0.9; if ((j + u + (sd > 0)) % 3) cones.push([xx, a.y, zz, 0, 0.42, 0.75, 0.42, [0xd9a21b, 0xb5391e, 0x8a5a2a, 0x3a6a2a][(j + u + 2) % 4]]); else cuivres.push([xx, a.y + 0.35, zz, 0, 0.4, 0.35, 0.4]); } }
         for (const sd of [-1, 1]) h.ribbon(T.t0, cT, sd * (W - 0.7), 0.04, sd * (W - 0.05), 0.04, h.mat('peinture', { lum: 1, c: 0xd8c8a8, side: THREE.DoubleSide }), 4); // seuil de pierre claire au pied des boutiques : le bord de la ruelle se lit dans les coudes
-        voute.fin(); boutiques.fin(); dehors.fin();
+        voute.fin(); boutiques.fin(); boutiquesD.fin(); dehors.fin();
         Is('arcBazar', { brique: h.mat('brique', { c: 0x9a7060 }), faience: h.mat('faience') }, arcs, { a: [W] });
         I(h.geo('disque'), h.mat('peinture', { lum: 1, c: 0xfff0c0, side: THREE.DoubleSide }), ocul);
-        I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lan); I(h.geo('boite', 0.5, 0.8, 2.4), bois, comptoirs); { const ms = I(h.geo('cone'), h.mat('peinture', { c: 0xffffff }), sacs); sacs.forEach((p, i) => ms.setColorAt(i, new THREE.Color(p[7]))); if (sacs.length) ms.instanceColor.needsUpdate = true; } I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xf0b840 }), lanT); I(h.geo('disque'), h.mat('peinture', { c: 0xf0b840, side: THREE.DoubleSide }), anneaux); I(h.geo('boite', 0.1, 3.2, 5), h.mat('faience', { lum: 1 }), coudes);
+        I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lan); I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xffb850 }), guirB); I(h.geo('disque'), h.mat('peinture', { lum: 1, c: 0xfff0c0, side: THREE.DoubleSide }), oculL);
+        I(h.geo('rai'), h.mat('peinture', { lum: 1, c: 0xf0c878, transparent: true, opacity: 0.13, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide }), raisL).renderOrder = 2; // puits de lumière : deux oculi par travée, près des murs, leur colonne tombe devant les boutiques I(h.geo('boite', 0.5, 0.8, 2.4), bois, comptoirs); { const ms = I(h.geo('cone'), h.mat('peinture', { c: 0xffffff }), sacs); sacs.forEach((p, i) => ms.setColorAt(i, new THREE.Color(p[7]))); if (sacs.length) ms.instanceColor.needsUpdate = true; } I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xf0b840 }), lanT); I(h.geo('disque'), h.mat('peinture', { c: 0xf0b840, side: THREE.DoubleSide }), anneaux); I(h.geo('boite', 0.1, 3.2, 5), h.mat('faience', { lum: 1 }), coudes);
         [['#a23b2a', '#1f3a6e', '#f0b840'], ['#1f3a6e', '#a23b2a', '#f4ead0'], ['#2aa39a', '#7a2a2a', '#f0b840'], ['#c8323c', '#2f4a2e', '#f0b840']].forEach((c, k) => I(h.geo('boite', 0.08, 3.2, 2.2), h.mat('tapis', {}, ...c), tap[k]));
         { const mc = I(h.geo('cone'), h.mat('peinture', { c: 0xffffff }), cones); cones.forEach((p, i) => mc.setColorAt(i, new THREE.Color(p[7]))); if (cones.length) mc.instanceColor.needsUpdate = true; }
         I(h.geo('houppierRond'), h.mat('peinture', { c: 0xc8742e }), cuivres);
@@ -1895,7 +1898,7 @@
           if ((k + (sd > 0)) % 2 === 0) { const [ex, ez] = bord(s, sd, s.w + 1.6); eta.push([ex, Math.min(s.y, sol(ex, ez)), ez, ang(s, sd)]); } else { const [cx, cz] = bord(s, sd, s.w + 2.4); (k & 2 ? cham : anes).push([cx, Math.min(s.y, sol(cx, cz)), cz, Math.atan2(-s.tz, s.tx)]); } } }
       Is('arcade', { brique: h.mat('hojreh'), faience: h.mat('faience'), crue }, arc);
       for (const [n, a, b] of [[0, '#c8323c', '#f0b840'], [1, '#2aa39a', '#1d3a8a']]) Is('etalPerse', { bois, auvent: h.mat('auvent', DS, a, b), marchandise: h.mat('peinture', { c: n ? 0xf0b840 : 0xc8323c }) }, eta.filter((_, k) => k % 2 === n));
-      Is('chameau', { poil: h.mat('peinture', { c: 0xb08a5a }), bat: h.mat('peinture', { c: 0xc8323c }) }, cham); Is('ane', { poil: h.mat('peinture', { c: 0x8a8478 }), bat: h.mat('peinture', { c: 0x1d3a8a }) }, anes);
+      Is('chameau', { poil: h.mat('peinture', { c: 0xb08a5a }), bat: h.mat('peinture', { c: 0xc8323c }) }, cham.map(p => [p[0], p[1], p[2], p[3], 1.4, 1.4, 1.4])); Is('ane', { poil: h.mat('peinture', { c: 0x8a8478 }), bat: h.mat('peinture', { c: 0x1d3a8a }) }, anes);
       for (let x = -10; x < 150; x += 13) for (let z = 110; z < 440; z += 13) { const xx = x + (rnd() - 0.5) * 4, zz = z + (rnd() - 0.5) * 4; if (!libre(xx, zz, 7) || g.dAt(xx, zz) > 60) continue;
         const sx = 0.9 + rnd() * 0.5, sy = 1 + rnd() * 1.2, y = sol(xx, zz); maisons.push([xx, y - 0.3, zz, (rnd() * 4 | 0) * Math.PI / 2, sx, sy, sx]); if (rnd() < 0.08) badgirs.push([xx, y + 6 * sy - 0.3, zz, 0]); if (rnd() < 0.12) calottes.push([xx, y + 6 * sy, zz, 0, 3.4 * sx, 2.4, 3.4 * sx]); }
       I(h.geo('boite', 0.08, 3.2, 2.2), h.mat('tapis', {}, '#a23b2a', '#1f3a6e', '#f0b840'), tapisO); I(h.geo('bloc'), h.mat('matGris'), guir); I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lanG);
