@@ -2035,7 +2035,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // gouttes sur l'objectif (voir AIR) : la pluie en dépose, pas la neige ; elles glissent, puis le vent de la course les remonte en les étirant, et au-delà de M.vit[0] il les chasse
     const gt = vu.gt || (vu.gt = Array.from({ length: 8 }, () => ({ x: 0, y: 0, r: 0, a: 0, vie: 0 }))), ve = Math.min(1, sp / V0), chasse = clamp((sp - V0) / (V1 - V0), 0, 1), pg = NG ? 0 : Math.max(pl, embAt(car.idx));
     for (let i = 0; i < 8; i++) { const g = gt[i], u = U.gt.value[i];
-      if (g.a >= g.vie) { u.z = 0; if (pg > 0.02 && i < 6 && Math.random() < dt * 0.9 * pg * (1 - 0.6 * chasse)) Object.assign(g, { x: Math.random(), y: 0.15 + 0.85 * Math.random(), r: (0.004 + 0.006 * Math.random()) * (pl > 0.02 ? 1 : 2.4), a: 0, vie: 2 + 4 * Math.random() }); else continue; }
+      if (g.a >= g.vie) { u.z = 0; if (pg > 0.02 && i < 6 && Math.random() < dt * 0.9 * pg * (1 - 0.6 * chasse)) Object.assign(g, { x: Math.random(), y: 0.15 + 0.85 * Math.random(), r: 0.004 + 0.006 * Math.random(), a: 0, vie: 2 + 4 * Math.random() }); else continue; }
       g.a += dt; g.y += dt * (-0.015 + 0.12 * ve * ve + 1.6 * chasse); if (g.y > 1.15 || g.y < -0.1) g.a = g.vie;
       u.set(g.x, g.y, g.r * Math.min(1, (g.vie - g.a) * 2, g.a * 8), 1 + 1.5 * ve * ve + 1.5 * chasse); // apparaît vite, s'évapore en rapetissant
     }
