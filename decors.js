@@ -2063,7 +2063,7 @@
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
       const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches'), lanterne = h.mat('peinture', { lum: 1, c: 0xffb45a });
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + (k < 12 ? 5 + rnd() * 6 : 7 + rnd() * rnd() * 40), [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
-        if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9) || g.dAt(x, z) < 12) continue; // ni l'une sur l'autre, ni sur une autre portion de route (la chicane) const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
+        if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9) || g.dAt(x, z) < 12) continue; const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route // ni l'une sur l'autre, ni sur une autre portion de route (la chicane)
         maisons.push([x, g.hAt(x, z) - 0.2, z, a, w, d, ru]); }
       for (const [x, y, z, a, w, d, ru] of maisons) { const gr = new THREE.Group(); gr.position.set(x, y, z); gr.rotation.y = a; h.scene.add(gr);
         h.pose('maisonIgatu', { pierre, tuile, porte }, gr, [0, 0, 0], w, d, rnd() < 0.35 ? 5.5 + rnd() * 2 : 3.4 + rnd() * 0.8, ru);
