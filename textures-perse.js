@@ -18,7 +18,7 @@
     }, 10],
     // dallage de la salle : damier de marbre ivoire et pierre grise, joints sombres, 2 m par dalle
     dallage: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) R(g, (x + y) & 1 ? '#9a5a48' : '#b87a62', x * 16, y * 16, 16, 16);
+      const { R, alea, voile } = o; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) R(g, (x + y) & 1 ? '#9a5a48' : '#d8c4a0', x * 16, y * 16, 16, 16); if ((x + y) & 1) { R(g, '#f0b840', x * 16 + 6, y * 16 + 6, 4, 4); R(g, '#1d3a8a', x * 16 + 7, y * 16 + 7, 2, 2); } // damier garance et ivoire, une rosette d'or au centre des dalles rouges
       voile(g, 0.15, () => { for (let i = 0; i < 40; i++) R(g, '#5a5048', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 6 | 0), 1); });
       voile(g, 0.35, () => { for (let k = 0; k < 64; k += 16) { R(g, '#3a3028', 0, k, 64, 1); R(g, '#3a3028', k, 0, 1, 64); } });
     }, 8],
@@ -133,7 +133,7 @@
     // REFS §5, §8 : mur de brique crue sur socle de pierre, percé de fenêtres et de niches en pierre noire à corniche à gorge (cavetto) ; 16 m par motif
     murSalle: () => [64, 64, (g, { R }) => {
       R(g, '#c49a5e', 0, 0, 64, 64); for (let y = 0; y < 56; y += 4) R(g, '#b48a52', 0, y, 64, 1); R(g, '#8a7c6c', 0, 56, 64, 8); R(g, '#6a5e50', 0, 56, 64, 1);
-      for (const x of [6, 38]) { R(g, '#3a3430', x, 18, 20, 36); R(g, '#1e1a18', x + 4, 26, 12, 28); R(g, '#4a4440', x - 3, 15, 26, 3); R(g, '#6a6056', x - 3, 14, 26, 1); // corniche à gorge droite (les gradins faisaient des merlons) R(g, '#7a6e60', x + 5, 34, 2, 10); R(g, '#7a6e60', x + 13, 34, 2, 10); }
+      for (const x of [6, 38]) { R(g, '#3a3430', x, 18, 20, 36); R(g, '#1e1a18', x + 4, 26, 12, 28); R(g, '#4a4440', x - 3, 15, 26, 3); R(g, '#6a6056', x - 3, 14, 26, 1); R(g, '#7a6e60', x + 5, 34, 2, 10); R(g, '#7a6e60', x + 13, 34, 2, 10); } // corniche à gorge droite au-dessus des fenêtres (les gradins faisaient des merlons)
     }, 16],
     // REFS §5 : encadrement de porte de pierre noire : corniche à gorge, chambranles à reliefs (le roi sur son trône sous l'ombrelle), vide sombre
     portePierre: () => [32, 64, (g, { R }) => {
