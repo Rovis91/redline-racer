@@ -219,6 +219,11 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
 - **Feu** : il couve dès 0,7 à l'avant, flambe à 0,85, embrase la voiture hors d'usage. L'intensité est modérée : trop forte, elle éblouissait et cachait la voiture.
 - **Son du contact** : plus fort, avec un coup grave (le poids de l'autre voiture) et un « clang » de tôle.
 
+**Après essai (4)** : le feu faisait trop « moderne ». Le vrai problème, c'était les bouffées qui sortent de l'avant dès les premiers dégâts : les mêmes disques flous que la fumée des pneus. Elles sont refaites en **particules pixel**, avec un seul système (`pix`, 900 points) : des carrés pleins en pixels entiers, une couleur, une opacité et une taille par palier d'âge (4 paliers), sans dégradé. Capture : `docs/avant-apres/casse/jeu-fumee-feu-pixel.jpg`.
+- **Vapeur grise** : elle sort de l'avant dès 0,6 d'usure, pour toutes les voitures, et s'assombrit en montant.
+- **Fumée noire** : au-dessus d'un moteur en feu.
+- **Feu** (CASSE) : jaune, orange, puis rouge sombre, en carrés qui rapetissent.
+
 **Reste à faire** :
 - régler en jouant : la force de la déviation, l'agressivité de l'IA, les points ;
 - jeu en ligne : il reste en mode Course (l'état de casse n'est pas envoyé aux invités) ;

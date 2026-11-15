@@ -933,8 +933,8 @@
     for (const D of DGM) { const P = D.pend; if (!P || !D.c) continue; const c = D.c, sp = Math.hypot(c.vx, c.vz); P.t += dt; // la pièce qui pend bat avec la vitesse ; un bout qui traîne crache des étincelles
       P.piv.rotation.x = P.a * (1 + Math.min(1, sp / 15) * 0.3 * Math.sin(P.t * (4 + sp * 0.25)));
       if (sp > 6 && P.piv.parent && Math.random() < dt * 20) { const w = P.piv.localToWorld(P.bout.clone()); emit(w.x, Math.max(w.y, modele(c).position.y + 0.05), w.z, c.vx * 0.5 + jit(2), Math.random() * 2, c.vz * 0.5 + jit(2), 0.4, 1, 0.7, 0.3, 22); } }
-    for (const vu of VUES) { const c = vu.moi, g = modele(c), z = g.userData.dg.z[0]; if (!g.visible || z < 0.6 || Math.random() > dt * 8 * (z - 0.55)) continue; // seulement les voitures des joueurs, un filet : au plus 1,2 bouffée par seconde (le plafond de course est 0,7)
-      const fx = Math.cos(c.th), fz = Math.sin(c.th), a = ENC.max.x - 0.9; FUM.emit(c.x + fx * a + jit(0.4), g.position.y + 1, c.z + fz * a + jit(0.4), c.vx * 0.3 + jit(1), 1.5 + Math.random(), c.vz * 0.3 + jit(1)); } // lâchée presque sur place : elle tombe derrière au lieu de suivre la voiture devant la caméra
+    for (const g of [carG, ...opps]) { const D = g.userData.dg, c = D.c, z = D.z[0]; if (!c || !g.visible || z < 0.6 || c.air || Math.random() > dt * 10 * (z - 0.5)) continue; // la vapeur grise sort de l'avant dès 0,6 d'usure, plus dense ensuite
+      const fx = Math.cos(c.th), fz = Math.sin(c.th), a = ENC.max.x - 0.9; pix(0, c.x + fx * a + jit(0.5), g.position.y + 0.9, c.z + fz * a + jit(0.5), c.vx * 0.55 + jit(0.6), 0.8 + Math.random() * 0.8, c.vz * 0.55 + jit(0.6), 0.9 + Math.random() * 0.6); }
   }
   // feux arrière des adversaires et des camions : deux points rouges hors brouillard (au-delà de 60 m la caisse ne fait plus que quelques pixels et rien ne l'éclaire) ;
   // leur taille suit la distance (un feu d'environ 0,5 m) : de loin, jamais plus gros que le véhicule, et jamais sous 1 pixel (le minimum de WebGL), donc toujours visibles ;
@@ -991,26 +991,34 @@
     for (const o of OBJ) { o.p.set(o.x0, o.y0 + o.S.h / 2, o.z0); o.v.set(0, 0, 0); o.w.set(0, 0, 0); o.q.identity(); o.dort = 1; objEcrit(o); } }
   decorRaz();
   function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg]) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
-  // flammes (mode CASSE) : un moteur à bout (avant ≥ 0,85) prend feu, une voiture hors d'usage brûle franchement ; des sprites additifs ronds qui montent en passant du jaune au rouge, sous la fumée noire
-  const FLN = 360, flP = new Float32Array(FLN * 3).fill(-1e4), flC = new Float32Array(FLN * 3), flV = new Float32Array(FLN * 3), flL = new Float32Array(FLN), flL0 = new Float32Array(FLN), flGeo = new THREE.BufferGeometry(); let fli = 0;
-  flGeo.setAttribute('position', new THREE.BufferAttribute(flP, 3)); flGeo.setAttribute('color', new THREE.BufferAttribute(flC, 3));
-  const flTex = tex(32, 32, g => { const d = g.createRadialGradient(16, 16, 1, 16, 16, 15); d.addColorStop(0, '#fff'); d.addColorStop(0.35, 'rgba(255,255,255,0.8)'); d.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = d; g.fillRect(0, 0, 32, 32); });
-  const flammes = new THREE.Points(flGeo, new THREE.PointsMaterial({ size: 0.95, map: flTex, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })); flammes.frustumCulled = false; flammes.userData.dyn = 1; scene.add(flammes);
-  const flamme = (x, y, z, vx, vz, f) => { const i = fli++ % FLN; flP.set([x, y, z], i * 3); flV.set([vx * 0.85 + jit(0.6), 1.2 + Math.random() * 1.6 * f, vz * 0.85 + jit(0.6)], i * 3); flL[i] = flL0[i] = 0.45 + Math.random() * 0.4 * f; };
-  function flammesPas(dt) { for (let i = 0; i < FLN; i++) { if (flL[i] <= 0) continue; const j = i * 3; flL[i] -= dt; if (flL[i] <= 0) { flP[j + 1] = -1e4; continue; }
-      const a = 1 - flL[i] / flL0[i]; flV[j + 1] += 2.5 * dt; flV[j] *= 1 - 2 * dt; flV[j + 2] *= 1 - 2 * dt; for (let k = 0; k < 3; k++) flP[j + k] += flV[j + k] * dt;
-      const fe = (1 - a) * (0.4 + Math.random() * 0.2); flC[j] = fe; flC[j + 1] = fe * (0.75 - 0.6 * a); flC[j + 2] = fe * 0.25 * (1 - a) ** 2; } // jaune pâle → orange → rouge sombre, qui vacille ; additif modéré, sinon les flammes empilées éblouissent et cachent la voiture
-    flGeo.attributes.position.needsUpdate = flGeo.attributes.color.needsUpdate = true; }
+  // particules pixel des moteurs abîmés : des carrés nets (comme le reste du jeu), une couleur et une taille par palier d'âge, pas de dégradé
+  //   fumee : la vapeur grise qui sort de l'avant dès 0,6 d'usure ; noire : la fumée d'un moteur en feu ; feu (mode CASSE) : il couve à 0,7, flambe à 0,85, embrase la voiture hors d'usage
+  const PXN = 900, pxP = new Float32Array(PXN * 3).fill(-1e4), pxV = new Float32Array(PXN * 3), pxC = new Float32Array(PXN * 3), pxA = new Float32Array(PXN), pxS = new Float32Array(PXN), pxL = new Float32Array(PXN), pxL0 = new Float32Array(PXN), pxK = new Uint8Array(PXN), pxGeo = new THREE.BufferGeometry(); let pxi = 0;
+  pxGeo.setAttribute('position', new THREE.BufferAttribute(pxP, 3)); pxGeo.setAttribute('col', new THREE.BufferAttribute(pxC, 3)); pxGeo.setAttribute('al', new THREE.BufferAttribute(pxA, 1)); pxGeo.setAttribute('sz', new THREE.BufferAttribute(pxS, 1));
+  const pxMesh = new THREE.Points(pxGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { ech: dEch },
+    vertexShader: 'attribute vec3 col; attribute float al, sz; varying vec3 c; varying float a; uniform float ech; void main() { c = col; a = al; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_PointSize = al > 0.0 ? max(1.0, floor(sz * ech * projectionMatrix[1][1] / -p.z)) : 0.0; }',
+    fragmentShader: 'varying vec3 c; varying float a; void main() { gl_FragColor = vec4(c, a); }' })); // pas de disque, pas de flou : un carré plein, en pixels entiers
+  pxMesh.frustumCulled = false; pxMesh.userData.dyn = 1; scene.add(pxMesh);
+  const PXH = h => [(h >> 16 & 255) / 255, (h >> 8 & 255) / 255, (h & 255) / 255];
+  const PXPAL = [ // par sorte : 4 paliers [couleur, opacité, taille (m)], montée (m/s²), freinage
+    { p: [[0xe2e2e0, 0.8, 0.28], [0xb0b0b4, 0.7, 0.42], [0x7a7a80, 0.5, 0.6], [0x4c4c52, 0.28, 0.8]].map(([c, a, t]) => [PXH(c), a, t]), g: 0.6, fr: 1.5 }, // fumee
+    { p: [[0x58585c, 0.9, 0.4], [0x3a3a3e, 0.8, 0.6], [0x26262a, 0.6, 0.85], [0x18181b, 0.35, 1.1]].map(([c, a, t]) => [PXH(c), a, t]), g: 1.2, fr: 1.2 }, // noire
+    { p: [[0xfff4a8, 1, 0.3], [0xffc23a, 1, 0.28], [0xff6a14, 1, 0.24], [0xa61e0a, 0.9, 0.18]].map(([c, a, t]) => [PXH(c), a, t]), g: 3, fr: 2 }]; // feu
+  const pix = (k, x, y, z, vx, vy, vz, vie) => { const i = pxi++ % PXN; pxP.set([x, y, z], i * 3); pxV.set([vx, vy, vz], i * 3); pxL[i] = pxL0[i] = vie; pxK[i] = k; };
+  function pixPas(dt) { for (let i = 0; i < PXN; i++) { if (pxL[i] <= 0) { if (pxA[i]) pxA[i] = 0; continue; } const j = i * 3, P = PXPAL[pxK[i]]; pxL[i] -= dt;
+      const st = P.p[Math.min(3, Math.floor((1 - pxL[i] / pxL0[i]) * 4))], fr = Math.exp(-P.fr * dt); pxV[j] *= fr; pxV[j + 2] *= fr; pxV[j + 1] += P.g * dt;
+      for (let q = 0; q < 3; q++) pxP[j + q] += pxV[j + q] * dt; pxC.set(st[0], j); pxA[i] = pxL[i] > 0 ? st[1] : 0; pxS[i] = st[2]; }
+    for (const a of ['position', 'col', 'al', 'sz']) pxGeo.attributes[a].needsUpdate = true; }
   function decorFrame(dt) {
-    flammesPas(dt);
+    pixPas(dt);
     const cars = race ? race.cars : VUES.map(v => v.car), up = new V3(), dq = new THREE.Quaternion();
     if (race && race.casse) { // CASSE : messages de takedown, fumée des moteurs à bout (noire et épaisse hors d'usage), étincelles des jantes
       for (let i = race.tdVu || 0; i < race.td.length; i++) { const e = race.td[i]; for (const vu of VUES) if (e.par === vu.moi) vu.casseMsg = { t: 'TAKEDOWN ! ' + pil(e.vic)[0], T: 2.5, c: Y }; else if (e.vic === vu.moi) vu.casseMsg = { t: 'TAKEDOWN PAR ' + pil(e.par)[0], T: 2.5, c: RD }; }
       race.tdVu = race.td.length;
       for (const c of cars) { const K = c.ca, sp = Math.hypot(c.vx, c.vz), fx = Math.cos(c.th), fz = Math.sin(c.th); if (partie(c)) continue;
         if (K.mort || K.z[0] >= 0.7) { const hx = c.x + fx * (ENC.max.x - 1.1), hz = c.z + fz * (ENC.max.x - 1.1), fort = K.mort ? 1.8 : K.z[0] >= 0.85 ? 1.1 : 0.6; // le feu sort du capot : il couve à 0,7, flambe à 0,85, embrase hors d'usage
-          for (let n = Math.floor(dt * (K.mort ? 110 : 25 + 60 * (fort - 0.6)) + Math.random()); n-- > 0;) flamme(hx + jit(0.7) * fort, c.y + 0.8 + Math.random() * 0.2, hz + jit(0.7) * fort, c.vx, c.vz, fort);
-          if (Math.random() < dt * (K.mort ? 25 : 8)) FUM.emit(hx + jit(0.4), c.y + 1.6, hz + jit(0.4), c.vx * 0.3 + jit(1), 1.8 + Math.random(), c.vz * 0.3 + jit(1)); } // la fumée au-dessus des flammes
+          for (let n = Math.floor(dt * (K.mort ? 90 : 20 + 50 * (fort - 0.6)) + Math.random()); n-- > 0;) pix(2, hx + jit(0.7) * fort, c.y + 0.8 + Math.random() * 0.2, hz + jit(0.7) * fort, c.vx * 0.85 + jit(0.5), 0.8 + Math.random() * fort, c.vz * 0.85 + jit(0.5), 0.35 + Math.random() * 0.3 * fort);
+          if (Math.random() < dt * (K.mort ? 22 : 8)) pix(1, hx + jit(0.4), c.y + 1.4, hz + jit(0.4), c.vx * 0.3 + jit(0.8), 1 + Math.random(), c.vz * 0.3 + jit(0.8), 1.6 + Math.random()); } // la fumée noire au-dessus des flammes
         if (sp > 4 && !c.air) K.creve.forEach((v, i) => { if (!v || Math.random() > dt * 30) return; const x = i >= 2 ? xf : xr, zs = (i & 1 ? 1 : -1) * (i >= 2 ? zf : zr); emit(c.x + fx * x - fz * zs, c.y + 0.05, c.z + fz * x + fx * zs, c.vx * 0.4 + jit(2), Math.random() * 2, c.vz * 0.4 + jit(2), 0.35, 1, 0.75, 0.35, 22); }); } }
     for (const c of cars) { if (!c.out) { saleFrame(c, dt); huileFrame(c, dt); } const sp = Math.hypot(c.vx, c.vz); if (c.out || sp < 3) continue;
       if (c.rub) marque(c, Math.sign(c.d) || 1, 0); // le long d'un mur : une traînée de peinture (les chocs francs passent par murChoc, à chaque pas)
