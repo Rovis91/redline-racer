@@ -1846,8 +1846,8 @@
       const tentes = [], moutons = [];
       { const s = S[P0(4)], [cx, cz] = bord(s, -1, s.w + 70); for (let k = 0; k < 5; k++) { const x = cx + k * 16 - 30, z = cz + (k & 1) * 12; if (libre(x, z, 12)) tentes.push([x, sol(x, z), z, ang(s, -1) + k * 0.3]); }
         for (let k = 0; k < 46; k++) { const x = cx + (rnd() - 0.5) * 90, z = cz + 30 + (rnd() - 0.5) * 50; if (libre(x, z, 10)) moutons.push([x, sol(x, z) + 0.45, z, rnd() * 6]); } }
-      { const po = [], ru = [], au_ = [], fe = [], te = []; // un repère tous les 68 m, d'un côté puis de l'autre : porte en ruine entre deux colonnes, autel du feu, deux tentes (REFS §8-9, §16)
-        for (let i = 30, k = 0; i < i9 - 20; i += 34, k++) { const sd = k & 1 ? 1 : -1, s = S[i], [x, z] = bord(s, sd, s.w + 15); if (!libre(x, z, 8)) continue; const y = sol(x, z), r = ang(s, sd);
+      { const po = [], ru = [], au_ = [], fe = [], te = []; // un repère tous les 40 m, d'un côté puis de l'autre : porte en ruine entre deux colonnes, autel du feu, deux tentes (REFS §8-9, §16)
+        for (let i = 24, k = 0; i < i9 - 12; i += 20, k++) { const sd = k & 1 ? 1 : -1, s = S[i], [x, z] = bord(s, sd, s.w + 15); if (!libre(x, z, 8)) continue; const y = sol(x, z), r = ang(s, sd);
           if (k % 3 === 0) { po.push([x, y, z, r]); for (const e of [-4, 4]) ru.push([x + s.tx * e, y, z + s.tz * e, 0, 1, 0.5, 1]); } else if (k % 3 === 1) { au_.push([x, y, z, r, 2.4, 2.4, 2.4]); fe.push([x, y + 2.6 * 2.4, z, 0, 1.4, 1, 1.4]); } else for (const e of [-5, 5]) te.push([x + s.tx * e, y, z + s.tz * e, r]); }
         Is('portail', { noir, pierre }, po); Is('colonneRuine', { pierre, fut: h.mat('cannelure'), sculpte }, ru); Is('autel', { pierre, or }, au_); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xff9a3a }), fe); Is('tente', { tente: h.mat('tente') }, te); }
       Is('tente', { tente: h.mat('tente') }, tentes); I(h.geo('boite', 1, 0.7, 0.55), h.mat('peinture', { c: 0xe8dcc4 }), moutons);
@@ -1928,7 +1928,7 @@
           if (ph === 2) { if (ouvert(j)) lanternons.push([a.x, a.y + HH(j) + 2, a.z, 0, 2.4, 1.6, 2.4]); else domes.push([a.x, a.y + HH(j) + 2.05, a.z, ry, wa * 0.8, 3.2, 5.5]); } // dehors : le tapis de coupoles, un lanternon sur chaque lanterneau
           if (ph === 0) { const avant = Math.abs(a.k) < 0.02 && [10, 14, 18].some(e => Math.abs(S[(i + e) % N].k) > 0.022), sy = (HM(j) + VT(j) * 0.9) / 6.2; (avant ? arcsL : arcs).push([a.x, a.y, a.z, ry, wa / W, sy, 1]); // l'arc transversal, à la largeur et à la hauteur de la voûte ; celui qui précède un coude luit
             lan.push([a.x, a.y + HM(j) + VT(j) * 0.9 - 1.4, a.z, 0, 0.7, 0.9, 0.7]); chaines.push([a.x, a.y + HM(j) + VT(j) * 0.9 - 0.7, a.z, 0, 0.12, 1.1, 0.12]); }
-          if (ph === 2 && !ouvert(j)) h.lum(i, a.x, a.y + HM(j), a.z, 0xffd890, 16, 0.4, 1);
+          if (ph === 2 && !ouvert(j)) h.lum(i, a.x, a.y + HM(j), a.z, 0xffd890, 18, 0.55, 1);
           if (j % 2 === 0) for (const sd of [-1, 1]) { const [x, z] = bord(a, sd, wa - 0.6); guirB.push([x, a.y + Math.min(3.8, HM(j) - 0.4) + 0.3, z, 0, 0.22, 0.3, 0.22]); }
           if (ph === 3 && (j / BAY | 0) % 3 === 1) { const sd = (j / BAY | 0) % 2 ? -1 : 1, [x, z] = bord(a, sd, wa - 1.1); anesB.push([x, a.y, z, Math.atan2(-a.tz, a.tx)]); } // un âne bâté le long des boutiques
           if (ph === 1 && (j / BAY | 0) % 3 !== 1) { const sd = (j / BAY | 0) % 2 ? 1 : -1, [x, z] = bord(a, sd, wa - 1.5); tapSol[(j / BAY | 0) % 4].push([x, a.y + 0.05, z, ry, 1, 1, 1]); } // tapis posés au sol devant la boutique
