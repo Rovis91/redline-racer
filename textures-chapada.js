@@ -38,8 +38,9 @@
       voile(g, 0.5, () => { for (let i = 0; i < 16; i++) R(g, '#14342c', alea() * 52 | 0, alea() * 52 | 0, 8 + alea() * 12 | 0, 6 + alea() * 10 | 0); });
       voile(g, 0.4, () => { for (let i = 0; i < 12; i++) R(g, '#a9bb7e', alea() * 54 | 0, alea() * 58 | 0, 6 + alea() * 8 | 0, 2 + (alea() * 2 | 0)); }); voile(g, 0.7, () => semis(g, o, 70, ['#7fa83a', '#5f8a34'], 2, 1)); }, 12],
     // la chute : un ruban blanc strié en long, des trouées sombres (la roche derrière)
-    chuteFil: () => [32, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#eef6e8', 0, 0, 32, 64);
-      voile(g, 0.35, () => { for (let i = 0; i < 26; i++) R(g, '#9fc0b8', alea() * 32 | 0, alea() * 50 | 0, 1, 10 + alea() * 30 | 0); }); voile(g, 0.5, () => { for (let i = 0; i < 6; i++) R(g, '#4a5a50', alea() * 32 | 0, alea() * 50 | 0, 1, 6 + alea() * 14 | 0); }); }],
+    chuteFil: () => [32, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#d4e6e2', 0, 0, 32, 64); // de l'eau qui tombe, pas un bloc de lumière : fond bleuté, mèches claires et sombres, trouées
+      voile(g, 0.6, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#8fb4b4' : '#ffffff', alea() * 32 | 0, alea() * 50 | 0, 1 + (alea() * 2 | 0), 10 + alea() * 34 | 0); });
+      voile(g, 0.7, () => { for (let i = 0; i < 12; i++) R(g, '#4a6a68', alea() * 32 | 0, alea() * 50 | 0, 1, 6 + alea() * 18 | 0); }); }],
     // la voie dallée de la cité (th.routeTex, mêmes réglages que chaussee : dalle, joint foncé, dalle claire, mousse) : grandes dalles de quartzite usées, joints moussus,
     // ni peinture ni flaque (l'alpha reste plein : rien ne reflète le ciel en plaques blanches), passages de roues polis plus clairs
     dallesJungle: (dalle, sombre, clair, mousse) => [128, 512, (g, o) => { const { R, alea, voile } = o; R(g, dalle, 0, 0, 128, 512);
@@ -53,7 +54,7 @@
     // les mêmes dalles, pour les surlargeurs et les places (ruban du décor, de W au bord roulable) : plus de mousse, un rang clair au bord extérieur (u = 1)
     dallesBord: () => [64, 128, (g, o) => { const { R, alea, voile } = o; R(g, '#77725f', 0, 0, 64, 128);
       for (let y = 0; y < 128; y += 16) for (let x = -(y & 16) / 2; x < 64; x += 16) { voile(g, 0.1 + alea() * 0.14, () => R(g, alea() < 0.5 ? '#5e5a4c' : '#8a8672', x, y, 16, 16)); voile(g, 0.75, () => { R(g, '#2c3a20', x, y, 1, 16); R(g, '#2c3a20', x, y, 16, 1); }); }
-      voile(g, 0.55, () => semis(g, o, 220, ['#4d6a34', '#7fa83a', '#7a5a30'], 2, 2, 64, 128)); voile(g, 0.3, () => R(g, '#b0aa94', 56, 0, 8, 128)); }],
+      voile(g, 0.55, () => semis(g, o, 220, ['#4d6a34', '#7fa83a', '#7a5a30'], 2, 2, 64, 128)); voile(g, 0.3, () => R(g, '#b0aa94', 56, 0, 8, 128)); }, 5],
     // bordure de pierre basse et talus : pierre moussue ; pierre de la cité : quartzite rosé, à l'ombre, socle noir
     bordureMousse: pierre('#6a6656', 0.8), pierreCite: pierre('#b09a86', 0.45), pierreClaire: pierre('#cbb8a0', 0.3), pierreOmbre: pierre('#6a5e56', 0.6), socleNoir: pierre('#26221f', 0.25),
     // l'attique de l'arc triple : des lignes de signes inconnus gravés (Manuscrit 512)

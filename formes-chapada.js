@@ -71,9 +71,17 @@
     // la grande idole assise (7 m), un disque d'or entre les mains
     idoleAssise: () => [['pierre', 6.4, 1.2, 6.4, 0, 0.6, 0], ['pierre', 5.6, 1.5, 3.8, 0, 1.95, 0.8], ['pierre', 3.7, 3.1, 2.7, 0, 4.2, -0.3], ['pierre', 2.5, 2.2, 2.3, 0, 6.85, -0.2], ['pierre', 3, 0.8, 2.8, 0, 8.3, -0.2],
       ...paire(sd => [['pierre', 0.9, 2.5, 1.1, sd * 2.25, 3.9, 0.2], ['or', 0.42, 0.26, 0.1, sd * 0.58, 7.05, 0.96], ['pierre', 0.5, 0.9, 0.6, sd * 1.45, 6.8, -0.2]]).flat(), ['or', 1.3, 1.3, 0.3, 0, 3.5, 1.35], ['ombre', 1.2, 0.3, 0.2, 0, 6.2, 0.95]],
-    // la statue de la place : l'homme qui montre le nord (+Z), sur son socle noir ; le doigt et le laurier dorés (Manuscrit 512)
+    // la statue de la place, sur son socle noir : debout, un disque d'or tenu contre la poitrine, laurier doré (plus de bras tendu)
     statueNord: () => [['socle', 3.4, 4, 3.4, 0, 2, 0], ['socle', 4, 0.45, 4, 0, 4.2, 0], ['socle', 4.4, 0.5, 4.4, 0, 0.25, 0], ['pierre', 1.1, 1.8, 0.8, 0, 5.3, 0], ['pierre', 1.35, 1.5, 0.9, 0, 6.95, 0], ['pierre', 0.8, 0.8, 0.8, 0, 8.1, 0],
-      ['or', 0.95, 0.16, 0.95, 0, 8.46, 0], ['pierre', 0.36, 0.36, 1.8, 0.55, 7.4, 0.95], ['or', 0.15, 0.15, 0.55, 0.55, 7.4, 2.05], ['pierre', 0.3, 1.2, 0.36, -0.82, 6.7, 0]],
+      ['or', 0.95, 0.16, 0.95, 0, 8.46, 0], ['pierre', 1.75, 0.36, 0.5, 0, 6.9, 0.45], ['or', 0.85, 0.85, 0.14, 0, 6.95, 0.75], ...paire(sd => ['pierre', 0.3, 0.9, 0.36, sd * 0.82, 7.1, 0.15])],
+    // le temple à degrés du fond de la place (à la place de la colonnade antique) : cinq gradins, un escalier axial, le sanctuaire en haut, sa porte, sa crête ; face vers +Z
+    templeDegres: () => [...[[36, 0], [29, 1], [22, 2], [15, 3], [9.5, 4]].map(([w, k]) => ['pierre', w, 3.2, w, 0, 1.6 + k * 3.2, 0]), ...[[36, 0], [29, 1], [22, 2], [15, 3]].map(([w, k]) => ['clair', w + 0.6, 0.4, w + 0.6, 0, 3.2 + k * 3.2, 0]),
+      ['clair', 5.4, 0.7, 23, 0, 7.9, 9.6, [0.76, 0, 0]], ...paire(sd => ['ombre', 0.8, 1.4, 23, sd * 3.1, 8.3, 9.6, [0.76, 0, 0]]),
+      ['pierre', 7.4, 4.6, 6.4, 0, 18.3, -0.6], ['noir', 2.4, 3.2, 0.3, 0, 17.6, 2.65], ['clair', 8.2, 0.6, 7.2, 0, 20.9, -0.6], ['pierre', 5.6, 3.4, 1.6, 0, 22.9, -0.6], ['or', 1.5, 1.5, 0.2, 0, 22.9, 0.3],
+      ...paire(sd => [['relief', 1.6, 2.6, 0.3, sd * 2.6, 17.4, 2.65], ['ombre', 3, 2.4, 3, sd * 5.4, 1.2, 19.2]]).flat()],
+    // un feu de camp : cercle de pierres, bûches, flamme
+    feuCamp: () => [...Array.from({ length: 7 }, (_, i) => ['pierre', 0.45, 0.3, 0.45, Math.cos(i * 0.9) * 0.9, 0.15, Math.sin(i * 0.9) * 0.9, [0, i, 0]]), ['bois', 1.3, 0.2, 0.2, 0, 0.2, 0, [0, 0.5, 0.2]], ['bois', 1.3, 0.2, 0.2, 0, 0.25, 0, [0, 2, -0.2]], ['flamme', 0.5, 0.7, 0.5, 0, 0.6, 0], ['flamme', 0.25, 0.5, 0.25, 0.05, 1.1, 0, [0, 0.7, 0]]],
+
     // l'arc triple de l'entrée de la cité : arche centrale (demi-ouverture R) pour la route, deux petites, attique à inscriptions
     arcTriple: (R = 7.5) => { const A = FORMES.arc, pw = 3.6, r = 3, xs = R + pw + r, xe = xs + r + 1.6, top = R + 6.5;
       return [...paire(sd => [['pierre', pw, top, 5, sd * (R + pw / 2), top / 2, 0], ['pierre', 3.2, top, 5, sd * xe, top / 2, 0], ['pierre', 2 * r, top - 6.4, 5, sd * xs, 6.4 + (top - 6.4) / 2, 0],

@@ -138,3 +138,16 @@ Coût : nul.
 | perse avec `rayonsK`, `ambiant`, `oeil` et `frole` | — | 2,19 / 2,11 ms, 464 / 438 appels |
 
 Le nombre d'appels varie de ±30 d'une mesure à l'autre avec le même code (perse avant : 409, puis 436). Sans option, les anciennes cartes gardent les mêmes géométries et matières, vérifié par empreinte sur wangan, barrage et paris. Les shaders ne diffèrent que par le texte des blocs `#ifdef MOUVIS` inactifs.
+
+## 10. Options ajoutées pour chapada (Manuscrit 512)
+
+Toutes absentes par défaut : sans elles, le code suit le même chemin qu'avant.
+
+```js
+th: { depart: [accent, ossature, texte, 'departJungle'],   // 4e valeur : nom d'une autre forme de portique de départ (mêmes zones que « depart »)
+      gloss: 0.02,                                          // brillance de la chaussée (0,08 par défaut, 0,2 sous la pluie) : moins de reflet du soleil
+      cones: 0,                                             // ni cônes ni poubelles à l'entrée des virages
+      brume: [[1, 4, 0.62], [29, 34, 0.68]],                // entre ces points de contrôle, portée du brouillard × k, fondue sur 120 m
+      tun: { gloss: 0.05 } }                                // brillance du sol du tunnel (0,3 par défaut)
+```
+

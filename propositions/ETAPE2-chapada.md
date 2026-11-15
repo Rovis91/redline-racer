@@ -29,6 +29,19 @@ Après cette passe : rupteur 20 % et 4 %, tour 78,9 s sans contact, tests verts,
 
 Reste à faire dans ce thème : les chutes sont des rubans blancs à bords droits (pas d'animation, pas d'embruns) ; les ressauts de la descente se lisent comme une rivière plus que comme des cascades ; le reflet blanc du soleil sur l'eau du marais est fort par endroits.
 
+## Troisième passe : retours de l'auteur en jouant
+
+- **Lumière** : `bloom` 0,05, soleil moins fort, plus de reflet blanc du soleil sur la chaussée (`th.gloss`), plus de colonnes de lumière ni de luminaires vifs dans la grotte. Brume plus dense sur le marais, la gorge du pont, la rivière de la descente et le gué (`th.brume`).
+- **Cônes retirés** de cette carte (`th.cones: 0`). **Murs des lacets retirés.**
+- **Marais** : eau 30 cm plus bas.
+- **Chutes** refaites : des mèches d'eau inégales entre des ressauts de roche, teinte d'eau pâle, plus de pavé lumineux.
+- **On roule dans la rivière** dans le bas de la descente : elle coule sur la chaussée sur 220 m, entre des bornes (surface mouillée).
+- **Cité** : la statue ne tend plus le bras (disque d'or contre la poitrine) ; la façade antique est remplacée par un temple à degrés ; ruines de maisons et stèles autour de la place ; dallage plus fin.
+- **Tête colossale** : deux têtes plus petites, des statues, deux obélisques et un pan de mur autour d'elle. **Camp** : feu, guirlande de lanternes, tour de bambou, caisses, second 4×4.
+- Pas fait : la « mécanique de feuilles » (des feuilles soulevées au passage : c'est du mouvement, à faire avec la phase vie).
+
+Quatre options moteur ajoutées, décrites dans `docs/MOTEUR-OPTIONS-CARTES.md` (section 10) ; sans elles, rien ne change pour les autres cartes.
+
 ## Mesures
 
 | Contrôle | Résultat | Cible |
