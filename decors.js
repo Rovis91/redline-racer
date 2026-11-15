@@ -2106,6 +2106,9 @@
       // panneaux de décompte 150, 100, 50 m avant le freinage de fin de crête (le plus fort après la plus longue droite), des deux côtés, sur le parapet
       { const i0 = P(40), pc = []; [[150, '150'], [100, '100'], [50, '50']].forEach(([m]) => { const s = S[(i0 - m / 2 + N) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 0.6); pc.push([x, s.y + 2.6, z, h.across(s), 1.4, 1.8, 0.1, m]); peints.push([x, s.y + 1.4, z, 0, 0.15, 1.6, 0.15, 0x4a4e4a]); } });
         for (const m of [150, 100, 50]) inst(h, h.geo('bloc'), mat('ecrit', {}, 64, 80, '#f0f0e8', '#c8302a', String(m), 26), pc.filter(p => p[7] === m)); }
+      // grands panneaux à chevrons à 120 m et 60 m des quatre plus gros freinages (entrée de la halle, première épingle, fin de crête, dernier virage), côté extérieur
+      { const gp = [[], []]; for (const [k, sd] of [[5, -1], [17, -1], [41, 1], [53, -1]]) for (const o of [60, 30]) { const i = (P(k) - o + N) % N, s = S[i], para = sd < 0 ? dans(i, 32, 49) : dans(i, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 2.5 : 3.6)); gp[sd < 0 ? 1 : 0].push([x, s.y + 3.4, z, h.across(s), para ? 0.8 : 1.2]); peints.push([x, s.y + 1.2, z, 0, 0.2, 2.4, 0.2, 0x4a4e4a]); }
+        gp.forEach((l, f) => inst(h, h.geo('chevron'), mat('chevron', { lum: 1, side: THREE.DoubleSide, retro: 1.5 }, f), l)); }
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
       fond();
       // les jets coulent, l'écume du bassin bouillonne, la rivière file vers le sud, l'embrun ondule
