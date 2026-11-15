@@ -1753,7 +1753,8 @@
         for (const ii of [i9 + 14, i12 - 26]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y + MH.escalier + 0.45, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xc8323c : 0x1d3a8a]); }
         for (const ii of [i20 - 30, P0(23) - 10]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xf0b840 : 0x2aa39a]); }
         Is('banniere', { mat: h.mat('peinture', { c: 0x4a3020 }), drap: h.mat('peinture', { c: 0xffffff }), or }, etendG, { teinte: 'drap' });
-        h.ribbon(i20 - 2, 2, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0xf4ead0, side: THREE.DoubleSide }), 2); // la lèvre du tremplin
+        h.ribbon(i20 - 2, 2, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0xc8323c, side: THREE.DoubleSide }), 2); // la lèvre du tremplin, rouge garance (l'ivoire s'y brûlait)
+        h.ribbon(i12 - 22, 2, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0x2aa39a, side: THREE.DoubleSide }), 2); // bande de faïence en travers : on freine ici pour l'épingle de la Porte
         h.ribbon(i20 + 1, 7, s => -s.w + 0.5, 0.04, s => s.w - 0.5, 0.04, h.mat('faience', { lum: 1, side: THREE.DoubleSide }), 4); // le fond de la fosse
         for (const sd of [-1, 1]) h.ribbon(i20 - 15, 15, s => sd * (s.w + 0.1), 1.4, s => sd * (s.w + 0.1), -3, appareil, 4); // les flancs de pierre du tremplin
         { const s = S[i20]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 1.5); aut.push([x, s.y, z, h.across(s), 2.4, 2.4, 2.4]); fl.push([x, s.y + 2.6 * 2.4, z, 0, 1.4, 1, 1.4]); } h.lum(i20, s.x, s.y + 8, s.z, 0xff9a40, 30, 0.6); } // la lèvre de la terrasse, d'où l'on saute
