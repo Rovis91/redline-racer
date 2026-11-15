@@ -149,6 +149,10 @@
       R(g, '#b5483c', 0, 104, 96, 16); g.fillStyle = '#f0e8d0'; g.font = 'bold 11px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('МИР ТРУД МАЙ', 48, 113);
       for (let y = 0; y < 120; y += 2) for (let x = 0; x < 96; x += 2) if (alea() < 0.5) R(g, 'rgba(0,0,0,0.1)', x + 1, y + 1, 1, 1); // joints des tesselles
     }],
+    // panneau de direction du virage à la soviétique (GOST 10807 : « направление поворота ») : chevrons rouges sur fond blanc
+    chevronGES: flip => [32, 16, (g, { R }) => { if (flip) { g.translate(32, 0); g.scale(-1, 1); } R(g, '#f2f0e8', 0, 0, 32, 16); g.fillStyle = '#c8281e';
+      for (const x of [3, 17]) { g.beginPath(); g.moveTo(x, 1); g.lineTo(x + 6, 1); g.lineTo(x + 12, 8); g.lineTo(x + 6, 15); g.lineTo(x, 15); g.lineTo(x + 6, 8); g.fill(); } }],
+    // enseigne de rez-de-chaussée : lettres blanches sur bandeau de couleur
     // vantail du portail de la garnison : tôle verte, cadre, une étoile rouge à cinq branches (l'insigne des portails militaires soviétiques)
     porteEtoile: () => [64, 32, (g, o) => { const { R, voile, alea } = o; R(g, '#4a6a4a', 0, 0, 64, 32); R(g, '#3a543a', 0, 0, 64, 2); R(g, '#3a543a', 0, 30, 64, 2); R(g, '#3a543a', 0, 0, 2, 32); R(g, '#3a543a', 62, 0, 2, 32);
       g.fillStyle = '#c8281e'; g.beginPath(); for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, r = k & 1 ? 4.2 : 10.5; g.lineTo(32 + Math.cos(a) * r, 16 + Math.sin(a) * r); } g.fill();

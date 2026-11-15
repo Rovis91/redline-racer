@@ -138,3 +138,18 @@ Coût : nul.
 | perse avec `rayonsK`, `ambiant`, `oeil` et `frole` | — | 2,19 / 2,11 ms, 464 / 438 appels |
 
 Le nombre d'appels varie de ±30 d'une mesure à l'autre avec le même code (perse avant : 409, puis 436). Sans option, les anciennes cartes gardent les mêmes géométries et matières, vérifié par empreinte sur wangan, barrage et paris. Les shaders ne diffèrent que par le texte des blocs `#ifdef MOUVIS` inactifs.
+
+## 10. Brouillard par zone : `th.brume`
+
+```js
+th: { fogD: [70, 1000], brume: [[68, 75, 30, 380]] }   // entre les points 68 et 75 du tracé, le brouillard commence à 30 m et bouche tout à 380 m
+```
+Entre deux points de contrôle du tracé, le début et la fin du brouillard de la carte glissent vers les valeurs données, avec un fondu de 180 m à l'entrée et à la sortie de la zone. C'est le vrai brouillard de la scène (aucune texture plate posée dans le décor) : tout ce qui reçoit le brouillard y disparaît, ce qui est posé hors brouillard (`fog: false`, les lointains) reste net. La zone ne doit pas enjamber la ligne de départ. En écran partagé, chaque vue a le brouillard de sa voiture. Sous un tunnel, le brouillard du tunnel reprend la main.
+Coût : nul (deux nombres par image). Sans `th.brume`, rien ne change.
+
+## 11. Texture des panneaux de virage : `th.chevTex`
+
+```js
+th: { chev: 1, chevTex: 'chevronGES' }
+```
+Les chevrons que le moteur pose à l'extérieur des virages prennent cette texture du catalogue au lieu de `chevron` (jaune et noir). Elle reçoit le même réglage (0 ou 1 : le sens). Barrage s'en sert pour des chevrons rouges sur fond blanc, ceux de la signalisation soviétique. Sans l'option, rien ne change.
