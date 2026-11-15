@@ -1937,7 +1937,7 @@
       // corniche(i, s, o, y) : appelé sur les replats, pour y poser fougères et broméliacées
       const PALG = ['#b59a78', '#9a8a70', '#8a8478', '#a07a58', '#9a5b3a', '#7d7468', '#a89478'];
       const falaise = (o0, Hf, y0 = () => -1.5, corniche, Hmax = 90) => {
-        const ep = [], rec = [], tc = []; for (let k = 0, y = 0; y < Hmax; k++) { ep.push(1.8 + rnd() * rnd() * 9); rec.push((rnd() - 0.35) * 4.5); tc.push(COL(PALG[rnd() * PALG.length | 0], 0.85 + rnd() * 0.3)); y += ep[k]; }
+        const ep = [], rec = [], tc = []; for (let k = 0, y = 0; y < Hmax; k++) { ep.push(1.8 + rnd() * rnd() * 9); rec.push((rnd() - 0.35) * 4.5); tc.push(COL(PALG[rnd() * PALG.length | 0], (k % 2 ? 0.72 : 1.12) * (0.9 + rnd() * 0.2))); y += ep[k]; } // un banc sur deux plus sombre : les strates se lisent de loin
         const nA = bruit(), nB = bruit(), nC = bruit(), joint = COL('#3a3532'), mo = COL('#5f7a3a');
         return (i, s) => { const H = Hf(i), b0 = y0(s), base = o0(s) + 3.5 * nA(i * 0.03) + 3.5 * nB(i * 0.22) ** 2, noir = lisse(0.6, 0.68, nC(i * 0.12)), L = []; let y = b0, o = base;
           for (let k = 0; k < ep.length; k++) { const dy = k ? 1.6 * (nA(i * 0.025 + k * 7) - 0.5) : 0, dz = 1.6 * (nA(i * 0.025 + k * 7 + 7) - 0.5), ya = Math.min(H, y + dy), yb = Math.min(H, y + ep[k] + dz), ob = base + rec[k] + 0.8 * (nB(i * 0.09 + k * 17) - 0.5), f = 1 - 0.85 * noir;
@@ -2126,7 +2126,7 @@
       const instT = (geo, m, l) => { const me = inst(h, geo, m, l); l.forEach((p, i) => me.setColorAt(i, new THREE.Color(p[7]))); if (l.length) me.instanceColor.needsUpdate = true; return me; };
       instT(h.geo('cime'), feuil, [...cimes.flatMap((l, k) => tc(l, vertsF[k])),  ...tc(coupes.map(p => [p[0], p[1], p[2], p[3], p[4] * 0.3, p[4] * 0.12, p[4] * 0.3]), 0x8aa83a)]);
       instT(h.geo('cimeLoin'), feuil, [...tc(cimesL, () => un(vertsF)), ...tc(buissons, () => un([0x2a4a2a, 0x3a5a2a]))]); // niveau de détail : les houppiers lointains
-      instT(h.geo('cime'), neutre, [...tc(cimesF, () => un([0xf0c020, 0xf8d030, 0xe878b8])), ...tc(cimesE.map(p => [p[0], p[1], p[2], p[3], p[4] * 1.3, p[5] * 0.45, p[6] * 1.3]), 0xb8c8b8)]); // ipês en fleur et embaúbas
+      instT(h.geo('cime'), neutre, [...tc(cimesF.map(p => [p[0], p[1] - 1, p[2], p[3], p[4] * 0.7, p[5] * 0.7, p[6] * 0.7]), () => un([0xe8c028, 0xf0cc38, 0xd878a8])), ...tc(cimesE.map(p => [p[0], p[1], p[2], p[3], p[4] * 1.3, p[5] * 0.45, p[6] * 1.3]), 0xb8c8b8)]); // ipês en fleur et embaúbas // les ipês, d'un tiers plus petits (ils faisaient des ballons)
       instT(h.geo('tronc'), ecorce, [...tc(arbres, () => un([0x6a5a48, 0x5a4a3a, 0x7a6a58])), ...tc(troncsC, () => un([0xc8bea8, 0xb0a890]))]);
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: feuil }, tc(fougeres, () => un([0x7da23d, 0x6a9a3a, 0x8ab04a])), { teinte: 'fronde' });
       inst(h, h.geo('troncPalmier'), h.mat('troncPalmier', { c: 0x8a8070 }), palmT);
