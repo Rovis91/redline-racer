@@ -20,7 +20,7 @@ Carte de comparaison : `ville`. Branche : `claude/refonte-plage-943d58`. Capture
 ![sortie du muelle](img-plage/actuel-sortie-muelle.jpg)
 *`plage`, sortie du muelle (idx 356) : bitume nu, sable nu, puis un mur de façades.*
 
-**L'origine de « l'effet de vague ».** Trois sources mesurées, aucune seule n'explique tout ; les trois sont retirées (DA-9, DA-10, M-3).
+**L'origine de « l'effet de vague ».** Quatre sources, trois mesurées ici ; aucune seule n'explique tout, les quatre sont retirées (DA-9, DA-10, M-3, C-5).
 
 1. **Des sinusoïdes dessinées dans les textures des grandes surfaces.** `textures-plage.js` trace ses rides de sable, ses ornières de piste, ses parois et ses reflets avec `Math.sin` (lignes 8, 14, 126, 144, 146, 170). Répétées sur des centaines de mètres, elles font de longues bandes ondulées qui glissent sous la voiture. C'est la source la plus visible en mouvement, et la seule commune aux trois autres cartes (strates qui ondulent, bandes, zigzags).
 
@@ -33,6 +33,8 @@ Carte de comparaison : `ville`. Branche : `claude/refonte-plage-943d58`. Capture
    *Même image (idx 1103), en haut avec `chaleur`, en bas sans : rail et mangrove bavent d'une ligne sur l'autre.*
 
 3. **Le ciel en éventail.** Le dégradé du ciel a cinq paliers serrés entre 44 % et 50 % de la hauteur, posés sur une sphère à 16 facettes : près de l'horizon, les paliers se cassent en éventail (visible sur toutes les vues de plage et de lagune).
+
+4. **Des altitudes en dents de scie dans la grotte.** Les points 26 à 35 valent −2, −4, −5, −5, −4, −4, −4, −5, −4, −2 : la route remonte et redescend d'un mètre deux fois, donc la caméra pique et se relève. La session perse a mesuré cette cause sur sa carte (tangage de 2 à 3°) ; je ne l'ai pas mesurée ici. Les altitudes proposées sont monotones (C-4, C-5).
 
 ---
 
@@ -88,7 +90,7 @@ Carte de comparaison : `ville`. Branche : `claude/refonte-plage-943d58`. Capture
 
 **C-4 · Cénote ouvert : la route descend sur la rive du lac.** À partir du point 25, une rampe taillée dans le calcaire descend de +2 m jusqu'à −6 m au point 27. Du point 26 au point 28, la route suit la rive sud-est d'un lac turquoise à ciel ouvert, en long virage à droite de 110 m de rayon : **l'eau est à 3 m de la roue droite, 50 cm sous la route**, la falaise de 7 m à gauche. L'eau ne se roule pas : la rive est fermée par une bordure de roche de 40 cm et une corde à flotteurs. *Justification : G2 et Z6-1, le cœur de la carte selon l'auteur.*
 
-**C-5 · Grotte : 120 m d'abri sous roche, puis une salle plus courte.** Le tunnel du moteur passe de `tun: [26, 35]` (490 m) à `tun: [30, 35]` (290 m). Avant lui, des points 28 à 30, la falaise surplombe la route : toit de roche posé par le décor, ouvert côté lac par quatre piliers. Dans la salle, la route traverse le bras souterrain du lac par un **gué** de 40 m sous le grand puits de lumière (points 32-33, zone `mouille` 0,6 déjà en place) ; `corde: [30, 33]`. *Justification : Z7-4 (pas de point d'eau), Z7-1 (tube uniforme), G7 (entrée en interrupteur).*
+**C-5 · Grotte : 120 m d'abri sous roche, puis une salle plus courte.** Le tunnel du moteur passe de `tun: [26, 35]` (490 m) à `tun: [30, 35]` (290 m). Avant lui, des points 28 à 30, la falaise surplombe la route : toit de roche posé par le décor, ouvert côté lac par quatre piliers. Dans la salle, la route traverse le bras souterrain du lac par un **gué** de 40 m sous le grand puits de lumière (points 32-33, zone `mouille` 0,6 déjà en place) ; `corde: [30, 33]`. Altitudes sans dents de scie : −6 m du point 27 au point 33, puis −5, −3, 0. *Justification : Z7-4 (pas de point d'eau), Z7-1 (tube uniforme), G7 (entrée en interrupteur).*
 
 **C-6 · Digue de la lagune : un S et un pont en dos d'âne.** La ligne droite de 366 m devient un S de 24 m d'amplitude (points 37 à 41 : x = −8, −24, −8, +16, +10 ; rayons de 65 à 100 m), avec le pont en dos d'âne sur le chenal au point 40 (`sauts` gardé, 1,5 m de relief). C'est le tracé essayé en série 3 (commit d6f11f4), élargi. *Justification : Z8-1 (« dernière ligne droite pas aimée », aucun événement à 190 km/h).*
 
@@ -237,7 +239,7 @@ Carte de comparaison : `ville`. Branche : `claude/refonte-plage-943d58`. Capture
 | G1 · pas de continuité | DA-1, D-1, D-11, T-1, T-2, T-3 à T-10 |
 | G2 · pas de point d'eau du cénote | C-4, C-5, D-7, D-8 |
 | G3 · peu de festif, peu de vie | DA-1, DA-6, X-5, T-2 ; personnes et mouvement : phase vie (V-1, V-2) |
-| G4 · effet de vague | DA-9 (`chaleur` et ciel), DA-10 (textures), M-3 |
+| G4 · effet de vague | DA-9 (`chaleur` et ciel), DA-10 (textures), M-3, C-5 (altitudes) |
 | G5 · marquages partout | X-1 |
 | G6 · architecture hors sources | DA-7, DA-8 |
 | G7 · éclairage uniforme, contrastes brutaux | DA-3, DA-4, T-8, T-9, M-1 |
