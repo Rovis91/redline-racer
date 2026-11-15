@@ -450,12 +450,6 @@
     g.setIndex(idx); g.computeVertexNormals();
     const m = new THREE.Mesh(g, mat); m.receiveShadow = true; scene.add(m); return m;
   }
-  const fondRubans = ms => { // plusieurs rubans d'une même matière en un seul maillage (normales gardées telles quelles) : une passe de dessin au lieu d'une par ruban
-    const g = new THREE.BufferGeometry(), idx = []; let o = 0;
-    for (const [k, n] of [['position', 3], ['normal', 3], ['uv', 2]]) g.setAttribute(k, new THREE.Float32BufferAttribute(ms.flatMap(m => Array.from(m.geometry.attributes[k].array)), n));
-    for (const m of ms) { for (const i of m.geometry.index.array) idx.push(i + o); o += m.geometry.attributes.position.count; scene.remove(m); m.geometry.dispose(); }
-    g.setIndex(idx); const m = new THREE.Mesh(g, ms[0].material); m.receiveShadow = true; scene.add(m); return m;
-  };
   // mouillure pour le dessin : texture MO.nb × N (bandes en travers de -W à W × échantillons), rouge = mouillure de la course (R.mo, voir MO dans sim.js ; 1 hors course), vert = pluie de l'échantillon (0 à 1)
   // Un shader qui veut savoir si la route est mouillée lit MOT : mouillure = rouge × vert. Remise à jour toutes les 8 images (moMaj).
   const MOI = new Uint8Array(N * MO.nb * 4).fill(255), MOT = new THREE.DataTexture(MOI, MO.nb, N, THREE.RGBAFormat); MOT.magFilter = MOT.minFilter = THREE.LinearFilter; MOT.k = 0;
@@ -516,12 +510,10 @@
       sol = ribbon(T.t0, cT, ng, 0, ps, 0, tunMats[0], 32);
       ribbon(T.t0, cT, ng, hm, ng, 0, tunMats[1]); ribbon(T.t0, cT, ps, hm, ps, 0, tunMats[2]);
       for (const sg of [-1, 1]) ribbon(T.t0, cT, s => sg * (tw(s) + 1.5), dh, s => sg * (tw(s) + 1.5), -u.coque, concrete).castShadow = true;
-      const vo = [], toits = [];
-      for (const [a, n] of pans) {
-        for (let j = 0; j < NV; j++) { const x = q => s => -tw(s) * Math.cos(Math.PI * q / NV), y = q => s => hm(s) + vt(s) * Math.sin(Math.PI * q / NV); vo.push(ribbon(T.t0 + a, n, x(j), y(j), x(j + 1), y(j + 1), tunMats[3])); }
-        toits.push(ribbon(T.t0 + a, n, s => -tw(s) - 1.5, dh, s => tw(s) + 1.5, dh, concrete));
+      for (const [a, n] of pans) { // (chaque facette est un ruban à part, fondu ensuite avec ceux de sa matière : voir « fusion du décor fixe »)
+        for (let j = 0; j < NV; j++) { const x = q => s => -tw(s) * Math.cos(Math.PI * q / NV), y = q => s => hm(s) + vt(s) * Math.sin(Math.PI * q / NV); ribbon(T.t0 + a, n, x(j), y(j), x(j + 1), y(j + 1), tunMats[3]); }
+        ribbon(T.t0 + a, n, s => -tw(s) - 1.5, dh, s => tw(s) + 1.5, dh, concrete).castShadow = true;
       }
-      if (vo.length) { fondRubans(vo); fondRubans(toits).castShadow = true; } // toute la voûte en une passe, tous les toits de coque en une autre (au lieu de NV + 1 par morceau)
       if (u.rayons) for (const [fa, fb] of u.ouv || []) { // une colonne de lumière par ouverture, penchée vers l'astre, et la tache de lumière qu'elle pose au sol
         const ka = Math.ceil(fa * cT), kb = Math.floor(fb * cT), s = S[(T.t0 + (ka + kb >> 1)) % N], ax = new V3(0, 1, 0).lerp(SD, 0.35).normalize(), h = hh(s), L = h / ax.y;
         const r = Math.max(1, Math.min(tw(s) * 0.7, Math.hypot(S[(T.t0 + kb) % N].x - S[(T.t0 + ka) % N].x, S[(T.t0 + kb) % N].z - S[(T.t0 + ka) % N].z) * 0.45));
