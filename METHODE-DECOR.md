@@ -28,7 +28,8 @@ node outils/plan.js wangan 14            # après : 14.jpg et 14.duo.jpg (avant 
 ```
 
 - un endroit précis : `@700` (échantillon de piste) ; un objet vu de près : `--vue=angle,distance,hauteur` ; un endroit qu'on revoit souvent : `--nom=pont`, puis `node outils/plan.js wangan pont` ;
-- ce qui ondule ou clignote ne se voit qu'en mouvement : `--rafale=6`.
+- ce qui ondule ou clignote ne se voit qu'en mouvement : `--rafale=6` ;
+- l'image est sans interface, pour voir tout le décor ; `--hud` la remet.
 
 Résultat dans `captures/plans/<carte>/` (ignoré par git), rien n'est jamais effacé. Chaque copie du jeu a son port, tiré de son chemin. Le mode d'emploi complet est en tête de `outils/plan.js`.
 

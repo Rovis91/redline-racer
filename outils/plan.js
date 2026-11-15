@@ -9,7 +9,8 @@
 //                  et <nom>.duo.jpg : avant à gauche, après à droite.
 //   --vue=90,12,4  caméra d'inspection autour de la voiture (angle°, distance, hauteur) au lieu de la caméra de course
 //   --rafale=6     6 images de suite au même endroit (1/30 s entre deux), en planche : ce qui ondule ou clignote ne se voit qu'en mouvement
-//   --style=jeu    le rendu réel du jeu (270 lignes, HUD) au lieu du rendu net      --taille=1920x1080   taille de l'image (960x540 par défaut)
+//   --style=jeu    le rendu réel du jeu (270 lignes, avec l'interface) au lieu du rendu net      --taille=1920x1080   taille de l'image (960x540 par défaut)
+//   --hud          garde l'interface du jeu sur l'image (retirée par défaut : elle cache les coins du décor)
 //   --nom=porte    enregistre ce plan (échantillon et vue) sous ce nom dans outils/plans.json
 // Variables : CHROME, PORT (un port par copie du jeu, tiré du chemin : deux worktrees ne se gênent pas), DBG (9400). Fermer le Chrome gardé : node outils/banc-rapide.js --fermer
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
@@ -27,6 +28,8 @@ const fin = (code, msg) => { if (msg) console.log(msg); process.exit(code); };
 const PAGE = `(() => {
   const g = __g, T = g.T, n = T.n, R = g.renderer, vues = [];
   requestAnimationFrame = () => 0; g.start(); let t = 1e7; while (g.state !== 'race') g.frame(t += 100);
+  // sans interface : le jeu dessine son HUD dans un canevas perdu, celui que lit la passe finale reste vide
+  if (!window.__planHud) for (const u of g.vues) { u.hudC.getContext('2d').clearRect(0, 0, u.hudC.width, u.hudC.height); u.hg = document.createElement('canvas').getContext('2d'); }
   R.info.autoReset = false;
   const prise = nom => { R.info.reset(); g.frame(t += 33); const cv = R.domElement, c = document.createElement('canvas'); c.width = cv.width; c.height = cv.height; c.getContext('2d').drawImage(cv, 0, 0); vues.push({ c, nom }); };
   const image = c => c.toDataURL('image/jpeg', 0.85).slice(23);
@@ -57,7 +60,7 @@ const PAGE = `(() => {
 })()`;
 
 (async () => {
-  if (!ids.includes(carte) || !demandes.length) fin(2, 'usage : node outils/plan.js <carte> <plan…|tour|@échantillon|nom> [--avant] [--vue=a,d,h] [--rafale=n] [--style=jeu] [--taille=LxH] [--nom=x]\ncartes : ' + ids.join(', ') + (noms[carte] ? '\nplans nommés de ' + carte + ' : ' + Object.keys(noms[carte]).join(', ') : ''));
+  if (!ids.includes(carte) || !demandes.length) fin(2, 'usage : node outils/plan.js <carte> <plan…|tour|@échantillon|nom> [--avant] [--vue=a,d,h] [--rafale=n] [--style=jeu] [--hud] [--taille=LxH] [--nom=x]\ncartes : ' + ids.join(', ') + (noms[carte] ? '\nplans nommés de ' + carte + ' : ' + Object.keys(noms[carte]).join(', ') : ''));
   if (!(await repond(BASE + 'index.html'))) { spawn('python', [path.join('outils', 'capture.py'), String(PORT)], { cwd: RACINE, stdio: 'ignore', detached: true }).unref(); if (!(await attends(BASE + 'index.html', 40))) fin(2, 'ÉCHEC : le serveur ne démarre pas sur le port ' + PORT); }
   if ((await req(BASE + 'outils/plan.js').catch(() => '')).replace(/\r/g, '') !== fs.readFileSync(__filename, 'utf8').replace(/\r/g, '')) fin(2, 'ÉCHEC : le serveur du port ' + PORT + ' sert une autre copie du jeu ; choisir un autre port (PORT=8995 node outils/plan.js …)');
   if (!(await repond('http://127.0.0.1:' + DBG + '/json/version'))) {
@@ -83,7 +86,7 @@ const PAGE = `(() => {
   const ouvre = async c => {
     for (let essai = 0; essai < 2; essai++) {
       erreurs.length = 0; await cmd('Page.navigate', { url: BASE + 'index.html?auto&carte=' + c + (style === 'jeu' ? '' : '&style=' + style) + '&v=' + Date.now() });
-      for (let i = 0; i < 240; i++) { await dort(250); if (await evalue('!!(window.__g && __g.M && __g.M.id === ' + JSON.stringify(c) + ')', 5000).catch(() => false)) return evalue(PAGE); if (erreurs.length && i > 8) break; }
+      for (let i = 0; i < 240; i++) { await dort(250); if (await evalue('!!(window.__g && __g.M && __g.M.id === ' + JSON.stringify(c) + ')', 5000).catch(() => false)) return evalue('window.__planHud = ' + (opt('hud') || style === 'jeu') + '; ' + PAGE); if (erreurs.length && i > 8) break; }
     }
     throw new Error('la carte ne se charge pas : ' + (erreurs[0] || 'délai'));
   };
