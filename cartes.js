@@ -428,16 +428,16 @@
     // départ sur la rive est de la rivière aval, cap nord vers le mur ; le pied du mur le long du bassin de dissipation (pts 3-5, embruns) ; la salle des machines au pied du mur (pts 6-12 : la voie, bordée de garde-corps,
     // serpente entre trois groupes posés au milieu de la halle, en quinconce : un slalom) ; la montée de la culée est en trois lacets (pts 13-35), dont un court passage en galerie dans la roche (pts 22-27) ;
     // la crête de 660 m cap ouest, retenue à droite, vide à gauche (pts 35-40) ; la corniche de la rive ouest qui descend au-dessus de la rivière (pts 41-49) ; le grand pont qui la traverse (pts 49-53).
-    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [22, 27], chaud: [35, 46], sect: [13, 40], corde: [36, 40], amb: [[3, 6], [6, 12], [36, 41]], anticipe: 1, trafic: 4, // corde : sur la crête, frôler le parapet sans le toucher remplit la nitro
+    { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [22, 27], chaud: [35, 46], sect: [13, 40], corde: [33, 40], amb: [[3, 6], [6, 12], [36, 41]], anticipe: 1, trafic: 4, // corde : sur la crête, frôler le parapet sans le toucher remplit la nitro
       surf: { zones: [[3, 6, 'mouille', 1], [6, 12, 'mouille', 0.4], [22, 27, 'mouille', 0.35]] }, // le pied du mur, mouillé par les embruns des jets ; la galerie suinte (pas de th.pluie : ce sont des embruns, pas une averse)
       pts: [[146, 790, 12], [118, 600, 12], [100, 400, 12], [90, 290, 12], [88, 200, 12], [110, 138, 12],
-        [145, 110, 12], [175, 99, 12], [200, 110, 12], [225, 121, 12], [250, 110, 12], [275, 99, 12], [305, 110, 12],
+        [145, 110, 12], [175, 97, 12], [200, 110, 12], [225, 123, 12], [250, 110, 12], [275, 97, 12], [305, 110, 12],
         [345, 114, 14], [450, 115, 23], [560, 115, 32], [680, 115, 40], [742, 112, 41.5], [752, 91, 43], [740, 70, 44.5],
         [680, 67, 46], [600, 67, 52], [520, 67, 57], [484, 61, 59.5], [477, 44.5, 61.5], [484, 28, 63.5],
         [540, 22, 66], [640, 22, 74], [800, 22, 81], [848, 16, 84], [864, -6, 86], [848, -30, 88],
         [700, -27, 92], [600, -28, 97.5], [500, -25, 102], [450, -12, 105], [400, 0, 105],
         [250, 0, 105], [100, 0, 105], [-100, 0, 105], [-290, 0, 105], [-340, 8, 104], [-354, 50, 102],
-        [-336, 150, 96], [-305, 300, 84], [-248, 420, 70], [-168, 560, 56], [-262, 700, 40], [-200, 820, 26], [-160, 900, 18],
+        [-336, 150, 96], [-310, 300, 84], [-238, 415, 70], [-160, 560, 56], [-272, 690, 40], [-200, 820, 26], [-160, 900, 18],
         [-100, 930, 14], [-20, 950, 14], [80, 952, 14], [150, 938, 13], [160, 860, 12]],
       // voiture inventée : une berline d'État des années 70 réarmée, V8 de 5,5 L, environ 340 ch, 1480 kg, propulsion, boîte à 5 rapports (chiffres inventés)
       car: car({ nom: 'VOLNA 24 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
