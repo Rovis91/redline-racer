@@ -451,21 +451,32 @@
     // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
     // W = la voie unique du pont : large ne fait qu'élargir (sim.js), tout le reste est élargi à 7 m ; le gué à 13 m. Pts 20 et 23 : bornes de l'élargissement, à 60 m du pont (le raccord de sim.js).
-    { id: 'chapada', nom: 'MATIN SUR LA CHAPADA', rivaux: ['TIAGO', 'LUANA', 'BRUNO'], W: 4.5, kmh: 0.75, vit: [150, 185], grip: 20, sc: 1.1, tun: null, chaud: [6, 16], sect: [10, 24], amb: [[14, 16], [17, 21]], anticipe: 1,
-      large: [[25, 22, 8], [6, 7, 10.5], [9, 10, 10.5], [12, 13, 10.5], [27, 28, 10.5], [15, 19, 13]], sauts: [[5, 70, 1.6], [23, 36, 1.2]], // V2 : on saute du bord du plateau dans la descente de la gorge, un tremplin qui pose la voiture sur les planches du pont
-      surf: { zones: [[14, 16, 'mouille', 2.5], [17, 21, 'mouille', 3], [23, 24, 'mouille', 0.8], [26, 31, 'mouille', 0.4]], large: 'sec' }, // V2 : le mouillé mord (le centre du gué doit coûter son raccourci)
-      // V2 : trois épingles différentes (la 1re à R 21 m, la 2e ouverte et longue, la 3e serrée), un vrai S au gué (on y freine), la forêt resserrée, une cassure dans la ligne droite du plateau, la gorge plus raide
-      pts: [[0, 0, 80], [250, 0, 80], [330, 10, 80], [350, 55, 80], [470, 140, 78], [760, 70, 74], [1075, 168, 67], [1180, 245, 61], [1075, 320, 56], [870, 330, 49], [770, 412, 45], [870, 500, 41], [1075, 512, 35], [1172, 594, 28], [1075, 662, 23],
-        [962, 700, 20], [850, 737, 17], [775, 762, 15], [690, 722, 14], [600, 792, 14], [510, 745, 14], [425, 762, 14], [350, 762, 16], [287, 762, 18], [150, 762, 20], [90, 752, 23], [-55, 725, 29], [-160, 590, 37],
-        [10, 510, 46], [30, 400, 54], [-55, 320, 62], [-125, 200, 69], [-110, 85, 75], [-117, 47, 77], [-75, 12, 79], [-25, 0, 79.6]],
-      // voiture inventée : un coupé brésilien léger à moteur avant, 4 cylindres turbo de 2 L, 250 ch, 1050 kg, propulsion (rapports et courbe de couple estimés)
-      car: car({ nom: 'ONCA 2000 TURBO', ratios: [3.2, 2.1, 1.52, 1.18, 0.95], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
-        tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], son: 1.2, moteur: 'l4', turbo: 1, look: { col: 0x1f6a4a, l: 0.9, w: 0.98, h: 0.98, nez: 0.55, cab: [-0.3, 2, 0.55], aileron: 1, bandes: 0xe9b44c } }),
+    { id: 'chapada', nom: 'MANUSCRIT 512', rivaux: ['TIAGO', 'LUANA', 'BRUNO'], W: 4.5, kmh: 0.75, vit: [150, 200], grip: 20, sc: 1, tun: [34, 40], chaud: [13, 40], sect: [20, 46], amb: [[30, 34], [62, 66]], anticipe: 1,
+      // Manuscrit 512 (Bahia, de nos jours, 9 h après la pluie) : une vallée de jungle dont la route fait le tour. Camp de base de l'expédition (départ), piste sous la canopée et chicane du fromager (pts 4-12),
+      // lacets des terrasses (14-24), pont de lianes au pied de la grande chute (32-33), temple-grotte (le tunnel, 34-40), saut de l'escalier écroulé, descente des idoles (équerres 43-48),
+      // cité perdue (arc triple pt 53, place 54-58), gué (63-64), retour au camp. Proposition validée : propositions/PROPOSITION-chapada.md
+      // largeur : W = le pont (file unique) ; partout ailleurs 6,5 m de demi-largeur, 9 au camp, 10 sur la place, 11 au gué
+      large: [[34, 30, 6.5], [66, 2, 9], [53, 62, 10], [63, 65, 11]], sauts: [[41, 40, 1.2]],
+      surf: { zones: [[63, 64, 'mouille', 2.5], [34, 40, 'mouille', 0.5]], large: 'sec' }, // l'eau du gué freine au centre, ses bords de dalles sont secs ; la grotte suinte
+      pts: [[0, 0, 15], [200, 0, 15], [360, -30, 17], [500, 20, 19], [555, 21, 20], [580, 19, 20.5], [598, 11, 21], [606, -7, 21.5], [606, -45, 22.5], [606, -83, 23.5], [614, -101, 24], [632, -109, 24.5], [700, -110, 25.5], [790, -112, 27],
+        [880, -110, 30], [896, -103, 30.5], [903, -87, 31], [896, -71, 31.5], [880, -64, 32], [800, -62, 35], [730, -61, 38], [714, -54, 38.5], [707, -38, 39], [714, -22, 39.5], [730, -15, 40], [820, -15, 46], [900, -15, 52], [950, -14, 56],
+        [974, -11, 58], [990, 2, 59], [996, 22, 60], [996, 60, 62], [996, 90, 63], [996, 240, 63], [996, 290, 63], [990, 330, 63], [970, 362, 62.5], [935, 380, 62], [880, 385, 61], [830, 400, 60], [770, 425, 58],
+        [680, 440, 52], [600, 415, 46], [560, 410, 43], [540, 418, 42], [532, 438, 41], [532, 480, 38], [526, 500, 36.5], [508, 510, 35.5], [430, 512, 31], [340, 490, 26], [250, 515, 22], [170, 510, 19],
+        [122, 510, 17.5], [103, 502, 17], [95, 484, 17], [95, 442, 17], [87, 424, 17], [68, 416, 17], [10, 416, 16.5], [-20, 412, 16], [-38, 392, 16], [-44, 365, 15.5], [-44, 310, 14.35], [-70, 260, 14], [-60, 200, 14.8], [-90, 140, 14.5], [-95, 80, 15], [-75, 30, 15], [-40, 5, 15]],
+      // voiture inventée : un coupé brésilien léger à moteur avant, 4 cylindres turbo de 2 L, 250 ch, 1050 kg, propulsion (rapports et courbe de couple estimés).
+      // Boîte longue : l'ancienne 5e plafonnait à 216 km/h au rupteur, la voiture y passait la moitié du tour (node outils/regime.js chapada touge)
+      car: car({ nom: 'ONCA 2000 TURBO', ratios: [3.2, 1.9, 1.3, 0.97, 0.74], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
+        tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], son: 1.2, moteur: 'l4', turbo: 1, look: { col: 0xe9b44c, l: 0.9, w: 0.98, h: 0.98, nez: 0.55, cab: [-0.3, 2, 0.55], aileron: 1, bandes: 0x26221f } }),
       radio: RADIO.chapada,
-      th: { decor: 'chapada', lisse: ['eauPoco', 'eauGue', 'chute'], routeTex: 'chausseeFine', ombre: { doux: 1 }, mouilleVisible: 1, frole: 1, fog: 0xb8c6cc, fogD: [20, 340], sky: [[0, '#7a9cb4'], [0.36, '#b8cad0'], [0.48, '#e0c896'], [0.5, '#b8c6cc'], [1, '#b8c6cc']], stars: 0, // ciel et brume un ton sous la V1 : 16 captures sur 20 avaient plus de 5 % de pixels brûlés
-        astre: { dir: [0.8, 0.25, 0.4], col: '#f8cc8c', ombre: '#ffd9a0', taille: 150 }, hemi: [0xc8dce0, 0x3a4a58, 0.72], sun: [0xffe2b0, 0.95], phares: 0.3, bloom: 0.05, scan: 0.05,
-        chev: 0, murH: 0, route: ['#34383a', '#44484a', '#f6f2e4', '#e8c860', '#34383a', '#34383a', false], mur: ['#6e6656', '#c8c4b0', '#6c7075', '#3a3428'], depart: [0xe9b44c, 0x4b5359, '#ede6cf'],
-        hud: { y: '#f2f0dc', c: '#ffb94a', r: '#ff5a4a', fond: 'rgba(10,22,18,.82)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'CHAPADA DIAMANTINA · 7 H'], titre: ['MATIN SUR', 'LA CHAPADA'] } } },
+      th: { decor: 'chapada', lisse: ['eauJade', 'chuteFil'], routeTex: 'dallesJungle', ombre: { doux: 1, champ: 250 }, frole: 1, fog: 0xa9bb7e, fogD: [18, 190], // brume vert-or de la couleur du fond : à 190 m il ne reste qu'elle (le procédé de touge, de jour)
+        sky: [[0, '#5f9aa0'], [0.36, '#9cc0a0'], [0.47, '#b6c68c'], [0.5, '#a9bb7e'], [1, '#a9bb7e']], stars: 0,
+        astre: { dir: [0.5, 0.62, 0.6], col: '#fff0c0', ombre: '#ffe6b0', taille: 150 }, hemi: [0xcfe6a8, 0x1c3a22, 0.62], sun: [0xffe6b0, 1.15], phares: 0.3, bloom: 0.18, scan: 0.05,
+        chev: 0, murH: 0, route: ['#77725f', '#5e5a4c', '#8a8672', '#4d6a34', '#77725f', '#77725f', false], mur: ['#5a5646', '#8a8672', '#4d6a34', '#2a2a20'], depart: [0xe8b83a, 0x4a3a24, '#f2ecd0'],
+        // la grotte : voûte de roche, salle haute à mi-parcours avec deux puits de lumière ; torches chaudes ; l'œil s'y fait vite (ni noir à l'entrée, ni blanc à la sortie)
+        tun: { sol: ['#5e5a4c', '#77725f', '#8a8672', '#8a8672', '#5e5a4c', '#5e5a4c'], murs: ['#ffb040', '#ffb040'], paroi: ['#4a443a', '#6a6052', '#8a7c68', '#1c1a16'], plafond: ['#2a2620', '#ffb040', '#ffb040', '#3a342c'],
+          fog: 0x2a3a2a, portail: 0x6a5e56, neons: [0xffb040, 0xffb040], coque: 80, h: [[0, 9], [0.35, 14], [0.55, 20], [0.75, 13], [1, 8]], voute: [[0, 4], [0.35, 8], [0.55, 12], [0.75, 7], [1, 3.5]], ouv: [[0.5, 0.54], [0.6, 0.63]], rayons: '#fff0c0', rayonsK: 0.35, ambiant: 0.7 },
+        oeil: { tun: 0.7, noir: 0.5, clair: 0.15 },
+        hud: { y: '#f2ecd0', c: '#ffc247', r: '#ff5a3a', fond: 'rgba(8,20,12,.84)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'BAHIA · LA CITE PERDUE'], titre: ['MANUSCRIT', '512'] } } },
     // Playa 307 (Riviera Maya, midi) : la ligne droite de la plage (sable dur au milieu, sable mou de part et d'autre), l'épingle au bout du ponton, la rue aux guirlandes de papel picado, le marché couvert,
     // la route de garrigue, le cénote ouvert (place : on peut couper par le bassin, sur fond meuble), la grotte du cénote (le tunnel), le lobby d'hôtel, retour à la plage. Mexique d'aujourd'hui, rien de maya.
     { id: 'plage', nom: 'PLAYA 307', rivaux: ['CAMILA', 'DIEGO', 'LUPE'], med: [1.06, 0.98, 0.9], W: 8, kmh: 0.7, vit: [130, 165], grip: 22, sc: 1, tun: [32, 35], chaud: [25, 35], sect: [16, 31], amb: [[3, 11], [18, 20], [32, 42]], anticipe: 1,

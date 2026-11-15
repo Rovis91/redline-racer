@@ -1,99 +1,57 @@
-// Textures propres à « chapada » (Matin sur la Chapada) : complète le catalogue de textures.js, mêmes conventions. Voir METHODE-DECOR.md.
+// Textures propres à « chapada » (Manuscrit 512, la cité perdue) : complète le catalogue de textures.js, mêmes conventions. Voir METHODE-DECOR.md.
+// Palette de la proposition (propositions/PROPOSITION-chapada.md, A-6) : verts profonds et émeraude, quartzite rosé, eau jade, or et flamme en accents.
 (() => {
+  const semis = (g, { R, alea }, n, cs, w = 1, h = 1, W = 64, H = 64) => { for (let i = 0; i < n; i++) R(g, cs[alea() * cs.length | 0], alea() * W | 0, alea() * H | 0, w + (alea() * w | 0), h + (alea() * h | 0)); };
+  // feuillage : un fond et de grosses touches d'ombre et de lumière (elles se lisent encore à 270 lignes, de loin elles se fondent)
+  const feuil = (c, clair) => () => [64, 64, (g, o) => { o.R(g, c, 0, 0, 64, 64); o.voile(g, 0.3, () => semis(g, o, 110, ['#000', '#000', clair], 3, 2)); o.voile(g, 0.55, () => semis(g, o, 26, [clair], 2, 1)); }];
+  // pierre taillée de la cité : gros blocs à joints sombres, mousse dans les joints et en haut, coulures
+  const pierre = (c, mousse = 0.5) => () => [64, 64, (g, o) => { const { R, alea, voile } = o; R(g, c, 0, 0, 64, 64);
+    voile(g, 0.12, () => { for (let y = 0; y < 64; y += 16) for (let x = (y & 16) / 2 - 8; x < 64; x += 32) R(g, alea() < 0.5 ? '#000' : '#fff', x, y, 32, 16); });
+    voile(g, 0.18, () => semis(g, o, 240, ['#000', '#fff']));
+    voile(g, 0.45, () => { for (let y = 0; y < 64; y += 16) { R(g, '#1c1a16', 0, y, 64, 1); for (let x = (y & 16) / 2; x < 64; x += 32) R(g, '#1c1a16', x, y, 1, 16); } });
+    voile(g, mousse, () => { for (let y = 0; y < 64; y += 16) for (let x = 0; x < 64; x += 2) if (alea() < 0.55) R(g, alea() < 0.5 ? '#4d6a34' : '#7fa83a', x, y, 2, 1 + (alea() * 3 | 0)); });
+    voile(g, 0.25, () => { for (let i = 0; i < 9; i++) R(g, '#1c1a16', alea() * 64 | 0, alea() * 30 | 0, 1 + (alea() * 2 | 0), 8 + alea() * 24 | 0); });
+  }, 4];
   Object.assign(TEXTURES, {
-    // REFS 1 : grès en strates. Les parois de la V2 sont des maillages à couleurs de sommet (decors.js, extrude) : cette texture n'en donne que le grain, en gris neutre,
-    // multiplié par la couleur du banc. Fissures verticales fines, joints horizontaux, piqûres claires et sombres
-    grainGres: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#d8d4cc', 0, 0, 64, 64);
-      for (let i = 0; i < 500; i++) R(g, alea() < 0.5 ? '#bcb6ac' : '#ece8e0', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1);
-      voile(g, 0.5, () => { for (let i = 0; i < 14; i++) R(g, '#8a847a', alea() * 64 | 0, alea() * 64 | 0, 1, 3 + (alea() * 12 | 0)); }); // fissures
-      voile(g, 0.35, () => { for (let i = 0; i < 6; i++) R(g, '#9a948a', alea() * 48 | 0, alea() * 64 | 0, 8 + (alea() * 16 | 0), 1); }); // joints
-    }, 6],
-    // REFS 5 : sol du campo rupestre, au bord de la route du plateau : gravier de quartz gris et ocre, touffes olive et dorées, lichen noir sur les éclats de quartzite
-    campoSol: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#a8987a', 0, 0, 64, 64);
-      for (let i = 0; i < 520; i++) R(g, ['#8a7a5e', '#a89478', '#b8ae98', '#7a6c54'][alea() * 4 | 0], alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1);
-      for (let i = 0; i < 46; i++) { const x = alea() * 60 | 0, y = alea() * 60 | 0, c = alea() < 0.6 ? '#6f7b3e' : '#a8944a'; for (let k = 0; k < 5; k++) R(g, c, x + (alea() * 4 | 0), y + (alea() * 4 | 0), 1, 2); } // touffes
-      voile(g, 0.6, () => { for (let i = 0; i < 18; i++) R(g, '#3c3a36', alea() * 60 | 0, alea() * 60 | 0, 2 + (alea() * 4 | 0), 1 + (alea() * 2 | 0)); }); // éclats noircis
-    }, 8],
-    // REFS 4 : litière du sous-bois : feuilles brunes et rousses, mousse, terre sombre
-    litiere: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#3a3424', 0, 0, 64, 64);
-      for (let i = 0; i < 420; i++) R(g, ['#5a4a2c', '#6e5432', '#2a2a1a', '#4a5a2a', '#7a5a30'][alea() * 5 | 0], alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 3 | 0), 1 + (alea() * 2 | 0));
-      voile(g, 0.4, () => { for (let i = 0; i < 20; i++) R(g, '#5f7a30', alea() * 60 | 0, alea() * 60 | 0, 2 + (alea() * 5 | 0), 1 + (alea() * 3 | 0)); });
-    }, 6],
-    // REFS 1 et 4 : bas-côté des lacets et de la gorge : herbe verte, éclats de grès, mousse
-    herbeRoche: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#4a6a34', 0, 0, 64, 64);
-      for (let i = 0; i < 460; i++) R(g, ['#3a5a2c', '#5f7a3a', '#6f8a40', '#2e4626'][alea() * 4 | 0], alea() * 64 | 0, alea() * 64 | 0, 1, 1 + (alea() * 3 | 0));
-      voile(g, 0.7, () => { for (let i = 0; i < 16; i++) R(g, alea() < 0.5 ? '#8a8478' : '#a08a68', alea() * 60 | 0, alea() * 60 | 0, 2 + (alea() * 4 | 0), 1 + (alea() * 3 | 0)); });
-    }, 6],
-    // REFS 3 : dalles de grès plates du lit de la rivière (lajedo) : ocre et rouille, fentes sombres, film d'eau plus sombre par endroits
-    lajedo: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#9a7a58', 0, 0, 64, 64);
-      for (let i = 0; i < 16; i++) R(g, ['#8a6a4a', '#a8865e', '#7a5a3e', '#b09070', '#6e5a48'][alea() * 5 | 0], alea() * 60 | 0, alea() * 60 | 0, 6 + (alea() * 14 | 0), 5 + (alea() * 12 | 0)); // dalles de toutes tailles
-      for (let i = 0; i < 300; i++) R(g, alea() < 0.5 ? '#6e5038' : '#b8a080', alea() * 64 | 0, alea() * 64 | 0, 1, 1);
-      for (let i = 0; i < 14; i++) { let x = alea() * 64 | 0, y = alea() * 64 | 0; for (let k = 0; k < 8; k++) { R(g, '#3a2a1c', x, y, 1, 1); x += alea() < 0.5 ? 1 : 0; y += alea() < 0.6 ? 1 : -1; } } // fentes en zigzag, pas de lignes droites
-      voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#4a3222', alea() * 50 | 0, alea() * 50 | 0, 10 + (alea() * 14 | 0), 6 + (alea() * 10 | 0)); }); // film d'eau
-    }, 6],
-    // REFS 3 : l'eau du gué, peu profonde : ambre clair, rides claires et reflets du ciel, écume crème en traînées (x du dessin : en travers sur un ruban)
-    eauGue: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#946430', 0, 0, 64, 64);
-      for (let i = 0; i < 10; i++) R(g, alea() < 0.5 ? '#a8742f' : '#7a5226', alea() * 48 | 0, alea() * 48 | 0, 12 + (alea() * 16 | 0), 10 + (alea() * 14 | 0)); // fond et profondeur, en grandes plages douces
-      for (let i = 0; i < 70; i++) R(g, ['#c8a070', '#b8c4c4', '#d8dcd4'][alea() * 3 | 0], alea() * 56 | 0, alea() * 63 | 0, 6 + (alea() * 9 | 0), 1); // reflets du ciel, en rides : c'est eux qui font lire de l'eau
-      for (let i = 0; i < 10; i++) R(g, '#f4efe0', alea() * 62 | 0, alea() * 63 | 0, 2 + (alea() * 2 | 0), 1); // écume
-    }, 12],
-    // REFS 3 : l'eau vue en rasant : le ciel pâle du matin en miroir, des plages couleur thé là où l'on voit le fond, quelques rides sombres et de l'écume (matière lumineuse : un reflet ne dépend pas de l'ombre)
-    eauCiel: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#b8bcb2', 0, 0, 64, 64);
-      for (let i = 0; i < 6; i++) R(g, alea() < 0.6 ? '#9a7a48' : '#a8885a', alea() * 50 | 0, alea() * 50 | 0, 8 + (alea() * 14 | 0), 6 + (alea() * 10 | 0)); // le fond couleur thé, par plages
-      for (let i = 0; i < 50; i++) R(g, alea() < 0.5 ? '#c8ccc0' : '#e0d8b8', alea() * 56 | 0, alea() * 63 | 0, 6 + (alea() * 10 | 0), 1); // le ciel en rides
-      for (let i = 0; i < 20; i++) R(g, '#5a4a30', alea() * 58 | 0, alea() * 63 | 0, 4 + (alea() * 6 | 0), 1);
-      for (let i = 0; i < 34; i++) R(g, '#f4efe0', alea() * 54 | 0, alea() * 63 | 0, 4 + (alea() * 10 | 0), 1); // l'écume en traînées : le courant
-    }, 12],
-    // REFS 3 : l'eau couleur thé des poços, foncée et saturée (plus sombre que tout le sol autour : c'est ce qui la fait lire comme de l'eau),
-    // des plages ambre là où l'on voit le fond, le ciel en rides bleutées, de l'écume en traînées (matière lumineuse : un reflet ne dépend pas de l'ombre)
-    eauPoco: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#4a2614', 0, 0, 64, 64);
-      for (let i = 0; i < 12; i++) R(g, alea() < 0.6 ? '#4e2a16' : '#6a3a1c', alea() * 40 | 0, alea() * 64 | 0, 14 + (alea() * 30 | 0), 1); // l'ambre du fond, à peine : une eau sombre et unie se lit comme de l'eau (les traînées vives faisaient de la tôle)
-      for (let i = 0; i < 18; i++) R(g, alea() < 0.6 ? '#6a7c84' : '#9aacb0', alea() * 54 | 0, alea() * 63 | 0, 5 + (alea() * 10 | 0), 1); // le ciel en rides, discret (des rides vives faisaient de la tôle)
-      for (let i = 0; i < 6; i++) R(g, '#e8e2d6', alea() * 56 | 0, alea() * 63 | 0, 3 + (alea() * 5 | 0), 1); // l'écume, rare
-    }, 12],
-    // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
-    // t = 1 : dessin tourné d'un quart, pour un ruban vertical (u = la hauteur) : les assises restent horizontales
-    pierreSeche: t => [64, 64, (g, o) => {
-      const { alea, voile } = o, R = t ? (g, c, x, y, w, hh) => o.R(g, c, y, x, hh, w) : o.R; R(g, '#2e2a24', 0, 0, 64, 64);
-      for (let y = 0; y < 64;) { const hh = 3 + (alea() * 4 | 0); for (let x = -(alea() * 6 | 0); x < 64;) { const l = 5 + (alea() * 9 | 0); R(g, ['#8a7a62', '#9a8a70', '#7a6c58', '#a89880', '#6e6252'][alea() * 5 | 0], x + 1, y + 1, l - 1, hh - 1); x += l; } y += hh; }
-      voile(g, 0.3, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.5 ? '#c8c0a8' : '#5a6a3a', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 3 | 0), 1 + (alea() * 2 | 0)); });
-    }, 3],
-    // REFS 5 : tuiles canal de terre cuite des maisons encore couvertes d'Igatu : rangs ondulés, tuiles plus claires ou noircies
-    tuileCuite: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#7a4028', 0, 0, 64, 64);
-      for (let y = 0; y < 64; y += 6) for (let x = (y / 6 & 1) * 4; x < 64; x += 8) { R(g, ['#9a5a3a', '#a8684a', '#8a4a30', '#6a3a28'][alea() * 4 | 0], x, y, 7, 5); R(g, '#4a2418', x, y + 5, 7, 1); }
-    }, 2],
-    // rivière couleur thé : brun profond, rides en travers du courant (x du dessin : en travers sur un ruban), reflets cuivrés, un peu d'écume
-    eauThe: () => [64, 64, (g, o) => {
-      const { R, alea } = o; R(g, '#8a5a2b', 0, 0, 64, 64);
-      for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#9a6a38' : '#6e4520', alea() * 64 | 0, alea() * 64 | 0, 3 + (alea() * 8 | 0), 1);
-      for (let i = 0; i < 90; i++) R(g, '#c58a4a', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1);
-      for (let i = 0; i < 40; i++) R(g, '#f4faf7', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1);
-    }, 12],
-    // REFS 2 : rideau de chute : filets d'eau blancs et gris-bleu pâle, transparents entre eux (pas de turquoise : la V1 se lisait comme des blocs de couleur) (matière transparente, la carte fait défiler la texture vers le bas).
-    // Posé en ruban vertical (u = la hauteur) : les filets courent le long de x du dessin
-    chute: () => [64, 32, (g, o) => {
-      const { alea } = o; g.fillStyle = 'rgba(214,226,228,.18)'; g.fillRect(0, 0, 64, 32);
-      for (let y = 0; y < 32; y += 4) { const a = 0.45 + alea() * 0.4; for (let x = 0; x < 64;) { const l = 28 + (alea() * 36 | 0); // de longs filets continus, larges, peu de trous
-        g.fillStyle = alea() < 0.75 ? 'rgba(246,249,248,' + a + ')' : 'rgba(196,210,214,' + a + ')'; g.fillRect(x, y + (alea() * 2 | 0), l, 3); x += l + (alea() * 3 | 0); } }
+    feuilleOmbre: feuil('#163a22', '#7fb04a'), feuilleCanopee: feuil('#1f5a2c', '#a8d458'), feuilleSoleil: feuil('#3f9a3c', '#d0ee78'), feuilleLoin: feuil('#3c6e3c', '#8fb070'), palmeJungle: feuil('#2a6a2e', '#b8dc5a'),
+    // écorce humide : stries verticales, plaques de mousse
+    ecorceJungle: () => [32, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#3a2e24', 0, 0, 32, 64);
+      voile(g, 0.4, () => { for (let i = 0; i < 40; i++) R(g, alea() < 0.6 ? '#1c1612' : '#6a5a48', alea() * 32 | 0, alea() * 64 | 0, 1, 6 + alea() * 20 | 0); });
+      voile(g, 0.6, () => semis(g, o, 14, ['#4d6a34', '#7fa83a'], 3, 4, 32, 64)); }],
+    // sol de la forêt, le même partout (D-7) : litière sombre, mousse, feuilles rousses ; jamais de sol nu clair
+    litiereMousse: () => [64, 64, (g, o) => { const { R, voile } = o; R(g, '#26381c', 0, 0, 64, 64);
+      semis(g, o, 300, ['#1c2a16', '#3a4a22', '#4a3a22', '#2e4420']); voile(g, 0.6, () => semis(g, o, 40, ['#5f8a34', '#7fa83a'], 3, 2)); voile(g, 0.7, () => semis(g, o, 30, ['#7a5a30', '#8a4a26'], 2, 1)); }, 6],
+    // roche des pentes et des gorges : blocs sombres, mousse sur le dessus, coulures noires (jamais de bancs horizontaux réguliers : D-9)
+    rocheMousse: () => [64, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#5a564a', 0, 0, 64, 64);
+      voile(g, 0.25, () => { for (let i = 0; i < 16; i++) R(g, alea() < 0.5 ? '#000' : '#fff', alea() * 56 | 0, alea() * 56 | 0, 6 + alea() * 14 | 0, 5 + alea() * 12 | 0); });
+      voile(g, 0.4, () => { for (let i = 0; i < 12; i++) R(g, '#1c1a16', alea() * 64 | 0, alea() * 40 | 0, 1 + (alea() * 2 | 0), 10 + alea() * 30 | 0); });
+      voile(g, 0.65, () => semis(g, o, 60, ['#4d6a34', '#7fa83a', '#3a5a2a'], 4, 2)); }, 5],
+    // rive : vase sombre et galets
+    vaseGalets: () => [64, 64, (g, o) => { const { R, voile } = o; R(g, '#3a3c2a', 0, 0, 64, 64); semis(g, o, 200, ['#2a2c20', '#4a4c36']); voile(g, 0.8, () => semis(g, o, 34, ['#8a8672', '#6a6656', '#a09a84'], 2, 2)); }, 6],
+    // eau jade : claire, verte, vive ; reflets clairs étirés dans le sens du courant (v), ombres des arbres
+    eauJade: () => [64, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#2f8f7a', 0, 0, 64, 64);
+      voile(g, 0.45, () => { for (let i = 0; i < 22; i++) R(g, '#134a40', alea() * 56 | 0, alea() * 60 | 0, 5 + alea() * 9 | 0, 8 + alea() * 16 | 0); });
+      voile(g, 0.5, () => { for (let i = 0; i < 26; i++) R(g, '#bfe8c8', alea() * 62 | 0, alea() * 60 | 0, 1, 4 + alea() * 9 | 0); });
+      voile(g, 0.35, () => { for (let i = 0; i < 10; i++) R(g, '#a9bb7e', alea() * 58 | 0, alea() * 60 | 0, 3, 6 + alea() * 10 | 0); }); }, 10],
+    // la chute : un ruban blanc strié en long, des trouées sombres (la roche derrière)
+    chuteFil: () => [32, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#eef6e8', 0, 0, 32, 64);
+      voile(g, 0.35, () => { for (let i = 0; i < 26; i++) R(g, '#9fc0b8', alea() * 32 | 0, alea() * 50 | 0, 1, 10 + alea() * 30 | 0); }); voile(g, 0.5, () => { for (let i = 0; i < 6; i++) R(g, '#4a5a50', alea() * 32 | 0, alea() * 50 | 0, 1, 6 + alea() * 14 | 0); }); }],
+    // la voie dallée de la cité (th.routeTex, mêmes réglages que chaussee : dalle, joint foncé, dalle claire, mousse) : grandes dalles de quartzite usées, joints moussus,
+    // ni peinture ni flaque (l'alpha reste plein : rien ne reflète le ciel en plaques blanches), passages de roues polis plus clairs
+    dallesJungle: (dalle, sombre, clair, mousse) => [128, 512, (g, o) => { const { R, alea, voile } = o; R(g, dalle, 0, 0, 128, 512);
+      for (let y = 0, r = 0; y < 512; r++) { const hh = 24 + (alea() * 3 | 0) * 8, y1 = Math.min(512, y + hh); // rangs de dalles de 1,5 à 2,5 m, joints décalés
+        for (let x = -(r & 1) * 8 - (alea() * 8 | 0); x < 128;) { const ww = 14 + (alea() * 3 | 0) * 4; voile(g, 0.1 + alea() * 0.12, () => R(g, alea() < 0.5 ? sombre : clair, x, y, ww, y1 - y)); voile(g, 0.75, () => R(g, '#2c3a20', x + ww - 1, y, 1, y1 - y)); x += ww; }
+        voile(g, 0.75, () => R(g, '#2c3a20', 0, y1 - 1, 128, 1)); y = y1; }
+      voile(g, 0.5, () => semis(g, o, 500, [mousse, '#2c3a20'], 1, 1, 128, 512)); voile(g, 0.14, () => semis(g, o, 2400, ['#000', '#fff'], 1, 1, 128, 512));
+      voile(g, 0.1, () => { for (const x of [36, 84]) R(g, clair, x, 0, 9, 512); });
+      voile(g, 0.55, () => { for (let i = 0; i < 90; i++) { const sd = alea() < 0.5; R(g, alea() < 0.6 ? mousse : '#7a5a30', sd ? alea() * 14 | 0 : 114 + (alea() * 14 | 0), alea() * 512 | 0, 2 + (alea() * 3 | 0), 2 + (alea() * 4 | 0)); } }); // mousse et feuilles sur le premier mètre de chaque bord
     }],
-    // planches du pont suspendu : en travers de la route (lignes du dessin), joints sombres, bois gris de pluie, quelques planches neuves plus claires
-    planches: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#8a6a3a', 0, 0, 64, 64);
-      for (let y = 0; y < 64; y += 4) { R(g, alea() < 0.2 ? '#a8865a' : alea() < 0.5 ? '#7a5c30' : '#6e5a44', 0, y, 64, 3); R(g, '#2a2014', 0, y + 3, 64, 1); }
-      voile(g, 0.3, () => { for (let i = 0; i < 120; i++) R(g, alea() < 0.6 ? '#000' : '#fff', alea() * 64 | 0, alea() * 64 | 0, 3 + alea() * 10 | 0, 1); });
-      for (let y = 1; y < 64; y += 4) for (const x of [6, 57]) R(g, '#3a3e42', x, y, 1, 1); // les clous
-    }, 4],
-    // rayon de soleil dans la brume : un fuseau doux, plus dense en haut (matière additive)
-    rayon: () => [16, 64, g => { const r = g.createLinearGradient(0, 0, 16, 0); r.addColorStop(0, 'rgba(255,255,255,0)'); r.addColorStop(0.5, 'rgba(255,255,255,1)'); r.addColorStop(1, 'rgba(255,255,255,0)');
-      g.fillStyle = r; g.fillRect(0, 0, 16, 64); g.globalCompositeOperation = 'destination-in'; const v = g.createLinearGradient(0, 0, 0, 64); v.addColorStop(0, 'rgba(0,0,0,.9)'); v.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = v; g.fillRect(0, 0, 16, 64); }],
+    // les mêmes dalles, pour les surlargeurs et les places (ruban du décor, de W au bord roulable) : plus de mousse, un rang clair au bord extérieur (u = 1)
+    dallesBord: () => [64, 128, (g, o) => { const { R, alea, voile } = o; R(g, '#77725f', 0, 0, 64, 128);
+      for (let y = 0; y < 128; y += 16) for (let x = -(y & 16) / 2; x < 64; x += 16) { voile(g, 0.1 + alea() * 0.14, () => R(g, alea() < 0.5 ? '#5e5a4c' : '#8a8672', x, y, 16, 16)); voile(g, 0.75, () => { R(g, '#2c3a20', x, y, 1, 16); R(g, '#2c3a20', x, y, 16, 1); }); }
+      voile(g, 0.55, () => semis(g, o, 220, ['#4d6a34', '#7fa83a', '#7a5a30'], 2, 2, 64, 128)); voile(g, 0.3, () => R(g, '#b0aa94', 56, 0, 8, 128)); }],
+    // bordure de pierre basse et talus : pierre moussue ; pierre de la cité : quartzite rosé, à l'ombre, socle noir
+    bordureMousse: pierre('#6a6656', 0.8), pierreCite: pierre('#b09a86', 0.45), pierreOmbre: pierre('#6a5e56', 0.6), socleNoir: pierre('#26221f', 0.25),
   });
 })();
+
