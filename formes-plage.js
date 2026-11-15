@@ -105,7 +105,7 @@
     maisonQuinta: (L = 10, H = 4.6, P = 9) => {
       const f = -P / 2, et = H > 6, nf = Math.max(2, Math.round(L / 3.4));
       return [['mur', L, H, P, 0, H / 2, 0, null, 1], ['acro', L + 0.3, 0.4, P + 0.3, 0, H + 0.2, 0], ...suite(Math.max(2, Math.round(L / 4)), (k, _, nb = Math.max(2, Math.round(L / 4))) => [['ombre', L / nb - 1, 2.5, 0.3, (k + 0.5) / nb * L - L / 2, 1.35, f - 0.02], ['comptoir', L / nb - 1.6, 0.9, 0.6, (k + 0.5) / nb * L - L / 2, 0.45, f - 0.5], ['marchandise', L / nb - 1.4, 0.8, 0.12, (k + 0.5) / nb * L - L / 2, 2.15, f - 0.22]]).flat(),
-        ['auvent', L * 0.84, 0.1, 2.4, 0, 3.1, f - 1.15, [0.2, 0, 0], 1], ['enseigne', 0.1, 0.9, 1.5, L / 2 - 0.7, 4.0, f - 0.85],
+        ['auvent', L * 0.84, 0.1, 2.4, 0, 3.1, f - 1.15, [-0.2, 0, 0], 1], ['enseigne', 0.1, 0.9, 1.5, L / 2 - 0.7, 4.0, f - 0.85],
         ...(et ? [...suite(nf, k => ['volet', 1.2, 1.5, 0.14, (k + 0.5) / nf * L - L / 2, H - 1.9, f - 0.04]), ['bois', L * 0.84, 0.12, 1.0, 0, H - 3.0, f - 0.5], ['bois', L * 0.84, 0.07, 0.07, 0, H - 2.1, f - 0.97],
           ...suite(nf + 1, k => ['bois', 0.07, 0.9, 0.07, k / nf * L * 0.84 - L * 0.42, H - 2.55, f - 0.97])] : [])];
     },
@@ -113,10 +113,10 @@
     // qui déborde, terrasse couverte de palmes sur poteaux de bois côté plage, muret bas. L = longueur, N = niveaux (2 ou 3)
     resort: (L = 30, N = 2) => {
       const H = N * 3.3, np = Math.max(3, Math.round(L / 5));
-      return [['crepi', L, H, 11, 0, H / 2, 4, null, 1], ['chaume', L + 2.4, 0.3, 7.6, 0, H + 1.6, 0.9, [0.48, 0, 0], 1], ['chaume', L + 2.4, 0.3, 7.6, 0, H + 1.6, 7.1, [-0.48, 0, 0], 1],
+      return [['crepi', L, H, 11, 0, H / 2, 4, null, 1], ['chaume', L + 2.4, 0.3, 7.6, 0, H + 1.6, 0.9, [-0.48, 0, 0], 1], ['chaume', L + 2.4, 0.3, 7.6, 0, H + 1.6, 7.1, [0.48, 0, 0], 1],
         ...suite(N, k => ['ombre', L - 2, 2.3, 0.2, 0, k * 3.3 + 1.35, -1.52]), ...suite(N - 1, k => ['bois', L - 1, 0.14, 1.5, 0, (k + 1) * 3.3, -2.2]), ...suite(N - 1, k => ['bois', L - 1, 0.07, 0.07, 0, (k + 1) * 3.3 + 0.95, -2.9]),
         ...suite(N - 1, k => suite(np + 1, j => ['bois', 0.07, 0.95, 0.07, j / np * (L - 1) - (L - 1) / 2, (k + 1) * 3.3 + 0.5, -2.9])).flat(),
-        ['chaume', L - 4, 0.25, 6.4, 0, 3.6, -5.6, [0.16, 0, 0], 1], ...suite(np, j => ['bois', 0.24, 3.1, 0.24, (j + 0.5) / np * (L - 4) - (L - 4) / 2, 1.55, -8.3]), ['dalle', L - 2, 0.3, 7.5, 0, 0.15, -5.4],
+        ['chaume', L - 4, 0.25, 6.4, 0, 3.6, -5.6, [-0.16, 0, 0], 1], ...suite(np, j => ['bois', 0.24, 3.1, 0.24, (j + 0.5) / np * (L - 4) - (L - 4) / 2, 1.55, -8.3]), ['dalle', L - 2, 0.3, 7.5, 0, 0.15, -5.4],
         ['muret', L, 0.7, 0.4, 0, 0.35, -9.6]];
     },
     // piscine de resort : margelle claire et eau turquoise au ras du sol
@@ -144,7 +144,8 @@
     // manège (carrousel) à l'arrêt : socle, mât, plateau haut ; le toit rayé (cône) est posé à part
     manege: () => [['dalle', 10, 0.6, 10, 0, 0.3, 0], ['fer', 0.8, 5, 0.8, 0, 2.8, 0], ['cabA', 10, 0.5, 10, 0, 5.2, 0, null, 1], ...suite(8, k => { const a = k / 8 * 6.2832; return [['cabA', 'cabB', 'cabC'][k % 3], 0.9, 1.3, 1.8, Math.cos(a) * 3.6, 1.6, Math.sin(a) * 3.6, [0, -a, 0]]; })],
     // pick-up garé (cabine vers +X) ; zone caisse teintée
-    pickup: () => [['caisse', 5, 0.8, 1.9, 0, 0.85, 0, null, 1], ['caisse', 1.9, 0.75, 1.8, 0.7, 1.6, 0], ['vitre', 1.95, 0.5, 1.6, 0.7, 1.65, 0], ['noir', 2.2, 0.5, 1.95, -1.35, 1.1, 0], ...paire(a => paire(b => ['noir', 0.7, 0.7, 0.3, a * 1.6, 0.35, b * 0.85])).flat()],
+    pickup: () => [['caisse', 5.2, 0.55, 1.9, 0, 0.78, 0, null, 1], ['caisse', 1.5, 0.32, 1.8, 1.8, 1.2, 0], ['caisse', 1.7, 0.72, 1.76, 0.3, 1.42, 0, null, 1], ['vitre', 1.74, 0.42, 1.62, 0.3, 1.52, 0], ['vitre', 0.1, 0.5, 1.56, 1.18, 1.5, 0, [0, 0, -0.4]], ...paire(a => ['caisse', 2.15, 0.42, 0.1, -1.5, 1.24, a * 0.9]), ['caisse', 0.1, 0.42, 1.9, -2.55, 1.24, 0], ['noir', 2, 0.05, 1.7, -1.5, 1.07, 0],
+      ...paire(a => ['pare', 0.16, 0.22, 1.94, a * 2.66, 0.62, 0]), ...paire(a => ['lampe', 0.06, 0.18, 0.42, 2.62, 0.98, a * 0.62]), ...paire(a => ['rouge', 0.06, 0.22, 0.26, -2.62, 0.98, a * 0.76]), ...paire(a => paire(b => ['noir', 0.74, 0.74, 0.3, a * 1.68, 0.37, b * 0.86])).flat()],
     // lampadaire noir de la Quinta et du muelle, 5 m, lanterne
     lampadaire: () => [['fer', 0.16, 5, 0.16, 0, 2.5, 0], ['fer', 0.5, 0.12, 0.5, 0, 5.05, 0], ['lampe', 0.36, 0.5, 0.36, 0, 4.7, 0]],
     // poteau électrique de béton de la 307, 9 m, traverse
