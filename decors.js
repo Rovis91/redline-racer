@@ -2061,20 +2061,24 @@
       const mFond = h.mat('peinture', { c: 0x0b3f63 }), mHaut = grain('#d8d2b8', ['#c4c0a4', '#e6e2cc']);
 
       mRocheS.emissive = new THREE.Color(0x1c2224);
-      // ---------- repères de piste (cénote v4) ----------
-      const tT = T.t0, t1 = T.t1, t0 = tT, iA = tT, i25 = P(25), i26 = P(26), i28 = P(28), i30 = P(30), i31 = P(31), i32 = P(32), i33 = P(33), i34 = P(34);
-      let iz = i25; while (S[iz].y > -0.2) iz++;      // la route passe sous le niveau du sol : début de la tranchée du cénote
-      let ix = t1; while (S[ix].y < -0.2) ix++;       // elle en ressort après la galerie
-      const EAU = -6.3, couvert = i => i >= tT && i <= t1, RIVE = [], LIANES = [];
-      // le cénote (photos de l'auteur : puits rond, eau au milieu, corniche le long de la paroi sous le surplomb, ouverture au ciel, racines qui pendent) : un bassin rond de 90 m de rayon ;
-      // la route en fait la moitié du tour sur la corniche sud, sous le surplomb ; le milieu est à ciel ouvert, au soleil
-      const CX = 320, CZ = 468, RP = 90, dC = (x, z) => Math.hypot(x - CX, z - CZ), cercle = (r, a0 = 0, a1 = 6.2832, n = 48) => Array.from({ length: n }, (_, k) => [CX + Math.cos(a0 + (a1 - a0) * k / (n - 1 + (a1 - a0 > 6.28))) * r, CZ + Math.sin(a0 + (a1 - a0) * k / (n - 1 + (a1 - a0 > 6.28))) * r]);
-      const eG = i => 0.3, eD = i => 0.3;             // les parois sont au ras de la limite roulable
-      const xG = (s, i = IX.get(s)) => -(s.w + eG(i)), xD = (s, i = IX.get(s)) => s.w + eD(i);
-      const pres = i => { const [x, z] = off(i, S[i].w + 0.3); return dC(x, z) < 104; }, ang = i => { const [x, z] = off(i, S[i].w + 0.3); return Math.atan2(z - CZ, x - CX); };
-      let iP0 = iz; while (!pres(iP0)) iP0++; let iP1 = tT; while (!pres(iP1)) iP1--;   // la route longe le bassin de iP0 à iP1
-      const aE = ang(iP0), aO = (a => a < aE ? a + 6.2832 : a)(ang(iP1)), NORD = Array.from({ length: 30 }, (_, k) => { const a = aO + (aE + 6.2832 - aO) * (k + 1) / 31, r = RP + 2 + 11 * Math.max(0, 1 - Math.min(k, 29 - k) / 3); return [CX + Math.cos(a) * r, CZ + Math.sin(a) * r]; }); // la falaise nord, d'ouest en est
-      const CREUX = [...ligne(iz, ix, xG), ...ligne(iP1, ix, xD).reverse(), ...NORD, ...ligne(iz, iP0, xD).reverse()];   // tranchée, cénote, galerie, sortie : un seul polygone retiré du sol
+      // ---------- repères de piste (cénote v5 : plus rien de rond ni de lisse ; les formes sortent d'un hasard fixe, par blocs) ----------
+      const tT = T.t0, t1 = T.t1, i25 = P(25), i26 = P(26), EAU = -6.3, E0 = 0.3;   // E0 : les parois sont au ras de la limite roulable
+      let iz = i25; while (S[iz].y > -0.2) iz++;      // repères du sascab et du chemin de la mangrove (inchangés)
+      let ix = t1; while (S[ix].y < -0.2) ix++;
+      let jz = i25; while (S[jz].y > 0.05) jz++; let jx = t1; while (S[jx].y < 0) jx++;   // le creux : tout ce qui roule sous le niveau du sol
+      let iP0 = jz; while (S[iP0].y > -5.85) iP0++;   // la route arrive au niveau de l'eau : le bassin s'ouvre à droite
+      const iM = tT - 8, iQ = t1 - 14, cT = t1 - tT, ouv = (h.TH.tun.ouv || []).map(([a, b]) => [tT + Math.ceil(a * cT), tT + Math.floor(b * cT)]), puits = i => ouv.some(([a, b]) => i >= a && i <= b);
+      const hz = (a, b = 0) => { const v = Math.sin(a * 127.1 + b * 311.7) * 43758.5453; return v - Math.floor(v); };                                  // hasard fixe
+      const bloc = (i, j, l = 4) => hz(Math.floor((i + hz(j, 9) * l) / l), j);                                                                        // … constant par blocs de l rangs (redans, strates cassées)
+      const lis = (i, j, l = 12) => { const u = i / l, k = Math.floor(u), f = u - k; return hz(k, j) + (hz(k + 1, j) - hz(k, j)) * f * f * (3 - 2 * f); }; // … continu (grandes formes)
+      const bassin = i => (8 + 10 * lis(i, 51, 12)) * (1 - ss(iQ - 12, iQ, i));   // largeur de la vasque à droite de la route, dans la grotte
+      // la rive du fond : de la route (iP0) au porche de la grotte (iM) par le nord, à distance irrégulière d'un centre (anses et caps), jamais un cercle
+      const CX = 318, CZ = 470, NS = 120, RIVE = (() => { const pE = off(iP0, S[iP0].w + E0), pO = off(iM, S[iM].w + E0 + bassin(iM)), aE = Math.atan2(pE[1] - CZ, pE[0] - CX), aO = (a => a > aE ? a - 6.2832 : a)(Math.atan2(pO[1] - CZ, pO[0] - CX)), rE = Math.hypot(pE[0] - CX, pE[1] - CZ), rO = Math.hypot(pO[0] - CX, pO[1] - CZ);
+        return Array.from({ length: NS + 1 }, (_, k) => { const t = k / NS, a = aE + (aO - aE) * t, r0 = rE + (rO - rE) * t, rb = 76 + 30 * (lis(k, 61, 17) - 0.5) + 16 * (lis(k, 62, 6) - 0.5) + 5 * (bloc(k, 63, 3) - 0.5), r = r0 + (rb - r0) * ss(0, 0.15, t) * (1 - ss(0.86, 1, t)); return [CX + Math.cos(a) * r, CZ + Math.sin(a) * r]; }); })();
+      // le bord droit du creux, dans le sens de la marche : tranchée, rive du bassin, paroi de la vasque dans la grotte, sortie ; DR = direction vers la route ou l'eau
+      const DROITE = [...Array.from({ length: iP0 - jz }, (_, k) => off(jz + k, S[jz + k].w + E0)), ...RIVE, ...Array.from({ length: jx - iM }, (_, k) => off(iM + 1 + k, S[iM + 1 + k].w + E0 + (iM + 1 + k < iQ ? bassin(iM + 1 + k) : 0)))];
+      const DR = DROITE.map((p, k) => { const a = DROITE[Math.max(0, k - 1)], b = DROITE[Math.min(DROITE.length - 1, k + 1)], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [(b[1] - a[1]) / l, -(b[0] - a[0]) / l]; }), kR = iP0 - jz;   // kR : rang du premier point de la rive
+      const CREUX = [...ligne(jz, jx, s => -(s.w + E0 + 2.5), 1), ...DROITE.map((p, k) => [p[0] - DR[k][0] * 2.5, p[1] - DR[k][1] * 2.5]).reverse()];   // un seul polygone retiré du sol (les talus des falaises le recouvrent de 2,5 m)
       // ---------- sols et eaux (polygones sans recouvrement) ----------
       const LAG = [[60, 105], [120, 150], [135, 260], [110, 340], [60, 385], [34, 378], [-12, 376], [-34, 392], [-60, 424], [-120, 440], [-900, 460]]; // rive de la lagune côté terre, du nord au sud
       nappe([[-900, -46], [1500, -46], [1500, -12], [540, -12], [540, 100], [60, 100], [60, 105], [-900, 105]], -0.06, mSable);
@@ -2108,32 +2112,6 @@
       for (const [a, b] of [[2, 4], [10, 12]]) { const [i0, n] = tr(a, b); for (const sg of [-1, 1]) ruban(i0, n, s => sg * s.w, 0, s => sg * s.w, s => -s.y - 0.1, mBois, i => S[i].y > 0.05 && S[i].z > -32); }
       h.ribbon(...tr(3, 11, 6, 6), s => -s.w, 0.02, s => s.w, 0.02, h.mat('planchesMuelle', OFF), 8);
 
-      // ---------- cénote v4 : tranchée sous la forêt, corniche autour du bassin rond, galerie de sortie ----------
-      const haut = s => 0.3 - s.y, nais = s => Math.max(4.6, haut(s) * 0.7);   // hauteur du bord du plateau au-dessus de la route ; naissance de la voûte de la galerie
-      const hG = (s, i = IX.get(s)) => couvert(i) ? nais(s) : haut(s) + 1.2;
-      for (const [x, sg] of [[xG, -1], [xD, 1]]) { ruban(iz, ix - iz, (s, i = IX.get(s)) => x(s, i) + sg * 1.4, s => haut(s) + 1.2, x, -1.5, mRoche, i => !couvert(i) && (sg < 0 || i < iP0 || i > iP1), 8); ruban(iz, ix - iz, x, nais, x, -2.5, mRocheS, couvert, 8); }
-      mur([off(iP1, xD(S[iP1])), ...NORD, off(iP0, xD(S[iP0]))], -10, 1.5, mRoche);                               // falaise nord, qui plonge dans l'eau
-      // le bassin : eau sombre et profonde sous le surplomb, turquoise au milieu où entre le soleil (3 teintes en anneaux) ; corniche de roche entre la route et l'eau
-      { const eau = (c, g) => grain(c, g, { lisse: 1 }); nappe(cercle(RP + 3), EAU, eau('#0f5f66', ['#126a70', '#0c545a']), 10); nappe(cercle(84), EAU + 0.04, eau('#168a8e', ['#1a9498', '#137e82']), 10); nappe(cercle(70), EAU + 0.08, eau('#2fc0cc', ['#45ccd6', '#28b2be']), 10); nappe(cercle(40), EAU + 0.12, eau('#1f9fb4', ['#2aaabd', '#1a92a6']), 10);
-        nappe([...ligne(iP0, iP1, s => s.w + 0.3), ...cercle(RP, aO, aE, 30)], -6.05, mRoche, 8);
-        h.ribbon(iP0, iP1 - iP0, s => s.w + 0.3, 0, s => s.w + 0.3, s => -6.3 - s.y, mRoche, 6);
-        for (const y of [1.0, 0.55]) h.ribbon(iP0, iP1 - iP0, s => s.w + 0.5, y, s => s.w + 0.5, y - 0.12, mBois, 6); }                                          // garde-corps de bois côté bassin
-      // le surplomb : un anneau de roche en coupole au-dessus de la corniche et du pourtour du bassin, ouvert au milieu (50 m de rayon) ; dessus, le tertre couvert de forêt
-      const anneau = (r0, y0, r1, y1, m, n = 56) => { const pos = [], uv = [], idx = []; for (let k = 0; k <= n; k++) { const a = aE + 0.36 + k / n * (6.2832 - 0.52), c = Math.cos(a), sn = Math.sin(a); pos.push(CX + c * r0, y0, CZ + sn * r0, CX + c * r1, y1, CZ + sn * r1); uv.push(k / n * 40, r0 / 10, k / n * 40, r1 / 10); if (k < n) { const q = k * 2; idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); } }
-        const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals(); const me = new THREE.Mesh(g, m); me.receiveShadow = me.castShadow = true; h.scene.add(me); return me; };
-      const mTertre = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462'], { side: D }), profil = r => r < 90 ? 6.7 - (r - 74) * 0.07 : 5.6 - (r - 90) * 0.256;   // altitude du dessus du tertre à r mètres du centre
-      anneau(104, 2.5, 86, 4.6, mRocheS); anneau(86, 4.6, 74, 5.5, mRocheS); anneau(74, 5.5, 74, 6.7, mRocheS); anneau(74, 6.7, 90, 5.6, mTertre); anneau(90, 5.6, 106, 1.5, mTertre); // surplomb court : de la route, on voit l'eau au soleil et la falaise d'en face
-      let iR0 = iz; while (S[iR0].y > -4.8) iR0++;   // le toit ne commence que là où la tranchée est assez profonde pour la caméra
-      h.ribbon(iR0, tT - iR0, xG, s => haut(s) + 1.2, s => Math.max(-s.w, dC(s.x, s.z) - 103.5), s => 2.5 - s.y, mRocheS, 8).castShadow = true;   // le toit de roche au-dessus de la route, de la paroi au bord de l'anneau
-      for (let k = 0; k < 30; k++) { const a = k / 30 * 6.2832 + (k % 3) * 0.05, l = 5 + (k * 7) % 6; LIANES.push([CX + Math.cos(a) * 74.5, 5.5 - (l + 4) / 2, CZ + Math.sin(a) * 74.5, k, 0.18, l + 4, 0.18, 0x5a4630]); } // racines qui pendent du bord de l'ouverture
-      // galerie de sortie (le tunnel du moteur) : voûte arrondie à 6 pans ; les trous sont ceux de th.tun.ouv, le moteur y fait tomber ses rayons
-      const cT = t1 - tT, ouv = (h.TH.tun.ouv || []).map(([a, b]) => [tT + Math.ceil(a * cT), tT + Math.floor(b * cT)]), puits = i => ouv.some(([a, b]) => i >= a && i <= b);
-      const cle = (s, i = IX.get(s)) => 7.5 - 1.2 * ss(t1 - 20, t1, i), xR = xD, NV = 6, vx = j => s => xG(s) + (xD(s) - xG(s)) * j / NV, vy = j => s => nais(s) + (cle(s) - nais(s)) * Math.sin(Math.PI * j / NV);
-      for (let j = 0; j < NV; j++) ruban(tT, cT, vx(j), vy(j), vx(j + 1), vy(j + 1), mRocheS, i => !(puits(i) && (j === 2 || j === 3)), 8);
-      const xa = vx(2), xb = vx(4), dess = s => cle(s) + 1.6, sol0 = s => -s.y - 0.06;
-      [h.ribbon(tT, cT, s => xG(s) - 14, sol0, s => xG(s) - 1, dess, mSol, 12), h.ribbon(tT, cT, s => xG(s) - 1, dess, xa, dess, mSol, 12), ...ruban(tT, cT, xa, dess, xb, dess, mSol, i => !puits(i), 12), h.ribbon(tT, cT, xb, dess, s => xR(s) + 1, dess, mSol, 12), h.ribbon(tT, cT, s => xR(s) + 1, dess, s => xR(s) + 14, sol0, mSol, 12)].forEach(m => { m.castShadow = true; });
-      for (const [a, b] of ouv) for (const i of [a, b]) { const s = S[i]; mur([off(i, xa(s)), off(i, xb(s))], s.y + cle(s), s.y + dess(s), mRocheS); }
-      { const s = S[t1]; mur([off(t1, xG(s) - 14), off(t1, xG(s) - 1), off(t1, xa(s)), off(t1, xb(s)), off(t1, xR(s) + 1), off(t1, xR(s) + 14)], k => s.y + [sol0(s), nais(s), cle(s), cle(s), nais(s), sol0(s)][k], k => s.y + [sol0(s), dess(s), dess(s), dess(s), dess(s), sol0(s)][k], mRocheS); } // front du tertre à la sortie
       // ---------- digue de la lagune : enrochement des deux côtés ----------
       { const [i0, n] = tr(36, 42, -8, -4), mHf = grain('#a6b47a', ['#b4be88', '#98a86c', '#8fb09a'], { lisse: 1 }); for (const sg of [-1, 1]) { h.ribbon(i0, n, s => sg * (s.w + 2.6), s => -s.y - 0.985, s => sg * (s.w + 11), s => -s.y - 0.985, mHf, 10); h.ribbon(i0, n, s => sg * s.w, -0.02, s => sg * (s.w + 0.6), -0.05, mEnroche, 6); h.ribbon(i0, n, s => sg * (s.w + 0.6), -0.05, s => sg * (s.w + 3), -1.4, mEnroche, 6); } }
       // =====================================================================================================================
@@ -2167,7 +2145,7 @@
       const VERTS = [0x66763f, 0x58703a, 0x7a8048, 0x4e6a34, 0x8c8a4e];
       const buisson = (x, z, w, ht, y = -0.2, c = VERTS[rnd() * 5 | 0]) => L.buis.push([x, y, z, rnd() * 6.28, w, ht, w * (0.8 + rnd() * 0.4), c]);
       const ARB = [[], []], arbre = (x, z, ht, w, c = VERTS[rnd() * 4 | 0], y = 0) => ARB[c === 0xe2532a || rnd() < 0.45 ? 0 : 1].push([x, y - 0.2, z, rnd() * 6.28, w / 11, ht / 14, w / 11, c]); // ceiba (houppier plat en parasol) ou arbre de selva (houppiers étagés)
-      const cube = (x, y, z, r, w, ht, d, c) => L.cubes.push([x, y, z, r, w, ht, d, c]); const MANG = [], mangl = (x, z, w) => { L.mangles.push([x, -1, z, rnd() * 6.28, w / 2]); MANG.push([x, 1.1 + w * 0.2, z, rnd() * 6.28, w * 0.8, 1.6 + rnd() * 1.8, w * 0.8, [0x2f5a34, 0x3c7a3a, 0x356a38, 0x44803c][rnd() * 4 | 0]]); }; LIANES.forEach(p => L.cubes.push(p));
+      const cube = (x, y, z, r, w, ht, d, c) => L.cubes.push([x, y, z, r, w, ht, d, c]); const MANG = [], mangl = (x, z, w) => { L.mangles.push([x, -1, z, rnd() * 6.28, w / 2]); MANG.push([x, 1.1 + w * 0.2, z, rnd() * 6.28, w * 0.8, 1.6 + rnd() * 1.8, w * 0.8, [0x2f5a34, 0x3c7a3a, 0x356a38, 0x44803c][rnd() * 4 | 0]]); };
       const chaque = ([i0, n], pas, f) => { for (let k = 0; k <= n; k += pas) f(S[(i0 + k) % N], (i0 + k) % N, k); };
       // rangée de bâtiments le long d'un côté : f(s, i) pose et renvoie la longueur occupée (0 = rien, on avance de 4 m) ; le pas suit la longueur de la ligne décalée dans les courbes
       const rangee = (i0, n, sd, o, f) => { for (let k = 0; k < n;) { const i = (i0 + k) % N, s = S[i], l = f(s, i) || 4; k += Math.max(2, Math.ceil(l / 2 / Math.max(0.4, 1 - sd * s.k * (s.w + o)))); } };
@@ -2236,20 +2214,15 @@
         { const i = P(39), s = S[i], [x, z] = off(i, -(s.w + 34)), [mx, mz] = off(i, -(s.w + 17)); pose('tourObs', x, -1, z, face(s, -1)); cube(mx, -0.35, mz, face(s, -1) + 1.5708, 34, 0.2, 1.6, 0xc9b58e); } // tour d'observation et son ponton
         for (let k = 0; k < 4; k++) { const i = P(37) + 10 + k * 34, s = S[i % N], sg = k % 2 ? -1 : 1, [x, z] = off(i, sg * (s.w + 30 + k * 4)); cube(x, 1.4, z, face(s, sg), 5.5, 2.8, 4.5, [0x35a79a, 0xe8b84a, 0xe07a9c, 0xefe3c8][k]); L.palapas.push([x, z, 4.6, 2.9]); for (const [a, b] of [[-2.2, -1.8], [2.2, -1.8], [-2.2, 1.8], [2.2, 1.8]]) L.poteaux.push([x + a, -1.5, z + b, 0, 1.4, 1.6, 1.4]); L.barques.push([x + 5, -0.95, z + 2, k, 1, 1, 1, FETE[k % 3]]); } // cabanes de pêcheurs sur pilotis et leurs barques
         for (const [x, z, r] of [[150, 190, 1.2], [158, 245, 1.5708], [150, 300, 1.9]]) { RL[0].push([x, 0, z, r, 1, 1, 1, CR[(x + z) % 5]]); for (let j = 0; j < 4; j++) coco(x - 14 + rnd() * 4, z - 18 + j * 12, 0); } // les hôtels de l'autre rive du bras
-        LAG.forEach(([x, z], k) => { if (k < LAG.length - 1) { const [x1, z1] = LAG[k + 1], n = Math.hypot(x1 - x, z1 - z) / 9 | 0; for (let j = 0; j < Math.min(n, 30); j++) buisson(x + (x1 - x) * j / n + rnd() * 4, z + (z1 - z) * j / n + rnd() * 4, 7 + rnd() * 5, 5 + rnd() * 4, -0.8, [0x2f5a34, 0x3c7a3a][j % 2]); } }); }
+        LAG.forEach(([x, z], k) => { if (k < LAG.length - 1) { const [x1, z1] = LAG[k + 1], n = Math.hypot(x1 - x, z1 - z) / 9 | 0; for (let j = 0; j < Math.min(n, 30); j++) { const bx = x + (x1 - x) * j / n + rnd() * 4, bz = z + (z1 - z) * j / n + rnd() * 4, r = 7 + rnd() * 5, ht = 5 + rnd() * 4; if (ecart(bx, bz) > r + 1) buisson(bx, bz, r, ht, -0.8, [0x2f5a34, 0x3c7a3a][j % 2]); } } }); }   // jamais sur la chaussée : à la sortie de la grotte, la route longe la rive et ces massifs de 7 à 12 m de rayon la recouvraient
 
       // ---------- la route 307 (D-6) : mur de selva basse au ras de l'accotement, grands arbres qui dépassent derrière, poteaux électriques d'un seul côté ----------
       { const gr = [i21 + 8, (iz - i21 - 8 + N) % N];
         chaque(gr, 1, (s, i, k) => { for (const sg of [-1, 1]) { const [x, z] = off(i, sg * (s.w + 4 + Math.max(0, s.y) * 2.6 + rnd() * 9)); if (ecart(x, z) > 2.5) buisson(x, z, 3 + rnd() * 3, 4 + rnd() * 4, Math.min(0, s.y) - 0.2); }
           if (k % 7 === 3) for (const sg of [-1, 1]) { const [x, z] = off(i, sg * (s.w + 26 + rnd() * 50)); if (ecart(x, z) > 18 && !dans(CREUX, x, z)) arbre(x, z, 13 + rnd() * 6, 9 + rnd() * 4, k % 28 === 3 ? 0xe2532a : undefined); }
           if (k % 22 === 6) { const [x, z] = off(i, s.w + 2.4 + Math.max(0, s.y) * 2.6); L.poteauxE.push([x, 0, z, face(s, 1)]); } }); }
-      // autour du cirque : la selva monte au bord des falaises et sur le tertre de la grotte
-      for (let i = iz; i < ix; i += 2) { const s = S[i]; for (let j = 0; j < 2; j++) { const [x, z] = off(i, xG(s, i) - 3 - rnd() * (couvert(i) ? 10 : 14)); buisson(x, z, 3.5 + rnd() * 3.5, 4 + rnd() * 5, couvert(i) ? s.y + cle(s, i) - 2 - rnd() * 3 : 0); } if (i % 12 === 0) { const [x, z] = off(i, xG(s, i) - 20 - rnd() * 20); if (!dans(CREUX, x, z)) arbre(x, z, 14 + rnd() * 5, 10 + rnd() * 3); } }
       // la forêt se resserre et se referme au-dessus de la route avant le cénote (T-7) : grands arbres au ras de la chaussée dès la crête, puis au bord de la tranchée ; arbres autour du trou du plafond du lac
-      for (let i = iP0; i <= iP1; i += 3) { const [x, z] = off(i, S[i].w + 0.5); L.poteaux.push([x, S[i].y - 0.2, z, 0, 1, 1.25, 1]); }
-      for (let k = 0; k < 46; k++) { const a = k / 46 * 6.2832, r = 77 + (k * 37 % 29), x = CX + Math.cos(a) * r, z = CZ + Math.sin(a) * r; arbre(x, z, 12 + rnd() * 5, 11, 0x3a5e2a, profil(r)); } // la forêt sur le tertre, jusqu'au bord de l'ouverture
       for (let i = P(24) - 14; i < iP0 - 4; i += 2) { const s = S[i], sg = i % 4 ? 1 : -1, [x, z] = off(i, sg * (s.w + 3.2 + Math.max(0, s.y) * 2.6 + rnd() * 3)); arbre(x, z, 18 + rnd() * 5, 14, 0x3a5e2a); }
-      RIVE.forEach(([x, z], k) => { if (k) { const [x0, z0] = RIVE[k - 1], n = Math.hypot(x - x0, z - z0) / 5 | 0; for (let j = 0; j < n; j++) { const f = j / n, nx = -(z - z0), nz = x - x0, l = Math.hypot(nx, nz), o = 3 + rnd() * 9; buisson(x0 + (x - x0) * f - nx / l * o, z0 + (z - z0) * f - nz / l * o, 4 + rnd() * 3, 4 + rnd() * 5, 0); if (j % 5 === 2) arbre(x0 + (x - x0) * f - nx / l * (16 + rnd() * 10), z0 + (z - z0) * f - nz / l * (16 + rnd() * 10), 15 + rnd() * 4, 10); } } });
       // l'intérieur de la boucle et le lointain : selva, cocotiers des jardins ; rien sur l'eau, dans le creux, dans le bourg ni sur la plage
       const BOURG = [[540, -30], [760, -30], [760, 360], [540, 360]], LAGP = [[-900, 105], [60, 105], ...LAG.slice(1)];
       for (let k = 0; k < 900; k++) { const x = -150 + rnd() * 1200, z = 110 + rnd() * 760; if (dans(LAGP, x, z) || dans(CREUX, x, z) || dans(BOURG, x, z) || ecart(x, z) < 16) continue; if (z < 200 && x < 520) { if (rnd() < 0.5) coco(x, z); continue; } rnd() < 0.12 ? arbre(x, z, 12 + rnd() * 6, 9 + rnd() * 4) : buisson(x, z, 5 + rnd() * 6, 4 + rnd() * 5); }
@@ -2260,9 +2233,8 @@
 
       // ---------- le fil continu (T-2) : une ligne de poteaux et de banderoles à droite de la route sur tout le tour ; guirlande d'ampoules dans la grotte ----------
       { const pts = [], amp = [], o = s => s.w + 1.4; let dernier = -99;
-        for (let i = 0; i <= N; i += 5) { const j = i % N, s = S[j], [x, z] = off(j, o(s)), tun = j > tT + 2 && j < t1 - 2;
-          if (tun) { amp.push([x, s.y + 3.2 - (i % 10 ? 0.25 : 0), z]); if (pts.length > 1) guirlande(pts.splice(0), 0.6, mBand, 6); if (i % 10 === 0) L.poteaux.push([x, s.y - 0.5, z, 0, 1, 3.7, 1]); continue; }
-          if (amp.length > 1) guirlande(amp.splice(0), 0.35, mAmp, 4);
+        for (let i = 0; i <= N; i += 5) { const j = i % N, s = S[j], [x, z] = off(j, o(s)), creux = j > jz - 4 && j < jx + 4;
+          if (creux) { if (pts.length > 1) guirlande(pts.splice(0), 0.6, mBand, 6); continue; }   // pas de banderoles dans le cénote ni dans la grotte : roche, bois et racines seulement
           pts.push([x, s.y + 5.3 - (i % 10 ? 0.5 : 0), z]); if (i % 10 === 0) L.poteaux.push([x, s.y - 0.3, z, 0, 1.3, 5.6, 1.3]); }
         if (pts.length > 1) guirlande(pts, 0.6, mBand, 6); }
 
@@ -2279,14 +2251,13 @@
       arche(i25 + 6, 'CENOTE  PLAYA 307', '#1f8f9f');                                                  // T-7 : le guichet du cénote, là où le bitume s'arrête
       arche(P(42) + 4, 'ZONA HOTELERA  ·  PLAYA 307', '#25406b');                                      // T-10
       h.ribbon(i20 + 14, 1, -W, 0.04, W, 0.04, h.mat('topes', OFF), 2);                                // T-6 : le tope où finit le dallage
-      panneau(i21 + 2, 'CARRETERA 307', '#1f6a3a'); panneau(P(23) + 6, 'CENOTE 300 m', '#1f8f9f'); panneau(P(24) + 14, 'CENOTE 100 m  ·  COCO FRIO', '#e8468c'); panneau(i26 + 4, 'NO BLOQUEADOR', '#f2c230', '#3a2a20', 0.2);
+      panneau(i21 + 2, 'CARRETERA 307', '#1f6a3a'); panneau(P(23) + 6, 'CENOTE 300 m', '#1f8f9f'); panneau(P(24) + 14, 'CENOTE 100 m  ·  COCO FRIO', '#e8468c');
       panneau(P(36) + 6, 'CUIDADO COCODRILOS', '#f2c230', '#3a2a20', 3.6);
       // T-7 : parking de sascab, guichet sous palapa, étal de noix de coco
       { const s = S[i25 - 4], [x, z] = off(i25 - 4, -(s.w + 9)); nappe([off(i25 - 16, -(s.w + 3)), off(i25 + 2, -(s.w + 3)), off(i25 + 2, -(s.w + 16)), off(i25 - 16, -(s.w + 16))], 0.0 + s.y - 2.0 > -0.05 ? -0.03 : -0.03, mSascab, 12);
         for (let k = 0; k < 3; k++) { const [px, pz] = off(i25 - 14 + k * 5, -(s.w + 10)); L.pickups.push([px, -0.05, pz, face(s, -1) + 1.5708, 1, 1, 1, [0xf6f2e8, 0xd8362a, TURQ][k]]); }
         const [gx, gz] = off(i25 + 2, s.w + 6); cube(gx, 1.2, gz, face(s, 1), 3.2, 2.4, 3.2, 0x35a79a); L.palapas.push([gx, gz, 3.2, 2.9]); const [ex, ez] = off(P(24) + 18, s.w + 3.4); L.etals.push([ex, S[P(24) + 18].y - 0.05, ez, face(S[P(24) + 18], 1), 1, 1, 1, JAUNE]); }
       // T-9 : sortie de la grotte en demi-ombre (arches de roche restantes au-dessus de la tranchée), racines et grands arbres
-      ruban(t1, ix - t1, s => xG(s) - 1, s => Math.max(7, haut(s) + 1.5), s => xD(s) + 1, s => Math.max(7, haut(s) + 1.5), mRocheS, i => (i - t1) % 10 < 3 && i < ix - 3, 8).forEach(m => { m.castShadow = true; });
       for (const i of [t1 + 6, t1 + 16, ix + 2]) for (const sg of [-1, 1]) { const [x, z] = off(i, sg * (S[i].w + 7)); arbre(x, z, 15, 11, 0x3f7a32); }
       // T-10 : zone hôtelière sur les 120 derniers mètres de la digue
       { const i = P(42) + 8, j = P(42) + 26; for (const [k, sd, v] of [[i, -1, 0], [j, -1, 2], [i + 2, 1, 1]]) { const s = S[k % N], [x, z] = off(k, sd * (s.w + 15)); RL[v].push([x, 0, z, face(s, sd), 1, 1, 1, CR[(k + v) % CR.length]]); } chaque([P(42), 40], 5, (s, k) => { for (const sg of [-1, 1]) { const [x, z] = off(k, sg * (s.w + 3)); coco(x, z, 0); } }); }
@@ -2296,13 +2267,113 @@
       { const i41 = P(41), n = 26, s = S[i41]; for (const sg of [-1, 1]) { h.ribbon(i41 - n, n + 6, sg * (s.w + 0.2), 1.0, sg * (s.w + 0.2), 0.86, mBois, 6); h.ribbon(i41 - n, n + 6, sg * (s.w + 0.2), 0.5, sg * (s.w + 0.2), 0.4, mBois, 6); for (let k = -n; k <= 6; k += 3) { const [x, z] = off(i41 + k, sg * (S[i41 + k].w + 0.2)); L.poteaux.push([x, S[i41 + k].y - 1.5, z, 0, 1.3, 2.6, 1.3]); } }
         nappe([off(i41 - 20, -70), off(i41 - 10, -3.2 - s.w), off(i41 + 2, -3.2 - s.w), off(i41 + 14, -70)], -0.985, grain('#5fc4c0', ['#74d0ca', '#4fb8b4'], { lisse: 1 }), 12); nappe([off(i41 - 14, 60), off(i41 - 8, 3.2 + s.w), off(i41, 3.2 + s.w), off(i41 + 8, 60)], -0.985, grain('#5fc4c0', ['#74d0ca', '#4fb8b4'], { lisse: 1 }), 12); }
 
-      // ---------- la grotte (X-12) : stalactites inégales, plus denses près des parois ; éboulis au bord ----------
-      { const stal = [], roc = [], plaf = (s, i, o) => { const a = xG(s, i), b = xR(s, i), t = (o - a) / (b - a), hg = hG(s, i), c = cle(s, i), nn = nais(s, i); return t < 0.28 ? hg + (c - hg) * t / 0.28 : t > 0.72 ? c + (nn - c) * (t - 0.72) / 0.28 : c; };
-        for (let i = iA + 4; i < t1 - 2; i++) { const s = S[i], a = xG(s, i), b = xR(s, i); if (puits(i)) continue;
-          for (let k = 0; k < 3; k++) { const u = rnd(), t = k < 2 ? (rnd() < 0.5 ? u * 0.22 : 1 - u * 0.22) : 0.25 + u * 0.5, o = a + (b - a) * t, [x, z] = off(i, o), l = 0.5 + rnd() * rnd() * 3.2; stal.push([x, s.y + plaf(s, i, o) + 0.1, z, rnd() * 6, 0.25 + l * 0.22, l, 0.25 + l * 0.22]); }
-          if (i % 3 === 0) for (const sg of [-1, 1]) { const o = sg < 0 ? -s.w - 0.4 - rnd() * 1 : s.w + 0.4 + rnd() * 1, [x, z] = off(i, o); if ((sg < 0 ? eG(i) : eD(i)) < 3 || true) roc.push([x, s.y + 0.1, z, rnd() * 6, 0.4 + rnd() * 0.7, 0.4 + rnd() * 0.5, 0.4 + rnd() * 0.7]); } }
-        for (const [i, t, l] of [[i32 - 6, 0.82, 5.5], [i33 + 10, 0.15, 5], [t0 + 12, 0.85, 4]]) { const s = S[i], o = xG(s, i) + (xR(s, i) - xG(s, i)) * t, [x, z] = off(i, o); stal.push([x, s.y + plaf(s, i, o) + 0.2, z, 0, 1.3, l, 1.3]); }
-        inst(h, h.geo('stalactite'), mRocheS, stal).castShadow = false; inst(h, h.geo('rocher'), mRocheS, roc).castShadow = false; }
+      // ---------- cénote v5 (quatre photos de l'auteur) : falaises de calcaire en strates cassées et en surplomb, rive irrégulière, eau claire au bord et sombre au large (fonds étagés sous une eau transparente),
+      // passerelles et escaliers de bois, racines qui pendent jusqu'à l'eau, forêt au-dessus ; puis la grotte : plafond en gradins, draperies de stalactites, colonnes, vasque claire le long de la route.
+      // Règle : rien de visible à l'intérieur de la limite roulable sous 6,5 m ; au sol, la roche, le bois ou l'eau commencent au ras de cette limite (E0).
+      { const C3 = new THREE.Color(), C4 = new THREE.Color(), PALC = [0xe2d3ae, 0xcbb585, 0xb39768, 0xd9c79c, 0xa88c62, 0xc9b890], PALG = [0xd8d2b8, 0xc4baa0, 0xb4ae98, 0xa8b09a], SOL = 0xb4ad86;
+        const mRocV = grain('#f2eee2', ['#dcd6c4', '#fffaf0', '#c2bcaa'], { side: D }); mRocV.vertexColors = true; const mRocL = grain('#f2eee2', ['#dcd6c4', '#fffaf0', '#c2bcaa'], { side: D, lum: 1 }); mRocL.vertexColors = true;   // roche de la grotte : le moteur éteint soleil et ciel sous le tunnel, elle porte donc ses teintes cuites (jour)
+        const teinte = (j, n, g, k = 1) => C3.set(PALC[(j + (bloc(n, 77, 9) * 3 | 0)) % 6]).lerp(C4.set(PALG[(j + (bloc(n, 78, 7) * 2 | 0)) % 4]), g).multiplyScalar((0.82 + 0.3 * bloc(n, j + 30, 2)) * k).getHex();
+        // peau : surface tendue entre des coupes successives (coupe = liste de points [x, y, z, teinte de la facette qui suit]) ; facettes à plat
+        const peau = (coupes, m) => { const pos = [], uv = [], cl = [], idx = []; let l = 0;
+          for (let k = 0; k + 1 < coupes.length; k++) { const A = coupes[k], B = coupes[k + 1], d = Math.hypot(B[0][0] - A[0][0], B[0][2] - A[0][2]); let v = 0;
+            for (let j = 0; j + 1 < A.length; j++) { const dv = Math.hypot(A[j + 1][0] - A[j][0], A[j + 1][1] - A[j][1], A[j + 1][2] - A[j][2]), q = pos.length / 3; C3.set(A[j][3] ?? 0xffffff);
+              for (const [p, u, w] of [[A[j], l, v], [A[j + 1], l, v + dv], [B[j], l + d, v], [B[j + 1], l + d, v + dv]]) { pos.push(p[0], p[1], p[2]); uv.push(u / 8, w / 8); cl.push(C3.r, C3.g, C3.b); }
+              idx.push(q, q + 1, q + 2, q + 1, q + 3, q + 2); v += dv; }
+            l += d; }
+          const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); g.setIndex(idx); g.computeVertexNormals();
+          const me = new THREE.Mesh(g, m); me.castShadow = me.receiveShadow = true; h.scene.add(me); return me; };
+        // coupe d'une falaise : pied p, direction d (vers la route ou l'eau), n = rang (hasard), yr = niveau de la route ou de l'eau, yb = bas, yw = haut de la paroi (six strates en retrait du pied),
+        // al : retrait d'ensemble au-dessus de la première strate (redans, et par endroits une cavité sombre sous le surplomb) ; rm : retrait maximal
+        // m = trois marches du surplomb [[avancée, haut de la marche] × 3], c1 = avancée du dessus, rc = recul du talus jusqu'au sol, g = part de grotte (teinte gris-vert)
+        const coupe = (p, d, n, yr, yb, yw, m, c1, rc, g = 0, lu = 1, rm = 9) => { const lh = lu < 1 ? lu * 0.62 : 1, al = (1.3 * bloc(n, 88, 7) + (bloc(n, 89, 9) > 0.68 ? 3.5 : 0)) * Math.max(0, Math.min(1, (yw - yr) / 3)); const at = (a, y, c) => [p[0] + d[0] * a, y, p[1] + d[1] * a, c], o = [], F = [0.22, 0.4, 0.56, 0.72, 0.87, 1]; let a = 0, y = yb;
+          for (let j = 0; j < 6; j++) { const y1 = j < 5 ? yr + (yw - yr) * (F[j] + 0.15 * (bloc(n, j + 60, 3 + j) - 0.5)) : yw; o.push(at(a, y, teinte(j, n, g, lu)), at(a, y1, teinte(j + 3, n, g, lh))); y = y1; if (j < 5) a = -Math.min(rm, al + (0.15 + 2.2 * bloc(n, j, 3 + j % 3) ** 1.5) * Math.max(0, Math.min(1, (yw - yr) / 3))); }   // rm : retrait maximal (la route passe derrière la falaise du fond, à son départ)
+          for (const [am, ym] of m) { o.push(at(am, y, teinte(1 + (am | 0), n, g, lu)), at(am, ym, teinte(2, n, g, lh))); y = ym; }
+          o[o.length - 1][3] = SOL; o.push(at(Math.max(c1, -rc * 0.3), y + 0.3, SOL), at(Math.max(Math.min(c1, 0) - 6, -rc * 0.7), y * 0.75, 0x9aa070), at(-rc, -0.3, SOL)); return o; };
+        const rim = i => 0.05 + 1.8 * ss(jz, jz + 16, i) * (1 - ss(jx - 16, jx, i)) * (0.7 + 0.6 * lis(i, 35, 9));                 // bord du plateau au-dessus du sol
+        const gr = i => ss(tT - 8, tT, i) * (1 - ss(t1 + 1, t1 + 9, i));                                                           // part de grotte
+        const jour = i => { if (i < 0 || gr(i) < 0.5) return 1; let b = Math.max(Math.exp(-Math.abs(i - tT + 4) / 10), Math.exp(-Math.abs(t1 + 5 - i) / 10)); for (const [p, q] of ouv) b = Math.max(b, Math.exp(-Math.abs(i - (p + q) / 2) / 8)); return 0.4 + 0.32 * b; };   // jour dans la grotte : il vient des deux porches et des puits
+        const xm = i => (lis(i, 50, 8) - 0.5) * 12 * (puits(i - 2) || puits(i) || puits(i + 2) ? 0 : 1);                           // ligne où les surplombs des deux bords se recouvrent, dans la grotte
+        // avancée du surplomb d'un bord (sg = -1 gauche, 1 droite) : massif et inégal à gauche le long du bassin, jusqu'au recouvrement dans la grotte, arrêté au bord des puits de lumière
+        const surpl = (i, sg) => { const e = S[i].w + E0, o = i < tT ? (sg < 0 ? (5 + 22 * lis(i, 40, 16) + 5 * (bloc(i, 41, 5) - 0.5)) * ss(iP0 - 4, iP0 + 12, i) : 0) : (3 + 3 * lis(i, 42 + sg, 6)) * (1 - ss(jx - 16, jx - 6, i)); return puits(i) ? e - 4.5 : o + (e - sg * xm(i) + 2.5 - o) * gr(i); };
+        const coupeB = (i, sg) => { const s = S[i], e = s.w + E0, R = surpl(i, sg), sur = R > 0.3, yw = Math.max(s.y + (sur ? 6.9 + 0.5 * bloc(i, 31 + sg, 6) : 0.05), rim(i) - 0.6), ht = 0.6 + 3 * ss(0, 10, R);
+          return coupe(off(i, sg * e), [sg * s.tz, -sg * s.tx], i + (sg > 0 ? 500 : 0), s.y, s.y - 1.5, yw, [[sur ? R * (0.22 + 0.2 * bloc(i, 32 + sg, 4)) : -0.3, yw + ht * 0.3 + (sur ? 0.8 * bloc(i, 36 + sg, 3) : 0)], [sur ? R * (0.55 + 0.2 * bloc(i, 33 + sg, 5)) : -0.5, yw + ht * 0.62 + (sur ? 1.6 * bloc(i, 38 + sg, 4) : 0)], [sur ? R + 1.2 * (bloc(i, 34 + sg, 3) - 0.5) : -0.2, yw + ht + (sur ? 2 : 0)]],
+            R > 6 ? R * 0.45 : -3, sg < 0 ? (8 + 22 * ss(jz, jz + 20, i)) * (1 - 0.7 * ss(t1 - 10, t1 + 6, i)) : i < iP0 ? 7 : 9, gr(i), jour(i)); };
+        // falaise du fond du bassin : elle plonge dans l'eau, ses strates hautes surplombent de 2 à 7 m
+        const coupeR = q => { let lim = 1e9; for (let i = jz; i <= tT; i++) lim = Math.min(lim, Math.hypot(RIVE[q][0] - S[i].x, RIVE[q][1] - S[i].z) - S[i].w - 0.6); lim = Math.max(0, lim); const t = q / NS, f = ss(0, 0.08, t), fin = ss(0.9, 1, t), yw = -1.9 + 1.4 * lis(q, 64, 7), R = (2.5 + 4 * lis(q, 65, 6)) * f + 5 * fin;
+          return coupe(RIVE[q], DR[kR + q], q + 2000, EAU, -12, yw, [[Math.min(lim, (0.5 + 1.5 * bloc(q, 66, 3)) * f), yw + 1.1], [Math.min(lim, (1.5 + 2 * bloc(q, 67, 4)) * f), yw + 2.3], [Math.min(lim, R), yw + 3.4 + 1.2 * lis(q, 68, 5)]], -3, Math.max(0.2, Math.min(lim, 7 + 23 * ss(0.1, 0.3, t) * (1 - fin))), 0, 1, lim); };
+        // paroi de la vasque dans la grotte : plafond bas au-dessus de l'eau (hors de la route), qui remonte à 7 m au bord de la chaussée
+        const coupeV = i => { const s = S[i], e = s.w + E0, b = bassin(i), yw = s.y + 3.2 + 0.8 * bloc(i, 52, 5), y3 = s.y + 7.1 + 1.6 * bloc(i, 53, 3), a1 = b * 0.45, a2 = Math.max(a1, b - 0.7), jonc = puits(i) ? (i < tT + cT / 2 ? b - 2 : b + e - 4.5) : b + e - xm(i) + 2.5;
+          return coupe(off(i, e + b), [s.tz, -s.tx], i + 1000, s.y - 0.3, -9.5, yw, [[a1, yw + 2 + 0.4 * bloc(i, 54, 3)], [a2, y3], [Math.max(a2, 4 + (jonc - 4) * gr(i)), y3 + 1.5 + lis(i, 55, 6)]], -3, 12, gr(i), jour(i)); };
+        const G = [], DD = DROITE.map((p, k) => k < kR ? coupeB(jz + k, 1) : k <= kR + NS ? coupeR(k - kR) : iM + k - kR - NS < iQ ? coupeV(iM + k - kR - NS) : coupeB(iM + k - kR - NS, 1)), iD = k => k < kR ? jz + k : k > kR + NS ? iM + k - kR - NS : -1;
+        for (let i = jz - 2; i <= jx + 2; i++) G.push(coupeB(i, -1));
+        const pose2 = (cols, ind) => { peau(cols.map(c => c.slice(17)), mRocV); for (let a = 0; a < cols.length - 1;) { const cv = jour(ind(a)) < 1; let b = a + 1; while (b < cols.length - 1 && (jour(ind(b)) < 1) === cv) b++; peau(cols.slice(a, b + 1).map(c => c.slice(0, 18)), cv ? mRocL : mRocV); a = b; } };   // dessus au soleil ; dedans : roche éclairée dehors, cuite dans la grotte
+        pose2(G, k => jz - 2 + k); pose2(DD, iD);
+        // contrôle : aucun point de roche dans le volume roulable (entre les deux limites, sous 6,5 m)
+        { const vu = (c, i) => { if (i < 0) return; const s = S[i]; for (const p of c) { const o = (p[0] - s.x) * -s.tz + (p[2] - s.z) * s.tx; if (Math.abs(o) < s.w - 0.01 && p[1] > s.y - 1 && p[1] < s.y + 6.5) return console.error('plage : roche dans la route à', i, o.toFixed(1), (p[1] - s.y).toFixed(1)); } };
+          G.forEach((c, k) => vu(c, jz - 2 + k)); DD.forEach((c, k) => vu(c, iD(k))); }
+        // bande de roche entre la chaussée et le pied des parois, chant de la route côté eau
+        for (const sg of [-1, 1]) h.ribbon(jz, jx - jz, s => sg * (s.w - 0.15), 0.015, s => sg * (s.w + E0 + 0.05), 0.015, mRoche, 6);
+        h.ribbon(iP0, iQ - iP0, s => s.w + E0, 0.015, s => s.w + E0, -3, mRoche, 6);
+
+        // l'eau : une nappe transparente sur trois fonds étagés aux contours inégaux (clair près des bords : on voit le fond et ses rochers ; bleu-noir au large)
+        const EAUP = [...ligne(iP0, iM, s => s.w + E0, 1), ...DROITE.slice(kR + 1, kR + NS + 1).reverse()], VASQ = [...ligne(iM, iQ, s => s.w + E0, 1), ...DROITE.slice(kR + NS, kR + NS + iQ - iM).reverse()];
+        const bord = a => { const dx = Math.cos(a), dz = Math.sin(a); let b = 1e9; EAUP.forEach((p, k) => { const q = EAUP[(k + 1) % EAUP.length], ex = q[0] - p[0], ez = q[1] - p[1], den = dx * ez - dz * ex; if (Math.abs(den) < 1e-9) return; const t = ((p[0] - CX) * ez - (p[1] - CZ) * ex) / den, u = ((p[0] - CX) * dz - (p[1] - CZ) * dx) / den; if (t > 0 && u >= 0 && u <= 1 && t < b) b = t; }); return b; };
+        const fosse = (m0, m1, j) => Array.from({ length: 44 }, (_, k) => { const a = k / 44 * 6.2832, r = Math.max(8, bord(a) - m0 - m1 * lis(k, j, 4)); return [CX + Math.cos(a) * r, CZ + Math.sin(a) * r]; });
+        const fond = (poly, y, c, trous) => { const me = nappe(poly, y, mRocV, 6, trous), n = me.geometry.attributes.position.count, cl = new Float32Array(n * 3); C3.set(c); for (let k = 0; k < n; k++) cl.set([C3.r, C3.g, C3.b], k * 3); me.geometry.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); me.castShadow = true; };   // même matière et mêmes ombres que la roche : fondu avec elle, pas de passe de dessin en plus
+        fond(EAUP, -7, 0xe6f0d8, [fosse(6, 12, 70)]); fond(EAUP, -8.6, 0x3f8f96, [fosse(20, 14, 71)]); fond(EAUP, -11.5, 0x04121e); fond(VASQ, -7, 0xd2e2c8);
+        nappe([...ligne(iP0, iQ, s => s.w + E0, 1), ...DROITE.slice(kR + 1, kR + NS + iQ - iM).reverse()], EAU, grain('#1b8fb0', ['#2499b8', '#1685a6'], { lisse: 1, transparent: true, opacity: 0.5, depthWrite: false }), 10);
+
+        // rochers : éboulis au bord de l'eau le long de la route, blocs sur le fond clair (certains émergent), un éboulis contre la falaise, deux piliers ; dans la vasque de la grotte
+        const ROC = [], ROCL = [], fonce = (c, k) => C3.set(c).multiplyScalar(k).getHex(), RT = [0xe6dcc0, 0xd2c29c, 0xbca67a, 0xc8c0a8], roc = (x, y, z, sc, g = 0) => ROC.push([x, y, z, rnd() * 6.28, sc * (0.8 + rnd() * 0.5), sc * (0.7 + rnd() * 0.6), sc * (0.8 + rnd() * 0.5), g ? PALG[rnd() * 4 | 0] : RT[rnd() * 4 | 0]]);
+        const iW0 = tT - 34, lisse = i => i > iP0 + 2 && i < iW0 && bloc(i, 80, 16) > 0.4;   // tronçons à garde-corps ; ailleurs, des blocs marquent le bord
+        for (let i = iP0; i < iW0; i++) if (!lisse(i)) for (let j = 0; j < 2; j++) { const sc = 0.6 + rnd() * 1.1, [x, z] = off(i, S[i].w + E0 + sc * 1.3 + rnd() * 1.6); roc(x, S[i].y - 0.55 + rnd() * 0.6, z, sc); }
+        for (let q = 4; q < NS - 2; q++) for (let j = 0; j < 2; j++) { const d = 1 + rnd() * 10, sc = 0.6 + rnd() * rnd() * 2.2; roc(RIVE[q][0] + DR[kR + q][0] * d, -7.1 + rnd() * (d < 4 ? 1.3 : 0.6), RIVE[q][1] + DR[kR + q][1] * d, sc); }
+        { const q = Math.round(NS * 0.7); for (let j = 0; j < 34; j++) { const u = rnd(), d = 0.5 + u * 9, k = q - 4 + (rnd() * 9 | 0), sc = 1 + rnd() * 1.6; roc(RIVE[k][0] + DR[kR + k][0] * d, -6.6 + (1 - u) * 4.5 * rnd(), RIVE[k][1] + DR[kR + k][1] * d, sc); } }
+        for (const [f, d] of [[0.3, 13], [0.56, 16]]) { const q = Math.round(NS * f), x = RIVE[q][0] + DR[kR + q][0] * d, z = RIVE[q][1] + DR[kR + q][1] * d; [[-8, 4.2], [-5.6, 3.3], [-3.6, 3.8], [-1.8, 2.6], [-0.4, 3.1]].forEach(([y, sc], j) => ROC.push([x + hz(j, q) * 1.6 - 0.8, y, z + hz(j, q + 1) * 1.6 - 0.8, hz(j, q + 2) * 6, sc, 2.2, sc * (0.8 + 0.3 * hz(j, q + 3)), RT[j % 4]])); }
+        for (let i = iM; i < iQ - 4; i++) { const b = bassin(i); if (b > 2.5) { const sc = 0.4 + rnd() * 0.9, [x, z] = off(i, S[i].w + E0 + 2 + rnd() * (b - 2.2)); ROCL.push([x, -7 + rnd() * 0.9, z, rnd() * 6.28, sc, sc * 0.9, sc * 1.1, fonce(PALG[rnd() * 4 | 0], jour(i) * 0.9)]); } }
+        const mStal = grain('#ffffff', ['#ececec', '#d6d6d6'], { lum: 1 }); colore(inst(h, h.geo('rocher'), PEAU.feuille, ROC), ROC); colore(inst(h, h.geo('rocher'), mStal, ROCL), ROCL).castShadow = false;   // matières partagées (feuillage ; roche de grotte auto-éclairée) : moins de passes de dessin
+
+        // bois : garde-corps par tronçons, passerelle de planches sur rondins le long de l'eau à l'approche de la grotte et dans la grotte (photo 2)
+        const POT = [];
+        for (const y of [1.0, 0.55]) ruban(iP0, iW0 - iP0, s => s.w + 0.5, y, s => s.w + 0.5, y - 0.12, mBois, lisse, 6);
+        for (let i = iP0; i < iW0; i += 2) if (lisse(i)) { const [x, z] = off(i, S[i].w + 0.5); POT.push([x, S[i].y - 0.9, z, 0, 1, 1.95, 1]); }
+        // (dans la grotte, la passerelle se réduit à une bordure de madriers : l'eau claire est au ras de la route ; bois foncé : au soleil, des planches claires se confondaient avec le sascab)
+        { const n = iQ - 10 - iW0, lg = s => Math.min(1.7 - 1.2 * ss(tT + 8, tT + 16, IX.get(s)), 0.1 + Math.max(0, (IX.get(s) < iM ? 9 : bassin(IX.get(s))) - 0.6)); h.ribbon(iW0, n, s => s.w + 0.1, 0.32, s => s.w + lg(s), 0.32, h.mat('planchesMuelle', { side: D, c: 0x9a7858 }), 8); h.ribbon(iW0, n, s => s.w + 0.1, 0.32, s => s.w + 0.1, -0.4, mBois, 6); h.ribbon(iW0, n, s => s.w + lg(s), 0.32, s => s.w + lg(s), 0.08, mBois, 6);
+          for (let i = iW0; i < iW0 + n; i += 3) { const [x, z] = off(i, S[i].w + lg(S[i]) - 0.15); POT.push([x, S[i].y - 1.4, z, 0, 1.8, 1.72, 1.8]); } }
+        // passerelle et escaliers accrochés à la falaise du fond, sur pilotis (photos 1 et 3) : passerelle du plateau, deux volées en zigzag, chemin à mi-paroi, dernière volée jusqu'à un ponton au ras de l'eau
+        { const R3 = (q, d, y) => [RIVE[q][0] + DR[kR + q][0] * d, y, RIVE[q][1] + DR[kR + q][1] * d], q0 = Math.round(NS * 0.5), top = DD[kR + q0][17][1] + 0.35, seq = (n, f) => Array.from({ length: n }, (_, j) => f(j));
+          const plancher = (pts, lg = 1.8) => { const cols = pts.map((p, k) => { const a = pts[Math.max(0, k - 1)], b = pts[Math.min(pts.length - 1, k + 1)], l = Math.hypot(b[0] - a[0], b[2] - a[2]) || 1, nx = (b[2] - a[2]) / l * lg / 2, nz = -(b[0] - a[0]) / l * lg / 2; return [[p[0] - nx, p[1], p[2] - nz], [p[0] + nx, p[1], p[2] + nz]]; });
+            Object.assign(peau(cols, mBois), { castShadow: false }); for (const sd of [0, 1]) { for (const [y, e] of [[1.05, 0.12], [0.6, 0.1]]) guirlande(cols.map(c => [c[sd][0], c[sd][1] + y, c[sd][2]]), e, mBois, 2); cols.forEach(c => POT.push([c[sd][0], EAU - 1, c[sd][2], 0, 1.2, c[sd][1] - EAU + 2.05, 1.2])); } };
+          plancher([R3(q0, -4, top), R3(q0, 2, top), R3(q0, 8, top)]);
+          plancher(seq(7, j => R3(q0 - j, 7.2, top - Math.min(j, 6) * (top + 0.4) / 6)));
+          plancher([R3(q0 - 6, 6.4, -0.4), R3(q0 - 6, 10, -0.4)]);
+          plancher([...seq(7, j => R3(q0 - 6 + j, 9.2, -0.4 - j * 0.5)), ...seq(30, j => R3(q0 + 1 + j, Math.max(2.6, 9.2 - (j + 1) * 1.6), -3.4)), ...seq(5, j => R3(q0 + 31 + j, 2.6 + (j + 1) * 0.7, -3.4 - (j + 1) * 0.52))]);
+          plancher([R3(q0 + 35, 4.5, -6), R3(q0 + 35, 9.5, -6)], 4); }
+        POT.forEach(p => L.poteaux.push(p));
+
+        // racines et lianes : du bord des surplombs jusqu'à l'eau (jamais plus bas que 6,6 m au-dessus de la chaussée), par touffes
+        const RC = [0x5a4630, 0x6e5a3e, 0x4a3a28, 0x8a7a58], racine = (p, bas, n) => { const l = p[1] - bas; if (l < 0.7) return; for (let j = 0; j < n; j++) { const e = 0.1 + rnd() * 0.16, lj = l * (j ? 0.35 + rnd() * 0.6 : 1); cube(p[0] + (rnd() - 0.5) * 1.2, p[1] - lj / 2, p[2] + (rnd() - 0.5) * 1.2, rnd() * 3, e, lj, e, RC[rnd() * 4 | 0]); } };
+        for (let i = iP0; i < tT + 2; i++) if (bloc(i, 95, 5) > 0.4) { const c = G[i - jz + 2], s = S[i], o = (c[16][0] - s.x) * -s.tz + (c[16][2] - s.z) * s.tx; racine(c[16], o > s.w + 0.8 ? EAU - 0.2 : s.y + 6.6, 2 + (rnd() * 3 | 0)); }
+        for (let q = 6; q < NS - 3; q++) if (bloc(q, 96, 4) > 0.3) racine(DD[kR + q][16], rnd() < 0.55 ? EAU - 0.2 : EAU + 1 + rnd() * 4, 2 + (rnd() * 4 | 0));
+        for (const [a, b] of ouv.slice(0, 1)) for (let i = a; i <= b; i++) racine(DD[kR + NS + i - iM][16], EAU - 0.2, 3);   // lianes du grand puits de lumière, côté vasque (photo 4)
+
+        // la grotte (photo 2) : draperies de stalactites crème et ocre au bord de chaque gradin du plafond, basses au-dessus de la vasque ; colonnes dans l'eau
+        { const stal = [], ST = [0xf0e6cc, 0xe2cfa4, 0xd4b888, 0xc8c0a8, 0xead8b4], cols = [];
+          const drap = (c, i, n) => { const s = S[i]; for (const j of [12, 14, 16]) { const p = c[j], o = (p[0] - s.x) * -s.tz + (p[2] - s.z) * s.tx, bas = Math.abs(o) < s.w + 0.6 ? s.y + 6.55 : EAU + 0.5; if (bloc(i, n + j, 6) < 0.22) continue;
+            for (let k = 0; k < 2; k++) { const l = Math.min(p[1] - bas, 0.4 + 3 * lis(i + k * 0.5, n + j, 3) ** 1.6); if (l > 0.3) stal.push([p[0] + (rnd() - 0.5) * 0.9, p[1] + 0.05, p[2] + (rnd() - 0.5) * 0.9, rnd() * 6, 0.22 + l * 0.14, l, 0.22 + l * 0.14, fonce(ST[(bloc(i, n + 7, 5) * 3 + rnd() * 2) | 0], jour(i) * (0.95 + 0.25 * rnd()))]); } } };
+          const semis = (c, i) => { const s = S[i]; for (let k = 0; k < 2; k++) { const f = rnd(), x = c[14][0] + (c[16][0] - c[14][0]) * f, z = c[14][2] + (c[16][2] - c[14][2]) * f, y = c[15][1], l = Math.min(y - s.y - 6.55, 0.3 + rnd() * rnd() * 2.4); if (l > 0.3) stal.push([x, y + 0.05, z, rnd() * 6, 0.2 + l * 0.14, l, 0.2 + l * 0.14, fonce(ST[rnd() * 5 | 0], jour(i))]); } };
+          for (let i = tT - 6; i < t1 + 6; i++) { const a = G[i - jz + 2], b = DD[kR + NS + i - iM]; drap(a, i, 100); drap(b, i, 130); if (!puits(i)) { semis(a, i); semis(b, i); } }
+          for (let k = 0; k < 8; k++) { const i = tT + 5 + k * 9 + (hz(k, 3) * 4 | 0), b = bassin(i), s = S[i]; if (i >= iQ - 6 || b < 4 || puits(i - 3) || puits(i) || puits(i + 3)) continue; const [x, z] = off(i, s.w + E0 + b * (0.4 + 0.4 * hz(k, 5))), w = 0.5 + 0.5 * hz(k, 6); cols.push([x, -7.2, z, hz(k, 7) * 6, w, (s.y + 6.6 + 7.2) / 7.6, w, fonce(ST[k % 5], jour(i) * 1.1)]); }
+          colore(inst(h, h.geo('stalactite'), mStal, stal), stal).castShadow = false; colore(inst(h, h.geo('colonneGrotte'), mStal, cols), cols).castShadow = false; }
+
+        // la forêt au-dessus : arbres sur les talus et sur le dessus des surplombs, buissons qui débordent des lèvres
+        for (let i = jz + 4; i < jx - 2; i += 2) { const c = G[i - jz + 2], s = S[i], rc = Math.hypot(c[20][0] - c[0][0], c[20][2] - c[0][2]), d = 7 + rnd() * Math.max(1, rc - 10), f = (d - 6) / Math.max(1, rc - 6), [x, z] = off(i, -(s.w + E0 + d));
+          arbre(x, z, 13 + rnd() * 6, 10 + rnd() * 3, 0x3a5e2a, c[19][1] * (1 - f)); if (bloc(i, 97, 3) > 0.35) buisson(c[18][0], c[18][2], 1.5 + rnd() * 1.1, 2 + rnd() * 2, c[18][1] - 0.4);   // (le rayon d'un buisson est sa largeur : jamais au-dessus de la chaussée)
+          const R = surpl(i, -1); if (R > 9 && i % 4 === 0) { const [ax, az] = off(i, -(s.w + E0) + 1 + rnd() * (R - 5)); arbre(ax, az, 12 + rnd() * 5, 10, 0x3a5e2a, c[17][1]); } }
+        for (let q = 3; q < NS - 2; q++) { const c = DD[kR + q], rc = Math.hypot(c[20][0] - c[0][0], c[20][2] - c[0][2]), d = 6.5 + rnd() * Math.max(1, rc - 9), f = (d - 6) / Math.max(1, rc - 6); if (q % 2) arbre(RIVE[q][0] - DR[kR + q][0] * d, RIVE[q][1] - DR[kR + q][1] * d, 13 + rnd() * 6, 10 + rnd() * 3, 0x3a5e2a, c[19][1] * (1 - f));
+          if (bloc(q, 98, 3) > 0.3) buisson(c[17][0], c[17][2], 1.6 + rnd() * 1.6, 2 + rnd() * 2.5, c[17][1] - 0.4); }
+        for (let k = kR + NS + 2; k < DD.length - 4; k += 3) { const c = DD[k]; arbre(c[19][0], c[19][2], 12 + rnd() * 5, 10, 0x3a5e2a, c[19][1]); if (k % 2) buisson(c[18][0], c[18][2], 1.5 + rnd() * 1.1, 2 + rnd() * 2, c[18][1] - 0.4); }
+      }
 
       // (le cénote ouvert de la première version est retiré : cénote v3 sans lac)
       // front de mer du bourg, vu de la voie retour du muelle : des pavillons de plage à toit de palmes tournés vers la mer cachent le dos des maisons

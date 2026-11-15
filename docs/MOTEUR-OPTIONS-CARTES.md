@@ -101,6 +101,7 @@ th: { tun: { ...tunnelHabituel, rayonsK: 0.35, ambiant: 0.7 },   // colonnes plu
 ```
 - `rayonsK` : l'opacité des colonnes de lumière sous les ouvertures (`th.tun.rayons`). Elle vaut 0,55 par défaut, et comme les colonnes sont additives, c'est leur éclat.
 - `ambiant` : la part de lumière ambiante sur le sol, les parois et la voûte du tunnel (0,55 par défaut, `TUN_AMB`). Le reste vient des luminaires. Les parois de la ville (`th.alarme`) gardent leur 0,85.
+- `tun.jour` (0 par défaut) : part du soleil et du ciel gardée quand la voiture est sous le tunnel (1 = rien ne s'éteint). Pour une grotte ouverte dont le décor fait la roche (`sans: ['parois']`) : le dehors vu par les porches et les puits, les arbres et le bois restent éclairés. Sans elle, tout ce qui n'est pas auto-éclairé passe au noir sous le tunnel.
 - `oeil` : l'adaptation de l'œil, sans style seulement (le style `net` des captures ne la montre pas). `tun` est la lumière vraie du tunnel par rapport au dehors (0,4) : plus près de 1, l'entrée noircit moins et la sortie éblouit moins. `noir` et `clair` sont les constantes de temps en secondes vers le noir (0,5) et vers le clair (0,35). Une sortie de grotte trop longue à retrouver le jour se règle avec `clair` plus petit, et une salle trop noire en entrant avec `tun` plus grand. `th.tun.eclat` garde son rôle.
 Coût : nul (des constantes).
 

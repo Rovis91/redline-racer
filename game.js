@@ -1936,7 +1936,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN, 320, lm);
     skyMat.color.copy(WHITE).lerp(FOG_IN, TH.tun && TH.tun.cielJour ? 0 : lm); // th.tun.cielJour : le ciel garde sa couleur sous le tunnel (on voit le jour par la bouche et par les ouvertures)
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;
-    hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * lm) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - lm); // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
+    { const nuit = lm * (1 - (TH.tun && TH.tun.jour || 0)); hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * nuit) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - nuit); } // th.tun.jour : part du jour gardée sous le tunnel (grotte ouverte : ce qu'on voit par les porches et les puits reste au soleil) // × π : three r155+ n'a plus d'intensités « héritées » // en tunnel, ciel et astre s'effacent : il ne reste que les luminaires skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
     beams.forEach((b, i) => b.rotation.set(0, Math.atan2(cam.position.x - b.position.x, cam.position.z - b.position.z), Math.sin(now * 0.0004 * (i % 3 + 1) + i) * 0.5)); // les faisceaux de projecteurs font face à la caméra
     // lumière dynamique : phares, boîte d'ombre de la voiture, reflets, puis la liste des luminaires
     const cp = Math.cos(pitch);
