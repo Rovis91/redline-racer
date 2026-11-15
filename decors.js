@@ -2062,9 +2062,9 @@
         { const s0 = S[30], cible = bord(s0, 1, s0.w + 12); let b = null, bd = 1e9; for (const q of rang1) { const d = Math.hypot(q[0] - cible[0], q[2] - cible[1]); if (q[5] > 0 && d < bd) { bd = d; b = q; } }
           if (b) { const [x, y, z, r, hl] = b, ax = Math.cos(r), az = -Math.sin(r), e = az > 0 ? 1 : -1, m = new THREE.Mesh(h.geo('boite', 11.4, 14.2, 0.2), mat('fresque')); m.position.set(x + ax * e * (hl + 0.15), y + 7.7, z + az * e * (hl + 0.15)); m.rotation.y = r + Math.PI / 2 + (e > 0 ? 0 : Math.PI); h.scene.add(m); } }
         // des voitures garées sur le parvis, le long du trottoir ; des kiosques à journaux bleus aux coins
-        const vo = []; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { if (rnd() < 0.55) continue; const s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w + 5); vo.push([x, s.y + 0.06, z, h.across(s) + Math.PI / 2, 1, 1, 1, [0xb5483c, 0x3d6e8a, 0xe8e4d8, 0x8a9488, 0xc8b47a, 0x4a4d50][vo.length % 6]]); }
+        const vo = []; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { if (rnd() < 0.55) continue; const s = S[i], sd = (rnd(), -1), [x, z] = bord(s, sd, s.w + 5); vo.push([x, s.y + 0.06, z, h.across(s) + Math.PI / 2, 1, 1, 1, [0xb5483c, 0x3d6e8a, 0xe8e4d8, 0x8a9488, 0xc8b47a, 0x4a4d50][vo.length % 6]]); }
         insts(h, 'berline', { caisse: mat('peinture'), vitre: mat('vitreSombre'), pneu: gris }, vo, { teinte: 'caisse' });
-        for (const k of [K.depart + 2, K.depart + 5, K.entreeVille + 3, K.entreeVille + 8, K.rueSud]) { const s = S[P(k)], [x, z] = bord(s, k & 1 ? 1 : -1, s.w + 4.6), r = h.across(s); bl(x, s.y + 1.3, z, r, 2.4, 2.6, 2.4, 0x3a6a9a); bl(x, s.y + 2.75, z, r, 3, 0.3, 3, 0x2a4a6a); bl(x, s.y + 1.6, z, r, 2.46, 0.9, 1.6, 0xd8e4e8); } }
+        for (const k of [K.depart + 2, K.depart + 5, K.entreeVille + 3, K.entreeVille + 8, K.rueSud]) { const s = S[P(k)], [x, z] = bord(s, -1, s.w + 4.6), r = h.across(s); bl(x, s.y + 1.3, z, r, 2.4, 2.6, 2.4, 0x3a6a9a); bl(x, s.y + 2.75, z, r, 3, 0.3, 3, 0x2a4a6a); bl(x, s.y + 1.6, z, r, 2.46, 0.9, 1.6, 0xd8e4e8); } }
       // les aires de jeu, dans les cours derrière le premier rang, là où il reste de la place
       const aire = (x, z, Y) => {
         bl(x - 8, Y + 0.08, z - 6, 0, 4, 0.16, 4, 0xd8c890); for (const [dx, dz, a, c] of [[0, -2, 4.2, 0.2], [0, 2, 4.2, 0.2], [-2, 0, 0.2, 4.2], [2, 0, 0.2, 4.2]]) bl(x - 8 + dx, Y + 0.2, z - 6 + dz, 0, a, 0.4, c, 0xd0a020); // le bac à sable
@@ -2078,8 +2078,15 @@
         bl(x, Y + 0.03, z, 0, 34, 0.06, 26, 0x8a8468); }; // le sol de terre battue de l'aire
       { let n = 0; for (let z = 720; z < 1130 && n < 7; z += 36) for (let x = 130; x < 480 && n < 7; x += 58) if (place(x, z, 0, 17, 13, 16)) { aire(x, z, hAt(x, z) + 0.05); n++; } }
       // les conduites de chauffage hors sol, isolées de tôle, qui enjambent les rues en portique
-      { const tole = 0xb8a868, portique = (i, o) => { const s = S[(i + N) % N], r = h.across(s); o = o || s.w + 3; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, o); bl(x, s.y + 4, z, r, 0.8, 8, 0.8, tole); bl(x, s.y + 4, z, r, 1.3, 0.3, 1.3, 0x6d726d); } bl(s.x, s.y + 8, s.z, r, 2 * o + 0.8, 0.8, 0.8, tole); bl(s.x, s.y + 8.9, s.z, r, 2 * o + 0.8, 0.8, 0.8, tole); };
-        portique(P(1) + 24); portique(P(5) + 4); portique(P(K.entreeVille) + 46); portique(P(K.rueSud) - 22); }
+      { // deux tubes jumeaux gainés de tôle, posés sur des plots le long du trottoir de droite sur toute la traversée ; une lyre de dilatation tous les 70 m ; ils ne montent en portique que pour traverser la chaussée, en deux endroits
+        const H = [], V = [], plots = [], O = 4.7, Y = [0.75, 1.4], pas = 3, span = ((iV1 - 8 - iV0 - 8 + N) % N), trav = [P(5) + 4, P(K.entreeVille) + 46].map(i => (i + N) % N);
+        const seg = (a, b, y) => { const dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz); H.push([(a[0] + b[0]) / 2, y, (a[1] + b[1]) / 2, -Math.atan2(dz, dx), l + 0.15, 1, 1]); }, mont = (q, y0, y1) => V.push([q[0], (y0 + y1) / 2, q[1], 0, 1, y1 - y0, 1]);
+        for (let n = 0; n < span; n += pas) { const i = (iV0 + 8 + n) % N, j = (i + pas) % N, a = bord(S[i], 1, S[i].w + O), b = bord(S[j], 1, S[j].w + O), ya = S[i].y, lyre = n % 36 === 18;
+          if (lyre) Y.forEach((y, k) => { const ht = 3.4 + k * 0.65; mont(a, ya + y, ya + ht); mont(b, ya + y, ya + ht); seg(a, b, ya + ht); });
+          else for (const y of Y) seg(a, b, ya + y);
+          if (n % 6 === 0) plots.push([a[0], ya + 0.3, a[1], h.across(S[i]), 0.9, 0.9, 0.5]);
+          if (trav.some(t => Math.abs(t - i) < pas / 2 + 0.6)) { const g = bord(S[i], -1, S[i].w + O); Y.forEach((y, k) => { const ht = 7 + k * 0.65; mont(a, ya + y, ya + ht); seg(a, g, ya + ht); mont(g, ya - 0.5, ya + ht); }); plots.push([g[0], ya + 0.3, g[1], h.across(S[i]), 1.6, 0.9, 1.2]); } }
+        const tole = mat('toleOrange', {}, '#b6bab4'); inst(h, h.geo('tubeGES'), tole, H); inst(h, h.geo('tubeGESv'), tole, V); inst(h, h.geo('bloc'), betS, plots); }
       bl(206, YV + 1.3, 1118, 0, 3.4, 1.5, 1.6, 0xe8b820); bl(206, YV + 0.4, 1118, 0, 2.4, 0.5, 1.5, 0x2a2c2a); // la citerne de kvas, jaune
       { const s = S[P(K.rueSud) - 4], gr = repere(h, s); h.pose('abriBus', { beton: betC, mosaique: betS, banc: mat('peinture', { c: 0x6d726d }) }, gr, [-(s.w + 5.2), 0, 0]).forEach(m => m.rotation.y = Math.PI / 2); }
 

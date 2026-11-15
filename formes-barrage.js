@@ -78,6 +78,8 @@
       ['treillis', 2.3, 28, 2.3, 0.9, 18.8, 0, null, 1], ['cabine', 2.2, 2.3, 2.6, 2.6, 30.4, 0, null, 1], ['vitre', 0.1, 1.2, 2.2, 3.74, 30.7, 0], ['treillis', 1.4, 8, 1.4, 0.9, 36.8, 0],
       ['treillis', 32, 1.7, 1.7, 15.6, 40.6, 0, [0, 0, 0.5], 1], ['treillis', 8, 1.2, 1.2, -3.2, 33.6, 0, [0, 0, -0.25]],
       ['cable', 29.5, 0.14, 0.14, 15, 44.6, 0, [0, 0, 0.27]], ['cable', 0.14, 34, 0.14, -1, 24, 0, [0, 0, -0.1]], ['cable', 0.1, 19, 0.1, 29.4, 38.6, 0], ['lest', 0.9, 1.1, 0.9, 29.4, 28.6, 0]],
+    // conduite de chauffage hors sol : un tube à huit pans de 0,56 m, d'un mètre de long, couché le long de X (mis à l'échelle par instance) ou debout
+    tubeGES: () => { const g = new THREE.CylinderGeometry(0.28, 0.28, 1, 8); g.rotateZ(Math.PI / 2); return g; }, tubeGESv: () => new THREE.CylinderGeometry(0.28, 0.28, 1, 8),
     // REFS 7 — abri de bus en béton, mosaïque au fond (face vers +Z)
     abriBus: () => [['beton', 7, 0.4, 3, 0, 3, 0], ['mosaique', 7, 2.8, 0.3, 0, 1.4, -1.3], ...paire(sd => ['beton', 0.3, 2.8, 2.6, sd * 3.4, 1.4, 0]), ['banc', 4, 0.5, 0.6, 0, 0.5, -0.8]],
   });
