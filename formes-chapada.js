@@ -101,6 +101,11 @@
     // un oiseau en vol (ara, vautour) : corps, tête, bec, longue queue ; les ailes sont à part (aileOiseau, sur un pivot à l'épaule, pour battre). l = longueur de la queue
     oiseauVol: (l = 1) => [['plume', 0.9, 0.3, 0.32, 0, 0, 0], ['plume', 0.3, 0.28, 0.28, 0.55, 0.06, 0], ['bec', 0.2, 0.14, 0.12, 0.76, 0.02, 0], ['queue', l, 0.08, 0.24, -0.4 - l / 2, 0, 0]],
     aileOiseau: (e = 1.5) => [['plume', 0.55, 0.06, e, 0, 0, e / 2], ['queue', 0.4, 0.05, e * 0.5, -0.1, 0, e * 1.2]], // origine à l'épaule, l'aile part vers +Z
+    // deux ailes en V, l'envergure le long de Z, le nez vers +X : une seule pièce, qu'on écrase en hauteur (échelle Y de -0,7 à 1) pour la faire battre ; chauves-souris, aigrettes en vol
+    ailesV: (e = 1) => { const g = new THREE.BufferGeometry(), P = []; for (const sd of [-1, 1]) { const a = [0.22, 0, sd * 0.06], b = [-0.2, 0, sd * 0.06], c = [0.05, 0.42 * e, sd * e], d = [-0.34, 0.16 * e, sd * e * 0.55]; P.push(...a, ...b, ...c, ...b, ...d, ...c); }
+      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(24), 2)); g.computeVertexNormals(); return g; },
+    // aigrette en vol : le corps à l'horizontale, le cou tendu, les pattes en arrière (les ailes : ailesV)
+    aigretteVol: () => [['plume', 0.9, 0.3, 0.32, 0, 0, 0], ['plume', 0.5, 0.14, 0.14, 0.6, 0.08, 0], ['plume', 0.22, 0.18, 0.18, 0.9, 0.12, 0], ['bec', 0.3, 0.07, 0.07, 1.13, 0.1, 0], ['patte', 0.9, 0.05, 0.05, -0.85, -0.05, 0.05], ['patte', 0.9, 0.05, 0.05, -0.85, -0.05, -0.05]],
     // singe capucin assis : tronc, tête, museau clair, queue en crochet
     singe: () => [['poil', 0.5, 0.6, 0.45, 0, 0.3, 0], ['poil', 0.34, 0.34, 0.34, 0.1, 0.78, 0], ['face', 0.14, 0.16, 0.2, 0.28, 0.74, 0], ['poil', 0.1, 0.7, 0.1, -0.32, 0.5, 0, [0, 0, 0.3]], ['poil', 0.3, 0.1, 0.1, -0.5, 0.86, 0],
       ...paire(sd => ['poil', 0.14, 0.4, 0.14, 0.22, 0.2, sd * 0.22])],
