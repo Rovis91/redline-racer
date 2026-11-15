@@ -2102,7 +2102,7 @@
 
       // balises de freinage à 150, 100 et 50 m de chaque virage serré : trois, deux, une bande rouge sur un poteau blanc, des deux côtés
       { let der = -99; for (let i = 0; i < N; i++) { const j = (i + 75) % N; if (Math.abs(S[j].k) > 0.025 && i - der > 90 && !dans(j, 5, 13)) { der = i; for (const [o, nb] of [[0, 3], [25, 2], [50, 1]]) { const q = (i + o) % N; if (q >= T0 && q <= T1) continue; const s = S[q];
-          for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 1.3, z, h.across(s), 0.45, 2.6, 0.45, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 2.3 - b * 0.55, z, h.across(s), 0.5, 0.3, 0.5, 0xc8302a]); } } } } }
+          for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 2, z, h.across(s), 0.8, 4, 0.8, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 3.5 - b * 0.8, z, h.across(s), 0.86, 0.45, 0.86, 0xc8302a]); } } } } }
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
       fond();
       // les jets coulent, l'écume du bassin bouillonne, la rivière file vers le sud, l'embrun ondule

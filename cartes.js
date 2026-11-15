@@ -443,7 +443,9 @@
       car: car({ nom: 'VOLNA 24 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'gtr', col: 0x3d6e8a, l: 1.05, w: 1.02, h: 1.04, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0, bandes: 0xe8761e } }),
       radio: RADIO.barrage,
-      th: { decor: 'barrage', pluie: [[3, 6, 0.6]], fog: 0xc3cdc9, fogD: [110, 1300], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
+      th: { decor: 'barrage', pluie: [[3, 6, 0.6]], routeTex: 'chausseeFine', lisse: ['eauGES', 'ecumeGES', 'gerbe', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin, eau lissée
+        couches: [{ tex: ['rocheGES'], pente: [0.35, 0.7], rep: 0.8, bruit: 0.06 }, { tex: ['bruit', '#6e6a58', ['#7c7864', '#5e5a4a']], bord: [6, 16] }, { tex: ['aiguilles', '#3a4a32'], haut: [60, 140], bruit: 0.05 }], // le terrain : roche sur les pentes, gravier au bord de la route, sous-bois en altitude
+        fog: 0xc3cdc9, fogD: [110, 1300], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
         astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xc8d4dc, 0x5a5a50, 0.95], sun: [0xfff0d0, 0.6], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
         chev: 0, murH: 0, route: ['#3a3c3e', '#46484a', '#f4f0e4', '#f4f0e4', '#3a3c3e', '#3a3c3e', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
         tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#8d918a', '#7d817a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#8d918a', '#5fa89a', '#5a5e5a'],
