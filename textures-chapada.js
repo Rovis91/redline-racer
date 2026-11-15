@@ -51,14 +51,14 @@
     // la voûte de la grotte : la même roche, mais calme (de grandes taches peu contrastées, aucun trait fin) ; les strates de rocheGrotte, étirées par la voûte et vues en rasant, scintillaient
     vouteGrotte: () => [32, 32, (g, o) => { const { R, alea, voile } = o; R(g, '#2c2a24', 0, 0, 32, 32);
       voile(g, 0.35, () => { for (let i = 0; i < 9; i++) R(g, alea() < 0.5 ? '#24221c' : '#36332b', alea() * 24 | 0, alea() * 24 | 0, 8 + alea() * 8 | 0, 8 + alea() * 8 | 0); }); }],
-    // l'eau qui tombe, faite pour défiler (decors.js fait glisser la texture vers le bas à chaque image) : mèches claires et bleutées sur un voile translucide, trouées par où l'on voit la roche ;
+    // l'eau qui tombe, faite pour défiler (decors-chapada.js fait glisser la texture vers le bas à chaque image) : mèches claires et bleutées sur un voile translucide, trouées par où l'on voit la roche ;
     // tout boucle en hauteur (chaque mèche est dessinée deux fois, à y et y - 64). trous : nombre de trouées (la nappe de devant en a plus : on voit la première à travers)
     eauChute: (trous = 6) => [32, 64, (g, o) => { const { R, alea, voile } = o, B = (c, x, y, w, h) => { R(g, c, x, y, w, h); R(g, c, x, y - 64, w, h); };
       voile(g, 0.82, () => R(g, '#b9d6d2', 0, 0, 32, 64));
       voile(g, 0.75, () => { for (let i = 0; i < 44; i++) B(alea() < 0.45 ? '#86b2b4' : '#ffffff', alea() * 32 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 12 + alea() * 30 | 0); });
       voile(g, 0.55, () => { for (let i = 0; i < 10; i++) B('#3f6468', alea() * 32 | 0, alea() * 64 | 0, 1, 8 + alea() * 18 | 0); });
       for (let i = 0; i < trous; i++) { const x = alea() * 30 | 0, y = alea() * 64 | 0, w = 1 + (alea() * 3 | 0), h = 14 + alea() * 26 | 0; g.clearRect(x, y, w, h); g.clearRect(x, y - 64, w, h); } }],
-    // l'écume du bassin : des paquets blancs sur du vide, qui bouclent ; decors.js la fait s'écarter du pied de la chute
+    // l'écume du bassin : des paquets blancs sur du vide, qui bouclent ; decors-chapada.js la fait s'écarter du pied de la chute
     ecumeBassin: () => [32, 32, (g, o) => { const { R, alea, voile } = o;
       voile(g, 0.9, () => { for (let i = 0; i < 26; i++) { const x = alea() * 32 | 0, y = alea() * 32 | 0, w = 2 + (alea() * 5 | 0), h = 1 + (alea() * 3 | 0); for (const dx of [0, -32]) for (const dy of [0, -32]) R(g, alea() < 0.3 ? '#cfe6e0' : '#ffffff', x + dx, y + dy, w, h); } }); }],
     // la voie dallée de la cité (th.routeTex, mêmes réglages que chaussee : dalle, joint foncé, dalle claire, mousse) : grandes dalles de quartzite usées, joints moussus,

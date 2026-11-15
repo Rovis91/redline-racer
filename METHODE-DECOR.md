@@ -40,14 +40,14 @@ Chaque session travaille dans son worktree et n'écrit que dans son périmètre 
 
 | Session | Formes et textures nouvelles | Placement | Autres fichiers autorisés |
 |---|---|---|---|
-| wangan | `formes-wangan.js`, `textures-wangan.js` (à créer au besoin, avec leur ligne dans `index.html`) | fonction `wangan` de `decors.js` | entrée `wangan` de `cartes.js`, bloc pluie de `game.js` |
-| touge | `formes-touge.js`, `textures-touge.js` (à créer au besoin, avec leur ligne dans `index.html`) | fonction `touge` de `decors.js` | fonction `terrain` de `decors.js`, entrée `touge` de `cartes.js` |
-| paris | `formes-paris.js`, `textures-paris.js` | fonction `paris` de `decors.js` | entrée `paris` de `cartes.js` ; `sim.js` seulement si le tracé l'exige, tests à l'appui |
-| canal | `formes-canal.js`, `textures-canal.js` | fonction `canal` de `decors.js` | entrée `canal` de `cartes.js` |
+| wangan | `formes-wangan.js`, `textures-wangan.js` (à créer au besoin, avec leur ligne dans `index.html`) | `decors-wangan.js` | entrée `wangan` de `cartes.js`, bloc pluie de `game.js` |
+| touge | `formes-touge.js`, `textures-touge.js` (à créer au besoin, avec leur ligne dans `index.html`) | `decors-touge.js` | fonction `terrain` de `decors.js`, entrée `touge` de `cartes.js` |
+| paris | `formes-paris.js`, `textures-paris.js` | `decors-paris.js` | entrée `paris` de `cartes.js` ; `sim.js` seulement si le tracé l'exige, tests à l'appui |
+| canal | `formes-canal.js`, `textures-canal.js` | `decors-canal.js` | entrée `canal` de `cartes.js` |
 | voitures | `formes-voitures.js`, `textures-voitures.js` | section « voiture » de `game.js` | — |
 | départ | forme `depart` de `formes.js` | bloc « ligne et portique de départ » de `game.js` | — |
 
-`formes.js` et `textures.js` (catalogues communs) se lisent, ne se modifient pas — sauf la session « départ » pour sa forme. Les fichiers par carte complètent les catalogues par `Object.assign(FORMES, { … })` et `Object.assign(TEXTURES, { … })`. Personne ne touche à `audio.js`.
+`formes.js` et `textures.js` (catalogues communs) se lisent, ne se modifient pas — sauf la session « départ » pour sa forme. Les fichiers par carte complètent les catalogues par `Object.assign(FORMES, { … })` et `Object.assign(TEXTURES, { … })`, et le placement par `Object.assign(DECORS, { … })` ; les poseurs que les cartes partagent (`inst`, `insts`, `boite`, `terrain`…) sont dans `decors.js`. Personne ne touche à `audio.js`.
 
 ## Terminé quand
 

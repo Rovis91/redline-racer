@@ -6,7 +6,7 @@
 //            le décor bougerait) ; alea est un hasard propre à la texture, à utiliser pour tout nouveau dessin.
 //            tuile (facultatif) : le dessin se répète tous les `tuile` mètres sur les boîtes, au lieu de s'étirer sur chaque face.
 // Étalon de détail : la chaussée. 8 pixels par mètre, un grain, des joints ou des nervures, de l'usure (coulures, rouille, éclats) ; pas de surface unie.
-// Les formes sont dans formes.js ; qui porte quelle texture, et où, se décide au placement (game.js pour la piste et la ville, decors.js pour les autres cartes),
+// Les formes sont dans formes.js ; qui porte quelle texture, et où, se décide au placement (game.js pour la piste et la ville, decors-<carte>.js pour les autres cartes),
 // par mat('nom', options, ...réglages). L'option c teinte un dessin clair (carrosserie, conteneur, wagon).
 // Les couleurs propres à une carte (chaussée, parois, glissières) restent dans son thème, cartes.js, et arrivent ici en réglages.
 (() => {

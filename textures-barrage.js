@@ -5,7 +5,7 @@
   Object.assign(TEXTURES, {
 
     // REFS 1 — face aval du mur : plots de 18 m (joint vertical sombre à gauche de la tuile), reprises de bétonnage tous les 3 m, une rangée de fenêtres de galerie de visite,
-    // coulures sous chaque fenêtre et sous les joints, bas de tuile plus sombre ; une tuile = 18 m × 24 m (fixée par les UV de decors.js)
+    // coulures sous chaque fenêtre et sous les joints, bas de tuile plus sombre ; une tuile = 18 m × 24 m (fixée par les UV de decors-barrage.js)
     faceGES: (fond = '#8d918a') => [64, 96, (g, o) => {
       const { R, alea, voile } = o; R(g, fond, 0, 0, 64, 96);
       voile(g, 0.12, () => { for (let y = 0; y < 96; y += 12) R(g, alea() < 0.5 ? '#fff' : '#000', 0, y, 64, 12); });
@@ -48,7 +48,7 @@
     // REFS 7 — clôture de béton soviétique type ПО-2 : panneaux gris à losanges en relief, poteaux tous les 4 m (sur un ruban : x = la hauteur, y = le long)
     betonPO2: () => [32, 32, (g, o) => { const { R, voile } = o; R(g, '#a4a49a', 0, 0, 32, 32); R(g, '#c0c0b6', 0, 0, 2, 32); R(g, '#6e6e66', 0, 30, 32, 2);
       for (let x = 3; x < 30; x += 1) { const k = Math.abs(((x - 3) % 9) - 4.5); R(g, '#7e7e76', x, 8 + k | 0, 1, 1); R(g, '#7e7e76', x, 8 - k + 16 | 0, 1, 1); R(g, '#c8c8be', x, 24 - k | 0, 1, 1); } voile(g, 0.2, () => semis(g, o, 60, '#000', 32, 32)); }, 4],
-    // REFS 2 — remous du bassin de dissipation : écume blanche, bouillons gris-bleu (défile dans decors.js)
+    // REFS 2 — remous du bassin de dissipation : écume blanche, bouillons gris-bleu (défile dans decors-barrage.js)
     ecumeGES: () => [64, 64, (g, o) => { const { R, alea } = o; R(g, '#cfe2e6', 0, 0, 64, 64); for (let i = 0; i < 220; i++) R(g, alea() < 0.5 ? '#f4fafa' : '#9cbcc6', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 8 | 0), 1 + (alea() * 2 | 0)); }, 14],
     // REFS 7 — filet pare-pierres sur la paroi : maille de 1 m transparente (alphaTest)
     filet: () => [32, 32, (g, o) => { const { R } = o; g.clearRect(0, 0, 32, 32); for (let k = 0; k < 32; k++) { R(g, '#3a3c3a', k, k, 1, 1); R(g, '#3a3c3a', 31 - k, k, 1, 1); } R(g, '#2a2c2a', 0, 0, 32, 2); }, 2],
@@ -110,7 +110,7 @@
       for (let i = 0; i < ecume; i++) R(g, '#e8f2f4', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 5 | 0), 1);
       for (let i = 0; i < 10; i++) { const y = alea() * 64 | 0; R(g, 'rgba(214,228,232,0.5)', 0, y, 64, 1); } // reflets du ciel en longues lignes
     }, 16],
-    // gerbe d'une vanne : filets d'eau blanche dans le sens de la chute (v), bords effilochés ; transparente, elle défile (map.offset) dans decors.js
+    // gerbe d'une vanne : filets d'eau blanche dans le sens de la chute (v), bords effilochés ; transparente, elle défile (map.offset) dans decors-barrage.js
     gerbe: () => [32, 128, (g, o) => {
       const { R, alea } = o; g.clearRect(0, 0, 32, 128);
       for (let x = 0; x < 32; x++) { const bord = Math.min(x, 31 - x) / 6, a = Math.min(1, bord) * 0.95;
