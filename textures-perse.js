@@ -27,6 +27,11 @@
       R(g, '#a89478', 0, 0, 64, 64); for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) if (alea() < 0.45) R(g, alea() < 0.5 ? '#b09c80' : '#a08c72', x * 32 + (y & 1) * 16, y * 16, 32, 16);
       for (let y = 0; y < 64; y += 16) R(g, '#8a7862', 0, y, 64, 1); for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) R(g, '#8a7862', (x * 32 + (y & 1) * 16) % 64, y * 16, 1, 16);
     }, 8],
+    // mur de terre des jardins (pisé) : ocre clair, lits de banchée à peine marqués, chaperon plus clair en haut ; une hauteur de mur par motif
+    murTerre: () => [32, 32, (g, { R, alea }) => {
+      R(g, '#c8a064', 0, 0, 32, 32); for (let y = 10; y < 32; y += 7) R(g, '#bc9458', 0, y, 32, 1); for (let i = 0; i < 26; i++) R(g, alea() < 0.5 ? '#d2aa70' : '#b88e54', alea() * 32 | 0, 4 + (alea() * 28 | 0), 2 + (alea() * 3 | 0), 1);
+      R(g, '#dcb880', 0, 0, 32, 3); R(g, '#a8824c', 0, 3, 32, 1); R(g, '#a07a48', 0, 29, 32, 3);
+    }, 4],
     // frise des Immortels sur pierre dorée : rangée de gardes de profil (lance, carquois, robe lapis ou rouge), cyprès entre eux, bandeau de rosettes en haut (REFS §3) ; étirée en hauteur sur un mur de 3 m
     frise: () => [64, 32, (g, { R }) => {
       R(g, PIERRE, 0, 0, 64, 32); R(g, '#a88a58', 0, 26, 64, 6); R(g, '#a88a58', 0, 4, 64, 1);
