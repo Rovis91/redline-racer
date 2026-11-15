@@ -26,7 +26,7 @@
   let mix = 0, inten = 0, driftL = 0, drums = 0, fin = false, wasIn = false, wasNear = false, wasBoost = false;
   let rubT = 0, satT = 0, platine = 0; // frottement bref entre voitures ; saturation de la musique après un choc ; ralenti de platine (1 → 0)
   const VX = [], UN = [], PANJ = 0.35; // voix moteur + boîte + pneus : VX[0] celle du solo (au centre, branchée comme toujours), VX[1] et VX[2] celles de l'écran partagé (joueur 1 à gauche, joueur 2 à droite) ; UN : liste d'un seul joueur, réutilisée quand le jeu n'en passe pas
-  let scrapeG, windG, windL, windF, nitroG, gbuf, esp, AU = [], pluie, ambBed, ambT = 2, inZone = false, uiF;
+  let scrapeG, windG, windL, windF, nitroG, gbuf, esp, AU = [], pluie, ambBed, ambT = 2, inZone = false, uiF, CH = null; // CH : les sons propres à chapada (sonChapada)
   const auHasard = () => Math.random() * ST.length | 0; // à chaque carte, une de ses stations au hasard
   let station = auHasard(), S16 = 60 / ST[station].bpm / 4;
 
@@ -45,6 +45,7 @@
   const AMB = {
     ville: [['highpass', 6000, 0.5, 0.012], ['bandpass', 1400, 0.6, 0.03, 0.13, 0.3], ['lowpass', 110, 0.7, 0.2, 0.07, 0.4]], // pluie, rumeur de ville
     touge: [['bandpass', 700, 0.5, 0.03, 0.1, 0.6], ['lowpass', 180, 0.7, 0.05, 0.05, 0.5]], // feuillage, air de la nuit (+ grillons)
+    chapada: [['bandpass', 800, 0.5, 0.03, 0.09, 0.6], ['highpass', 6200, 0.7, 0.008, 55, 0.9], ['highpass', 5200, 0.7, 0.006, 0.13, 0.9]], // feuillage de la forêt, cigales (un souffle aigu haché à 55 Hz) qui enflent et retombent (+ les bêtes de chaque secteur : evChapada)
     wangan: [['bandpass', 350, 0.8, 0.07, 0.08, 0.7], ['lowpass', 90, 0.7, 0.2]], // vent de la baie, ronflement du port (+ corne de navire)
     paris: [['lowpass', 140, 0.7, 0.15, 0.05, 0.3], ['highpass', 7000, 0.5, 0.004]], // ville qui s'éveille (+ oiseaux)
     canal: [['lowpass', 500, 0.5, 0.06, 0.06, 0.7], ['bandpass', 220, 0.7, 0.06]], // vent sec, autoroute lointaine (+ hélicoptère)
@@ -509,9 +510,58 @@
       const s = AC.createBufferSource(), g = gain(lv, ambBed); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, g)); s.start(0, Math.random() * 2);
       if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, g.gain)); l.start(); }
     }
+    if (CH) { CH.rac.disconnect(); for (const s of CH.src) try { s.stop(); } catch (e) { } CH = null; }
+    if (M.id === 'chapada') sonChapada();
+  }
+  // ---------- chapada : l'eau et les lieux, par-dessus le lit d'ambiance (propositions/VIE-chapada.md). Tout est du bruit filtré ; la famille est « amb » ----------
+  // La grande chute est une source placée : son niveau et son timbre suivent la distance (le grave porte loin, l'aigu n'arrive que de près), un panoramique la met du bon côté, la grotte l'étouffe.
+  // Les rapides, le gué et les planches du pont sont des lits de zone. Les indices de piste viennent des points de contrôle de la carte (C.P), calculés à la première image.
+  function sonChapada() {
+    const rac = gain(0, V.amb), src = AC.createBufferSource(); src.buffer = nbuf; src.loop = true; src.start(0, Math.random() * 2);
+    const pan = AC.createStereoPanner(); pan.connect(rac); const gC = gain(0, pan), lp = filt('lowpass', 600, 0.5, gC); src.connect(lp); src.connect(filt('lowpass', 130, 0.7, gain(1.6, gC))); // la chute : un souffle large dont le passe-bas s'ouvre en approchant, sur un grondement
+    const gR = gain(0, rac); src.connect(filt('bandpass', 2200, 0.7, gR)); src.connect(filt('lowpass', 300, 0.7, gain(0.7, gR))); // les rapides : plus clairs que la chute
+    const gG = gain(0, rac), fG = filt('bandpass', 1200, 2.5, gG); src.connect(fG); // le gué : un clapotis (la bande saute)
+    const gP = gain(0, rac), pm = gain(0.5, gP), po = AC.createOscillator(); po.type = 'square'; po.frequency.value = 12; po.connect(gain(0.5, pm.gain)); po.start(); src.connect(filt('bandpass', 300, 1.5, pm)); src.connect(filt('bandpass', 760, 3, gain(0.5, pm))); // les planches du pont : un martèlement de bois
+    CH = { rac, src: [src, po], pan, gC, lp, gR, gG, fG, gP, po, eau: false, tG: 0, fait: {}, idx: 0, tr: 0, sp: 0, N: 1, z: null };
+  }
+  function chapadaFrame(dt, e, t, k, tun, r) {
+    const C = CH, c = e.car, N = e.T.n;
+    if (!C.z) { const S = e.T.S, P = n => { const x = M.pts[n][0] * (M.sc || 1), z = M.pts[n][1] * (M.sc || 1); let b = 0, bd = 1e18; for (let i = 0; i < N; i++) { const d = (S[i].x - x) ** 2 + (S[i].z - z) ** 2; if (d < bd) { bd = d; b = i; } } return b; };
+      C.N = N; C.z = { camp: [P(68), P(1)], marais: [P(1), P(4)], aras: [P(8) + 4, P(10) + 40], lacets: [P(13), P(28)], pont: [P(32) - 4, P(33) + 4], chauves: [P(33) + 6, P(34)], hurleurs: [P(41) + 10, P(43) + 20],
+        rapides: [P(49) - 10, P(52) + 6], onca: [P(52) - 34, P(52)], cite: [P(52), P(62)], gue: [P(63) - 8, P(64) + 8], seriema: [P(65), P(67)] }; }
+    const dans = ([a, b], f = 30) => { const i = (c.idx - a + N) % N, L = (b - a + N) % N; return i < L ? Math.min(1, i / f, (L - i) / f) : 0; };
+    C.idx = c.idx; C.tr = Math.floor((c.dist || 0) / N); C.sp = e.sp;
+    k(C.rac.gain, e.state === 'title' ? 0 : 1, 0.3);
+    // la grande chute, au fond du cirque (x 1036, z 243) : on l'entend dès le haut des lacets, elle est à gauche sur le pont, la grotte l'étouffe
+    const dx = 1036 - c.x, dz = 243 - c.z, d = Math.hypot(dx, dz), p = clamp(1 - d / 420, 0, 1), lat = (dz * Math.cos(c.th) - dx * Math.sin(c.th)) / Math.max(d, 1);
+    k(C.gC.gain, 0.16 * p * p * (1 - 0.8 * tun), 0.3); k(C.lp.frequency, (300 + 5200 * p ** 3) * (1 - 0.85 * tun), 0.3); k(C.pan.pan, clamp(lat, -1, 1) * 0.8, 0.2);
+    k(C.gR.gain, 0.05 * dans(C.z.rapides), 0.3);
+    const gu = dans(C.z.gue, 10); k(C.gG.gain, 0.05 * gu, 0.2); if (gu > 0 && (C.tG -= dt) < 0) { C.tG = 0.08; C.fG.frequency.setTargetAtTime(800 + Math.random() * 1400, t, 0.02); }
+    k(C.gP.gain, (c.air ? 0 : 0.09) * dans(C.z.pont, 4) * Math.min(1, r * 2), 0.06); k(C.po.frequency, 5 + e.sp * 0.7, 0.1);
+    // l'entrée dans l'eau (marais, rivière, gué, réception du saut) : un plouf sourd, puis l'eau qui retombe
+    const eau = !!(c.sol && c.sol.aq > 0.09) && !c.air; if (eau && !C.eau && e.sp > 8 && e.state !== 'title') { const v = Math.min(1, e.sp / 45); nz(t, 0.28, 0.3 * v, C.rac, 'lowpass', 320, 0.8); nz(t + 0.03, 0.7, 0.1 * v, C.rac, 'highpass', 2600, 0.7, nbuf, 0.02); } C.eau = eau;
+    // le feu du camp, à gauche de la grille de départ : il crépite (on l'entend à l'arrêt, plus dès qu'on roule)
+    const pf = clamp(1 - Math.hypot(c.x - 50, c.z + 11) / 40, 0, 1); if (pf > 0 && e.state !== 'title' && Math.random() < dt * 14 * pf) nz(t + Math.random() * 0.03, 0.005 + Math.random() * 0.012, 0.12 * pf * pf, C.rac, 'highpass', 1800 + Math.random() * 2500);
+  }
+  // les bêtes de chapada, par secteur (appelé comme ambEvent : renvoie le délai avant l'événement suivant). une() : une seule fois par tour
+  function evChapada(t) {
+    const C = CH; if (!C || !C.z) return 1; const i = C.idx, Z = C.z, d = ambBed, rnd = (a, b) => a + Math.random() * (b - a), en = ([a, b]) => (i - a + C.N) % C.N < (b - a + C.N) % C.N, une = n => C.fait[n] !== C.tr && (C.fait[n] = C.tr, true);
+    if (en(Z.camp) && C.sp < 6 && une('toucan')) { for (let k = 0; k < 3; k++) { nz(t + k * 0.22, 0.09, 0.1, d, 'bandpass', 900, 5); osc('square', 380, t + k * 0.22, 0.07, 0.015, d); } return 3; } // à l'arrêt sur la grille : le toucan croasse
+    if (en(Z.marais)) { if (Math.random() < 0.6) { osc('sine', 1100, t, 0.045, 0.05, d); osc('sine', 2200, t, 0.03, 0.02, d); } else for (let k = 0; k < 5; k++) osc('sine', 2400, t + k * 0.05, 0.016, 0.03, d); return rnd(0.4, 1.2); } // la grenouille forgeron (un marteau sur l'enclume) et le chœur
+    if (en(Z.aras) && une('aras')) { for (let k = 0; k < 3; k++) { const o = AC.createOscillator(), g = AC.createGain(), t0 = t + k * 0.42; o.type = 'sawtooth'; o.frequency.setValueAtTime(940, t0); o.frequency.linearRampToValueAtTime(760, t0 + 0.26);
+        o.connect(filt('bandpass', 2100, 3, g)); g.connect(d); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.09, t0 + 0.03); g.gain.linearRampToValueAtTime(0, t0 + 0.28); o.start(t0); o.stop(t0 + 0.3); } return 2; } // le cri rauque des aras qui passent
+    if (en(Z.lacets)) { osc('sine', 2100, t, 0.17, 0.045, d); osc('sine', 3430, t, 0.1, 0.03, d); return rnd(3, 7); } // l'araponga : un coup de cloche fêlée, au loin
+    if (en(Z.chauves) && une('chauves')) { for (let k = 0; k < 16; k++) osc('sine', rnd(7000, 9000), t + k * 0.04 + rnd(0, 0.02), 0.012, 0.03, d); nz(t, 0.7, 0.04, d, 'bandpass', 3000, 1.5, nbuf, 0.1); return 3; } // la nuée sort de la grotte
+    if (en(Z.hurleurs) && une('hurleurs')) { for (let w = 0; w < 3; w++) { const t0 = t + w * 1.05, a = nz(t0, 1.3, 0.22, d, 'bandpass', 430, 6, nbuf, 0.35), b = nz(t0, 1.3, 0.1, d, 'bandpass', 820, 6, nbuf, 0.35);
+        a && a.frequency.linearRampToValueAtTime(300, t0 + 1.2); b && b.frequency.linearRampToValueAtTime(600, t0 + 1.2); } return 5; } // les singes hurleurs : trois vagues graves et rauques, au freinage de l'idole
+    if (en(Z.onca) && C.tr % 2 === 0 && une('onca')) { for (let k = 0; k < 14; k++) nz(t + k / 12, 0.06, 0.22, d, 'bandpass', rnd(160, 200), 3); return 3; } // l'onça : un râle scié, un tour sur deux
+    if (en(Z.cite)) { for (let k = 0, n = 4 + Math.random() * 4 | 0; k < n; k++) { const f = rnd(3000, 4200), o = osc('sine', f, t + k * 0.08, 0.06, 0.035, d); o && o.frequency.exponentialRampToValueAtTime(f * 1.3, t + k * 0.08 + 0.05); } return rnd(2, 5); } // un jacassement de perruches au-dessus de la place
+    if (en(Z.seriema) && une('seriema')) { let tt = t; for (let k = 0; k < 12; k++) { const o = osc('sine', 1600, tt, 0.09, 0.05, d); o && o.frequency.exponentialRampToValueAtTime(1100, tt + 0.08); tt += 0.12 + 0.13 * Math.abs(k - 6) / 6; } return 4; } // la seriema : une cascade de jappements, avant le camp
+    return rnd(1.5, 4); // ailleurs : le lit seul (feuillage, cigales)
   }
   function ambEvent(t) { // événements du lieu, espacés au hasard ; renvoie le délai avant le suivant
     const id = M.id, rnd = (a, b) => a + Math.random() * (b - a);
+    if (id === 'chapada') return evChapada(t);
     if (id === 'touge') { const f = Math.random() < 0.7 ? 4300 : 5100; for (let i = 0; i < 6; i++) osc('sine', f, t + i * 0.03, 0.014, 0.05, ambBed); return rnd(0.6, 1.4); } // grillons
     if (id === 'paris') { for (let i = 0, n = 2 + Math.random() * 4 | 0, f = rnd(2600, 3800); i < n; i++) { const o = osc('sine', f, t + i * 0.11, 0.08, 0.04, ambBed); o && o.frequency.exponentialRampToValueAtTime(f * rnd(0.8, 1.4), t + i * 0.11 + 0.07); } return rnd(1.5, 5); } // oiseaux
     if (id === 'wangan') { for (const [type, f] of [['sawtooth', 98], ['square', 147]]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.connect(filt('lowpass', 420, 0.7, g)); g.connect(ambBed);
@@ -596,6 +646,7 @@
   const ESP = {
     ville: { slap: 0.034, sl: 0.3, mur: 1, rv: 0.12, dur: 1.2, lp: 4000 }, // rues encaissées entre les tours
     touge: { slap: 0.16, sl: 0.12, mur: 0.4, rv: 0.06, dur: 2.2, lp: 2500 }, // la montagne renvoie l'écho de loin ; forêt qui l'étouffe
+    chapada: { slap: 0.11, sl: 0.1, mur: 0.5, rv: 0.07, dur: 1.9, lp: 2600 }, // une vallée de forêt : l'écho revient des troncs et des murs de la cité, vite étouffé
     wangan: { slap: 0.022, sl: 0.2, mur: 0.8, rv: 0.06, dur: 1, lp: 4500 }, // autoroute surélevée entre deux glissières de béton
     paris: { slap: 0.028, sl: 0.3, mur: 1, rv: 0.14, dur: 1.4, lp: 3800 }, // façades de pierre
     canal: { slap: 0.05, sl: 0.25, mur: 0.7, rv: 0.1, dur: 1.6, lp: 3500 }, // le lit de béton du canal
@@ -853,7 +904,7 @@ registerProcessor('moteur', Moteur);`;
   function audioFrame(dt, e) {
     if (!AC) return;
     const { state, car, T, r, sp } = e, N = T.n, tun = e.tun || 0, CARD = M.car, t = AC.currentTime, racing = state === 'race', k = (p, v, tc = 0.04) => regle(p, v, t, tc);
-    if (state === 'pause') { for (const v of VX) tait(v, t); for (const v of AU) { k(v.g.gain, 0, 0.05); k(v.wh.gain, 0, 0.05); } k(scrapeG.gain, 0, 0.05); k(windG.gain, 0, 0.05); k(windL.gain, 0, 0.05); k(nitroG.gain, 0, 0.05); k(pluie.rid.gain, 0, 0.05); k(pluie.aq.gain, 0, 0.05); return; } // en pause : la radio continue, les voitures se taisent
+    if (state === 'pause') { for (const v of VX) tait(v, t); for (const v of AU) { k(v.g.gain, 0, 0.05); k(v.wh.gain, 0, 0.05); } k(scrapeG.gain, 0, 0.05); k(windG.gain, 0, 0.05); k(windL.gain, 0, 0.05); k(nitroG.gain, 0, 0.05); k(pluie.rid.gain, 0, 0.05); k(pluie.aq.gain, 0, 0.05); if (CH) k(CH.rac.gain, 0, 0.05); return; } // en pause : la radio continue, les voitures se taisent
     if ((state === 'title') !== menu) { if (dk) finMix(); menu = !menu; retune(t + 0.05); tuneG.gain.cancelScheduledValues(t); tuneG.gain.setValueAtTime(0, t); tuneG.gain.linearRampToValueAtTime(lvl(), t + 0.3); } // menu ↔ course : la boucle de menu laisse la place à la station
     // une voix par joueur : seul, celle du centre, inchangée ; à deux, une de chaque côté, créées à l'arrivée du deuxième joueur et retirées à son départ (fondu, puis arrêt des sources)
     const L = e.cars || (UN[0] = e, UN), duo = L.length > 1; let hit = 0, bump = 0, rub = false; // chocs et frottement : ceux de n'importe quel joueur s'entendent (la musique, elle, n'encaisse que ceux du mieux placé)
@@ -904,6 +955,7 @@ registerProcessor('moteur', Moteur);`;
     // ambiance du lieu : seulement dans ses zones (e.amb, fondu fait par le jeu), jamais au menu ni en tunnel ; événements espacés au hasard, dans la zone
     const amb = state === 'title' ? 0 : (e.amb || 0) * (1 - tun);
     k(ambBed.gain, 0.6 * amb, 0.4); if (amb > 0.5) { if (!inZone) ambT = Math.min(ambT, 1.2); if ((ambT -= dt) < 0) ambT = ambEvent(t + 0.05); } inZone = amb > 0.5;
+    if (CH) chapadaFrame(dt, e, t, k, tun, r);
     // musique : sections et filtres suivent la course
     const a0 = (car.idx - T.h0 + N) % N, inside = a0 < T.h1 - T.h0, near = racing && !inside && N - a0 < 60;
     if (near && !wasNear) riser(t, clamp((N - a0) * 2 / Math.max(sp, 20), 0.5, 3));

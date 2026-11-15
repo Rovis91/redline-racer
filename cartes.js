@@ -509,7 +509,7 @@
     // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
     // W = la voie unique du pont : large ne fait qu'élargir (sim.js), tout le reste est élargi à 7 m ; le gué à 13 m. Pts 20 et 23 : bornes de l'élargissement, à 60 m du pont (le raccord de sim.js).
-    { id: 'chapada', nom: 'MANUSCRIT 512', rivaux: ['TIAGO', 'LUANA', 'BRUNO'], W: 4.5, kmh: 0.75, vit: [150, 200], grip: 20, sc: 1, tun: [34, 40], chaud: [13, 40], sect: [20, 46], amb: [[30, 34], [62, 66]], anticipe: 1,
+    { id: 'chapada', nom: 'MANUSCRIT 512', rivaux: ['TIAGO', 'LUANA', 'BRUNO'], W: 4.5, kmh: 0.75, vit: [150, 200], grip: 20, sc: 1, tun: [34, 40], chaud: [13, 40], sect: [20, 46], amb: [[0, 34], [40, 69]], /* l'ambiance sonne sur tout le tour, hors de la grotte : chaque secteur a ses bêtes (audio.js, evChapada) */ anticipe: 1,
       // Manuscrit 512 (Bahia, de nos jours, 9 h après la pluie) : une vallée de jungle dont la route fait le tour. Camp de base de l'expédition (départ), chaussée du marais tropical (pts 1-4) et chicane du fromager (pts 4-12),
       // lacets des terrasses (14-24), pont de lianes au pied de la grande chute (32-33), temple-grotte derrière un rideau d'eau (le tunnel, 34-40), descente des idoles (équerres 43-48), saut et descente des cascades (49-52),
       // cité perdue (arc triple pt 53, place 54-58), gué (63-64), retour au camp. Proposition validée : propositions/PROPOSITION-chapada.md
