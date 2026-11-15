@@ -2007,9 +2007,9 @@
         for (const [a, b] of [[P(13), T0 - 2], [T1 + 2, P(31)], [P(41), P(49) - 10]]) for (let i = a; dans(i, 13, 49) && i < b; i += 4) { const s = S[i], sd = i < P(41) ? 0 : 1; for (const e of sd ? [1] : [-1, 1]) { const [x, z] = bord(s, e, s.w + 2.6 + rnd() * 2); if (rnd() < 0.5) bu.push([x, s.y - 0.2, z, rnd() * 6, 0.7 + rnd() * 0.9]); } }
         inst(h, h.geo('houppierB'), mat('feuillesB', { c: 0x8a9a6a }), bu.map(([x, y, z, r, k]) => [x, y - 7.2 * k, z, r, k * 0.6, k * 0.45, k * 0.6]));
         for (const [a, b] of [[P(14), P(15)], [P(20), P(21)], [P(28), P(29) + 4], [P(43), P(43) + 40], [P(45), P(45) + 50], [P(47), P(47) + 40]]) { const sd = a >= P(41) ? 1 : -1; tranche(a, b, (i, l) => ruban(i, l, s => sd * (s.w + 1.5), -1, s => sd * (s.w + 1.5), 4.5, pr, 8)); } }
-      tranche(T0 - 2, T1 + 2, (i, l) => { ruban(i, l, s => -(s.w + 14), 10.2, s => s.w + 14, 10.2, roche, 14); for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 14), 10.2, s => sd * (s.w + 22), -5, roche, 14); });
-      { const tu = mat('peinture', { c: 0x5fa89a }); tranche(T0, T1, (i, l) => { for (const sd of [-1, 1]) for (const y of [5, 6.2]) ruban(i, l, sd * (W - 0.05), y, sd * (W - 0.05), y + 0.6, tu, 8); }); } // la tuyauterie vert d'eau de la galerie
-      insts(h, 'portailGES', { beton: bet, bande: mat('bandeOrange'), numero: mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), roche: mat('rocheGES') }, [[T0, 0], [T1, Math.PI]].map(([i, sens]) => [S[i].x, S[i].y, S[i].z, h.across(S[i]) + sens]), { a: [W] });
+      tranche(T0 - 2, T1 + 2, (i, l) => { ruban(i, l, s => -(s.w + 14), 10.2, s => s.w + 14, 10.2, roche, 14); for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 14), 10.2, s => sd * (s.w + 14.5), -8, roche, 14); });
+      { const tu = mat('peinture', { c: 0x5fa89a }); tranche(T0, T1, (i, l) => { for (const sd of [-1, 1]) for (const y of [5, 6.2]) ruban(i, l, s => sd * (s.w - 0.05), y, s => sd * (s.w - 0.05), y + 0.6, tu, 8); }); } // la tuyauterie vert d'eau de la galerie
+      insts(h, 'portailGES', { beton: bet, bande: mat('bandeOrange'), numero: mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), roche: mat('rocheGES') }, [[T0, 0], [T1, Math.PI]].map(([i, sens]) => [S[i].x, S[i].y, S[i].z, h.across(S[i]) + sens]), { a: [Math.max(S[T0].w, S[T1].w)] }); // à la largeur de la galerie (M.large)
 
       // ---------- la crête (REFS 5) : rails, deux portiques roulants au-dessus de la route, cabane de garde, tour de commande, lettres ----------
       for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, sd * (W + 2.6), 0.05, sd * (W + 3.4), 0.05, mat('matGris'), 4));
@@ -2103,6 +2103,9 @@
       // balises de freinage à 150, 100 et 50 m de chaque virage serré : trois, deux, une bande rouge sur un poteau blanc, des deux côtés
       { let der = -99; for (let i = 0; i < N; i++) { const j = (i + 75) % N; if (Math.abs(S[j].k) > 0.025 && i - der > 90 && !dans(j, 5, 13)) { der = i; for (const [o, nb] of [[0, 3], [25, 2], [50, 1]]) { const q = (i + o) % N; if (q >= T0 && q <= T1) continue; const s = S[q];
           for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 2, z, h.across(s), 0.8, 4, 0.8, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 3.5 - b * 0.8, z, h.across(s), 0.86, 0.45, 0.86, 0xc8302a]); } } } } }
+      // panneaux de décompte 150, 100, 50 m avant le freinage de fin de crête (le plus fort après la plus longue droite), des deux côtés, sur le parapet
+      { const i0 = P(40), pc = []; [[150, '150'], [100, '100'], [50, '50']].forEach(([m]) => { const s = S[(i0 - m / 2 + N) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 0.6); pc.push([x, s.y + 2.6, z, h.across(s), 1.4, 1.8, 0.1, m]); peints.push([x, s.y + 1.4, z, 0, 0.15, 1.6, 0.15, 0x4a4e4a]); } });
+        for (const m of [150, 100, 50]) inst(h, h.geo('bloc'), mat('ecrit', {}, 64, 80, '#f0f0e8', '#c8302a', String(m), 26), pc.filter(p => p[7] === m)); }
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
       fond();
       // les jets coulent, l'écume du bassin bouillonne, la rivière file vers le sud, l'embrun ondule
