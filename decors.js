@@ -1747,12 +1747,16 @@
       const TP = [[TXO, TZ], [AX0, TZ], [AX0, AZ], [rampeD[0][0], AZ], ...rampeD, [TXE, rampeD[rampeD.length - 1][1]], [TXE, TZS], [TXO, TZS]];
       const PIED = [[900, -420], [760, -160], [722, -10], [720, 400], [708, 566], [520, 578], [300, 590], [120, 640], [-150, 780]]; // le pied du Kuh-e Rahmat : la montagne est à gauche de cette ligne
       const dMont = (x, z) => { let bd = 1e9, cote = 0; for (let k = 0; k < PIED.length - 1; k++) { const [ax, az] = PIED[k], [bx, bz] = PIED[k + 1], dx = bx - ax, dz = bz - az, t = Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / (dx * dx + dz * dz))), ex = x - ax - dx * t, ez = z - az - dz * t, e = Math.hypot(ex, ez); if (e < bd) { bd = e; cote = dx * ez - dz * ex; } } return cote < 0 ? bd : 0; };
-      const hMont = (x, z) => { const d = dMont(x, z); if (d <= 0) return 0; const rav = Math.min(Math.abs(Math.sin(z / 41 + 0.5 * Math.sin(x / 57))), Math.abs(Math.sin(x / 47 + 0.4 * Math.sin(z / 63)))); // des ravines qui descendent la pente : une montagne de calcaire, pas une dune
-        return 230 * (1 - Math.exp(-d / 140)) * (0.62 + 0.38 * rav) * (0.85 + 0.15 * Math.sin(x / 131 + z / 97)); };
+      // le relief du Kuh-e Rahmat : des arêtes vives (1 - |sin|, deux familles déformées) au lieu de bosses rondes (on lisait des dunes), et des bancs de calcaire : la pente se casse en gradins de 16 m
+      const arete = (x, z) => { const u = (x * 0.6 + z) / 45 + 1.2 * Math.sin(x / 71) + 0.8 * Math.sin(z / 53), v = (x - z * 0.5) / 23 + Math.sin(z / 37); return 0.77 * (1 - Math.abs(Math.sin(u))) + 0.23 * (1 - Math.abs(Math.sin(v))); };
+      const hMont = (x, z) => { const d = dMont(x, z); if (d <= 0) return 0; const y = 230 * (1 - Math.exp(-d / 140)) * (0.35 + 0.65 * arete(x, z)) * (0.8 + 0.2 * Math.sin(x / 131 + z / 97)), b = y / 16, fr = b - Math.floor(b);
+        return y < 10 ? y : 16 * (Math.floor(b) + ss(0.55, 0.95, fr)) * 0.6 + y * 0.4; };
       const basse = (x, z) => x < 648 && z < (x < AX0 - 14 ? TZ + 14 : AZ + 14) ? ss(140, 185, x) : 0; // la plaine et la ville basse : à plat, jusqu'à 14 m derrière le mur de la terrasse (la pente du maillage reste cachée derrière lui)
       const jard = S.slice(i20 + 3, i25 - 2);
       const g = terrain(h, { pas: 12, marge: 360, mat: h.mat('bruit', { flatShading: true }, '#cdb47c', ['#c2a86e', '#d6c08c', '#b89c64']),
-        couches: [{ tex: ['bruit', '#b9ad9c', ['#9c9080', '#d0c6b6', '#857a6c']], rep: 0.3, poids: (x, z, y, p) => Math.max(ss(0.1, 0.3, p), ss(22, 40, y)) * (dMont(x, z) > 0 ? 1 : 0) }], // le calcaire du Kuh-e Rahmat, sur ses pentes
+        couches: [{ tex: ['bruit', '#b9ad9c', ['#9c9080', '#d0c6b6', '#857a6c']], rep: 0.3, poids: (x, z, y, p) => Math.max(ss(0.1, 0.3, p), ss(22, 40, y)) * (dMont(x, z) > 0 ? 1 : 0) },
+          { tex: ['bruit', '#8e7460', ['#7a624e', '#a08670', '#6a5444']], rep: 0.3, poids: (x, z, y, p) => dMont(x, z) > 0 ? ss(0.3, 0.55, p) * ss(14, 30, y) : 0 }, // les fronts des bancs, plus raides : une roche brune, dans l'ombre
+          { tex: ['bruit', '#e2cfa4', ['#f0deb4', '#d0bc90', '#c8b088']], rep: 0.3, poids: (x, z, y, p) => dMont(x, z) > 0 ? ss(0.75, 0.95, arete(x, z)) * ss(60, 110, y) * (1 - ss(0.25, 0.45, p)) : 0 }], // les crêtes hautes, dorées par le couchant // le calcaire du Kuh-e Rahmat, sur ses pentes
         creux: (x, z, y) => { const k = basse(x, z); let c = y * (1 - k) - 0.5 * k; if (dansPoly(x, z, TP)) c = Math.min(c, YT - 0.4);
           if (x > 100 && x < TXO + 6 && z > TZ && z < 530) { let d = 1e9; for (const s of jard) d = Math.min(d, Math.hypot(s.x - x, s.z - z)); c -= 2.6 * ss(19, 25, d) * (1 - ss(60, 72, d)); } // les parterres du jardin : sous l'allée, en paliers (posés plus bas, à part)
           return y - (c + hMont(x, z)); } });
