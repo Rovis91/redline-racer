@@ -27,6 +27,12 @@
       R(g, '#a89478', 0, 0, 64, 64); for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) if (alea() < 0.45) R(g, alea() < 0.5 ? '#b09c80' : '#a08c72', x * 32 + (y & 1) * 16, y * 16, 32, 16);
       for (let y = 0; y < 64; y += 16) R(g, '#8a7862', 0, y, 64, 1); for (let y = 0; y < 4; y++) for (let x = 0; x < 2; x++) R(g, '#8a7862', (x * 32 + (y & 1) * 16) % 64, y * 16, 1, 16);
     }, 8],
+    // mur de soutènement des gradins du jardin (Bagh-e Takht, Chiraz) : brique claire, quatre niches en arc brisé par motif de 8 m, une sur quatre à fond de faïence turquoise, chaperon clair
+    nichesJardin: () => [64, 32, (g, { R }) => {
+      R(g, '#c2a46a', 0, 0, 64, 32); for (let y = 5; y < 32; y += 4) R(g, '#b4965e', 0, y, 64, 1); R(g, '#e4d6b0', 0, 0, 64, 3); R(g, '#9a7c4a', 0, 3, 64, 1);
+      for (let k = 0; k < 4; k++) { const x = k * 16 + 3, c = k === 1 ? '#2aa39a' : '#7a5a3c'; R(g, '#9a7c4a', x - 1, 9, 12, 21); R(g, c, x, 11, 10, 19); for (let j = 0; j < 4; j++) { R(g, '#9a7c4a', x - 1 + j, 9 - j, 12 - 2 * j, 1); R(g, c, x + j, 10 - j, 10 - 2 * j, 1); } if (k === 1) for (let y = 13; y < 30; y += 4) R(g, '#e4d6b0', x + 2 + (y % 8 ? 0 : 3), y, 2, 2); }
+      R(g, '#9a7c4a', 0, 30, 64, 2);
+    }, 8],
     // mur de terre des jardins (pisé) : ocre clair, lits de banchée à peine marqués, chaperon plus clair en haut ; une hauteur de mur par motif
     murTerre: () => [32, 32, (g, { R, alea }) => {
       R(g, '#c8a064', 0, 0, 32, 32); for (let y = 10; y < 32; y += 7) R(g, '#bc9458', 0, y, 32, 1); for (let i = 0; i < 26; i++) R(g, alea() < 0.5 ? '#d2aa70' : '#b88e54', alea() * 32 | 0, 4 + (alea() * 28 | 0), 2 + (alea() * 3 | 0), 1);
