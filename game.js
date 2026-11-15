@@ -2001,7 +2001,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
         tmp.lerp(cam.position, rw ? Math.min(0.5, 1.5 / dc) : 0).project(cam); // 1,5 m vers la caméra : la lanterne ne cache pas sa propre lumière
         if (tmp.z > 1 || Math.abs(tmp.x) > 1.4 || Math.abs(tmp.y) > 1.4) return false;
         const r = rw ? rw / (2 * dc * th) : 0.08; RY[n].set(tmp.x * 0.5 + 0.5, tmp.y * 0.5 + 0.5, tmp.z * 0.5 + 0.5, 1 / (r * r)); RC[n++].copy(col).multiplyScalar(k); return true; };
-      if (TH.astre.taille > 1) { const p = cam.position; src(p.x + SD.x * 1800, p.y + SD.y * 1800, p.z + SD.z * 1800, ASTRE, 1.3 * RAYS * TH.sun[1] * (1 - lm), 0); } // tout ce qui est à moins de 1 800 m cache l'astre ; le ciel (2 500 m), non
+      if (TH.astre.taille > 1) { const p = cam.position; src(p.x + SD.x * 1800, p.y + SD.y * 1800, p.z + SD.z * 1800, ASTRE, 1.3 * RAYS * TH.sun[1] * (1 - lm) * (TH.astre.rayons ?? 1), 0); } // th.astre.rayons : force du halo de l'astre (1 par défaut) // tout ce qui est à moins de 1 800 m cache l'astre ; le ciel (2 500 m), non
       const c = veh[0]; if (c && Math.cos(c.th) * (cam.position.x - c.x) + Math.sin(c.th) * (cam.position.z - c.z) > 0) { const av = c.lane === undefined ? 6.5 : 10; src(c.x + Math.cos(c.th) * av, c.y + 0.8, c.z + Math.sin(c.th) * av, PHARE, brume * NUIT, 2); }
       for (; n < 4; n++) RC[n].setScalar(0);
     }

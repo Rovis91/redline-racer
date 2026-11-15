@@ -2053,7 +2053,7 @@
       const ligne = (i0, i1, o, pas = 2) => { const l = []; for (let i = i0; i <= i1; i += pas) l.push(off(i, typeof o === 'function' ? o(S[i % N], i) : o)); return l; };
 
       // matières des grandes masses (grain non directionnel)
-      const mSable = grain('#e2d6ba', ['#d6c8a8', '#ece2ca', '#cfc09c']), mPiste = grain('#a8946c', ['#9c8860', '#b4a078', '#8e7c58'], OFF), mSol = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462']);
+      const mSable = grain('#cdbb8e', ['#c2ae80', '#d8c89e', '#b8a476']), mPiste = grain('#a8946c', ['#9c8860', '#b4a078', '#8e7c58'], OFF), mSol = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462']);
       const mDalle = h.mat('dallageQuinta'), mRoche = grain('#ddd2b2', ['#c8bc98', '#ece2c6', '#b4a884'], { side: D }), mRocheS = grain('#8e8a78', ['#7c7868', '#a09c88', '#5e6654'], { side: D });
       const mSascab = grain('#d2c8ae', ['#c4baa0', '#ddd4bc'], OFF), mEnroche = grain('#a8a294', ['#8e887a', '#c0baac', '#787266'], { side: D }), mBois = h.mat('planches', { side: D }), mPlanches = h.mat('planchesMuelle');
       const mMerB = grain('#9fe3d2', ['#b4ecde', '#8ad8c8'], { lisse: 1 }), mMer = grain('#4fcbc3', ['#62d4cc', '#42bfb8'], { lisse: 1 }), mMerL = grain('#146a8c', ['#1a7496', '#105e80'], { lisse: 1 });
@@ -2074,7 +2074,7 @@
       const bassin = i => (8 + 10 * lis(i, 51, 12)) * (1 - ss(iQ - 12, iQ, i));   // largeur de la vasque à droite de la route, dans la grotte
       // la rive du fond : de la route (iP0) au porche de la grotte (iM) par le nord, à distance irrégulière d'un centre (anses et caps), jamais un cercle
       const CX = 318, CZ = 470, NS = 120, RIVE = (() => { const pE = off(iP0, S[iP0].w + E0), pO = off(iM, S[iM].w + E0 + bassin(iM)), aE = Math.atan2(pE[1] - CZ, pE[0] - CX), aO = (a => a > aE ? a - 6.2832 : a)(Math.atan2(pO[1] - CZ, pO[0] - CX)), rE = Math.hypot(pE[0] - CX, pE[1] - CZ), rO = Math.hypot(pO[0] - CX, pO[1] - CZ);
-        return Array.from({ length: NS + 1 }, (_, k) => { const t = k / NS, a = aE + (aO - aE) * t, r0 = rE + (rO - rE) * t, rb = 76 + 30 * (lis(k, 61, 17) - 0.5) + 16 * (lis(k, 62, 6) - 0.5) + 5 * (bloc(k, 63, 3) - 0.5), r = r0 + (rb - r0) * ss(0, 0.15, t) * (1 - ss(0.86, 1, t)); return [CX + Math.cos(a) * r, CZ + Math.sin(a) * r]; }); })();
+        return Array.from({ length: NS + 1 }, (_, k) => { const t = k / NS, a = aE + (aO - aE) * t, r0 = rE + (rO - rE) * t, rb = 44 + 44 * (lis(k, 61, 20) - 0.5) + 20 * (lis(k, 62, 7) - 0.5) + 6 * (bloc(k, 63, 3) - 0.5), r = r0 + (rb - r0) * ss(0, 0.15, t) * (1 - ss(0.86, 1, t)); return [CX + Math.cos(a) * r, CZ + Math.sin(a) * r]; }); })();
       // le bord droit du creux, dans le sens de la marche : tranchée, rive du bassin, paroi de la vasque dans la grotte, sortie ; DR = direction vers la route ou l'eau
       const DROITE = [...Array.from({ length: iP0 - jz }, (_, k) => off(jz + k, S[jz + k].w + E0)), ...RIVE, ...Array.from({ length: jx - iM }, (_, k) => off(iM + 1 + k, S[iM + 1 + k].w + E0 + (iM + 1 + k < iQ ? bassin(iM + 1 + k) : 0)))];
       const DR = DROITE.map((p, k) => { const a = DROITE[Math.max(0, k - 1)], b = DROITE[Math.min(DROITE.length - 1, k + 1)], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1; return [(b[1] - a[1]) / l, -(b[0] - a[0]) / l]; }), kR = iP0 - jz;   // kR : rang du premier point de la rive
@@ -2320,8 +2320,8 @@
         const bord = a => { const dx = Math.cos(a), dz = Math.sin(a); let b = 1e9; EAUP.forEach((p, k) => { const q = EAUP[(k + 1) % EAUP.length], ex = q[0] - p[0], ez = q[1] - p[1], den = dx * ez - dz * ex; if (Math.abs(den) < 1e-9) return; const t = ((p[0] - CX) * ez - (p[1] - CZ) * ex) / den, u = ((p[0] - CX) * dz - (p[1] - CZ) * dx) / den; if (t > 0 && u >= 0 && u <= 1 && t < b) b = t; }); return b; };
         const fosse = (m0, m1, j) => Array.from({ length: 44 }, (_, k) => { const a = k / 44 * 6.2832, r = Math.max(8, bord(a) - m0 - m1 * lis(k, j, 4)); return [CX + Math.cos(a) * r, CZ + Math.sin(a) * r]; });
         const fond = (poly, y, c, trous) => { const me = nappe(poly, y, mRocV, 6, trous), n = me.geometry.attributes.position.count, cl = new Float32Array(n * 3); C3.set(c); for (let k = 0; k < n; k++) cl.set([C3.r, C3.g, C3.b], k * 3); me.geometry.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); me.castShadow = true; };   // même matière et mêmes ombres que la roche : fondu avec elle, pas de passe de dessin en plus
-        fond(EAUP, -7, 0xe6f0d8, [fosse(6, 12, 70)]); fond(EAUP, -8.6, 0x3f8f96, [fosse(20, 14, 71)]); fond(EAUP, -11.5, 0x04121e); fond(VASQ, -7, 0xd2e2c8);
-        nappe([...ligne(iP0, iQ, s => s.w + E0, 1), ...DROITE.slice(kR + 1, kR + NS + iQ - iM).reverse()], EAU, grain('#1b8fb0', ['#2499b8', '#1685a6'], { lisse: 1, transparent: true, opacity: 0.5, depthWrite: false }), 10);
+        fond(EAUP, -7, 0x9cc0a0, [fosse(3, 9, 70)]); fond(EAUP, -8.6, 0x1f5a58, [fosse(9, 12, 71)]); fond(EAUP, -11.5, 0x04121e); fond(VASQ, -7, 0x8fb09a);
+        nappe([...ligne(iP0, iQ, s => s.w + E0, 1), ...DROITE.slice(kR + 1, kR + NS + iQ - iM).reverse()], EAU, grain('#136f74', ['#187a7c', '#0f6468'], { lisse: 1, transparent: true, opacity: 0.6, depthWrite: false }), 10);
 
         // rochers : éboulis au bord de l'eau le long de la route, blocs sur le fond clair (certains émergent), un éboulis contre la falaise, deux piliers ; dans la vasque de la grotte
         const ROC = [], ROCL = [], fonce = (c, k) => C3.set(c).multiplyScalar(k).getHex(), RT = [0xe6dcc0, 0xd2c29c, 0xbca67a, 0xc8c0a8], roc = (x, y, z, sc, g = 0) => ROC.push([x, y, z, rnd() * 6.28, sc * (0.8 + rnd() * 0.5), sc * (0.7 + rnd() * 0.6), sc * (0.8 + rnd() * 0.5), g ? PALG[rnd() * 4 | 0] : RT[rnd() * 4 | 0]]);
@@ -2403,6 +2403,11 @@
       { const i = P(22) + 12, s = S[i], [x, z] = off(i, s.w + 4.5); L.pickups.push([x, -0.05, z, face(s, 1) + 1.5708, 1, 1, 1, 0xe8b84a]); cube(x, 1.9, z, face(s, 1) + 1.5708, 1.6, 1.2, 1.4, 0x1e1e22); }
       // cumulus de midi au-dessus de la terre
       { const nu = []; for (let k = 0; k < 30; k++) { const a = rnd() * 3.14, r = 1300 + rnd() * 700; nu.push([300 + Math.cos(a) * r, 240 + rnd() * 220, 300 + Math.sin(a) * r, rnd() * 6, 100 + rnd() * 120, 34 + rnd() * 30, 70 + rnd() * 70]); } inst(h, h.geo('buisson'), col(0xf8fbff, { lum: 1, fog: false }), nu).castShadow = false; }
+      // ---------- plage plus habitée : côté mer, palapas à transats, lanchas tirées au sec et cocotiers entre la corde et l'eau ; à la sortie du muelle, cabanes, palapas, barques et cocotiers des deux côtés jusqu'au bourg ----------
+      chaque(plageT, 3, (s, i, k) => { const [x, z] = off(i, -(s.w + 3 + rnd() * 7)); if (z < -34 || ecart(x, z) < 2.5) return;
+        if (k % 12 === 9) L.barques.push([x, -0.05, z, rnd() * 6.28, 1, 1, 1, FETE[k % 3]]); else if (k % 6 === 3) coco(x, z); else { L.palapas.push([x, z, 2.1, 2.3]); for (const e of [-1.5, 1.5]) L.transats.push([x + e, 0.12, z + 0.4, face(s, -1) + 1.5708, 1, 1, 1, FETE[(i + k) % 3]]); } });
+      for (let i = P(10); i < i11 + 12; i += 3) for (const sg of [-1, 1]) for (const d of [9 + rnd() * 6, 19 + rnd() * 10]) { const s = S[i], [x, z] = off(i, sg * (s.w + d)), r = rnd(); if (z < -36 || ecart(x, z) < 3 || dans(BOURG, x, z)) continue;
+        if (r < 0.3) coco(x, z); else if (r < 0.48) L.barques.push([x, -0.05, z, rnd() * 6.28, 1, 1, 1, FETE[i % 3]]); else if (r < 0.72) { cube(x, 1.3, z, face(s, sg), 3.4, 2.6, 3, [0x35a79a, 0xe8b84a, 0xe07a9c, 0xefe3c8][i % 4]); L.palapas.push([x, z, 3.2, 3.1]); } else { L.palapas.push([x, z, 2.1, 2.3]); for (const e of [-1.5, 1.5]) L.transats.push([x + e, 0.12, z + 0.4, face(s, sg) + 1.5708, 1, 1, 1, FETE[i % 3]]); } }
       inst(h, h.geo('toitPalapa'), mChaume, L.palapas.map(([x, z, r, y]) => [x, y, z, 0, r, r * 0.6, r])).castShadow = true; L.palapas.forEach(([x, z, r, y]) => L.poteaux.push([x, -0.2, z, 0, 1.3, y + 0.3, 1.3]));
       insts(h, 'transat', PEAU, L.transats, { teinte: 'toile' }); insts(h, 'pickup', PEAU, L.pickups, { teinte: 'caisse' }); insts(h, 'mototaxi', PEAU, L.motos, { teinte: 'caisse' });
       RES.forEach(([Lg, Nv], v) => insts(h, 'resort', PEAU, RL[v], { a: [Lg, Nv], teinte: 'crepi' })); insts(h, 'piscine', PEAU, L.piscines);

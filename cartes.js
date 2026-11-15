@@ -499,12 +499,12 @@
       ],
       th: { decor: 'plage', fog: 0xcfe6f0, fogD: [220, 1900], sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, cielSeg: 48,
         // midi, soleil haut côté terre (les ombres tombent vers la mer, sur la piste) ; pas de mirage (chaleur) : il faisait onduler tout l'horizon
-        astre: { dir: [-0.25, 0.85, 0.45], col: '#fffbe8', ombre: '#fffbe8', taille: 200 }, hemi: [0xa8d0ee, 0x7a6a4e, 0.6], sun: [0xfff0d0, 0.78], phares: 0, bloom: 0.03, scan: 0, chaleur: 0, sansCones: 1, routeTex: 'chausseeFine', ombre: { doux: 1 }, oeil: { tun: 0.6, noir: 0.5, clair: 0.12 }, frole: 1,
+        astre: { dir: [-0.25, 0.85, 0.45], col: '#fffbe8', ombre: '#fffbe8', taille: 200, rayons: 0.3 }, hemi: [0xa8d0ee, 0x7a6a4e, 0.6], sun: [0xfff0d0, 0.72], phares: 0, bloom: 0.015, scan: 0, chaleur: 0, sansCones: 1, routeTex: 'chausseeFine', ombre: { doux: 1 }, oeil: { tun: 0.6, noir: 0.5, clair: 0.12 }, frole: 1,
         murH: 0, route: ['#6e7378', '#7a7f84', '#e8b84a', '#e8e0c8', '#6e7378', '#6e7378', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xe8468c, 0x1fb5a8, '#fff4e0'], // bitume de la 307 et de la digue, ligne de rive jaune ; le décor pose le sable dur, les planches, le dallage et le sascab par-dessus
         tun: { sol: ['#a69c84', '#9a9078', '#a69c84', '#a69c84', '#a69c84', '#a69c84'], murs: ['#1fd6b0', '#1fd6b0'], paroi: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], plafond: ['#4a4232', '#4a4232', '#4a4232', '#4a4232'],
           fog: 0x4a5a58, portail: 0x3a3428, neons: [0x4a8a80, 0x9a7a50], coque: 20, ambiant: 0.6, cielJour: 1, jour: 1, sans: ['portails', 'luminaires', 'lumieres', 'parois'],
           // la salle du cénote : le décor fait les parois, la voûte et le tertre (sans : 'parois') ; un grand puits de lumière au-dessus du gué, deux petits vers la sortie
-          h: [[0, 7.5], [1, 6.3]], ouv: [[0.28, 0.36], [0.74, 0.8]], rayons: '#fff0c8', rayonsK: 0.35 },
+          h: [[0, 7.5], [1, 6.3]], ouv: [[0.28, 0.36], [0.74, 0.8]] },   // pas de colonnes de lumière (th.tun.rayons) : le jour entre par les puits, sans halo
         hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', fond: 'rgba(10,70,90,.88)', style: 'panneau', split: 0, jp: null, sur: [null, 'RIVIERA MAYA · MIDI'], titre: ['PLAYA', '307'] } } },
   ];
   // La Tournée court une nuit, du crépuscule à l'aube : ses manches dans l'ordre de l'heure, pas dans celui du menu. heure : ce que l'horloge affiche à la manche (le mode démo suit le même ordre)
