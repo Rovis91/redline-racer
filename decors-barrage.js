@@ -620,7 +620,7 @@
       { // V-82 : un hélicoptère militaire fait le tour de la vallée (forme de terre), rotor qui tourne
         const heli = new THREE.Group(), rotor = new THREE.Group(), peauH = { caisse: mat('peinture', { c: 0x4a5a3a }), vitre: mat('vitreSombre'), chassis: gris, pale: gris }; heli.userData.dyn = 1; heli.scale.setScalar(2); rotor.position.y = 1.65; heli.add(rotor); h.scene.add(heli);
         h.pose('helico', peauH, heli); h.pose('rotorHelico', peauH, rotor);
-        TICK.push((dt, car, t) => { const a = t * 0.085; heli.position.set(40 + Math.cos(a) * 170, 96 + Math.sin(a * 2) * 6, 500 + Math.sin(a) * 340); heli.rotation.y = Math.atan2(-Math.cos(a) * 340, -Math.sin(a) * 170); rotor.rotation.y += dt * 25; h.helico = heli.position; }); }
+        TICK.push((dt, car, t) => { const a = t * 0.085; heli.position.set(40 + Math.cos(a) * 170, 96 + Math.sin(a * 2) * 6, 500 + Math.sin(a) * 340); heli.rotation.y = Math.atan2(-Math.cos(a) * 340, -Math.sin(a) * 170); rotor.rotation.y += dt * 25; }); h.helicoP = heli.position; }
       { // V-64 : le câble-grue du chantier, tendu d'un versant à l'autre ; sa benne va et vient au-dessus de la vallée
         const A = [-430, hAt(-430, 470) + 22, 470], B = [470, hAt(470, 470) + 22, 470], lg = new THREE.BufferGeometry(), pts = []; for (let k = 0; k < 16; k++) for (const u of [k / 16, (k + 1) / 16]) pts.push(A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u - 60 * u * (1 - u), A[2]);
         lg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3)); const ls = new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x2e3230 })); ls.userData.cables = 1; h.scene.add(ls);
@@ -638,6 +638,31 @@
       { // V-44 : l'éclair bleu d'un poste de soudure sur l'ossature de l'immeuble en chantier ; éteint dès qu'on approche du S de la vallée (rien ne clignote au freinage)
         const m = new THREE.Mesh(new THREE.SphereGeometry(0.9, 8, 6), new THREE.MeshBasicMaterial({ color: 0xbfe4ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); m.position.set(62.4, terrasse(540) + 21.6, 512); m.userData.dyn = 1; m.visible = false; h.scene.add(m);
         TICK.push((dt, car, t) => { m.visible = !!car && car.idx > 225 && car.idx < 325 && t % 2.4 < 0.6 && Math.random() < 0.6; }); }
+      // ---------- le son du lieu (SON.lieux, SON.coup de audio.js) : sources posées dans le décor, entendues selon la distance et le côté ; événements liés au passage de la voiture ----------
+      if (window.SON && SON.lieux) { const Vp = (x, y, z) => ({ x, y, z }), [RA, RB] = h.trains, coupe = S[P(K.rampe + 3)], camp = Vp(396, hAt(396, 362), 362), carr = S[(QA + QB) >> 1], tunM = S[(T0 + T1) >> 1];
+        const chute = { p: Vp(-115, 12, 110), son: 'chute', r: 560, vol: 0.9 }, trA = { p: RA, son: 'train', r: 170, vol: 0 }, trB = { p: RB, son: 'train', r: 190, vol: 0 }, scie = { p: Vp(coupe.x, coupe.y, coupe.z), son: 'tronconneuse', r: 150, vol: 0.45 };
+        SON.lieux('barrage', [chute, trA, trB, scie, // V-18 à V-20 : la chute, entendue du quai, du pont, de la crête (en contrebas) et du belvédère ; V-24 : le roulement des rames ; V-59 : la tronçonneuse
+          ...[[105, 14, 65], [60, 14, 84], [15, 14, 65]].map(([x, y, z]) => ({ p: Vp(x, y + 3, z), son: 'turbine', r: 75, vol: 0.8, int: 1 })), // V-16, V-17 : un bourdon par groupe en marche, qui passe d'une oreille à l'autre dans le slalom
+          { p: Vp(249, 18, 516), son: 'transfo', r: 220, vol: 0.6 }, // V-42 : les transformateurs du poste
+          { p: Vp(carr.x, carr.y + 8, carr.z), son: 'concasseur', r: 160, vol: 0.6 }, // V-78
+          { p: h.helicoP, son: 'helico', r: 320, vol: 0.5 }, // V-82
+          ...[P(K.rampe + 6), P(K.traverse + 3), P(K.traverse + 6), P(K.culee + 6), P(K.belvedere + 4)].map(i => ({ p: Vp(S[i].x, S[i].y, S[i].z), son: 'foret', r: 260, vol: 0.5 })), // V-62 : le vent dans les mélèzes, dans la montée et la descente
+          { p: Vp(tunM.x, tunM.y + 5, tunM.z), son: 'souffle', r: 170, vol: 0.5, int: 1 }, // V-69 : la ventilation du tunnel
+          ...[40, 2760].map(i => { const [x, z] = bord(S[i], i < 100 ? 1 : -1, S[i].w + 4); return { p: Vp(x, S[i].y + 7, z), son: 'hautParleur', r: 90, vol: 0.35 }; })]); // V-33 : les haut-parleurs de la rue
+        const pos = car => Vp(car.x, car.y || 0, car.z); let iAv = -1, tOis = 3, trompe = 0, craq = 0;
+        TICK.push((dt, car) => { if (!car) return; const i = car.idx, v = Math.hypot(car.vx, car.vz);
+          chute.occ = i > iH0 && i < iH1 ? 0.75 : 0; trA.vol = RA.vc ? 0.7 : 0; trB.vol = RB.vc ? 0.8 : 0; scie.vol = h.arbre() < 0 || h.arbre() > 4 ? 0.45 : 0; // dans la halle, la chute est derrière les murs ; les rames à l'arrêt se taisent ; la scie s'arrête quand l'arbre tombe
+          if (h.arbre() > 1.5 && !craq) { craq = 1; SON.coup('craque', scie.p, 1, 260); } if (h.arbre() < 0) craq = 0; // V-59
+          { const d = Math.hypot(RB.x - car.x, RB.z - car.z); if (RB.vc && d < 150 && !trompe) { trompe = 1; SON.coup('trompe', RB, 1, 320); } if (d > 260) trompe = 0; } // V-24 : la trompe de la locomotive, une fois par rencontre
+          if (i !== iAv) { iAv = i;
+            if (i > iP0 + 6 && i < iP1 - 6 && i % 11 === 0) SON.coup('joint', pos(car), Math.min(1, v / 45), 50); // V-54 : les joints du tablier
+            if (i > iM0 + 6 && i < iM1 && (i - iM0 - 6) % 14 === 0) { const sd = ((i - iM0 - 6) / 14) & 1 ? 1 : -1, s = S[i], [x, z] = bord(s, sd, s.w + 1.2); SON.coup('souffle', Vp(x, s.y + 2, z), Math.min(1, v / 55), 40); } } // V-70 : chaque lampadaire de la crête passe en soufflant
+          if ((i > P(K.rampe) && i < T0 - 20) || (i > P(K.culee) + 40 && i < P(K.descente))) { if ((tOis -= dt) < 0) { tOis = 2 + Math.random() * 4; const s = S[(i + 30) % N], [x, z] = bord(s, Math.random() < 0.5 ? 1 : -1, s.w + 20); SON.coup('oiseau', Vp(x, s.y + 8, z), 0.8, 120); } } // V-62 : les oiseaux du matin, en forêt
+          if (i > 280 && i < 345 && Math.random() < dt * 0.5) SON.coup('marteau', Vp(68, 30, 530), 0.7, 220); }); // V-43 : le chantier
+        borne(P(K.crete) + 12, () => SON.coup('corne', Vp(70, YC, -70), 1, 900)); // V-71 : la corne de brume, en entrant sur la crête
+        borne(2150, () => SON.coup('clairon', camp, 1, 300)); // V-76 : le clairon du camp
+        for (const i of [388, 2398]) borne(i, car => SON.coup('gresille', pos(car), 0.8, 60)); // V-84 : sous les lignes à 500 kV
+        for (const i of [1235, 1298, 1700]) borne(i, () => SON.coup('trompe', Vp(170, 15, 400), 1, 1300)); } // V-28 : la trompe d'un train monte de la vallée
       // le lot mobile : tous les cubes des objets de MOB en une seule passe de dessin, hors de la fusion du décor (userData.dyn)
       { const L = MOB.flatMap(o => o.c.map(c => [o, c])), im = inst(h, h.geo('bloc'), mat('peinture'), L.map(([, c]) => c)), col = new THREE.Color(), d = new THREE.Object3D(), m4 = new THREE.Matrix4(); im.userData.dyn = 1;
         const loc = L.map(([, c]) => { d.position.set(c[0], c[1], c[2]); d.rotation.set(0, c[3] || 0, 0); d.scale.set(c[4], c[5], c[6]); d.updateMatrix(); return d.matrix.clone(); });

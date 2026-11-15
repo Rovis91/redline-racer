@@ -50,6 +50,7 @@
     canal: [['lowpass', 500, 0.5, 0.06, 0.06, 0.7], ['bandpass', 220, 0.7, 0.06]], // vent sec, autoroute lointaine (+ hélicoptère)
     stade: [['bandpass', 450, 0.6, 0.12, 0.09, 0.35], ['bandpass', 1100, 0.8, 0.05, 0.13, 0.5], ['lowpass', 120, 0.7, 0.1]], // la foule des tribunes, son brouhaha qui ondule (+ clameurs)
     givre: [['bandpass', 320, 3, 0.05, 0.07, 0.8], ['lowpass', 200, 0.7, 0.05, 0.04, 0.5]], // le vent qui siffle dans les sapins (+ grelots au loin)
+    barrage: [['bandpass', 520, 0.5, 0.035, 0.09, 0.6], ['lowpass', 150, 0.7, 0.07]], // le vent de la vallée, l'eau au loin ; les sons du lieu (chute, turbines, trains…) sont posés par le décor : SON.lieux
   };
 
   const gain = (v, dest) => { const g = AC.createGain(); g.gain.value = v; g.connect(dest); return g; };
@@ -498,6 +499,54 @@
     if (AC) { retune(AC.currentTime + 0.05, menu); if (menu) swF.frequency.setTargetAtTime((MENU[M.id] || MENU.ville).lp, AC.currentTime, 0.5); buildAmb(); } // au menu, le morceau commun continue : seule sa couleur change
   }
   carte(M);
+  // ---------- les sources du décor (SON.lieux, SON.coup) : des sons posés dans le lieu par une carte (chute, turbine, transformateur, train…), entendus selon la distance et le côté de la voiture écoutée ----------
+  // lieux(id, [{ p: { x, y, z } (peut bouger), son: un nom de SONS, r: portée en m, vol, int: 1 = à l'intérieur (le tunnel ne l'étouffe pas), occ: 0 à 1 = étouffé (le décor le règle) }, …]) ; id = la carte qui les pose : une autre carte les fait taire.
+  // coup(nom, p, vol, portée) : un son bref au point p (trompe d'un train, corne de brume, joint de pont…). Tout passe par la famille « amb ».
+  // shortcut: les sources d'une carte quittée restent branchées sur un gain coupé jusqu'au rechargement ; à débrancher pour de bon si une carte en pose des dizaines
+  let LIEUX = [], lieuxId = '';
+  const OREILLE = { x: 0, y: 0, z: 0, th: 0 };
+  const bruitV = (type, f, q, lv, d, rate, depth) => { const s = AC.createBufferSource(), g = gain(lv, d); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, g)); s.start(0, Math.random() * 2); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, g.gain)); l.start(); } };
+  const oscV = (type, f, lv, d, rate, depth) => { const o = AC.createOscillator(); o.type = type; o.frequency.value = f; o.connect(gain(lv, d)); o.start(); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(depth, o.frequency)); l.start(); } };
+  const SONS = {
+    chute: d => { bruitV('lowpass', 420, 0.5, 0.9, d); bruitV('bandpass', 1400, 0.4, 0.35, d, 0.3, 0.3); }, // grondement grave et chuintement de l'eau qui tombe
+    turbine: d => { const lp = filt('lowpass', 520, 0.7, d); for (const [f, v] of [[50, 0.5], [100, 0.3], [150, 0.14], [300, 0.05]]) oscV('sawtooth', f, v, lp); bruitV('bandpass', 950, 6, 0.12, d); }, // 50 Hz et ses harmoniques, sifflement de l'alternateur
+    transfo: d => { for (const [f, v] of [[100, 0.5], [200, 0.2], [400, 0.06]]) oscV('sine', f, v, d); }, // le bourdon d'un transformateur
+    train: d => { bruitV('lowpass', 220, 0.7, 0.8, d, 3.2, 0.5); bruitV('bandpass', 2400, 2, 0.1, d, 6.4, 0.9); }, // roulement, battement des rails
+    concasseur: d => { bruitV('lowpass', 300, 0.8, 0.9, d, 1.7, 0.6); bruitV('bandpass', 2000, 1, 0.08, d, 9, 0.9); },
+    tronconneuse: d => { oscV('sawtooth', 96, 0.4, filt('bandpass', 900, 1.2, d), 7, 6); },
+    helico: d => { bruitV('lowpass', 180, 0.8, 0.9, d, 11, 0.9); },
+    foret: d => { bruitV('bandpass', 620, 0.5, 0.5, d, 0.11, 0.6); bruitV('highpass', 5000, 0.5, 0.05, d, 0.07, 0.8); }, // vent dans les mélèzes
+    souffle: d => { bruitV('lowpass', 260, 0.6, 0.8, d); }, // ventilation d'un tunnel
+    hautParleur: d => { const bp = filt('bandpass', 1300, 2.5, d); for (const f of [392, 494, 587]) oscV('square', f, 0.12, bp, 5.5, 3); bruitV('highpass', 3000, 0.5, 0.03, d); }, // un haut-parleur de rue : un accord nasillard qui tremble
+  };
+  function lieux(id, L) { for (const l of LIEUX) if (l.g) { l.g.disconnect(); l.g = null; } lieuxId = id; LIEUX = L || []; }
+  const coteO = (dx, dz, d) => clamp((dz * Math.cos(OREILLE.th) - dx * Math.sin(OREILLE.th)) / Math.max(d, 10), -1, 1) * 0.85; // de -1 (à gauche) à 1 (à droite) de la voiture écoutée
+  function lieuxFrame(t, car, state, tun) {
+    if (!LIEUX.length) return; const actif = lieuxId === M.id && state !== 'title';
+    OREILLE.x = car.x; OREILLE.y = car.y || 0; OREILLE.z = car.z; OREILLE.th = car.th;
+    for (const l of LIEUX) {
+      if (!l.g || l.ac !== AC) { if (!actif) continue; l.ac = AC; l.pan = AC.createStereoPanner(); l.pan.connect(V.amb); l.lp = filt('lowpass', 800, 0.7, l.pan); l.g = gain(0, l.lp); SONS[l.son](l.g); }
+      const dx = l.p.x - car.x, dz = l.p.z - car.z, d = Math.hypot(dx, dz, (l.p.y || 0) - OREILLE.y), a = clamp(1 - d / l.r, 0, 1), o = l.occ || 0;
+      regle(l.g.gain, actif ? l.vol * a * a * (l.int ? 1 : 1 - 0.85 * tun) * (1 - o) : 0, t, 0.12); regle(l.pan.pan, coteO(dx, dz, d), t, 0.1); regle(l.lp.frequency, 500 + 9000 * a * a * (1 - 0.7 * o), t, 0.15);
+    }
+  }
+  const rafaleB = (t, dur, v, d, type, f, q = 0.7) => { const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = nbuf; s.connect(filt(type, f, q, g)); g.connect(d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + dur * 0.3); g.gain.linearRampToValueAtTime(0, t + dur); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02); };
+  const noteL = (t, dur, v, d, type, f, f1) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (f1) o.frequency.linearRampToValueAtTime(f1, t + dur); o.connect(g); g.connect(d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + Math.min(0.04, dur * 0.3)); g.gain.setValueAtTime(v, t + dur * 0.8); g.gain.linearRampToValueAtTime(0, t + dur); o.start(t); o.stop(t + dur + 0.02); };
+  const COUPS = {
+    trompe: (t, d) => { const lp = filt('lowpass', 1700, 1, d); for (const f of [277, 370]) noteL(t, 1.4, 0.22, lp, 'sawtooth', f * 1.05, f * 0.95); }, // la trompe d'une locomotive ; sa hauteur tombe pendant qu'on la croise (effet Doppler)
+    corne: (t, d) => { const lp = filt('lowpass', 520, 1, d); for (const f of [82, 123]) noteL(t, 2.8, 0.4, lp, 'sawtooth', f); }, // corne de brume
+    joint: (t, d) => { rafaleB(t, 0.07, 0.5, d, 'lowpass', 320); noteL(t, 0.09, 0.35, d, 'sine', 74, 52); }, // les pneus sur un joint de tablier
+    souffle: (t, d) => { rafaleB(t, 0.16, 0.3, d, 'bandpass', 1700, 0.8); }, // un poteau qui passe tout près
+    craque: (t, d) => { for (let k = 0; k < 6; k++) rafaleB(t + k * 0.11 + Math.random() * 0.05, 0.05, 0.45, d, 'highpass', 1500); rafaleB(t + 1.1, 0.5, 0.9, d, 'lowpass', 130); }, // un arbre craque, puis touche le sol
+    clairon: (t, d) => { const lp = filt('lowpass', 2200, 1, d); [392, 523, 659, 523, 659].forEach((f, k) => noteL(t + k * 0.24, 0.22, 0.2, lp, 'square', f)); },
+    gresille: (t, d) => { const g = AC.createGain(), l = AC.createOscillator(); g.connect(d); l.frequency.value = 100; l.connect(gain(0.5, g.gain)); l.start(t); l.stop(t + 0.9); rafaleB(t, 0.8, 0.25, g, 'highpass', 5200); }, // une ligne à haute tension
+    marteau: (t, d) => { for (let k = 0; k < 3; k++) noteL(t + k * 0.34, 0.12, 0.2, d, 'sine', 1900, 1750); },
+    oiseau: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.12, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
+  };
+  function coupLieu(nom, p, vol = 1, r = 200) {
+    if (!AC || !nbuf || lieuxId !== M.id || !COUPS[nom]) return; const t = AC.currentTime + 0.02, dx = p.x - OREILLE.x, dz = p.z - OREILLE.z, d = Math.hypot(dx, dz, (p.y || 0) - OREILLE.y), a = clamp(1 - d / r, 0, 1); if (a <= 0) return;
+    const pan = AC.createStereoPanner(); pan.pan.value = coteO(dx, dz, d); pan.connect(V.amb); COUPS[nom](t, gain(vol * a * a, pan)); setTimeout(() => pan.disconnect(), 6000);
+  }
   function buildAmb() {
     if (M.id === 'canal') rafaleBuf(HELICO); if (M.id === 'givre' && !(GREL && GREL.ac === AC)) GREL = Object.assign(grelots(), { ac: AC }); // l'hélicoptère, écrit maintenant plutôt qu'en course
     if (esp) { const P = ESP[M.id] || ESP.essai, n = Math.round(AC.sampleRate * P.dur), ir = AC.createBuffer(2, n, AC.sampleRate); // la salle du lieu
@@ -600,6 +649,7 @@
     paris: { slap: 0.028, sl: 0.3, mur: 1, rv: 0.14, dur: 1.4, lp: 3800 }, // façades de pierre
     canal: { slap: 0.05, sl: 0.25, mur: 0.7, rv: 0.1, dur: 1.6, lp: 3500 }, // le lit de béton du canal
     stade: { slap: 0.09, sl: 0.25, mur: 0.5, rv: 0.45, dur: 3, lp: 3000 }, // arène couverte : grande salle
+    barrage: { slap: 0.14, sl: 0.12, mur: 0.5, rv: 0.1, dur: 2, lp: 3000 }, // vallée encaissée : l'écho revient de loin
     givre: { slap: 0.06, sl: 0.04, mur: 0.2, rv: 0.03, dur: 0.8, lp: 2000 }, // la neige boit le son
     terre: { slap: 0.12, sl: 0.06, mur: 0, rv: 0.03, dur: 1, lp: 2500 }, // garrigue à découvert
     essai: { slap: 0.04, sl: 0.1, mur: 0.5, rv: 0.05, dur: 1, lp: 3000 },
@@ -904,6 +954,7 @@ registerProcessor('moteur', Moteur);`;
     // ambiance du lieu : seulement dans ses zones (e.amb, fondu fait par le jeu), jamais au menu ni en tunnel ; événements espacés au hasard, dans la zone
     const amb = state === 'title' ? 0 : (e.amb || 0) * (1 - tun);
     k(ambBed.gain, 0.6 * amb, 0.4); if (amb > 0.5) { if (!inZone) ambT = Math.min(ambT, 1.2); if ((ambT -= dt) < 0) ambT = ambEvent(t + 0.05); } inZone = amb > 0.5;
+    lieuxFrame(t, car, state, tun); // les sources posées par le décor
     // musique : sections et filtres suivent la course
     const a0 = (car.idx - T.h0 + N) % N, inside = a0 < T.h1 - T.h0, near = racing && !inside && N - a0 < 60;
     if (near && !wasNear) riser(t, clamp((N - a0) * 2 / Math.max(sp, 20), 0.5, 3));
@@ -950,6 +1001,7 @@ registerProcessor('moteur', Moteur);`;
   choc = differe(choc); clac = differe(clac); levier = differe(levier); petarade = differe(petarade); pschitt = differe(pschitt); boostFx = differe(boostFx); reception = differe(reception); klaxon = differe(klaxon); coupMusique = differe(coupMusique);
   document.addEventListener('visibilitychange', () => { if (AC && live) document.hidden ? AC.suspend() : AC.resume(); }); // pas de musique hachée ni de moteur figé en arrière-plan
   window.SON = {
+    lieux, coup: coupLieu, lieuxEtat: () => LIEUX.map(l => [l.son, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // sources du décor ; lieuxEtat : prise de test (niveau visé de chaque source)
     init: initAudio, frame: audioFrame, setStation, carte, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrivee, quitter, reprendre,
     crash: () => AC && crash(),
     tonnerre: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // grondement + craquement dans le médium
