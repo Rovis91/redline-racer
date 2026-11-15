@@ -1879,10 +1879,10 @@
       for (const x of [-148, ...XS.map(x => x + 15)]) bloc(bet, x - 2, x + 2, zF(30), 97, 0, 14); // les piles entre pertuis
       XS.forEach((x, k) => {
         bloc(noir, x - 4, x + 4, zF(14) - 6, zF(14) + 0.6, 9, 19); bloc(orange, x - 4.6, x + 4.6, zF(21) - 3, zF(21) + 1.5, 19, 22.5); // pertuis et vanne levée, en applique sur la face
-        const gj = h.geo('gerbe', 108, 44, 10, 27); gj.applyMatrix4(new THREE.Matrix4().makeRotationX(-0.35).setPosition(x, 11.6, 99)); jets.push(gj);
+        const gj = h.geo('gerbe', 104, 58, 11, 30); gj.applyMatrix4(new THREE.Matrix4().makeRotationX(-0.5).setPosition(x, 11.6, 99)); jets.push(gj);
         bru.push([x, 7, 212, rnd() * 3, 34, 16, 34], [x + 15, 6, 180, rnd() * 3, 22, 12, 22]);
       });
-      for (const x of [-120, -60, 0]) bru.push([x, 26, 205, rnd() * 3, 50, 40, 50]); // le panache qui monte de la retombée
+      for (const x of [-120, -60, 0, 40]) bru.push([x, 30, 200, rnd() * 3, 56, 46, 56], [x, 16, 105, rnd() * 3, 18, 12, 18]); // le panache qui monte de la retombée
       { const P3 = [], UV = [], I = []; for (const g of jets) { const b = P3.length / 3; P3.push(...g.attributes.position.array); UV.push(...g.attributes.uv.array); I.push(...Array.from(g.index.array, i => i + b)); } maille(P3, UV, I, gerbe).renderOrder = 2; } // les six jets en une passe de dessin
       bru.push([88, 7, 200, 0, 34, 10, 50], [40, 14, 210, 0, 60, 22, 70], [70, 10, 170, 0, 50, 16, 60], [-170, 12, 200, 0, 40, 18, 60]); // l'embrun qui passe sur la route et les berges
       inst(h, h.geo('brume'), brume, bru).renderOrder = 3;
@@ -1968,7 +1968,7 @@
       // lampadaires de sodium : crête et bord du lac des deux côtés en quinconce, rive est côté cité ; la crosse au-dessus de la chaussée, à 9 m
       { const lp = [], lampe = mat('lampe', LUMI); const pose1 = (i, sd, o = 1.6) => { const s = S[i], [x, z] = bord(s, sd, s.w + o); lp.push([x, s.y, z, h.across(s) + (sd > 0 ? Math.PI : 0)]); const [lx, lz] = bord(s, sd, s.w - 0.6); h.lum(i, lx, s.y + 8.6, lz, 0xffc070, 26, 0.9); };
         for (let i = P(33), k = 0; dans(i, 33, 41); i = (i + 11) % N, k++) pose1(i, k & 1 ? 1 : -1, 0.6);
-        for (let i = P(53), k = 0; dans(i, 53, 4); i = (i + 14) % N, k++) pose1(i, k & 1 ? 1 : -1);
+        for (let i = P(53), k = 0; dans(i, 53, 4); i = (i + 14) % N, k++) pose1(i, 1);
         insts(h, 'lampadaireGES', { fut: mat('matGris'), lampe }, lp); }
       // ce qui défile au ras de la route : montants du parapet tous les 4 m (crête, lac, corniche), catadioptres sur les glissières de la culée, barbacanes sur les murs de soutènement
       { const mo = [], ca = [];
@@ -2064,7 +2064,7 @@
       for (let k = 0; k < 2600; k++) { const x = -400 + rnd() * 700, z = 220 + rnd() * 1500, rv = riv(x, z); if (rv < -3 || rv > 5 || dAt(x, z) < W + 4) continue; roc.push([x, Math.max(2.4, hAt(x, z)), z, rnd() * 6, 1.4 + rnd() * 2.6, 0.8 + rnd() * 1.4, 1.4 + rnd() * 2.6]); }
 
       // des arbres serrés sur les versants entre les lacets et au-dessus de la corniche (les grands aplats verts et bruns)
-      for (let k = 0; k < 2600; k++) { const z = -40 + rnd() * 200, x = 440 + rnd() * 380; if (dAt(x, z) > W + 6 && !lac(x, z) && !mur(x, z)) mel.push([x, hAt(x, z) - 0.5, z, rnd() * 6, 0.6 + rnd() * 0.6, 0.6 + rnd() * 0.7]); }
+      for (let k = 0; k < 6000; k++) { const z = -40 + rnd() * 200, x = 440 + rnd() * 380; if (dAt(x, z) > W + 4 && !lac(x, z) && !mur(x, z)) mel.push([x, hAt(x, z) - 0.5, z, rnd() * 6, 0.6 + rnd() * 0.6, 0.6 + rnd() * 0.7]); }
       for (let i = P(41); dans(i, 41, 49); i += 2) { const s = S[i]; for (let j = 0; j < 2; j++) { const [x, z] = bord(s, 1, s.w + 12 + rnd() * 50); if (dAt(x, z) > W + 9) mel.push([x, hAt(x, z) - 0.5, z, rnd() * 6, 0.7 + rnd() * 0.6, 0.7 + rnd() * 0.7]); } }
       // panneaux triangulaires « virage » à 120 m avant chaque virage serré ; plaques cyrilliques dans la galerie
       { const pv = [], pg = []; let der = -99; for (let i = 0; i < N; i++) { const j = (i + 60) % N, k = S[j].k; if (Math.abs(k) > 0.025 && i - der > 80 && !dans(j, 5, 13)) { der = i; if (i >= T0 && i <= T1) continue; const s = S[i], [x, z] = bord(s, 1, s.w + 3); pv.push([x, s.y + 2.4, z, h.across(s), 1.4, 1.4, 0.08]); peints.push([x, s.y + 1, z, 0, 0.1, 2.2, 0.1, 0x4a4e4a]); } }
