@@ -145,6 +145,14 @@ Coût : nul. Sans ces options, rien ne change (ville, wangan, paris : mêmes gé
 
 `th: { sansCones: 1 }` : le moteur ne pose ni cônes ni poubelles à l'entrée des virages. Désactivé par défaut ; les autres cartes gardent les leurs.
 
+## 12. Piste plus étroite que `W` : `M.large` avec une demi-largeur inférieure à `W`
+
+```js
+{ id: 'plage', W: 8, tun: [26, 34], large: [[27, 33, 5]] }   // passerelle de 10 m dans la grotte du cénote
+```
+
+`M.large` ne savait qu'élargir (`sim.js` gardait le maximum). Une entrée dont la demi-largeur est inférieure à `W` resserre maintenant la piste entre ses deux points, avec le même raccord de 60 m de part et d'autre. Aucune autre carte ne pose de valeur inférieure à `W` : rien ne change pour elles. À n'utiliser que sous un tunnel de forme libre (section 5), où le sol du moteur suit `s.w` : à ciel ouvert, le ruban de chaussée et les glissières du moteur restent à `W`, le décor devrait couvrir la bande en trop. Contrôle sur plage : `node test-cartes.js` (tour du pilote automatique, 0 choc).
+
 ## Mesures de la deuxième série (banc rapide, machine chargée de 30 à 57 %)
 
 | Carte | Avant | Après |

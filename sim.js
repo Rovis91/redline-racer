@@ -105,9 +105,9 @@
     S.forEach((s, i) => { const a = S[(i - 3 + n) % n], b = S[(i + 3) % n]; s.k = s.kl = (a.tx * b.tz - a.tz * b.tx) / (6 * len / n); });
     const near = p => { let b = 0, bd = 1e9; S.forEach((s, i) => { const d = (s.x - p[0]) ** 2 + (s.z - p[1]) ** 2; if (d < bd) { bd = d; b = i; } }); return b; };
     const at = i => near(PTS[i]), TUN = M.tun || [0, 0];
-    // largeur variable : M.large = [[a, b, w], …] demi-largeur w entre les points a et b, raccordée sur 60 m de part et d'autre ; ailleurs W (s.w = demi-largeur à l'échantillon)
+    // largeur variable : M.large = [[a, b, w], …] demi-largeur w (plus large ou plus étroite que W) entre les points a et b, raccordée sur 60 m de part et d'autre ; ailleurs W (s.w = demi-largeur à l'échantillon)
     S.forEach(s => s.w = W);
-    for (const [a, b, w] of M.large || []) { const i0 = at(a), l = (at(b) - i0 + n) % n; for (let k = -30; k <= l + 30; k++) { const f = Math.min(1, (k + 30) / 30, (l + 30 - k) / 30), s = S[(i0 + k + n) % n]; s.w = Math.max(s.w, W + (w - W) * f * f * (3 - 2 * f)); } }
+    for (const [a, b, w] of M.large || []) { const i0 = at(a), l = (at(b) - i0 + n) % n; for (let k = -30; k <= l + 30; k++) { const f = Math.min(1, (k + 30) / 30, (l + 30 - k) / 30), s = S[(i0 + k + n) % n]; s.w = (w < W ? Math.min : Math.max)(s.w, W + (w - W) * f * f * (3 - 2 * f)); } }   // w < W : la piste se resserre (passerelle de la plage) ; aucune autre carte n'en pose
     // murs roulables : M.cuv = [[a, b, largeur, rayon], …] ajoute de chaque côté du plat, entre les points a et b, un quart de tube qui s'ouvre sur 40 m (s.pl = demi-largeur du plat, s.rc = rayon du tube)
     S.forEach(s => { s.pl = s.w; s.rc = 0; });
     for (const [a, b, B, R] of M.cuv || []) { const i0 = at(a), l = (at(b) - i0 + n) % n; for (let k = 0; k <= l; k++) { const f = Math.min(1, k / 20, (l - k) / 20), s = S[(i0 + k) % n]; s.rc = R; s.w = W + B * f * f * (3 - 2 * f); } }
