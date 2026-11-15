@@ -2247,6 +2247,12 @@
         colore(inst(h, h.geo('disque'), h.mat('tache', ADD), ts), ts).castShadow = false; inst(h, h.geo('pan'), h.mat('racines', { side: D, transparent: true, alphaTest: 0.5 }), rac);
         CUB.push(...trousHaut.map(([x, y, z, r, sx, sy, sz]) => [x, y, z, 0, sx * 1.7, 0.1, sz * 1.7, 0x0a1410])); }
       { for (let k = 4; k < 44; k += 3) { const s = S[(t1 + k) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 1.2); POT.push([x, -0.05, z, 0, 1.8, 6.2, 1.8]); } boiteL(chaume, 2 * W + 4, 0.25, 2.2, s.x, s.y + 6.2, s.z, h.across(s)); } } // pergola de palmes à la sortie : l'œil passe de la grotte au plein soleil sous une ombre rayée
+      // les mécaniques, visibles : bandeau jaune lumineux au pied des parois là où frôler remplit la nitro (corde), rampe peinte et panneau du pont en dos d'âne, chevrons du virage de retour, anneau de sable mouillé au bord de la place
+      { const [c0, cn] = tranche(27, 33), jaune = h.mat('peinture', { lum: 1, c: 0xffc830, side: D }); for (const sd of [-1, 1]) h.ribbon(c0, cn, sd * (W - 0.24), 0.35, sd * (W - 0.24), 0.75, jaune, 4); }
+      { const i = P(40), sj = 17; couvre((i - sj + N) % N, 3, -W, W, h.mat('topes', { side: D, ...OFF }), 4); couvre((i - 2 + N) % N, 2, -W, W, h.mat('topes', { side: D, ...OFF }), 4);
+        const s = S[(i - 70 + N) % N], [x, z] = bord(s, 1, s.w + 2); panneaux.push([x, -0.05, z, enFace(s) + Math.PI, 'PUENTE  TOPE', '#f7d36b', '#1a1a1a', 4]); }
+      for (const [i, j] of [[P(43) - 6, P(42)], [P(43), P(42) + 10], [P(43) + 8, P(42) + 20]]) { const s = S[i], sd = s.k > 0 ? -1 : 1, [x, z] = bord(s, sd, s.w + 1.4); boiteL(ecrit('>>', '#e8302a', '#ffffff', 32), 3, 2, 0.15, x, 2.1, z, enFace(S[j])); POT.push([x, -0.05, z, 0, 1.4, 1.2, 1.4]); }
+      { const g = new THREE.RingGeometry(PR - 1.4, PR, 96); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, h.mat('sableMouille', { side: D, ...OFF })); m.position.set(PX, 0.012, PZ); m.receiveShadow = true; h.scene.add(m); }
       inst(h, h.geo('rocher'), calc, rochers);
 
       // --- secteur 8, la chaussée de la lagune de mangrove (fiche 7, remplace le lobby) : bordures blanches, enrochement, lampadaires ; palétuviers rouges en rideaux et en îlots,
