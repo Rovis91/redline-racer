@@ -95,7 +95,9 @@
   // Le nombre de vues est le nombre de joueurs : il se règle par joueurs(n), plus bas (retireVue() ôte la dernière). À deux, les vues sont superposées, joueur 1 en haut, chacune sur sa grille de 270 lignes : le canvas en fait 540.
   // Une vue est un joueur : sa place (rang n, périphérique, entrée de l'image, compte de tours, « arrivé »), sa voiture (moi) et son modèle animé (hu), plus ce que sa caméra regarde (car : moi, sauf éliminé à deux).
   // VUES[0] est le joueur 1 : VUES[0].moi est la voiture du jeu hors course (il n'y a pas d'autre variable « la voiture du joueur »).
-  const SSR = T.pluie.some(p => p > 0); // carte où il pleut quelque part : chaque vue a sa profondeur et sa passe de reflets (ssr)
+  // th.mouilleVisible (1, ou une force) : les zones surf « mouille » se voient comme la pluie (MOT, reflets ssr), plus sombres. MV = force de pluie équivalente par échantillon (3 = SURF.mouille plein, comme dans sim.js)
+  const MV = TH.mouilleVisible ? Float32Array.from(T.surf, q => 3 * (+TH.mouilleVisible) * Math.min(1, q.aq / 0.1)) : null, mouAt = i => MV ? Math.max(T.tun && (i - T.t0 + T.n) % T.n <= T.t1 - T.t0 ? 0 : T.pluie[i], MV[i]) : T.pluie[i]; // sous le tunnel, la pluie ne mouille pas le sol
+  const SSR = T.pluie.some(p => p > 0) || !!MV && MV.some(p => p > 0); // carte où il pleut quelque part : chaque vue a sa profondeur et sa passe de reflets (ssr)
   const EAU = 0.5; // alpha de la route dans la cible : 1 - EAU × mouillure (écrit par eclaire, relu par ssr) ; tout autre opaque écrit 1
   const VUES = [], AA = ST ? ST.aa : 1, deux = () => VUES.length > 1;
   const suit = (vu, c) => { vu.moi = vu.car = c; vu.hu.hist.length = vu.hu.gR[0].length = vu.hu.gR[1].length = vu.hu.gOn[0] = vu.hu.gOn[1] = 0; vu.cth = c.th; vu.carY = S[c.idx].y; vu.result = null; vu.fini = vu.spec = false; vu.lap0 = [0, 0, 0]; }; // la vue se cale derrière la voiture c, compteurs de course à zéro : au départ, au retour au menu
@@ -210,7 +212,7 @@
   // vu.oeil = log de la lumière à laquelle l'œil de la vue est fait (0 dehors, log TUN adapté au tunnel) ; exposition = lumière vraie / lumière de l'œil (rendVue) :
   // à l'entrée l'image s'assombrit puis l'œil s'habitue, à la sortie le dehors éblouit (au plus ×1,6) puis l'œil se referme, en 1 à 2 s ; une fois adapté, l'image est la scène peinte, couleurs comprises.
   // (L'ancienne version mesurait la luminosité de l'image et la ramenait à celle du dehors : un tunnel peint plus clair que la nuit, wangan, restait à ×0,4 ; un plus sombre, la ville, plafonnait.)
-  const TUN = 0.4, OEIL_NOIR = 0.5, OEIL_CLAIR = 0.35; // lumière vraie des tunnels ; constantes de temps de l'œil (s) vers le noir, vers le clair
+  const TUN = 0.4, OEIL_N = 0.5, OEIL_C = 0.35; // lumière vraie des tunnels ; constantes de temps de l'œil (s) vers le noir, vers le clair ; th.oeil = { tun, noir, clair } les remplace pour une carte
   if (ST) { // passe finale des styles : la scène telle quelle, l'effet du style, le HUD (toujours sur sa grille de 270 lignes), une vignette légère
     Object.assign(post.uniforms, { dz: { value: null }, ecr: { value: new THREE.Vector2(1, 1) }, pal: { value: PAL.map(c => new THREE.Color(c)) } });
     post.fragmentShader = `uniform sampler2D t, h, dz; uniform float amt, vig; uniform vec2 px, ecr; uniform vec3 pal[5]; varying vec2 v; ${AIR}
@@ -378,6 +380,9 @@
       #ifdef MOUILLE
         gl_FragColor.rgb *= 1. - .35 * mo.g * (1. - mo.r); // et la ligne sèche, gomme et poussière, plus sombre encore
       #endif
+      #ifdef MOUVIS
+        gl_FragColor.rgb *= 1. - .3 * mo.g * mo.r; // th.mouilleVisible : le bitume mouillé est plus sombre (la pluie seule ne le fonce pas : rendu des cartes de pluie inchangé)
+      #endif
       gl_FragColor.rgb += 1. - exp(-1.3 * (diffuseColor.rgb + .07) * dif) + spe * (g * (.12 + pow(1. - max(dot(n, v), 0.), 3.))); // même l'asphalte sombre répond ; les teintes claires saturent en douceur
     }
     `;
@@ -393,7 +398,7 @@
     m.onBeforeCompile = sh => {
       Object.assign(sh.uniforms, LUX, { uGloss: { value: m.userData.gloss || 0 }, uRetro: { value: m.userData.retro || 0 } });
       if (m.userData.mo) { // la route à ciel ouvert : vMo = (travers, échantillon) dans MOT ; uv.y = échantillon / 16 depuis T.t1 (ribbon, vLen 32)
-        Object.assign(sh.uniforms, { uMo: { value: MOT }, uMoN: { value: new THREE.Vector2(T.t1 + 0.5, N) } });
+        Object.assign(sh.uniforms, { uMo: { value: MOT }, uMoN: { value: new THREE.Vector2((m.userData.mo0 ?? T.t1) + 0.5, N) } });
         sh.vertexShader = '#define MOUILLE\nuniform vec2 uMoN; varying vec2 vMo;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vMo = vec2(uv.x, (uv.y * 16. + uMoN.x) / uMoN.y);\n#include <fog_vertex>');
       }
       sh.vertexShader = 'varying vec3 vLw, vAf; uniform vec2 uRes;\n' + sh.vertexShader.replace('#include <fog_vertex>', LU_V + '#include <fog_vertex>');
@@ -409,10 +414,10 @@
         sh.fragmentShader = 'varying vec4 vCo; uniform vec4 uCr;\n' + co.map((c, i) => 'uniform sampler2D uC' + i + ';\n').join('') + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment)
           .replace('diffuseColor *= sampledDiffuseColor;', co.map((c, i) => `sampledDiffuseColor = mix(sampledDiffuseColor, texture2D(uC${i}, vMapUv * uCr[${i}]), vCo[${i}]);\n`).join('') + 'diffuseColor *= sampledDiffuseColor;');
       }
-      if (m.userData.mo) sh.fragmentShader = '#define MOUILLE\n' + sh.fragmentShader; // en tête, avant LU_H qui s'en sert
+      if (m.userData.mo) sh.fragmentShader = '#define MOUILLE\n' + (MV ? '#define MOUVIS\n' : '') + sh.fragmentShader; // en tête, avant LU_H qui s'en sert
       sh.fragmentShader = '#undef OPAQUE\n' + sh.fragmentShader; // r151+ force l'alpha des opaques à 1 avant fog_fragment : les flaques (alpha de la texture) et la mouillure le lisent
     };
-    m.customProgramCacheKey = () => 'lu' + lit + opaque + mou + (m.userData.mo ? 'mo' : '') + (OMBO.doux ? 'od' : '') + (m.userData.couches ? 'c' + m.userData.couches.length : '');
+    m.customProgramCacheKey = () => 'lu' + lit + opaque + mou + (m.userData.mo ? 'mo' + (MV ? 'mv' : '') + (m.userData.mo0 ?? '') : '') + (OMBO.doux ? 'od' : '') + (m.userData.couches ? 'c' + m.userData.couches.length : '');
   };
   const gloss = (m, g) => { m.userData.gloss = g; return m; }, retro = (m, r = 1.5) => { m.userData.retro = r; return m; };
 
@@ -448,7 +453,7 @@
   // mouillure pour le dessin : texture MO.nb × N (bandes en travers de -W à W × échantillons), rouge = mouillure de la course (R.mo, voir MO dans sim.js ; 1 hors course), vert = pluie de l'échantillon (0 à 1)
   // Un shader qui veut savoir si la route est mouillée lit MOT : mouillure = rouge × vert. Remise à jour toutes les 8 images (moMaj).
   const MOI = new Uint8Array(N * MO.nb * 4).fill(255), MOT = new THREE.DataTexture(MOI, MO.nb, N, THREE.RGBAFormat); MOT.magFilter = MOT.minFilter = THREE.LinearFilter; MOT.k = 0;
-  for (let k = 0; k < N * MO.nb; k++) MOI[k * 4 + 1] = Math.min(1, T.pluie[k / MO.nb | 0]) * 255; MOT.needsUpdate = true;
+  for (let k = 0; k < N * MO.nb; k++) MOI[k * 4 + 1] = Math.min(1, mouAt(k / MO.nb | 0)) * 255; MOT.needsUpdate = true;
   const moMaj = () => { const mo = race && race.mo; if (!mo && !MOT.sale || ++MOT.k & 7) return; for (let k = 0; k < N * MO.nb; k++) MOI[k * 4] = mo ? mo[k] * 255 : 255; MOT.sale = !!mo; MOT.needsUpdate = true; }; // toutes les 8 images : la route sèche lentement, et chaque envoi est toute la texture
   const across = s => Math.atan2(-s.tx, -s.tz); // rotation Y qui met l'axe X local en travers de la route
   const box = (w, h, d, mat, x, y, z, parent = scene) => { const m = new THREE.Mesh(habille(geo('boite', w, h, d), mat), mat); m.position.set(x, y, z); parent.add(m); return m; };
@@ -457,7 +462,7 @@
   // route : mouillée, elle renvoie en reflets étirés les phares, les néons, la lune ou le soleil (lumière dynamique)
   const route = ribbon(T.t1, cO, -W, 0, W, 0, mat(TH.routeTex || 'chaussee', { // th.routeTex : autre dessin de chaussée, mêmes réglages th.route (chausseeFine : textures.js)
     side: THREE.DoubleSide, gloss: TH.route[6] ? 0.2 : 0.08 }, ...TH.route), 32); route.material.userData.mo = 1;
-  if (SSR) { route.material.userData.mou = 1; route.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cO + 1) * 2 }, (_, j) => pluieAt((T.t1 + (j >> 1)) % N)), 1)); } // pluie par échantillon : ssr ne reflète que là où il pleut
+  if (SSR) { route.material.userData.mou = 1; route.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cO + 1) * 2 }, (_, j) => mouAt((T.t1 + (j >> 1)) % N)), 1)); } // pluie par échantillon : ssr ne reflète que là où il pleut
   const barrier = mat('glissiere', { lum: TH.tubes, side: THREE.DoubleSide }, TH.mur); // ville : liseré néon, lumineux par lui-même ; ailleurs la glissière prend la lumière
   const MURS = {}; // les deux glissières (côté -1 et +1), qui gardent la forme des chocs (voir « décor qui s'abîme »)
   if (!T.vert) { MURS[-1] = ribbon(T.t1, cO, -W, TH.murH, -W, -2, barrier); MURS[1] = ribbon(T.t1, cO, W, TH.murH, W, -2, barrier); }
@@ -477,14 +482,14 @@
     // forme du tunnel (docs/MOTEUR-OPTIONS-CARTES.md) : th.tun.h (hauteur sous voûte, 8 m), th.tun.voute (flèche de la voûte, 0 = plafond plat), th.tun.ouv (ouvertures du plafond [[f0, f1], …]),
     // th.tun.rayons (couleur des colonnes de lumière sous les ouvertures). h et voute : un nombre, des clés [[f, valeur], …] ou une fonction (f, s) ; f = 0 à l'entrée, 1 à la sortie.
     // Avec l'une d'elles, parois et sol suivent la demi-largeur roulable s.w (M.large de sim.js : les murs de la physique) au lieu de W. Sans elles, rien ne change.
-    const FT = u.h != null || !!u.voute || !!u.ouv, FI = new Map(); for (let k = 0; k <= cT; k++) FI.set(S[(T.t0 + k) % N], k / cT);
+    let sol; const FT = u.h != null || !!u.voute || !!u.ouv, FI = new Map(); for (let k = 0; k <= cT; k++) FI.set(S[(T.t0 + k) % N], k / cT);
     const val = (v, d) => s => { const f = FI.get(s) ?? 0; if (v == null) return d; if (typeof v === 'number') return v; if (typeof v === 'function') return v(f, s);
       let j = 0; while (j < v.length - 1 && v[j + 1][0] < f) j++; const [fa, a] = v[j], [fb, b] = v[Math.min(j + 1, v.length - 1)]; return fb > fa ? a + (b - a) * clamp((f - fa) / (fb - fa), 0, 1) : a; };
     const tw = FT ? s => s.w : () => W, hh = val(u.h, 8), vt = val(u.voute, 0), hm = s => hh(s) - vt(s), plaf = (s, x) => hm(s) + vt(s) * Math.sqrt(Math.max(0, 1 - (x / tw(s)) ** 2));
     const ouvert = k => (u.ouv || []).some(([a, b]) => k >= a * cT && k <= b * cT), pans = [] /* plafond : morceaux [début, longueur] hors des ouvertures */;
     for (let k = 0, a = -1; k <= cT; k++) { const o = ouvert(k) || k === cT; if (!o && a < 0) a = k; if (o && a >= 0) { pans.push([a, k - a + (k === cT && !ouvert(k))]); a = -1; } }
     tunMats.push(mat('chaussee', { lum: 1, side: THREE.DoubleSide, gloss: 0.3 }, ...u.sol), mat('paroi', LUMI2, u.murs[0], u.paroi, u.carreaux), mat('paroi', LUMI2, u.murs[1], u.paroi, u.carreaux), mat('plafond', LUMI2, u.plafond));
-    tunMats.forEach((m, i) => m.color.setScalar(m.userData.amb = TH.alarme && (i === 1 || i === 2) ? 0.85 : TUN_AMB)); // ville : les parois gardent leurs bandes néon vives
+    tunMats.forEach((m, i) => m.color.setScalar(m.userData.amb = TH.alarme && (i === 1 || i === 2) ? 0.85 : u.ambiant ?? TUN_AMB)); // th.tun.ambiant : autre part d'ambiante sous la voûte ; ville : les parois gardent leurs bandes néon vives
     { // luminaires en quinconce, un à gauche, un à droite : la lumière et l'ombre de la voiture changent de côté à chaque luminaire franchi
       const d = new THREE.Object3D(), fx = u.neons.map(c => new THREE.InstancedMesh(geo('luminaireTunnel'), mat('peinture', { lum: 1, c, fog: false }), Math.ceil(cT / LUM_PAS))), nf = [0, 0];
       for (let i = T.t0 + 2, k = 0; i < T.t1 - 1; i += LUM_PAS, k++) {
@@ -497,26 +502,27 @@
       fx.forEach((m, c) => { m.count = nf[c]; scene.add(m); });
     }
     if (!FT) {
-      ribbon(T.t0, cT, -W, 0, W, 0, tunMats[0], 32);
+      sol = ribbon(T.t0, cT, -W, 0, W, 0, tunMats[0], 32);
       ribbon(T.t0, cT, -W, 8, -W, 0, tunMats[1]); ribbon(T.t0, cT, W, 8, W, 0, tunMats[2]); ribbon(T.t0, cT, -W, 8, W, 8, tunMats[3]);
       for (const [oa, ya, ob, yb] of [[-W - 1.5, 10, -W - 1.5, -u.coque], [W + 1.5, 10, W + 1.5, -u.coque], [-W - 1.5, 10, W + 1.5, 10]]) ribbon(T.t0, cT, oa, ya, ob, yb, concrete).castShadow = true;
     } else {
       const ng = s => -tw(s), ps = tw, dh = s => hh(s) + 2, NV = 10; // voûte : NV facettes d'une demi-ellipse, des naissances (hm) à la clé (hh)
-      ribbon(T.t0, cT, ng, 0, ps, 0, tunMats[0], 32);
+      sol = ribbon(T.t0, cT, ng, 0, ps, 0, tunMats[0], 32);
       ribbon(T.t0, cT, ng, hm, ng, 0, tunMats[1]); ribbon(T.t0, cT, ps, hm, ps, 0, tunMats[2]);
       for (const sg of [-1, 1]) ribbon(T.t0, cT, s => sg * (tw(s) + 1.5), dh, s => sg * (tw(s) + 1.5), -u.coque, concrete).castShadow = true;
-      for (const [a, n] of pans) {
+      for (const [a, n] of pans) { // (chaque facette est un ruban à part, fondu ensuite avec ceux de sa matière : voir « fusion du décor fixe »)
         for (let j = 0; j < NV; j++) { const x = q => s => -tw(s) * Math.cos(Math.PI * q / NV), y = q => s => hm(s) + vt(s) * Math.sin(Math.PI * q / NV); ribbon(T.t0 + a, n, x(j), y(j), x(j + 1), y(j + 1), tunMats[3]); }
         ribbon(T.t0 + a, n, s => -tw(s) - 1.5, dh, s => tw(s) + 1.5, dh, concrete).castShadow = true;
       }
       if (u.rayons) for (const [fa, fb] of u.ouv || []) { // une colonne de lumière par ouverture, penchée vers l'astre, et la tache de lumière qu'elle pose au sol
         const ka = Math.ceil(fa * cT), kb = Math.floor(fb * cT), s = S[(T.t0 + (ka + kb >> 1)) % N], ax = new V3(0, 1, 0).lerp(SD, 0.35).normalize(), h = hh(s), L = h / ax.y;
         const r = Math.max(1, Math.min(tw(s) * 0.7, Math.hypot(S[(T.t0 + kb) % N].x - S[(T.t0 + ka) % N].x, S[(T.t0 + kb) % N].z - S[(T.t0 + ka) % N].z) * 0.45));
-        const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.25, L, 16, 1, true), addMat(tx('degrade', u.rayons, 1), { opacity: 0.55, polygonOffset: false }));
+        const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.25, L, 16, 1, true), addMat(tx('degrade', u.rayons, 1), { opacity: u.rayonsK ?? 0.55, polygonOffset: false }));
         m.quaternion.setFromUnitVectors(new V3(0, -1, 0), ax.clone().negate()); m.position.set(s.x, s.y + h, s.z).addScaledVector(ax, -L / 2); m.scale.y = -1; scene.add(m); // scale.y = -1 : le dégradé vif en haut, éteint au sol
         const pied = new V3(s.x, s.y + h, s.z).addScaledVector(ax, -L); lum((T.t0 + (ka + kb >> 1)) % N, pied.x, s.y + 2.5, pied.z, u.rayons, r * 2.5, 2); // le pied de la colonne, au sol
       }
     }
+    if (MV) { tunMats[0].userData.mo = 1; tunMats[0].userData.mo0 = T.t0; if (SSR) { tunMats[0].userData.mou = 1; sol.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cT + 1) * 2 }, (_, j) => mouAt((T.t0 + (j >> 1)) % N)), 1)); } } // th.mouilleVisible : le sol du tunnel lit aussi MOT
     const pm = mat('peinture', { lum: 1, c: u.portail });
     for (const i of [T.t0, T.t1]) { // portails lumineux
       const s = S[i], g = new THREE.Group(); g.position.set(s.x, s.y, s.z); g.rotation.y = across(s); scene.add(g);
@@ -1661,7 +1667,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (car.boost > 0) tag('NITRO', HW - 66, HH - 92, C); else if (car.asp > 0.15) tag('ASPIRATION', HW - 66, HH - 92, Y); // au-dessus du compteur : au centre, il chassait les étiquettes des rivaux vers le ciel
     if (state !== 'title') { // jauge de nitro, dans le panneau de vitesse : 10 segments ; elle monte en glisse, au ras d'un mur ou d'un camion, dans l'aspiration ; pleine, elle clignote ; elle se vide tant qu'on la déclenche
       const f = car.nitro, plein = f >= 1 && blink, n = Math.round(f * 10); txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
-      for (let i = 0; i < 10; i++) R(hg, i >= n ? '#30303c' : car.boost > 0 ? C : plein ? '#ffffff' : Y, HW - 108 + i * 10, HH - 17, 8, 7);
+      // th.frole : frôler le mur remplit la jauge (sim.js, mur) ; la jauge s'éclaire tant que ça frotte, et 0,3 s après, le segment qui se remplit en blanc
+      const fro = TH.frole && (vu.fro = car.rub && Math.hypot(car.vx, car.vz) > 15 ? 0.3 : Math.max(0, (vu.fro || 0) - dt)) > 0 && car.boost <= 0;
+      for (let i = 0; i < 10; i++) R(hg, fro && i === Math.min(n, 9) ? '#ffffff' : i >= n ? '#30303c' : car.boost > 0 ? C : plein ? '#ffffff' : fro ? '#fff2a0' : Y, HW - 108 + i * 10, HH - 17 - (fro && i === Math.min(n, 9)), 8, 7 + 2 * (fro && i === Math.min(n, 9)));
     }
     if (vu.casseMsg && (vu.casseMsg.T -= dt) > 0) tag(vu.casseMsg.t, cx, 124, vu.casseMsg.c); // CASSE : takedown infligé ou subi
     if (splitMsg && (splitMsg.T -= dt) > 0) tag('S' + (splitMsg.i + 1) + ' ' + (splitMsg.d == null ? fmt(splitMsg.t) : (splitMsg.d <= 0 ? '-' : '+') + Math.abs(splitMsg.d).toFixed(2)), cx, 102, splitMsg.d == null ? Y : splitMsg.d <= 0 ? C : RD); // écart au record à chaque secteur
@@ -2020,7 +2028,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
     if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       REPLI.rDz.value = vu.rt.depthTexture; REPLI.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(repliScene, cam); renderer.autoClear = true; }
-    { const vrai = Math.log(1 - (1 - TUN) * lm), cible = vrai - Math.log(T.tun && TH.tun.eclat || 1) * lm; // l'œil : vrai = log de la lumière vraie ; th.tun.eclat : l'œil se fait à un tunnel plus clair que sa peinture
+    { const OE = TH.oeil || {}, OEIL_NOIR = OE.noir ?? OEIL_N, OEIL_CLAIR = OE.clair ?? OEIL_C, vrai = Math.log(1 - (1 - (OE.tun ?? TUN)) * lm), cible = vrai - Math.log(T.tun && TH.tun.eclat || 1) * lm; // l'œil : vrai = log de la lumière vraie ; th.tun.eclat : l'œil se fait à un tunnel plus clair que sa peinture
       vu.oeil += (cible - vu.oeil) * (1 - Math.exp(-dt / (cible > vu.oeil ? OEIL_CLAIR : OEIL_NOIR))); U.ex.value = Math.min(Math.exp(vrai - vu.oeil), Math.max(1.6, T.tun && TH.tun.eclat || 1)); } // éblouissement au plus ×1,6
     renderer.setRenderTarget(null);
     if (COM) { const [cols, rows] = grille(VUES.length), x = (vu.n % cols) * vu.w, y = (rows - 1 - (vu.n / cols | 0)) * HH; renderer.setViewport(x, y, vu.w, HH); renderer.setScissor(x, y, vu.w, HH); } // à deux : la passe finale de la vue dans sa bande (y compté du bas : le joueur 1 en haut) ; le shader ne change pas, son centre de flou et sa vignette sont relatifs à la bande
