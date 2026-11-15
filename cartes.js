@@ -473,7 +473,7 @@
         astre: { dir: [0.42, 0.82, 0.39], col: '#fff0c0', ombre: '#ffe6b0', taille: 150 }, hemi: [0xdcefb0, 0x2a4a2a, 0.8], sun: [0xffe6b0, 1.15], phares: 0.3, bloom: 0.18, scan: 0.05,
         chev: 0, murH: 0, route: ['#77725f', '#5e5a4c', '#8a8672', '#4d6a34', '#77725f', '#77725f', false], mur: ['#5a5646', '#8a8672', '#4d6a34', '#2a2a20'], depart: [0xe8b83a, 0x6a5630, '#f2ecd0', 'departJungle'],
         // la grotte : voûte de roche, salle haute à mi-parcours avec deux puits de lumière ; torches chaudes ; l'œil s'y fait vite (ni noir à l'entrée, ni blanc à la sortie)
-        tun: { sol: ['#5e5a4c', '#77725f', '#8a8672', '#8a8672', '#5e5a4c', '#5e5a4c'], murs: ['#4a443a', '#4a443a'], paroi: ['#4a443a', '#6a6052', '#8a7c68', '#1c1a16'], plafond: ['#2a2620', '#3a342c', '#3a342c', '#3a342c'],
+        tun: { sol: ['#4a473c', '#5e5a4c', '#5e5a4c', '#5e5a4c', '#4a473c', '#4a473c'], murs: ['#2c2a24', '#2c2a24'], paroi: ['#2c2a24', '#3a362e', '#4a4438', '#141210'], plafond: ['#1c1a16', '#2a2620', '#2a2620', '#2a2620'],
           fog: 0x2a3a2a, portail: 0x3a342c, neons: [0xffa030, 0xffa030], coque: 80, h: [[0, 9], [0.35, 14], [0.55, 20], [0.75, 13], [1, 8]], voute: [[0, 4], [0.35, 8], [0.55, 12], [0.75, 7], [1, 3.5]], ouv: [[0.5, 0.54], [0.6, 0.63]], rayons: '#fff0c0', rayonsK: 0.35, ambiant: 0.55 },
         oeil: { tun: 0.7, noir: 0.5, clair: 0.15 },
         hud: { y: '#f2ecd0', c: '#ffc247', r: '#ff5a3a', fond: 'rgba(8,20,12,.84)', style: 'trait', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'BAHIA · LA CITE PERDUE'], titre: ['MANUSCRIT', '512'] } } },
