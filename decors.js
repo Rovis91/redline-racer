@@ -2073,8 +2073,10 @@
           for (let k = 0; k < 12; k++) { const a = k * Math.PI / 6 + 0.26; B(Math.cos(a) * 10, 12.6 + Math.sin(a) * 10 - 0.9, 0, 1.5, 1.5, 1.3, [0xc8281e, 0x2a6aa8, 0xe8e4d8, 0x3a8a4a][k % 4]); }
           B(8, 1.3, 3.4, 2.4, 2.6, 2.4, 0xd8d0b8); B(8, 2.75, 3.4, 3, 0.3, 3, 0xc8281e); B(0, 0.03, 0, 26, 0.06, 11, 0x8a8468); });
         // la statue sur sa place : socle de granit rouge, bronze le bras levé, parterres, trois drapeaux
-        lieu(iF(280), 1, 9, 8, (B) => { B(0, 0.03, 0, 20, 0.06, 17, 0xa8a49a); B(0, 0.3, 0, 6, 0.6, 6, 0x6d726d); B(0, 2.4, 0, 2.8, 3.6, 2.8, 0x7a3a34); B(0, 5.9, 0, 1.3, 3.4, 0.9, 0x3e4038); B(0, 8, 0, 0.75, 0.8, 0.75, 0x3e4038); B(0.2, 6.9, 1, 0.34, 0.34, 1.8, 0x3e4038);
-          for (const e of [-1, 1]) { B(e * 6, 0.25, 4, 5, 0.5, 2, 0xb5241c); B(e * 6, 0.25, -4, 5, 0.5, 2, 0xb5241c); } for (let k = -1; k <= 1; k++) { B(k * 3, 5, -6.5, 0.16, 10, 0.16, 0x8a8e88); B(k * 3 + 1.1, 8.8, -6.5, 2.2, 1.5, 0.06, 0xb5241c); } });
+        lieu(iF(280), -1, 18, 15, (B, mot) => { const br = 0x3a3c36; B(0, 0.03, 0, 38, 0.06, 31, 0xa8a49a); B(0, 0.25, -3, 16, 0.5, 14, 0x8d918a); B(0, 0.7, -3, 11, 0.5, 10, 0x8d918a); B(0, 3.6, -3, 5.4, 5.4, 4.6, 0x7a3a34); B(0, 6.5, -3, 6, 0.5, 5.2, 0x5a2a26); mot('ЛЕНИН', '#7a3a34', 0, 4, -0.62, 4.4, 1.3);
+          for (const e of [-1, 1]) B(e * 0.6, 8.6, -3, 0.9, 3.8, 1.1, br); B(0, 12, -3, 2.6, 3.6, 1.7, br); B(0, 11, -3.2, 3, 3.2, 1.3, br); B(0, 14.5, -3, 1.2, 1.3, 1.2, br); B(-1.5, 11.6, -3, 0.6, 2.6, 0.7, br); B(1.6, 13.2, -1.6, 0.6, 0.6, 3.4, br); // jambes, buste, pan du manteau, tête, bras gauche le long du corps, bras droit tendu vers la rue
+          for (const e of [-1, 1]) { B(e * 12, 0.3, 6, 8, 0.6, 3, 0xb5241c); B(e * 12, 0.3, -9, 8, 0.6, 3, 0xb5241c); B(e * 9, 0.45, 12, 2.4, 0.1, 0.5, 0x6a4a2a); B(e * 9, 0.22, 12, 2.2, 0.44, 0.12, 0x55585a); }
+          for (let k = -2; k <= 2; k++) { B(k * 4, 6, -12.5, 0.2, 12, 0.2, 0x8a8e88); B(k * 4 + 1.3, 10.9, -12.5, 2.6, 1.7, 0.06, 0xb5241c); } }, 8);
         // la patinoire de la cour : bande blanche à liseré bleu, deux cages
         lieu(iF(385), -1, 14, 8, (B) => { B(0, 0.05, 0, 27, 0.1, 15, 0xdce4e8); for (const e of [-1, 1]) { B(0, 0.6, e * 7.5, 27, 1.2, 0.2, 0xf0f0ec); B(0, 1.25, e * 7.5, 27, 0.14, 0.24, 0x2a6aa8); B(e * 13.5, 0.6, 0, 0.2, 1.2, 15, 0xf0f0ec); B(e * 13.5, 1.25, 0, 0.24, 0.14, 15, 0x2a6aa8);
             B(e * 11, 0.6, 0, 0.1, 1.2, 1.8, 0xc8281e); B(e * 11.5, 1.2, 0, 1, 0.08, 1.8, 0xc8281e); B(e * 12.6, 4, 7.9, 0.2, 8, 0.2, 0x55585a); } B(0, 0.11, 0, 0.3, 0.02, 15, 0xc8281e); });
@@ -2109,7 +2111,7 @@
         { const s0 = S[30], cible = bord(s0, 1, s0.w + 12); let b = null, bd = 1e9; for (const q of rang1) { const d = Math.hypot(q[0] - cible[0], q[2] - cible[1]); if (q[5] > 0 && d < bd) { bd = d; b = q; } }
           if (b) { const [x, y, z, r, hl] = b, ax = Math.cos(r), az = -Math.sin(r), e = az > 0 ? 1 : -1, m = new THREE.Mesh(h.geo('boite', 11.4, 14.2, 0.2), mat('fresque')); m.position.set(x + ax * e * (hl + 0.15), y + 7.7, z + az * e * (hl + 0.15)); m.rotation.y = r + Math.PI / 2 + (e > 0 ? 0 : Math.PI); h.scene.add(m); } }
         // des voitures garées sur le parvis, le long du trottoir ; des kiosques à journaux bleus aux coins
-        const vo = []; let nm = 0; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { const u = rnd(), s = S[i], sd = (rnd(), -1), [x, z] = bord(s, sd, s.w + 4.8), y = Math.max(s.y, hAt(x, z)) + 0.06, r = h.across(s); if (u < 0.3 || dansBati(x, z, 0.4)) continue;
+        const vo = []; let nm = 0; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { const u = rnd(), s = S[i], sd = (rnd(), -1), [x, z] = bord(s, sd, s.w + 4.8), y = s.y + 0.07, r = h.across(s); if (u < 0.3 || dansBati(x, z, 0.4) || Math.abs(hAt(x, z) - s.y + 0.6) > 0.7) continue;
           if (u >= 0.6) { vo.push([x, y, z, r + Math.PI / 2, 1.2, 1.2, 1.2, [0xb5483c, 0x3d6e8a, 0xe8e4d8, 0x8a9488, 0xc8b47a, 0x4a4d50][vo.length % 6]]); continue; }
           const t = nm++ % 4; // le mobilier du trottoir : banc et corbeille, tableau d'honneur rouge, colonne d'affiches, cabine téléphonique
           if (t === 0) { bl(x, y + 0.45, z, r + Math.PI / 2, 2.2, 0.1, 0.5, 0x6a4a2a); bl(x, y + 0.85, z, r + Math.PI / 2, 2.2, 0.5, 0.08, 0x6a4a2a); bl(x, y + 0.22, z, r + Math.PI / 2, 2, 0.44, 0.12, 0x55585a); bl(x + s.tx * 1.8, y + 0.4, z + s.tz * 1.8, r, 0.5, 0.8, 0.5, 0x3a5a3a); }
@@ -2117,7 +2119,7 @@
           else if (t === 2) { bl(x, y + 1.6, z, r + 0.4, 1.2, 3.2, 1.2, 0xc8b47a); bl(x, y + 3.3, z, r + 0.4, 1.5, 0.3, 1.5, 0x4a5a50); bl(x, y + 1.8, z, r + 0.4, 1.24, 1.2, 1.24, [0xc8281e, 0x2a6aa8, 0xe8e4d8][nm % 3]); }
           else { bl(x, y + 1.25, z, r, 1, 2.5, 1, 0xc8281e); bl(x, y + 1.5, z, r, 1.04, 1.2, 1.04, 0xd8e4e8); bl(x, y + 2.6, z, r, 1.1, 0.2, 1.1, 0xf0f0ec); } }
         insts(h, 'berline', { caisse: mat('peinture'), vitre: mat('vitreSombre'), pneu: gris }, vo, { teinte: 'caisse' });
-        for (const k of [K.depart + 2, K.depart + 5, K.entreeVille + 3, K.entreeVille + 8, K.rueSud]) { const s = S[P(k)], [x, z] = bord(s, -1, s.w + 4.6), r = h.across(s), y = Math.max(s.y, hAt(x, z)); if (dansBati(x, z, 0.5)) continue; bl(x, y + 1.3, z, r, 2.4, 2.6, 2.4, 0x3a6a9a); bl(x, y + 2.75, z, r, 3, 0.3, 3, 0x2a4a6a); bl(x, y + 1.6, z, r, 2.46, 0.9, 1.6, 0xd8e4e8); } }
+        for (const k of [K.depart + 2, K.depart + 5, K.entreeVille + 3, K.entreeVille + 8, K.rueSud]) { const s = S[P(k)], [x, z] = bord(s, -1, s.w + 4.6), r = h.across(s), y = s.y + 0.06; if (dansBati(x, z, 0.5)) continue; bl(x, y + 1.3, z, r, 2.4, 2.6, 2.4, 0x3a6a9a); bl(x, y + 2.75, z, r, 3, 0.3, 3, 0x2a4a6a); bl(x, y + 1.6, z, r, 2.46, 0.9, 1.6, 0xd8e4e8); } }
       // les aires de jeu, dans les cours derrière le premier rang, là où il reste de la place
       const aire = (x, z, Y) => {
         bl(x - 8, Y + 0.08, z - 6, 0, 4, 0.16, 4, 0xd8c890); for (const [dx, dz, a, c] of [[0, -2, 4.2, 0.2], [0, 2, 4.2, 0.2], [-2, 0, 0.2, 4.2], [2, 0, 0.2, 4.2]]) bl(x - 8 + dx, Y + 0.2, z - 6 + dz, 0, a, 0.4, c, 0xd0a020); // le bac à sable
@@ -2304,7 +2306,7 @@
 
       // ---------- la forêt : les arbres de touge (houppier en cône sur un fût nu), de jour ; mélèzes clairs et pins cembro sombres sur les versants, bouleaux dans le fond de vallée ----------
       { const cla = [], som = [], futs = [], bou = [];
-        const libre = (x, z, m) => dAt(x, z) > W + m && !carr(proche(x, z), x, z, 78) && riv(x, z) > 6 && !cite(x, z) && !poste(x, z) && !usine(x, z) && !base(x, z) && !chantier(x, z) && !dansBati(x, z, 3) && !clair.some(([cx, cz, r]) => (x - cx) ** 2 + (z - cz) ** 2 < r * r);
+        const libre = (x, z, m) => dAt(x, z) > W + m && !carr(proche(x, z), x, z, 78) && riv(x, z) > 6 && !cite(x, z) && !poste(x, z) && !usine(x, z) && !base(x, z) && !chantier(x, z) && !dansBati(x, z, 7) && !clair.some(([cx, cz, r]) => (x - cx) ** 2 + (z - cz) ** 2 < r * r);
         const arbre = (x, z, k) => { const y = hAt(x, z) - 0.4, dv = aval(x, z); if (dv < 30 && y < PLEIN + 1.5) return; if (dv > -30 && dv < 95 && Math.abs(x) < 262 && y < YC + 3) return; if (y > 250 && rnd() < (y - 250) / 90) return; // rien sous le niveau de la retenue pleine, rien sur le mur, la forêt s'éclaircit vers les crêtes
           const loin = dAt(x, z) > 90; (rnd() < 0.62 ? cla : som).push([x, y + (loin ? 8.2 : 11) * k, z, rnd() * 6, k]); if (!loin) futs.push([x, y + 2.6 * k, z, 0, k]); };
         // le rang serré le long de la route, là où elle est en forêt ; ouvert côté vallée dans les trouées de la traverse haute, sur la descente est et face au mur
@@ -2312,11 +2314,11 @@
         const ouvert = (i, sd) => sd === vallee(i) && (dans(i, K.culee, K.entreeVille) || [K.traverse + 2, K.traverse + 4, K.traverse + 6].some(k => Math.abs(i - P(k)) < 26));
         for (let i = 0; i < N; i += 3) { if (!foret(i)) continue; for (const sd of [-1, 1]) { if (ouvert(i, sd)) continue; const [x, z] = bord(S[i], sd, S[i].w + 5 + rnd() * 7); if (dAt(x, z) > W + 4 && libre(x, z, 4)) arbre(x, z, 0.8 + rnd() * 0.6); } }
         for (let k = 0; k < 15000; k++) { const x = g.box[0] + rnd() * (g.box[2] - g.box[0]), z = g.box[1] + rnd() * (g.box[3] - g.box[1]); if (!libre(x, z, 9)) continue; const dv = aval(x, z), plat = dv > 40 && x > pl(XW, z) - 8 && x < pl(XE, z) + 8;
-          if (plat) { if (rnd() < 0.3 && riv(x, z) > 14 && !dansBati(x, z, 3)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); continue; }
+          if (plat) { if (rnd() < 0.3 && riv(x, z) > 14 && !dansBati(x, z, 6)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); continue; }
           const p = proche(x, z); if (p.d < 60 && ouvert(p.i, vallee(p.i)) && (z - p.s.z) * p.s.tx - (x - p.s.x) * p.s.tz > 0 === vallee(p.i) > 0) continue; // les trouées restent ouvertes en profondeur
           arbre(x, z, 0.9 + rnd() * 0.8); }
         // bouleaux en allée le long de la rue et de la route de la vallée, et autour des immeubles
-        for (let i = iV0 - 40; ((i - iV0 + 40 + N) % N) < ((P(K.plat + 2) - iV0 + 40 + N) % N); i = (i + 9) % N) for (const sd of [-1, 1]) { if (enVille(i) && ((i / 9 | 0) + (sd > 0)) % 2) continue; const [x, z] = bord(S[i], sd, S[i].w + (enVille(i) ? 4.4 : 6.5)); if (dAt(x, z) > W + 3.5 && riv(x, z) > 6 && !dansBati(x, z, 1) && !poste(x, z) && !base(x, z) && !chantier(x, z)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.9 + rnd() * 0.4]); }
+        for (let i = iV0 - 40; ((i - iV0 + 40 + N) % N) < ((P(K.plat + 2) - iV0 + 40 + N) % N); i = (i + 9) % N) for (const sd of [-1, 1]) { if (enVille(i) && ((i / 9 | 0) + (sd > 0)) % 2) continue; const [x, z] = bord(S[i], sd, S[i].w + (enVille(i) ? 1.9 : 6.5)); if (dAt(x, z) > W + 1.2 && riv(x, z) > 6 && !dansBati(x, z, 4) && !poste(x, z) && !base(x, z) && !chantier(x, z)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.9 + rnd() * 0.4]); }
         { const m = inst(h, h.geo('cedre'), mat('conifere', {}, '#5e7a44'), [...cla, ...som]), c = new THREE.Color(); for (let k = 0; k < cla.length + som.length; k++) m.setColorAt(k, k < cla.length ? c.setRGB(1, 1, 1) : c.setRGB(0.54, 0.57, 0.69)); m.instanceColor.needsUpdate = true; } // mélèzes clairs et pins sombres en un seul lot : la teinte par arbre
         inst(h, h.geo('tronc'), h.mat('tronc'), futs);
         inst(h, h.geo('futBouleau'), mat('ecorceB'), bou); { const hp = bou.map(([x, y, z, r, s]) => [x, y, z, r, s * (0.8 + rnd() * 0.5)]); inst(h, h.geo('houppierB'), mat('feuillesB'), hp.filter((_, k) => k % 3)); inst(h, h.geo('houppierB'), mat('feuillesB', { c: 0xa8b890 }), hp.filter((_, k) => k % 3 === 0)); } }

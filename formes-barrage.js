@@ -68,7 +68,7 @@
     // REFS 5 — tour de commande sur la culée : fût, salle vitrée, toit, antenne
     tourControle: () => [['beton', 7, 24, 7, 0, 12, 0, null, 1], ['vitre', 10, 4, 10, 0, 26, 0], ['beton', 11, 1, 11, 0, 28.5, 0], ['acier', 0.4, 12, 0.4, 2, 35, 2]],
     // REFS 7 — berline garée des années 70 (X = le long) : caisse, pavillon, vitres
-    berline: () => [['caisse', 4.7, 0.9, 1.8, 0, 0.75, 0, null, 1], ['caisse', 2.4, 0.6, 1.6, -0.3, 1.5, 0], ['vitre', 2.3, 0.45, 1.65, -0.3, 1.45, 0], ['pneu', 3.4, 0.6, 1.7, 0, 0.3, 0]],
+    berline: () => [['caisse', 4.7, 0.75, 1.8, 0, 0.62, 0, null, 1], ['caisse', 2.4, 0.6, 1.6, -0.3, 1.3, 0], ['vitre', 2.3, 0.45, 1.65, -0.3, 1.25, 0], ...[-1.5, 1.5].flatMap(x => paire(sd => ['pneu', 0.72, 0.72, 0.3, x, 0.36, sd * 0.82]))], // caisse à 25 cm du sol, quatre roues qui touchent : la voiture se lit posée
     // REFS 7 — panneau de route sur deux poteaux (face vers -Z), 4 × 2 m
     panneauGES: () => [...paire(sd => ['poteau', 0.15, 3.6, 0.15, sd * 1.6, 1.8, 0]), ['plaque', 4, 2, 0.08, 0, 3.4, 0]],
     // cabane du camp de pionniers (X = le long) : socle, murs de planches peintes, toit à deux pentes, pignons, deux fenêtres
