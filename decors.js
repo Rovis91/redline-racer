@@ -1950,7 +1950,7 @@
       const chaussee = h.mat('chaussee', { side: THREE.DoubleSide, gloss: 0.08, ...lisseBord }, ...h.TH.route), glis = h.mat('glissiere', DS, h.TH.mur);
       for (const [a, b] of [[g1, p0], [p1, g0]]) tranche(a, b, (i, l) => h.ribbon(i, l, s => -s.w, 0, s => s.w, 0, chaussee, 32));
       const gueM = h.mat('eauCiel', { ...DS, lum: 1, c: 0xc4c0b4, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
-      tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0x8a7e70 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
+      tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0x9a9a92 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
       { const ecu = h.mat('peinture', { lum: 1, c: 0xf2efe6, transparent: true, opacity: 0.75, depthWrite: false, ...lisseBord, side: THREE.DoubleSide }); // l'écume crème au bord du courant
         tranche(iF0, iF1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * (W - 0.25), 0.06, sd * (W + 0.45), 0.06, ecu, 6); }); }
       // le bas-côté, en pente douce depuis le bord de la chaussée, par tronçons de même largeur et de même sol
@@ -1997,12 +1997,12 @@
         tranche(gal0 - 10, gal1 + 10, (i, l) => extrude(i, l, 1, (j, s) => { const t = Math.min((j - i + N) % N, (i + l - j + N) % N), e = lisse(0, 10, t), b = 7.2 + 1.6 * nV(j * 0.08);
           return [[s.w + 1.2, 6.5, sombre], [s.w * 0.3, b + 0.6 * nV(j * 0.2 + 9), sombre.map(v => v * 0.8)], [-(s.w + 1) * e, b + 0.5 * e + 0.4 * nV(j * 0.15 + 3), sombre], [-(s.w + 3.8) * e, 8.5 * e + 2, mix(sombre, mo2, 0.5)], null,
             [-(s.w + 3.8) * e, 8.5 * e + 2, mo2], [-(s.w + 3.8) * e, 11 * e + 2, mo], [s.w * 0.2, 12.5 + nV(j * 0.1 + 5), mo], [s.w + 3, 14, mo2]]; })); }
-      tranche(gal0, gal1, (i, l) => h.ribbon(i, l, s => -(s.w + 10.5), nivS, s => -(s.w + 10.5), 44, chuteM, 12)); // un seul rideau : deux superposés faisaient un moiré
+      // (pas de rideau texturé derrière les filets : il faisait une grille de pixels)
       { const nL = bruit(), c1 = COL('#8a7660'), c2 = COL('#a89478'), mo = COL('#6f8a3a'); // REFS 2 : la lèvre de la corniche d'où tombe la chute, en surplomb au-dessus du rideau
         tranche(gal0 - 30, gal1 + 30, (i, l) => extrude(i, l, -1, (j, s) => { const e = lisse(0, 25, Math.min((j - i + N) % N, (i + l - j + N) % N)), y = 43 + 2 * nL(j * 0.05);
           return [[s.w + 13 - 3 * e, y - 1, c1], [s.w + 7 - 1.5 * e, y - 0.5, c1], [s.w + 7 - 1.5 * e, y + 2.5, c2], [s.w + 20, y + 4, mo]]; })); }
-      { const fil = [], ecume = []; for (let i = gal0; entre(i, gal0, gal1); i = (i + 1) % N) { const s = S[i]; if (rnd() < 0.7) continue;
-          for (const o of [8, 9.6]) { const [x, z] = bord(s, -1, s.w + o + rnd() * 0.6), y0 = s.y + niv(i), hh = 44 - niv(i); fil.push([x, y0 + hh / 2, z, h.across(s), 0.3 + rnd() * 1.1, hh, 1, rnd() < 0.6 ? 0xdde8ea : 0xb8ccd2]); }
+      { const fil = [], ecume = []; for (let i = gal0; entre(i, gal0, gal1); i = (i + 1) % N) { const s = S[i]; if (rnd() < 0.8) continue;
+          for (const o of [8, 9.6]) { const [x, z] = bord(s, -1, s.w + o + rnd() * 0.6), y0 = s.y + niv(i), hh = 44 - niv(i); fil.push([x, y0 + hh / 2, z, h.across(s), 1.2 + rnd() * 2, hh, 1, rnd() < 0.6 ? 0xdde8ea : 0xb8ccd2]); }
           if (rnd() < 0.2) { const [x, z] = bord(s, -1, s.w + 7 + rnd() * 4); ecume.push([x, s.y + niv(i) + 0.4, z, rnd() * 6, 2 + rnd() * 3, 0.8 + rnd(), 2 + rnd() * 3]); } }
         const pf = new THREE.PlaneGeometry(1, 1); const mf = inst(h, pf, h.mat('peinture', { lum: 1, c: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false }), fil); fil.forEach((p, k) => mf.setColorAt(k, new THREE.Color(p[7]))); mf.castShadow = false;
         inst(h, h.geo('cime'), h.mat('peinture', { c: 0xc8d0d0 }), ecume.map(p => [p[0], p[1], p[2], p[3], p[4] / 5, p[5] / 6, p[6] / 5])); // l'écume au pied
@@ -2051,7 +2051,7 @@
       { const bal = [], ref = [], dist = [[], [], []], poD = [];
         for (let i = 0; i < N; i += 8) { const s = S[i]; if (entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue; const gue = entre(i, iF0, iF1);
           for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, gue ? W + 0.3 : s.w + 0.9), y = gue ? s.y + niv(i) : s.y; bal.push([x, y + 0.7, z, h.across(s), 1.8, 1.2, 1.8]); ref.push([x, y + 1.35, z, h.across(s), 1.8, 1.6, 1.8]); } }
-        for (const k of [3, 5, 8, 11, 15, 21]) { const side = k === 15 || k === 21 ? 1 : -amont(S[P(k)]); [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.8, z, h.across(s) + Math.PI / 2, 3.4, 3.4, 3.4]); for (const u of [-1.6, 1.6]) { const [px, pz] = bord(s, side, s.w + 1.6 + u); poD.push([px, s.y + 1, pz, 0, 1.2, 3.4, 1.2]); } }); }
+        for (const k of [3, 5, 8, 11, 15, 21]) for (const side of [-1, 1]) { [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.8, z, h.across(s) + Math.PI / 2, 3.4, 3.4, 3.4]); for (const u of [-1.6, 1.6]) { const [px, pz] = bord(s, side, s.w + 1.6 + u); poD.push([px, s.y + 1, pz, 0, 1.2, 3.4, 1.2]); } }); }
         for (const m of [inst(h, h.geo('boite', 0.18, 1.2, 0.18), h.mat('peinture', { c: 0xe8e4d8 }), bal), inst(h, h.geo('boite', 0.2, 0.18, 0.2), h.mat('peinture', { lum: 1, c: 0xff6a2a }), ref)]) m.castShadow = false; // au soleil rasant, leurs ombres barraient la route en damier
         inst(h, h.geo('boite', 0.12, 1, 0.12), bois, poD).castShadow = false; ['150', '100', '50'].forEach((t, j) => { inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j]).castShadow = false; }); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
@@ -2117,10 +2117,11 @@
       { const s = S[(iB1 + 12) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 12); arbre(x, g.hAt(x, z), z, 1.8, false); } } // les grands arbres fantômes au bout du pont
       for (const p of corn) fougeres.push(p); for (const p of cornB) coupes.push(p);
       // une matière par famille (feuillage, écorce, roche) ; chaque exemplaire porte sa teinte (8e valeur), que la fusion de game.js passe en couleur de sommet : moins de passes de dessin
-      const feuil = h.mat('feuillage', DS), ecorce = h.mat('tronc'), rocM = h.mat('grainGres'), vertsF = [0x1f4d34, 0x2e6a3a, 0x4f7a3a, 0x6f9a45];
+      const feuil = h.mat('feuillage', DS), neutre = h.mat('bruit', DS, '#e8e8e4', ['#d0d0cc', '#f4f4f0', '#c0c0bc']), ecorce = h.mat('tronc'), rocM = h.mat('grainGres'), vertsF = [0x1f4d34, 0x2e6a3a, 0x4f7a3a, 0x6f9a45];
       const tc = (l, c) => l.map(p => [p[0], p[1], p[2], p[3] || 0, p[4] || 1, p[5] || p[4] || 1, p[6] || p[4] || 1, typeof c === 'function' ? c() : c]), un = l => l[rnd() * l.length | 0];
       const instT = (geo, m, l) => { const me = inst(h, geo, m, l); l.forEach((p, i) => me.setColorAt(i, new THREE.Color(p[7]))); if (l.length) me.instanceColor.needsUpdate = true; return me; };
-      instT(h.geo('cime'), feuil, [...cimes.flatMap((l, k) => tc(l, vertsF[k])), ...tc(cimesF, () => un([0xf0c020, 0xe8b818, 0xe070b0])), ...tc(cimesE.map(p => [p[0], p[1], p[2], p[3], p[4] * 1.3, p[5] * 0.45, p[6] * 1.3]), 0xb8c8b0), ...tc(buissons, () => un([0x2a4a2a, 0x3a5a2a])), ...tc(coupes.map(p => [p[0], p[1], p[2], p[3], p[4] * 0.3, p[4] * 0.12, p[4] * 0.3]), 0x8aa83a)]);
+      instT(h.geo('cime'), feuil, [...cimes.flatMap((l, k) => tc(l, vertsF[k])),  ...tc(buissons, () => un([0x2a4a2a, 0x3a5a2a])), ...tc(coupes.map(p => [p[0], p[1], p[2], p[3], p[4] * 0.3, p[4] * 0.12, p[4] * 0.3]), 0x8aa83a)]);
+      instT(h.geo('cime'), neutre, [...tc(cimesF, () => un([0xf0c020, 0xf8d030, 0xe878b8])), ...tc(cimesE.map(p => [p[0], p[1], p[2], p[3], p[4] * 1.3, p[5] * 0.45, p[6] * 1.3]), 0xb8c8b8)]); // ipês en fleur et embaúbas
       instT(h.geo('tronc'), ecorce, [...tc(arbres, () => un([0x6a5a48, 0x5a4a3a, 0x7a6a58])), ...tc(troncsC, () => un([0xc8bea8, 0xb0a890]))]);
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: feuil }, tc(fougeres, () => un([0x7da23d, 0x6a9a3a, 0x8ab04a])), { teinte: 'fronde' });
       inst(h, h.geo('troncPalmier'), h.mat('troncPalmier', { c: 0x8a8070 }), palmT);
@@ -2131,7 +2132,7 @@
       insts(h, 'canelaEma', { bois: h.mat('tronc', { c: 0x2a2622 }), touffe: feuil }, tc(canelas, () => un([0x8a9a6a, 0x9aa070])), { teinte: 'touffe' });
       insts(h, 'lajedo', { roc: rocM, lichen: h.mat('grainGres', { c: 0xb8ae98 }) }, tc(lajedos, () => un([0x5a554c, 0x4a4640, 0x6a6258])), { teinte: 'roc' });
       instT(h.geo('rocher'), rocM, [...tc(affl, () => un([0x6a6258, 0x7a7062])), ...tc(blocs, () => un([0x8a7a62, 0x7a6a58, 0x9a7a5a]))]);
-      instT(h.geo('touffe'), feuil, [...touffes.flatMap((l, k) => tc(l, [0x9aa858, 0xc8b060, 0x6f9a45][k])), ...tc(sempre, 0xf4f0e0)]); // REFS 5 : les sempre-vivas en touffes blanches
+      instT(h.geo('touffe'), feuil, touffes.flatMap((l, k) => tc(l, [0x9aa858, 0xc8b060, 0x6f9a45][k]))); instT(h.geo('touffe'), neutre, tc(sempre, 0xf8f4e8)); // REFS 5 : les sempre-vivas en touffes blanches
       instT(h.geo('boite', 1, 1, 1), rocM, tc(galets, () => un([0x7a6a58, 0x8a7a62])));
 
       // ---------- REFS 5 : les mesas au loin (Pai Inácio, Camelo, Três Irmãos) : sommet plat, flancs en strates, talus d'éboulis ; bleuies par la distance, hors brouillard ----------
