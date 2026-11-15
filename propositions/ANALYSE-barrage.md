@@ -3,6 +3,27 @@
 Session qui n'a pas construit la carte. Code observé : branche `claude/refonte-barrage-afe3e1` (63a51b2). Aucun code du jeu n'est modifié ici.
 Chaque constat (A-01, A-02…) se valide ou se refuse seul. Ils sont classés par effet attendu, le plus fort d'abord.
 
+## Suite donnée (même branche)
+
+L'auteur a accepté toutes les propositions. Elles sont faites sur cette branche, jugées sur captures du rendu réel après chaque étape, sauf ce qui suit.
+
+| Constat | État |
+|---|---|
+| A-01 brouillard | Fait. Visibilité de 55 m, zone des points 68 à 73. Le moteur tend un voile sur le ciel, l'astre et les lointains dans la zone (plus simple que prévu : pas de marquage des objets, pas de shader du ciel modifié). |
+| A-02 descente | Fait : vue ouverte, meules et palissades retirées, carrière, camp refait avec son portique. La carrière est à l'ombre du versant : elle se lit par son concasseur, ses tas et son talus clair, moins par ses gradins. |
+| A-03 garnison | Fait : sur le quai, barbelés côté route, portail à étoiles, missiles et radar au premier rang. |
+| A-04 grues | Fait : immeuble en chantier, deux grues KB rouge oxyde sur rails, plus de grue ailleurs. |
+| A-05 conduites | Fait : deux tubes le long du trottoir de droite, lyres, deux traversées. Pas de raccord dessiné jusqu'à la chaufferie. Les voitures garées et les kiosques sont passés à gauche. |
+| A-06 lumière | En partie : voile général (`fogD: [40, 760]`), sommets teintés. Lampadaires, fenêtres et projecteurs allumés : non faits. |
+| A-07 vallée | En partie : clôture d'un seul côté, rien dans les 150 m avant la halle. Les objets de droite n'ont pas été avancés. |
+| A-08 tracé | Fait : S de la culée resserré, freinage à 165 km/h à 3 809 m, tour lancé 117 s, trace or régénérée. `vit` et médailles non réglés. |
+| A-09 coût | En partie : 450 → 418 appels (sapins en un seul lot). La cible de 320 n'est pas atteinte. **Erratum** : le chargement de 8 s était celui d'un Chrome à froid ; à chaud barrage charge en 1,7 s comme `touge`. Il n'y a rien à corriger là. |
+| A-10 rivière, bouleaux | Fait. |
+| A-11 sommets | Fait : aplats, neige au-dessus d'une ligne nette. |
+| A-12 chevrons | Fait pour la halle (`th.chevSauf`). Gardés dans la cité, où ils aident à lire le zigzag. |
+
+Restent du ressort de l'auteur : tout ce qui se juge manette en main (le brouillard à 190 km/h, le nouveau freinage de la culée, la lecture de la garnison et de la carrière en passant). La montée en forêt (échantillons 864 à 1436) n'a pas été touchée et ressemble maintenant à ce qu'était la descente.
+
 ## Verdict
 
 1. Le site est réussi : vallée, mur, retenue basse, versants. Rien ne flotte plus, le lac est à sa place. Les reproches du premier cahier sur le relief sont réglés.
@@ -175,7 +196,7 @@ Justification : un seul freinage ajouté coupe les 2 km en deux et donne un enje
 | ville | 4,40 / 3,67 | 353 / 354 | 1,0 s |
 | touge | 2,71 / 3,19 | 233 / 231 | 1,7 s |
 
-Le budget du banc est de 300 appels. Le chargement de 8 s n'était pas signalé.
+Le budget du banc est de 300 appels. (Le chargement de 8,1 s est un artefact de démarrage à froid : voir l'erratum en tête.)
 
 **Proposition.**
 1. Appels : la halle, la garnison, le poste et la prise d'eau sont faits de `bloc()` isolés, un objet de dessin chacun. Les passer par la liste `peints` (une seule passe) ou par matière commune. Cible : moins de 320.

@@ -145,7 +145,8 @@ Le nombre d'appels varie de ±30 d'une mesure à l'autre avec le même code (per
 th: { fogD: [70, 1000], brume: [[68, 75, 30, 380]] }   // entre les points 68 et 75 du tracé, le brouillard commence à 30 m et bouche tout à 380 m
 ```
 Entre deux points de contrôle du tracé, le début et la fin du brouillard de la carte glissent vers les valeurs données, avec un fondu de 180 m à l'entrée et à la sortie de la zone. C'est le vrai brouillard de la scène (aucune texture plate posée dans le décor) : tout ce qui reçoit le brouillard y disparaît, ce qui est posé hors brouillard (`fog: false`, les lointains) reste net. La zone ne doit pas enjamber la ligne de départ. En écran partagé, chaque vue a le brouillard de sa voiture. Sous un tunnel, le brouillard du tunnel reprend la main.
-Coût : nul (deux nombres par image). Sans `th.brume`, rien ne change.
+Dans la zone, un voile de la couleur du brouillard est tendu à 700 m autour de la caméra : il cache ce qui échappe au brouillard (le ciel, l'astre, les lointains posés hors brouillard). Son opacité suit la force de la zone. Un brouillard serré (`[68, 73, 0, 55]` sur barrage : on voit à 55 m) est donc un vrai brouillard, sans horizon net au-dessus.
+Coût : une passe de dessin dans la zone seulement. Sans `th.brume`, rien ne change (le voile n'est pas créé).
 
 ## 11. Texture des panneaux de virage : `th.chevTex`
 
@@ -153,3 +154,10 @@ Coût : nul (deux nombres par image). Sans `th.brume`, rien ne change.
 th: { chev: 1, chevTex: 'chevronGES' }
 ```
 Les chevrons que le moteur pose à l'extérieur des virages prennent cette texture du catalogue au lieu de `chevron` (jaune et noir). Elle reçoit le même réglage (0 ou 1 : le sens). Barrage s'en sert pour des chevrons rouges sur fond blanc, ceux de la signalisation soviétique. Sans l'option, rien ne change.
+
+## 12. Portions sans panneaux de virage : `th.chevSauf`
+
+```js
+th: { chev: 1, chevSauf: [[27, 33]] }   // pas de chevrons entre les points 27 et 33 du tracé
+```
+Le moteur pose un chevron tous les 12 m dès que le rayon passe sous 167 m. Entre les points donnés, il n'en pose pas : pour un passage où le décor guide déjà (sur barrage, la salle des turbines et ses garde-corps orange). Sans l'option, rien ne change.

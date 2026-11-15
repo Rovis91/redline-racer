@@ -2237,7 +2237,8 @@
           arbre(x, z, 0.9 + rnd() * 0.8); }
         // bouleaux en allée le long de la rue et de la route de la vallée, et autour des immeubles
         for (let i = iV0 - 40; ((i - iV0 + 40 + N) % N) < ((P(K.plat + 2) - iV0 + 40 + N) % N); i = (i + 9) % N) for (const sd of [-1, 1]) { if (enVille(i) && ((i / 9 | 0) + (sd > 0)) % 2) continue; const [x, z] = bord(S[i], sd, S[i].w + (enVille(i) ? 4.4 : 6.5)); if (dAt(x, z) > W + 3.5 && riv(x, z) > 6 && !dansBati(x, z, 1) && !poste(x, z) && !base(x, z) && !chantier(x, z)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.9 + rnd() * 0.4]); }
-        inst(h, h.geo('cedre'), mat('conifere', {}, '#5e7a44'), cla); inst(h, h.geo('cedre'), mat('conifere', {}, '#33452f'), som); inst(h, h.geo('tronc'), h.mat('tronc'), futs);
+        { const m = inst(h, h.geo('cedre'), mat('conifere', {}, '#5e7a44'), [...cla, ...som]), c = new THREE.Color(); for (let k = 0; k < cla.length + som.length; k++) m.setColorAt(k, k < cla.length ? c.setRGB(1, 1, 1) : c.setRGB(0.54, 0.57, 0.69)); m.instanceColor.needsUpdate = true; } // mélèzes clairs et pins sombres en un seul lot : la teinte par arbre
+        inst(h, h.geo('tronc'), h.mat('tronc'), futs);
         inst(h, h.geo('futBouleau'), mat('ecorceB'), bou); { const hp = bou.map(([x, y, z, r, s]) => [x, y, z, r, s * (0.8 + rnd() * 0.5)]); inst(h, h.geo('houppierB'), mat('feuillesB'), hp.filter((_, k) => k % 3)); inst(h, h.geo('houppierB'), mat('feuillesB', { c: 0xa8b890 }), hp.filter((_, k) => k % 3 === 0)); } }
       { const s = S[P(K.epingleHaute)], [x, z] = bord(s, -1, s.w + 16); inst(h, h.geo('rocherGES'), mat('rocheGES'), [[x, hAt(x, z) + 2, z, 0.7, 7, 5, 6], [x + 6, hAt(x + 6, z + 5) + 1, z + 5, 2, 3.5, 2.5, 3]]); } // le rocher de l'épingle haute, repère de freinage
       // enrochements des berges
