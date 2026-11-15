@@ -171,7 +171,7 @@
     }],
     // rayon de lumière en volume (cône ouvert) : blanc chaud en haut, qui s'efface vers le bas, stries verticales (rendu en additif)
     rayonCone: () => [32, 64, (g) => {
-      for (let y = 0; y < 64; y++) for (let x = 0; x < 32; x++) { const a = (0.55 + 0.45 * Math.sin(x / 32 * Math.PI * 6) ** 2) * (1 - y / 64) ** 0.8 * 0.85; g.fillStyle = 'rgba(255,240,190,' + a.toFixed(3) + ')'; g.fillRect(x, y, 1, 1); }
+      for (let y = 0; y < 64; y++) for (let x = 0; x < 32; x++) { const a = (0.55 + 0.45 * Math.sin(x / 32 * Math.PI * 6) ** 2) * (1 - y / 64) ** 0.7 * 0.95; g.fillStyle = 'rgba(255,240,190,' + a.toFixed(3) + ')'; g.fillRect(x, y, 1, 1); }
     }],
     // tache ronde de lumière (trou du plafond vu d'en bas, soleil au sol) : disque clair aux bords doux, transparent autour
     tache: (c = '255,246,210') => [64, 64, (g) => {

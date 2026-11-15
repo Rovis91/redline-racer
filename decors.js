@@ -2026,7 +2026,7 @@
       const PAPEL = [0xff3d7f, 0xffb100, 0x1fb5a8, 0x7a4bd6, 0xff6a2b], FACADES = [0xf4a838, 0xfcd444, 0xe8643a, 0xfaf2de, 0xf48e72, 0x4cc4c4, 0x3c9ce4, 0xec5484];
       const remap = (nom, m, ...a) => FORMES[nom](...a).map(([z, ...r]) => [m[z] || z, ...r]); // un assemblage avec moins de zones : moins de passes de dessin
       const BX = [], MX = {}, boiteL = (m, w, ht, d, x, y, z, ry = 0, rz = 0) => { MX[m.uuid] = m; BX.push([m.uuid, w, ht, d, x, y, z, [0, ry, rz]]); }; // boîtes isolées, fondues par matière à la fin
-      const POT = [], PAL = [], BOU = [], CUB = [], palmiers = [[], []], buissons = [], buisFleur = [], maisons = [], fac = [], tinacos = [], gens = [], velos = [], panneaux = [];
+      const filets = [], barquesP = [], postesP = [], parasolsP = [], POT = [], PAL = [], BOU = [], CUB = [], palmiers = [[], []], buissons = [], buisFleur = [], maisons = [], fac = [], tinacos = [], gens = [], velos = [], panneaux = [];
       const palmier = (x, z, v = rnd() < 0.4 ? 1 : 0, t = 1, y = 0) => palmiers[v].push([x, y, z, rnd() * 6.28, t * (1.05 + rnd() * 0.35)]);
       const figurant = (x, z, r = rnd() * 6.28, y = -0.05) => gens.push([x, y, z, r, 1, 1, 1, PAPEL[rnd() * 5 | 0]]);
       const ecrit = (t, c, fg = '#fff4e0', w = 96) => h.mat('ecrit', {}, w, 24, c, fg, t, 16);
@@ -2069,11 +2069,20 @@
       { const l = []; for (let a = 0; a <= 6.2832; a += 0.07) { const x = PX + Math.sin(a) * (PR + 0.6), z = PZ + Math.cos(a) * (PR + 0.6); if (ecartR(x, z) > 0.4) l.push([x, z]); else if (l.length) chaine(l.splice(0)); } chaine(l); }
       for (const c of cordes) if (c[2] < -20) for (let u = -0.4; u <= 0.4; u += 0.2) { const dx = Math.cos(c[3]), dz = -Math.sin(c[3]); bouees.push([c[0] + dx * u * c[4], 0.9, c[2] + dz * u * c[4], 0, 0.5, 0.5, 0.5, [0xff6a2b, 0xfff4e0, 0xffb100][bouees.length % 3]]); }
       POT.push(...poteaux); inst(h, h.geo('corde'), h.mat('peinture', { c: 0xf4ead2 }), cordes); BOU.push(...bouees);
+      { const lanchas = [], postes = []; // obstacles de la plage : barques tirées sur le sable, cocotiers, postes de sauveteur, parasols, filet ; des allées roulables entre eux
+        for (const [px, pz, hx, hz, t] of PL.piles.slice(1)) { const x = PX + px * Math.cos(PL.a) + pz * Math.sin(PL.a), z = PZ - px * Math.sin(PL.a) + pz * Math.cos(PL.a);
+          if (t === 'lancha') lanchas.push([x, -0.05, z, Math.PI / 2 + (rnd() - 0.5) * 0.2, 1, 1, 1, [0x1478d8, 0x1fb5a8, 0xff3d7f, 0xffb100, 0x3f8f2a, 0xe8402a][lanchas.length % 6]]);
+          else if (t === 'palmier') palmier(x, z, 0, 1.1);
+          else if (t === 'poste') postes.push([x, -0.05, z, Math.PI]);
+          else if (t === 'parasol') { parasolsP.push([x, 2.3, z, 0, 1.5, 0.55, 1.5, PAPEL[parasolsP.length % 5]]); POT.push([x, -0.05, z, 0, 0.5, 2.4, 0.5]); }
+          else if (t === 'filet') filets.push([x, -0.05, z, 0]); }
+        barquesP.push(...lanchas); postesP.push(...postes); }
+      { const tc = h.mat('tracesSable', { transparent: true, opacity: 0.9, depthWrite: false, side: D, ...OFF }); const m = new THREE.Mesh(new THREE.PlaneGeometry(10, 120), tc); m.rotation.set(-Math.PI / 2, 0, Math.PI / 2); m.position.set(PX, 0.02, PZ); h.scene.add(m); } // la coupe à travers la place : des traces de pneus la montrent
       // la tour de maître-nageur : la pile de la place (sim.js la heurte), tournée vers la mer ; drapeaux de baignade ; une seconde tour plus loin
       { const [px, pz] = PL.piles[0], x = PX + px * Math.cos(PL.a) + pz * Math.sin(PL.a), z = PZ - px * Math.sin(PL.a) + pz * Math.cos(PL.a), peauT = { bois: h.mat('peinture', { c: 0xf4f0e8 }), cabine: h.mat('peinture', { c: 0xb8bcc0 }), toit: h.mat('peinture', { c: 0xf4f0e8 }), drapeau: h.mat('peinture', { c: 0x3a9a3a }) };
-        insts(h, remap('torreSalvavidas', { toit: 'bois', drapeau: 'cabine' }), peauT, [[x, z], [140, 25.5], [420, 25.5], [230, -24], [-120, 32], [-300, 34]].map(([tx, tz]) => [tx, -0.05, tz, Math.PI])); }
+        insts(h, remap('torreSalvavidas', { toit: 'bois', drapeau: 'cabine' }), peauT, [...postesP.map(([a, , b]) => [a, b]), [x, z], [140, 25.5], [420, 25.5], [230, -24], [-120, 32], [-300, 34]].map(([tx, tz]) => [tx, -0.05, tz, Math.PI])); }
       // côté terre : rangée de palapas et transats, filets de volley, clubs de plage sous palapa, cocotiers ; côté mer : lanchas tirées sur le sable, baigneurs, ligne de bouées, kitesurf
-      const cones = [], pieds = [], parasols = [], mats = [], transats = [], filets = [], serviettes = [];
+      const cones = [], pieds = [], parasols = parasolsP, mats = [], transats = [], serviettes = [];
       const terre = (x, z) => z > 20 + 3 && dPlace(x, z) > 3;
       for (let x = -260; x < 560; x += 11 + rnd() * 8) for (const z0 of [28, 41, 54, 66]) {
         const z = z0 + rnd() * 6; if (!terre(x, z) || ecartR(x, z) < 3 || (x > -40 && x < 95 && z > 30)) continue;
@@ -2120,7 +2129,7 @@
         if (k % 12 === 6 && (k / 12 | 0) % 2 === (sd > 0 ? 1 : 0)) { const [x, z] = bord(s, sd, W + 0.5); lamp.push([x, 0, z, 0, 0.9, 5, 0.9]); ampoules.push([x, 5.1, z]); } }
         if (k % 16 === 8) { const sd = (k / 16 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 3.4); barques2.push([x, -0.78, z, Math.atan2(-s.tz, s.tx), 1, 1, 1, PAPEL[k % 5]]); } });
       CUB.push(...pil.map(p => [p[0], p[1], p[2], p[3] || 0, 0.45 * (p[4] || 1), 3.2 * (p[5] || p[4] || 1), 0.45 * (p[6] || p[4] || 1), 0x8a6a48])); POT.push(...[...gc, ...lamp]); inst(h, h.geo('boite', 0.5, 0.5, 0.5), h.mat('lampe', LUM), ampoules);
-       insts(h, remap('barque', { bois: 'coque', moteur: 'coque' }), { coque: h.mat('peinture', { c: 0xf4f0e8 }), bande: blancT }, [...barques, ...barques2], { teinte: 'bande' }); // pélicans bruns posés sur les pieux (même silhouette, bec jaune)
+       insts(h, remap('barque', { bois: 'coque', moteur: 'coque' }), { coque: h.mat('peinture', { c: 0xf4f0e8 }), bande: blancT }, [...barques, ...barques2, ...barquesP], { teinte: 'bande' }); // pélicans bruns posés sur les pieux (même silhouette, bec jaune)
       { const x = 515, z = -66; // la terrasse entre les deux voies du muelle, la palapa-bar au milieu
         boiteL(bois, 30, 0.3, 66, x, -0.2, z); const sous = []; for (let a = -12; a <= 12; a += 6) for (let b = -30; b <= 30; b += 10) sous.push([x + a, -2, z + b]); CUB.push(...sous.map(p => [p[0], p[1], p[2], p[3] || 0, 0.45 * (p[4] || 1), 3.2 * (p[5] || p[4] || 1), 0.45 * (p[6] || p[4] || 1), 0x8a6a48]));
         PAL.push(...[[x, 4.3, z, 0.3, 9, 4.2, 9], [x, 3.2, z - 24, 0, 4, 2, 4], [x, 3.2, z + 22, 0, 4, 2, 4]]); POT.push(...[[x - 6, -0.05, z - 6, 0, 1.6, 4.4, 1.6], [x + 6, -0.05, z - 6, 0, 1.6, 4.4, 1.6], [x - 6, -0.05, z + 6, 0, 1.6, 4.4, 1.6], [x + 6, -0.05, z + 6, 0, 1.6, 4.4, 1.6]]);
@@ -2228,9 +2237,9 @@
         const rr = [], cc = [], ts = [], tr = [], rac = [];
         for (const [f, d, R] of [[0.04, -4.5, 2.4], [0.14, 4.6, 1.8], [0.25, -4.8, 2.2], [0.36, 4.8, 1.6], [0.47, -4.2, 2.8], [0.56, 4.6, 1.8], [0.67, -4.8, 2.2], [0.78, 4.8, 2], [0.86, -4.6, 2]]) {
           const i = (t0 + Math.round(nT * f)) % N, s = S[i], [x, z] = bord(s, 1, d), y = s.y + 7.58;
-          tr.push([x, y, z, 0, R * 1.2, 1, R * 1.2]); cc.push([x, y, z, rnd() * 6, R * 1.1, 7.6, R * 1.1]); cc.push([x, y, z, rnd() * 6, R * 0.6, 7.6, R * 0.6]);
+          tr.push([x, y, z, 0, R * 1.5, 1, R * 1.5]); cc.push([x, y, z, rnd() * 6, R * 1.3, 7.6, R * 1.3]); cc.push([x, y, z, rnd() * 6, R * 0.8, 7.6, R * 0.8]); cc.push([x, y, z, rnd() * 6, R * 0.45, 7.6, R * 0.45]);
           for (const a of [0, 1.05, 2.1]) rr.push([x, y, z, a, R * 1.6, 7.6, 1]);
-          ts.push([x, s.y + 0.06, z, 0, R * 1.5, 1, R * 1.2, 0xfff0be]); for (const sd of [-1, 1]) { const [ex, ez] = bord(s, sd, W - 1.3); ts.push([ex, s.y + 0.07, ez, 0, R * 2.4, 1, R * 2.4, 0x50ffe0]); }
+          ts.push([x, s.y + 0.06, z, 0, R * 1.5, 1, R * 1.2, 0xc0b088]); for (const sd of [-1, 1]) { const [ex, ez] = bord(s, sd, W - 1.3); ts.push([ex, s.y + 0.07, ez, 0, R * 2.4, 1, R * 2.4, 0x50ffe0]); }
           for (let j = 0; j < 8; j++) rac.push([x + (rnd() - 0.5) * R * 1.4, y, z + (rnd() - 0.5) * R * 1.4, rnd() * 3.14, R * 1.3, 1.6 + rnd() * 1.4, 1]);
           h.lum(i, x, s.y + 6.2, z, 0xfff0c8, 24, 1.4 + R * 0.4);
           const tx = x, tz = z, ty = tert.hAt(tx, tz); trousHaut.push([tx, ty + 0.08, tz, 0, R * 1.2, 1, R * 1.2]); for (let a = 0; a < 6.28; a += 0.8) rochers.push([tx + Math.cos(a) * R * 1.5, ty, tz + Math.sin(a) * R * 1.5, rnd() * 6, 0.8, 0.5, 0.8]); }
@@ -2244,18 +2253,19 @@
       //     flamants roses en bandes dans l'eau peu profonde, aigrettes, tour d'observation et ponton de bois, kayaks ; un pont au milieu, garde-corps de béton ---
       const lag = tranche(36, 43, 2, 0), pont = [P(39) - 8, P(40) + 8], surPont = i => ((i - pont[0] + N) % N) <= ((pont[1] - pont[0] + N) % N);
       const bordure = h.mat('peinture', { c: 0xe8e4d8 }), enro = h.mat('enrochement', { side: D });
-      for (const sd of [-1, 1]) { h.ribbon(lag[0], lag[1], sd * (W + 0.35), 0.95, sd * (W + 0.35), 0.55, h.mat('peinture', { c: 0xf2f2ea, side: D }), 4); h.ribbon(lag[0], lag[1], sd * W, 0.18, sd * (W + 0.45), 0.18, bordure, 4); h.ribbon(lag[0], lag[1], sd * (W + 0.45), 0.18, sd * (W + 4.5), -0.45, enro, 6); }
+      const bitume = h.mat('bruit', { side: D }, '#5a564e', ['#4e4a44', '#66625a']); for (const sd of [-1, 1]) { h.ribbon(lag[0], lag[1], sd * W, 0.005, s => sd * s.w, 0.005, bitume, 8); h.ribbon(lag[0], lag[1], s => sd * (W - 0.4), 0.012, s => sd * (W - 0.2), 0.012, bordure, 8); // la ligne de rive de la route du moteur, et le bas-côté bitumé jusqu'à la bordure
+        h.ribbon(lag[0], lag[1], s => sd * (s.w + 0.35), 0.95, s => sd * (s.w + 0.35), 0.55, h.mat('peinture', { c: 0xf2f2ea, side: D }), 4); h.ribbon(lag[0], lag[1], s => sd * s.w, 0.18, s => sd * (s.w + 0.45), 0.18, bordure, 4); h.ribbon(lag[0], lag[1], s => sd * (s.w + 0.45), 0.18, s => sd * (s.w + 4.5), -0.45, enro, 6); }
       const bornes = [], lampsL = [], ampL = [], garde = [], mangles = [], couronnes = [], flamants = [[], []], aigrettes = [], kayaks = [];
-      chaque(lag, 3, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 0.3); if (surPont(i)) garde.push([x, 0.55, z, Math.atan2(-s.tz, s.tx), 6.2, 1, 1]); else if (k % 2 === 0) { bornes.push([x, 0, z, 0, 2.4, 1.0, 2.4]); CUB.push([x, 0.85, z, 0, 0.5, 0.14, 0.5, 0xe8302a]); } }
-        if (k % 7 === 3) { const sd = (k / 7 | 0) % 2 ? 1 : -1, [px, pz] = bord(s, sd, W + 3.2); palmier(px, pz, 0, 0.9, -0.2); }
-        if (k % 15 === 0) { const sd = (k / 15 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, W + 3.2); lampsL.push([x, 5, z]); const [ax, az] = bord(s, sd, W + 1.6); ampL.push([ax, 9.95, az, h.across(s)]); } });
+      chaque(lag, 3, (s, i, k) => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 0.3); if (surPont(i)) garde.push([x, s.y + 0.55, z, Math.atan2(-s.tz, s.tx), 6.2, 1, 1]); else if (k % 2 === 0) { bornes.push([x, s.y, z, 0, 2.4, 1.0, 2.4]); CUB.push([x, s.y + 0.85, z, 0, 0.5, 0.14, 0.5, 0xe8302a]); } }
+        if (k % 7 === 3) { const sd = (k / 7 | 0) % 2 ? 1 : -1, [px, pz] = bord(s, sd, s.w + 3.2); palmier(px, pz, 0, 0.9, -0.2); }
+        if (k % 15 === 0) { const sd = (k / 15 | 0) % 2 ? 1 : -1, [x, z] = bord(s, sd, s.w + 3.2); lampsL.push([x, 5, z]); const [ax, az] = bord(s, sd, s.w + 1.6); ampL.push([ax, 9.95, az, h.across(s)]); } });
       inst(h, h.geo('poteauBois'), h.mat('peinture', { c: 0xf4f0e8 }), bornes); CUB.push(...garde.map(p => [p[0], p[1], p[2], p[3] || 0, 1 * (p[4] || 1), 1 * (p[5] || p[4] || 1), 0.35 * (p[6] || p[4] || 1), 0xd8d4c8]));
       CUB.push(...lampsL.map(p => [p[0], p[1], p[2], p[3] || 0, 0.3 * (p[4] || 1), 10 * (p[5] || p[4] || 1), 0.3 * (p[6] || p[4] || 1), 0x6a6a6a])); CUB.push(...ampL.map(p => [p[0], p[1], p[2], p[3] || 0, 3.2 * (p[4] || 1), 0.25 * (p[5] || p[4] || 1), 0.7 * (p[6] || p[4] || 1), 0x6a6a6a]));
       for (const r of LAG) for (let k = 0; k < (r[2] - r[0]) * (r[3] - r[1]) / 70; k++) { const x = r[0] + rnd() * (r[2] - r[0]), z = r[1] + rnd() * (r[3] - r[1]), e = ecartR(x, z), ilot = Math.sin(x * 0.045 + 1) * Math.cos(z * 0.05) > 0.45, rideau = e > 14 && e < 48 && Math.sin(z * 0.06 + (x < 0 ? 0 : 2)) > -0.2;
         if (e < 10 || x < -420 && rnd() < 0.6) continue; if ((rideau && z > 100 && !surPont(near(h, x, z))) || ilot || x < -260 || z > 360) { if (e > 90 && rnd() < 0.6) continue; const sc = 0.8 + rnd() * 0.6; if (e < 60) mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); // au-delà de 60 m les racines ne se voient plus : la couronne seule
           couronnes.push([x, 2.6 * sc - 0.4, z, rnd() * 6, 2.6 * sc, 1.6 * sc, 2.6 * sc]); if (rnd() < 0.08) aigrettes.push([x, 3.3 * sc, z, rnd() * 6, 0.6, 0.6, 0.6, 0xffffff]); } }
       for (const [cx, cz, nb] of [[-22, 125, 30], [-26, 205, 40], [24, 165, 22], [-90, 300, 40], [28, 255, 26], [-45, 85, 18]]) for (let k = 0; k < nb; k++) { const x = cx + (rnd() - 0.5) * nb * 0.9, z = cz + (rnd() - 0.5) * nb * 0.8, t = rnd() < 0.35 ? 1 : 0, sc = 1.8 + rnd() * 0.3; if (ecartR(x, z) > 5) flamants[t].push([x, -0.6, z, rnd() * 6.28, sc, sc, sc, [0xff9ab8, 0xff80a4, 0xffb4c4][rnd() * 3 | 0]]); }
-      chaque(lag, 2, (s, i) => { if (!surPont(i)) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, W + 5.5 + rnd() * 4); if (z > 75) { const sc = 0.8 + rnd() * 0.4; mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); couronnes.push([x, 2.3 * sc - 0.4, z, rnd() * 6, 2.4 * sc, 1.5 * sc, 2.4 * sc]); } } });
+      chaque(lag, 2, (s, i) => { if (!surPont(i)) for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 5.5 + rnd() * 4); if (z > 75) { const sc = 0.8 + rnd() * 0.4; mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); couronnes.push([x, 2.3 * sc - 0.4, z, rnd() * 6, 2.4 * sc, 1.5 * sc, 2.4 * sc]); } } });
       chaque(lag, 2, s => { for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, 36 + rnd() * 14); if (ecartR(x, z) > 30 && z > 75) { const sc = 1.1 + rnd() * 0.5; mangles.push([x, -0.4, z, rnd() * 6, sc, sc, sc]); couronnes.push([x, 2.4 * sc - 0.4, z, rnd() * 6, 3.6 * sc, 2.2 * sc, 3.6 * sc]); } } }); // le mur de mangrove, continu
       insts(h, 'mangle', { racine: h.mat('bruit', {}, '#5a4030', ['#4a3424', '#6e5440']) }, mangles); inst(h, h.geo('buisson'), mangleF, couronnes);
       flamants[0].push(...pelicans, ...aigrettes); flamants.forEach((l, t) => insts(h, remap('flamant', { patte: 'bec' }, t), { plume: blancT, bec: h.mat('peinture', { c: 0x3a2a2a }) }, l, { teinte: 'plume' })); // flamants, pélicans et aigrettes : une silhouette, la teinte par instance
