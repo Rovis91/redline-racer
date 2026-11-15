@@ -1839,8 +1839,10 @@
       const pontI = new Set(); for (let i = P(48); i !== P(53); i = (i + 1) % N) if (riv(S[i].x, S[i].z) < 22) pontI.add(i);
       const iC0 = P(36) - 6, iC1 = P(40) + 6; // la crête, sur le mur : le sol reste au fond de la vallée dessous
       // ---------- le sol : la vallée suit la route ; la rivière et le lac se creusent ; la falaise ouest au-dessus de la corniche, des collines de taïga au loin ----------
+      const sc = S[P(1) + 8], canal = (x, z) => { const u = (x - sc.x) * -sc.tz + (z - sc.z) * sc.tx, v = (x - sc.x) * sc.tx + (z - sc.z) * sc.tz; return Math.abs(v) < 8 && u < 30 && u > -260; }; // le canal de fuite que la route saute (M.sauts, pt 1), jusqu'à la rivière
       const creux = (x, z, y) => {
         const p = proche(x, z), w = p.s.w, rv = riv(x, z), libre = p.d > w + 4 || pontI.has(p.i); let r = 0;
+        if (canal(x, z) && p.d > w + 1) return Math.max(0, y - (sc.y - 5));
         if (p.d < w + 30 && !pontI.has(p.i)) { const cap = p.s.y - 0.6 + Math.max(0, p.d - w - 6) * 0.8; if (y > cap) return y - cap; } // jamais de sol au-dessus de la chaussée : un talus qui ne monte qu'à 6 m du bord
         if (libre && rv < 34) { const f = rv < 0 ? 0.3 : 1 + rv * 0.5; if (y > f) r = (y - f) * (rv < 0 ? 1 : lisse(34, 0, rv)); }
         if (libre && lac(x, z) && !mur(x, z)) r = Math.max(r, y - 70);
@@ -1852,6 +1854,9 @@
       const g = terrain(h, { pas: 12, marge: 720, sol: s => { const i = IX.get(s); return i >= iC0 && i <= iC1 ? 6 : pontI.has(i) ? 0 : s.y; }, creux, mat: mat('solGES') });
       const hAt = g.hAt, dAt = g.dAt;
 
+      { const gr = new THREE.Group(); gr.position.set(sc.x, sc.y, sc.z); gr.rotation.y = h.across(sc); h.scene.add(gr); // repère : X en travers de la route
+        h.pose('boite', mat('eauGES', { c: 0x9fd0d8 }, '#5a96a8', 40), gr, [-115, -4.2, 0], 290, 0.3, 12); for (const e of [-1, 1]) h.pose('boite', mat('betonGES', {}, '#6d726d'), gr, [-115, -3, e * 7], 290, 5, 1.6);
+        h.pose('boite', mat('betonGES', {}, '#6d726d'), gr, [0, -1.6, 0], 2 * W + 4, 2.4, 16); } // le pont-dalle du canal sous le saut
       // ---------- l'eau : le lac au ras de la crête (101 m), le bassin d'écume, la rivière (3 m) ----------
       const eau = mat('eauGES', { c: 0xc4d8d8 }, '#6aa4b0', 40), eauRiv = mat('eauGES', { c: 0x9fd0d8 }, '#5a96a8', 40), ecume = mat('ecumeGES');
       { const P3 = [], UV = [], I = []; for (const [x0, x1, z1] of [[-1700, -310, -22], [-310, 432, -11], [432, 1700, -48]]) { const b = P3.length / 3, z0 = -1700; P3.push(x0, 101, z0, x1, 101, z0, x0, 101, z1, x1, 101, z1); UV.push(x0 / 16, z0 / 16, x1 / 16, z0 / 16, x0 / 16, z1 / 16, x1 / 16, z1 / 16); I.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } maille(P3, UV, I, eau); } // le lac en une passe
@@ -1959,7 +1964,7 @@
       const glissiere = (a, b, sd) => tranche(a, b, (i, l) => ruban(i, l, s => sd * (s.w + 0.4), 0.85, s => sd * (s.w + 0.4), 0.1, glis, 4));
       tranche(P(5) + 6, P(13) - 6, (i, l) => { for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 0.1), 0.02, s => sd * (s.w + 1.1), 0.02, mat('bandeOrange'), 2); }); // bandes de danger au sol le long de la voie de la halle
       { const gc = mat('glissiere', DS, ['#e8761e', '#1e1e1c', '#e8761e', '#c86a1a']); for (const sd of [-1, 1]) tranche(P(5) + 6, P(13) - 6, (i, l) => ruban(i, l, s => sd * (s.w + 0.4), 1, s => sd * (s.w + 0.4), 0, gc, 4)); } // la voie de la halle, bordée de garde-corps orange
-      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, s => sd * (s.w + 0.3), 1.17, s => sd * (s.w + 0.9), 1.17, mat('bandeOrange'), 2)); // la corde de la crête : chaperon rayé orange, là où frôler le parapet remplit la nitro
+      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, s => sd * (s.w + 0.3), 1.17, s => sd * (s.w + 0.9), 1.17, mat('bandeOrange'), 2)); for (const sd of [-1, 1]) tranche(P(33), P(40), (i, l) => ruban(i, l, s => sd * (s.w + 0.29), 1.15, s => sd * (s.w + 0.29), 0.7, mat('bandeOrange'), 2)); // la corde de la crête : chaperon rayé orange, là où frôler le parapet remplit la nitro
       parapet(P(32), P(41), -1); parapet(P(35), P(41), 1); glissiere(P(31), P(35) + 4, 1); parapet(P(41), P(49), -1); // la crête des deux côtés, le lac et la corniche côté vide
       glissiere(P(53), P(5), -1); glissiere(P(13), P(32), -1); glissiere(P(13), P(32), 1); glissiere(P(49) - 10, P(53) + 6, -1); glissiere(P(49) - 10, P(53) + 6, 1);
       { const bo = []; for (let i = 0; i < N; i += 8) { if (dansHalle(i) || (i >= T0 && i <= T1)) continue; const s = S[i]; for (const sd of [-1, 1]) { if (sd < 0 ? dans(i, 32, 49) : dans(i, 31, 41)) continue; const [x, z] = bord(s, sd, s.w + 1.3); bo.push([x, s.y + 0.45, z, h.across(s)]); } }
