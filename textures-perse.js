@@ -163,10 +163,10 @@
     }, 6],
     // REFS §12 : boutiques (hojreh) du bazar en niches brisées, deux par motif de 8 m : tapis, cuivres, épices, étoffes ; cadre de brique et liseré de faïence
     // n niches par motif (4 : la voûte ; 5 sur les modules de 12 m de la rue : niches de 2,4 m, pixels plus fins), d : décalage de l'ordre des marchandises (les modules voisins diffèrent)
-    hojreh: (n = 4, d = 0) => [16 * n, 32, (g, { R }) => {
+    hojreh: (n = 4, d = 0, cadre = TURQ) => [16 * n, 32, (g, { R }) => { // cadre : la couleur de l'encadrement des niches (turquoise ; brique pour un module sur deux de la rue ouverte)
       R(g, '#7a4630', 0, 0, 16 * n, 32); for (let y = 0; y < 32; y += 2) R(g, '#5e3424', 0, y, 16 * n, 1);
       const B = [[ROUGE, LAPIS, OR], ['#c8742e', '#e89a50', '#7a4420'], ['#d9a21b', '#b5391e', '#7a5a20'], [TURQ, IVOIRE, ROUGE]];
-      for (let q = 0; q < n; q++) { const x = q * 16 + 2, k = (q + d) % 4, [a, b, c] = B[k]; R(g, TURQ, x - 1, 7, 14, 25); R(g, '#24140c', x, 9, 12, 23); for (let j = 0; j < 5; j++) { R(g, TURQ, x + 1 + j, 9 - j, 10 - 2 * j, 1); R(g, '#24140c', x + 2 + j, 10 - j, 8 - 2 * j, 1); }
+      for (let q = 0; q < n; q++) { const x = q * 16 + 2, k = (q + d) % 4, [a, b, c] = B[k]; R(g, cadre, x - 1, 7, 14, 25); R(g, '#24140c', x, 9, 12, 23); for (let j = 0; j < 5; j++) { R(g, cadre, x + 1 + j, 9 - j, 10 - 2 * j, 1); R(g, '#24140c', x + 2 + j, 10 - j, 8 - 2 * j, 1); }
         R(g, '#ffd890', x + 4, 11, 4, 2); // lampe au fond de la boutique
         if (k === 0) { R(g, a, x + 1, 14, 5, 14); R(g, c, x + 2, 16, 3, 10); R(g, b, x + 6, 15, 5, 13); R(g, IVOIRE, x + 7, 18, 3, 6); } // tapis pendus
         else if (k === 1) for (let j = 0; j < 3; j++) { R(g, a, x + 1 + j * 4, 15 + j, 3, 3); R(g, b, x + 2 + j * 3, 22, 3, 4); R(g, c, x + 1, 27, 10, 1); } // cuivres
