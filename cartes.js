@@ -455,8 +455,8 @@
       large: [[23, 20, 8], [4, 5, 10.5], [7, 8, 10.5], [10, 11, 10.5], [25, 26, 10.5], [15, 19, 13]], sauts: [[3, 60, 1.4], [21, 30, 0.9]], // V2 : on saute du bord du plateau dans la descente de la gorge, un tremplin qui pose la voiture sur les planches du pont surf: { zones: [[12, 14, 'mouille', 2.5], [15, 19, 'mouille', 3], [21, 22, 'mouille', 0.8], [24, 29, 'mouille', 0.4]], large: 'sec' }, // V2 : le mouillé mord (le centre du gué doit coûter son raccourci)
       // V2 : trois épingles différentes (la 1re à R 21 m, la 2e ouverte et longue, la 3e serrée), un vrai S au gué (on y freine), la forêt resserrée, une cassure dans la ligne droite du plateau, la gorge plus raide
       pts: [[0, 0, 80], [250, 0, 80], [470, 140, 78], [760, 70, 74], [1075, 168, 67], [1180, 245, 61], [1075, 320, 56], [870, 330, 49], [770, 412, 45], [870, 500, 41], [1075, 512, 35], [1172, 594, 28], [1075, 662, 23],
-        [962, 700, 20], [850, 737, 17], [775, 762, 15], [690, 722, 14], [600, 792, 14], [510, 722, 14], [425, 762, 14], [350, 762, 16], [287, 762, 18], [150, 762, 20], [90, 752, 23], [-55, 725, 29], [-160, 590, 37],
-        [10, 510, 46], [30, 400, 54], [-55, 320, 62], [-125, 200, 69], [-110, 85, 75], [-115, 45, 77], [-75, 12, 79], [-25, 0, 79.6]],
+        [962, 700, 20], [850, 737, 17], [775, 762, 15], [690, 722, 14], [600, 792, 14], [510, 745, 14], [425, 762, 14], [350, 762, 16], [287, 762, 18], [150, 762, 20], [90, 752, 23], [-55, 725, 29], [-160, 590, 37],
+        [10, 510, 46], [30, 400, 54], [-55, 320, 62], [-125, 200, 69], [-110, 85, 75], [-117, 47, 77], [-75, 12, 79], [-25, 0, 79.6]],
       // voiture inventée : un coupé brésilien léger à moteur avant, 4 cylindres turbo de 2 L, 250 ch, 1050 kg, propulsion (rapports et courbe de couple estimés)
       car: car({ nom: 'ONCA 2000 TURBO', ratios: [3.2, 2.1, 1.52, 1.18, 0.95], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
         tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], son: 1.2, moteur: 'l4', turbo: 1, look: { col: 0x1f6a4a, l: 0.9, w: 0.98, h: 0.98, nez: 0.55, cab: [-0.3, 2, 0.55], aileron: 1, bandes: 0xe9b44c } }),
