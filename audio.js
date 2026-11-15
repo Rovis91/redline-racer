@@ -522,7 +522,7 @@
     const gR = gain(0, rac); src.connect(filt('bandpass', 2200, 0.7, gR)); src.connect(filt('lowpass', 300, 0.7, gain(0.7, gR))); // les rapides : plus clairs que la chute
     const gG = gain(0, rac), fG = filt('bandpass', 1200, 2.5, gG); src.connect(fG); // le gué : un clapotis (la bande saute)
     const gP = gain(0, rac), pm = gain(0.5, gP), po = AC.createOscillator(); po.type = 'square'; po.frequency.value = 12; po.connect(gain(0.5, pm.gain)); po.start(); src.connect(filt('bandpass', 300, 1.5, pm)); src.connect(filt('bandpass', 760, 3, gain(0.5, pm))); // les planches du pont : un martèlement de bois
-    CH = { rac, src: [src, po], pan, gC, lp, gR, gG, fG, gP, po, eau: false, tG: 0, fait: {}, idx: 0, tr: 0, sp: 0, N: 1, z: null };
+    CH = { rac, src: [src, po], pan, gC, lp, gR, gG, fG, gP, po, eau: false, tEau: -9, tG: 0, touc: 0, fait: {}, idx: 0, tr: 0, sp: 0, N: 1, z: null };
   }
   function chapadaFrame(dt, e, t, k, tun, r) {
     const C = CH, c = e.car, N = e.T.n;
@@ -530,33 +530,38 @@
       C.N = N; C.z = { camp: [P(68), P(1)], marais: [P(1), P(4)], aras: [P(8) + 4, P(10) + 40], lacets: [P(13), P(28)], pont: [P(32) - 4, P(33) + 4], chauves: [P(33) + 6, P(34)], hurleurs: [P(41) + 10, P(43) + 20],
         rapides: [P(49) - 10, P(52) + 6], onca: [P(52) - 34, P(52)], cite: [P(52), P(62)], gue: [P(63) - 8, P(64) + 8], seriema: [P(65), P(67)] }; }
     const dans = ([a, b], f = 30) => { const i = (c.idx - a + N) % N, L = (b - a + N) % N; return i < L ? Math.min(1, i / f, (L - i) / f) : 0; };
-    C.idx = c.idx; C.tr = Math.floor((c.dist || 0) / N); C.sp = e.sp;
+    if (c.idx < C.idx - N / 2) C.tr++; C.idx = c.idx; C.sp = e.sp; // un tour de plus quand l'indice repasse par zéro (car.dist ne sert pas : le contre-la-montre le ramène à zéro à chaque tour)
+    for (const n of ['aras', 'chauves', 'hurleurs', 'onca', 'seriema']) if (dans(C.z[n], 1) > 0 && C.fait[n] !== C.tr && e.state !== 'title' && (n !== 'onca' || C.tr % 2 === 0)) { C.fait[n] = C.tr; unCri(n, t + 0.05, C.rac); } // les cris d'une fois par tour partent à l'entrée de leur zone (au hasard de la minuterie, on manquait les zones courtes)
     k(C.rac.gain, e.state === 'title' ? 0 : 1, 0.3);
     // la grande chute, au fond du cirque (x 1036, z 243) : on l'entend dès le haut des lacets, elle est à gauche sur le pont, la grotte l'étouffe
     const dx = 1036 - c.x, dz = 243 - c.z, d = Math.hypot(dx, dz), p = clamp(1 - d / 420, 0, 1), lat = (dz * Math.cos(c.th) - dx * Math.sin(c.th)) / Math.max(d, 1);
-    k(C.gC.gain, 0.16 * p * p * (1 - 0.8 * tun), 0.3); k(C.lp.frequency, (300 + 5200 * p ** 3) * (1 - 0.85 * tun), 0.3); k(C.pan.pan, clamp(lat, -1, 1) * 0.8, 0.2);
+    k(C.gC.gain, 0.11 * p * p * (1 - 0.8 * tun), 0.3); k(C.lp.frequency, (300 + 5200 * p ** 3) * (1 - 0.85 * tun), 0.3); k(C.pan.pan, clamp(lat, -1, 1) * 0.8, 0.2);
     k(C.gR.gain, 0.05 * dans(C.z.rapides), 0.3);
     const gu = dans(C.z.gue, 10); k(C.gG.gain, 0.05 * gu, 0.2); if (gu > 0 && (C.tG -= dt) < 0) { C.tG = 0.08; C.fG.frequency.setTargetAtTime(800 + Math.random() * 1400, t, 0.02); }
     k(C.gP.gain, (c.air ? 0 : 0.09) * dans(C.z.pont, 4) * Math.min(1, r * 2), 0.06); k(C.po.frequency, 5 + e.sp * 0.7, 0.1);
     // l'entrée dans l'eau (marais, rivière, gué, réception du saut) : un plouf sourd, puis l'eau qui retombe
-    const eau = !!(c.sol && c.sol.aq > 0.09) && !c.air; if (eau && !C.eau && e.sp > 8 && e.state !== 'title') { const v = Math.min(1, e.sp / 45); nz(t, 0.28, 0.3 * v, C.rac, 'lowpass', 320, 0.8); nz(t + 0.03, 0.7, 0.1 * v, C.rac, 'highpass', 2600, 0.7, nbuf, 0.02); } C.eau = eau;
+    const eau = !!(c.sol && c.sol.aq > 0.09) && !c.air; if (eau && !C.eau && e.sp > 8 && e.state !== 'title' && t - C.tEau > 1.5) { C.tEau = t; const v = Math.min(1, e.sp / 45); nz(t, 0.28, 0.3 * v, C.rac, 'lowpass', 320, 0.8); nz(t + 0.03, 0.7, 0.1 * v, C.rac, 'highpass', 2600, 0.7, nbuf, 0.02); } C.eau = eau;
     // le feu du camp, à gauche de la grille de départ : il crépite (on l'entend à l'arrêt, plus dès qu'on roule)
-    const pf = clamp(1 - Math.hypot(c.x - 50, c.z + 11) / 40, 0, 1); if (pf > 0 && e.state !== 'title' && Math.random() < dt * 14 * pf) nz(t + Math.random() * 0.03, 0.005 + Math.random() * 0.012, 0.12 * pf * pf, C.rac, 'highpass', 1800 + Math.random() * 2500);
+    const pf = clamp(1 - Math.hypot(c.x - 50, c.z + 11) / 120, 0, 1); /* la grille est à 70-90 m du feu */ if (pf > 0 && e.state !== 'title' && Math.random() < dt * 14 * pf) nz(t + Math.random() * 0.03, 0.005 + Math.random() * 0.012, 0.12 * pf * pf, C.rac, 'highpass', 1800 + Math.random() * 2500);
   }
-  // les bêtes de chapada, par secteur (appelé comme ambEvent : renvoie le délai avant l'événement suivant). une() : une seule fois par tour
+  // les cris d'une fois par tour (lancés par chapadaFrame à l'entrée de leur zone), dans d
+  function unCri(n, t, d) {
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    if (n === 'aras') for (let k = 0; k < 3; k++) { const o = AC.createOscillator(), g = AC.createGain(), t0 = t + k * 0.42; o.type = 'sawtooth'; o.frequency.setValueAtTime(940, t0); o.frequency.linearRampToValueAtTime(760, t0 + 0.26);
+      o.connect(filt('bandpass', 2100, 3, g)); g.connect(d); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.055, t0 + 0.03); g.gain.linearRampToValueAtTime(0, t0 + 0.28); o.start(t0); o.stop(t0 + 0.3); } // le cri rauque des aras qui passent
+    if (n === 'chauves') { for (let k = 0; k < 16; k++) osc('sine', rnd(7000, 9000), t + k * 0.04 + rnd(0, 0.02), 0.012, 0.02, d); nz(t, 0.7, 0.025, d, 'bandpass', 3000, 1.5, nbuf, 0.1); } // la nuée sort de la grotte
+    if (n === 'hurleurs') for (let w = 0; w < 3; w++) { const t0 = t + w * 1.05, a = nz(t0, 1.3, 0.13, d, 'bandpass', 430, 6, nbuf, 0.35), b = nz(t0, 1.3, 0.06, d, 'bandpass', 820, 6, nbuf, 0.35); // les singes hurleurs : trois vagues graves et rauques, au freinage de l'idole
+      if (a) { a.frequency.setValueAtTime(430, t0); a.frequency.linearRampToValueAtTime(300, t0 + 1.2); } if (b) { b.frequency.setValueAtTime(820, t0); b.frequency.linearRampToValueAtTime(600, t0 + 1.2); } }
+    if (n === 'onca') for (let k = 0; k < 14; k++) nz(t + k / 12, 0.06, 0.13, d, 'bandpass', rnd(160, 200), 3); // l'onça : un râle scié, un tour sur deux
+    if (n === 'seriema') { let tt = t; for (let k = 0; k < 12; k++) { const o = osc('sine', 1600, tt, 0.09, 0.03, d); if (o) { o.frequency.setValueAtTime(1600, tt); o.frequency.exponentialRampToValueAtTime(1100, tt + 0.08); } tt += 0.12 + 0.13 * Math.abs(k - 6) / 6; } } // la seriema : une cascade de jappements, avant le camp
+  }
+  // les bêtes de chapada qui reviennent, par secteur (appelé comme ambEvent : renvoie le délai avant l'événement suivant)
   function evChapada(t) {
-    const C = CH; if (!C || !C.z) return 1; const i = C.idx, Z = C.z, d = ambBed, rnd = (a, b) => a + Math.random() * (b - a), en = ([a, b]) => (i - a + C.N) % C.N < (b - a + C.N) % C.N, une = n => C.fait[n] !== C.tr && (C.fait[n] = C.tr, true);
-    if (en(Z.camp) && C.sp < 6 && une('toucan')) { for (let k = 0; k < 3; k++) { nz(t + k * 0.22, 0.09, 0.1, d, 'bandpass', 900, 5); osc('square', 380, t + k * 0.22, 0.07, 0.015, d); } return 3; } // à l'arrêt sur la grille : le toucan croasse
+    const C = CH; if (!C || !C.z) return 1; const i = C.idx, Z = C.z, d = ambBed, rnd = (a, b) => a + Math.random() * (b - a), en = ([a, b]) => (i - a + C.N) % C.N < (b - a + C.N) % C.N;
+    if (en(Z.camp) && C.sp < 6 && t > C.touc) { C.touc = t + 25; for (let k = 0; k < 3; k++) { nz(t + k * 0.22, 0.09, 0.1, d, 'bandpass', 900, 5); osc('square', 380, t + k * 0.22, 0.07, 0.015, d); } return 3; } // à l'arrêt sur la grille : le toucan croasse
     if (en(Z.marais)) { if (Math.random() < 0.6) { osc('sine', 1100, t, 0.045, 0.05, d); osc('sine', 2200, t, 0.03, 0.02, d); } else for (let k = 0; k < 5; k++) osc('sine', 2400, t + k * 0.05, 0.016, 0.03, d); return rnd(0.4, 1.2); } // la grenouille forgeron (un marteau sur l'enclume) et le chœur
-    if (en(Z.aras) && une('aras')) { for (let k = 0; k < 3; k++) { const o = AC.createOscillator(), g = AC.createGain(), t0 = t + k * 0.42; o.type = 'sawtooth'; o.frequency.setValueAtTime(940, t0); o.frequency.linearRampToValueAtTime(760, t0 + 0.26);
-        o.connect(filt('bandpass', 2100, 3, g)); g.connect(d); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.09, t0 + 0.03); g.gain.linearRampToValueAtTime(0, t0 + 0.28); o.start(t0); o.stop(t0 + 0.3); } return 2; } // le cri rauque des aras qui passent
     if (en(Z.lacets)) { osc('sine', 2100, t, 0.17, 0.045, d); osc('sine', 3430, t, 0.1, 0.03, d); return rnd(3, 7); } // l'araponga : un coup de cloche fêlée, au loin
-    if (en(Z.chauves) && une('chauves')) { for (let k = 0; k < 16; k++) osc('sine', rnd(7000, 9000), t + k * 0.04 + rnd(0, 0.02), 0.012, 0.03, d); nz(t, 0.7, 0.04, d, 'bandpass', 3000, 1.5, nbuf, 0.1); return 3; } // la nuée sort de la grotte
-    if (en(Z.hurleurs) && une('hurleurs')) { for (let w = 0; w < 3; w++) { const t0 = t + w * 1.05, a = nz(t0, 1.3, 0.22, d, 'bandpass', 430, 6, nbuf, 0.35), b = nz(t0, 1.3, 0.1, d, 'bandpass', 820, 6, nbuf, 0.35);
-        a && a.frequency.linearRampToValueAtTime(300, t0 + 1.2); b && b.frequency.linearRampToValueAtTime(600, t0 + 1.2); } return 5; } // les singes hurleurs : trois vagues graves et rauques, au freinage de l'idole
-    if (en(Z.onca) && C.tr % 2 === 0 && une('onca')) { for (let k = 0; k < 14; k++) nz(t + k / 12, 0.06, 0.22, d, 'bandpass', rnd(160, 200), 3); return 3; } // l'onça : un râle scié, un tour sur deux
     if (en(Z.cite)) { for (let k = 0, n = 4 + Math.random() * 4 | 0; k < n; k++) { const f = rnd(3000, 4200), o = osc('sine', f, t + k * 0.08, 0.06, 0.035, d); o && o.frequency.exponentialRampToValueAtTime(f * 1.3, t + k * 0.08 + 0.05); } return rnd(2, 5); } // un jacassement de perruches au-dessus de la place
-    if (en(Z.seriema) && une('seriema')) { let tt = t; for (let k = 0; k < 12; k++) { const o = osc('sine', 1600, tt, 0.09, 0.05, d); o && o.frequency.exponentialRampToValueAtTime(1100, tt + 0.08); tt += 0.12 + 0.13 * Math.abs(k - 6) / 6; } return 4; } // la seriema : une cascade de jappements, avant le camp
     return rnd(1.5, 4); // ailleurs : le lit seul (feuillage, cigales)
   }
   function ambEvent(t) { // événements du lieu, espacés au hasard ; renvoie le délai avant le suivant
@@ -955,7 +960,7 @@ registerProcessor('moteur', Moteur);`;
     // ambiance du lieu : seulement dans ses zones (e.amb, fondu fait par le jeu), jamais au menu ni en tunnel ; événements espacés au hasard, dans la zone
     const amb = state === 'title' ? 0 : (e.amb || 0) * (1 - tun);
     k(ambBed.gain, 0.6 * amb, 0.4); if (amb > 0.5) { if (!inZone) ambT = Math.min(ambT, 1.2); if ((ambT -= dt) < 0) ambT = ambEvent(t + 0.05); } inZone = amb > 0.5;
-    if (CH) chapadaFrame(dt, e, t, k, tun, r);
+    if (CH && T.S && car.x != null) chapadaFrame(dt, e, t, k, tun, r); // le banc d'écoute et l'éditeur n'ont ni piste ni position : rien à placer
     // musique : sections et filtres suivent la course
     const a0 = (car.idx - T.h0 + N) % N, inside = a0 < T.h1 - T.h0, near = racing && !inside && N - a0 < 60;
     if (near && !wasNear) riser(t, clamp((N - a0) * 2 / Math.max(sp, 20), 0.5, 3));
