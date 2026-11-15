@@ -55,7 +55,7 @@
     // des plages ambre là où l'on voit le fond, le ciel en rides bleutées, de l'écume en traînées (matière lumineuse : un reflet ne dépend pas de l'ombre)
     eauPoco: () => [64, 64, (g, o) => {
       const { R, alea } = o; R(g, '#4a2614', 0, 0, 64, 64);
-      for (let i = 0; i < 8; i++) R(g, alea() < 0.6 ? '#7a3c18' : '#a8582a', alea() * 50 | 0, alea() * 50 | 0, 8 + (alea() * 14 | 0), 6 + (alea() * 10 | 0)); // l'ambre du fond
+      for (let i = 0; i < 40; i++) R(g, alea() < 0.6 ? '#6a3418' : '#9a5228', alea() * 40 | 0, alea() * 64 | 0, 14 + (alea() * 30 | 0), 1 + (alea() * 2 | 0)); // l'ambre du fond, en traînées du courant (des plaques faisaient un damier)
       for (let i = 0; i < 46; i++) R(g, alea() < 0.6 ? '#8aa8b4' : '#c8d8dc', alea() * 54 | 0, alea() * 63 | 0, 5 + (alea() * 10 | 0), 1); // le ciel en rides
       for (let i = 0; i < 22; i++) R(g, '#f4efe0', alea() * 56 | 0, alea() * 63 | 0, 3 + (alea() * 8 | 0), 1); // l'écume
     }, 12],

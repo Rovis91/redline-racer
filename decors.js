@@ -1983,6 +1983,7 @@
       for (let k = 0; k < 60; k++) { const i = (g0 + (rnd() * ((g1 - g0 + N) % N) | 0)) % N, s = S[i], sd = rnd() < 0.5 ? -1 : 1, [x, z] = bord(s, sd, s.w + 2 + rnd() * 14), t = rnd(); // rochers et îlots de rive, avec leurs fougères
         blocs.push([x, s.y + niv(i) - 0.3, z, rnd() * 6, 0.8 + rnd() * 2, 0.6 + rnd() * 1.2, 0.8 + rnd() * 2]); if (t < 0.4) fbas.push([x, s.y + niv(i) + 0.6, z, rnd() * 6, 0.8]); else if (t < 0.55) coupes.push([x, s.y + niv(i) + 0.6, z, rnd() * 6, 0.9]); }
       inst(h, h.geo('boite', 1, 1, 1), h.mat('lajedo', { c: 0x9a8070 }), dalles);
+      const rive = []; for (let i = g0; entre(i, g0, g1); i = (i + 3) % N) for (const sd of [-1, 1]) { const s = S[i], o = sd > 0 ? s.w + 44 + rnd() * 3 : s.w + 50 + rnd() * 3, [x, z] = bord(s, sd, o); blocs.push([x, s.y + niv(i) - 0.2, z, rnd() * 6, 1 + rnd() * 2, 0.8 + rnd() * 1.2, 1 + rnd() * 2]); if (rnd() < 0.6) (rnd() < 0.5 ? fbas : coupes).push([x, s.y + niv(i) + 0.8, z, rnd() * 6, 1 + rnd() * 0.6]); if (rnd() < 0.15) rive.push([x, s.y + niv(i), z]); } // les rives du gué
 
       // ---------- les épingles (pts 3 à 12) : une falaise en strates côté amont sur chaque tronçon droit, garde-corps et vide côté aval ----------
       { let deb = -1; const nH = bruit();
@@ -2002,7 +2003,7 @@
         tranche(gal0 - 30, gal1 + 30, (i, l) => extrude(i, l, -1, (j, s) => { const e = lisse(0, 25, Math.min((j - i + N) % N, (i + l - j + N) % N)), y = 43 + 2 * nL(j * 0.05);
           return [[s.w + 13 - 3 * e, y - 1, c1], [s.w + 7 - 1.5 * e, y - 0.5, c1], [s.w + 7 - 1.5 * e, y + 2.5, c2], [s.w + 20, y + 4, mo]]; })); }
       { const fil = [], ecume = []; for (let i = gal0; entre(i, gal0, gal1); i = (i + 1) % N) { const s = S[i]; if (rnd() < 0.8) continue;
-          for (const o of [8, 9.6]) { const [x, z] = bord(s, -1, s.w + o + rnd() * 0.6), y0 = s.y + niv(i), hh = 44 - niv(i); fil.push([x, y0 + hh / 2, z, h.across(s), 1.2 + rnd() * 2, hh, 1, rnd() < 0.6 ? 0xdde8ea : 0xb8ccd2]); }
+          for (const o of [8, 9.6]) { const [x, z] = bord(s, -1, s.w + o + rnd() * 0.6), y0 = s.y + niv(i), hh = 44 - niv(i); fil.push([x, y0 + hh / 2, z, h.across(s), 0.8 + rnd() * 1.6, hh, 1, rnd() < 0.5 ? 0xeef4f4 : rnd() < 0.5 ? 0xa8bcc2 : 0x7a8c94]); } // des filets clairs et sombres : un rideau strié
           if (rnd() < 0.2) { const [x, z] = bord(s, -1, s.w + 7 + rnd() * 4); ecume.push([x, s.y + niv(i) + 0.4, z, rnd() * 6, 2 + rnd() * 3, 0.8 + rnd(), 2 + rnd() * 3]); } }
         const pf = new THREE.PlaneGeometry(1, 1); const mf = inst(h, pf, h.mat('peinture', { lum: 1, c: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false }), fil); fil.forEach((p, k) => mf.setColorAt(k, new THREE.Color(p[7]))); mf.castShadow = false;
         inst(h, h.geo('cime'), h.mat('peinture', { c: 0xc8d0d0 }), ecume.map(p => [p[0], p[1], p[2], p[3], p[4] / 5, p[5] / 6, p[6] / 5])); // l'écume au pied
@@ -2051,7 +2052,7 @@
       { const bal = [], ref = [], dist = [[], [], []], poD = [];
         for (let i = 0; i < N; i += 8) { const s = S[i]; if (entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue; const gue = entre(i, iF0, iF1);
           for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, gue ? W + 0.3 : s.w + 0.9), y = gue ? s.y + niv(i) : s.y; bal.push([x, y + 0.7, z, h.across(s), 1.8, 1.2, 1.8]); ref.push([x, y + 1.35, z, h.across(s), 1.8, 1.6, 1.8]); } }
-        for (const k of [3, 5, 8, 11, 15, 21]) for (const side of [-1, 1]) { [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.8, z, h.across(s) + Math.PI / 2, 3.4, 3.4, 3.4]); for (const u of [-1.6, 1.6]) { const [px, pz] = bord(s, side, s.w + 1.6 + u); poD.push([px, s.y + 1, pz, 0, 1.2, 3.4, 1.2]); } }); }
+        for (const k of [3, 5, 8, 11, 15, 17, 21, 26, 30]) for (const side of [-1, 1]) { [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.8, z, h.across(s) + Math.PI / 2, 3.4, 3.4, 3.4]); for (const u of [-1.6, 1.6]) { const [px, pz] = bord(s, side, s.w + 1.6 + u); poD.push([px, s.y + 1, pz, 0, 1.2, 3.4, 1.2]); } }); }
         for (const m of [inst(h, h.geo('boite', 0.18, 1.2, 0.18), h.mat('peinture', { c: 0xe8e4d8 }), bal), inst(h, h.geo('boite', 0.2, 0.18, 0.2), h.mat('peinture', { lum: 1, c: 0xff6a2a }), ref)]) m.castShadow = false; // au soleil rasant, leurs ombres barraient la route en damier
         inst(h, h.geo('boite', 0.12, 1, 0.12), bois, poD).castShadow = false; ['150', '100', '50'].forEach((t, j) => { inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j]).castShadow = false; }); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
@@ -2113,6 +2114,7 @@
             if (rnd() < 0.3) at(o(), (x, y, z) => buissons.push([x, y + 0.6, z, rnd() * 6, 0.4 + rnd() * 0.4, 0.3 + rnd() * 0.3]));
             if (rnd() < 0.08) at(s.w + 4 + rnd() * 10, (x, y, z) => fougeres.push([x, y, z, rnd() * 6, 0.8 + rnd() * 0.5]));
             if (rnd() < 0.05) at(s.w + 4 + rnd() * 10, (x, y, z) => palmier(x, y, z, 0.4 + rnd() * 0.8)); } } }
+      for (const [x, y, z] of rive) arbre(x, y, z, 0.9 + rnd() * 0.4, true); // des arbres de rive, leurs lianes au-dessus de l'eau
       // le grand arbre fantôme dans la brume du pont
       { const s = S[(iB1 + 12) % N]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 12); arbre(x, g.hAt(x, z), z, 1.8, false); } } // les grands arbres fantômes au bout du pont
       for (const p of corn) fougeres.push(p); for (const p of cornB) coupes.push(p);
@@ -2157,6 +2159,7 @@
       for (let k = 0; k < 14; k++) { const u = (rnd() - 0.5) * 240, v = (rnd() - 0.5) * 30; voiles.push([sb.x - sb.tz * u + sb.tx * v, sb.y - 12 + rnd() * 6, sb.z + sb.tx * u + sb.tz * v, rnd() * 6, 40 + rnd() * 30, 1, 30 + rnd() * 20]); } // le ravin du pont
       for (let k = 0; k < 40; k++) { const i = (P(23) + (rnd() * ((P(29) - P(23) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 4 + rnd() * 40); voiles.push([x, g.hAt(x, z) + 0.6 + rnd() * 1.5, z, rnd() * 6, 20 + rnd() * 20, 1, 20 + rnd() * 15]); } // brume rasante entre les troncs
       for (let k = 0; k < 40; k++) { const i = (P(3) + (rnd() * ((P(12) - P(3) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -amont(s), s.w + 6 + rnd() * 30); voiles.push([x, s.y - 1 - rnd() * 3, z, rnd() * 6, 25 + rnd() * 20, 1, 25 + rnd() * 20]); } // la brume monte du vide, au ras des lacets
+      for (let k = 0; k < 14; k++) { const i = (gal0 + (rnd() * ((gal1 - gal0 + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w * (rnd() * 1.6 - 0.6) + 2); voiles.push([x, s.y + 0.6 + rnd() * 1.2, z, rnd() * 6, 10 + rnd() * 8, 1, 10 + rnd() * 8]); } // et qui déborde sur la route
       const nap = inst(h, nappe, brume, voiles); nap.castShadow = nap.receiveShadow = false;
       // au pont, le blanc s'épaissit : des voiles debout en travers de la route, qu'on traverse
       const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 23); i = (i + 8) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
