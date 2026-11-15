@@ -1866,8 +1866,9 @@
       prisme([[zF(0), 0], [10, YC]], -335, 460, face, 18, 24); prisme([[10, YC], [-10, YC], [-10, 0]], -335, 460, bet, 8, 8);
       { const m = prisme([[zF(0) + 0.15, 0], [zF(16) + 0.15, 16]], -335, 460, mat('faceGES', {}, '#5e625c'), 18, 24); } // le pied du mur, mouillé par les embruns
       // les plots en relief : un joint saillant tous les 18 m sur toute la hauteur de la face, et trois rangées de fenêtres des galeries de visite (REFS 1)
-      { const jo = [], fe = [], L = (YC - 2) / Math.cos(0.625); for (let x = -324; x < 452; x += 18) { jo.push([x, (YC + 2) / 2, zF((YC + 2) / 2) + 0.6, 0, 2.2, L, 1.2]); for (const y of [30, 55, 80]) if (rnd() < 0.35) fe.push([x + 5 + rnd() * 8, y, zF(y) + 0.25, 0, 2, 2.4, 0.5]); }
-        const mj = inst(h, h.geo('bloc'), betS, jo); { const c = new THREE.Color(0x8c8c8c); for (let k = 0; k < jo.length; k++) mj.setColorAt(k, c); mj.instanceColor.needsUpdate = true; } // les joints de plots, plus sombres que la face
+      { const jo = [], fe = [], L = (YC - 2) / Math.cos(0.625); for (let x = -324; x < 452; x += 18) { jo.push([x, (YC + 2) / 2, zF((YC + 2) / 2) + 0.6, 0, 3, L, 1.4]); for (const y of [30, 55, 80]) if (rnd() < 0.5) fe.push([x + 5 + rnd() * 8, y + 1.6, zF(y + 1.6) + 0.5, 0, 2.6, 2.6, 0.6]); }
+        for (const y of [30, 55, 80]) jo.push([62, y, zF(y) + 0.9, 0, 784, 1.2, 1]); // les corniches des trois galeries de visite, qui rayent le mur de loin
+        const mj = inst(h, h.geo('bloc'), betS, jo); { const c = new THREE.Color(0x767676); for (let k = 0; k < jo.length; k++) mj.setColorAt(k, c); mj.instanceColor.needsUpdate = true; } // les joints de plots, plus sombres que la face
         for (const m of [mj, inst(h, h.geo('bloc'), noirF, fe)]) { const d = new THREE.Object3D(), M4 = new THREE.Matrix4(); for (let k = 0; k < m.count; k++) { m.getMatrixAt(k, M4); M4.decompose(d.position, d.quaternion, d.scale); d.rotation.set(-0.625, 0, 0); d.updateMatrix(); m.setMatrixAt(k, d.matrix); } m.instanceMatrix.needsUpdate = true; } }
       // lettres peintes sur la face, à l'est des conduites (on les lit depuis la vallée et la rive ouest)
       { const m = new THREE.Mesh(h.geo('boite', 150, 34, 0.3), mat('lettres', {}, 'ГЭС-74', '#8d918a', '#b5483c')); m.position.set(345, 62, zF(62) + 0.5); m.rotation.x = -0.625; h.scene.add(m); }
@@ -1912,6 +1913,7 @@
       inst(h, h.geo('couvercle'), mat('peinture', { c: 0x8a9a6a }), [[200, YH - 0.05, 127], [250, YH - 0.05, 93]]);
       { const arm = []; for (let x = 145; x < 310; x += 9) for (const z of [86.5, 133.5]) { const s = S[near(h, x, z)]; if (Math.hypot(s.x - x, s.z - z) > s.w + 2.5) arm.push([x, YH, z, 0, 2.4, 2.4, 1.2]); }
         peint(arm.map(([x, y, z, r, a, b, c]) => [x, y + 1.2, z, r, a, b, c]), 0x9aa89a); }
+      { const ex = []; for (let x = 146; x < 310; x += 12) for (const z of [86.2, 133.8]) { const s = S[near(h, x, z)]; if (Math.hypot(s.x - x, s.z - z) > s.w + 2.2) ex.push([x, YH + 1.1, z, 0, 1.2, 2.2, 0.6, (x / 12 | 0) % 3 ? 0xb5483c : 0xe8e4d8]); } peints.push(...ex); } // armoires d'incendie rouges et tableaux blancs contre les murs
       // colonnes, rails et pont roulant orange, lampes du plafond
       { const col = []; for (let x = 136; x <= 314; x += 14.8) for (const z of [85.4, 134.6]) col.push([x, YH + 13, z, 0, 1.6, 26, 1.4]); inst(h, h.geo('bloc'), betS, col); }
       for (const z of [86, 134]) bloc(orange, 136, 314, z - 0.6, z + 0.6, YH + 20, YH + 21);
@@ -2067,6 +2069,7 @@
       // panneaux triangulaires « virage » à 120 m avant chaque virage serré ; plaques cyrilliques dans la galerie
       { const pv = [], pg = []; let der = -99; for (let i = 0; i < N; i++) { const j = (i + 60) % N, k = S[j].k; if (Math.abs(k) > 0.025 && i - der > 80 && !dans(j, 5, 13)) { der = i; if (i >= T0 && i <= T1) continue; const s = S[i], [x, z] = bord(s, 1, s.w + 3); pv.push([x, s.y + 2.4, z, h.across(s), 1.4, 1.4, 0.08]); peints.push([x, s.y + 1, z, 0, 0.1, 2.2, 0.1, 0x4a4e4a]); } }
         for (let i = T0 + 10; i < T1; i += 25) { const s = S[i], sd = (i / 25 | 0) & 1 ? 1 : -1, [x, z] = bord(s, sd, s.w - 0.06); pg.push([x, s.y + 4.2, z, h.across(s), 0.05, 0.9, 2.6]); }
+        for (let i = T0 + 22, k = 0; i < T1; i += 25, k++) { const s = S[i], sd = k & 1 ? -1 : 1, [x, z] = bord(s, sd, s.w - 0.04); peints.push([x, s.y + 1.4, z, h.across(s), 0.1, 2.6, 1.6, 0xe8761e]); } // niches de secours orange
         inst(h, h.geo('bloc'), mat('virageGES'), pv); inst(h, h.geo('bloc'), mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), pg); }
       // le mât de la radio de la centrale sur la colline est, rayé rouge et blanc, feux d'obstacle : le repère qu'on voit de partout
       { const x = 600, z = 520, y = hAt(x, z), B = []; for (let k = 0; k < 12; k++) B.push([x, y + 6 + k * 12, z, 0, 2.6 - k * 0.12, 12, 2.6 - k * 0.12, k & 1 ? 0xe8e4d8 : 0xc8302a]); peints.push(...B); h.lum(near(h, x, z), x, y + 150, z, 0xff2030, 20, 1); }
