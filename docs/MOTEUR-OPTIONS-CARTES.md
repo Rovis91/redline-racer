@@ -139,6 +139,10 @@ th: { cielSeg: 48,
 - `cielSeg` : nombre de facettes de la sphère du ciel (16 par défaut). Sur un ciel de jour à paliers serrés près de l'horizon, 16 facettes cassent les paliers en éventail.
 Coût : nul. Sans ces options, rien ne change (ville, wangan, paris : mêmes géométries, même ciel).
 
+## 11. Pas de cônes : `th.sansCones`
+
+`th: { sansCones: 1 }` : le moteur ne pose ni cônes ni poubelles à l'entrée des virages. Désactivé par défaut ; les autres cartes gardent les leurs.
+
 ## Mesures de la deuxième série (banc rapide, machine chargée de 30 à 57 %)
 
 | Carte | Avant | Après |
