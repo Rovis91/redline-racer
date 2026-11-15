@@ -403,15 +403,15 @@
     // Route royale (spec : docs/SPEC-PERSE.md) : Persépolis au couchant. La plaine en S (la seule droite), le grand escalier de la terrasse (pavés, +14 m), la Porte des Nations et son épingle,
     // la salle aux cent colonnes (une place où l'on roule partout entre 15 colonnes), le jardin au canal turquoise qui redescend, puis les coudes à 90° du bazar couvert (pavés, voûte de briques).
     { id: 'perse', nom: 'ROUTE ROYALE', rivaux: ['DARIUS', 'ROXANE', 'KAVEH'], W: 10, kmh: 0.8, vit: [150, 190], grip: 17, sc: 1, anticipe: 1, trafic: 0,
-      large: [[0, 7, 18], [9, 12, 13], [20, 24, 16]], sauts: [[20, 30, 2, 16, 2.5]], // la plaine et l'escalier assez larges pour doubler avant les freinages ; on saute de la terrasse de la salle dans le jardin
+      large: [[0, 7, 18], [9, 14, 13], [20, 24, 16]], sauts: [[20, 30, 2, 16, 2.5]], // la plaine et l'escalier assez larges pour doubler avant les freinages ; on saute de la terrasse de la salle dans le jardin
       surf: { zones: [[9, 12, 'paves', 0.8], [14, 19, 'mouille', 0.5], [20, 24, 'mouille', 0.3], [25, 42, 'paves', 1]] },
       tun: [26, 37], chaud: [12, 24], amb: [[12, 20], [25, 42]], sect: [13, 25],
       place: { c: [430, 460], r: 55, a: -Math.PI / 2, piles: [[-28, -18, 2.5, 2.5], [-28, 36, 2.5, 2.5], [-28, 18, 2.5, 2.5], [-28, 0, 2.5, 2.5], [-28, -36, 2.5, 2.5], [30, 27, 2.5, 2.5], [30, 9, 2.5, 2.5], [30, -9, 2.5, 2.5], [30, -27, 2.5, 2.5], [-44, 27, 2.5, 2.5], [-44, 9, 2.5, 2.5], [-44, -9, 2.5, 2.5], [-44, -27, 2.5, 2.5], [44, 18, 2.5, 2.5], [44, -18, 2.5, 2.5]] }, // a : l'axe de la salle suit la route (vers -x) ; piles dans ce repère : [z, -x] du monde autour du centre
       pts: [[0, 0, 0], [110, 0, 0], [210, 30, 0], [290, 80, 0], [372, 58, 0], [450, 20, 0], [540, 10, 0], [650, 6, 0], [670, 26, 0],
-        [665, 185, 0], [680, 250, 4], [670, 320, 9], [660, 380, 14], [661, 430, 14], [628, 452, 14],
+        [665, 185, 0], [680, 250, 4], [670, 320, 9], [660, 380, 14], [664, 434, 14], [634, 450, 14],
         [510, 455, 14], [474, 478, 14], [438, 458, 14], [398, 460, 14], [355, 455, 14], [315, 450, 13],
-        [270, 440, 12], [220, 440, 10], [170, 440, 9], [140, 442, 8],
-        [118, 418, 8], [96, 394, 7], [46, 380, 6], [36, 356, 6], [36, 300, 5], [38, 268, 5], [52, 246, 4], [58, 226, 4], [62, 208, 3], [80, 198, 3], [100, 196, 2], [110, 180, 2], [110, 152, 1], [98, 131, 1], [10, 125, 1], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
+        [270, 440, 12], [220, 440, 10], [175, 442, 9], [140, 434, 8],
+        [112, 410, 8], [96, 394, 7], [46, 380, 6], [36, 356, 6], [36, 300, 5], [38, 268, 5], [52, 246, 4], [58, 226, 4], [62, 208, 3], [80, 198, 3], [100, 196, 2], [110, 180, 2], [110, 152, 1], [98, 131, 1], [10, 125, 1], [-45, 100, 0], [-62, 56, 0], [-42, 14, 0]],
       // voiture inventée : une propulsion légère, 4 cylindres atmosphérique de 2,2 L, 290 ch, 1050 kg : faite pour glisser d'un coude à l'autre
       car: car({ nom: 'SHAHIN 2.2', ratios: [3.1, 2.1, 1.55, 1.22, 1.0, 0.84], final: 4.1, wheel: 0.31, mass: 1125, idle: 950, red: 8200, cd: 0.36, area: 1.8,
         tq: [0, 170, 230, 265, 285, 295, 290, 270, 230], trac: 10, son: 1.2, moteur: 'l4', look: { type: 'fd', col: 0x2aa39a, l: 0.95, w: 1, h: 1, nez: 0.6, cab: [-0.4, 2, 0.52], aileron: 1, bandes: 0xf0b840 } }),

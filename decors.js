@@ -1753,6 +1753,9 @@
         for (const ii of [i9 + 14, i12 - 26]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y + MH.escalier + 0.45, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xc8323c : 0x1d3a8a]); }
         for (const ii of [i20 - 30, P0(23) - 10]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xf0b840 : 0x2aa39a]); }
         Is('banniere', { mat: h.mat('peinture', { c: 0x4a3020 }), drap: h.mat('peinture', { c: 0xffffff }), or }, etendG, { teinte: 'drap' });
+        h.ribbon(i20 - 2, 2, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0xf4ead0, side: THREE.DoubleSide }), 2); // la lèvre du tremplin
+        h.ribbon(i20 + 1, 7, s => -s.w + 0.5, 0.04, s => s.w - 0.5, 0.04, h.mat('faience', { lum: 1, side: THREE.DoubleSide }), 4); // le fond de la fosse
+        for (const sd of [-1, 1]) h.ribbon(i20 - 15, 15, s => sd * (s.w + 0.1), 1.4, s => sd * (s.w + 0.1), -3, appareil, 4); // les flancs de pierre du tremplin
         { const s = S[i20]; for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, s.w + 1.5); aut.push([x, s.y, z, h.across(s), 2.4, 2.4, 2.4]); fl.push([x, s.y + 2.6 * 2.4, z, 0, 1.4, 1, 1.4]); } h.lum(i20, s.x, s.y + 8, s.z, 0xff9a40, 30, 0.6); } // la lèvre de la terrasse, d'où l'on saute
         Is('autel', { pierre, or }, aut); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xff9a3a }), fl); } // autels du feu (REFS §9, Naqsh-e Rostam) : le rythme de la montée ; les deux derniers, plus grands, annoncent l'épingle de la Porte
       h.ribbon(i9, i12 - i9, s => -s.w + 0.4, 0.03, s => s.w - 0.4, 0.03, h.mat('marchesPerse', { ...DS, emissive: 0x2a2014 }), 1.2);
@@ -1766,7 +1769,7 @@
       const ca = Math.cos(PL.a), sa = Math.sin(PL.a), cols = PL.piles.map(([x, z]) => [CX + x * ca + z * sa, YS, CZ - x * sa + z * ca, 0]);
       for (let x = CX - 78; x <= CX + 78; x += 12) for (let z = CZ - 72; z <= CZ + 72; z += 12) { if (dansSalle(x, z, 4) || g.dAt(x, z) < W + 4) continue; cols.push([x, YS, z, 0]); }
       Is('colonnePerse', { pierre: h.mat('pierre', { c: 0xa8a098, emissive: 0x1a1612 }), fut: h.mat('cannelure', { c: 0xa49e94, emissive: 0x1a1612 }), sculpte: h.mat('sculpte', { emissive: 0x1a1612 }), or }, cols, { a: [HC] });
-      I(h.geo('disque'), h.mat('tapisBord', DS), PL.piles.map((_, k) => [cols[k][0], YS + 0.05, cols[k][2], 0, 4.2, 1, 4.2])); // un tapis rond sous chaque colonne qu'on peut percuter
+      I(h.geo('disque'), h.mat('tapisBord', DS), PL.piles.map((_, k) => [cols[k][0], YS + 0.05, cols[k][2], 0, 4.2, 1, 4.2])); I(h.geo('margelle'), h.mat('peinture', { lum: 1, c: 0xf4ead0 }), PL.piles.map((_, k) => [cols[k][0], YS - 0.1, cols[k][2], 0, 4.4, 0.35, 4.4])); // un cercle ivoire autour : la colonne se voit à 60 m // un tapis rond sous chaque colonne qu'on peut percuter
       { const poutres = []; for (let z = CZ - 72; z <= CZ + 72; z += 18) poutres.push([CX, YS + HC + 0.6, z, 0, 168, 1.2, 1.6]);
         for (let x = CX - 81; x <= CX + 81; x += 9) poutres.push([x, YS + HC + 1.6, CZ, 0, 0.8, 0.7, 150]);
         I(h.geo('bloc'), cedre, poutres); }
@@ -1882,7 +1885,7 @@
             const e = au(a, sd * (W + 1.6)), f = au(b, sd * (W + 1.6)); boutiquesD.quad([e[0], e[1] + 3.8, e[2]], [e[0], e[1] - 1, e[2]], [f[0], f[1] + 3.8, f[2]], [f[0], f[1] - 1, f[2]], j / 4, (j + 1) / 4); dehors.quad([e[0], e[1] + 10.3, e[2]], [e[0], e[1] + 3.8, e[2]], [f[0], f[1] + 10.3, f[2]], [f[0], f[1] + 3.8, f[2]], j / 2, (j + 1) / 2); } // le dehors : murs de brique crue sur la coque
           dehors.quad(au(a, -W - 1.7, 10.3), au(a, W + 1.7, 10.3), au(b, -W - 1.7, 10.3), au(b, W + 1.7, 10.3), j / 2, (j + 1) / 2);
           const ph = j % BAY, ry = h.across(a);
-          if (ph === 0) { const avant = Math.abs(a.k) < 0.02 && [10, 14, 18].some(e => Math.abs(S[(i + e) % N].k) > 0.035); (avant ? arcsL : arcs).push([a.x, a.y, a.z, ry]); } // l'arc qui précède un coude luit
+          if (ph === 0) { const avant = Math.abs(a.k) < 0.02 && [10, 14, 18].some(e => Math.abs(S[(i + e) % N].k) > 0.022); (avant ? arcsL : arcs).push([a.x, a.y, a.z, ry]); } // l'arc qui précède un coude luit
           if (ph === BAY / 2) { const yA = a.y + 3.8 + rise(j) - 0.03; ocul.push([a.x, yA, a.z, 0, 2.1, 1, 2.1]); anneaux.push([a.x, yA - 0.04, a.z, 0, 3, 1, 3]); taches.push([a.x, a.y + 0.05, a.z, 0, 2.2, 1, 2.2]); domes.push([a.x, a.y + 10.3, a.z, ry, 8.5, 3.6, 5.5]); lanternons.push([a.x, a.y + 13.7, a.z, 0, 1.1, 1.4, 1.1]);
             if ((j / BAY | 0) % 2 === 0) h.lum(i, a.x, a.y + 5.5, a.z, 0xffd890, 11, 0.2, 1);
             for (const sd of [-1, 1]) { const o = sd * 6.2, [x, z] = bord(a, sd, 6.2), y0 = a.y + Y(o, j) - 0.05; oculL.push([x, y0, z, 0, 1.2, 1, 1.2]); raisL.push([x, y0, z, 0, 0.35, y0 - a.y, 0.35]); } }
