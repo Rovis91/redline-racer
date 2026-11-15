@@ -412,9 +412,9 @@
         [510, 455, 14], [474, 478, 14], [438, 458, 14], [398, 460, 14], [355, 455, 14], [315, 450, 14],
         [270, 440, 11.5], [220, 440, 10.59], [172, 440, 9.71], [136, 446, 9.04], // altitudes : pentes constantes le long de la route (rampe 7 %, descente 1,8 %), jamais de palier dans une pente : des paliers d'un mètre faisaient tanguer la caméra (« effet de vague »)
         [110, 422, 8.4], [92, 396, 7.82], [46, 380, 6.93], [36, 356, 6.46], [36, 300, 5.43], [38, 268, 4.85], [52, 246, 4.37], [58, 226, 3.99], [62, 208, 3.65], [80, 198, 3.28], [100, 196, 2.91], [110, 180, 2.56], [110, 152, 2.05], [98, 131, 1.61], [10, 125, 0], [-45, 100, 0], [-60, 50, 0], [-35, 10, 0]],
-      // voiture inventée : une propulsion légère, 4 cylindres atmosphérique de 2,2 L, 290 ch, 1050 kg : faite pour glisser d'un coude à l'autre
-      car: car({ nom: 'SHAHIN 2.2', ratios: [3.1, 2.1, 1.55, 1.22, 1.0, 0.84], final: 4.1, wheel: 0.31, mass: 1125, idle: 950, red: 8200, cd: 0.36, area: 1.8,
-        tq: [0, 170, 230, 265, 285, 295, 290, 270, 230], trac: 10, son: 1.2, moteur: 'l4', look: { type: 'fd', col: 0x2aa39a, l: 0.95, w: 1, h: 1, nez: 0.6, cab: [-0.4, 2, 0.52], aileron: 1, bandes: 0xf0b840 } }),
+      // voiture inventée, inspirée de la Paykan (la berline populaire d'Iran, dérivée de la Hillman Hunter) préparée pour le rallye : 4 cylindres de 1,7 L, 210 ch, 940 kg, propulsion, boîte 5 (chiffres inventés)
+      car: car({ nom: 'PEYKAR 1725 RALLYE', ratios: [3.35, 2.14, 1.39, 1.0, 0.8], final: 4.3, wheel: 0.3, mass: 940, idle: 950, red: 7400, cd: 0.42, area: 1.9,
+        tq: [0, 150, 190, 215, 228, 232, 228, 216, 180], trac: 10, son: 1.15, moteur: 'l4', look: { type: 'peykan', col: 0xf0e6cc, l: 0.95, w: 0.98, h: 1.06, nez: 0.5, cab: [-0.2, 2.2, 0.6], aileron: 0, bandes: 0x2aa39a } }),
       // shortcut: les stations du canal sous d'autres noms (test-cartes exige noms et genres uniques), en attendant une radio perse composée (daf, tar, santour : spec §4.5)
       radio: RADIO.canal.map((s, i) => ({ ...s, name: ['RADIO SHIRAZ', 'BAZAR 122', 'MARVDASHT FM'][i], fq: ['99.2', '122.0', '70.7'][i], genre: ['FUNK ROYAL', 'ELECTRO DU BAZAR', 'ROCK DES DUNES'][i] })),
       th: { decor: 'perse', fog: 0xe6b07c, fogD: [140, 1600], sky: [[0, '#3a3f78'], [0.26, '#3a3f78'], [0.27, '#8a5a86'], [0.38, '#8a5a86'], [0.39, '#e08a62'], [0.45, '#e08a62'], [0.46, '#f6c98a'], [0.5, '#e6b07c'], [1, '#e6b07c']], stars: 0,
