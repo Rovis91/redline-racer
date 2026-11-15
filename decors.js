@@ -2049,7 +2049,7 @@
       };
       // ruban le long de la piste par morceaux : seulement là où garde(i) est vrai
       const ruban = (i0, n, oa, ya, ob, yb, m, garde, v = 8) => { const out = []; for (let k = 0, a = -1; k <= n; k++) { const ok = k < n && (!garde || garde((i0 + k) % N)); if (ok && a < 0) a = k; if (!ok && a >= 0) { out.push(h.ribbon((i0 + a) % N, k - a, oa, ya, ob, yb, m, v)); a = -1; } } return out; };
-      const OFF = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 };
+      const OFF = { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, col2 = c => h.mat('peinture', { c, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
       const ligne = (i0, i1, o, pas = 2) => { const l = []; for (let i = i0; i <= i1; i += pas) l.push(off(i, typeof o === 'function' ? o(S[i % N], i) : o)); return l; };
 
       // matières des grandes masses (grain non directionnel)
@@ -2091,6 +2091,10 @@
       h.ribbon(...tr(43, 3, -6, 4), -W, 0.02, W, 0.02, mPiste, 12);                                   // sable dur de la plage
       h.ribbon(...tr(11, 20, 4, 18), s => -s.w, 0.02, s => s.w, 0.02, h.mat('dallageQuinta', { ...OFF, rep: [3, 1] }), 8); // dallage du bourg
       h.ribbon(i25 + 10, t0 - i25 - 10, s => -s.w, 0.02, s => s.w, 0.02, mSascab, 12); h.ribbon(t1, ix - t1 + 14, s => -s.w, 0.02, s => s.w, 0.02, mSascab, 12); // sascab du cénote
+      // bitume de la 307 et de la digue (X-1, X-10) : gris usé à grain, ligne de rive jaune, axe discontinu ; posé par le décor, sans les flaques brillantes de la chaussée du moteur
+      { const mBit = grain('#6e7378', ['#666b70', '#787d82', '#5e6368', '#747a80'], OFF), jaune = col2(0xe8b84a), blanc = col2(0xe8e0c8);
+        for (const [i0, n] of [[P(20) + 15, i25 + 10 - P(20) - 15], [ix + 14, (P(43) + 6 - ix - 14 + N) % N]]) { h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mBit, 12);
+          for (const sg of [-1, 1]) h.ribbon(i0, n, s => sg * (s.w - 0.75), 0.04, s => sg * (s.w - 0.5), 0.04, jaune, 8); ruban(i0, n, -0.12, 0.04, 0.12, 0.04, blanc, i => i % 9 < 3, 8); } }
       // talus de la crête de la 307 (la route passe au-dessus du sol plat)
       for (const sg of [-1, 1]) ruban(P(22), P(25) + 20 - P(22), s => sg * (s.w + 0.4), -0.03, s => sg * (s.w + 0.6 + 2.6 * Math.max(0, s.y)), s => -s.y - 0.07, mSol, i => S[i].y > 0.08, 12);
 
@@ -2141,10 +2145,11 @@
       const col = (c, o = {}) => h.mat('peinture', { c, ...o }), colore = (m, l) => { if (l.length) { l.forEach((p, i) => m.setColorAt(i, new THREE.Color(p[7]))); m.instanceColor.needsUpdate = true; } return m; };
       const ROSE = 0xe8468c, TURQ = 0x1fb5a8, JAUNE = 0xf2c230, FETE = [ROSE, TURQ, JAUNE];
       const tronc = grain('#7a6a58', ['#5a4a3a', '#94846e']), palme = grain('#3f7a22', ['#5a9a2a', '#2f6a1e'], { side: D }), mChaume = h.mat('chaume', { side: D }), mCrepi = h.mat('crepiClair');
-      const MZ = { bois: mBois, chaume: mChaume, crepi: mCrepi, mur: mCrepi, acro: col(0xf4ecd8), ombre: col(0x4a3a30), auvent: h.mat('toldo', { side: D }, '#25406b', '#f4ecd8'), enseigne: col(0x25406b), volet: col(0x2f7f8f), dalle: col(0xe6dcc4), muret: col(0xefe6d0),
+      const MZ = { bois: mBois, chaume: mChaume, crepi: mCrepi, mur: mCrepi, acro: col(0xf4ecd8), ombre: col(0x5e4a3c), auvent: h.mat('toldo', { side: D }, '#25406b', '#f4ecd8'), enseigne: col(0x25406b), volet: col(0x2f7f8f), dalle: col(0xe6dcc4), muret: col(0xefe6d0),
         eau: col(0x35c4d4), fer: col(0x2a2a2e), pied: col(0xf2f2f2), cabA: col(ROSE), cabB: col(TURQ), cabC: col(JAUNE), blanc: col(0xf6f2e8), toitR: col(0xc8452e), croix: col(0x3a2a20), cuve: col(0xf2ece0), rouge: col(0xd8362a), noir: col(0x1e1e22), caisse: col(0xffffff),
         vitre: col(0x2a3a4a), lampe: col(0xfff2c0, { lum: 1 }), beton: col(0xb0aca0), tronc, palme, noix: col(0xe8b828), coque: col(0xf6f6f0), bande: col(0xffffff), toile: col(0xffffff), racine: col(0xb8b2a2), plume: col(0xf0836a), patte: col(0xe78a8c), bec: col(0x2a2a2a),
         filet: col(0xf6f6f0), poteau: col(0x8a6a48), cabine: col(0xc9cfcf), toit: col(0xf2f0ea), drapeau: col(ROSE), moteur: col(0x2a2a2e), siege: col(0x2a2a2e), cadre: col(0x2a2a2e), roue: col(0x1e1e22), plaque: col(0xf6f2e8), hamac: col(0xf6f2e8), paille: col(0xd8b96a), pilier: col(0x8a6a48), pierre: mRoche,
+        marchandise: h.mat('toldoMulti'), comptoir: mBois,
         texte: h.mat('ecrit', {}, 128, 32, '#f2ece0', '#1f8f9f', 'PLAYA 307', 24) };
       const PEAU = new Proxy(MZ, { get: (o, k) => o[k] || (o[k] = col(0xff00ff)) }); // une zone sans matière sort en magenta : on la voit tout de suite
       const pose = (nom, x, y, z, r = 0, ...a) => { const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = r; h.scene.add(g); h.pose(nom, PEAU, g, [0, 0, 0], ...a); return g; };

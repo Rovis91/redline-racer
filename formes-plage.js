@@ -104,7 +104,7 @@
     // sous un auvent, à l'étage des fenêtres à volets et un balcon de bois, enseigne plate en drapeau. L = longueur de façade, H = hauteur, P = profondeur
     maisonQuinta: (L = 10, H = 4.6, P = 9) => {
       const f = -P / 2, et = H > 6, nf = Math.max(2, Math.round(L / 3.4));
-      return [['mur', L, H, P, 0, H / 2, 0, null, 1], ['acro', L + 0.3, 0.4, P + 0.3, 0, H + 0.2, 0], ...suite(Math.max(2, Math.round(L / 4)), (k, _, nb = Math.max(2, Math.round(L / 4))) => ['ombre', L / nb - 1, 2.5, 0.3, (k + 0.5) / nb * L - L / 2, 1.35, f - 0.02]),
+      return [['mur', L, H, P, 0, H / 2, 0, null, 1], ['acro', L + 0.3, 0.4, P + 0.3, 0, H + 0.2, 0], ...suite(Math.max(2, Math.round(L / 4)), (k, _, nb = Math.max(2, Math.round(L / 4))) => [['ombre', L / nb - 1, 2.5, 0.3, (k + 0.5) / nb * L - L / 2, 1.35, f - 0.02], ['comptoir', L / nb - 1.6, 0.9, 0.6, (k + 0.5) / nb * L - L / 2, 0.45, f - 0.5], ['marchandise', L / nb - 1.4, 0.8, 0.12, (k + 0.5) / nb * L - L / 2, 2.15, f - 0.22]]).flat(),
         ['auvent', L * 0.84, 0.1, 2.4, 0, 3.1, f - 1.15, [0.2, 0, 0], 1], ['enseigne', 0.1, 0.9, 1.5, L / 2 - 0.7, 4.0, f - 0.85],
         ...(et ? [...suite(nf, k => ['volet', 1.2, 1.5, 0.14, (k + 0.5) / nf * L - L / 2, H - 1.9, f - 0.04]), ['bois', L * 0.84, 0.12, 1.0, 0, H - 3.0, f - 0.5], ['bois', L * 0.84, 0.07, 0.07, 0, H - 2.1, f - 0.97],
           ...suite(nf + 1, k => ['bois', 0.07, 0.9, 0.07, k / nf * L * 0.84 - L * 0.42, H - 2.55, f - 0.97])] : [])];
