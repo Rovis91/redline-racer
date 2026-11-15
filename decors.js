@@ -2085,6 +2085,7 @@
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + (k < 12 ? 5 + rnd() * 6 : 7 + rnd() * rnd() * 40), [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
         if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9) || g.dAt(x, z) < 12) continue; const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route // ni l'une sur l'autre, ni sur une autre portion de route (la chicane)
         maisons.push([x, g.hAt(x, z) - 0.2, z, a, w, d, ru]); }
+      { const s = S[1204], sd = -amont(s); for (const [o, l] of [[s.w + 9, 0], [s.w + 16, 10]]) { const [x, z] = bord(s, sd, o), q = S[(1204 + l) % N]; maisons.push([x, g.hAt(x, z) - 0.2, z, h.across(q) + sd * Math.PI / 2, 8, 6, 1]); } } // épingle 3 : les ruines d'un garimpo à la corde, son seul repère
       for (const [x, y, z, a, w, d, ru] of maisons) { const gr = new THREE.Group(); gr.position.set(x, y, z); gr.rotation.y = a; h.scene.add(gr);
         h.pose('maisonIgatu', { pierre, tuile, porte }, gr, [0, 0, 0], w, d, rnd() < 0.35 ? 5.5 + rnd() * 2 : 3.4 + rnd() * 0.8, ru);
         if (!ru) { const lp = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.45, 0.35), lanterne); lp.position.set(0.9, 2.5, -d / 2 - 0.35); gr.add(lp); }
@@ -2092,6 +2093,8 @@
 
       // ---------- la végétation, par lieu et par plan ----------
       const cimesF = [], cimesE = [], cimesL = [], arbres = [], cimes = [[], [], [], []], troncsC = [], fougeres = [], palm = [], palmT = [], bromelias = [], buissons = [], lianes = [], canelas = [], lajedos = [], affl = [];
+      { const s = S[687], sd = -amont(s); for (let c = 0; c < 4; c++) { const [x, z] = bord(s, sd, s.w + 8 + c * 4), y = g.hAt(x, z), t = 1.3 - c * 0.15, Ht = 11 * t; arbres.push([x, y + Ht / 2, z, rnd() * 6, t, Ht / 5.2, t]); for (let e = 0; e < 4; e++) cimesF.push([x + (rnd() - 0.5) * 4, y + Ht, z + (rnd() - 0.5) * 4, rnd() * 6, 2.4 * t, 1.8 * t, 2.4 * t]); } } // épingle 1 : un bosquet d'ipês jaunes à la corde
+      { const s = S[940], sd = -amont(s), [x, z] = bord(s, sd, s.w + 14), y = g.hAt(x, z); inst(h, h.geo('rocher'), h.mat('grainGres', { c: 0xa88a6a }), [[x, y + 9, z, 0.4, 5, 20, 4.5], [x + 2, y + 21, z - 1, 1.1, 3.5, 6, 3.2], [x - 3, y + 3, z + 2, 2, 4, 6, 4]]); } // épingle 2 : une aiguille de grès isolée, le repère de la corde
       const touffes = [[], [], []], sempre = [];
       // un arbre de la forêt de galerie (REFS 4) : fût de 10 à 24 m, clair ou sombre, couronne de 2 à 4 houppiers de trois verts
       const arbre = (x, y, z, t, prochePiste, loin) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]); // sans fût, les houppiers lointains flottaient
