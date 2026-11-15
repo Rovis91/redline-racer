@@ -1721,6 +1721,7 @@
       for (let k = 0; k < 64; k++) { const f = j => [CX + Math.cos(j * Math.PI / 32) * (PL.r + 0.5), YS - 0.02, CZ + Math.sin(j * Math.PI / 32) * (PL.r + 0.5)], c = [CX, YS - 0.02, CZ]; dalles.quad(c, c, f(k), f(k + 1)); }
       bas.fin(); dalles.fin(); allee.fin();
       h.ribbon(i14 + 10, (i20 - i14 + N) % N - 20, -3.5, 0.03, 3.5, 0.03, h.mat('tapisAllee', DS), 7);
+      for (const e of [-1, 1]) h.ribbon(i14 + 10, (i20 - i14 + N) % N - 20, e * 3.5, 0.035, e * 3.85, 0.035, h.mat('peinture', { lum: 1, c: 0xf4ead0, side: THREE.DoubleSide }), 4); // liserés ivoire : l'allée se lit sur le tapis
       { const jo = h.mat('joints', { alphaTest: 0.5, ...DS }); for (const [p0, p1] of [[0, 9], [20, 25], [34, 38]]) { const a0 = P0(p0), n = (P0(p1) - a0 + N) % N; h.ribbon(a0, n, s => -s.w + 0.2, 0.025, s => s.w - 0.2, 0.025, jo, 6); } } // dalles de la route royale (REFS §1) // l'allée de tapis de la salle : la ligne rapide
 
       // --- les murets de bord : bordure de tapis (plaine), frise des Immortels (escalier), faïence (jardin), arcades (bazar ouvert) ; ni dans la salle, ni dans le tunnel ---
@@ -1782,6 +1783,7 @@
         if (i % 24 === 0) { const [x, z] = bord(s, sd, s.w + 2); bornes.push([x, s.y + 0.6, z, 0]); }
         if (i % 9 === 0 && ((i / 9) & 1) === (sd > 0 ? 1 : 0)) { const [x, z] = bord(s, sd, s.w + 4.2); etendards.push([x, s.y, z, h.across(s), 1, 1, 1, (i / 18 | 0) % 2 ? 0xc8323c : 0x1d3a8a]); } // étendards de la route royale, l'aigle d'or sur lapis ou garance : un repère qui défile
         if (i % 6 === 3 && (i < 120 || i > 250)) { const [x, z] = bord(s, sd, s.w + 70 + (i % 12)); if (libre(x, z, 20)) peupliers.push([x, sol(x, z), z, 0, 0.8, 1.2, 0.8]); } // le rideau du plan moyen
+        if (i % 3 === 0) { const [x, z] = bord(s, sd, s.w + 7.5); if (libre(x, z, 6)) cypres.push([x, sol(x, z), z, 0, 0.5, 0.55 + ((i * 7) % 5) * 0.06, 0.5]); } // le couloir de cyprès au bord de la route royale
         if (i % 3 === 0 && ((i / 60 | 0) + (sd > 0)) % 2) { const [x, z] = bord(s, sd, s.w + 12); if (libre(x, z, 8)) cypres.push([x, sol(x, z), z, 0, 0.6, 0.75 + ((i * 13) % 4) * 0.08, 0.6]); } // rideau de cyprès, d'un côté puis de l'autre
         if (i % 6 === 0 && (i < 150 || i > 230)) { const [x, z] = bord(s, sd, s.w + 5.5); if (libre(x, z, 5)) peupliers.push([x, sol(x, z), z, 0, 0.75, 1.1 + ((i * 7) % 5) * 0.08, 0.75]); } // l'allée de peupliers le long du ruisseau
         const off = s.w + 9 + rnd() * 40, [x, z] = bord(s, sd, off); if (!libre(x, z, 8) || rnd() < 0.5) continue; const y = sol(x, z);
@@ -1797,7 +1799,7 @@
         { const o3 = o2 + 6, o4 = o3 + 40, e = [au(a, sd * o3), au(b, sd * o3), au(a, sd * o4), au(b, sd * o4)]; if (e.every(p => libre(p[0], p[2], 6))) { e.forEach(p => p[1] = sol(p[0], p[2]) + 0.08); champs[(k * 3 + (sd > 0 ? 3 : 2)) % 5].quad(e[0], e[1], e[2], e[3]); } } }
       champs.forEach(n => n.fin());
       const verger = nappe(crue), grenad = [];
-      for (let i = 20; i < i9 - 2; i++) for (const sd of [-1, 1]) { if (!(i > 160 && i < 232) && ((i / 40 | 0) + (sd > 0)) % 2) continue; const a = S[i], b = S[i + 1], p = au(a, sd * (a.w + 7.5)), q = au(b, sd * (b.w + 7.5)); if (!libre(p[0], p[2], 7)) continue; const y0 = sol(p[0], p[2]);
+      for (let i = 20; i < i9 - 2; i++) for (const sd of [-1, 1]) { if (!(i > 160 && i < 232) && ((i / 25 | 0) + (sd > 0)) % 2) continue; const a = S[i], b = S[i + 1], p = au(a, sd * (a.w + 7.5)), q = au(b, sd * (b.w + 7.5)); if (!libre(p[0], p[2], 7)) continue; const y0 = sol(p[0], p[2]);
         verger.quad([p[0], y0 + 1.8, p[2]], [p[0], y0 - 0.5, p[2]], [q[0], y0 + 1.8, q[2]], [q[0], y0 - 0.5, q[2]], i / 4, (i + 1) / 4);
         if (i % 3 === 0 && !(i > 160 && i < 232)) for (const dd of [11, 16, 21, 26]) { const [x, z] = bord(a, sd, a.w + dd); if (libre(x, z, 8)) grenad.push([x, sol(x, z) + 1.5, z, rnd() * 6, 1.4, 1.2, 1.4]); } // grenadiers en rangs dans le verger clos
         if (i % 4 === 0) for (const d of (i > 160 && i < 232 ? [14, 21, 28] : [])) { const [x, z] = bord(a, sd, a.w + d); if (libre(x, z, 8)) cypres.push([x, sol(x, z), z, 0, 0.5, 0.55 + rnd() * 0.15, 0.5]); } }
@@ -1838,14 +1840,15 @@
       const herbe = nappe(h.mat('bruit', { ...DS, emissive: 0x16240c }, '#4a6a2e', ['#5a7a34', '#3e5a28', '#6a8a3a']), 5), parterre = nappe(h.mat('parterre', { ...DS, emissive: 0x1a2a10 }), 4), eauJ = nappe(eau, 3), bordJ = nappe(h.mat('pierre', DS), 2), murJ = nappe(h.mat('arcades', DS)), cypJ = [], orang = [], tron = [], fleurs = [], marg = [], plans = [], jets = [];
       const pont = [], parap = [], P = (s, d, u = 0, y) => { const x = s.x - s.tz * d + s.tx * u, z = s.z + s.tx * d + s.tz * u; return [x, y === undefined ? sol(x, z) + 0.06 : s.y + y, z]; };
       for (const sd of [-1, 1]) {
-        h.ribbon(i20, nJ, s => sd * (s.w + 1), 0.1, s => sd * (s.w + 4.5), 0.1, eau, 4); h.ribbon(i20, nJ, s => sd * (s.w + 0.4), 0.3, s => sd * (s.w + 1), 0.3, faience, 2); h.ribbon(i20, nJ, s => sd * (s.w + 4.5), 0.3, s => sd * (s.w + 5.1), 0.3, faience, 2);
+        h.ribbon(i20, nJ, s => sd * (s.w + 0.8), 0.15, s => sd * (s.w + 5.5), 0.15, eau, 4); h.ribbon(i20, nJ, s => sd * (s.w + 0.4), 0.3, s => sd * (s.w + 1), 0.3, faience, 2); h.ribbon(i20, nJ, s => sd * (s.w + 4.5), 0.3, s => sd * (s.w + 5.1), 0.3, faience, 2);
         for (let i = i20; i < iJ1; i++) { const a = S[i], b = S[i + 1], onC = pres(i); herbe.quad(P(a, sd * (a.w + 5.1)), P(b, sd * (b.w + 5.1)), P(a, sd * (a.w + 62)), P(b, sd * (b.w + 62)));
-          if (!onC) { const q = [P(a, sd * (a.w + 8)), P(b, sd * (b.w + 8)), P(a, sd * (a.w + 32)), P(b, sd * (b.w + 32))]; q.forEach(v => v[1] += 0.05); parterre.quad(...q); }
+          if (!onC) { const q = [P(a, sd * (a.w + 8)), P(b, sd * (b.w + 8)), P(a, sd * (a.w + 32)), P(b, sd * (b.w + 32))]; q.forEach(v => v[1] += 0.35); parterre.quad(...q); }
+          if (!onC && i % 2 === 0) for (const dd of [10, 18, 26]) { const [x, y, z] = P(a, sd * (a.w + dd + (i % 4))); fleurs.push([x, y + 0.5, z, Math.atan2(-a.tz, a.tx), 1.6, 0.9, 1.6, [0xc8323c, 0xf0c020, 0xf4ead0, 0xe87a2a][(i / 2 + dd) % 4]]); } // massifs de fleurs dans les parterres
           const p = P(a, sd * (a.w + 62)), q = P(b, sd * (b.w + 62)); murJ.quad([p[0], p[1] + 4.5, p[2]], [p[0], p[1] - 1, p[2]], [q[0], q[1] + 4.5, q[2]], [q[0], q[1] - 1, q[2]], i / 4, (i + 1) / 4);
           if (!(Math.abs(i - iC) < 10)) for (const d of (i % 5 === 0 ? [6.5, 34] : i % 2 === 0 ? [34] : [])) { const [x, y, z] = P(a, sd * (a.w + d)); cypJ.push([x, y, z, 0, 0.62, 0.85 + ((i * 7 + d) % 5) * 0.1, 0.62]); }
           if (i % 6 === 3 && !onC) { const [x, , z] = P(a, sd * (a.w + 2.75)); jets.push([x, a.y + 0.1, z, 0, 0.45, 2.2, 0.45]); } // une file de jets dans le jub
           if (i % 4 === 2 && !onC) { const [x, y, z] = P(a, sd * (a.w + 7.2)); fleurs.push([x, y + 0.2, z, Math.atan2(-a.tz, a.tx), 3.6, 0.8, 1, (i >> 2) & 1 ? 0xf0c020 : 0xc8323c]); }
-          if (i % 5 === 0 && !(Math.abs(i - iC) < 12) && !croix.some(c => Math.abs(i - c) < 4)) for (const d of [40, 47, 54]) { const [x, y, z] = P(a, sd * (a.w + d + ((i / 5) & 1) * 3)); tron.push([x, y + 1.2, z, 0, 0.35, 2.4, 0.35]); orang.push([x, y + 3.6, z, 0, 2.2, 1.9, 2.2]); } }
+          if (i % 5 === 0 && !(Math.abs(i - iC) < 12) && !croix.some(c => Math.abs(i - c) < 4)) for (const d of [14, 22, 30, 42, 52]) { const [x, y, z] = P(a, sd * (a.w + d + ((i / 5) & 1) * 3)); tron.push([x, y + 1.2, z, 0, 0.35, 2.4, 0.35]); orang.push([x, y + 3.6, z, 0, 2.2, 1.9, 2.2]); } }
         for (const c of croix) { const s = S[c], large = c === iC ? 4 : 1.5, d1 = c === iC ? 30 : 60;
           for (let dd = 10; dd < d1; dd += 7) { for (const u of [-large - 2.2, large + 2.2]) { const [x, y, z] = P(s, sd * (s.w + dd), u); cypJ.push([x, y, z, 0, 0.55, 0.8, 0.55]); } if (c !== iC && dd % 14 === 3) { const [x, y, z] = P(s, sd * (s.w + dd)); jets.push([x, y, z, 0, 0.5, 1.8, 0.5]); } }
           { const [x, y, z] = P(s, sd * (s.w + 20), large + 1.2); gens.push([x, y, z, rnd() * 6, 1, 1, 1, [0xf4ead0, 0x2aa39a, 0xc8323c, 0xf0b840][(c + sd + 2) % 4]]); } // un canal en travers (le bassin long sur l'axe du pavillon) et sa margelle
@@ -1865,9 +1868,10 @@
       // ================= le bazar (pts 25-38) : REFS §12-14 =================
       // --- couvert (tunnel de game.js, pts 26-34) : boutiques en niches des deux côtés, arcs transversaux brisés, coupoles en enfilade percées d'un oculus, puits de lumière, tapis pendus, lanternes, épices ---
       if (T.tun) { const cT = (T.t1 - T.t0 + N) % N, BAY = 4, NF = 8, rise = j => 2.4 + 1.7 * Math.sin(Math.PI * (j % BAY) / BAY), Y = (o, j) => 3.8 + rise(j) * Math.pow(Math.max(0, 1 - Math.abs(o) / W), 0.62);
-        const anneaux = [], lanT = [], coudes = [], anesB = [], tapSol = [[], [], [], []], oculL = [], raisL = [], guirB = [], comptoirs = [], sacs = [], voute = nappe(h.mat('voute', DS)), boutiques = nappe(h.mat('hojreh', DS)), boutiquesD = nappe(h.mat('hojreh', DS)), dehors = nappe(h.mat('arcades', DS)), arcs = [], ocul = [], taches = [], lan = [], chaines = [], tap = [[], [], [], []], cones = [], cuivres = [], domes = [], lanternons = [];
+        const anneaux = [], lanT = [], coudes = [], anesB = [], tapSol = [[], [], [], []], oculL = [], raisL = [], guirB = [], comptoirs = [], sacs = [], voute = nappe(h.mat('voute', DS)), boutiques = nappe(h.mat('hojreh', DS)), bandeau = nappe(h.mat('faience', DS)), boutiquesD = nappe(h.mat('hojreh', DS)), dehors = nappe(h.mat('arcades', DS)), arcs = [], ocul = [], taches = [], lan = [], chaines = [], tap = [[], [], [], []], cones = [], cuivres = [], domes = [], lanternons = [];
         for (let j = 0; j < cT; j++) { const i = (T.t0 + j) % N, a = S[i], b = S[(i + 1) % N];
           for (let k = 0; k < NF; k++) { const o0 = -W + 2 * W * k / NF, o1 = -W + 2 * W * (k + 1) / NF; voute.quad(au(a, o0, Y(o0, j)), au(a, o1, Y(o1, j)), au(b, o0, Y(o0, j + 1)), au(b, o1, Y(o1, j + 1)), j / 3, (j + 1) / 3); }
+          for (const sd of [-1, 1]) { const p0 = au(a, sd * (W - 0.08)), q0 = au(b, sd * (W - 0.08)); bandeau.quad([p0[0], p0[1] + 4.6, p0[2]], [p0[0], p0[1] + 3.85, p0[2]], [q0[0], q0[1] + 4.6, q0[2]], [q0[0], q0[1] + 3.85, q0[2]], j / 2, (j + 1) / 2); }
           for (const sd of [-1, 1]) { const p = au(a, sd * (W - 0.05)), q = au(b, sd * (W - 0.05)); boutiques.quad([p[0], p[1] + 3.8, p[2]], [p[0], p[1] - 0.1, p[2]], [q[0], q[1] + 3.8, q[2]], [q[0], q[1] - 0.1, q[2]], j / 4, (j + 1) / 4);
             const e = au(a, sd * (W + 1.6)), f = au(b, sd * (W + 1.6)); boutiquesD.quad([e[0], e[1] + 3.8, e[2]], [e[0], e[1] - 1, e[2]], [f[0], f[1] + 3.8, f[2]], [f[0], f[1] - 1, f[2]], j / 4, (j + 1) / 4); dehors.quad([e[0], e[1] + 10.3, e[2]], [e[0], e[1] + 3.8, e[2]], [f[0], f[1] + 10.3, f[2]], [f[0], f[1] + 3.8, f[2]], j / 2, (j + 1) / 2); } // le dehors : murs de brique crue sur la coque
           dehors.quad(au(a, -W - 1.7, 10.3), au(a, W + 1.7, 10.3), au(b, -W - 1.7, 10.3), au(b, W + 1.7, 10.3), j / 2, (j + 1) / 2);
@@ -1886,7 +1890,7 @@
           if (j % 3 === 0 && Math.abs(a.k) > 0.035) { const sd = a.k > 0 ? -1 : 1, [x, z] = bord(a, sd, W - 0.12); coudes.push([x, a.y + 2.4, z, ry]); } // le mur extérieur du coude : faïence qui luit, repère de freinage
           if (ph === 3) for (const sd of [-1, 1]) for (let u = -1; u <= 1; u++) { const [x, z] = bord(a, sd, W - 0.55); const xx = x + a.tx * u * 0.9, zz = z + a.tz * u * 0.9; if ((j + u + (sd > 0)) % 3) cones.push([xx, a.y, zz, 0, 0.42, 0.75, 0.42, [0xd9a21b, 0xb5391e, 0x8a5a2a, 0x3a6a2a][(j + u + 2) % 4]]); else cuivres.push([xx, a.y + 0.35, zz, 0, 0.4, 0.35, 0.4]); } }
         for (const sd of [-1, 1]) h.ribbon(T.t0, cT, sd * (W - 0.7), 0.04, sd * (W - 0.05), 0.04, h.mat('peinture', { lum: 1, c: 0xd8c8a8, side: THREE.DoubleSide }), 4); // seuil de pierre claire au pied des boutiques : le bord de la ruelle se lit dans les coudes
-        voute.fin(); boutiques.fin(); boutiquesD.fin(); dehors.fin();
+        voute.fin(); boutiques.fin(); bandeau.fin(); boutiquesD.fin(); dehors.fin();
         Is('arcBazar', { brique: h.mat('brique', { c: 0x9a7060 }), faience: h.mat('faience') }, arcs, { a: [W] });
         I(h.geo('disque'), h.mat('peinture', { lum: 1, c: 0xfff0c0, side: THREE.DoubleSide }), ocul);
         I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lan.map(p => [p[0], p[1], p[2], 0, 0.45, 0.6, 0.45])); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xffb850 }), guirB.map(p => [p[0], p[1], p[2], 0, 0.22, 0.3, 0.22])); lots.anes = anesB; // lanternes de cuivre rondes I(h.geo('disque'), h.mat('peinture', { lum: 1, c: 0xfff0c0, side: THREE.DoubleSide }), oculL);
