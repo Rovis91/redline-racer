@@ -1908,12 +1908,6 @@
       { const arc = new THREE.Group(); arc.position.set(-55, 4, 215); arc.rotation.y = 0.5; h.scene.add(arc); // l'arc-en-ciel dans l'embrun, soleil bas dans le dos du joueur qui remonte la vallée
         const P3 = [], C3 = [], I = []; [0xff5040, 0xffb040, 0xf0f060, 0x60d080, 0x6080ff].forEach((c, k) => { const t = new THREE.TorusGeometry(44 - k * 1.4, 0.7, 3, 40, Math.PI), b = P3.length / 3, col = new THREE.Color(c); P3.push(...t.attributes.position.array); for (let j = 0; j < t.attributes.position.count; j++) C3.push(col.r, col.g, col.b); I.push(...Array.from(t.index.array, i => i + b)); });
         const ga = new THREE.BufferGeometry(); ga.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); ga.setAttribute('color', new THREE.Float32BufferAttribute(C3, 3)); ga.setIndex(I); arc.add(new THREE.Mesh(ga, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }))); } // une seule passe pour les cinq bandes
-      // ---------- le déversoir de crête (REFS 1) : cinq passes vannées sous la route, au-dessus du bassin ; la lame dévale la face, l'embrun traverse la route (zone mouillée de la fin de crête) ----------
-      { const X0 = -160, X1 = -95, pil = [], van = [];
-        for (let x = X0; x <= X1 + 0.1; x += 13) { pil.push([x, 98, -13, 0, 3, 8, 6]); if (x < X1) van.push([(x + 6.5), 107.5, -13, 0, 10, 2.2, 1.2]); } // piles côté lac, vannes relevées au-dessus du parapet
-        peint(pil, 0x8d918a); peint(van, 0xe8761e);
-        prisme([[zF(YC - 1) + 0.35, YC - 1], [zF(12) + 0.35, 12]], X0, X1, gerbe, 18, 30).renderOrder = 2; // la lame d'eau sur la face, jusqu'au coursier
-        inst(h, h.geo('brume'), brume, [[-128, 108, 0, 0.4, 70, 18, 34], [-105, 114, 10, 1.1, 56, 22, 30], [-150, 106, 16, 2, 60, 14, 32], [-128, 80, 40, 0, 80, 40, 40], [-120, 50, 60, 0.7, 70, 36, 40]]).renderOrder = 3; } // l'embrun qui passe sur la crête
       // les bajoyers du bassin et le seuil de sortie
       bloc(bet, -164, -158, zF(20), 250, 0, 11); bloc(bet, 58, 64, zF(20), 250, 0, 6.5); bloc(betS, -158, 58, 246, 252, 0, 3.6);
 
@@ -1967,8 +1961,7 @@
       // ---------- les lignes à 500 kV (REFS 4) : vers le sud le long de la vallée, à travers la rivière vers la falaise ouest, vers l'est par-dessus la culée ----------
       const LIGNES = [[[300, 300], [190, 420], [168, 610], [178, 800], [150, 1010], [120, 1250], [80, 1520]],
         [[180, 300], [55, 390], [-160, 430], [-430, 470], [-700, 520], [-980, 560]],
-        [[320, 300], [470, 290], [660, 300], [860, 330], [1080, 360], [1320, 380]],
-        [[250, 300], [200, 520], [60, 780], [-120, 805], [-330, 815], [-560, 830], [-800, 850]]]; // la quatrième passe au-dessus du bas de la corniche : le dernier tiers retrouve la ligne
+        [[320, 300], [470, 290], [660, 300], [860, 330], [1080, 360], [1320, 380]]];
       const pyl = [], fils = [];
       for (const L of LIGNES) { const tops = [];
         L.forEach(([x, z], k) => { if (!k) return; const a = L[k - 1], b = L[Math.min(L.length - 1, k + 1)], ang = Math.atan2(b[0] - a[0], b[1] - a[1]), y = hAt(x, z), c = Math.cos(ang), s = Math.sin(ang);
@@ -2019,8 +2012,8 @@
       insts(h, 'portailGES', { beton: bet, bande: mat('bandeOrange'), numero: mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), roche: mat('rocheGES') }, [[T0, 0], [T1, Math.PI]].map(([i, sens]) => [S[i].x, S[i].y, S[i].z, h.across(S[i]) + sens]), { a: [W] });
 
       // ---------- la crête (REFS 5) : rails, deux portiques roulants au-dessus de la route, cabane de garde, tour de commande, lettres ----------
-      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, sd * (12 + 2.6), 0.05, sd * (12 + 3.4), 0.05, mat('matGris'), 4));
-      insts(h, 'portiqueVanne', { acier: mat('toleOrange', {}, '#e8a01e'), roue: mat('matGris'), treuil: mat('peinture', { c: 0x5fa89a }), cabine: mat('peinture', { c: 0xe8e4d8 }), vitre: mat('vitreSombre') }, [225, -45].map(x => { const s = S[near(h, x, 0)]; return [s.x, s.y, s.z, h.across(s)]; }), { a: [12] }); // les deux portiques roulants en une passe par pièce
+      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, sd * (W + 2.6), 0.05, sd * (W + 3.4), 0.05, mat('matGris'), 4));
+      insts(h, 'portiqueVanne', { acier: mat('toleOrange', {}, '#e8a01e'), roue: mat('matGris'), treuil: mat('peinture', { c: 0x5fa89a }), cabine: mat('peinture', { c: 0xe8e4d8 }), vitre: mat('vitreSombre') }, [225, -45].map(x => { const s = S[near(h, x, 0)]; return [s.x, s.y, s.z, h.across(s)]; }), { a: [W] }); // les deux portiques roulants en une passe par pièce
       { const s = S[P(34) + 6], gr = repere(h, s); gr.position.y = hAt(...bord(s, -1, W + 5)); h.pose('cabane', { beton: mat('betonGES', {}, '#b8b4a4'), toit: mat('toleOrange', {}, '#b5483c'), vitre: mat('lampe', LUMI) }, gr, [-(W + 5), 0, 0]); } // la cabane de garde à l'entrée de la crête, sur le replat de la culée
       h.pose('tourControle', { beton: bet, vitre: mat('vitreSombre'), acier: mat('matGris') }, h.scene, [-374, hAt(-374, 18) - 1, 18]);
       // deux tours de prise d'eau dans le lac, reliées à la crête par une passerelle ; deux vedettes de service amarrées
