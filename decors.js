@@ -1717,6 +1717,7 @@
       { const mat0 = h.mat, MC = new Map(); h = { ...h, mat: (...a) => { const k = JSON.stringify(a); return MC.get(k) || MC.set(k, mat0(...a)).get(k); } }; } // une matière par réglage : la fusion de game.js fait une passe de dessin par matière
       const DS = { side: THREE.DoubleSide }, au = (s, d, y = 0) => [s.x - s.tz * d, s.y + y, s.z + s.tx * d]; // au : point à d mètres à droite de l'axe (négatif : à gauche)
       const cull = m => { for (const x of [].concat(m)) { x.computeBoundingSphere(); x.frustumCulled = true; } return m; }, I = (...a) => cull(inst(h, ...a)), Is = (...a) => cull(insts(h, ...a));
+      const sansOmbre = (ms, ...gardes) => { for (const m of ms) if (!gardes.includes(m.material)) m.castShadow = false; return ms; }; // seules les grandes masses portent une ombre : chaque petite zone (fenêtres, portes, étoffes) coûtait une passe de plus dans la carte d'ombre
       const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
       const enTunnel = i => T.tun && ((i - T.t0 + N) % N) <= ((T.t1 - T.t0 + N) % N), dansSalle = (x, z, e = 0) => Math.hypot(x - CX, z - CZ) < PL.r + e;
       const i9 = P0(9), i12 = P0(12), i14 = P0(14), i20 = P0(20), i24 = P0(24), i25 = P0(25), i39 = P0(39);
@@ -1845,9 +1846,9 @@
           for (const [g0, g1] of trous[sd]) { const kc = (g0 + g1) >> 1, s = S[rel(kc)]; // dans chaque ouverture du mur : un hameau à 30 m, derrière un champ, et sa ligne de peupliers
             for (let m = 0; m < 12; m++) { const [x, , z] = au(S[rel(kc - 12 + m * 2)], sd * (s.w + 34 + (m * 7) % 3 * 11)); maisons.push([x, sol(x, z) - 0.4, z, dehors(s, sd) + Math.PI, 1.1 + (m % 3) * 0.2, 0.9 + (m % 4) * 0.3, 1.1 + (m % 3) * 0.2]); }
             for (let m = 0; m < 9; m++) { const [x, , z] = au(S[rel(kc - 16 + m * 4)], sd * (s.w + 20)); if (m !== 4) peup.push([x, sol(x, z) + 8.5, z, m, 1.8, 8 + (m % 3) * 0.8, 1.8]); } } }
-        Is('ilot', peauRue, ilots); Is('ruelle', { crue: peauRue.crue, sol: h.mat('peinture', { c: 0xb89a70 }), cadre: peauRue.cadre, porte: peauRue.porte, fenetre, arc: h.mat('peinture', { c: 0xdccfb4 }) }, ruellesI);
+        sansOmbre(Is('ilot', peauRue, ilots), peauRue.crue); sansOmbre(Is('ruelle', { crue: peauRue.crue, sol: h.mat('peinture', { c: 0xb89a70 }), cadre: peauRue.cadre, porte: peauRue.porte, fenetre, arc: h.mat('peinture', { c: 0xdccfb4 }) }, ruellesI));
         I(h.geo('houppierRond'), h.mat('bruit', {}, '#4f7a3a', ['#5c8a44', '#3e6b34']), debord).castShadow = false; I(h.geo('boite', 0.7, 2, 2.2), peauRue.tapis, tapisM);
-        { const sab = []; for (const m of [2, 9, 13, 17, 21]) if (aIlot(-1, m) && aIlot(1, m) && sab.length < 3) { const s = S[rel(8 + 17 * m + 5)]; sab.push([s.x, s.y - 0.3, s.z, h.across(s), 1, 1, 1]); } Is('sabat', peauRue, sab, { a: [11] }); }
+        { const sab = []; for (const m of [2, 9, 13, 17, 21]) if (aIlot(-1, m) && aIlot(1, m) && sab.length < 3) { const s = S[rel(8 + 17 * m + 5)]; sab.push([s.x, s.y - 0.3, s.z, h.across(s), 1, 1, 1]); } sansOmbre(Is('sabat', peauRue, sab, { a: [11] }), peauRue.crue); }
         I(h.geo('houppierRond'), h.mat('bruit', {}, '#4e6e34', ['#5a7a3e', '#3e5a2c']), verger).castShadow = false; I(h.geo('boite', 0.5, 2.8, 1.8), h.mat('planches', { c: 0x7a5a3c }), portes);
         I(h.geo('houppierRond'), h.mat('peinture', { c: 0xb5683c }), jarres); I(h.geo('bloc'), h.mat('planches', { c: 0x9a7a52 }), bois); I(h.geo('houppierRond'), h.mat('peinture', { c: 0x3a2c20 }), roues);
         rigole(rel(0), KD); // la rigole au pied des façades de droite
@@ -1900,7 +1901,7 @@
         { const fond = paroi(h.mat('murSalle', DS), 8); fond.seg(700, 486, 592, 486, YT + 16, YT - 0.3); fond.fin(); for (const [x, g] of [[672, false], [650, true]]) { const m = boite(h, h.mat('lamassuRelief', { emissive: 0x2a2018 }, true, g), 0.6, 13, 9.6, x, YT + 6.5, 484.6); m.rotation.y = Math.PI / 2; } }
 
         murets.seg(702, 396, 702, 562, YT + 7, YT - 0.3); murets.seg(702, 562, 500, 566, YT + 7, YT - 0.3); murets.fin(); boite(h, noir, 1.2, 0.8, 166, 702, YT + 7.3, 479); boite(h, noir, 202, 0.8, 1.2, 601, YT + 7.3, 564);
-        I(h.geo('bloc'), relief, socles); Is('portail', { noir, pierre }, portes); Is('colonneRuine', { pierre, fut: h.mat('cannelure'), sculpte }, ruines); }
+        I(h.geo('bloc'), relief, socles); sansOmbre(Is('portail', { noir, pierre }, portes)); Is('colonneRuine', { pierre, fut: h.mat('cannelure'), sculpte }, ruines); }
       // --- la salle aux cent colonnes (REFS §4-5) : une forêt de colonnes sous un toit plat de cèdre, ouverte sur ses quatre côtés par des portiques. Au sol, comme avant : damier garance et ivoire,
       // allée de tapis rouge et or qui montre la ligne rapide, un tapis rond et un cercle ivoire sous chaque colonne qu'on peut percuter, frise des Immortels sur le pourtour ---
       { const HX = 88, HZ = 80, HM = HC + 3, foret = [];
@@ -1919,7 +1920,7 @@
       // --- le perron : la terrasse finit net, la route décolle et se reçoit en contrebas, dans le jardin ; deux murs d'échiffre, deux braseros ---
       for (const sd of [-1, 1]) { const p = paroi(appareil, 8); murS(i20 - 15, 16, s => sd * (s.w + 0.3), 0.55, -3, p); p.fin(); brasero(i20 - 1, sd * (S[i20].w + 2), 1.8); }
       { const s = S[i20], A = au(s, -s.w - 0.3), B = au(s, s.w + 0.3), f = nappe(appareil); f.quad([A[0], s.y, A[2]], [A[0], s.y - 6, A[2]], [B[0], s.y, B[2]], [B[0], s.y - 6, B[2]], 0, 3, 8); f.fin(); } // la face du perron, sous la lèvre
-      Is('autel', { pierre, or }, braseros); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xff8a2a }), flammes).castShadow = false; // autels du feu : une braise fixe (la flamme viendra avec la vie)
+      sansOmbre(Is('autel', { pierre, or }, braseros)); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xff8a2a }), flammes).castShadow = false; // autels du feu : une braise fixe (la flamme viendra avec la vie)
       // --- à chaque seuil de zone, de chaque côté : un cyprès sombre et un arbre rond, côte à côte (le couple des miniatures persanes) ---
       { const cy = [], tr = [], ho = []; for (const i of [i9 - 26, i12 + 24, i20 - 36, i20 + 8, T.t0 - 9]) for (const sd of [-1, 1]) { const s = S[(i + N) % N], a = au(s, sd * (s.w + 3.4)), s2 = S[(i + 3 + N) % N], b = au(s2, sd * (s2.w + 4.2)); if (dansSalle(a[0], a[2], 4)) continue; const ya = Math.max(sol(a[0], a[2]), s.y - 0.5), yb = Math.max(sol(b[0], b[2]), s2.y - 0.5); cy.push([a[0], ya - 0.3, a[2], 0, 1.1, 1.35, 1.1]); tr.push([b[0], yb + 2.4, b[2], 0, 0.7, 5.6, 0.7]); ho.push([b[0], yb + 6.8, b[2], i % 6, 3.8, 3.2, 3.8]); }
         I(h.geo('cypres'), h.mat('peinture', { c: 0x2f4a2e }), cy).castShadow = false; I(h.geo('bloc'), h.mat('peinture', { c: 0x8a7458 }), tr); I(h.geo('houppierRond'), h.mat('bruit', {}, '#4f7a3a', ['#5c8a44', '#3e6b34']), ho).castShadow = false; }
@@ -2018,7 +2019,7 @@
               if ((k + (sd > 0) * 2) % 5 === 0) { const [px, , pz] = au(s, sd * (s.w - 0.4)); potences.push([px, s.y + 4.9, pz, h.across(s), 1.8, 0.1, 0.1]); const [lx, , lz] = au(s, sd * (s.w - 1.1)); lanternes.push([lx, s.y + 4.2, lz, 0]); h.lum(j, lx, s.y + 4.2, lz, 0xffb060, 14, 0.4); } } } }; // une lanterne sur potence de fer, fixée à la façade, une boutique sur cinq
         rue(i25 - 2, T.t0 - 2); rue(T.t1 + 3, finRue);
         for (let k = 0; k < 7; k++) { const s = S[(T.t1 + 3 + k * 3) % N]; toiles[k % 2].push([s.x, s.y + 8.2 - (k % 3) * 0.5, s.z, h.across(s), 2 * s.w + 2, 0.08, 4.4]); }
-        Is('arcadeBazar', peaux, mods); [['#c8323c', '#f0b840'], ['#2aa39a', '#e8d9b5']].forEach((c, n) => Is('etalPerse', { bois, auvent: h.mat('auvent', DS, ...c), marchandise: h.mat('peinture', { c: n ? 0xf0b840 : 0xc8323c }) }, etals[n])); I(h.geo('bloc'), h.mat('matGris'), potences); I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lanternes);
+        sansOmbre(Is('arcadeBazar', peaux, mods), peaux.etage); [['#c8323c', '#f0b840'], ['#2aa39a', '#e8d9b5']].forEach((c, n) => sansOmbre(Is('etalPerse', { bois, auvent: h.mat('auvent', DS, ...c), marchandise: h.mat('peinture', { c: n ? 0xf0b840 : 0xc8323c }) }, etals[n]))); I(h.geo('bloc'), h.mat('matGris'), potences); I(h.geo('lanterne'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lanternes);
         [['#e8d9b5', '#d2a24c'], ['#e8d9b5', '#2aa39a']].forEach((c, k) => I(h.geo('bloc'), h.mat('auvent', { ...DS, lum: 1 }, ...c), toiles[k])); // toiles claires : sombres, elles se lisaient comme des dalles en l'air
         rigole(T.t1 + 3, (R0 - (T.t1 + 3) + N) % N); if (T.tun) rigole(T.t0, (T.t1 - T.t0 + N) % N + 3, 2.7, 1.8); rigole(i25 - 3, (T.t0 - (i25 - 3) + N) % N); } // la rigole du canal, à droite, jusqu'à celle de la ruelle
       // --- le quartier du bazar : autour de la voûte et de la rue, une nappe de maisons de brique crue à toits plats qui descend la pente, quelques calottes de brique (pas de bulbe : REFS §12) ---
@@ -2026,7 +2027,7 @@
         for (let x = -70; x < 172; x += 12.5) for (let z = 104; z < 470; z += 12.5) { const xx = x + ((x * 7 + z * 3) % 5) - 2, zz = z + ((x * 3 + z * 11) % 5) - 2, i = near(h, xx, zz), s = S[i], d = Math.hypot(s.x - xx, s.z - zz);
           if (d < s.w + (enTunnel(i) ? 16 : 23) || d > 84 || !(enTunnel(i) || i >= i25 - 4 && i < T.t0 || i > T.t1 && i < R0 - 4) || xx > 120 && zz > TZ + 4) continue; // ni sur la route, ni dans le jardin, ni loin de la rue
           const sx = 0.95 + ((x + z) % 4) * 0.14, sy = 0.9 + ((x * 5 + z) % 5) * 0.22, y = sol(xx, zz); maisons.push([xx, y - 0.4, zz, ((x + z) % 4 | 0) * Math.PI / 2, sx, sy, sx]); if ((x * 3 + z * 7) % 11 < 1.2) calottes.push([xx, y + 6 * sy - 0.4, zz, 0, 3.3 * sx, 2.3, 3.3 * sx]); }
-        Is('maison', { crue: h.mat('facadeCrue'), sombre }, maisons); I(h.geo('calotte'), h.mat('voute'), calottes); }
+        sansOmbre(Is('maison', { crue: h.mat('facadeCrue'), sombre }, maisons)); I(h.geo('calotte'), h.mat('voute'), calottes); }
     },
     // ---------- Barrage 74 : centrale hydroélectrique soviétique des années 70, vannes ouvertes, matin voilé (docs/SPEC-BARRAGE.md) ----------
     // Le corps du barrage est fait de gradins de béton (x de -252 à 170) qui enferment les galeries du tunnel : couronnement (z 12-30, au ras de la crête), gradin haut (z 30-68, 111 m)
