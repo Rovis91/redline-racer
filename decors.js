@@ -1959,6 +1959,7 @@
       const glissiere = (a, b, sd) => tranche(a, b, (i, l) => ruban(i, l, s => sd * (s.w + 0.4), 0.85, s => sd * (s.w + 0.4), 0.1, glis, 4));
       tranche(P(5) + 6, P(13) - 6, (i, l) => { for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 0.1), 0.02, s => sd * (s.w + 1.1), 0.02, mat('bandeOrange'), 2); }); // bandes de danger au sol le long de la voie de la halle
       { const gc = mat('glissiere', DS, ['#e8761e', '#1e1e1c', '#e8761e', '#c86a1a']); for (const sd of [-1, 1]) tranche(P(5) + 6, P(13) - 6, (i, l) => ruban(i, l, s => sd * (s.w + 0.4), 1, s => sd * (s.w + 0.4), 0, gc, 4)); } // la voie de la halle, bordée de garde-corps orange
+      for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, s => sd * (s.w + 0.3), 1.17, s => sd * (s.w + 0.9), 1.17, mat('bandeOrange'), 2)); // la corde de la crête : chaperon rayé orange, là où frôler le parapet remplit la nitro
       parapet(P(32), P(41), -1); parapet(P(35), P(41), 1); glissiere(P(31), P(35) + 4, 1); parapet(P(41), P(49), -1); // la crête des deux côtés, le lac et la corniche côté vide
       glissiere(P(53), P(5), -1); glissiere(P(13), P(32), -1); glissiere(P(13), P(32), 1); glissiere(P(49) - 10, P(53) + 6, -1); glissiere(P(49) - 10, P(53) + 6, 1);
       { const bo = []; for (let i = 0; i < N; i += 8) { if (dansHalle(i) || (i >= T0 && i <= T1)) continue; const s = S[i]; for (const sd of [-1, 1]) { if (sd < 0 ? dans(i, 32, 49) : dans(i, 31, 41)) continue; const [x, z] = bord(s, sd, s.w + 1.3); bo.push([x, s.y + 0.45, z, h.across(s)]); } }
@@ -2081,7 +2082,7 @@
 
       // balises de freinage à 150, 100 et 50 m de chaque virage serré : trois, deux, une bande rouge sur un poteau blanc, des deux côtés
       { let der = -99; for (let i = 0; i < N; i++) { const j = (i + 75) % N; if (Math.abs(S[j].k) > 0.025 && i - der > 90 && !dans(j, 5, 13)) { der = i; for (const [o, nb] of [[0, 3], [25, 2], [50, 1]]) { const q = (i + o) % N; if (q >= T0 && q <= T1) continue; const s = S[q];
-          for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 1, z, h.across(s), 0.3, 2, 0.3, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 1.75 - b * 0.4, z, h.across(s), 0.34, 0.2, 0.34, 0xc8302a]); } } } } }
+          for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 1.3, z, h.across(s), 0.45, 2.6, 0.45, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 2.3 - b * 0.55, z, h.across(s), 0.5, 0.3, 0.5, 0xc8302a]); } } } } }
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
       fond();
       // les jets coulent, l'écume du bassin bouillonne, la rivière file vers le sud, l'embrun ondule
