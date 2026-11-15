@@ -1839,10 +1839,10 @@
       const pontI = new Set(); for (let i = P(48); i !== P(53); i = (i + 1) % N) if (riv(S[i].x, S[i].z) < 22) pontI.add(i);
       const iC0 = P(36) - 6, iC1 = P(40) + 6; // la crête, sur le mur : le sol reste au fond de la vallée dessous
       // ---------- le sol : la vallée suit la route ; la rivière et le lac se creusent ; la falaise ouest au-dessus de la corniche, des collines de taïga au loin ----------
-      const sc = S[P(1) + 8], canal = (x, z) => { const u = (x - sc.x) * -sc.tz + (z - sc.z) * sc.tx, v = (x - sc.x) * sc.tx + (z - sc.z) * sc.tz; return Math.abs(v) < 8 && u < 30 && u > -260; }; // le canal de fuite que la route saute (M.sauts, pt 1), jusqu'à la rivière
+      const sc = S[P(1) + 6], yFosse = Math.min(...S.slice(P(1), P(1) + 14).map(s => s.y)), canal = (x, z) => { const u = (x - sc.x) * -sc.tz + (z - sc.z) * sc.tx, v = (x - sc.x) * sc.tx + (z - sc.z) * sc.tz; return Math.abs(v) < (Math.abs(u) < 30 ? 16 : 8) && u < 30 && u > -260; }; // (plus large sous la route : toute la fosse) // le canal de fuite que la route saute (M.sauts, pt 1), jusqu'à la rivière
       const creux = (x, z, y) => {
         const p = proche(x, z), w = p.s.w, rv = riv(x, z), libre = p.d > w + 4 || pontI.has(p.i); let r = 0;
-        if (canal(x, z) && p.d > w + 1) return Math.max(0, y - (sc.y - 5));
+        if (canal(x, z)) return Math.max(0, y - (yFosse - (p.d > w + 1 ? 5 : 2))); // sous le saut, le sol descend sous le fond de la fosse
         if (p.d < w + 30 && !pontI.has(p.i)) { const cap = p.s.y - 0.6 + Math.max(0, p.d - w - 6) * 0.8; if (y > cap) return y - cap; } // jamais de sol au-dessus de la chaussée : un talus qui ne monte qu'à 6 m du bord
         if (libre && rv < 34) { const f = rv < 0 ? 0.3 : 1 + rv * 0.5; if (y > f) r = (y - f) * (rv < 0 ? 1 : lisse(34, 0, rv)); }
         if (libre && lac(x, z) && !mur(x, z)) r = Math.max(r, y - 70);
@@ -1856,7 +1856,9 @@
 
       { const gr = new THREE.Group(); gr.position.set(sc.x, sc.y, sc.z); gr.rotation.y = h.across(sc); h.scene.add(gr); // repère : X en travers de la route
         h.pose('boite', mat('eauGES', { c: 0x9fd0d8 }, '#5a96a8', 40), gr, [-115, -4.2, 0], 290, 0.3, 12); for (const e of [-1, 1]) h.pose('boite', mat('betonGES', {}, '#6d726d'), gr, [-115, -3, e * 7], 290, 5, 1.6);
-        h.pose('boite', mat('betonGES', {}, '#6d726d'), gr, [0, -1.6, 0], 2 * W + 4, 2.4, 16); } // le pont-dalle du canal sous le saut
+        h.pose('boite', mat('betonGES', {}, '#6d726d'), gr, [0, yFosse - sc.y - 1.6, 0], 2 * W + 4, 2.4, 16); } // le pont-dalle du canal sous le saut, sous le fond de la fosse
+      tranche(P(1) - 24, P(1), (i, l) => { for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 0.1), 0.03, s => sd * (s.w + 1.6), 0.03, mat('bandeOrange'), 2); }); // le tremplin du saut, bordé de bandes de danger
+      tranche(P(1) - 2, P(1) + 1, (i, l) => ruban(i, l, s => -s.w, 0.04, s => s.w, 0.04, mat('bandeOrange'), 2)); // le bec du tremplin, rayé en travers
       // ---------- l'eau : le lac au ras de la crête (101 m), le bassin d'écume, la rivière (3 m) ----------
       const eau = mat('eauGES', { c: 0xc4d8d8 }, '#6aa4b0', 40), eauRiv = mat('eauGES', { c: 0x9fd0d8 }, '#5a96a8', 40), ecume = mat('ecumeGES');
       { const P3 = [], UV = [], I = []; for (const [x0, x1, z1] of [[-1700, -310, -22], [-310, 432, -11], [432, 1700, -48]]) { const b = P3.length / 3, z0 = -1700; P3.push(x0, 101, z0, x1, 101, z0, x0, 101, z1, x1, 101, z1); UV.push(x0 / 16, z0 / 16, x1 / 16, z0 / 16, x0 / 16, z1 / 16, x1 / 16, z1 / 16); I.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } maille(P3, UV, I, eau); } // le lac en une passe
@@ -2086,7 +2088,7 @@
         const g2 = new THREE.BufferGeometry(); g2.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); g2.setAttribute('color', new THREE.Float32BufferAttribute(C3, 3)); g2.setIndex(I); h.scene.add(new THREE.Mesh(g2, new THREE.MeshBasicMaterial({ vertexColors: true, fog: false, side: THREE.DoubleSide }))); } // les deux rangées en une passe
 
       // balises de freinage à 150, 100 et 50 m de chaque virage serré : trois, deux, une bande rouge sur un poteau blanc, des deux côtés
-      { let der = -99; for (let i = 0; i < N; i++) { const j = (i + 75) % N; if (Math.abs(S[j].k) > 0.025 && i - der > 90 && !dans(j, 5, 13)) { der = i; for (const [o, nb] of [[0, 3], [25, 2], [50, 1]]) { const q = (i + o) % N; if (q >= T0 && q <= T1) continue; const s = S[q];
+      { let der = -99; for (let i = 0; i < N; i++) { const j = (i + 75) % N; if (Math.abs(S[j].k) > 0.02 && i - der > 90 && !dans(j, 5, 13)) { der = i; for (const [o, nb] of [[0, 3], [25, 2], [50, 1]]) { const q = (i + o) % N; if (q >= T0 && q <= T1) continue; const s = S[q];
           for (const sd of [-1, 1]) { const para = sd < 0 ? dans(q, 32, 49) : dans(q, 35, 41), [x, z] = bord(s, sd, s.w + (para ? 0.6 : 2)); peints.push([x, s.y + 1.3, z, h.across(s), 0.45, 2.6, 0.45, 0xf0f0e8]); for (let b = 0; b < nb; b++) peints.push([x, s.y + 2.3 - b * 0.55, z, h.across(s), 0.5, 0.3, 0.5, 0xc8302a]); } } } } }
       { const m = inst(h, h.geo('bloc'), mat('peinture'), peints), c = new THREE.Color(); peints.forEach((p, k) => m.setColorAt(k, c.setHex(p[7]))); m.instanceColor.needsUpdate = true; }
       fond();
