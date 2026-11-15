@@ -210,6 +210,15 @@ Dans le jeu, tout cela passe dans sim.js, pour rester déterministe en réseau.
   - les éclats retombent à plat et brillent au sol.
 - **Son du contact entre voitures** (audio.js, `contact`) : deux caisses creuses qui s'entrechoquent, plus graves et plus rondes qu'un mur. Une touchette n'est qu'un « tok » de bouclier ; fort, la tôle se froisse ; très fort, des éclats. Les murs gardent `choc`.
 
+**Après essai (3)** : en jeu, on ne voyait rien de nouveau. Les éclats de 9 cm faisaient moins d'un pixel avec la caméra de course, les vitres ne cassaient qu'à plus de 80 km/h dans l'axe, et le feu ne démarrait qu'à 0,85. Corrigé, capture `docs/avant-apres/casse/jeu-feu-verre-camera.jpg` (caméra de course) :
+- **Vitres** : la vitre cassée est peinte sur la livrée, un trou sombre semé de verre étoilé.
+  - Le pare-brise casse de face et la lunette par l'arrière au-dessus de 14 m/s ; une vitre latérale de côté au-dessus de 12 m/s.
+  - Les éclats font 17 cm, 40 pour le pare-brise et la lunette, et ils brillent un peu d'eux-mêmes.
+  - L'ancienne étoile peinte sur le pare-brise est retirée.
+  - Limite : une vitre latérale cassée l'est des deux côtés, car les deux flancs partagent la même vue de côté.
+- **Feu** : il couve dès 0,7 à l'avant, flambe à 0,85, embrase la voiture hors d'usage. L'intensité est modérée : trop forte, elle éblouissait et cachait la voiture.
+- **Son du contact** : plus fort, avec un coup grave (le poids de l'autre voiture) et un « clang » de tôle.
+
 **Reste à faire** :
 - régler en jouant : la force de la déviation, l'agressivité de l'IA, les points ;
 - jeu en ligne : il reste en mode Course (l'état de casse n'est pas envoyé aux invités) ;

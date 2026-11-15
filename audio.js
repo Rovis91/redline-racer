@@ -759,8 +759,10 @@ registerProcessor('moteur', Moteur);`;
     joue(tampon(0.8, x => { for (let i = 0; i < 9; i++) { const d = 0.12 + Math.random() * 0.6; coup(x, d, 0.015, v * (0.1 + Math.random() * 0.2), 0.005, 0); if (i % 3 === 0) coup(x, d, 0.06, v * 0.06, 0.005, 3500 + Math.random() * 3000); } }), t, filt('highpass', 3000, 1, V.choc)); // débris et éclats : un tampon, une source (12 avant)
   }
   function contact(bump, t = AC.currentTime) { // voiture contre voiture : deux caisses creuses qui s'entrechoquent, plus graves et plus rondes qu'un mur ; une touchette n'est qu'un « tok » de bouclier
-    const k = Math.min(1, bump / 12), g = 0.1 + 0.35 * k, f0 = 90 + Math.random() * 35;
+    const k = Math.min(1, bump / 10), g = 0.22 + 0.5 * k, f0 = 85 + Math.random() * 35;
     nz(t, 0.05, g * 0.9, V.choc, 'bandpass', 700 + Math.random() * 600, 1.4); // l'attaque : plastique des boucliers et tôle
+    const th = osc('sine', 75, t, 0.25, g * 0.7, V.choc); th && th.frequency.exponentialRampToValueAtTime(38, t + 0.22); // le poids de l'autre voiture : un coup grave
+    nz(t, 0.25 + 0.4 * k, g * 0.45, V.choc, 'bandpass', 1300 + Math.random() * 900, 9, mbuf, 0.002); // le « clang » : deux tôles qui sonnent l'une contre l'autre
     const o = osc('sine', f0 * 1.7, t, 0.2 + 0.25 * k, g * 0.6, V.choc); o && o.frequency.exponentialRampToValueAtTime(f0, t + 0.18); // le coup sourd de la caisse
     for (const [m, a] of [[2.13, 0.22], [3.47, 0.12], [5.31, 0.06]]) osc('sine', f0 * 2 * m * (0.97 + Math.random() * 0.06), t, 0.12 + 0.3 * k, g * a, V.choc); // la portière qui résonne (partiels inharmoniques)
     if (k > 0.35) { const f = nz(t, 0.16, g * 0.6, shaper(5, gain(0.5, V.choc)), 'bandpass', 1900, 0.9); f && f.frequency.exponentialRampToValueAtTime(450, t + 0.15); } // fort : la tôle se froisse
