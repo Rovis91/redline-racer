@@ -133,7 +133,7 @@
     // REFS §5, §8 : mur de brique crue sur socle de pierre, percé de fenêtres et de niches en pierre noire à corniche à gorge (cavetto) ; 16 m par motif
     murSalle: () => [64, 64, (g, { R }) => {
       R(g, '#c49a5e', 0, 0, 64, 64); for (let y = 0; y < 56; y += 4) R(g, '#b48a52', 0, y, 64, 1); R(g, '#8a7c6c', 0, 56, 64, 8); R(g, '#6a5e50', 0, 56, 64, 1);
-      for (const x of [6, 38]) { R(g, '#3a3430', x, 18, 20, 36); R(g, '#1e1a18', x + 4, 26, 12, 28); for (let k = 0; k < 3; k++) R(g, '#4a4440', x - 2 + k, 18 - 2 * k, 24 - 2 * k, 2); R(g, '#7a6e60', x + 5, 34, 2, 10); R(g, '#7a6e60', x + 13, 34, 2, 10); }
+      for (const x of [6, 38]) { R(g, '#3a3430', x, 18, 20, 36); R(g, '#1e1a18', x + 4, 26, 12, 28); R(g, '#4a4440', x - 3, 15, 26, 3); R(g, '#6a6056', x - 3, 14, 26, 1); // corniche à gorge droite (les gradins faisaient des merlons) R(g, '#7a6e60', x + 5, 34, 2, 10); R(g, '#7a6e60', x + 13, 34, 2, 10); }
     }, 16],
     // REFS §5 : encadrement de porte de pierre noire : corniche à gorge, chambranles à reliefs (le roi sur son trône sous l'ombrelle), vide sombre
     portePierre: () => [32, 64, (g, { R }) => {
