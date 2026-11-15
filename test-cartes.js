@@ -2,11 +2,12 @@
 // La ville a ses propres tests, plus complets, dans test.js (ses chiffres ne doivent pas bouger : records de la ville).
 const assert = require('assert'), THREE = require('./three/three.module.js');
 require('./cartes.js'); require('./traces-or.js'); require('./sim.js');
-// inventaire : une carte se monte de son entrée de cartes.js, de son décor (decors.js), de sa trace or (traces-or.js) et de son titre anglais (TITRE_EN de langue.js, sinon le titre du HUD)
-globalThis.window = globalThis; require('./decors.js'); require('./langue.js');
-{ const EN = TITRE_EN;
+// inventaire : une carte se monte de son entrée de cartes.js, de son décor (decors-<carte>.js, chargé par index.html après decors.js), de sa trace or (traces-or.js) et de son titre anglais (TITRE_EN de langue.js, sinon le titre du HUD)
+globalThis.window = globalThis; require('./decors.js'); for (const M of CARTES) require('./decors-' + M.th.decor + '.js'); require('./langue.js');
+{ const EN = TITRE_EN, PAGE = require('fs').readFileSync(__dirname + '/index.html', 'utf8');
   for (const M of CARTES) {
-    assert(typeof DECORS[M.th.decor] === 'function', M.id + ' : pas de décor ' + M.th.decor + ' dans decors.js');
+    assert(typeof DECORS[M.th.decor] === 'function', M.id + ' : pas de décor ' + M.th.decor + ' dans decors-' + M.th.decor + '.js');
+    assert(PAGE.includes('<script defer src="decors-' + M.th.decor + '.js"></script>'), M.id + ' : decors-' + M.th.decor + '.js absent de index.html');
     assert(typeof TRACES_OR[M.id] === 'string' && TRACES_OR[M.id].startsWith(DEFI_V + '.' + M.id + '.'), M.id + ' : pas de trace or dans traces-or.js');
     const t = EN[M.id] || M.th.hud.titre; assert(t && t.length === 2 && t.every(l => l), M.id + ' : titre anglais absent');
   }

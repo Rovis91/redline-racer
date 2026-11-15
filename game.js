@@ -262,7 +262,7 @@
   };
   const R = (g, c, x, y, w, h) => { g.fillStyle = c; g.fillRect(x, y, w, h); };
 
-  // ---------- les trois entités du décor : textures.js (l'aspect), formes.js (la géométrie), et le placement — ici pour la piste et la ville, decors.js pour les autres cartes ----------
+  // ---------- les trois entités du décor : textures.js (l'aspect), formes.js (la géométrie), et le placement — ici pour la piste et la ville, decors-<carte>.js pour les autres cartes ----------
   const speckle = (g, n, c, h = 1, H = 64) => { for (let i = 0; i < n; i++) R(g, c, rnd() * 64 | 0, rnd() * H | 0, 1, h); };
   const voile = (g, a, f) => { g.globalAlpha = a; f(); g.globalAlpha = 1; }; // dessine en transparence : salissures et usure par-dessus n'importe quelle teinte
   const tx = (nom, ...a) => { // un dessin du catalogue, tiré à neuf à chaque appel ; alea = hasard propre à la texture, semé par son nom : il ne décale pas rnd, donc pas le décor
@@ -601,7 +601,7 @@
   }
 
   fond && await souffle();
-  // ---------- décor de la carte : decors.js ----------
+  // ---------- décor de la carte : decors-<carte>.js ----------
   const VAP = [], vapeur = (x, y, z) => VAP.push([x, y, z]); // bouches de vapeur déclarées par le décor (panaches : voir flou)
   const beams = [], decorTick = window.DECORS[TH.decor]({ THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, temps: () => race ? -1 : tTraf }); // pas de trafic en course : les adversaires ne savent pas l'éviter
 
@@ -726,7 +726,7 @@
       step(dt) { const fr = Math.exp(-2.4 * dt); for (let k = 0; k < n; k++) if (L[k] > 0) { const j = k * 3; L[k] -= dt; V[j] *= fr; V[j + 2] *= fr; V[j + 1] = Math.max(-1.3, V[j + 1] - 7 * dt);
           P[j] += (V[j] + Math.sin(L[k] * 9 + k) * 1.6) * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += (V[j + 2] + Math.cos(L[k] * 7 + k) * 1.6) * dt; if (L[k] <= 0) P[j + 1] = -1e4; }
         g.attributes.position.needsUpdate = true; } }; })();
-  if (GERBE) GERBE.d.renderOrder = -4; // le nuage des autres voitures passe sous la nappe d'eau du gué (renderOrder -2 dans decors.js), comme avant que la nappe ne passe sous les particules : vu de loin, elle en voile le pied
+  if (GERBE) GERBE.d.renderOrder = -4; // le nuage des autres voitures passe sous la nappe d'eau du gué (renderOrder -2 dans decors-terre.js), comme avant que la nappe ne passe sous les particules : vu de loin, elle en voile le pied
   // gerbe d'eau du gué (Spéciale des Ocres : seule carte en terre avec une zone mouillée) : derrière chaque roue avant, des gouttes en traits blancs projetées en éventail sur le côté, qui retombent, et un peu d'écume au ras de l'eau (disques à vie courte : plus longue, ils grossissent en brume) ; plus haute et plus large avec la vitesse
   //   Vue de sa propre caméra (moi : une vue la suit), la même gerbe bouchait l'écran : ses disques, freinés, restaient derrière la voiture et grossissaient devant l'objectif. Pour elle, l'effet est refait à l'échelle de la caméra de poursuite :
   //   deux éventails de petits disques sans frein (GERBE1) lancés de chaque côté à la vitesse de la voiture, des gouttes qui montent et retombent à côté d'elle, une écume basse (ECUME) qui suit les roues arrière sur 3 à 4 m ;
@@ -803,7 +803,7 @@
         if (v < 8 || c.air || c.out || !(VUES.some(v => v.car === c) || c.drift || Math.random() < 0.5)) continue;
         const aq = j => T.surf[(c.idx + j) % N].aq > 0.099, dansEau = aq(0) || aq(1), moi = !window.__g.vue && VUES.some(u => u.car === c); // aq(1) : les roues avant, 2 m devant, y sont déjà
         c.eauT = dansEau ? (c.eauT || 0) + dt : 0; // temps passé dans l'eau (décor seulement, la simulation ne le lit pas)
-        if (dansEau) gerbe(c, v, moi, dt, 1 + 2.5 * Math.max(0, 1 - c.eauT / 0.35) + (aq(4) ? 0 : 2)); // fort : le coup d'étrave à l'entrée, et la vague des 8 derniers mètres avant la sortie ; hors de l'eau, rien // le gué : une gerbe d'eau de chaque côté, là seulement où la zone mouillée est pleine ; sur la boue de ses bords, ni gerbe ni poussière (decors.js y pose la nappe), et rien dans la boue de ses bords ; allégée pour une voiture que suit une caméra de poursuite (pas en caméra d'inspection, __g.vue, qui regarde de loin)
+        if (dansEau) gerbe(c, v, moi, dt, 1 + 2.5 * Math.max(0, 1 - c.eauT / 0.35) + (aq(4) ? 0 : 2)); // fort : le coup d'étrave à l'entrée, et la vague des 8 derniers mètres avant la sortie ; hors de l'eau, rien // le gué : une gerbe d'eau de chaque côté, là seulement où la zone mouillée est pleine ; sur la boue de ses bords, ni gerbe ni poussière (decors-terre.js y pose la nappe), et rien dans la boue de ses bords ; allégée pour une voiture que suit une caméra de poursuite (pas en caméra d'inspection, __g.vue, qui regarde de loin)
         else if (q.roul > 0.25 && !q.aq) for (let k = 0; k < 2; k++) poussiere(x + jit(0.6), c.y + 0.15, z + jit(0.6), c.vx * 0.7 + jit(2), 0.3 + Math.random() * 1.2, c.vz * 0.7 + jit(2));
         else if (FEU && !q.aq && !(T.tun && (c.idx - T.t0 + N) % N <= T.t1 - T.t0)) for (let k = Math.max(1, Math.round((c.drift ? 3 : 1.5) * dt * 60)); k--;) FEU.emit(x + jit(2), c.y + 0.12, z + jit(2), c.vx * 0.85 + jit(6), 1.5 + Math.random() * 4.5, c.vz * 0.85 + jit(6)); } // elles partent à la vitesse de la voiture puis freinent, comme la poussière : le sillage reste dans le champ de la caméra de poursuite
       POUS.step(dt); if (FEU) FEU.step(dt); if (GERBE) { GERBE.step(dt); GERBE1.step(dt); ECUME.step(dt); } }
