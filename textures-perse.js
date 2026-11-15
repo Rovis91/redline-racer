@@ -18,7 +18,7 @@
     }, 10],
     // dallage de la salle : damier de marbre ivoire et pierre grise, joints sombres, 2 m par dalle
     dallage: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) R(g, (x + y) & 1 ? '#a8826a' : '#c8a888', x * 16, y * 16, 16, 16);
+      const { R, alea, voile } = o; for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) R(g, (x + y) & 1 ? '#9a5a48' : '#b87a62', x * 16, y * 16, 16, 16);
       voile(g, 0.15, () => { for (let i = 0; i < 40; i++) R(g, '#5a5048', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 6 | 0), 1); });
       voile(g, 0.35, () => { for (let k = 0; k < 64; k += 16) { R(g, '#3a3028', 0, k, 64, 1); R(g, '#3a3028', k, 0, 1, 64); } });
     }, 8],

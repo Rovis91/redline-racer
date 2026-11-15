@@ -1788,7 +1788,7 @@
       // ================= la plaine de Marvdasht (pts 0-8) : REFS §15-16 =================
       const troncs = [], palmes = [], cypres = [], peupliers = [], bornes = [], meules = [], gens = [], etendards = [];
       for (let i = 0; i < i9; i += 3) for (const sd of [-1, 1]) { const s = S[i];
-        if (i % 24 === 0) { const [x, z] = bord(s, sd, s.w + 2); bornes.push([x, s.y + 0.6, z, 0]); }
+        if (i % 8 === 0) { const [x, z] = bord(s, sd, s.w + 2); bornes.push([x, s.y + 0.6, z, 0, 1, i % 24 ? 1 : 1.8, 1]); } // stèles de la route royale tous les 16 m, une plus haute tous les 48
         if (i % 9 === 0 && ((i / 9) & 1) === (sd > 0 ? 1 : 0)) { const [x, z] = bord(s, sd, s.w + 4.2); etendards.push([x, s.y, z, h.across(s), 1, 1, 1, (i / 18 | 0) % 2 ? 0xc8323c : 0x1d3a8a]); } // étendards de la route royale, l'aigle d'or sur lapis ou garance : un repère qui défile
         if (i % 6 === 3 && (i < 120 || i > 250)) { const [x, z] = bord(s, sd, s.w + 70 + (i % 12)); if (libre(x, z, 20)) peupliers.push([x, sol(x, z), z, 0, 0.8, 1.2, 0.8]); } // le rideau du plan moyen
         if (i % 3 === 0) { const [x, z] = bord(s, sd, s.w + 7.5); if (libre(x, z, 6)) cypres.push([x, sol(x, z), z, 0, 0.5, 0.55 + ((i * 7) % 5) * 0.06, 0.5]); } // le couloir de cyprès au bord de la route royale
@@ -1840,7 +1840,7 @@
       const dent = (k, base, amp) => base + amp * (0.5 * Math.abs(Math.sin(k * 0.71 + 1.3)) + 0.3 * Math.abs(Math.sin(k * 1.93)) + 0.2 * ((k * 0.618) % 1));
       for (const [r, base, amp, c, n] of [[2150, 80, 150, 0x8a6a80, 170], [1650, 50, 110, 0x8a7468, 150]]) crete(Array.from({ length: n + 1 }, (_, k) => { const a = k / n * 6.2832; return [300 + Math.cos(a) * r, 250 + Math.sin(a) * r, dent(k + r, base, amp)]; }), 0, 0, h.mat('peinture', { lum: 1, c, fog: false, side: THREE.DoubleSide }), 1e9);
       // REFS §9 : le Kuh-e Rahmat juste derrière la terrasse, à l'est : falaise claire en strates, tombeaux rupestres en croix
-      crete(Array.from({ length: 49 }, (_, k) => [940 + 14 * Math.sin(k * 0.45), 40 + k * 14, dent(k * 1.1, 60, 55) + 25 * Math.sin(k * 0.21)]), -130, 0, h.mat('bruit', { side: THREE.DoubleSide, emissive: 0x2a241e }, '#8a7c6c', ['#7a6c5e', '#9a8c7a', '#6e6052']), 40);
+      crete(Array.from({ length: 49 }, (_, k) => [940 + 14 * Math.sin(k * 0.45), 40 + k * 14, dent(k * 1.1, 60, 55) + 25 * Math.sin(k * 0.21)]), -130, 0, h.mat('bruit', { side: THREE.DoubleSide, emissive: 0x241e26 }, '#7a6a78', ['#6c5a74', '#8a7a86', '#5e5066']), 40);
 
       // ================= le jardin (pts 20-24) : un chahar bagh symétrique, des deux côtés de l'allée (REFS §10-11) =================
       // en travers, à partir du bord : margelle, canal (jub), rangée de cyprès, parterres creusés coupés de canaux en travers, rangée de cyprès, orangers, mur ; au milieu, l'axe en croix avec son bassin long et un pavillon de chaque côté
