@@ -1774,7 +1774,7 @@
         for (const ii of [i9 + 14, i12 - 26]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y + MH.escalier + 0.45, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xc8323c : 0x1d3a8a]); }
         for (const ii of [i20 - 30, P0(23) - 10]) for (const sd of [-1, 1]) { const s = S[ii], [x, z] = bord(s, sd, s.w + 1.2); etendG.push([x, s.y, z, h.across(s), 1.8, 1.8, 1.8, sd > 0 ? 0xf0b840 : 0x2aa39a]); }
         Is('banniere', { mat: h.mat('peinture', { c: 0x4a3020 }), drap: h.mat('peinture', { c: 0xffffff }), or }, etendG, { teinte: 'drap' });
-        h.ribbon(i20 - 1, 1, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0xc8323c, side: THREE.DoubleSide }), 2); // la lèvre du tremplin, rouge garance (l'ivoire s'y brûlait)
+        h.ribbon(i20 - 1, 1, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { c: 0xc8323c, side: THREE.DoubleSide }), 2); // la lèvre du tremplin, rouge garance (l'ivoire s'y brûlait)
         h.ribbon(i12 - 22, 2, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0x2aa39a, side: THREE.DoubleSide }), 2); // bande de faïence en travers : on freine ici pour l'épingle de la Porte
         h.ribbon(i20 + 1, 7, s => -s.w + 0.5, 0.04, s => s.w - 0.5, 0.04, h.mat('faience', { lum: 1, side: THREE.DoubleSide }), 4); // le fond de la fosse
         for (const e of [-14, -8]) h.ribbon(i20 + e, 1, s => -s.w, 0.05, s => s.w, 0.05, h.mat('peinture', { lum: 1, c: 0xf0b840, side: THREE.DoubleSide }), 2); // le tremplin s'annonce : deux bandes d'or au pied et à mi-pente
@@ -1942,7 +1942,7 @@
         Is('arcBazar', { brique: h.mat('brique', { c: 0x9a7060 }), faience: h.mat('faience') }, arcs, { a: [W] }); Is('arcBazar', { brique: h.mat('faience', { lum: 1 }), faience: h.mat('peinture', { lum: 1, c: 0xf0b840 }) }, arcsL, { a: [W] });
         I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xe8a050 }), lan); I(h.geo('bloc'), h.mat('matGris'), chaines); I(h.geo('houppierRond'), h.mat('peinture', { lum: 1, c: 0xffb850 }), guirB); lots.anes = anesB; // lanternes de cuivre rondes, pendues à la clé des arcs ; guirlandes au-dessus des boutiques
         I(h.geo('boite', 0.5, 0.8, 2.4), bois, comptoirs); { const ms = I(h.geo('cone'), h.mat('peinture', { c: 0xffffff }), sacs); sacs.forEach((p, k) => ms.setColorAt(k, new THREE.Color(p[7]))); if (sacs.length) ms.instanceColor.needsUpdate = true; } // comptoirs chargés de sacs d'épices
-        [h.mat('faience', { lum: 1 }), h.mat('peinture', { lum: 1, c: 0x3a6ec8 }), h.mat('peinture', { lum: 1, c: 0xf0b840 })].forEach((m, k) => I(h.geo('boite', 0.1, 4, 8), m, coudes[k])); // chaque coude a sa couleur : faïence, lapis, or
+        [h.mat('faience'), h.mat('peinture', { c: 0x3a6ec8 }), h.mat('peinture', { c: 0xc89838 })].forEach((m, k) => I(h.geo('boite', 0.1, 4, 8), m, coudes[k])); // mats : allumés, ils éblouissaient au coude // chaque coude a sa couleur : faïence, lapis, or
         [['#a23b2a', '#1f3a6e', '#f0b840'], ['#1f3a6e', '#a23b2a', '#f4ead0'], ['#2aa39a', '#7a2a2a', '#f0b840'], ['#c8323c', '#2f4a2e', '#f0b840']].forEach((c, k) => { I(h.geo('boite', 0.08, 3.2, 2.2), h.mat('tapis', {}, ...c), tap[k]); I(h.geo('boite', 1.3, 0.04, 2.2), h.mat('tapis', {}, ...c), tapSol[k]); });
         { const mc = I(h.geo('cone'), h.mat('peinture', { c: 0xffffff }), cones); cones.forEach((p, k) => mc.setColorAt(k, new THREE.Color(p[7]))); if (cones.length) mc.instanceColor.needsUpdate = true; }
         I(h.geo('houppierRond'), h.mat('peinture', { c: 0xc8742e }), cuivres);
