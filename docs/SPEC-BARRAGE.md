@@ -1,5 +1,7 @@
 # SPEC · Carte BARRAGE (`id: 'barrage'`)
 
+> **Remplacée par la refonte.** Le site, le tracé et le décor en place suivent `propositions/PROPOSITION-barrage.md` (points B-01 à B-45, validés par l'auteur). Ce qui suit est la spec V1, gardée pour mémoire : son tracé, ses indices et sa halle traversée ne correspondent plus au jeu.
+
 Spec de construction, V1. Sources : `propositions/barrage.html` (concept, minimap) et `propositions/moodboard-barrage.html` (47 images Wikimedia Commons en liens directs : il n'y a aucun fichier image dans le dépôt, la page ouvre les photos sur leur page source). Format des cartes : voir l'en-tête de `cartes.js`.
 
 Une centrale hydroélectrique soviétique des années 70, vannes ouvertes. Le circuit monte de 10 m (vallée) à 105 m (crête) en passant *dans* le mur, puis redescend par les lacets de la falaise. Boucle de **5,7 km**, aucun croisement de la route avec elle-même (voir « Décisions de conception »).

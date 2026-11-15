@@ -1931,14 +1931,16 @@
         maille(Q3, QV, QI, mat('peinture', { c: 0x1e2022, side: THREE.DoubleSide })); }
 
       // ---------- les vidanges de fond et le bassin : quatre pertuis dans la moitié ouest, à 12 m au-dessus de l'eau ; chaque jet est un volume en arc qui retombe dans le bassin ----------
-      { const XS = [-101, -77, -53, -29], blanc = mat('ecumeGES', { lum: 0.5 }), brume = mat('brumeGES', { lum: 1, transparent: true, depthWrite: false, side: THREE.DoubleSide }), P3 = [], UV = [], I = [], bru = [];
+      { const XS = [-101, -77, -53, -29], blanc = mat('ecumeGES', { lum: 1, c: 0xffffff }), brume = mat('brumeGES', { lum: 1, transparent: true, depthWrite: false, side: THREE.DoubleSide }), P3 = [], UV = [], I = [], bru = [];
         for (const x of XS) { const [, , z0] = pF(x, 22); bloc(noir, x - 3.4, x + 3.4, z0 - 5, z0 + 0.8, 19, 25); bloc(orange, x - 3.8, x + 3.8, z0 - 3.4, z0 - 2.6 + 3.2, 25.4, 28.6); bloc(betS, x - 5, x + 5, z0 - 2, z0 + 3, 16.5, 18.8); // le pertuis, sa vanne levée, sa lèvre
           const n = 12, m = 8, b0 = P3.length / 3; // le jet : un tube à section en ellipse, qui part à l'horizontale et retombe de 12 m en 52 m
-          for (let k = 0; k <= n; k++) { const t = k / n, zc = z0 + 1 + t * 52, yc = 22 - 12.5 * t * t, a = Math.atan2(-25 * t, 52), rx = 2.6 + 3.4 * t, ry = 1.7 + 2.2 * t;
+          for (let k = 0; k <= n; k++) { const t = k / n, zc = z0 + 1 + t * 52, yc = 22 - 12.5 * t * t, a = Math.atan2(-25 * t, 52), rx = 3.2 + 4.6 * t, ry = 2.2 + 3 * t;
             for (let j = 0; j <= m; j++) { const u = j / m * Math.PI * 2, cy = Math.cos(u) * ry, cx = Math.sin(u) * rx; P3.push(x + cx, yc + cy * Math.cos(a), zc - cy * Math.sin(a)); UV.push(j / m * 2, t * 5); if (k < n && j < m) { const c = b0 + k * (m + 1) + j; I.push(c, c + 1, c + m + 1, c + 1, c + m + 2, c + m + 1); } } }
           bru.push([x, 15, z0 + 60, rnd() * 3, 30, 15, 30], [x + 10, 13.5, z0 + 78, rnd() * 3, 26, 11, 26]); }
         maille(P3, UV, I, blanc);
-        bru.push([-65, 13, 170, 0, 60, 9, 40], [-20, 12.5, 150, 1, 30, 8, 30]); inst(h, h.geo('brume'), brume, bru).renderOrder = 3; }
+        bru.push([-65, 13, 170, 0, 60, 9, 40], [-20, 12.5, 150, 1, 30, 8, 30]);
+        for (const [x, z, , y] of RIV.slice(1, 7)) bru.push([x + 20, y + 5, z + 40, rnd() * 3, 110, 9, 70]); // la brume basse du matin sur la rivière
+ inst(h, h.geo('brume'), brume, bru).renderOrder = 3; }
       bloc(bet, BAS[0] - 4, BAS[0], 36, BAS[3] + 4, 2, 15); bloc(bet, BAS[1], BAS[1] + 4, 28, BAS[3] + 4, 2, 15); bloc(betS, BAS[0], BAS[1], BAS[3], BAS[3] + 4, 2, 10.6); // les bajoyers du bassin et le seuil de sortie
 
       // ---------- l'usine, au pied de la moitié est du mur : halle de 110 × 38 m, baies au sud, conduites forcées sur le parement, les lettres sur le toit ----------
@@ -2040,6 +2042,7 @@
         for (let i = iV0 - 40; ((i - iV0 + 40 + N) % N) < ((P(6) - iV0 + 40 + N) % N); i = (i + 9) % N) for (const sd of [-1, 1]) { const [x, z] = bord(S[i], sd, S[i].w + 6.5); if (dAt(x, z) > W + 5 && riv(x, z) > 6 && !BARRES.some(([bx, bz, r]) => Math.abs(x - bx) < (r ? 9 : 33) && Math.abs(z - bz) < (r ? 33 : 9)) && !poste(x, z)) bou.push([x, hAt(x, z) - 0.3, z, rnd() * 6, 0.9 + rnd() * 0.4]); }
         inst(h, h.geo('cedre'), mat('conifere', {}, '#5e7a44'), cla); inst(h, h.geo('cedre'), mat('conifere', {}, '#33452f'), som); inst(h, h.geo('tronc'), h.mat('tronc'), futs);
         inst(h, h.geo('futBouleau'), mat('ecorceB'), bou); inst(h, h.geo('houppierB'), mat('feuillesB'), bou.map(([x, y, z, r, s]) => [x, y, z, r, s * (0.9 + rnd() * 0.3)])); }
+      { const s = S[P(46)], [x, z] = bord(s, -1, s.w + 16); inst(h, h.geo('rocherGES'), mat('rocheGES'), [[x, hAt(x, z) + 2, z, 0.7, 7, 5, 6], [x + 6, hAt(x + 6, z + 5) + 1, z + 5, 2, 3.5, 2.5, 3]]); } // le rocher de l'épingle haute, repère de freinage
       // enrochements des berges
       { const roc = []; for (let k = 0; k < 2200; k++) { const x = -420 + rnd() * 560, z = 190 + rnd() * 1150, rv = riv(x, z); if (rv < -2 || rv > 6 || dAt(x, z) < W + 4) continue; roc.push([x, hAt(x, z), z, rnd() * 6, 1.2 + rnd() * 2.2, 0.7 + rnd() * 1.2, 1.2 + rnd() * 2.2]); } inst(h, h.geo('rocherGES'), mat('rocheGES'), roc); }
 
