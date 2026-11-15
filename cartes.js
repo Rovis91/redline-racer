@@ -470,7 +470,7 @@
       radio: RADIO.chapada,
       th: { decor: 'chapada', lisse: ['eauJade', 'chuteFil'], routeTex: 'dallesJungle', ombre: { doux: 1, champ: 250 }, frole: 1, fog: 0xa9bb7e, fogD: [18, 190], // brume vert-or de la couleur du fond : à 190 m il ne reste qu'elle (le procédé de touge, de jour)
         sky: [[0, '#5f9aa0'], [0.36, '#9cc0a0'], [0.47, '#b6c68c'], [0.5, '#a9bb7e'], [1, '#a9bb7e']], stars: 0,
-        astre: { dir: [0.42, 0.82, 0.39], col: '#fff0c0', ombre: '#ffe6b0', taille: 150 }, hemi: [0xdcefb0, 0x2a4a2a, 0.8], sun: [0xffe6b0, 1.15], phares: 0.3, bloom: 0.18, scan: 0.05,
+        astre: { dir: [0.42, 0.82, 0.39], col: '#fff0c0', ombre: '#ffe6b0', taille: 150 }, hemi: [0xdcefb0, 0x2a4a2a, 0.8], sun: [0xffe6b0, 1.15], phares: 0.3, bloom: 0.13, scan: 0.05,
         chev: 0, murH: 0, route: ['#77725f', '#5e5a4c', '#8a8672', '#4d6a34', '#77725f', '#77725f', false], mur: ['#5a5646', '#8a8672', '#4d6a34', '#2a2a20'], depart: [0xe8b83a, 0x6a5630, '#f2ecd0', 'departJungle'],
         // la grotte : voûte de roche, salle haute à mi-parcours avec deux puits de lumière ; torches chaudes ; l'œil s'y fait vite (ni noir à l'entrée, ni blanc à la sortie)
         tun: { sol: ['#4a473c', '#5e5a4c', '#5e5a4c', '#5e5a4c', '#4a473c', '#4a473c'], murs: ['#2c2a24', '#2c2a24'], paroi: ['#2c2a24', '#3a362e', '#4a4438', '#141210'], plafond: ['#1c1a16', '#2a2620', '#2a2620', '#2a2620'],

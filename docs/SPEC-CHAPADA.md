@@ -1,3 +1,5 @@
+> **Document périmé.** La carte a été refaite sous le nom « Manuscrit 512 » : voir `propositions/PROPOSITION-chapada.md` (ce qui a été validé) et `propositions/ETAPE2-chapada.md` (ce qui est construit). Ce qui suit décrit l'ancienne carte « Matin sur la Chapada ».
+
 # Carte « Matin sur la Chapada » (id proposé : `chapada`)
 
 Brouillard, gorge et chutes de la Chapada Diamantina (Brésil), à l'aube. Pas d'Asie du Sud-Est, pas de latérite rouge (trop proche de `terre`) : roche gris-bleu, sable blanc, mousse, eau couleur thé.

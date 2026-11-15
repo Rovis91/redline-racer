@@ -2041,8 +2041,11 @@
       inst(h, h.geo('tronc'), ecorce, futs); cimes.forEach((l, k) => inst(h, h.geo('cime'), feuilles[k], l)); // tous les arbres, ceux de la cité et le houppier du fromager compris
       insts(h, 'torche', { bois, fer, flamme }, torches);
       // ---------- Z5, dedans : des côtes de roche le long des parois de la grotte, pour qu'elle ne soit pas un couloir ----------
-      { const cotes = []; for (let i = t0 + 6, k = 0; i < t1 - 4; i += 5, k++) { const s = S[i], sd = k & 1 ? 1 : -1, [x, z] = bord(s, sd, s.w + 0.9); cotes.push([x, s.y + 2.6 + rnd() * 2, z, rnd() * 6, 1.6 + rnd(), 4 + rnd() * 3, 1.6 + rnd()]); }
+      { const cotes = []; for (let i = t0 + 6, k = 0; i < t1 - 4; i += 5, k++) { const s = S[i], sd = k & 1 ? 1 : -1, [x, z] = bord(s, sd, s.w + 1.2); cotes.push([x, s.y + 2.6 + rnd() * 2, z, rnd() * 6, 1.3 + rnd() * 0.6, 4 + rnd() * 3, 1.3 + rnd() * 0.6]); } // elles dépassent la paroi de moins de 0,8 m
         inst(h, h.geo('rocher'), mat('rocheMousse', { c: 0x8a8478 }), cotes); }
+      // ---------- le saut de la descente (C-6) : les degrés écroulés d'un escalier de la cité, de part et d'autre du tremplin ----------
+      { const deg = []; for (let k = 0; k < 7; k++) for (const sd of [-1, 1]) { const s = S[P(49) - 18 + k * 3], [x, z] = bord(s, sd, s.w + 2.2); deg.push([x, s.y - 0.6 + k * 0.12, z, h.across(s) + (rnd() - 0.5) * 0.3, 2.6, 1.2 + k * 0.25, 5.2]); }
+        inst(h, h.geo('bloc'), pierre, deg); for (const sd of [-1, 1]) auBord('obelisque', CITE, P(49) + 2, sd, S[P(49)].w + 2.4, 8); }
     },
     // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
     // Le nord (z < 0) est la mer. Intérieurs : la grotte est le tunnel du moteur ; le marché et le lobby sont des halles posées autour de la route (toit haut, ombre franche), sans mode tunnel.
