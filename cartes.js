@@ -420,7 +420,7 @@
       radio: RADIO.canal.map((s, i) => ({ ...s, name: ['RADIO SHIRAZ', 'BAZAR 122', 'MARVDASHT FM'][i], fq: ['99.2', '122.0', '70.7'][i], genre: ['FUNK ROYAL', 'ELECTRO DU BAZAR', 'ROCK DES DUNES'][i] })),
       th: { decor: 'perse', fog: 0xe0a060, fogD: [140, 1600], sky: [[0, '#1d2a5a'], [0.22, '#1d2a5a'], [0.23, '#5a3a78'], [0.34, '#5a3a78'], [0.35, '#c8505a'], [0.42, '#c8505a'], [0.43, '#f08a3a'], [0.48, '#f08a3a'], [0.49, '#ffc860'], [0.5, '#e0a060'], [1, '#e0a060']], stars: 0,
         astre: { dir: [-0.8, 0.08, 0.4], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0x8a78b8, 0xc89a6a, 0.8], sun: [0xffa850, 0.95], phares: 0.3, bloom: 0.04, scan: 0.05, chaleur: 0.4,
-        chev: 1, murH: 0, route: ['#8a7a64', '#968670', '#f4ead0', '#2aa39a', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
+        chev: 1, murH: 0, route: ['#857664', '#918270', '#f4ead0', '#f4ead0', '#c8323c', '#f4ead0', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
         tun: { sol: ['#4a4644', '#54504c', '#f4ead0', '#d8c8a8', '#c8323c', '#2a1a10'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#1d3a8a', '#f0b840', '#2aa39a', '#1d2a5a'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
           fog: 0x5a3020, portail: 0x6a3a22, neons: [0xffb850, 0xf0b840], reflets: ['#5a2a18', '#5a4418'], coque: 80, eclat: 1 },
         hud: { y: '#f0b840', c: '#2aa39a', r: '#c8323c', fond: 'rgba(20,24,56,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'PERSEPOLIS · COUCHANT'], titre: ['ROUTE', 'ROYALE'] } } },

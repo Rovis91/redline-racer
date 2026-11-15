@@ -10,7 +10,7 @@
     ['sculpte', 1.9, 1, 1.9, x, H - 2.8, z, R45], ['sculpte', 1.3, 1.3, 1.3, x, H - 1.7, z], ['sculpte', 4.6, 1.2, 1.5, x, H - 0.4, z], ['sculpte', 1.1, 1.2, 1.4, x - 2.6, H - 0.1, z], ['sculpte', 1.1, 1.2, 1.4, x + 2.6, H - 0.1, z], ['or', 4.8, 0.25, 1.6, x, H + 0.3, z]];
   Object.assign(FORMES, {
     // REFS §4 : colonne persépolitaine de H m : socle, base en cloche (deux boîtes croisées), fût cannelé octogonal, chapiteau, deux protomés de taureau dos à dos (X), poutre du plafond posée dessus
-    colonnePerse: (H = 19) => [['pierre', 3.4, 0.6, 3.4, 0, 0.3, 0], ['pierre', 2.6, 1.2, 2.6, 0, 1.2, 0], ['pierre', 2.6, 1.2, 2.6, 0, 1.2, 0, R45],
+    colonnePerse: (H = 19) => [['pierre', 2.6, 0.5, 2.6, 0, 0.25, 0], ['pierre', 2, 1.1, 2, 0, 1.05, 0], ['pierre', 2, 1.1, 2, 0, 1.05, 0, R45],
       ['fut', 1.2, H - 6, 1.2, 0, 1.8 + (H - 6) / 2, 0, null, 1], ['fut', 1.2, H - 6, 1.2, 0, 1.8 + (H - 6) / 2, 0, R45], ['sculpte', 2.4, 1, 2.4, 0, H - 4.4, 0, R45], // couronne de palmes (REFS §4)
      
       ['pierre', 2.2, 1.4, 2.2, 0, H - 3.5, 0], ['pierre', 1.6, 1.2, 1.6, 0, H - 2.3, 0, R45],
