@@ -385,3 +385,37 @@ Tests verts à chaque tour, trace or refaite à chaque changement de tracé. Pas
 3. **Le saut** (Moments forts). Au-delà de 2 m de haut, la réception dépasse le seuil de réception dure (`c.land > 9`). Cela élimine le pilote en glisse de `outils/traces-or.js` et casse la trace or. Un vrai envol (3 s en l'air) demanderait une réception adoucie en pente descendante (`sauts` avec une rampe de réception, dans `sim.js` près de la ligne 115).
 4. **La nitro au ras des parois ne se voit pas** (Profondeur, Lisibilité). Le pilote automatique ne frôle jamais (`autopilot` dans `sim.js`), et aucun effet à l'image ne montre la jauge qui se remplit par la `corde` (pas d'étincelles dans `game.js`). Les relecteurs ne peuvent juger que sur le bandeau jaune.
 5. **Le bruit de notation.** D'un relecteur neuf à l'autre, un même critère varie de 0,5 à 1 point sur des changements mineurs (Moments forts 8 → 6,5 → 7,5 → 6,5). Les relecteurs voient aussi les captures en 480 × 270 et ouvrent rarement toutes les images. Les captures en haute résolution prévues par la session « moteur commun » aideraient.
+
+## Série 2 : options moteur, captures en 1920, panel étalonné en aveugle
+
+La série a commencé par la fusion de `claude/moteur-options-cartes-31146a` (dd5d95b). Elle a apporté la vraie cénote, en `th.tun.h`, `voute`, `ouv` et `rayons` : une salle de 9 à 18 m sous la clé, voûtée, avec trois trous dans la voûte et leurs colonnes de lumière, des parois à la largeur roulable (`large [26, 35, 12]`) et le tertre percé au-dessus des trous. Elle a aussi apporté le filtrage lisse de l'eau (`lisse`), `chausseeFine` et `ombre: { doux: 1 }`.
+
+**Protocole.** Les captures sont en 1920 × 1080 avec le rendu du jeu à côté (`taille=1920x1080&jeu=1`) : un tour `pas=5`, 18 `idx=` (rapprochés sur l'épingle, les trous de la grotte et le saut) et deux vues de côté du saut. Chaque relecteur reçoit des planches contact numérotées (`captures/planche.py`). Chaque panel compte quatre nouveaux relecteurs Sonnet, dont la consigne est d'ouvrir toutes les images ; ils l'ont fait à partir du tour 1. Ils notent en aveugle la carte A (ville, capturée une fois et réutilisée) et la carte B (plage), sans savoir laquelle est la nouvelle. Les mesures sont anonymisées (`captures/monte-panel.sh`).
+
+| Critère (poids) | B t0 | B t1 | B t2 | B t3 | A t0 | A t1 | A t2 | A t3 |
+|---|---|---|---|---|---|---|---|---|
+| Rythme (20 %) | 8 | 8 | 8 | 8 | 5 | 5,5 | 5,5 | 5,5 |
+| Moments forts (15 %) | 7,5 | 7,5 | 8,5 | 8 | 6 | 6 | 6 | 6,5 |
+| Lisibilité (15 %) | 7 | 7,5 | 7 | 7,75 | 7,25 | 8 | 8 | 8,25 |
+| Profondeur (15 %) | 7,5 | 8 | 7,5 | 8,5 | 5 | 4,5 | 5 | 6,5 |
+| Identité (15 %) | 8 | 8,5 | 8 | 8,5 | 8,5 | 7,5 | 8 | 8,5 |
+| Dépassements (10 %) | 8 | 7 | 8 | 7 | 6 | 7 | 6 | 6 |
+| Tracé et décor (10 %) | 8 | 8,5 | 8,5 | 8,5 | 8 | 7,75 | 8,25 | 8 |
+| **Note pondérée** | **7,70** | **7,88** | **7,90** | **8,06** | **6,41** | **6,48** | **6,58** | **6,96** |
+| **Écart B − A** | +1,29 | +1,40 | +1,33 | +1,10 | | | | |
+| Commit | dcd0b75 | 51355e4 | 7e10bb3 | da1bce4 | | | | |
+
+**Arrêt.** D'un tour à l'autre, la note de plage monte de 0,18, puis de 0,02, puis de 0,16 : chaque fois moins que le seuil de 0,3. C'est trois tours de suite. Sur la série, plage gagne 0,36, mais la référence, qui n'a pas changé, gagne 0,55 dans le même temps. L'écart avec la référence passe de +1,29 à +1,10 : la hausse brute vient des relecteurs, pas de la carte.
+
+Base gardée : le tour 1 n'a pas franchi le seuil, mais ses changements corrigent des défauts relevés par tous (contraste du sable, parois, obstacles recalés sur la trajectoire). Ils n'ajoutent pas de mécanique ; je les ai gardés plutôt que de revenir au tour 0.
+
+**Temps d'image**, mesuré côte à côte, la machine chargée de 55 à 65 % : plage 7,2 à 7,5 ms, ville 5,6 à 6,4 ms, canal 6,1 à 6,7 ms. Plage est environ 15 % au-dessus des références. Passes de dessin : plage 348 à 363, ville 344 à 358 depuis la fusion. Tests verts à chaque tour ; trace or refaite (45,9 s, seuil 49,6 s).
+
+### Ce qui bloque encore, et où
+
+1. **Rayons de la grotte faibles dans le rendu du jeu, sortie noire.** Tous les relecteurs le disent : les colonnes se lisent dans le rendu fin, à peine dans le rendu du jeu (270 lignes agrandies). La colonne du moteur est un cylindre additif à opacité fixe de 0,55 (`game.js`, bloc « une colonne de lumière par ouverture », vers la ligne 512). Il faudrait une opacité par carte (`th.tun.rayonsForce`) ; j'en ai doublé une moi-même (`rayonDoux`), au prix d'un voile. La sortie noire vient de l'adaptation de l'œil, qui ne connaît qu'une constante pour toutes les cartes (`OEIL_CLAIR`, `game.js` vers la ligne 209). Il faudrait une adaptation par carte, ou une lumière de sortie posée par le moteur.
+2. **Voûte coûteuse en passes.** La voûte est faite de 10 facettes par morceau, chacune un maillage (`game.js`, `for (let j = 0; j < NV; j++) ribbon(…)` vers la ligne 503), soit une quarantaine de passes de plus avec trois trous. Les fondre en une géométrie par morceau les ramènerait à quatre. Le moteur les crée avant le décor, je ne peux pas les fondre de mon côté.
+3. **La coupe par la place plafonne à −0,37 s.** Cette fois, toute la série l'a jugée « bien dosée » et pas seulement trop faible. Pour la rendre plus payante, il faudrait une surface propre à la place (`sim.js`, `T.surfL` : une seule surface hors route par carte).
+4. **Le saut reste court.** Au-delà de 2 m, la réception dure (`c.land > 9`) casse la trace or (`sim.js`, `vole`, et `outils/traces-or.js`).
+5. **Tracé plat et chaussée droite.** Les relecteurs demandent 3 à 5 m de relief dans la garrigue et une courbe sur la chaussée de la lagune. Ce n'est pas un blocage moteur. Mais chaque essai de courbe déplace la trajectoire du pilote dans tout le rééchantillonnage, donc l'allée d'obstacles de la plage, qui doit alors être recalculée (`captures/piles.js`). Je ne l'ai pas tenté une deuxième fois.
+6. **Le bruit du panel**, même étalonné : la référence, inchangée, a bougé de 0,55 point en quatre tours. Le seuil de 0,3 est en dessous de ce bruit.
