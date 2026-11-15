@@ -1917,7 +1917,7 @@
           if ((zn === 'gorge' && q.cote < 0 && y < q.s.y + niv(q.i) - 0.5) || ravin(x, z) > 0.3) c = dalle; // le lit de la rivière et le ravin du pont
           c = mix(c, roc, lisse(0.85, 0.6, nr.getY(v))); const k = 0.85 + 0.3 * u; C.set([c[0] * k, c[1] * k, c[2] * k], v * 3); }
         ge.setAttribute('color', new THREE.BufferAttribute(C, 3)); }
-      const eau = h.mat('eauCiel', { ...DS, lum: 1, rep: [5, 1], c: 0xd8d8d0 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
+      const eau = h.mat('eauCiel', { ...DS, lum: 1, rep: [5, 1], c: 0xb8b4a8 }), bois = h.mat('tronc'), planches = h.mat('planches', DS), mousse = h.mat('feuillage', { c: 0x8aa850 });
       const gres = h.mat('grainGres', { vertexColors: true, emissive: 0x3a342c, ...DS }), pierre = h.mat('pierreSeche'), pierreR = h.mat('pierreSeche', { rep: [0.35, 1] }, 1);
       const chuteM = h.mat('chute', { ...DS, lum: 1, c: 0xccd8d8, transparent: true, depthWrite: false, rep: [6, 1] }), lisseBord = { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 };
       const tranche = (a, b, f) => { const l = (b - a + N) % N; f((a + N) % N, l); }; // ruban de l'échantillon a à b
@@ -1931,7 +1931,7 @@
           prev = cur; if (k === cnt) break; }
         const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
         ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(idx); ge.computeVertexNormals();
-        const me = new THREE.Mesh(ge, m); me.castShadow = me.receiveShadow = true; h.scene.add(me); return me; };
+        const me = new THREE.Mesh(ge, m); me.receiveShadow = true; h.scene.add(me); return me; }; // sans ombre portée : à la résolution de la carte d'ombre, celle des falaises barrait la route en damier
       // REFS 1 : une falaise de grès en bancs horizontaux. o0(s) = écart du pied à l'axe, Hf(i) = hauteur du sommet (plat : les bancs au-dessus sont rabotés),
       // y0(s) = hauteur du pied. Chaque banc a son épaisseur, son retrait (corniche ou surplomb) et sa teinte ; des contreforts et des couloirs en plan ; des coulures noires.
       // corniche(i, s, o, y) : appelé sur les replats, pour y poser fougères et broméliacées
@@ -1939,17 +1939,17 @@
       const falaise = (o0, Hf, y0 = () => -1.5, corniche, Hmax = 90) => {
         const ep = [], rec = [], tc = []; for (let k = 0, y = 0; y < Hmax; k++) { ep.push(1.8 + rnd() * rnd() * 9); rec.push((rnd() - 0.35) * 4.5); tc.push(COL(PALG[rnd() * PALG.length | 0], 0.85 + rnd() * 0.3)); y += ep[k]; }
         const nA = bruit(), nB = bruit(), nC = bruit(), joint = COL('#3a3532'), mo = COL('#5f7a3a');
-        return (i, s) => { const H = Hf(i), b0 = y0(s), base = o0(s) + 3.5 * nA(i * 0.03) + 2 * nB(i * 0.13), noir = lisse(0.6, 0.68, nC(i * 0.12)), L = []; let y = b0, o = base;
+        return (i, s) => { const H = Hf(i), b0 = y0(s), base = o0(s) + 3.5 * nA(i * 0.03) + 3.5 * nB(i * 0.22) ** 2, noir = lisse(0.6, 0.68, nC(i * 0.12)), L = []; let y = b0, o = base;
           for (let k = 0; k < ep.length; k++) { const dy = k ? 1.6 * (nA(i * 0.025 + k * 7) - 0.5) : 0, dz = 1.6 * (nA(i * 0.025 + k * 7 + 7) - 0.5), ya = Math.min(H, y + dy), yb = Math.min(H, y + ep[k] + dz), ob = base + rec[k] + 0.8 * (nB(i * 0.09 + k * 17) - 0.5), f = 1 - 0.85 * noir;
             if (k) L.push([o, ya, ob > o ? mo : joint], [ob + 0.3, ya, ob > o ? mo : joint], null); // le replat (vert) ou le dessous du surplomb (sombre)
             if (corniche && k && ob > o + 0.5 && ya < H - 1 && rnd() < 0.08) corniche(i, s, (o + ob) / 2, ya);
-            L.push([ob + 0.3, ya, tc[k].map(v => v * 0.3 * f)], [ob + 0.28, Math.min(yb, ya + 0.6), tc[k].map(v => v * 0.55 * f)], [ob - 0.25, yb, tc[k].map(v => v * f)], null); o = ob - 0.25; y += ep[k]; } // chaque banc : le joint sombre, puis la pierre qui s'éclaircit vers le haut
+            L.push([ob + 0.3, ya, tc[k].map(v => v * 0.3 * f)], [ob + 0.28, Math.min(yb, ya + 0.9), tc[k].map(v => v * 0.4 * f)], [ob - 0.25, yb, tc[k].map(v => v * f)], null); o = ob - 0.25; y += ep[k]; } // chaque banc : le joint sombre, puis la pierre qui s'éclaircit vers le haut
           const c = tc[(i >> 6) % tc.length]; L.push([o, H - 1.8, joint], [o - 1.6, H - 1.8, joint], null, [o - 1.6, H - 1.8, c.map(v => v * 0.7)], [o - 1.6, H, c], null, [o - 1.6, H, mo], [o + 9, H + 0.4, mix(mo, joint, 0.3)]); return L; }; }; // la corniche en saillie au sommet
 
       // ---------- la route : chaussée à la demi-largeur réelle (s.w) ; au gué, des dalles sur les bords et l'eau au milieu ; au pont, des planches ----------
       const chaussee = h.mat('chaussee', { side: THREE.DoubleSide, gloss: 0.08, ...lisseBord }, ...h.TH.route), glis = h.mat('glissiere', DS, h.TH.mur);
       for (const [a, b] of [[g1, p0], [p1, g0]]) tranche(a, b, (i, l) => h.ribbon(i, l, s => -s.w, 0, s => s.w, 0, chaussee, 32));
-      const gueM = h.mat('eauCiel', { ...DS, lum: 1, c: 0xe0dcd0, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
+      const gueM = h.mat('eauCiel', { ...DS, lum: 1, c: 0xc4c0b4, ...lisseBord }); tranche(iF0, iF1, (i, l) => h.ribbon(i, l, -W, 0.04, W, 0.04, gueM, 12)); // le courant passe au milieu
       tranche(g0, g1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * W, 0.03, s => sd * s.w, 0.03, h.mat('lajedo', { ...DS, ...lisseBord, rep: [2, 1], c: 0x8a7e70 }), 6); }); // REFS 3 : les bords secs du gué sont des dalles de grès
       { const ecu = h.mat('peinture', { lum: 1, c: 0xf2efe6, transparent: true, opacity: 0.75, depthWrite: false, ...lisseBord, side: THREE.DoubleSide }); // l'écume crème au bord du courant
         tranche(iF0, iF1, (i, l) => { for (const sd of [-1, 1]) h.ribbon(i, l, sd * (W - 0.25), 0.06, sd * (W + 0.45), 0.06, ecu, 6); }); }
@@ -2006,6 +2006,7 @@
           if (rnd() < 0.2) { const [x, z] = bord(s, -1, s.w + 7 + rnd() * 4); ecume.push([x, s.y + niv(i) + 0.4, z, rnd() * 6, 2 + rnd() * 3, 0.8 + rnd(), 2 + rnd() * 3]); } }
         const pf = new THREE.PlaneGeometry(1, 1); const mf = inst(h, pf, h.mat('peinture', { lum: 1, c: 0xffffff, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false }), fil); fil.forEach((p, k) => mf.setColorAt(k, new THREE.Color(p[7]))); mf.castShadow = false;
         inst(h, h.geo('cime'), h.mat('peinture', { c: 0xc8d0d0 }), ecume.map(p => [p[0], p[1], p[2], p[3], p[4] / 5, p[5] / 6, p[6] / 5])); // l'écume au pied
+        tranche(gal0, gal1, (i, l) => h.ribbon(i, l, s => -(s.w + 6.5), s => nivS(s) + 0.15, s => -(s.w + 11.5), s => nivS(s) + 0.15, h.mat('peinture', { lum: 1, c: 0xeef2f0, transparent: true, opacity: 0.7, depthWrite: false, side: THREE.DoubleSide }), 6)); // l'écume au pied du rideau
         for (let k = 0; k < 4; k++) { const i = (gal0 + Math.round((k + 0.5) / 4 * ((gal1 - gal0 + N) % N))) % N, s = S[i], [x, z] = bord(s, -1, s.w + 2); h.lum(i, x, s.y + 4, z, 0xcfe8e4, 26, 0.7); } } // le jour qui traverse l'eau
       // à l'entrée, un voile d'eau en travers de la route : on le traverse, la vue se coupe un instant
       { const s = S[(gal0 + 6) % N], vg = new THREE.PlaneGeometry(7, 2 * s.w + 8); vg.rotateZ(Math.PI / 2); const v = new THREE.Mesh(vg, chuteM); v.position.set(s.x, s.y + 4, s.z); v.rotation.y = h.across(s); h.scene.add(v); }
@@ -2047,12 +2048,12 @@
         for (let i = 0; i < N; i += 6) { const s = S[i]; if (Math.abs(s.k) < 0.006 || entre(i, g0, g1) || entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue;
           const side = s.k > 0 ? -1 : 1, [x, z] = bord(s, side, s.w + 1.4); pl[side < 0 ? 0 : 1].push([x, s.y + 2.4, z, h.across(s) + Math.PI / 2, 2.4, 2.4, 2.4]); for (const u of [-1.2, 1.2]) { const [px, pz] = bord(s, side, s.w + 1.4 + u); po.push([px, s.y + 0.8, pz, 0, 1.2, 2.6, 1.2]); } }
         pl.forEach((l, k) => { inst(h, h.geo('boite', 0.08, 0.9, 1.7), fl[k], l).castShadow = false; }); inst(h, h.geo('boite', 0.12, 1, 0.12), bois, po).castShadow = false; }
-      { const bal = [], ref = [], dist = [[], [], []];
+      { const bal = [], ref = [], dist = [[], [], []], poD = [];
         for (let i = 0; i < N; i += 8) { const s = S[i]; if (entre(i, p0, p1) || entre(i, gal0 - 10, gal1 + 10)) continue; const gue = entre(i, iF0, iF1);
           for (const sd of [-1, 1]) { const [x, z] = bord(s, sd, gue ? W + 0.3 : s.w + 0.9), y = gue ? s.y + niv(i) : s.y; bal.push([x, y + 0.7, z, h.across(s), 1.8, 1.2, 1.8]); ref.push([x, y + 1.35, z, h.across(s), 1.8, 1.6, 1.8]); } }
-        for (const k of [3, 5, 8, 11, 15, 21]) { const side = k === 15 || k === 21 ? 1 : -amont(S[P(k)]); [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.2, z, h.across(s) + Math.PI / 2, 2.4, 2.4, 2.4]); }); }
+        for (const k of [3, 5, 8, 11, 15, 21]) { const side = k === 15 || k === 21 ? 1 : -amont(S[P(k)]); [150, 100, 50].forEach((m, j) => { const s = S[(P(k) - Math.round(m / 2) + N) % N], [x, z] = bord(s, side, s.w + 1.6); dist[j].push([x, s.y + 2.8, z, h.across(s) + Math.PI / 2, 3.4, 3.4, 3.4]); for (const u of [-1.6, 1.6]) { const [px, pz] = bord(s, side, s.w + 1.6 + u); poD.push([px, s.y + 1, pz, 0, 1.2, 3.4, 1.2]); } }); }
         for (const m of [inst(h, h.geo('boite', 0.18, 1.2, 0.18), h.mat('peinture', { c: 0xe8e4d8 }), bal), inst(h, h.geo('boite', 0.2, 0.18, 0.2), h.mat('peinture', { lum: 1, c: 0xff6a2a }), ref)]) m.castShadow = false; // au soleil rasant, leurs ombres barraient la route en damier
-        ['150', '100', '50'].forEach((t, j) => { inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j]).castShadow = false; }); }
+        inst(h, h.geo('boite', 0.12, 1, 0.12), bois, poD).castShadow = false; ['150', '100', '50'].forEach((t, j) => { inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j]).castShadow = false; }); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
       const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches'), lanterne = h.mat('peinture', { lum: 1, c: 0xffb45a });
       for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + 7 + rnd() * rnd() * 40, [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
@@ -2068,7 +2069,7 @@
       const touffes = [[], [], []], sempre = [];
       // un arbre de la forêt de galerie (REFS 4) : fût de 10 à 24 m, clair ou sombre, couronne de 2 à 4 houppiers de trois verts
       const arbre = (x, y, z, t, prochePiste, loin) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]); // sans fût, les houppiers lointains flottaient
-        const sorte = rnd(), cc = sorte < 0.06 ? cimesF : sorte < 0.14 ? cimesE : cimes[rnd() * 4 | 0]; // ipê en fleur, embaúba, ou l'un des quatre verts
+        const sorte = rnd(), cc = sorte < 0.1 ? cimesF : sorte < 0.2 ? cimesE : cimes[rnd() * 4 | 0]; // ipê en fleur, embaúba, ou l'un des quatre verts
         const nc = 2 + (rnd() * 2 | 0); for (let c = 0; c < nc; c++) { const r = (0.8 + rnd() * 1.8) * t, a = rnd() * 6.28; cc.push([x + Math.cos(a) * r, y + Ht - 1 + rnd() * 3 * t, z + Math.sin(a) * r, rnd() * 6, (0.9 + rnd() * 0.7) * t, (0.85 + rnd() * 0.6) * t, (0.9 + rnd() * 0.7) * t]); }
         if (rnd() < 0.3) coupes.push([x + 0.4, y + 3 + rnd() * Ht * 0.4, z, rnd() * 6, 0.5]); // une broméliacée épiphyte sur le fût
         if (prochePiste && rnd() < 0.7) for (let c = 0; c < 1 + (rnd() * 3 | 0); c++) { const ll = 4 + rnd() * 8, a = rnd() * 6.28, r = 1 + rnd() * 3; lianes.push([x + Math.cos(a) * r, y + Ht - ll / 2, z + Math.sin(a) * r, rnd() * 6, 1, ll, 1]); } };
@@ -2080,7 +2081,7 @@
         if (d < a + 1 && (zn === 'lacets' && q.cote === amont(q.s) && paroiLacet(q.i))) continue; // le pied de la falaise
         if (zn === 'plateau') { // REFS 5 : campo rupestre
           if (d < 2.5) continue; // le muret
-          if (r < 0.2) { if (d < 60) touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, (d < 15 ? 1.4 : 0.8) + rnd() * 1.2, 0.6 + rnd() * 1.2]); }
+          if (r < 0.2) { if (d < 60) touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, (d < 15 ? 1.4 : 0.8) + rnd() * 1.2, 0.4 + rnd() * 0.6]); }
           else if (r < 0.5) { if (d < 120 && rnd() < 0.3) sempre.push([x, y - 0.05, z, rnd() * 6, 0.5 + rnd() * 0.4, 0.5 + rnd() * 0.4]); }
           else if (r < 0.525) for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.8 + rnd() * 1.2]); // en groupes
           else if (r < (d < 15 ? 0.64 : 0.56)) lajedos.push([x, y - 0.3, z, h.across(q.s) + Math.PI / 2 + (rnd() - 0.5) * 0.6, (d < 15 ? 0.5 : 0.6) + rnd() * (d < 15 ? 0.6 : 1.4)]);
@@ -2102,7 +2103,7 @@
         for (const sd of [-1, 1]) { const a = acc(i, sd), at = (o, f) => { const [x, z] = bord(s, sd, o), y = o < s.w + a + 0.5 ? s.y + A(Math.min(o - s.w, a)) : g.hAt(x, z); f(x, y, z); }, o = () => s.w + 2.6 + rnd() * rnd() * 34;
           if (zn === 'plateau' && rnd() < 0.015) at(s.w + 12 + rnd() * 40, (x, y, z) => { const t = 0.6 + rnd() * 0.4, Ht = 9 * t; arbres.push([x, y + Ht / 2, z, rnd() * 6, t, Ht / 5.2, t]); for (let c = 0; c < 3; c++) cimesF.push([x + (rnd() - 0.5) * 3, y + Ht, z + (rnd() - 0.5) * 3, rnd() * 6, t, 0.8 * t, t]); }); // un ipê en fleur isolé
           if (zn === 'plateau') { // REFS 5 : campo rupestre, à touche-touche au bord
-            for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.6 + rnd() * 1.2]));
+            for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.4 + rnd() * 0.6])); // plus larges que hautes : hautes, elles faisaient des sapins
             if (rnd() < 0.35) at(s.w + 4 + rnd() * rnd() * 30, (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.5, 0.6 + rnd() * 0.8])); // le long de la route : en travers, la dalle de 12 m mordait la chaussée
             if (rnd() < 0.1) at(s.w + 3.5 + rnd() * rnd() * 25, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
             if (rnd() < 0.5) at(s.w + 5 + rnd() * 30, (x, y, z) => { for (let c = 0; c < 4; c++) sempre.push([x + (rnd() - 0.5) * 3, y - 0.05, z + (rnd() - 0.5) * 3, rnd() * 6, 0.5 + rnd() * 0.4, 0.5 + rnd() * 0.4]); }); }
@@ -2159,6 +2160,7 @@
       const debout = new THREE.PlaneGeometry(1, 1), vd = []; for (let i = P(19); dans(i, 19, 23); i = (i + 8) % N) { const s = S[i]; vd.push([s.x, s.y + 3, s.z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.4, 45, 12, 1]); }
       for (let k = 0; k < 60; k++) { const i = (P(23) + (rnd() * ((P(29) - P(23) + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, rnd() < 0.5 ? -1 : 1, s.w + 18 + rnd() * 45); vd.push([x, g.hAt(x, z) + 5, z, h.across(s) + (rnd() - 0.5) * 0.5, 40 + rnd() * 20, 12, 1]); } // les plans de la forêt se séparent dans le blanc
       // la brume en couches, partout : des voiles debout à 30-160 m, parallèles à la route (les nappes à plat ne se voient pas de profil)
+      for (let k = 0; k < 24; k++) { const i = (gal0 + (rnd() * ((gal1 - gal0 + N) % N) | 0)) % N, s = S[i], [x, z] = bord(s, -1, s.w + 7 + rnd() * 3); vd.push([x, s.y + niv(i) + 2.5 + rnd() * 2, z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.3, 14 + rnd() * 10, 6 + rnd() * 3, 1]); } // la brume qui monte du bassin
       for (let k = 0; k < 240; k++) { const i = rnd() * N | 0, s = S[i], zn = zone(i), sd = zn === 'lacets' ? -amont(s) : rnd() < 0.5 ? -1 : 1, o = s.w + (k < 80 ? 14 : 30) + rnd() * (k < 80 ? 26 : 130), [x, z] = bord(s, sd, o);
         const y = zn === 'lacets' || zn === 'gorge' ? s.y - 8 + rnd() * 10 : g.hAt(x, z) + 3; vd.push([x, y, z, h.across(s) + (rnd() - 0.5) * 0.6, 60 + rnd() * 60, 10 + rnd() * 10, 1]); }
       const vds = inst(h, debout, h.mat('brume', { lum: 1, c: 0xe4ecf0, transparent: true, opacity: 0.24, depthWrite: false, side: THREE.DoubleSide }), vd); vds.castShadow = vds.receiveShadow = false;
