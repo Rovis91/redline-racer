@@ -63,7 +63,7 @@
     // auvent rayé des étals : bandes de deux couleurs, frange festonnée
     auvent: (a, b) => [32, 16, (g, { R }) => { R(g, b, 0, 0, 32, 16); for (let x = 0; x < 32; x += 8) { R(g, a, x, 0, 4, 16); R(g, b, x + 4, 0, 4, 16); } R(g, IVOIRE, 0, 13, 32, 1); for (let x = 0; x < 32; x += 4) R(g, a, x, 14, 2, 2); }, 4], // bandes de 0,5 m : plus fines, elles se fondaient en blanc à distance
     // nez des marches du grand escalier, posé sur la chaussée
-    marchesPerse: () => [32, 16, (g, { R }) => { R(g, '#b8a07c', 0, 0, 32, 16); R(g, '#a88e70', 0, 9, 32, 7); R(g, '#3e342d', 0, 0, 32, 2); R(g, '#f0e0c0', 0, 2, 32, 1); for (const x of [0, 11, 22]) R(g, '#6a5a48', x, 3, 1, 13); }], // grandes dalles : joints de marche et joints en long // REFS §2 : marches basses de pierre, nez d'ombre et arête claire
+    marchesPerse: () => [32, 16, (g, { R }) => { R(g, '#b8a07c', 0, 0, 32, 16); R(g, '#a88e70', 0, 9, 32, 7); R(g, '#3e342d', 0, 0, 32, 4); R(g, '#f0e0c0', 0, 4, 32, 1); for (const x of [0, 11, 22]) R(g, '#6a5a48', x, 3, 1, 13); }], // grandes dalles : joints de marche et joints en long // REFS §2 : marches basses de pierre, nez d'ombre et arête claire
     // façade de palais vue de loin (fond, à contre-jour) : iwan central, arcades sur deux niveaux, frise de faïence, toit plat
     palais: () => [64, 32, (g, { R }) => {
       R(g, '#b0905a', 0, 0, 64, 32); R(g, TURQ, 0, 4, 64, 2); R(g, '#8a6a40', 0, 0, 64, 2);
@@ -112,7 +112,7 @@
       else { R(g, S2, 0, 20, 10, 8); R(g, S1, 0, 25, 5, 4); R(g, '#f0b840', 4, 13, 2, 7); R(g, '#f0b840', 8, 12, 2, 8); R(g, '#c4a478', 5, 22, 2, 1); } // tête de taureau, cornes d'or
     }],
     // REFS §1 : joints de grandes dalles sur la chaussée de la route royale, transparents ailleurs (les marquages du moteur restent visibles) ; x en travers, y le long
-    joints: () => [32, 32, (g, { R }) => { g.clearRect(0, 0, 32, 32); R(g, '#4a3e32', 0, 0, 32, 1); R(g, '#4a3e32', 0, 16, 32, 1); for (const [x, y] of [[5, 1], [13, 17], [21, 1], [29, 17]]) R(g, '#4a3e32', x, y, 1, 15); }],
+    joints: () => [32, 32, (g, { R }) => { g.clearRect(0, 0, 32, 32); R(g, '#7a6a58', 0, 0, 32, 1); R(g, '#7a6a58', 0, 16, 32, 1); }], // joints en travers seulement, clairs : sans damier ni taches
     // REFS §9 : calcaire du Kuh-e Rahmat, gris miel en strates horizontales, éboulis plus sombres au pied
     strates: () => [64, 64, (g, { R, alea }) => { R(g, '#8a7c6c', 0, 0, 64, 64); for (let y = 0; y < 64; y += 5 + (alea() * 4 | 0)) { R(g, '#5f5046', 0, y, 64, 1); R(g, '#a8987e', 0, y + 1, 64, 1); }
       for (let i = 0; i < 120; i++) R(g, alea() < 0.5 ? '#6e6052' : '#9a8a76', alea() * 64 | 0, alea() * 64 | 0, 2 + (alea() * 4 | 0), 1); R(g, '#5f5046', 0, 56, 64, 8); }, 40],
