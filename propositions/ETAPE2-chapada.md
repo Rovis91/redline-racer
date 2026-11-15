@@ -9,6 +9,26 @@ Version jouable construite d'après [PROPOSITION-chapada.md](PROPOSITION-chapada
 Rendu réel du jeu (270 lignes), trois suites de trois images à 8 m d'écart :
 ![rendu du jeu, en mouvement](img-chapada/etape2-rendu-jeu-mouvement.jpg)
 
+## Deuxième passe : l'eau au centre (retour de l'auteur)
+
+Demande : remettre la cascade et l'eau, retrouver le marais tropical de l'ancienne version, rendre lisible le passage dans l'eau, et casser la répétition des zones de forêt. Le tracé en plan ne change pas.
+
+- **Z2 devient le marais tropical** (à la place de la piste sous la canopée) : la plaine entre le camp et la chicane est inondée, la chaussée de pierre passe au ras de l'eau, les arbres ont les pieds dans l'eau sur des racines-échasses, nénuphars géants. Du point 2 au point 3, la chaussée est sous 20 cm d'eau, entre deux rangées de bornes (surface mouillée dans la physique).
+- **Le bas de la descente devient la descente des cascades** : la rivière a été déviée pour longer la route sur 250 m, à droite, vue dégagée ; elle y tombe par trois ressauts.
+- **La grande chute fait face au pont.** Elle tombe du plateau juste à gauche du temple, à 70 m : on la voit grossir pendant toute la traversée. Son bassin alimente la rivière qui passe sous le pont.
+- **La grotte s'ouvre derrière un rideau d'eau** : deux nappes tombent de part et d'autre du portail dans deux bassins, des filets pendent du linteau au-dessus des voitures. Rien n'est posé sur la chaussée.
+- **Le gué se lit** : eau transparente sur les dalles de la chaussée, bornes de pierre des deux côtés.
+
+Restent en forêt fermée : les lacets et le haut de la descente (les idoles).
+
+![marais](img-chapada/etape2-marais.jpg)
+![chute face au pont](img-chapada/etape2-chute-pont.jpg)
+![rideau de la grotte, cascades, gué](img-chapada/etape2-rideau-cascades-gue.jpg)
+
+Après cette passe : rupteur 20 % et 4 %, tour 78,9 s sans contact, tests verts, 246 à 254 passes de dessin. Temps d'image sur machine chargée à 47 % : 2,3 à 2,6 ms (touge 1,9 à 2,4 ms), donc au-dessus des 2 ms dans cette mesure ; à refaire sur une machine au repos. Le lancer de rayons sur la chaussée n'a pas été refait après cette passe.
+
+Reste à faire dans ce thème : les chutes sont des rubans blancs à bords droits (pas d'animation, pas d'embruns) ; les ressauts de la descente se lisent comme une rivière plus que comme des cascades ; le reflet blanc du soleil sur l'eau du marais est fort par endroits.
+
 ## Mesures
 
 | Contrôle | Résultat | Cible |

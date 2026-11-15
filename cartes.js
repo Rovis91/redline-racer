@@ -452,13 +452,13 @@
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.
     // W = la voie unique du pont : large ne fait qu'élargir (sim.js), tout le reste est élargi à 7 m ; le gué à 13 m. Pts 20 et 23 : bornes de l'élargissement, à 60 m du pont (le raccord de sim.js).
     { id: 'chapada', nom: 'MANUSCRIT 512', rivaux: ['TIAGO', 'LUANA', 'BRUNO'], W: 4.5, kmh: 0.75, vit: [150, 200], grip: 20, sc: 1, tun: [34, 40], chaud: [13, 40], sect: [20, 46], amb: [[30, 34], [62, 66]], anticipe: 1,
-      // Manuscrit 512 (Bahia, de nos jours, 9 h après la pluie) : une vallée de jungle dont la route fait le tour. Camp de base de l'expédition (départ), piste sous la canopée et chicane du fromager (pts 4-12),
-      // lacets des terrasses (14-24), pont de lianes au pied de la grande chute (32-33), temple-grotte (le tunnel, 34-40), saut de l'escalier écroulé, descente des idoles (équerres 43-48),
+      // Manuscrit 512 (Bahia, de nos jours, 9 h après la pluie) : une vallée de jungle dont la route fait le tour. Camp de base de l'expédition (départ), chaussée du marais tropical (pts 1-4) et chicane du fromager (pts 4-12),
+      // lacets des terrasses (14-24), pont de lianes au pied de la grande chute (32-33), temple-grotte derrière un rideau d'eau (le tunnel, 34-40), descente des idoles (équerres 43-48), saut et descente des cascades (49-52),
       // cité perdue (arc triple pt 53, place 54-58), gué (63-64), retour au camp. Proposition validée : propositions/PROPOSITION-chapada.md
       // largeur : W = le pont (file unique) ; partout ailleurs 6,5 m de demi-largeur, 9 au camp, 10 sur la place, 11 au gué
       large: [[34, 30, 6.5], [66, 2, 9], [54, 62, 10], [63, 65, 11]], sauts: [[49, 40, 1.2]],
-      surf: { zones: [[63, 64, 'mouille', 2.5], [34, 40, 'mouille', 0.5]], large: 'sec' }, // l'eau du gué freine au centre, ses bords de dalles sont secs ; la grotte suinte
-      pts: [[0, 0, 15], [200, 0, 15], [360, -30, 17], [500, 20, 19], [555, 21, 20], [580, 19, 20.5], [598, 11, 21], [606, -7, 21.5], [606, -45, 22.5], [606, -83, 23.5], [614, -101, 24], [632, -109, 24.5], [700, -110, 25.5], [790, -112, 27],
+      surf: { zones: [[2, 3, 'mouille', 1.5], [63, 64, 'mouille', 2.5], [34, 40, 'mouille', 0.5]], large: 'sec' }, // le passage inondé du marais (pts 2-3, la chaussée y est sous 20 cm d'eau), l'eau du gué, la grotte qui suinte
+      pts: [[0, 0, 15], [200, 0, 15.5], [360, -30, 15], [500, 20, 15], [555, 21, 16.6], [580, 19, 17.4], [598, 11, 18.2], [606, -7, 19], [606, -45, 20.5], [606, -83, 22], [614, -101, 22.8], [632, -109, 23.5], [700, -110, 25], [790, -112, 27],
         [880, -110, 30], [896, -103, 30.5], [903, -87, 31], [896, -71, 31.5], [880, -64, 32], [800, -62, 35], [730, -61, 38], [714, -54, 38.5], [707, -38, 39], [714, -22, 39.5], [730, -15, 40], [820, -15, 46], [900, -15, 52], [950, -14, 56],
         [974, -11, 58], [990, 2, 59], [996, 22, 60], [996, 60, 62], [996, 90, 63], [996, 240, 63], [996, 290, 63], [990, 330, 63], [970, 362, 62.5], [935, 380, 62], [880, 385, 61], [830, 400, 60], [770, 425, 58],
         [680, 440, 52], [600, 415, 46], [560, 410, 43], [540, 418, 42], [532, 438, 41], [532, 480, 38], [526, 500, 36.5], [508, 510, 35.5], [430, 512, 31], [340, 490, 26], [250, 515, 22], [170, 510, 19],

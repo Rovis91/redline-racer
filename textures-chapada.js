@@ -33,6 +33,10 @@
       voile(g, 0.45, () => { for (let i = 0; i < 22; i++) R(g, '#134a40', alea() * 56 | 0, alea() * 60 | 0, 5 + alea() * 9 | 0, 8 + alea() * 16 | 0); });
       voile(g, 0.5, () => { for (let i = 0; i < 26; i++) R(g, '#bfe8c8', alea() * 62 | 0, alea() * 60 | 0, 1, 4 + alea() * 9 | 0); });
       voile(g, 0.35, () => { for (let i = 0; i < 10; i++) R(g, '#a9bb7e', alea() * 58 | 0, alea() * 60 | 0, 3, 6 + alea() * 10 | 0); }); }, 10],
+    // eau du marais : sombre et calme, reflets du ciel en taches claires, lentilles d'eau
+    eauMarais: () => [64, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#2a5a48', 0, 0, 64, 64);
+      voile(g, 0.5, () => { for (let i = 0; i < 16; i++) R(g, '#14342c', alea() * 52 | 0, alea() * 52 | 0, 8 + alea() * 12 | 0, 6 + alea() * 10 | 0); });
+      voile(g, 0.4, () => { for (let i = 0; i < 12; i++) R(g, '#a9bb7e', alea() * 54 | 0, alea() * 58 | 0, 6 + alea() * 8 | 0, 2 + (alea() * 2 | 0)); }); voile(g, 0.7, () => semis(g, o, 70, ['#7fa83a', '#5f8a34'], 2, 1)); }, 12],
     // la chute : un ruban blanc strié en long, des trouées sombres (la roche derrière)
     chuteFil: () => [32, 64, (g, o) => { const { R, alea, voile } = o; R(g, '#eef6e8', 0, 0, 32, 64);
       voile(g, 0.35, () => { for (let i = 0; i < 26; i++) R(g, '#9fc0b8', alea() * 32 | 0, alea() * 50 | 0, 1, 10 + alea() * 30 | 0); }); voile(g, 0.5, () => { for (let i = 0; i < 6; i++) R(g, '#4a5a50', alea() * 32 | 0, alea() * 50 | 0, 1, 6 + alea() * 14 | 0); }); }],

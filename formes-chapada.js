@@ -30,6 +30,9 @@
     lianes: (l = 6) => [['liane', 5, 0.14, 0.14, 0, 0, 0, [0, 0, 0.06]], ...[[-2.1, 1], [-1.2, 0.55], [-0.3, 0.8], [0.7, 0.45], [1.5, 0.95], [2.2, 0.6]].map(([x, f]) => ['liane', 0.12, l * f, 0.12, x, -l * f / 2, 0, [0, 0, x * 0.02]])],
     // torche de l'expédition : un piquet, une coupe, la flamme (lumineuse)
     torche: () => [['bois', 0.14, 2.3, 0.14, 0, 1.15, 0], ['fer', 0.5, 0.22, 0.5, 0, 2.35, 0], ['flamme', 0.34, 0.5, 0.34, 0, 2.7, 0], ['flamme', 0.18, 0.4, 0.18, 0.03, 3.05, 0, [0, 0.7, 0]]],
+    // le marais : racines-échasses d'un arbre qui a les pieds dans l'eau (huit arceaux autour du fût) ; nénuphar géant (vitória-régia), un disque à plat sur l'eau
+    racinesEchasses: (k = 1) => Array.from({ length: 8 }, (_, i) => { const a = i / 8 * 6.2832 + 0.3, c = Math.cos(a), s = Math.sin(a); return ['bois', 3.6 * k, 0.32 * k, 0.32 * k, c * 1.5 * k, 1.5 * k, s * 1.5 * k, [0, -a, -0.8]]; }),
+    nenuphar: () => new THREE.CylinderGeometry(1, 1, 0.06, 9),
     // ---------- le camp de l'expédition (O-10) ----------
     // portique de départ en bambou (th.depart[4], mêmes zones que « depart » de formes.js : sol, damier, beton, acier, nom, boitier, feu0-2, lampe) ; la ligne fait la largeur du camp (2 W de demi-largeur)
     departJungle: W => { const xp = 2 * W + 1.4, L = 2 * xp + 1.4;
