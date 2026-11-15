@@ -1999,6 +1999,7 @@
           return [[s.w + 1.2, 6.5, sombre], [s.w * 0.3, b + 0.6 * nV(j * 0.2 + 9), sombre.map(v => v * 0.8)], [-(s.w + 1) * e, b + 0.5 * e + 0.4 * nV(j * 0.15 + 3), sombre], [-(s.w + 3.8) * e, 8.5 * e + 2, mix(sombre, mo2, 0.5)], null,
             [-(s.w + 3.8) * e, 8.5 * e + 2, mo2], [-(s.w + 3.8) * e, 11 * e + 2, mo], [s.w * 0.2, 12.5 + nV(j * 0.1 + 5), mo], [s.w + 3, 14, mo2]]; })); }
       // (pas de rideau texturé derrière les filets : il faisait une grille de pixels)
+      tranche(gal0 - 6, gal1 + 6, (i, l) => extrude(i, l, -1, falaise(s => s.w + 13, () => 46, s => nivS(s) - 1, undefined, 50))); // REFS 2 : l'alcôve, la roche sombre derrière la chute
       { const nL = bruit(), c1 = COL('#8a7660'), c2 = COL('#a89478'), mo = COL('#6f8a3a'); // REFS 2 : la lèvre de la corniche d'où tombe la chute, en surplomb au-dessus du rideau
         tranche(gal0 - 30, gal1 + 30, (i, l) => extrude(i, l, -1, (j, s) => { const e = lisse(0, 25, Math.min((j - i + N) % N, (i + l - j + N) % N)), y = 43 + 2 * nL(j * 0.05);
           return [[s.w + 13 - 3 * e, y - 1, c1], [s.w + 7 - 1.5 * e, y - 0.5, c1], [s.w + 7 - 1.5 * e, y + 2.5, c2], [s.w + 20, y + 4, mo]]; })); }
@@ -2041,7 +2042,7 @@
         for (let k = 0; k < 14; k++) { const u = (rnd() - 0.5) * 2 * (s.w + 12), v = (rnd() - 0.5) * 9; (rnd() < 0.5 ? fbas : coupes).push([s.x - s.tz * u + s.tx * v, s.y + 23.8, s.z + s.tx * u + s.tz * v, rnd() * 6, 1 + rnd() * 0.6]); } } // fougères et broméliacées sur le dessus
       // panneaux de bois, repères de freinage (une planche à flèches, 90 m avant chaque épingle, au gué et au pont), cairns
       const plaques = new Map(), panneau = (i, sd, txt) => { const s = S[(i + N) % N]; if (!plaques.has(txt)) plaques.set(txt, h.mat('ecrit', {}, 128, 40, '#5a3e20', '#ede6cf', txt, 13)); h.pose('panneauBois', { bois, plaque: plaques.get(txt) }, repere(h, s), [sd * (s.w + 2.5), 0, 0]); };
-      panneau(P(1), 1, 'CHAPADA DIAMANTINA'); panneau(P(0) + 25, -1, 'IGATU · ANDARAÍ'); panneau(P(12) - 60, -1, 'CACHOEIRA  ▸'); panneau(iB0 - 70, 1, 'PONTE · UMA VIA'); panneau(P(24), -1, 'MIRANTE 2 KM'); panneau(P(26), 1, 'VALE DO PATI');
+      panneau(P(1), 1, 'CHAPADA DIAMANTINA'); panneau(P(3) - 60, -1, '▲ SALTO ▲'); panneau(P(21) - 50, 1, '▲ SALTO · PONTE ▲'); panneau(P(0) + 25, -1, 'IGATU · ANDARAÍ'); panneau(P(12) - 60, -1, 'CACHOEIRA  ▸'); panneau(iB0 - 70, 1, 'PONTE · UMA VIA'); panneau(P(24), -1, 'MIRANTE 2 KM'); panneau(P(26), 1, 'VALE DO PATI');
       for (const [k, txt] of [[3, '▶ ▶ ▶'], [5, '◀ ◀ ◀'], [8, '▶ ▶ ▶'], [11, '◀ ◀ ◀'], [15, 'VAU · 13 M'], [21, '▲ UMA VIA ▲']]) { const i = (P(k) - 45 + N) % N; panneau(i, k === 15 || k === 21 ? 1 : -amont(S[P(k)]), txt); }
       { const pc = h.mat('grainGres', { c: 0x8a8478 }); for (const k of [2, 30, 1]) { const s = S[P(k)], [x, z] = bord(s, -1, s.w + 6 + rnd() * 6); h.pose('cairn', { pierre: pc }, h.scene, [x, g.hAt(x, z), z]); } }
 
@@ -2057,7 +2058,7 @@
         inst(h, h.geo('boite', 0.12, 1, 0.12), bois, poD).castShadow = false; ['150', '100', '50'].forEach((t, j) => { inst(h, h.geo('boite', 0.08, 0.9, 1.4), h.mat('ecrit', {}, 64, 40, '#e9b44c', '#1a1a16', t, 26), dist[j]).castShadow = false; }); }
       // ---------- REFS 5 : le hameau de garimpeiros, en pierre sèche, au nord de la ligne droite (et quelques ruines au sud) ----------
       const maisons = [], tuile = h.mat('tuileCuite'), porte = h.mat('planches'), lanterne = h.mat('peinture', { lum: 1, c: 0xffb45a });
-      for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + 7 + rnd() * rnd() * 40, [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
+      for (let k = 0; k < 120 && maisons.length < 36; k++) { const sd = k % 4 ? -1 : 1, gp = [30, 75, 120, 170, 215, 260, 320, 380][k % 8], i = (P(0) + gp + (rnd() * 30 | 0)) % N, s = S[i], off = s.w + (k < 12 ? 5 + rnd() * 6 : 7 + rnd() * rnd() * 40), [x, z] = bord(s, sd, off); // six grappes le long de la ligne droite
         if (maisons.some(m => Math.hypot(m[0] - x, m[2] - z) < 9)) continue; const ru = rnd() < 0.4 ? 1 : 0, w = 6 + rnd() * 4, d = 5 + rnd() * 3, a = h.across(s) + sd * Math.PI / 2 + (rnd() - 0.5) * 0.5; // la façade (-Z) vers la route
         maisons.push([x, g.hAt(x, z) - 0.2, z, a, w, d, ru]); }
       for (const [x, y, z, a, w, d, ru] of maisons) { const gr = new THREE.Group(); gr.position.set(x, y, z); gr.rotation.y = a; h.scene.add(gr);
@@ -2099,6 +2100,7 @@
         else if (d < 90) { if (r < 0.2) arbre(x, y, z, 0.7 + rnd() * 0.6, false, d > 25); else if (r < 0.26) { if (d < 25) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); } else if (r < 0.31) { if (d < 30) palmier(x, y, z, 0.8 + rnd() * 0.5); } else if (r < 0.55 && d < 30) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.5, 0.4]); else if (r < 0.57 && d > 20) affl.push([x, y - 1.5, z, rnd() * 6, 3 + rnd() * 6, 2 + rnd() * 3, 3 + rnd() * 6]); }
         else if (r < 0.13 && d < 150) arbre(x, y, z, 0.9 + rnd() * 0.5, false, true);
       }
+      for (let i = (P(25) + 20) % N; dans(i, 25, 27); i = (i + 5) % N) for (const sd of [-1, 1]) if (rnd() < 0.6) { const s = S[i], [x, z] = bord(s, sd, s.w + 3 + rnd() * 8), y = g.hAt(x, z), Ht = 11 + rnd() * 6; troncsC.push([x, y + Ht / 2, z, rnd() * 6, 0.9, Ht / 5.2, 0.9]); cimesE.push([x, y + Ht, z, rnd() * 6, 1.1, 0.8, 1.1]); } // REFS 4 : le tronçon des embaúbas
       // (pas de lianes isolées au-dessus de la route : sans arbre au-dessus, elles flottaient ; celles des arbres de bord restent)
       for (let i = 0; i < N; i++) { const s = S[i], zn = zone(i); if (zn !== 'plateau' && zn !== 'foret') continue;
         for (const sd of [-1, 1]) { const a = acc(i, sd), at = (o, f) => { const [x, z] = bord(s, sd, o), y = o < s.w + a + 0.5 ? s.y + A(Math.min(o - s.w, a)) : g.hAt(x, z); f(x, y, z); }, o = () => s.w + 2.6 + rnd() * rnd() * 34;

@@ -56,8 +56,8 @@
     eauPoco: () => [64, 64, (g, o) => {
       const { R, alea } = o; R(g, '#4a2614', 0, 0, 64, 64);
       for (let i = 0; i < 40; i++) R(g, alea() < 0.6 ? '#6a3418' : '#9a5228', alea() * 40 | 0, alea() * 64 | 0, 14 + (alea() * 30 | 0), 1 + (alea() * 2 | 0)); // l'ambre du fond, en traînées du courant (des plaques faisaient un damier)
-      for (let i = 0; i < 46; i++) R(g, alea() < 0.6 ? '#8aa8b4' : '#c8d8dc', alea() * 54 | 0, alea() * 63 | 0, 5 + (alea() * 10 | 0), 1); // le ciel en rides
-      for (let i = 0; i < 22; i++) R(g, '#f4efe0', alea() * 56 | 0, alea() * 63 | 0, 3 + (alea() * 8 | 0), 1); // l'écume
+      for (let i = 0; i < 18; i++) R(g, alea() < 0.6 ? '#6a7c84' : '#9aacb0', alea() * 54 | 0, alea() * 63 | 0, 5 + (alea() * 10 | 0), 1); // le ciel en rides, discret (des rides vives faisaient de la tôle)
+      for (let i = 0; i < 6; i++) R(g, '#e8e2d6', alea() * 56 | 0, alea() * 63 | 0, 3 + (alea() * 5 | 0), 1); // l'écume, rare
     }, 12],
     // REFS 5 : pierre sèche d'Igatu : moellons bruts empilés sans mortier, gris-ocre, joints creux sombres, lichen
     // t = 1 : dessin tourné d'un quart, pour un ruban vertical (u = la hauteur) : les assises restent horizontales
