@@ -140,6 +140,39 @@ Sous la canopée (hors pont, grotte, place et passages noyés), chaque voiture a
 À l'écran : un sillage de feuilles derrière soi et derrière les rivaux ; la forêt réagit au passage, ce que les cônes faisaient mal.
 Coût : 1 nuage de points (1 passe, 480 points au plus). **Code partagé** : une option `th.feuilles: [couleurs]` dans `game.js`, trois lignes à côté de la poussière (ligne 787), qui réutilise l'émetteur `flou`/`emit` existant ; absente par défaut, sans effet ailleurs ; décrite dans `docs/MOTEUR-OPTIONS-CARTES.md`.
 
+## Réalisé après validation (l'auteur a accepté les quinze points)
+
+Tout est fait, jugé sur captures du rendu réel après chaque passe, corrigé, recapturé. Tour complet : [0](img-chapada/fait-tour-0.jpg), [1](img-chapada/fait-tour-1.jpg), [2](img-chapada/fait-tour-2.jpg), [3](img-chapada/fait-tour-3.jpg), [4](img-chapada/fait-tour-4.jpg). [Pont, grande chute du portail, voile, rivière](img-chapada/fait-chute-portail-riviere.jpg). [La descente](img-chapada/fait-descente.jpg). [L'Onça](img-chapada/fait-onca.jpg).
+
+| N° | Fait | Écart avec la proposition |
+|---|---|---|
+| 1 | Chute du cirque en nappes qui coulent | gardée à sa place : c'est la source de la rivière |
+| 2 | Grande chute sur toute la falaise au-dessus du portail, deux bassins, voile troué devant l'ouverture ; falaise rehaussée à 44 m, parvis dégagé | la chute du cirque n'a pas été supprimée (voir 1) |
+| 3 | Rivière, ressauts et gué coulent vers l'aval | une seule couche sur la rivière vue de loin (la seconde ne s'y voyait pas), deux sur la route et au gué |
+| 4 | Gerbe dans les trois passages noyés | — |
+| 5 | Marais : deux nappes qui dérivent en sens croisés, 85 % d'opacité | — |
+| 6 | Deux seuils de 1 m aux points 50 et 51, en plus du saut du point 49 | **sans ajouter de point de contrôle** : les seuils sont des `sauts` (un tremplin qui compense la pente puis tombe net). Aucun numéro de point ne bouge. Seuils de 1 m et non 1,6 m, et lit élargi à 11 m de demi-largeur : avec 6,5 m le pilote automatique touchait le bord en retombant |
+| 7 | Rives de roche des deux côtés, forêt reculée, terrain abaissé sous le lit | pas de cascade d'arrivée au saut : la rivière n'a que 1,6 m de dénivelé disponible à cet endroit ; elle rejoint la route par la droite, à niveau |
+| 8 | Eau vive presque opaque sur la route, 2,2 fois plus rapide, sillages derrière les bornes, eau blanche sur l'arête et au pied des seuils, à la réception du saut | — |
+| 9 | Bordure de pierre claire continue ; trois torches à l'extérieur des deux épingles et des deux équerres | les torches des lignes droites sont restées (elles annoncent les freinages) |
+| 10 | Seconde épingle ouverte sur la vallée ; la tête colossale était déjà dans l'axe de la première | — |
+| 11 | Parois et voûte en roche (`rocheGrotte`) | pas de nappes d'eau le long des parois |
+| 12 | Temple à degrés agrandi 1,8 fois, couloir de vue ouvert | pas de marches ni de bassin sur la place |
+| 13 | Modèle `onca` : coupé à poupe tronquée, phares ronds, longue-portée, galerie et roue de secours sur le toit, bavettes | la roue de secours est sur le toit (sur le hayon elle cachait les feux et la plaque) |
+| 14 | Robe de jaguar : rosettes sur l'arrière, capot sombre, numéro dans un rond blanc, boue | — |
+| 15 | Feuilles soulevées : petits carrés nets qui tournoient et retombent, hors de l'eau et de la grotte | pas de feuilles peintes sur la chaussée |
+
+Code partagé touché, tout absent par défaut : `game.js` (`th.tun.tex`, `th.feuilles`, décrits dans `docs/MOTEUR-OPTIONS-CARTES.md` section 10) ; `formes-voitures.js` et `textures-voitures.js` (modèle et livrée `onca`, ajouts seuls). `sim.js` n'est pas touché. La trace or de `chapada` est refaite (68,2 s, seuil 75,7 s).
+
+Mesures après travaux (`banc-rapide`, 540 lignes, machine chargée à 35–39 %) : chapada 4,07 puis 4,22 ms, 262 à 266 passes ; touge 3,56 puis 3,55 ms. L'écart avec touge passe de +12–15 % à +14–19 % ; les nappes d'eau d'une même matière sont fondues en une géométrie pour tenir ce chiffre. Pilote automatique : tour lancé 79,2 s, aucun contact (comme avant). `node test.js` et `node test-cartes.js` verts.
+
+Auto-critique, ce qui reste en dessous :
+- Les seuils se voient moins que je ne voudrais : une ligne blanche sur l'arête, pas une vraie chute d'eau de face (on les voit d'amont, par-dessus).
+- Les rochers des rives ont tous la même matière à grandes facettes ; de près ils font camouflage.
+- En course, le banc relève un choc entre voitures vers l'échantillon 1421 (sortie de la rivière, avant l'arc) qui n'existait pas : les seuils resserrent le peloton. Le premier bris de verre d'une partie coûte une image longue (compilation des reflets du verre, vrai sur toutes les cartes).
+- Le Chrome sans écran de `outils/capture.sh` a calé plusieurs fois sur cette machine ; les captures ont été faites en ouvrant `outils/captures.html` dans le navigateur intégré, ce qui marche à tous les coups.
+- Toujours pas joué à la main.
+
 ## Ordre conseillé
 
 1 (fait), puis 4 (une ligne, effet immédiat), 2, 3, 6 à 8 ensemble (la descente), 13 et 14 (la voiture), 9 et 10 (la forêt), puis 5, 11, 12, 15.

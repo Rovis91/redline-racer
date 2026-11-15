@@ -1,5 +1,7 @@
 # Manuscrit 512 (`chapada`) : point d'étape pour une reprise à l'œil neuf
 
+> **Périmé en partie.** La reprise a eu lieu : voir [OEIL-NEUF-chapada.md](OEIL-NEUF-chapada.md), section « Réalisé après validation » (voiture, eau qui coule, grande chute sur le portail, descente en seuils, grotte, feuilles). Ce qui suit décrit l'état d'avant.
+
 Branche `claude/refonte-chapada-e4341f`, worktree `.claude/worktrees/carte-chapada-v2-b9a43e`. Rien n'est poussé. Dernier commit de la carte : la fusion du rendu en 540 lignes (`250ac2e`).
 À lire aussi : [PROPOSITION-chapada.md](PROPOSITION-chapada.md) (ce que l'auteur a validé au départ) et [ETAPE2-chapada.md](ETAPE2-chapada.md) (ce qui a été construit, passe par passe). Les noms de zones de la proposition sont en partie périmés : c'est ce document qui dit l'état réel.
 

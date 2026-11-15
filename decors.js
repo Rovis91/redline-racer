@@ -1901,11 +1901,15 @@
       const COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; }; // l'eau qui coule : [texture, vitesse en u, vitesse en v] (répétitions par seconde), avancées par le tick renvoyé à la fin
       const tombe = (trous, op, v, c = 0xc4d8d4) => coule(h.mat('eauChute', { lum: 1, c, side: THREE.DoubleSide, transparent: true, opacity: op, depthWrite: false, lisse: 1 }, trous), 0, v); // de l'eau qui tombe : la texture glisse vers le bas
       // une nappe d'eau : une bande courbe qui suit la chute. secs, de haut en bas : [x du milieu, y, z, largeur] ; u en travers, v = la hauteur (une répétition tous les 16 m) ; sens : de quel côté (z) elle bombe, vers qui regarde
-      const nappe = (secs, m, rep, dz = 0, parent = h.scene, sens = -1, vK = 16) => { /* vK : mètres de chute par répétition de la texture */ const Pn = [], U = [], I = [], NX = 6;
-        secs.forEach(([x, y, z, w], i) => { for (let j = 0; j <= NX; j++) { const u = j / NX; Pn.push(x + (u - 0.5) * w, y, z + dz + sens * 0.5 * Math.sin(u * Math.PI)); U.push(u * rep, y / vK); }
-          if (i) for (let j = 0; j < NX; j++) { const a = (i - 1) * (NX + 1) + j, b = a + NX + 1; I.push(a, b, a + 1, a + 1, b, b + 1); } });
-        const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(Pn, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); ge.setIndex(I); ge.computeVertexNormals();
-        const o = new THREE.Mesh(ge, m); o.userData.dyn = 1; parent.add(o); return o; };
+      // Toutes les nappes d'une même matière sont fondues en une seule géométrie à la fin (une passe de dessin par matière, pas une par nappe) : NAP les accumule, en coordonnées du monde
+      const NAP = new Map(), tas = m => NAP.get(m) || NAP.set(m, { P: [], U: [], I: [] }).get(m), V3 = new THREE.Vector3();
+      const nappe = (secs, m, rep, dz = 0, parent = null, sens = -1, vK = 16) => { const b = tas(m), base = b.P.length / 3, NX = 6; if (parent) parent.updateMatrixWorld(); /* vK : mètres de chute par répétition de la texture */
+        secs.forEach(([x, y, z, w], i) => { for (let j = 0; j <= NX; j++) { const u = j / NX; V3.set(x + (u - 0.5) * w, y, z + dz + sens * 0.5 * Math.sin(u * Math.PI)); if (parent) V3.applyMatrix4(parent.matrixWorld); b.P.push(V3.x, V3.y, V3.z); b.U.push(u * rep, y / vK); }
+          if (i) for (let j = 0; j < NX; j++) { const a = base + (i - 1) * (NX + 1) + j, c = a + NX + 1; b.I.push(a, c, a + 1, a + 1, c, c + 1); } }); };
+      // une plaque d'eau à plat (bassin, écume) : w en travers, d dans le sens où la texture glisse, dans le repère parent
+      const plat = (m, parent, [x, y, z], w, d) => { const b = tas(m), base = b.P.length / 3; parent.updateMatrixWorld();
+        for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) { V3.set(x + sx * w / 2, y, z + sz * d / 2).applyMatrix4(parent.matrixWorld); b.P.push(V3.x, V3.y, V3.z); b.U.push((sx + 1) * w / 16, (sz + 1) * d / 16); }
+        b.I.push(base, base + 2, base + 1, base + 1, base + 2, base + 3); };
       const e1 = tombe(5, 1, 0.55), e2 = tombe(11, 0.8, 0.9), ec = coule(h.mat('ecumeBassin', { lum: 1, side: THREE.DoubleSide, transparent: true, opacity: 0.85, depthWrite: false }), 0, 0.35); // les deux couches de toute chute, l'écume de tout bassin
       const t0 = T.t0, t1 = T.t1, enTunnel = i => entre(i, t0, t1), surPont = i => entre(i, P(32) - 4, P(33) + 4), MAR = 14.9;
       // le marais tropical (Z2) : la plaine inondée entre le camp et la chicane, de part et d'autre de la chaussée ; routeZ = l'axe de la chaussée, marais(x, z) = 0 dehors, 1 dedans
@@ -1946,7 +1950,7 @@
         for (const [k, op, vit] of [[0, 0.86, 1], [1, 0.5, 1], [2, 0.9, 2.2]]) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); ge.setIndex(tri[k]); ge.computeVertexNormals();
           const eau = new THREE.Mesh(ge, coule(mat('eauJade', { ...DS, transparent: true, opacity: op, gloss: 0.5, c: k === 2 ? 0xb8d8cc : 0xffffff }), 0, -0.5 * vit)); eau.receiveShadow = true; eau.userData.dyn = 1; h.scene.add(eau);
           // le courant : une seconde couche, plus rapide et plus claire, 4 cm au-dessus (deux couches qui défilent à des vitesses différentes : l'eau, pas un tapis roulant)
-          const g2 = ge.clone(); g2.translate(0, 0.04, 0); const e2 = new THREE.Mesh(g2, coule(h.mat('eauJade', { ...DS, transparent: true, opacity: op * 0.5, depthWrite: false, rep: [1.7, 0.6], c: 0xd8f0e0 }), 0.03, -0.85 * vit)); e2.userData.dyn = 1; h.scene.add(e2); } }
+          if (!k) continue; const g2 = ge.clone(); g2.translate(0, 0.04, 0); const e2 = new THREE.Mesh(g2, coule(h.mat('eauJade', { ...DS, transparent: true, opacity: op * 0.5, depthWrite: false, rep: [1.7, 0.6], c: 0xd8f0e0 }), 0.03, -0.85 * vit)); e2.userData.dyn = 1; h.scene.add(e2); } }
       h.pose('boite', coule(mat('eauMarais', { transparent: true, opacity: 0.85, c: 0x6a7a70 }), 0.012, 0.008), h.scene, [345, MAR - 0.05, 25], 440, 0.1, 250).userData.dyn = 1; // l'eau du marais : une nappe plate, le terrain en sort autour ; elle dérive à peine
       h.pose('boite', coule(h.mat('eauMarais', { transparent: true, opacity: 0.35, depthWrite: false, c: 0x9ab0a0, rep: [0.7, 0.7] }), -0.009, 0.014), h.scene, [345, MAR, 25], 440, 0.02, 250).userData.dyn = 1; // une seconde nappe qui dérive en sens croisé : les taches de ciel glissent
       { const bornes = []; for (let i = 0; i < N; i += 3) if (gue(S[i]) && !enTunnel(i)) for (const sd of [-1, 1]) { const [x, z] = bord(S[i], sd, S[i].w + 0.5); bornes.push([x, S[i].y + 0.45, z, h.across(S[i]), 0.7, 1.5, 0.7]); } // des bornes de pierre des deux côtés de chaque passage dans l'eau
@@ -2077,11 +2081,11 @@
           // la grande chute du temple : elle tombe de toute la falaise au-dessus du portail, dans l'axe du pont. Elle se partage sur le fronton : deux nappes épaisses de part et d'autre, jusqu'à deux bassins ;
           // au milieu elle se brise sur le fronton (la façade reste visible) et il n'en reste qu'un voile mince et troué devant l'ouverture, que les voitures traversent
           for (const sd of [-1, 1]) { const x = sd * (w + 9.5), cote = [[x, 43, -9, 15], [x, 41.6, -6.4, 15.4], [x - sd * 0.3, 36, -3.6, 16], [x - sd * 0.5, 20, 0.6, 17], [x - sd * 0.6, 0.3, 3.2, 18]];
-            nappe(cote, e1, 2.2, 0, r, 1); nappe(cote, e2, 1.7, 0.45, r, 1); h.pose('boite', eauB, r, [sd * (w + 11), 0.15, 10], 21, 0.3, 16).userData.dyn = 1; h.pose('boite', ec, r, [sd * (w + 10), 0.34, 7.2], 18, 0.02, 9).userData.dyn = 1;
+            nappe(cote, e1, 2.2, 0, r, 1); nappe(cote, e2, 1.7, 0.45, r, 1); plat(eauB, r, [sd * (w + 11), 0.3, 10], 21, 16); plat(ec, r, [sd * (w + 10), 0.36, 7.2], 18, 9);
             h.pose('boite', pierre, r, [sd * (w + 11), 0.1, 18.4], 22, 0.9, 1); h.pose('boite', pierre, r, [sd * (w + 0.9), 0.1, 10], 1, 0.9, 17); }
           const milieu = [[0, 44, -9, 2 * w + 5], [0, 42.4, -6.2, 2 * w + 5], [0, 36, -3.4, 2 * w + 5], [0, 22, 0.4, 2 * w + 5], [0, 10.4, 2.2, 2 * w + 5]]; nappe(milieu, e1, 2, 0, r, 1); nappe(milieu, e2, 1.5, 0.45, r, 1);
           nappe([[0, 10.6, 2.4, 2 * w], [0, 5, 2.9, 2 * w], [0, 0.1, 3.1, 2 * w]], voile, 1.3, 0, r, 1);
-          h.pose('boite', ec, r, [0, 10.3, 2.2], 2 * w + 6, 0.5, 1.6).userData.dyn = 1; } // l'eau blanche qui se brise sur le fronton
+          nappe([[0, 11, 2.7, 2 * w + 6], [0, 10, 2.7, 2 * w + 6]], ec, 4, 0, r, 1, 1); } // l'eau blanche qui se brise sur le fronton
         for (const sd of [-1, 1]) { const b = new THREE.Group(); b.position.set(sd * (S[i].w + 2.2), 0, 5); b.scale.setScalar(1.7); r.add(b); h.pose('torche', { bois: fer, fer, flamme }, b, [0, 0, 0]); }
         r.updateMatrixWorld(); for (const sd of [-1, 1]) { const q = r.localToWorld(new THREE.Vector3(sd * (S[i].w + 2.2), 5, 5)); h.lum(i, q.x, q.y, q.z, 0xffa040, 22, 2.2); } }
 
@@ -2120,6 +2124,8 @@
       // ---------- le saut de la descente (C-6) : les degrés écroulés d'un escalier de la cité, de part et d'autre du tremplin ----------
       { const deg = []; for (let k = 0; k < 7; k++) for (const sd of [-1, 1]) { const s = S[P(49) - 18 + k * 3], [x, z] = bord(s, sd, s.w + 2.2); deg.push([x, s.y - 0.6 + k * 0.12, z, h.across(s) + (rnd() - 0.5) * 0.3, 2.6, 1.2 + k * 0.25, 5.2]); }
         inst(h, h.geo('bloc'), pierre, deg); for (const sd of [-1, 1]) auBord('obelisque', CITE, P(49) + 2, sd, S[P(49)].w + 2.4, 8); }
+      for (const [m, b] of NAP) { const ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.Float32BufferAttribute(b.P, 3)); ge.setAttribute('uv', new THREE.Float32BufferAttribute(b.U, 2)); ge.setIndex(b.I); ge.computeVertexNormals();
+        const o = new THREE.Mesh(ge, m); o.userData.dyn = 1; o.frustumCulled = false; o.renderOrder = m === e1 ? 1 : m === e2 ? 2 : 3; h.scene.add(o); } // la nappe de derrière d'abord, puis celle de devant, puis voiles et écume
       return dt => { for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } }; // l'eau coule : seules des textures glissent
     },
     // ---------- Playa 307 (Riviera Maya, midi) : plage, ponton, rue aux papel picado, marché couvert, garrigue, cénote ouvert (la place), grotte (le tunnel), lobby d'hôtel ----------
