@@ -1852,7 +1852,7 @@
       const hAt = g.hAt, dAt = g.dAt;
 
       // ---------- l'eau : le lac au ras de la crête (101 m), le bassin d'écume, la rivière (3 m) ----------
-      const eau = mat('eauGES', { c: 0xa8c0c8 }), eauRiv = mat('eauGES', { c: 0x9fd0d8 }, '#5a96a8', 40), ecume = mat('ecumeGES');
+      const eau = mat('eauGES', { c: 0xc4d8d8 }, '#6aa4b0', 40), eauRiv = mat('eauGES', { c: 0x9fd0d8 }, '#5a96a8', 40), ecume = mat('ecumeGES');
       const plan = (m, x0, x1, z0, z1, y) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(x1 - x0, z1 - z0), m); p.rotation.x = -Math.PI / 2; p.position.set((x0 + x1) / 2, y, (z0 + z1) / 2); p.geometry.attributes.uv.array.forEach((v, k, a) => a[k] = v * (k & 1 ? (z1 - z0) : (x1 - x0)) / 16); h.scene.add(p); return p; };
       plan(eau, -1700, -310, -1700, -22, 101); plan(eau, -310, 432, -1700, -11, 101); plan(eau, 432, 1700, -1700, -48, 101);
       bloc(ecume, -158, 58, 80, 250, 1, 3.2);
@@ -1866,7 +1866,7 @@
       prisme([[zF(0), 0], [10, YC]], -335, 460, face, 18, 24); prisme([[10, YC], [-10, YC], [-10, 0]], -335, 460, bet, 8, 8);
       { const m = prisme([[zF(0) + 0.15, 0], [zF(16) + 0.15, 16]], -335, 460, mat('faceGES', {}, '#5e625c'), 18, 24); } // le pied du mur, mouillé par les embruns
       // les plots en relief : un joint saillant tous les 18 m sur toute la hauteur de la face, et trois rangées de fenêtres des galeries de visite (REFS 1)
-      { const jo = [], fe = [], L = (YC - 2) / Math.cos(0.625); for (let x = -324; x < 452; x += 18) { jo.push([x, (YC + 2) / 2, zF((YC + 2) / 2) + 0.6, 0, 2.2, L, 1.2]); for (const y of [30, 55, 80]) if (rnd() < 0.7) fe.push([x + 5 + rnd() * 8, y, zF(y) + 0.25, 0, 2, 2.4, 0.5]); }
+      { const jo = [], fe = [], L = (YC - 2) / Math.cos(0.625); for (let x = -324; x < 452; x += 18) { jo.push([x, (YC + 2) / 2, zF((YC + 2) / 2) + 0.6, 0, 2.2, L, 1.2]); for (const y of [30, 55, 80]) if (rnd() < 0.35) fe.push([x + 5 + rnd() * 8, y, zF(y) + 0.25, 0, 2, 2.4, 0.5]); }
         for (const m of [inst(h, h.geo('bloc'), betS, jo), inst(h, h.geo('bloc'), noirF, fe)]) { const d = new THREE.Object3D(), M4 = new THREE.Matrix4(); for (let k = 0; k < m.count; k++) { m.getMatrixAt(k, M4); M4.decompose(d.position, d.quaternion, d.scale); d.rotation.set(-0.625, 0, 0); d.updateMatrix(); m.setMatrixAt(k, d.matrix); } m.instanceMatrix.needsUpdate = true; } }
       // lettres peintes sur la face, à l'est des conduites (on les lit depuis la vallée et la rive ouest)
       { const m = new THREE.Mesh(h.geo('boite', 150, 34, 0.3), mat('lettres', {}, 'ГЭС-74', '#8d918a', '#b5483c')); m.position.set(345, 62, zF(62) + 0.5); m.rotation.x = -0.625; h.scene.add(m); }
@@ -1882,7 +1882,7 @@
       });
       for (const x of [-120, -60, 0]) bru.push([x, 26, 205, rnd() * 3, 50, 40, 50]); // le panache qui monte de la retombée
       { const P3 = [], UV = [], I = []; for (const g of jets) { const b = P3.length / 3; P3.push(...g.attributes.position.array); UV.push(...g.attributes.uv.array); I.push(...Array.from(g.index.array, i => i + b)); } maille(P3, UV, I, gerbe).renderOrder = 2; } // les six jets en une passe de dessin
-      bru.push([95, 12, 190, 0, 70, 26, 90], [100, 8, 240, 0.5, 50, 16, 60], [40, 14, 210, 0, 60, 22, 70], [70, 10, 170, 0, 50, 16, 60], [-170, 12, 200, 0, 40, 18, 60]); // l'embrun qui passe sur la route et les berges
+      bru.push([88, 7, 200, 0, 34, 10, 50], [40, 14, 210, 0, 60, 22, 70], [70, 10, 170, 0, 50, 16, 60], [-170, 12, 200, 0, 40, 18, 60]); // l'embrun qui passe sur la route et les berges
       inst(h, h.geo('brume'), brume, bru).renderOrder = 3;
       { const arc = new THREE.Group(); arc.position.set(-55, 4, 215); arc.rotation.y = 0.5; h.scene.add(arc); // l'arc-en-ciel dans l'embrun, soleil bas dans le dos du joueur qui remonte la vallée
         const P3 = [], C3 = [], I = []; [0xff5040, 0xffb040, 0xf0f060, 0x60d080, 0x6080ff].forEach((c, k) => { const t = new THREE.TorusGeometry(44 - k * 1.4, 0.7, 3, 40, Math.PI), b = P3.length / 3, col = new THREE.Color(c); P3.push(...t.attributes.position.array); for (let j = 0; j < t.attributes.position.count; j++) C3.push(col.r, col.g, col.b); I.push(...Array.from(t.index.array, i => i + b)); });
@@ -1908,13 +1908,13 @@
       inst(h, h.geo('excitatrice'), rouge, G3.map(([x, y, z]) => [x, y + 6.8, z]));
       inst(h, h.geo('boite', 4, 1.4, 0.1), mat('lettres', {}, 'ГА', '#5fa89a', '#e8e4d8'), G3.flatMap(([x, y, z]) => [0, Math.PI].map(a => [x + Math.sin(a) * 5.05, y + 3, z + Math.cos(a) * 5.05, a]))); // plaques des groupes
       // les groupes à l'arrêt : couvercles ronds au ras du sol, dans l'axe (on roule dessus) ; armoires et pupitres contre les murs, là où la route s'écarte
-      inst(h, h.geo('couvercle'), mat('peinture', { c: 0x8a9a6a }), [[150, YH - 0.05, 110], [200, YH - 0.05, 110], [250, YH - 0.05, 110], [300, YH - 0.05, 110]]);
+      inst(h, h.geo('couvercle'), mat('peinture', { c: 0x8a9a6a }), [[200, YH - 0.05, 127], [250, YH - 0.05, 93]]);
       { const arm = []; for (let x = 145; x < 310; x += 9) for (const z of [86.5, 133.5]) { const s = S[near(h, x, z)]; if (Math.hypot(s.x - x, s.z - z) > s.w + 2.5) arm.push([x, YH, z, 0, 2.4, 2.4, 1.2]); }
         inst(h, h.geo('bloc'), mat('peinture', { c: 0x9aa89a }), arm.map(([x, y, z, r, a, b, c]) => [x, y + 1.2, z, r, a, b, c])); }
       // colonnes, rails et pont roulant orange, lampes du plafond
       { const col = []; for (let x = 136; x <= 314; x += 14.8) for (const z of [85.4, 134.6]) col.push([x, YH + 13, z, 0, 1.6, 26, 1.4]); inst(h, h.geo('bloc'), betS, col); }
       for (const z of [86, 134]) bloc(orange, 136, 314, z - 0.6, z + 0.6, YH + 20, YH + 21);
-      { const gr = new THREE.Group(); gr.position.set(212, YH + 22, CZ); gr.rotation.y = Math.PI / 2; h.scene.add(gr); h.pose('pontRoulant', { acier: orange, chariot: orange, cabine: mat('peinture', { c: 0xe8e4d8 }), cable: mat('matGris'), crochet: mat('matGris') }, gr, [0, 0, 0], 48); }
+      insts(h, 'pontRoulant', { acier: orange, chariot: orange, cabine: mat('peinture', { c: 0xe8e4d8 }), cable: mat('matGris'), crochet: mat('matGris') }, [[212, YH + 22, CZ, Math.PI / 2]], { a: [48] });
       { const l = []; for (let x = 150; x < 310; x += 20) for (const z of [97, 123]) { l.push([x, YH + 25.6, z, 0, 6, 0.3, 1]); } inst(h, h.geo('bloc'), mat('lampe', LUMI), l);
         for (let x = 150; x < 310; x += 40) { const i = near(h, x, CZ); h.lum(i, x, YH + 22, CZ, 0xfff0d8, 40, 0.7); } }
       bloc(mat('mosaique'), 175, 265, 84.62, 84.9, YH + 6, YH + 20); // la mosaïque du mur nord : soleil, vagues, roues de turbine
@@ -1976,7 +1976,7 @@
         cv.forEach((l, f) => inst(h, h.geo('chevron'), mat('chevron', { lum: 1, side: THREE.DoubleSide, retro: 1.5 }, f), l)); }
 
       // ---------- la culée est (REFS 1, 7) : parois de roche taillée côté amont des lacets, filets pare-pierres ; la galerie (REFS 8) sous une chape de roche, deux portails ----------
-      const roche = mat('rocheGES', { ...DS, rep: [3, 1] }), filet = mat('filet', { alphaTest: 0.5, side: THREE.DoubleSide });
+      const roche = mat('rocheGES', { ...DS, rep: [2, 1] }), filet = mat('filet', { alphaTest: 0.5, side: THREE.DoubleSide });
       { const amont = i => { const s = S[i], a = proche(s.x - s.tz * 30, s.z + s.tx * 30), b = proche(s.x + s.tz * 30, s.z - s.tx * 30); return a.s.y < b.s.y ? -1 : 1; }; // côté où le terrain monte
         for (const [a, b] of [[P(13), T0 - 2], [T1 + 2, P(31)]]) { let deb = a, sd = amont(a);
           for (let i = a; i !== b; i = (i + 1) % N) { const n = amont(i), fin = (i + 1) % N === b; if (n !== sd || fin) { tranche(deb, i, (j, l) => { ruban(j, l, s => sd * (s.w + 1.6), -1, s => sd * (s.w + 1.6), s => 5 + 2 * Math.sin(IX.get(s) * 0.07), roche, 12); }); deb = i; sd = n; } } } }
@@ -1986,11 +1986,11 @@
         for (const [a, b] of [[P(14), P(15)], [P(20), P(21)], [P(28), P(29) + 4], [P(43), P(43) + 40], [P(45), P(45) + 50], [P(47), P(47) + 40]]) { const sd = a >= P(41) ? 1 : -1; tranche(a, b, (i, l) => ruban(i, l, s => sd * (s.w + 1.5), -1, s => sd * (s.w + 1.5), 4.5, pr, 8)); } }
       tranche(T0 - 2, T1 + 2, (i, l) => { ruban(i, l, s => -(s.w + 14), 10.2, s => s.w + 14, 10.2, roche, 14); for (const sd of [-1, 1]) ruban(i, l, s => sd * (s.w + 14), 10.2, s => sd * (s.w + 22), -5, roche, 14); });
       { const tu = mat('peinture', { c: 0x5fa89a }); tranche(T0, T1, (i, l) => { for (const sd of [-1, 1]) for (const y of [5, 6.2]) ruban(i, l, sd * (W - 0.05), y, sd * (W - 0.05), y + 0.6, tu, 8); }); } // la tuyauterie vert d'eau de la galerie
-      for (const [i, sens] of [[T0, 0], [T1, Math.PI]]) { const gr = repere(h, S[i]); gr.rotation.y += sens; h.pose('portailGES', { beton: bet, bande: mat('bandeOrange'), numero: mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), roche: mat('rocheGES') }, gr, [0, 0, 0], W); }
+      insts(h, 'portailGES', { beton: bet, bande: mat('bandeOrange'), numero: mat('lettres', {}, 'Т-2', '#8d918a', '#b5483c'), roche: mat('rocheGES') }, [[T0, 0], [T1, Math.PI]].map(([i, sens]) => [S[i].x, S[i].y, S[i].z, h.across(S[i]) + sens]), { a: [W] });
 
       // ---------- la crête (REFS 5) : rails, deux portiques roulants au-dessus de la route, cabane de garde, tour de commande, lettres ----------
       for (const sd of [-1, 1]) tranche(P(36), P(40), (i, l) => ruban(i, l, sd * (W + 2.6), 0.05, sd * (W + 3.4), 0.05, mat('matGris'), 4));
-      for (const x of [225, -45]) { const s = S[near(h, x, 0)]; h.pose('portiqueVanne', { acier: mat('toleOrange', {}, '#e8a01e'), roue: mat('matGris'), treuil: mat('peinture', { c: 0x5fa89a }), cabine: mat('peinture', { c: 0xe8e4d8 }), vitre: mat('vitreSombre') }, repere(h, s), [0, 0, 0], W); }
+      insts(h, 'portiqueVanne', { acier: mat('toleOrange', {}, '#e8a01e'), roue: mat('matGris'), treuil: mat('peinture', { c: 0x5fa89a }), cabine: mat('peinture', { c: 0xe8e4d8 }), vitre: mat('vitreSombre') }, [225, -45].map(x => { const s = S[near(h, x, 0)]; return [s.x, s.y, s.z, h.across(s)]; }), { a: [W] }); // les deux portiques roulants en une passe par pièce
       { const s = S[P(34) + 6], gr = repere(h, s); gr.position.y = hAt(...bord(s, -1, W + 5)); h.pose('cabane', { beton: mat('betonGES', {}, '#b8b4a4'), toit: mat('toleOrange', {}, '#b5483c'), vitre: mat('lampe', LUMI) }, gr, [-(W + 5), 0, 0]); } // la cabane de garde à l'entrée de la crête, sur le replat de la culée
       h.pose('tourControle', { beton: bet, vitre: mat('vitreSombre'), acier: mat('matGris') }, h.scene, [-374, hAt(-374, 18) - 1, 18]);
       // deux tours de prise d'eau dans le lac, reliées à la crête par une passerelle ; deux vedettes de service amarrées
@@ -2025,7 +2025,6 @@
       { const s = S[P(1) + 6], gr = repere(h, s); h.pose('abriBus', { beton: mat('betonGES', {}, '#b8b4a4'), mosaique: mat('mosaique'), banc: mat('peinture', { c: 0xb5483c }) }, gr, [W + 4.2, 0, 0]).forEach(m => m.rotation.y = -Math.PI / 2); }
       const panneau = (i, sd, txt) => { const s = S[(i + N) % N], gr = repere(h, s); h.pose('panneauGES', { poteau: mat('matGris'), plaque: mat('ecrit', {}, 128, 64, '#1d4a7a', '#f4f0e0', txt, 22) }, gr, [sd * (s.w + 3.5), 0, 0]); };
       panneau(P(54), 1, 'ГЭС  ↑ 2'); panneau(P(13) + 4, 1, 'ПЛОТИНА ↑'); panneau(P(41) + 10, 1, '↓ МОСТ');
-      { const dr = []; for (const [a, b, e] of [[P(13), P(31), 0], [P(41), P(49), 1]]) for (let i = a; i < b; i += 3) { if (i >= T0 - 2 && i <= T1 + 2) continue; const s = S[i]; for (const sd of e ? [1] : [-1, 1]) { const [x, z] = bord(s, sd, s.w + 1.55); dr.push([x, s.y + 1.1 + (i % 2) * 1.4, z, h.across(s), 0.12, 0.5, 0.5]); } } inst(h, h.geo('bloc'), noirF, dr); } // barbacanes des murs, tous les 6 m
 
       // ---------- la centrale à béton du chantier, restée sur la culée est (REFS 7) : silos, tapis roulant, bâtiment, camions-bennes, panneaux de béton empilés ----------
       { const yb = hAt(580, 190), bS = mat('betonGES', {}, '#a4a69e'), cam = [];
@@ -2053,7 +2052,7 @@
       const mel = [], bou = [], roc = [];
       const vue = (x, z) => (x > -175 && x < 100 && z > 55 && z < 330) || (z < 900 && x > -60 && x < 140 && riv(x, z) < 28); // dégagé : le bassin et les jets depuis la route, la berge est le long de la rivière
       const libre = (x, z, m) => dAt(x, z) > W + m && riv(x, z) > 3 && !lac(x, z) && !mur(x, z) && !halle(x, z) && !poste(x, z) && !vue(x, z);
-      for (let k = 0; k < 11000; k++) { const x = -1050 + rnd() * 2400, z = -720 + rnd() * 2400; if (!libre(x, z, 9)) continue; const y = hAt(x, z), c = cite(x, z);
+      for (let k = 0; k < 17000; k++) { const x = -1050 + rnd() * 2400, z = -720 + rnd() * 2400; if (!libre(x, z, 9)) continue; const y = hAt(x, z), c = cite(x, z);
         if (c && rnd() < 0.85) continue; if (y < 30 && rnd() < 0.45 || c) bou.push([x, y - 0.3, z, rnd() * 6, 0.8 + rnd() * 0.5]); else mel.push([x, y - 0.5, z, rnd() * 6, 0.7 + rnd() * 0.7, 0.7 + rnd() * 0.8]); }
       // en bord de route : des rangées serrées qui défilent (vallée, corniche, lac), à 12-35 m
       for (let i = 0; i < N; i += 2) { const s = S[i]; if (dansHalle(i) || dans(i, 35, 41) || pontI.has(i)) continue; for (const sd of [-1, 1]) { if (rnd() < 0.55) continue; const [x, z] = bord(s, sd, s.w + 11 + rnd() * 24); if (!libre(x, z, 9)) continue;

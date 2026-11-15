@@ -20,8 +20,7 @@
       const { R, alea, voile } = o; R(g, fond, 0, 0, 64, 64);
       for (let i = 0; i < 26; i++) voile(g, 0.45, () => R(g, ['#6e6658', '#4a4438', '#7a7466', '#55504a'][i & 3], alea() * 60 | 0, alea() * 60 | 0, 6 + (alea() * 14 | 0), 5 + (alea() * 12 | 0)));
       voile(g, 0.55, () => { for (let i = 0; i < 40; i++) { const v = alea() < 0.5; R(g, '#2e2a24', alea() * 64 | 0, alea() * 64 | 0, v ? 1 : 3 + (alea() * 8 | 0), v ? 3 + (alea() * 8 | 0) : 1); } });
-      voile(g, 0.35, () => semis(g, o, 220, '#8a8476')); voile(g, 0.45, () => { for (let i = 0; i < 14; i++) { const x = alea() * 64 | 0, y = alea() * 64 | 0; R(g, '#5e6a3e', x, y, 2 + (alea() * 4 | 0), 2 + (alea() * 3 | 0)); } }); // touffes d'herbe et de mousse
-      voile(g, 0.5, () => { for (let k = 0; k < 64; k += 9) for (let y = 0; y < 64; y++) R(g, '#3a352e', (k + y * 0.35) % 64 | 0, y, 1, 1); }); // lits obliques voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#3a3630', 0, alea() * 64 | 0, 64, 1 + (alea() * 2 | 0)); }); // ruissellements (sur les parois, x de la texture = la hauteur)
+      voile(g, 0.35, () => semis(g, o, 220, '#8a8476')); voile(g, 0.45, () => { for (let i = 0; i < 14; i++) { const x = alea() * 64 | 0, y = alea() * 64 | 0; R(g, '#5e6a3e', x, y, 2 + (alea() * 4 | 0), 2 + (alea() * 3 | 0)); } }); // touffes d'herbe et de mousse voile(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#3a3630', 0, alea() * 64 | 0, 64, 1 + (alea() * 2 | 0)); }); // ruissellements (sur les parois, x de la texture = la hauteur)
     }, 10],
     // REFS 7 — sol de taïga : herbe sombre, mousse, aiguilles rousses, cailloux
     solGES: () => [64, 64, (g, o) => {
