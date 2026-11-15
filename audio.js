@@ -499,9 +499,9 @@
     if (AC) { retune(AC.currentTime + 0.05, menu); if (menu) swF.frequency.setTargetAtTime((MENU[M.id] || MENU.ville).lp, AC.currentTime, 0.5); buildAmb(); } // au menu, le morceau commun continue : seule sa couleur change
   }
   carte(M);
-  // ---------- les sources du décor (SON.lieux, SON.coup) : des sons posés dans le lieu par une carte (chute, turbine, transformateur, train…), entendus selon la distance et le côté de la voiture écoutée ----------
+  // ---------- les sources du décor (SON.lieux, SON.bref) : des sons posés dans le lieu par une carte (chute, turbine, transformateur, train…), entendus selon la distance et le côté de la voiture écoutée ----------
   // lieux(id, [{ p: { x, y, z } (peut bouger), son: un nom de SONS, r: portée en m, vol, int: 1 = à l'intérieur (le tunnel ne l'étouffe pas), occ: 0 à 1 = étouffé (le décor le règle) }, …]) ; id = la carte qui les pose : une autre carte les fait taire.
-  // coup(nom, p, vol, portée) : un son bref au point p (trompe d'un train, corne de brume, joint de pont…). Tout passe par la famille « amb ».
+  // bref(nom, p, vol, portée) : un son bref au point p (trompe d'un train, corne de brume, joint de pont…). Tout passe par la famille « amb ».
   // shortcut: les sources d'une carte quittée restent branchées sur un gain coupé jusqu'au rechargement ; à débrancher pour de bon si une carte en pose des dizaines
   let LIEUX = [], lieuxId = '';
   const OREILLE = { x: 0, y: 0, z: 0, th: 0 };
@@ -535,13 +535,13 @@
   const COUPS = {
     trompe: (t, d) => { const lp = filt('lowpass', 1700, 1, d); for (const f of [277, 370]) noteL(t, 1.4, 0.22, lp, 'sawtooth', f * 1.05, f * 0.95); }, // la trompe d'une locomotive ; sa hauteur tombe pendant qu'on la croise (effet Doppler)
     corne: (t, d) => { const lp = filt('lowpass', 520, 1, d); for (const f of [82, 123]) noteL(t, 2.8, 0.4, lp, 'sawtooth', f); }, // corne de brume
-    joint: (t, d) => { rafaleB(t, 0.07, 0.5, d, 'lowpass', 320); noteL(t, 0.09, 0.35, d, 'sine', 74, 52); }, // les pneus sur un joint de tablier
+    joint: (t, d) => { rafaleB(t, 0.06, 0.9, d, 'bandpass', 1100, 0.8); noteL(t, 0.08, 0.5, d, 'sine', 150, 95); }, // les pneus sur un joint de tablier : sec et médium, pour passer au-dessus du grondement de la chute
     souffle: (t, d) => { rafaleB(t, 0.16, 0.3, d, 'bandpass', 1700, 0.8); }, // un poteau qui passe tout près
     craque: (t, d) => { for (let k = 0; k < 6; k++) rafaleB(t + k * 0.11 + Math.random() * 0.05, 0.05, 0.45, d, 'highpass', 1500); rafaleB(t + 1.1, 0.5, 0.9, d, 'lowpass', 130); }, // un arbre craque, puis touche le sol
     clairon: (t, d) => { const lp = filt('lowpass', 2200, 1, d); [392, 523, 659, 523, 659].forEach((f, k) => noteL(t + k * 0.24, 0.22, 0.2, lp, 'square', f)); },
     gresille: (t, d) => { const g = AC.createGain(), l = AC.createOscillator(); g.connect(d); l.frequency.value = 100; l.connect(gain(0.5, g.gain)); l.start(t); l.stop(t + 0.9); rafaleB(t, 0.8, 0.25, g, 'highpass', 5200); }, // une ligne à haute tension
     marteau: (t, d) => { for (let k = 0; k < 3; k++) noteL(t + k * 0.34, 0.12, 0.2, d, 'sine', 1900, 1750); },
-    oiseau: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.12, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
+    oiseau: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.4, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
   };
   function coupLieu(nom, p, vol = 1, r = 200) {
     if (!AC || !nbuf || lieuxId !== M.id || !COUPS[nom]) return; const t = AC.currentTime + 0.02, dx = p.x - OREILLE.x, dz = p.z - OREILLE.z, d = Math.hypot(dx, dz, (p.y || 0) - OREILLE.y), a = clamp(1 - d / r, 0, 1); if (a <= 0) return;
@@ -1001,7 +1001,7 @@ registerProcessor('moteur', Moteur);`;
   choc = differe(choc); clac = differe(clac); levier = differe(levier); petarade = differe(petarade); pschitt = differe(pschitt); boostFx = differe(boostFx); reception = differe(reception); klaxon = differe(klaxon); coupMusique = differe(coupMusique);
   document.addEventListener('visibilitychange', () => { if (AC && live) document.hidden ? AC.suspend() : AC.resume(); }); // pas de musique hachée ni de moteur figé en arrière-plan
   window.SON = {
-    lieux, coup: coupLieu, lieuxEtat: () => LIEUX.map(l => [l.son, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // sources du décor ; lieuxEtat : prise de test (niveau visé de chaque source)
+    lieux, bref: coupLieu, lieuxEtat: () => LIEUX.map(l => [l.son, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // sources du décor ; lieuxEtat : prise de test (niveau visé de chaque source)
     init: initAudio, frame: audioFrame, setStation, carte, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrivee, quitter, reprendre,
     crash: () => AC && crash(),
     tonnerre: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // grondement + craquement dans le médium

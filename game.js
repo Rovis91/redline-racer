@@ -1015,8 +1015,8 @@
   // à moins de 40 m, aucun point : les feux de la caisse se voient, et un point de 0,5 m y ferait un pavé rouge
   const feuxGeo = new THREE.BufferGeometry(), feuxP = new Float32Array(6 * Math.max(3, M.trafic || 0)); feuxGeo.setAttribute('position', new THREE.BufferAttribute(feuxP, 3));
   const feux = new THREE.Points(feuxGeo, new THREE.PointsMaterial({ color: 0xff2030, size: 1, fog: false })); feux.frustumCulled = false; scene.add(feux);
-  // th.pharesBrume : les faisceaux des deux phares de la voiture suivie, visibles dans le banc de brouillard (par phare, une nappe additive à plat et une debout, vives au nez, éteintes à 30 m)
-  const cones = TH.pharesBrume ? (() => { const g = new THREE.BufferGeometry(), L = 30, P = [], C = []; for (const sd of [-0.62, 0.62]) { P.push(sd, 0, 0, sd * 1.4 - 3.2, -0.5, L, sd * 1.4 + 3.2, -0.5, L, sd, 0, 0, sd * 1.4, -1.4, L, sd * 1.4, 1, L); for (let k = 0; k < 2; k++) C.push(1, 0.95, 0.8, 0, 0, 0, 0, 0, 0); }
+  // th.pharesBrume : les faisceaux des deux phares de la voiture suivie, visibles dans le banc de brouillard (par phare, une nappe additive à plat, vive au nez, éteinte à 30 m)
+  const cones = TH.pharesBrume ? (() => { const g = new THREE.BufferGeometry(), L = 30, P = [], C = []; for (const sd of [-0.62, 0.62]) { P.push(sd, 0, 0, sd * 1.4 - 3.2, 0.3, L, sd * 1.4 + 3.2, 0.3, L); C.push(1, 0.95, 0.8, 0, 0, 0, 0, 0, 0); } // une nappe à plat par phare, tenue au-dessus de la chaussée (la nappe debout se voyait par la tranche : un trait dur)
     g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.frustumCulled = false; m.renderOrder = 51; m.userData.dyn = 1; m.visible = false; scene.add(m); return m; })() : null; // renderOrder 51 : après le voile du banc (50)
 
@@ -1971,7 +1971,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const cp = Math.cos(pitch);
     const dg = G.userData.dg, hs = (dg.ph[0] - dg.ph[1]) * 0.55; // un phare cassé : le faisceau part de l'autre, à moitié ; les deux : plus rien
     LUX.uCam.value = cam.position; LUX.uHP.value.set(car.x + fx * 1.9 - fz * hs, carY + 0.62, car.z + fz * 1.9 + fx * hs); LUX.uHD.value.set(fx * cp, Math.sin(pitch), fz * cp); LUX.uHC.value.copy(HCB).multiplyScalar(pharesV * (1 - (dg.ph[0] + dg.ph[1]) / 2));
-    if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.22 * kBr; cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
+    if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.14 * kBr * (1 - (dg.ph[0] + dg.ph[1]) / 2); cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
     G.updateMatrixWorld(); LUX.uBox.value.copy(G.matrixWorld).multiply(BOITE).invert(); // G : le modèle de la voiture de la vue ; l'ombre portée sous les luminaires n'existe que pour elle
     LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
     let nl = 0;
@@ -1990,7 +1990,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     let nf = 0; veh.forEach(c => { if (d2(c) < 1600) return; const i = nf++, ax = Math.cos(c.th), az = Math.sin(c.th), k = c.lane === undefined, ar = k ? ENCt.x / 2 + 0.05 : 6.5, l = k ? ENCt.z / 2 - 0.3 : 1; // sur l'arrière de la caisse, ou de la remorque
       for (const s of [-1, 1]) feuxP.set(tmp.set(c.x - ax * ar - az * l * s, c.y + (k ? 0.7 : 1.3), c.z - az * ar + ax * l * s).lerp(cam.position, 0.01).toArray(), i * 6 + (s + 1) * 1.5); }); // 1 % vers la caméra : de loin, la profondeur ne distingue plus le feu de la caisse
     feuxGeo.setDrawRange(0, nf * 2); feuxGeo.attributes.position.needsUpdate = true;
-    feux.material.size = (TH.pharesBrume ? 1 + 2 * kBr : 1) * 0.5 / Math.tan(vu.cam.fov * Math.PI / 360) * RH / renderer.domElement.height * renderer.getPixelRatio(); // three.js mesure les points sur la toile (0,5 × sa hauteur / distance), on dessine dans la cible de la vue, de RH lignes
+    feux.material.size = (TH.pharesBrume ? 1 + 0.6 * kBr : 1) * 0.5 / Math.tan(vu.cam.fov * Math.PI / 360) * RH / renderer.domElement.height * renderer.getPixelRatio(); // three.js mesure les points sur la toile (0,5 × sa hauteur / distance), on dessine dans la cible de la vue, de RH lignes
     for (const c of veh.sort((a, b) => d2(a) - d2(b)).slice(0, 2)) {
       const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 6.5 : 10, ar = c.lane === undefined ? 3.4 : 7; // un camion est plus long
       const dv = c.lane === undefined ? modele(c).userData.dg : null, kp = dv ? 1 - (dv.ph[0] + dv.ph[1]) / 2 : 1, kf = dv ? 1 - (dv.fe[0] + dv.fe[1]) / 2 : 1; // ses phares et feux cassés
