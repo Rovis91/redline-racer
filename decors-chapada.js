@@ -155,11 +155,11 @@
         inst(h, h.geo('nenuphar'), mat('peinture', { c: 0xa6d24a }), nen).castShadow = false; inst(h, h.geo('bloc'), mat('peinture', { c: 0xf0a8c8 }), fl); }
       // un vol d'aigrettes blanches posées dans l'eau du marais, de part et d'autre du passage noyé : elles décollent à l'approche et partent sur le côté (avant le freinage de la chicane)
       { const peauA = { patte: mat('peinture', { c: 0x2a2a26 }), plume: mat('peinture', { c: 0xf6f6ee }), bec: mat('peinture', { c: 0xe8b83a }) }, i0 = P(2) + 8;
-        const blanc = mat('peinture', { c: 0xf6f6ee, ...DS });
+        const blanc = mat('peinture', { lum: 1, c: 0xeeeee6, ...DS }); /* lumineux : éclairées, les ailes vues par-dessous étaient noires */
         for (const tete of [0, 1]) { const bs = []; for (let k = 0; k < 12; k++) { const q = S[i0 + 2 + (alea() * 24 | 0)], sd = (k + tete) & 1 ? 1 : -1, [x, z] = bord(q, sd, q.w + 2.5 + alea() * 6), v = 2 + alea() * 2.5, av = 10 + alea() * 7;
-            bs.push({ x, y: MAR - 0.2, z, r: alea() * 6.28, vx: -q.tz * sd * v + q.tx * av, vy: 0.7 + alea() * 0.9, vz: q.tx * sd * v + q.tz * av, e: [3.2, 3.2, 3.2] }); }
-          const l = bs.map(q => [q.x, q.y, q.z, q.r, 3.2]); // posée : l'échassier de la plage, en blanc ; en vol : le corps à l'horizontale et deux ailes
-          envol(insts(h, 'flamant', peauA, l, { a: [tete] }), bs, i0, { vol: insts(h, 'aigretteVol', peauA, l), ailes: [inst(h, h.geo('ailesV', 1.5, 2.2), blanc, l)], D: 28, T: 6, g: 0.07, bat: 8 }); } }
+            bs.push({ x, y: MAR - 0.2, z, r: alea() * 6.28, vx: -q.tz * sd * v + q.tx * av, vy: 0.7 + alea() * 0.9, vz: q.tx * sd * v + q.tz * av, e: [2.5, 2.5, 2.5] }); }
+          const l = bs.map(q => [q.x, q.y, q.z, q.r, 2.5]); // posée : l'échassier de la plage, en blanc ; en vol : le corps à l'horizontale et deux ailes
+          envol(insts(h, 'flamant', peauA, l, { a: [tete] }), bs, i0, { vol: insts(h, 'aigretteVol', { ...peauA, plume: blanc }, l), ailes: [inst(h, h.geo('ailesOiseau', 1.25, 1.7, 0.45), blanc, l)], D: 28, T: 6, g: 0.07, bat: 8 }); } }
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: palme }, fougeres); insts(h, 'jucara', { stipe: ecorce, palme }, palmiers);
       inst(h, h.geo('cimeLoin'), mat('feuilleLoin'), rideau).castShadow = false;
       const feuilleG = mat('feuilleSoleil', DS), rouge = mat('peinture', { c: 0xd8362a });
@@ -182,9 +182,9 @@
       const pose = (nom, peau, x, z, ry = 0, y = g.hAt(x, z), ...a) => { const p = new THREE.Group(); p.position.set(x, y, z); p.rotation.y = ry; h.scene.add(p); h.pose(nom, peau, p, [0, 0, 0], ...a); return p; };
       // une flamme qui vit (feu de camp, braseros des portails ; jamais les torches, qui marquent les freinages) : deux langues dont la hauteur change, penchées par le vent ; l = son luminaire, qui respire avec elle
       const coeurFeu = mat('peinture', { lum: 1, c: 0xffe890, fog: false });
-      const flammeVive = (x, y, z, k = 1, l = null, lw = 1) => { const p = new THREE.Group(); p.position.set(x, y, z); p.userData.dyn = 1; h.scene.add(p); for (const [w, ht, y, dx] of [[0.62, 0.7, 0.35, 0], [0.42, 0.6, 0.95, 0.03], [0.22, 0.55, 1.45, 0.08]]) h.pose('boite', flamme, p, [dx * k, y * k, 0], w * k * lw, ht * k, w * k * lw); /* trois langues de plus en plus étroites : une pointe, pas un bloc */
+      const flammeVive = (x, y, z, k = 1, l = null, lw = 1) => { const p = new THREE.Group(); p.position.set(x, y, z); p.userData.dyn = 1; h.scene.add(p); for (const [w, ht, y, dx] of [[0.62, 0.7, 0.68, 0], [0.42, 0.6, 1.28, 0.03], [0.22, 0.55, 1.78, 0.08]]) h.pose('boite', flamme, p, [dx * k, y * k, 0], w * k * lw, ht * k, w * k * lw); /* trois langues de plus en plus étroites : une pointe, pas un bloc */
         h.pose('boite', coeurFeu, p, [0, 0.22 * k, 0], 0.7 * k * lw, 0.44 * k, 0.7 * k * lw); /* le cœur jaune */
-        const ph = alea() * 9, c0 = l && l.c ? l.c.clone() : null; VIE.push((dt, car, t) => { const f = 1 + 0.24 * Math.sin(t * 11 + ph) + 0.16 * Math.sin(t * 27.3 + ph * 2); p.scale.set(1 + 0.22 * Math.sin(t * 19 + ph), f, 1 + 0.18 * Math.sin(t * 23 + ph * 3)); p.rotation.z = 0.14 + 0.08 * Math.sin(t * 7 + ph); if (c0) l.c.copy(c0).multiplyScalar(0.75 + 0.3 * f); }); };
+        const ph = alea() * 9, c0 = l && l.c ? l.c.clone() : null; VIE.push((dt, car, t) => { const f = 1 + 0.24 * Math.sin(t * 19 + ph) + 0.16 * Math.sin(t * 43 + ph * 2); p.scale.set(1 + 0.22 * Math.sin(t * 29 + ph), f, 1 + 0.18 * Math.sin(t * 37 + ph * 3)); p.rotation.z = 0.14 + 0.08 * Math.sin(t * 7 + ph); if (c0) l.c.copy(c0).multiplyScalar(0.75 + 0.3 * f); }); };
       // au bord de la route, face à elle : échantillon i, côté sd, à off m de l'axe
       const auBord = (nom, peau, i, sd, off, ...a) => { const s = S[(i + N) % N], [x, z] = bord(s, sd, off); return pose(nom, peau, x, z, Math.atan2(s.x - x, s.z - z), s.y - 0.35, ...a); };
       // torches de l'expédition : elles marquent les freinages à la place des panneaux (O-5) : deux à 100 m, une à 50 m ; et les lieux
