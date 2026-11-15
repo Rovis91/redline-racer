@@ -429,7 +429,7 @@
     // serpente entre trois groupes posés au milieu de la halle, en quinconce : un slalom) ; la montée de la culée est en trois lacets (pts 13-35), dont un court passage en galerie dans la roche (pts 22-27) ;
     // la crête de 660 m cap ouest, retenue à droite, vide à gauche (pts 35-40) ; la corniche de la rive ouest qui descend au-dessus de la rivière (pts 41-49) ; le grand pont qui la traverse (pts 49-53).
     { id: 'barrage', nom: 'BARRAGE 74', rivaux: ['ILYA', 'VERA', 'OLEG'], W: 9, kmh: 0.8, vit: [175, 225], grip: 20, sc: 1, tun: [22, 27], chaud: [35, 46], sect: [13, 40], corde: [36, 40], amb: [[3, 6], [6, 12], [36, 41]], anticipe: 1, trafic: 4, // corde : sur la crête, frôler le parapet sans le toucher remplit la nitro
-      surf: { zones: [[3, 6, 'mouille', 1], [6, 12, 'mouille', 0.4], [22, 27, 'mouille', 0.35]] }, // le pied du mur, mouillé par les embruns des jets ; la galerie suinte (pas de th.pluie : ce sont des embruns, pas une averse)
+      surf: { zones: [[3, 6, 'mouille', 1], [6, 12, 'mouille', 0.4], [22, 27, 'mouille', 0.35], [39, 40, 'mouille', 0.6]] }, // le pied du mur, mouillé par les embruns des jets ; la galerie suinte ; la fin de crête, sous l'embrun du déversoir (pas de th.pluie : ce sont des embruns, pas une averse)
       pts: [[146, 790, 12], [118, 600, 12], [100, 400, 12], [90, 290, 12], [88, 200, 12], [110, 138, 12],
         [145, 110, 12], [175, 99, 12], [200, 110, 12], [225, 121, 12], [250, 110, 12], [275, 99, 12], [305, 110, 12],
         [345, 114, 14], [450, 115, 23], [560, 115, 32], [680, 115, 40], [742, 112, 41.5], [752, 91, 43], [740, 70, 44.5],
@@ -437,19 +437,19 @@
         [540, 22, 66], [640, 22, 74], [800, 22, 81], [848, 16, 84], [864, -6, 86], [848, -30, 88],
         [700, -27, 92], [600, -28, 97.5], [500, -25, 102], [450, -12, 105], [400, 0, 105],
         [250, 0, 105], [100, 0, 105], [-100, 0, 105], [-290, 0, 105], [-340, 8, 104], [-354, 50, 102],
-        [-336, 150, 96], [-305, 300, 84], [-248, 420, 70], [-168, 560, 56], [-262, 700, 40], [-200, 820, 26], [-160, 900, 18],
+        [-336, 150, 96], [-305, 300, 84], [-248, 420, 70], [-140, 565, 56], [-262, 700, 40], [-200, 820, 26], [-160, 900, 18],
         [-100, 930, 14], [-20, 950, 14], [80, 952, 14], [150, 938, 13], [160, 860, 12]],
       // voiture inventée : une berline d'État des années 70 réarmée, V8 de 5,5 L, environ 340 ch, 1480 kg, propulsion, boîte à 5 rapports (chiffres inventés)
       car: car({ nom: 'VOLNA 24 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'gtr', col: 0x3d6e8a, l: 1.05, w: 1.02, h: 1.04, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0, bandes: 0xe8761e } }),
       radio: RADIO.barrage,
-      th: { decor: 'barrage', pluie: [[3, 6, 0.6]], routeTex: 'chausseeFine', lisse: ['eauGES', 'ecumeGES', 'gerbe', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin, eau lissée
+      th: { decor: 'barrage', pluie: [[3, 6, 0.6]], mouilleVisible: 1, frole: 1, oeil: { tun: 0.7, noir: 0.5, clair: 0.15 }, routeTex: 'chausseeFine', lisse: ['eauGES', 'ecumeGES', 'gerbe', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin, eau lissée
         couches: [{ tex: ['rocheGES'], pente: [0.35, 0.7], rep: 0.8, bruit: 0.06 }, { tex: ['bruit', '#6e6a58', ['#7c7864', '#5e5a4a']], bord: [6, 16] }, { tex: ['aiguilles', '#3a4a32'], haut: [60, 140], bruit: 0.05 }], // le terrain : roche sur les pentes, gravier au bord de la route, sous-bois en altitude
         fog: 0xc3cdc9, fogD: [110, 1300], sky: [[0, '#6f8aa0'], [0.3, '#9db4c0'], [0.47, '#d6d2c0'], [0.5, '#c9cfc8'], [1, '#c9cfc8']], stars: 0,
         astre: { dir: [-0.25, 0.12, -0.95], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xc8d4dc, 0x5a5a50, 0.95], sun: [0xfff0d0, 0.6], phares: 0.3, bloom: 0.04, scan: 0.05, // soleil bas et pâle derrière la brume, côté retenue (nord)
         chev: 0, murH: 0, route: ['#3a3c3e', '#46484a', '#f4f0e4', '#f4f0e4', '#3a3c3e', '#3a3c3e', false], mur: ['#8d918a', '#b8bbb4', '#e8761e', '#6d726d'], depart: [0xe8761e, 0x6d726d, '#e8e4d8'],
         tun: { sol: ['#3a3c3e', '#46484a', '#e8e4d8', '#e8e4d8', '#3a3c3e', '#3a3c3e'], murs: ['#8d918a', '#7d817a'], paroi: ['#6d726d', '#8d918a', '#a8aca4', '#3a3c3e'], plafond: ['#4a4e4a', '#8d918a', '#5fa89a', '#5a5e5a'],
-          fog: 0x55584f, portail: 0xe8761e, neons: [0xf2b43a, 0xf4c860], coque: 6 }, // galeries : béton, néons sodium
+          fog: 0x55584f, portail: 0xe8761e, neons: [0xf2b43a, 0xf4c860], coque: 6, ambiant: 0.7 }, // galeries : béton, néons sodium
         hud: { y: '#f4f0e0', c: '#e8761e', r: '#b5483c', fond: 'rgba(60,64,60,.9)', style: 'plaque', jauge: 'aiguille', split: 0, jp: null, sur: ['ГЭС-74', 'VANNES OUVERTES · 6 H 10'], titre: ['BARRAGE', '74'] } } },
     // Matin sur la Chapada : gorge et chutes de la Chapada Diamantina (Brésil) à 7 h, dans la brume. Plateau de sable blanc, trois épingles qui descendent la gorge,
     // la galerie derrière la grande chute (route mouillée), le gué en S (centre mouillé, bords secs et plus longs), le pont suspendu à voie unique, la remontée en forêt, l'arche de roche.

@@ -1908,6 +1908,12 @@
       { const arc = new THREE.Group(); arc.position.set(-55, 4, 215); arc.rotation.y = 0.5; h.scene.add(arc); // l'arc-en-ciel dans l'embrun, soleil bas dans le dos du joueur qui remonte la vallée
         const P3 = [], C3 = [], I = []; [0xff5040, 0xffb040, 0xf0f060, 0x60d080, 0x6080ff].forEach((c, k) => { const t = new THREE.TorusGeometry(44 - k * 1.4, 0.7, 3, 40, Math.PI), b = P3.length / 3, col = new THREE.Color(c); P3.push(...t.attributes.position.array); for (let j = 0; j < t.attributes.position.count; j++) C3.push(col.r, col.g, col.b); I.push(...Array.from(t.index.array, i => i + b)); });
         const ga = new THREE.BufferGeometry(); ga.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); ga.setAttribute('color', new THREE.Float32BufferAttribute(C3, 3)); ga.setIndex(I); arc.add(new THREE.Mesh(ga, new THREE.MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.22, blending: THREE.AdditiveBlending, depthWrite: false }))); } // une seule passe pour les cinq bandes
+      // ---------- le déversoir de crête (REFS 1) : cinq passes vannées sous la route, au-dessus du bassin ; la lame dévale la face, l'embrun traverse la route (zone mouillée de la fin de crête) ----------
+      { const X0 = -160, X1 = -95, pil = [], van = [];
+        for (let x = X0; x <= X1 + 0.1; x += 13) { pil.push([x, 98, -13, 0, 3, 8, 6]); if (x < X1) van.push([(x + 6.5), 107.5, -13, 0, 10, 2.2, 1.2]); } // piles côté lac, vannes relevées au-dessus du parapet
+        peint(pil, 0x8d918a); peint(van, 0xe8761e);
+        prisme([[zF(YC - 1) + 0.35, YC - 1], [zF(12) + 0.35, 12]], X0, X1, gerbe, 18, 30).renderOrder = 2; // la lame d'eau sur la face, jusqu'au coursier
+        inst(h, h.geo('brume'), brume, [[-128, 106, 2, 0.4, 46, 10, 22], [-110, 110, 8, 1.1, 34, 12, 18], [-140, 104, 12, 2, 40, 8, 20]]).renderOrder = 3; } // l'embrun qui passe sur la crête
       // les bajoyers du bassin et le seuil de sortie
       bloc(bet, -164, -158, zF(20), 250, 0, 11); bloc(bet, 58, 64, zF(20), 250, 0, 6.5); bloc(betS, -158, 58, 246, 252, 0, 3.6);
 
