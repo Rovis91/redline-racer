@@ -1908,7 +1908,7 @@
         const k = ravin(x, z); if (k > 0) r = Math.max(r, (y - (sb.y - 15)) * k);
         const a = acc(i, cote), e = Math.max(0, d - w); if (a && e < a + 60) r = Math.max(r, y - (s.y + A(Math.min(e, a)) - 0.35 + Math.max(0, e - a - 2) * 0.7)); // jamais au-dessus du bas-côté, puis une rampe (pas de marche)
         return r; };
-      const g = terrain(h, { pas: 10, marge: 220, creux, mat: h.mat('bruit', { vertexColors: true }, '#d0cec6', ['#c0beb6', '#e0ded6', '#b0aea6']) });
+      const g = terrain(h, { pas: 12, marge: 180, creux, mat: h.mat('bruit', { vertexColors: true }, '#d0cec6', ['#c0beb6', '#e0ded6', '#b0aea6']) });
       // le sol prend sa couleur du lieu : campo ocre-gris et olive au plateau, herbe et roche ailleurs (la roche là où ça monte raide), litière en forêt, dalles au fond de la rivière
       { const ge = g.mesh.geometry, p = ge.attributes.position, nr = ge.attributes.normal, C = new Float32Array(p.count * 3);
         const campo = [COL('#b09a78'), COL('#7f8b4a'), COL('#9a8a6a')], vert = [COL('#3a5a30'), COL('#2f4a2c'), COL('#4a6a34')], roc = COL('#7d7062'), litiere = COL('#3e3a26'), dalle = COL('#8a6a4a');
@@ -1969,7 +1969,7 @@
       tranche(iF0 - 20, iF1 + 20, (i, l) => h.ribbon(i, l, s => s.w + 1, nivS, s => s.w + 45, nivS, eau, 12));
       const corn = [], cornB = []; // fougères et broméliacées sur les replats des falaises
       const surCorniche = sd => (i, s, o, y) => { const [x, z] = bord(s, sd, o); (rnd() < 0.6 ? corn : cornB).push([x, s.y + y, z, rnd() * 6, 0.6 + rnd() * 0.5]); };
-      { const nH = bruit(); tranche(P(12) - 30, P(23) + 20, (i, l) => extrude(i, l, -1, falaise(s => s.w + 54, j => 52 + 14 * nH(j * 0.012), s => nivS(s) - 1, surCorniche(-1), 70), gres, 3)); }
+      { const nH = bruit(); tranche(P(12) - 30, P(23) + 20, (i, l) => extrude(i, l, -1, falaise(s => s.w + 54, j => 52 + 14 * nH(j * 0.012), s => nivS(s) - 1, surCorniche(-1), 62), gres, 4)); }
       // REFS 2 : trois chutes fines qui descendent la paroi d'en face, chacune avec sa vasque de brume et ses blocs au pied
       const chutes = []; for (const [k, f] of [[12, 0.6], [17, 0.3], [20, 0.7]]) { const i = (P(k) + Math.round(((P(k + 1) - P(k) + N) % N) * f)) % N; h.ribbon(i, 5, s => -(s.w + 51), nivS, s => -(s.w + 51), 56, chuteM, 12); chutes.push(i); }
       // galets du gué (le mur de la simulation y est), blocs et dalles dans la rivière
@@ -2065,13 +2065,13 @@
         if (rnd() < 0.7) { const l = 6 + rnd() * 10; h.pose('muret', { pierre }, gr, [(rnd() < 0.5 ? -1 : 1) * (w / 2 + l / 2 + 1), 0, d / 2 + 2 + rnd() * 4], l); } } // l'enclos du quintal
 
       // ---------- la végétation, par lieu et par plan ----------
-      const cimesF = [], cimesE = [], arbres = [], cimes = [[], [], [], []], troncsC = [], fougeres = [], palm = [], palmT = [], bromelias = [], buissons = [], lianes = [], canelas = [], lajedos = [], affl = [];
+      const cimesF = [], cimesE = [], cimesL = [], arbres = [], cimes = [[], [], [], []], troncsC = [], fougeres = [], palm = [], palmT = [], bromelias = [], buissons = [], lianes = [], canelas = [], lajedos = [], affl = [];
       const touffes = [[], [], []], sempre = [];
       // un arbre de la forêt de galerie (REFS 4) : fût de 10 à 24 m, clair ou sombre, couronne de 2 à 4 houppiers de trois verts
       const arbre = (x, y, z, t, prochePiste, loin) => { const Ht = (10 + rnd() * 14) * t, l = 0.9 + rnd() * 0.9; (rnd() < 0.35 ? troncsC : arbres).push([x, y + Ht / 2, z, rnd() * 6, l * t, Ht / 5.2, l * t]); // sans fût, les houppiers lointains flottaient
-        const sorte = rnd(), cc = sorte < 0.1 ? cimesF : sorte < 0.2 ? cimesE : cimes[rnd() * 4 | 0]; // ipê en fleur, embaúba, ou l'un des quatre verts
-        const nc = 2 + (rnd() * 2 | 0); for (let c = 0; c < nc; c++) { const r = (0.8 + rnd() * 1.8) * t, a = rnd() * 6.28; cc.push([x + Math.cos(a) * r, y + Ht - 1 + rnd() * 3 * t, z + Math.sin(a) * r, rnd() * 6, (0.9 + rnd() * 0.7) * t, (0.85 + rnd() * 0.6) * t, (0.9 + rnd() * 0.7) * t]); }
-        if (rnd() < 0.3) coupes.push([x + 0.4, y + 3 + rnd() * Ht * 0.4, z, rnd() * 6, 0.5]); // une broméliacée épiphyte sur le fût
+        const sorte = rnd(), cc = sorte < 0.1 ? cimesF : sorte < 0.2 ? cimesE : loin ? cimesL : cimes[rnd() * 4 | 0]; // ipê en fleur, embaúba, ou l'un des quatre verts
+        const nc = loin ? 1 : 2 + (rnd() * 2 | 0), gl = loin ? 1.35 : 1; for (let c = 0; c < nc; c++) { const r = (loin ? 0 : 0.8 + rnd() * 1.8) * t, a = rnd() * 6.28; cc.push([x + Math.cos(a) * r, y + Ht - 1 + rnd() * 3 * t, z + Math.sin(a) * r, rnd() * 6, (0.9 + rnd() * 0.7) * t * gl, (0.85 + rnd() * 0.6) * t * gl, (0.9 + rnd() * 0.7) * t * gl]); } // loin de la route (niveau de détail), un seul houppier, plus gros
+        if (!loin && rnd() < 0.25) coupes.push([x + 0.4, y + 3 + rnd() * Ht * 0.4, z, rnd() * 6, 0.5]); // une broméliacée épiphyte sur le fût
         if (prochePiste && rnd() < 0.7) for (let c = 0; c < 1 + (rnd() * 3 | 0); c++) { const ll = 4 + rnd() * 8, a = rnd() * 6.28, r = 1 + rnd() * 3; lianes.push([x + Math.cos(a) * r, y + Ht - ll / 2, z + Math.sin(a) * r, rnd() * 6, 1, ll, 1]); } };
       const palmier = (x, y, z, t) => { const Ht = (5 + rnd() * 11) * t; palmT.push([x, y + Ht / 2, z, rnd() * 6, 0.6 * t, Ht, 0.6 * t]); palm.push([x, y + Ht, z, rnd() * 6, 0.55 * t]); }; // juçara : stipe fin, couronne de palmes
       for (let k = 0; k < 42000; k++) {
@@ -2083,19 +2083,19 @@
           if (d < 2.5) continue; // le muret
           if (r < 0.2) { if (d < 60) touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, (d < 15 ? 1.4 : 0.8) + rnd() * 1.2, 0.4 + rnd() * 0.6]); }
           else if (r < 0.5) { if (d < 120 && rnd() < 0.3) sempre.push([x, y - 0.05, z, rnd() * 6, 0.5 + rnd() * 0.4, 0.5 + rnd() * 0.4]); }
-          else if (r < 0.525) for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.8 + rnd() * 1.2]); // en groupes
+          else if (r < 0.525 && d < 40) for (let c = 0, nc = d > 20 ? 1 : 1 + (rnd() * 3 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.8 + rnd() * 1.2]); // en groupes
           else if (r < (d < 15 ? 0.64 : 0.56)) lajedos.push([x, y - 0.3, z, h.across(q.s) + Math.PI / 2 + (rnd() - 0.5) * 0.6, (d < 15 ? 0.5 : 0.6) + rnd() * (d < 15 ? 0.6 : 1.4)]);
           else if (r < 0.58 && d > 25) affl.push([x, y - 2, z, rnd() * 6, 4 + rnd() * 10, 2 + rnd() * 6, 3 + rnd() * 8]); // gros affleurements de quartzite
           continue; }
         if (zn === 'foret') {
           if (d < 14) { if (r < 0.28) fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]); else if (r < 0.36) (d < 6 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.7 + rnd() * 0.8]); else if (r < 0.55) buissons.push([x, y + 0.6, z, rnd() * 6, 0.35 + rnd() * 0.35, 0.3 + rnd() * 0.25]);
             else if (r < 0.7 && d > 4) fougeres.push([x, y, z, rnd() * 6, 0.8 + rnd() * 0.5]); else if (r < 0.76 && d > 3) palmier(x, y, z, 0.3 + rnd() * 0.9); else if (r < 0.86 && d > 6) arbre(x, y, z, 0.8 + rnd() * 0.5, true); }
-          else if (d < 80) { if (r < 0.25) arbre(x, y, z, 0.8 + rnd() * 0.7, false); else if (r < 0.3) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.6]); else if (r < 0.36) palmier(x, y, z, 0.8 + rnd() * 0.6); else if (r < 0.5) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.4, 0.4]); }
+          else if (d < 80) { if (r < 0.25) arbre(x, y, z, 0.8 + rnd() * 0.7, false, d > 25); else if (r < 0.3) { if (d < 25) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.6]); } else if (r < 0.36) { if (d < 30) palmier(x, y, z, 0.8 + rnd() * 0.6); } else if (r < 0.5 && d < 30) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.4, 0.4]); }
           else if (r < 0.14 && d < 150) arbre(x, y, z, 1 + rnd() * 0.6, false, true);
           continue; }
         // la gorge et les lacets : mata ciliar sur les rives et les pentes, fougères arborescentes, palmiers ; roche nue là où c'est raide
         if (d < 10) { if (r < 0.25) fbas.push([x, y, z, rnd() * 6, 0.7 + rnd() * 0.6]); else if (r < 0.36) (d < 5 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.8 + rnd() * 0.6]); else if (r < 0.48) touffes[2].push([x, y, z, rnd() * 6, 0.6 + rnd() * 0.5, 0.6 + rnd() * 0.6]); else if (r < 0.62) blocs.push([x, y, z, rnd() * 6, 0.6 + rnd(), 0.4 + rnd() * 0.6, 0.6 + rnd()]); else if (r < 0.74 && d > 3.5) fougeres.push([x, y, z, rnd() * 6, 0.7 + rnd() * 0.6]); else if (r < 0.8 && d > 4) palmier(x, y, z, 0.5 + rnd() * 0.5); }
-        else if (d < 90) { if (r < 0.2) arbre(x, y, z, 0.7 + rnd() * 0.6, false); else if (r < 0.26) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); else if (r < 0.31) palmier(x, y, z, 0.8 + rnd() * 0.5); else if (r < 0.55) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.5, 0.4]); else if (r < 0.6 && d > 20) affl.push([x, y - 1.5, z, rnd() * 6, 3 + rnd() * 6, 2 + rnd() * 3, 3 + rnd() * 6]); }
+        else if (d < 90) { if (r < 0.2) arbre(x, y, z, 0.7 + rnd() * 0.6, false, d > 25); else if (r < 0.26) { if (d < 25) fougeres.push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.7]); } else if (r < 0.31) { if (d < 30) palmier(x, y, z, 0.8 + rnd() * 0.5); } else if (r < 0.55 && d < 30) buissons.push([x, y + 0.8, z, rnd() * 6, 0.5 + rnd() * 0.5, 0.4]); else if (r < 0.57 && d > 20) affl.push([x, y - 1.5, z, rnd() * 6, 3 + rnd() * 6, 2 + rnd() * 3, 3 + rnd() * 6]); }
         else if (r < 0.13 && d < 150) arbre(x, y, z, 0.9 + rnd() * 0.5, false, true);
       }
       // (pas de lianes isolées au-dessus de la route : sans arbre au-dessus, elles flottaient ; celles des arbres de bord restent)
@@ -2103,10 +2103,10 @@
         for (const sd of [-1, 1]) { const a = acc(i, sd), at = (o, f) => { const [x, z] = bord(s, sd, o), y = o < s.w + a + 0.5 ? s.y + A(Math.min(o - s.w, a)) : g.hAt(x, z); f(x, y, z); }, o = () => s.w + 2.6 + rnd() * rnd() * 34;
           if (zn === 'plateau' && rnd() < 0.015) at(s.w + 12 + rnd() * 40, (x, y, z) => { const t = 0.6 + rnd() * 0.4, Ht = 9 * t; arbres.push([x, y + Ht / 2, z, rnd() * 6, t, Ht / 5.2, t]); for (let c = 0; c < 3; c++) cimesF.push([x + (rnd() - 0.5) * 3, y + Ht, z + (rnd() - 0.5) * 3, rnd() * 6, t, 0.8 * t, t]); }); // un ipê en fleur isolé
           if (zn === 'plateau') { // REFS 5 : campo rupestre, à touche-touche au bord
-            for (let k = 0; k < 3; k++) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.4 + rnd() * 0.6])); // plus larges que hautes : hautes, elles faisaient des sapins
-            if (rnd() < 0.35) at(s.w + 4 + rnd() * rnd() * 30, (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.5, 0.6 + rnd() * 0.8])); // le long de la route : en travers, la dalle de 12 m mordait la chaussée
-            if (rnd() < 0.1) at(s.w + 3.5 + rnd() * rnd() * 25, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
-            if (rnd() < 0.5) at(s.w + 5 + rnd() * 30, (x, y, z) => { for (let c = 0; c < 4; c++) sempre.push([x + (rnd() - 0.5) * 3, y - 0.05, z + (rnd() - 0.5) * 3, rnd() * 6, 0.5 + rnd() * 0.4, 0.5 + rnd() * 0.4]); }); }
+            for (let k = 0; k < 2; k++) if (rnd() < 0.8) at(o(), (x, y, z) => touffes[rnd() * 3 | 0].push([x, y - 0.05, z, rnd() * 6, 1 + rnd() * 1.4, 0.4 + rnd() * 0.6])); // plus larges que hautes : hautes, elles faisaient des sapins
+            if (rnd() < 0.22) at(s.w + 4 + rnd() * rnd() * 30, (x, y, z) => lajedos.push([x, y - 0.3, z, h.across(s) + Math.PI / 2 + (rnd() - 0.5) * 0.5, 0.6 + rnd() * 0.8])); // le long de la route : en travers, la dalle de 12 m mordait la chaussée
+            if (rnd() < 0.07) at(s.w + 3.5 + rnd() * rnd() * 25, (x, y, z) => { for (let c = 0, nc = 1 + (rnd() * 4 | 0); c < nc; c++) canelas.push([x + (rnd() - 0.5) * 5, y - 0.1, z + (rnd() - 0.5) * 5, rnd() * 6, 0.9 + rnd() * 1.3]); });
+            if (rnd() < 0.5) at(s.w + 5 + rnd() * 30, (x, y, z) => { for (let c = 0; c < 3; c++) sempre.push([x + (rnd() - 0.5) * 3, y - 0.05, z + (rnd() - 0.5) * 3, rnd() * 6, 0.6 + rnd() * 0.4, 0.5 + rnd() * 0.4]); }); }
           else { // REFS 4 : le sous-bois au bord
             if (rnd() < 0.5) at(o(), (x, y, z) => fbas.push([x, y, z, rnd() * 6, 1 + rnd() * 1.2]));
             if (rnd() < 0.35) at(o(), (x, y, z) => (rnd() < 0.3 ? bromelias : coupes).push([x, y, z, rnd() * 6, 0.9 + rnd() * 0.8]));
@@ -2120,7 +2120,8 @@
       const feuil = h.mat('feuillage', DS), neutre = h.mat('bruit', DS, '#e8e8e4', ['#d0d0cc', '#f4f4f0', '#c0c0bc']), ecorce = h.mat('tronc'), rocM = h.mat('grainGres'), vertsF = [0x1f4d34, 0x2e6a3a, 0x4f7a3a, 0x6f9a45];
       const tc = (l, c) => l.map(p => [p[0], p[1], p[2], p[3] || 0, p[4] || 1, p[5] || p[4] || 1, p[6] || p[4] || 1, typeof c === 'function' ? c() : c]), un = l => l[rnd() * l.length | 0];
       const instT = (geo, m, l) => { const me = inst(h, geo, m, l); l.forEach((p, i) => me.setColorAt(i, new THREE.Color(p[7]))); if (l.length) me.instanceColor.needsUpdate = true; return me; };
-      instT(h.geo('cime'), feuil, [...cimes.flatMap((l, k) => tc(l, vertsF[k])),  ...tc(buissons, () => un([0x2a4a2a, 0x3a5a2a])), ...tc(coupes.map(p => [p[0], p[1], p[2], p[3], p[4] * 0.3, p[4] * 0.12, p[4] * 0.3]), 0x8aa83a)]);
+      instT(h.geo('cime'), feuil, [...cimes.flatMap((l, k) => tc(l, vertsF[k])),  ...tc(coupes.map(p => [p[0], p[1], p[2], p[3], p[4] * 0.3, p[4] * 0.12, p[4] * 0.3]), 0x8aa83a)]);
+      instT(h.geo('cimeLoin'), feuil, [...tc(cimesL, () => un(vertsF)), ...tc(buissons, () => un([0x2a4a2a, 0x3a5a2a]))]); // niveau de détail : les houppiers lointains
       instT(h.geo('cime'), neutre, [...tc(cimesF, () => un([0xf0c020, 0xf8d030, 0xe878b8])), ...tc(cimesE.map(p => [p[0], p[1], p[2], p[3], p[4] * 1.3, p[5] * 0.45, p[6] * 1.3]), 0xb8c8b8)]); // ipês en fleur et embaúbas
       instT(h.geo('tronc'), ecorce, [...tc(arbres, () => un([0x6a5a48, 0x5a4a3a, 0x7a6a58])), ...tc(troncsC, () => un([0xc8bea8, 0xb0a890]))]);
       insts(h, 'fougereArbo', { stipe: ecorce, fronde: feuil }, tc(fougeres, () => un([0x7da23d, 0x6a9a3a, 0x8ab04a])), { teinte: 'fronde' });
