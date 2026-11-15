@@ -117,6 +117,9 @@
         for (let y = 0; y < 128; y += 2 + (alea() * 6 | 0)) { const l = 4 + (alea() * 20 | 0); R(g, `rgba(${alea() < 0.35 ? '150,182,196' : '244,250,252'},${(a * (0.5 + alea() * 0.5)).toFixed(2)})`, x, y, 1, l); } } // filets clairs et filets gris-bleu : on lit l'eau qui file, pas un dôme lisse
     }],
     // brume des embruns au pied des gerbes : nuage rond, opaque au centre, transparent au bord
+    // voie ferrée : ballast gris-brun et traverses de bois sombre ; une tuile = 2 m de voie (trois traverses) sur la largeur de la plate-forme (3,6 m)
+    voieGES: () => [32, 32, (g, o) => { const { R, alea } = o; R(g, '#6e6a60', 0, 0, 32, 32); for (let i = 0; i < 130; i++) R(g, alea() < 0.5 ? '#7c786c' : '#5a564c', alea() * 32 | 0, alea() * 32 | 0, 1 + (alea() * 2 | 0), 1);
+      for (const y of [2, 13, 23]) { R(g, '#4a3a2a', 5, y, 22, 5); R(g, '#3a2c20', 5, y + 4, 22, 1); } }],
     brumeGES: () => [64, 64, (g) => {
       const d = g.createRadialGradient(32, 32, 2, 32, 32, 32); d.addColorStop(0, 'rgba(240,246,248,0.7)'); d.addColorStop(0.5, 'rgba(232,242,244,0.35)'); d.addColorStop(1, 'rgba(232,242,244,0)');
       g.fillStyle = d; g.fillRect(0, 0, 64, 64);
