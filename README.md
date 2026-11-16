@@ -336,10 +336,12 @@ Pour la mémoire sur un enchaînement de cartes sans rechargement (Tournée) : `
 
 | mesure | référence | ce que c'est |
 |---|---|---|
-| `ms` | ≤ 2 ms | temps moyen d'une image, GPU compris |
-| `msMax` | ≤ 3 ms | la même chose sur la pire demi-seconde du tour |
+| `ms` | ≤ 3 ms | temps moyen d'une image, GPU compris |
+| `msMax` | ≤ 4,5 ms | la même chose sur la pire demi-seconde du tour |
 | `cpuMax` | ≤ 8,3 ms | la pire image isolée (à-coup) : aucune ne doit dépasser une image à 120 Hz |
 | `appelsMax` | ≤ 300 | passes de dessin par image, ombres comprises (le seul chiffre qui ne dépend pas de la machine) |
+
+Référence relevée le 16/11/2026 de 2 à 3 ms (et 3 à 4,5) : la scène est dessinée sur 540 lignes depuis la fusion de moteur-540, ce qui coûte 2 à 3 ms par image sur la machine de mesure.
 
 Les millisecondes valent pour la machine de mesure (portable à puce graphique intégrée Intel Arc 140T, image de 480 × 270) ; sur une autre, comparer les cartes entre elles et surveiller `appelsMax`. Une carte qui sort du tableau : `sectMs` et `sectAppels` disent sur quel dixième du tracé, `piresCpu` où tombent les à-coups et s'ils viennent du rendu ou du son.
 

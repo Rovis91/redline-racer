@@ -3,7 +3,7 @@
 // Le pilote automatique fait un tour en course contre 3 IA (le cas le plus lourd), à pas fixe de 1/60 s. Chaque image est chronométrée (cpu), et chaque lot de 30 images GPU compris (ms).
 // Référence à tenir sur toutes les cartes (voir README, « Performances ») : BUDGET ci-dessous.
 // Écran partagé : index.html?perf&auto&joueurs=2 fait la même mesure avec les deux vues dessinées (les deux joueurs au pilote automatique, 2 IA), résultat dans 'vpr.perf2'. Sa référence : budget(2).
-export const BUDGET = { appels: 300, ms: 2, msMax: 3, cpuMax: 8.3 }; // passes de dessin par image (ombres comprises) ; ms par image en moyenne ; dans le pire lot de 30 images ; ms de frame() pour la pire image (8,3 ms = 120 images/s)
+export const BUDGET = { appels: 300, ms: 3, msMax: 4.5, cpuMax: 8.3 }; // passes de dessin par image (ombres comprises) ; ms par image en moyenne ; dans le pire lot de 30 images ; ms de frame() pour la pire image (8,3 ms = 120 images/s)
 // la référence vaut par vue : à n vues, n fois les passes de dessin du solo ; le temps d'image, lui, doit seulement rester sous une image à 120 Hz
 export const budget = n => n > 1 ? { appels: BUDGET.appels * n, ms: BUDGET.cpuMax, msMax: BUDGET.cpuMax, cpuMax: BUDGET.cpuMax } : BUDGET;
 const cede = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = r; c.port2.postMessage(0); }); // un setTimeout serait bridé à 1 par seconde en arrière-plan
