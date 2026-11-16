@@ -143,6 +143,18 @@
     scene: () => [['noir', 14, 1.3, 8, 0, 0.65, 0, null, 1], ...paire(a => paire(b => ['fer', 0.3, 7, 0.3, a * 6.8, 4.8, b * 3.8])).flat(), ['fer', 14.4, 0.5, 8.4, 0, 8.4, 0, null, 1], ['texte', 12.4, 4.4, 0.2, 0, 5, 3.6], ...paire(a => ['noir', 1.8, 4.2, 1.6, a * 8.4, 2.1, -2.6, null, 1])],
     // manège (carrousel) à l'arrêt : socle, mât, plateau haut ; le toit rayé (cône) est posé à part
     manege: () => [['dalle', 10, 0.6, 10, 0, 0.3, 0], ['fer', 0.8, 5, 0.8, 0, 2.8, 0], ['cabA', 10, 0.5, 10, 0, 5.2, 0, null, 1], ...suite(8, k => { const a = k / 8 * 6.2832; return [['cabA', 'cabB', 'cabC'][k % 3], 0.9, 1.3, 1.8, Math.cos(a) * 3.6, 1.6, Math.sin(a) * 3.6, [0, -a, 0]]; })],
+    // ---------- la vie (propositions/VIE-plage.md) : tout regarde +X ----------
+    // oiseau en vol : corps fin et deux ailes relevées en V, 2 m d'envergure, une seule zone teintée (mouette, frégate, pélican, zopilote, hirondelle selon la teinte et l'échelle).
+    // Une échelle Y négative rabat les ailes sous le corps : c'est le battement
+    oiseau: () => [['plumage', 0.9, 0.16, 0.2, 0, 0, 0], ['plumage', 0.3, 0.1, 0.1, 0.55, 0.02, 0], ...paire(sd => ['plumage', 0.36, 0.05, 1.0, 0.05, 0.16, sd * 0.52, [sd * -0.32, 0, 0]])],
+    // oiseau posé : corps, tête, bec, pattes ; origine aux pattes
+    oiseauPose: () => [['plumage', 0.36, 0.18, 0.18, 0, 0.22, 0], ['plumage', 0.13, 0.13, 0.12, 0.2, 0.36, 0], ['bec', 0.12, 0.04, 0.04, 0.31, 0.35, 0], ['bec', 0.03, 0.14, 0.1, 0, 0.07, 0]],
+    // flamant en vol : cou tendu, pattes traînantes, ailes roses au bout noir ; même battement que l'oiseau
+    flamantVol: () => [['plume', 0.7, 0.26, 0.26, 0, 0, 0], ['plume', 0.85, 0.08, 0.08, 0.75, 0.03, 0], ['bec', 0.16, 0.1, 0.09, 1.22, 0, 0], ['patte', 0.9, 0.04, 0.1, -0.8, -0.04, 0],
+      ...paire(sd => [['plume', 0.42, 0.05, 0.75, 0, 0.12, sd * 0.45, [sd * -0.3, 0, 0]], ['bec', 0.38, 0.05, 0.5, 0, 0.3, sd * 1.02, [sd * -0.3, 0, 0]]]).flat()],
+    // personnage de plage : jambes, haut teinté (zone habit), tête, bras ; t = 0 bras le long du corps, 1 bras levés. Origine au sol
+    gente: (t = 0) => [...paire(sd => ['bas', 0.16, 0.8, 0.18, 0, 0.4, sd * 0.11]), ['habit', 0.26, 0.6, 0.44, 0, 1.1, 0, null, 1], ['peau', 0.24, 0.26, 0.24, 0, 1.56, 0],
+      ...paire(sd => t ? ['peau', 0.1, 0.62, 0.1, 0, 1.62, sd * 0.33, [sd * 0.35, 0, 0]] : ['peau', 0.1, 0.6, 0.1, 0, 1.08, sd * 0.28])],
     // pick-up garé (cabine vers +X) ; zone caisse teintée
     pickup: () => [['caisse', 5.2, 0.55, 1.9, 0, 0.78, 0, null, 1], ['caisse', 1.5, 0.32, 1.8, 1.8, 1.2, 0], ['caisse', 1.7, 0.72, 1.76, 0.3, 1.42, 0, null, 1], ['vitre', 1.74, 0.42, 1.62, 0.3, 1.52, 0], ['vitre', 0.1, 0.5, 1.56, 1.18, 1.5, 0, [0, 0, -0.4]], ...paire(a => ['caisse', 2.15, 0.42, 0.1, -1.5, 1.24, a * 0.9]), ['caisse', 0.1, 0.42, 1.9, -2.55, 1.24, 0], ['noir', 2, 0.05, 1.7, -1.5, 1.07, 0],
       ...paire(a => ['pare', 0.16, 0.22, 1.94, a * 2.66, 0.62, 0]), ...paire(a => ['lampe', 0.06, 0.18, 0.42, 2.62, 0.98, a * 0.62]), ...paire(a => ['rouge', 0.06, 0.22, 0.26, -2.62, 0.98, a * 0.76]), ...paire(a => paire(b => ['noir', 0.74, 0.74, 0.3, a * 1.68, 0.37, b * 0.86])).flat()],

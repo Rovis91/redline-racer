@@ -572,7 +572,7 @@
             '17 - - - 20 - 24 - 20 - - - . - - - | 19 - - - 15 - 12 - 15 - - - . - - - | 23 - - - 19 - 14 - 11 - - - . - - - | 19 - - - - - - - . - - - . - - -'],
           sec: { i: 'b0 c0', a: 'k0 s0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
       ],
-      th: { decor: 'plage', fog: 0xcfe6f0, fogD: [220, 1900], sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, cielSeg: 48,
+      th: { decor: 'plage', sansRythme: 1, fog: 0xcfe6f0, fogD: [220, 1900], sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, cielSeg: 48,
         // midi, soleil haut côté terre (les ombres tombent vers la mer, sur la piste) ; pas de mirage (chaleur) : il faisait onduler tout l'horizon
         astre: { dir: [-0.25, 0.85, 0.45], col: '#fffbe8', ombre: '#fffbe8', taille: 200, rayons: 0.3 }, hemi: [0xa8d0ee, 0x7a6a4e, 0.6], sun: [0xfff0d0, 0.72], phares: 0, bloom: 0.015, scan: 0, chaleur: 0, sansCones: 1, routeTex: 'chausseeFine', ombre: { doux: 1 }, oeil: { tun: 0.6, noir: 0.5, clair: 0.12 }, frole: 1,
         murH: 0, route: ['#6e7378', '#7a7f84', '#e8b84a', '#e8e0c8', '#6e7378', '#6e7378', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xe8468c, 0x1fb5a8, '#fff4e0'], // bitume de la 307 et de la digue, ligne de rive jaune ; le décor pose le sable dur, les planches, le dallage et le sascab par-dessus

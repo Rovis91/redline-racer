@@ -4,7 +4,8 @@
 // Pour le retirer : supprimer la ligne <script src="rythme.js"> de index.html (et ce fichier). Pour comparer sans rien toucher : ajouter &rythme=0 à l'adresse.
 (window.lanceRythme = () => {
   const FORCE = 0.4; // 0 = rien ; 0,4 = les aplats passent de 80 % à 120 % de leur couleur
-  if (!window.__g || !window.SON || /rythme=0/.test(location.search)) return;
+  cancelAnimationFrame(window.__rythme); // changement de carte : lanceRythme est rejoué, l'ancienne boucle s'arrête
+  if (!window.__g || !window.SON || /rythme=0/.test(location.search) || (window.CARTE && CARTE.th && CARTE.th.sansRythme)) return; // th.sansRythme : la carte ne bat pas avec la musique
   const mats = new Map(); // matériau → couleur d'origine
   __g.scene.traverse(o => {
     const m = o.material;
@@ -14,7 +15,6 @@
     mats.set(m, m.userData.c0 || (m.userData.c0 = m.color.clone())); // la couleur d'origine, gardée sur la matière : une carte remise à l'écran a ses couleurs encore modulées
   });
   let k = 1;
-  cancelAnimationFrame(window.__rythme); // changement de carte : lanceRythme est rejoué, l'ancienne boucle s'arrête
   const tick = () => {
     window.__rythme = requestAnimationFrame(tick);
     const but = SON.musicOn && __g.state !== 'pause' ? 1 - FORCE / 2 + FORCE * (SON.pulse || 0) : 1; // musique coupée ou pause : couleurs d'origine

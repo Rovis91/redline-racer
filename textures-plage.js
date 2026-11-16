@@ -205,5 +205,12 @@
     planchesMuelle: () => [64, 64, (g, { R, alea }) => { let y = 0; while (y < 64) { const l = 3 + (alea() * 4 | 0); R(g, ['#b7a98c', '#a89a7e', '#c2b498', '#9e9076', '#b0a286'][alea() * 5 | 0], 0, y, 64, l); R(g, '#6e624e', 0, y + l - 1, 64, 1); for (let k = 0; k < 3; k++) R(g, '#8a7c66', alea() * 64 | 0, y + (alea() * (l - 1) | 0), 2 + (alea() * 5 | 0), 1); y += l; } }, 8],
     // façade crépie : grain léger, salissure au pied, pour la zone teintée des maisons et des resorts
     crepiClair: () => [64, 64, (g, { R, alea, voile }) => { R(g, '#f4f0e8', 0, 0, 64, 64); for (let i = 0; i < 260; i++) R(g, alea() < 0.5 ? '#e8e2d8' : '#fffdf6', alea() * 64 | 0, alea() * 64 | 0, 1 + (alea() * 2 | 0), 1); voile(g, 0.12, () => R(g, '#6a5a44', 0, 56, 64, 8)); }, 8],
+    // ---------- la vie (propositions/VIE-plage.md) ----------
+    // crête d'écume d'un rouleau, vue de dessus : frange blanche déchirée, transparente autour
+    ecumeLarge: () => [64, 16, (g, { R, alea }) => { for (let x = 0; x < 64; x++) { const a = 5 + (Math.sin(x * 0.3) * 2 + alea() * 3 | 0), l = 3 + (alea() * 5 | 0); if (alea() < 0.85) R(g, '#ffffff', x, a, 1, l); if (alea() < 0.3) R(g, '#d8f6f2', x, a - 2 - (alea() * 2 | 0), 1, 1); } }],
+    // reflets d'eau sur la roche (caustiques) : des anneaux clairs qui se recoupent sur fond noir, raccordés d'un bord à l'autre ; à rendre en additif
+    caustique: () => [64, 64, (g, { R, alea }) => { R(g, '#000', 0, 0, 64, 64); g.strokeStyle = '#bfeee4'; g.lineWidth = 1.4;
+      for (let k = 0; k < 9; k++) { const x = (k % 3) * 21.3 + alea() * 12, y = (k / 3 | 0) * 21.3 + alea() * 12, rx = 8 + alea() * 6, ry = 7 + alea() * 6, a = alea() * 3;
+        for (const dx of [-64, 0, 64]) for (const dy of [-64, 0, 64]) { g.beginPath(); g.ellipse(x + dx, y + dy, rx, ry, a, 0, 6.2832); g.stroke(); } } }],
   });
 })();
