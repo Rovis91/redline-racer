@@ -53,7 +53,7 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 | Réaction à la course | ola, étincelles au saut, confettis, salle éteinte au dernier tour | stade `src/rendu/decors.js:419-453` |
 | Clignotement | `visible` alterné, `color.setHex` | givre `577`, touge `882` |
 | Foule à deux poses, ola | `POSEURS.foule(h, { etages, ola })` | `src/rendu/foule.js` (stade, canal) |
-| Foule qui réagit à la course | `POSEURS.foule(…, pancartes)`, `tick.leve(car, sorte)`, `SON.clameur()` | `src/rendu/foule.js` (stade, canal) |
+| Foule qui réagit à la course | `POSEURS.foule(…, pancartes)`, `tick.leve(car, sorte)`, `SON.clameur()` : banderole géante (tifo) et pancartes 80 m au moins devant la voiture | `src/rendu/foule.js` (stade, canal) |
 | Flammes instanciées | échelle par `setMatrixAt` | stade `442` |
 | Bande de sommets ondulante | aurores | givre `569-582` |
 | Points qui montent | vapeur `VAP` | chapada `2758` |
@@ -61,7 +61,7 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 | Faisceau tourné vers la caméra | `h.beams` | ville `src/rendu/decors.js:238` |
 | Groupe mobile en une passe | `soude(h, grp, fam)` | `src/rendu/decors.js:30` |
 | Objet du décor renversable | `h.cassable(pièces, x, y, z, r, h, éclats)` | barils du stade, jarres de perse |
-| Écran qui passe la course en direct | `tick.direct(renderer)` (cible 192 × 108, une image sur quatre) | cube du stade |
+| Écran qui passe la course en direct | `tick.direct(renderer)` (cible 320 × 136, une image sur quatre) | stade : trois écrans suspendus au bout des lignes droites (le cube et les écrans du fond ne se voyaient pas de la caméra de course) |
 
 ### Formes prêtes mais jamais posées
 
