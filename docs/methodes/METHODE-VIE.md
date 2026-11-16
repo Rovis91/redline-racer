@@ -59,6 +59,7 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 | Panache permanent | `h.vapeur(x, y, z)` | `src/moteur/game.js:605` |
 | Faisceau tourné vers la caméra | `h.beams` | ville `src/rendu/decors.js:238` |
 | Groupe mobile en une passe | `soude(h, grp, fam)` | `src/rendu/decors.js:30` |
+| Objet du décor renversable | `h.cassable(pièces, x, y, z, r, h, éclats)` | barils du stade, jarres de perse |
 
 ### Formes prêtes mais jamais posées
 

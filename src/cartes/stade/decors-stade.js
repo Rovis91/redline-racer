@@ -98,6 +98,13 @@
         const s = S[i0], sd = Math.hypot(...bord(s, 1, 1).map((v, j) => v - [CX, CZ][j])) < Math.hypot(...bord(s, -1, 1).map((v, j) => v - [CX, CZ][j])) ? 1 : -1, [x, z] = bord(s, sd, s.w + 9);
         const mt = new THREE.Group(); mt.position.set(x, g.hAt(x, z), z); mt.rotation.y = h.across(s) + Math.PI / 2 + 0.5; h.scene.add(mt);
         h.pose('monsterTruck', { caisse: h.mat('peinture', { c: 0x2ab84a }), flammes: h.mat('peinture', { c: 0xff8a1a }), vitre: h.mat('vitreSombre'), chassis: h.mat('matGris'), acier, pneu: h.mat('pneu'), lampe }, mt); }
+      // l'aire centrale est un terrain de jeu : des grappes de barils debout, à renverser (h.cassable : chaque baril part seul, visuel seulement, la voiture n'est pas freinée).
+      // Hors de la chaussée du tracé, hors de la scène et du mur de la butte, et des deux côtés de l'arche, là où passe qui coupe
+      { const bar = [], cols = [0xe8362a, 0x1c3fa8, 0xffc21a, 0xf4f0e0, 0x16161c], libre = (x, z) => { const s = S[near(h, x, z)]; return Math.hypot(s.x - x, s.z - z) > s.w + 2.5 && dansAire(x, z, -4) && !(Math.abs(z - CZ) < 5 && (x > CX + 8 || x < CX - 21)); };
+        const centres = [[CX - 6, CZ - 14], [CX - 6, CZ + 14], ...[0, 1, 2, 3, 4, 5, 6, 7].map(k => [CX + Math.cos(k * 0.785 + 0.4) * 36, CZ + Math.sin(k * 0.785 + 0.4) * 36])];
+        for (const [cx0, cz0] of centres) if (libre(cx0, cz0)) for (let k = 0; k < 7; k++) { const a = k * 1.047, r = k ? 1.05 : 0, x = cx0 + Math.cos(a) * r, z = cz0 + Math.sin(a) * r; if (libre(x, z)) bar.push([x, 0.55, z, rnd() * 3, 1, 1, 1, cols[(k + bar.length) % 5]]); }
+        const mb = inst(h, new THREE.CylinderGeometry(0.45, 0.45, 1.1, 10), h.mat('peinture', { c: 0xffffff }), bar); bar.forEach((p, k) => mb.setColorAt(k, new THREE.Color(p[7]))); if (bar.length) mb.instanceColor.needsUpdate = true;
+        bar.forEach((p, k) => h.cassable([[mb, k]], p[0], 0, p[2], 0.45, 1.1, [0.85, 0.3, 0.2])); }
       // étincelles : à chaque décollage, une gerbe tombe de la charpente au-dessus de la voiture suivie (une seule gerbe à la fois)
       const NE = 160, pe = new Float32Array(NE * 3), ve = new Float32Array(NE * 3), ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.BufferAttribute(pe, 3));
       const me = new THREE.PointsMaterial({ color: 0xffb040, size: 0.7, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false }), etin = new THREE.Points(ge, me); etin.frustumCulled = false; etin.visible = false; h.scene.add(etin);
