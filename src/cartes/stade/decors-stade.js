@@ -47,7 +47,11 @@
       const peauF = { acier, lampe, treillis: h.mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide, rep: [(Z1 - Z0) / 6.2, 1] }, '#3a3e4a') };
       for (let x = -230; x <= 380; x += 70) h.pose('fermeToit', peauF, h.scene, [x, HT - 4.5, cz], Z1 - Z0 + 100);
       // le cube d'affichage au-dessus de l'aire, et un écran géant à chaque bout de la salle (deux images qui alternent)
-      h.pose('cubeScore', { ecran: h.mat('tableauStade', LUM), acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [CX, HT - 30, CZ]);
+      // ses quatre écrans passent la course en direct : une caméra de télévision suit la voiture et change de plan toutes les 4 s (hélicoptère, travelling, face, tribune) ;
+      // rendue en 192 × 108, une image sur quatre (15 images/s à 60), jusqu'à 400 m, écrans du cube cachés pendant sa prise (ils ne peuvent pas se lire eux-mêmes)
+      const ecranT = h.mat('tableauStade', LUM), RTV = new THREE.WebGLRenderTarget(192, 108), tv = new THREE.PerspectiveCamera(50, 16 / 9, 1, 400), vif = new THREE.MeshBasicMaterial({ map: RTV.texture, fog: false });
+      const ecransTV = h.pose('cubeScore', { ecran: ecranT, acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [CX, HT - 30, CZ]).filter(m => m.material === ecranT);
+      ecransTV.forEach(m => { m.material = vif; m.userData.dyn = 1; });
       const ecranG = h.mat('ecranGeant', LUM); ecranG.map.repeat.set(1, 0.5);
       for (const x of [X1 + RE + 34, X0 - RW - 34]) boite(h, ecranG, 1, 18, 84, x, 50, cz);
       // la scène (elle ferme l'est de l'aire), le mur de la butte et l'arche de feu entre les deux : ce sont les piles de M.place
@@ -119,9 +123,9 @@
       gc2.setAttribute('position', new THREE.BufferAttribute(pc, 3)); gc2.setAttribute('color', new THREE.BufferAttribute(cc, 3));
       const conf = new THREE.Points(gc2, new THREE.PointsMaterial({ size: 0.45, vertexColors: true, fog: false })); conf.frustumCulled = false; conf.visible = false; h.scene.add(conf);
       const cone0 = cones.map(m => m.position.clone());
-      let feuT = 0, zA = null;
+      let feuT = 0, zA = null, suivie = null, nTV = 0, tNow = 0;
       let tE = 9, parti = false, vol = 0, rejoue = 0, eteint = 0, fete = false;
-      return (dt, now, car) => {
+      const tick = (dt, now, car) => { suivie = car; tNow = now;
         if (car) {
           // décollage franc (pas une bosse) : la gerbe part ; réception d'un vrai saut : l'écran le rejoue
           if (car.air && car.airT > 0.2 && !parti) { parti = true; tE = 0;
@@ -157,6 +161,16 @@
         if (fete) { for (let k = 0; k < NC; k++) { const j = k * 3; pc[j] += Math.sin(now * 0.003 + k) * 1.5 * dt; pc[j + 1] -= (2 + k % 3) * dt; pc[j + 2] += Math.cos(now * 0.0027 + k * 1.3) * 1.5 * dt; if (pc[j + 1] < 0) pc[j + 1] = HT - 8; } gc2.attributes.position.needsUpdate = true; }
         gfl.setDrawRange(Math.floor(now / 70) * 7919 % 860, 40);
       };
+      tick.direct = R => { // appelé par game.js avant le rendu de la première vue
+        const c = suivie; if (!c || nTV++ % 4) return;
+        const fx = Math.cos(c.th), fz = Math.sin(c.th), plan = Math.floor(tNow / 4000) % 4; tv.fov = 50;
+        if (plan === 0) tv.position.set(c.x - fx * 26, c.y + 18, c.z - fz * 26); // hélicoptère, derrière et au-dessus
+        else if (plan === 1) tv.position.set(c.x - fz * 13, c.y + 2.5, c.z + fx * 13); // travelling, à hauteur de roue
+        else if (plan === 2) tv.position.set(c.x + fx * 20, c.y + 1.6, c.z + fz * 20); // de face, elle arrive sur nous
+        else { const p = grad.reduce((a, b) => ((b[0] - c.x) ** 2 + (b[2] - c.z) ** 2 < (a[0] - c.x) ** 2 + (a[2] - c.z) ** 2 ? b : a)); tv.position.set(p[0], p[1] + 14, p[2]); tv.fov = 22; } // la tribune la plus proche, au téléobjectif
+        tv.updateProjectionMatrix(); tv.lookAt(c.x + c.vx * 0.15, c.y + 0.8, c.z + c.vz * 0.15); tv.updateMatrixWorld();
+        ecransTV.forEach(m => { m.visible = false; }); R.setRenderTarget(RTV); R.render(h.scene, tv); ecransTV.forEach(m => { m.visible = true; }); };
+      return tick;
     },
   });
 })();

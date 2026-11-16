@@ -2074,6 +2074,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // les matrices de la scène une fois pour les trois rendus de la vue (reflets, ombres mobiles, scène) : chacun les recalculait toutes
     rouesInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n) refFace();
     ombres(vu, pasL, car, carY);
+    if (decorTick && decorTick.direct && !vu.n) decorTick.direct(renderer); // un écran du décor qui passe la course en direct (stade) : sa prise, avant la scène qui l'affiche
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
     if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       REPLI.rDz.value = vu.rt.depthTexture; REPLI.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(repliScene, cam); renderer.autoClear = true; }

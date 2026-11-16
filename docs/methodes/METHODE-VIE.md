@@ -60,6 +60,7 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 | Faisceau tourné vers la caméra | `h.beams` | ville `src/rendu/decors.js:238` |
 | Groupe mobile en une passe | `soude(h, grp, fam)` | `src/rendu/decors.js:30` |
 | Objet du décor renversable | `h.cassable(pièces, x, y, z, r, h, éclats)` | barils du stade, jarres de perse |
+| Écran qui passe la course en direct | `tick.direct(renderer)` (cible 192 × 108, une image sur quatre) | cube du stade |
 
 ### Formes prêtes mais jamais posées
 
