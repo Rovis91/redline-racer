@@ -7,7 +7,7 @@
     // tranchée et tunnel immergé sous le chenal, retour en ville. L'eau n'existe que là où la route passe au-dessus (pont) ou dessous (tunnel). ----------
     wangan(h) {
       const { THREE, S, N, W, rnd, T } = h; const poses = (nom, peau, list, o = {}) => Object.entries(h.zones(nom, peau, ...(o.a || []))).forEach(([zn, g]) => { const G = indexe(h, g), t = zn === o.teinte, mt = t && Object.assign(peau[zn].clone(), { vertexColors: true }); for (const p of list) { const Gp = t ? G.clone() : G; if (t) { const c = new THREE.Color(p[7]), n = Gp.attributes.position.count, A = new Float32Array(n * 3); for (let i = 0; i < n; i++) A.set([c.r, c.g, c.b], i * 3); Gp.setAttribute('color', new THREE.BufferAttribute(A, 3)); } const m = new THREE.Mesh(Gp, t ? mt : peau[zn]); m.position.set(p[0], p[1], p[2]); m.rotation.y = p[3] || 0; m.scale.set(p[4] || 1, p[5] || p[4] || 1, p[6] || p[4] || 1); m.castShadow = m.receiveShadow = h.TH.sun[1] > 0.6; h.scene.add(m); } }); // comme insts, mais un maillage par exemplaire : la fusion les découpe en pavés de 500 m, ceux hors champ ne sont plus dessinés (une instance fondue reste entière)
-      const mm = new Map(), M = (n, o = {}, ...a) => { const m = h.mat(n, o, ...a), k = JSON.stringify([n, o, a]); if (n === 'metalClair') m.userData.mc = 1; return o.lum ? m : mm.get(k) || mm.set(k, m).get(k); }; // matières non lumineuses partagées à réglages égaux : même image, des lots fondus en moins (les lumineuses restent à part : rythme.js les module). h.mat est appelé quand même : ses textures tirent dans rnd, le décor ne doit pas bouger
+      const mm = new Map(), M = (n, o = {}, ...a) => { const m = h.mat(n, o, ...a), k = JSON.stringify([n, o, a]); if (n === 'metalClair') m.userData.mc = 1, m.userData.famille = 'metalClair'; return o.lum ? m : mm.get(k) || mm.set(k, m).get(k); }; // matières non lumineuses partagées à réglages égaux : même image, des lots fondus en moins (les lumineuses restent à part : rythme.js les module). h.mat est appelé quand même : ses textures tirent dans rnd, le décor ne doit pas bouger
       const CH0 = 62, CH1 = 520, ILE = [-880, 1650, 1045], PH = [1568, 958]; // chenal entre z = CH0 et CH1 ; l'île va de x = ILE[0] à ILE[1], jusqu'à z = ILE[2] ; PH : le phare, au bout de l'île, dans l'épingle (points 11 à 16)
       const mer = (x, z) => (z > CH0 && z < CH1) || (z >= CH1 && (x < ILE[0] || x > ILE[1] || z > ILE[2]));
       const tun = i => h.zone(i, 0) === 1;
@@ -411,11 +411,11 @@
       { const s = S[iPm], [x, z] = bord(s, 1, 18); h.lum(iPm, x, s.y + 22, z, 0xffc040, 40, 1.4); } // gyrophare et éclairage du portique
 
       // ---------- le péage abandonné (points 30 à 31) : gare sur dalle de part et d'autre du viaduc, guérites éteintes mais vitres au sodium, auvent sur toute la largeur ----------
-      { const s = S[near(h, -450, -245)], r = repere(h, s), dalle = M('bitume'), L = 2 * W + 44;
+      { const s = S[near(h, -450, -245)], r = repere(h, s), dalle = M('bitume'), L = 2 * W + 44, guerite = { beton, nez: M('rayures', LUM), cabine: blancP, vitre: M('sodium', LUM) }; // les six guérites partagent leurs matières : une passe de dessin par matière, et non par guérite
         h.pose('auventPeage', { toit: M('betonGris'), lampe: M('sodium', LUM), acier: gris, enseigne: M('ecrit', LUM, 128, 16, '#3a2a10', '#ffb040', '料金所  TOLL  閉鎖 CLOSED', 11) }, r, [0, 0, 0], L);
         for (const sd of [-1, 1]) { h.pose('boite', dalle, r, [sd * (W + 11.5), -0.6, 0], 21, 1, 36); // la dalle des voies fermées, au niveau de la chaussée
           for (const sz of [-12, 12]) h.pose('boite', beton, r, [sd * (W + 11.5), -s.y / 2 - 1, sz], 3, s.y, 3); // ses piles
-          for (const e of [5, 11, 17]) h.pose('guerite', { beton, nez: M('rayures', LUM), cabine: blancP, vitre: M('sodium', LUM) }, r, [sd * (W + e), 0, 0]); }
+          for (const e of [5, 11, 17]) h.pose('guerite', guerite, r, [sd * (W + e), 0, 0]); }
         h.lum(near(h, -450, -245), s.x, s.y + 7, s.z, 0xffa040, 36, 2.6); }
 
       // ---------- l'enseigne de love hotel (point 32) : la première lumière rose de la ville, sur un mât au bord du viaduc, devant l'hôtel ----------
