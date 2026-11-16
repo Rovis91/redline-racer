@@ -13,8 +13,8 @@
 </style>
 </head>
 <body>
-<!-- three.js r187 (ES module, dossier three/) posé dans window.THREE ; les scripts suivants sont « defer » : ils s'exécutent après lui, dans cet ordre -->
-<script type="module">import * as THREE from "./vendor/three/three.module.js"; window.THREE = THREE;</script>
+<!-- three.js r187 en script classique (généré par outils/three-classique.js : un module ES ne se charge pas en file://) posé dans window.THREE ; les scripts suivants sont « defer » : ils s'exécutent après lui, dans cet ordre -->
+<script src="vendor/three/three.classique.js"></script>
 <script defer src="src/donnees/cartes.js"></script>
 <script defer src="src/donnees/traces-or.js"></script>
 <script defer src="src/moteur/sim.js"></script>

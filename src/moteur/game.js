@@ -2104,7 +2104,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const veille = () => { actif = false; cancelAnimationFrame(raf); padNote.style.display = 'none'; if (COM) COM.c.style.display = 'none'; for (const k in keys) keys[k] = 0; };
   const reprend = () => {
     const av = window.__g; if (av && av !== api) (av.veille || av.fin)();
-    actif = true; window.__g = api; window.CARTE = M;
+    actif = true; window.__g = api; window.CARTE = M; PER.cherche(); // Joy-Con autorisé depuis la construction de cette carte (fenêtre de l'accueil, ouverte par une autre instance) : sans cela, elle ne le verrait jamais
     if (state !== 'title') toMenu(); accueil = true; aMenu = false; choix = false; msel = 5; cible = null; demo = null; enl = null; ins = false; inactif = 0; // comme une carte neuve
     langue = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr'; appliqueLangue(); manual = pref('vpr.boite', 'a') === 'm'; VUES[0].moi.manual = manual; // les réglages ont pu changer sur une autre carte
     { const n = +(Q.get('joueurs') || pref('vpr7.joueurs', '1')); joueurs(n > 1 && !DEFI && !NET.role ? n : 1); }
