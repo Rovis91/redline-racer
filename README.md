@@ -390,6 +390,8 @@ Dans `cartes.js`, pour chaque carte :
 | `surf` | surface de la route : `{ fond: 'neige', zones: [[point a, point b, 'glace', force], …] }` (`fond` partout, zones par-dessus, fondues sur 20 m ; `force` de 0 à 1, 1 par défaut). Aucune des six cartes n'en déclare ; `test-cartes.js` l'essaie sur une copie du touge |
 | Pluie sur la conduite | une averse est la surface `mouille` dosée par `(force − 1) / 2`, nulle en tunnel : la force 1 (la ville) ne change rien. Aquaplaning au-delà de 230 − 40·m km/h. Wan-9 : +6 % au tour |
 | Pluie au son | `pluieFrame` d'`audio.js`, famille « pluie » (bouton « Pluie » d'`ecoute.html`) : rideau étouffé par la carrosserie, qui suit la force (`T.pluie`) et la vitesse, coupé en tunnel ; gerbe grave en aquaplaning (`car.aq`) |
+| `th.objets`, `th.objetsEn` | objets à renverser sur la carte (plage, chapada…) ; `h.cassable` y ajoute des pièces du décor (perse) |
+| `th.loin` | portée minimale de la caméra, pour garder des lointains hors brouillard |
 | `trafic` | nombre de camions sur la route |
 | `sauts`, `cuv` | le relief (carte Grand Vacarme) : tremplins `[point, longueur, hauteur, fosse, profondeur]` et murs roulables `[a, b, largeur, rayon]`. Déclarer l'un ou l'autre donne à la voiture une hauteur et une gravité (`GRAV`, `DROOP`, `LAND0`, `LANDK`, `LANDX` en tête de `sim.js` : pesanteur, débattement avant de « voler », seuil et pente de la perte de vitesse à la réception). Sans eux, la carte reste à plat comme avant. |
 
