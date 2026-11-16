@@ -117,7 +117,8 @@
     const rs = SSR ? new THREE.WebGLRenderTarget(1, 1, { minFilter: rt.texture.minFilter, magFilter: rt.texture.magFilter, depthBuffer: false, type: rt.texture.type }) : null; // la scène + ses reflets calculés à l'écran (voir ssr)
     const hudC = document.createElement('canvas'), hudT = new THREE.CanvasTexture(hudC);
     hudT.minFilter = hudT.magFilter = THREE.NearestFilter;
-    const vu = { cam: Object.assign(new THREE.PerspectiveCamera(70, 1, 0.5, 3000), { layers: Object.assign(new THREE.Layers(), { mask: 1 | 1 << 2 | 1 << 3 }) }), rt, rs, oeil: 0, hudC, hg: hudC.getContext('2d'), hudT, w: 480, rw: 480, // w : largeur de la grille du HUD ; rw : celle de la cible (la même sans style)
+    const hb = ST ? null : new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, type: THREE.HalfFloatType }); // halo et rayons, sur la grille du HUD (voir halo)
+    const vu = { cam: Object.assign(new THREE.PerspectiveCamera(70, 1, 0.5, 3000), { layers: Object.assign(new THREE.Layers(), { mask: 1 | 1 << 2 | 1 << 3 }) }), rt, rs, hb, oeil: 0, hudC, hg: hudC.getContext('2d'), hudT, w: 480, rw: 480, // w : largeur de la grille du HUD ; rw : celle de la cible (la même sans style)
       moi: null, hu: HUM[VUES.length], car: null, cth: 0, carY: 0, pitch: 0, roll: 0, // voiture suivie ; cap de la caméra, hauteur, tangage et roulis lissés
       lookA: 0, lookP: 0, lookT: 0, // caméra libre à la souris : angle autour de la voiture, hauteur en plus, délai avant retour
       hit: 0, bump: 0, land: 0, stun: 0, nit: 0, lm: 0, rv: 0, rc: 0, // chocs de la voiture suivie pendant l'image ; secousse, fondu de nitro, fondu de tunnel
@@ -129,7 +130,7 @@
       pluieO: [0, 0, 0], splP: new Float32Array(SN * 3), splA: splA.slice(), splD: new Float32Array(SN) }; // gouttes (leur décalage cumulé, voir pluie) et impacts : mêmes tirages de départ pour toutes les vues, rnd n'est pas tiré
     suit(vu, VUES.length ? VUES[0].moi : newCar(T)); VUES.push(vu); resize(); return vu; // une vue ajoutée (au menu) suit la voiture du joueur 1, comme toutes les vues hors course
   };
-  const rendVue = vu => { vu.rt.dispose(); if (vu.rs) vu.rs.dispose(); if (vu.rt.depthTexture) vu.rt.depthTexture.dispose(); vu.hudT.dispose(); }; // ce qu'une vue tient au GPU (son canvas de HUD n'est pas dans la page)
+  const rendVue = vu => { vu.rt.dispose(); if (vu.rs) vu.rs.dispose(); if (vu.hb) vu.hb.dispose(); if (vu.rt.depthTexture) vu.rt.depthTexture.dispose(); vu.hudT.dispose(); }; // ce qu'une vue tient au GPU (son canvas de HUD n'est pas dans la page)
   const retireVue = () => { const vu = VUES.pop(); vu.hu.tr.visible = false; rendVue(vu); resize(); }; // ses traînées ne sont plus tenues par aucune vue
   let COM = null; // couche plein écran commune aux deux vues : un canvas 2D posé sur celui du jeu, { c, g }. Elle n'existe qu'à deux joueurs (voir joueurs et couche, près de la boucle)
   let hg = null; // contexte 2D du HUD en cours de dessin (celui de la vue, ou de la couche commune), pour txt, panel, tag
@@ -144,11 +145,11 @@
           o.xy += k * vec2(sin(v.y * 420. + cr.z * 9.) * .004, sin(v.y * 260. - cr.z * 6.) * .0016); }
         return o; }`;
   const post = new THREE.ShaderMaterial({
-    uniforms: { t: { value: null }, h: { value: null }, dz: { value: null }, ex: { value: 1 }, amt: { value: 0 }, ab: { value: 0 }, vig: { value: 0 }, res: { value: 270 }, bloom: { value: TH.bloom }, scan: { value: TH.scan }, px: { value: new THREE.Vector2(1 / 480, 1 / 270) },
+    uniforms: { t: { value: null }, h: { value: null }, hb: { value: null }, dz: { value: null }, ex: { value: 1 }, amt: { value: 0 }, ab: { value: 0 }, vig: { value: 0 }, res: { value: 270 }, bloom: { value: TH.bloom }, scan: { value: TH.scan }, px: { value: new THREE.Vector2(1 / 480, 1 / 270) },
       gt: { value: Array.from({ length: 8 }, () => new THREE.Vector4()) }, ch: { value: new THREE.Vector4() }, cr: { value: new THREE.Vector4() },
       ray: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, rayC: { value: [0, 1, 2, 3].map(() => new THREE.Color(0)) } }, // rayons : position à l'écran (xy), profondeur de la source (z), 1 / rayon² du halo (w) ; couleur × force
     vertexShader: 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
-    fragmentShader: `uniform sampler2D t, h, dz; uniform float amt, ab, vig, res, bloom, scan, ex; uniform vec2 px; uniform vec4 ray[4]; uniform vec3 rayC[4]; varying vec2 v; ${AIR}
+    fragmentShader: `uniform sampler2D t, h, hb; uniform float amt, ab, vig, res, scan, ex; uniform vec2 px; varying vec2 v; ${AIR}
       float b2(vec2 a){ a = floor(a); return fract(a.x / 2. + a.y * a.y * .75); } // matrice de Bayer 4×4, par récurrence
       void main(){
         float e = ex; // exposition : l'œil (voir TUN et rendVue)
@@ -161,16 +162,7 @@
           c += min(vec3(texture2D(t, u + d * ab).r, texture2D(t, u).g, texture2D(t, u - d * ab).b) * e, 1.); // + aberration chromatique ; exposé et écrêté au blanc, échantillon par échantillon comme l'ancienne cible 8 bits
         }
         c /= nf;
-        vec3 bl = vec3(0.); // halo : on ajoute ce qui dépasse un seuil de luminosité, prélevé en couronne
-        for (int i = 0; i < 12; i++) { float a = float(i) * .5236, rr = 2. + 2.5 * mod(float(i), 3.); bl += max(min(texture2D(t, w + vec2(cos(a), sin(a)) * rr * px).rgb * e, 1.) - .5, 0.); }
-        c += bl * bloom;
-        vec3 ry = vec3(0.); float j = fract(52.98 * fract(dot(v / px, vec2(.0671, .0058)))); // rayons de lumière : un halo autour de chaque source, masqué par ce qui est devant elle, étiré vers le pixel ; décalage par pixel, du grain plutôt que des marches
-        for (int k = 0; k < 4; k++) if (rayC[k] != vec3(0.)) {
-          vec2 s = ray[k].xy, dd = (s - v) / 12., q; float f = 0.;
-          for (int i = 0; i < 12; i++) { vec2 u = v + dd * (float(i) + j); q = (u - s) * vec2(px.y / px.x, 1.); f += step(ray[k].z, texture2D(dz, u).x) * exp(-dot(q, q) * ray[k].w); }
-          q = (v - s) * vec2(px.y / px.x, 1.); ry += rayC[k] * f * max(0., 1. - 1.4 * length(q)); // portée : un peu plus d'une demi-hauteur d'écran
-        }
-        c += ry * e / 12.;
+        c += texture2D(hb, v).rgb; // halo et rayons, calculés une fois par case de la grille (voir halo)
         c *= ai.z; // assombri sous les gouttes
         ${QUANT ? `vec2 q = v / px; c = floor(c * ${QUANT}. + (b2(.5 * q) * .25 + b2(q) - .5) * ${TRAME.toFixed(2)} + .5) / ${QUANT}.; // couleurs réduites et tramées, sur la grille de pixels du jeu` : ''}
         vec4 hd = texture2D(h, v); c = mix(c, hd.rgb, hd.a);
@@ -181,6 +173,22 @@
   });
   const postScene = new THREE.Scene(), postCam = new THREE.Camera(), quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), post);
   quad.frustumCulled = false; postScene.add(quad);
+  // halo et rayons de lumière : ils ne changent pas d'une ligne de la scène à l'autre au sein d'une case de la grille de 270 ; calculés ici une fois par case (un quart des pixels), la passe finale les relit (th.bloom, rayons : voir post)
+  const halo = new THREE.ShaderMaterial({ uniforms: post.uniforms, vertexShader: post.vertexShader, depthTest: false, depthWrite: false,
+    fragmentShader: `uniform sampler2D t, dz; uniform float bloom, ex; uniform vec2 px; uniform vec4 ray[4]; uniform vec3 rayC[4]; varying vec2 v; ${AIR}
+      void main(){
+        float e = ex; vec3 ai = air(v, px); vec2 w = v + ai.xy;
+        vec3 bl = vec3(0.); // halo : on ajoute ce qui dépasse un seuil de luminosité, prélevé en couronne
+        for (int i = 0; i < 12; i++) { float a = float(i) * .5236, rr = 2. + 2.5 * mod(float(i), 3.); bl += max(min(texture2D(t, w + vec2(cos(a), sin(a)) * rr * px).rgb * e, 1.) - .5, 0.); }
+        vec3 ry = vec3(0.); float j = fract(52.98 * fract(dot(v / px, vec2(.0671, .0058)))); // rayons de lumière : un halo autour de chaque source, masqué par ce qui est devant elle, étiré vers le pixel ; décalage par pixel, du grain plutôt que des marches
+        for (int k = 0; k < 4; k++) if (rayC[k] != vec3(0.)) {
+          vec2 s = ray[k].xy, dd = (s - v) / 12., q; float f = 0.;
+          for (int i = 0; i < 12; i++) { vec2 u = v + dd * (float(i) + j); q = (u - s) * vec2(px.y / px.x, 1.); f += step(ray[k].z, texture2D(dz, u).x) * exp(-dot(q, q) * ray[k].w); }
+          q = (v - s) * vec2(px.y / px.x, 1.); ry += rayC[k] * f * max(0., 1. - 1.4 * length(q)); // portée : un peu plus d'une demi-hauteur d'écran
+        }
+        gl_FragColor = vec4(bl * bloom + ry * e / 12., 1.);
+      }` });
+  const haloScene = new THREE.Scene(); haloScene.add(Object.assign(new THREE.Mesh(quad.geometry, halo), { frustumCulled: false }));
   // reflets de la route mouillée calculés à l'écran : entre la scène et la passe finale. La route écrit dans l'alpha de la cible combien elle est mouillée
   // (1 = sèche, 0,5 = détrempée, voir eclaire) ; de chacun de ses pixels on suit le rayon réfléchi dans la profondeur de la vue, et on ajoute la couleur qu'il rencontre :
   // voitures, néons, feux arrière. Ce que le rayon ne trouve pas à l'écran (le ciel, ce qui est hors champ) reste aux rubans et aux reflets étirés de la lumière dynamique.
@@ -249,7 +257,7 @@
     const [cols, rows] = grille(n);
     for (const vu of VUES) { // chaque vue prend une case de la grille (à 2 : bandes superposées ; à 3 ou 4 : 2 × 2) : sa largeur de grille suit le rapport de cette case, dans les bornes du solo, la haute multipliée par l'allongement de la case (une bande est n fois plus allongée que l'écran : bornée à 960, elle s'étirait dès que l'écran dépassait le 16/9)
       vu.w = clamp(Math.round(HH * rows / cols * innerWidth / (innerHeight || 1)), 360, 960 * rows / cols); vu.rw = Math.round(vu.w * k);
-      vu.rt.setSize(vu.rw, RH); if (vu.rs) vu.rs.setSize(vu.rw, RH); vu.hudC.width = vu.w; vu.hudC.height = HH; vu.hg.f_ = null; vu.cam.aspect = vu.w / HH; vu.cam.updateProjectionMatrix();
+      vu.rt.setSize(vu.rw, RH); if (vu.rs) vu.rs.setSize(vu.rw, RH); if (vu.hb) vu.hb.setSize(vu.w, HH); vu.hudC.width = vu.w; vu.hudC.height = HH; vu.hg.f_ = null; vu.cam.aspect = vu.w / HH; vu.cam.updateProjectionMatrix();
     }
     if (ST) { renderer.setSize(OW, OH, false); post.uniforms.ecr.value.set(OW, OH); } else if (n) renderer.setSize(VUES[0].w * cols * KL, HH * rows * KL, false);
     renderer.setScissorTest(n > 1); // à deux, la passe finale de chaque vue ne touche que sa bande (voir vueFrame)
@@ -2073,6 +2081,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       REPLI.rDz.value = vu.rt.depthTexture; REPLI.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(repliScene, cam); renderer.autoClear = true; }
     { const OE = TH.oeil || {}, OEIL_NOIR = OE.noir ?? OEIL_N, OEIL_CLAIR = OE.clair ?? OEIL_C, vrai = Math.log(1 - (1 - (OE.tun ?? TUN)) * lm), cible = vrai - Math.log(T.tun && TH.tun.eclat || 1) * lm; // l'œil : vrai = log de la lumière vraie ; th.tun.eclat : l'œil se fait à un tunnel plus clair que sa peinture
       vu.oeil += (cible - vu.oeil) * (1 - Math.exp(-dt / (cible > vu.oeil ? OEIL_CLAIR : OEIL_NOIR))); U.ex.value = Math.min(Math.exp(vrai - vu.oeil), Math.max(1.6, T.tun && TH.tun.eclat || 1)); } // éblouissement au plus ×1,6
+    if (vu.hb) { U.hb.value = vu.hb.texture; renderer.setRenderTarget(vu.hb); renderer.render(haloScene, postCam); }
     renderer.setRenderTarget(null);
     if (COM) { const [cols, rows] = grille(VUES.length), x = (vu.n % cols) * vu.w, y = (rows - 1 - (vu.n / cols | 0)) * HH; renderer.setViewport(x * KL, y * KL, vu.w * KL, HH * KL); renderer.setScissor(x * KL, y * KL, vu.w * KL, HH * KL); } // à deux : la passe finale de la vue dans sa bande (y compté du bas : le joueur 1 en haut) ; le shader ne change pas, son centre de flou et sa vignette sont relatifs à la bande
     renderer.render(postScene, postCam);
