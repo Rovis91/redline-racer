@@ -152,8 +152,6 @@
         bloc(bet, HX0, HX1, HZ1 - 1, HZ1, YH - 12, YH + 4); bloc(verre, HX0 + 1, HX1 - 1, HZ1 - 0.8, HZ1 - 0.2, YH + 4, YH + HT - 3); bloc(bet, HX0, HX1, HZ1 - 1, HZ1, YH + HT - 3, YH + HT); // la façade sud : allège, grandes baies, bandeau
         bloc(betS, HX0 - 1, HX1 + 1, 20, HZ1 + 1.5, YH + HT, YH + HT + 1.2); // le toit
         for (const x of [15, 60, 105]) bloc(mat('vitreSombre'), x - 9, x + 9, HZ0 + 12, HZ1 - 12, YH + HT + 1.2, YH + HT + 2.2); // lanterneaux
-        { const P3 = [], UV = [], I = []; for (const x0 of [22, 50, 78, 106, 130]) { const b = P3.length / 3; P3.push(x0, YH + HT - 3, HZ1 - 1.2, x0, YH + 8, HZ1 - 1.2, x0, YH + 0.15, HZ1 - 37, x0, YH + 0.15, HZ1 - 13.5); UV.push(0, 0, 1, 0, 0, 1, 1, 1); I.push(b, b + 1, b + 2, b + 1, b + 3, b + 2); } // V-47 : un rai de soleil par baie, debout en travers de la halle (face à la caméra de course) : on les traverse
-          const m = maille(P3, UV, I, h.addMat(h.tx('degrade', '#fff0c8', 1), { opacity: 0.2 })); m.receiveShadow = false; }
 
         // les pignons, percés pour la route : la porte suit la chaussée qui les traverse
         for (const xw of [HX0, HX1]) { let bi = iH0, bd = 1e9; for (let i = iH0 - 12; i <= iH1 + 12; i++) { const d = Math.abs(S[i].x - xw); if (d < bd) { bd = d; bi = i; } } const s = S[bi], o = (s.w + 2.2) / Math.max(0.5, Math.abs(s.tx));
@@ -457,6 +455,7 @@
             const iM = (a + b) >> 1, G = (u, y, v, lu, ly, lv, col) => { const q = S[Math.round(iM + u / 2)]; bl(q.x - q.tz * (q.w + v), Y + y, q.z + q.tx * (q.w + v), h.across(q) + Math.PI / 2, lu, ly, lv, col); }; // u le long de la voie (2 m par échantillon), v depuis le bord de la chaussée : chaque pièce suit la courbe
             tranche(a, b, (i, l) => { ruban(i, l, s => s.w + 15.5, 1, s => s.w + 20, 1, betC, 4); ruban(i, l, s => s.w + 15.5, 0, s => s.w + 15.5, 1, betC, 4); }); // le quai
             for (let u = -28; u <= 28; u += 8) { G(u, 3, 18.6, 0.3, 4, 0.3, 0x55585a); G(u, 5.1, 17.6, 8.6, 0.3, 4.6, 0x7a3a30); } // la marquise, par travées qui suivent le quai
+            for (const u of [-22, 0, 22]) { const q = S[Math.round(iM + u / 2)]; h.lum(IX.get(q), q.x - q.tz * (q.w + 17.6), Y + 4.6, q.z + q.tx * (q.w + 17.6), 0xffe2a8, 22, 0.9); } // trois lampes sous la marquise : de vrais luminaires
             batis.push([sm.x + nx * (sm.w + 27), sm.z + nz * (sm.w + 27), r, 18, 8]);
             G(0, 3.5, 26.5, 32, 7, 10, 0xd8b070); G(0, 7.2, 26.5, 33, 0.5, 11, 0x6d726d); G(0, 5.2, 26, 11, 10.4, 12.4, 0xe0bc7c); G(0, 10.7, 26, 12, 0.6, 13.4, 0x6d726d); G(0, 12.2, 26, 3.4, 2.6, 3.4, 0xe0bc7c); G(0, 13.8, 26, 4, 0.5, 4, 0x7a3a30); // corps, toit, pavillon central, lanternon
             for (const e of [-1, 1]) { G(0, 12.2, 26 + e * 1.74, 2, 2, 0.1, 0xf2f0e8); G(0, 12.2, 26 + e * 1.8, 0.14, 0.9, 0.06, 0x1e2020); } // l'horloge, côté voies et côté cour
@@ -490,7 +489,8 @@
             return R; };
           const RA = rame(CH[1], [motrice(1), motrice(0)], 16.7, 30), RB = rame(CH[0], [loco(), plat(), couvert(), citerne(), tombereau(), citerne(), couvert()], 11, -8); // A à quai en gare, B à l'arrêt ГЭС
           const fum = panache(0, 0, 0, [0.3, 0.3, 0.32], 0.3, 4, 2.4, 6, 3, 0.3); // l'échappement de la locomotive, quand elle roule
-          TICK.push(dt => { RA.pas(dt); RB.pas(dt); fum.p[0] = RB.x; fum.p[1] = RB.y + 4.6; fum.p[2] = RB.z; fum.off = !RB.vc; });
+          const phare = Rm => { const l = h.lum(iG0, 0, -99, 0, 0xfff0c0, 34, 1.2); return () => { const dT = Rm.d + Rm.sens * (Rm.Lr / 2 + 3), [x, y, z] = surVoie(Rm.ch, dT); l.x = x; l.y = y + 3; l.z = z; l.i = iG0 + Math.round(Math.max(0, Math.min(1, dT / Rm.ch.L)) * (iG1 - iG0)); }; }, phA = phare(RA), phB = phare(RB); // les phares : un luminaire du moteur porté 3 m devant la tête de chaque rame, qui éclaire la voie, le ballast et la route
+          TICK.push(dt => { RA.pas(dt); RB.pas(dt); phA(); phB(); fum.p[0] = RB.x; fum.p[1] = RB.y + 4.6; fum.p[2] = RB.z; fum.off = !RB.vc; });
           borne(60, () => { RA.va(RA.nord); RB.va(RB.d > RB.ch.L / 2 ? RB.sud : RB.nord); }); // à la sortie de la ligne de départ : A part vers la centrale (on la double dans la vallée), B change de bout (on la croise un tour, on la double le suivant)
           borne(1300, () => RA.va(RA.sud)); // pendant la montée, où on ne la voit pas : A rentre en gare pour le tour suivant
           h.trains = [RA, RB]; } // pour le son (sources mobiles)
@@ -629,32 +629,32 @@
         TICK.push((dt, car, t) => { for (let k = 0; k < NB; k++) { const x = -232 + k * 58, u = ((t * 3.5 + k * 23) % 80) - 40; const f = Math.max(0.02, Math.min(1, (40 - Math.abs(u)) / 14)); d.position.set(x, YC + 3, CZ - Math.sqrt(RA * RA - x * x) + u); d.scale.set(28 * f, 8 * f, 28 * f); d.rotation.set(0, k, 0); d.updateMatrix(); im.setMatrixAt(k, d.matrix); } im.instanceMatrix.needsUpdate = true; }); }
       { // V-07 : un feu orange qui tourne en haut de chaque portique de la crête ; V-68 : deux paires de ventilateurs sous la voûte du tunnel
         const tour = [], orangeL = mat('lampe', { lum: 1, c: 0xff9a20 });
-        for (const x of [-65, 120]) { const s = S[near(h, x, CZ - Math.sqrt(RA * RA - x * x))], g = new THREE.Group(); g.position.set(s.x, s.y + 21.6, s.z); g.userData.dyn = 1; h.scene.add(g); h.pose('boite', orangeL, g, [0, 0, 0], 2.8, 0.7, 0.7); h.pose('boite', gris, g, [0, -0.5, 0], 0.6, 0.6, 0.6); tour.push([g, 'y', 2.2]); }
+        for (const x of [-65, 120]) { const s = S[near(h, x, CZ - Math.sqrt(RA * RA - x * x))], g = new THREE.Group(); g.position.set(s.x, s.y + 21.6, s.z); g.userData.dyn = 1; h.scene.add(g); h.pose('boite', orangeL, g, [0, 0, 0], 2.8, 0.7, 0.7); h.pose('boite', gris, g, [0, -0.5, 0], 0.6, 0.6, 0.6); tour.push([g, 'y', 2.2]); const l = h.lum(IX.get(s), s.x, s.y + 14, s.z, 0xff8a20, 30, 1), c0 = l.c.clone(); TICK.push((dt, car, t) => { l.c.copy(c0).multiplyScalar(0.6 + 0.4 * Math.sin(t * 2.2)); }); } // le feu éclaire pour de vrai le portique et la chaussée dessous
         for (const i of [T0 + 24, T0 + 64]) for (const o of [-3.4, 3.4]) { const s = S[i], [x, z] = bord(s, 1, o), g = new THREE.Group(), ro = new THREE.Group(); g.position.set(x, s.y + 6.3, z); g.rotation.y = Math.atan2(-s.tz, s.tx); g.userData.dyn = 1; g.add(ro); h.scene.add(g);
           const c = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 2.2, 10, 1, true), mat('peinture', { c: 0x6d726d, side: THREE.DoubleSide })); c.rotation.z = Math.PI / 2; g.add(c); h.pose('boite', noir, ro, [0, 0, 0], 0.12, 1.1, 0.24); h.pose('boite', noir, ro, [0, 0, 0], 0.12, 0.24, 1.1); tour.push([ro, 'x', 14]); }
         TICK.push(dt => { for (const [g, ax, w] of tour) g.rotation[ax] += dt * w; }); }
       // ---------- le son du lieu (SON.lieux, SON.bref de audio.js) : sources posées dans le décor, entendues selon la distance et le côté ; événements liés au passage de la voiture ----------
       if (window.SON && SON.lieux) { const Vp = (x, y, z) => ({ x, y, z }), [RA, RB] = h.trains, coupe = S[P(K.rampe + 3)], camp = Vp(396, hAt(396, 362), 362), carr = S[(QA + QB) >> 1], tunM = S[(T0 + T1) >> 1];
-        const chute = { p: Vp(-115, 12, 110), son: 'chute', r: 760, vol: 0.9 }, trA = { p: RA, son: 'train', r: 170, vol: 0 }, trB = { p: RB, son: 'train', r: 190, vol: 0 }, scie = { p: Vp(coupe.x, coupe.y, coupe.z), son: 'tronconneuse', r: 280, vol: 0.45 };
+        const chute = { p: Vp(-115, 12, 110), son: 'chute', r: 760, vol: 0.22 }, trA = { p: RA, son: 'train', r: 170, vol: 0 }, trB = { p: RB, son: 'train', r: 190, vol: 0 }, scie = { p: Vp(coupe.x, coupe.y, coupe.z), son: 'tronconneuse', r: 280, vol: 0.25 };
         SON.lieux('barrage', [chute, trA, trB, scie, // V-18 à V-20 : la chute, entendue du quai, du pont, de la crête (en contrebas) et du belvédère ; V-24 : le roulement des rames ; V-59 : la tronçonneuse
-          ...[[105, 14, 65], [60, 14, 84], [15, 14, 65]].map(([x, y, z]) => ({ p: Vp(x, y + 3, z), son: 'turbine', r: 75, vol: 0.8, int: 1 })), // V-16, V-17 : un bourdon par groupe en marche, qui passe d'une oreille à l'autre dans le slalom
-          { p: Vp(249, 18, 516), son: 'transfo', r: 220, vol: 0.6 }, // V-42 : les transformateurs du poste
-          { p: Vp(carr.x, carr.y + 8, carr.z), son: 'concasseur', r: 160, vol: 0.6 }, // V-78
-          { p: h.helicoP, son: 'helico', r: 320, vol: 0.5 }, // V-82
-          ...[P(K.rampe + 6), P(K.traverse + 3), P(K.traverse + 6), P(K.culee + 6), P(K.belvedere + 4)].map(i => ({ p: Vp(S[i].x, S[i].y, S[i].z), son: 'foret', r: 260, vol: 0.5 })), // V-62 : le vent dans les mélèzes, dans la montée et la descente
-          { p: Vp(tunM.x, tunM.y + 5, tunM.z), son: 'souffle', r: 170, vol: 0.5, int: 1 }, // V-69 : la ventilation du tunnel
-          ...[40, 2760].map(i => { const [x, z] = bord(S[i], i < 100 ? 1 : -1, S[i].w + 4); return { p: Vp(x, S[i].y + 7, z), son: 'hautParleur', r: 90, vol: 0.35 }; })]); // V-33 : les haut-parleurs de la rue
+          ...[[105, 14, 65], [60, 14, 84], [15, 14, 65]].map(([x, y, z]) => ({ p: Vp(x, y + 3, z), son: 'turbine', r: 75, vol: 0.1, int: 1 })), // V-16, V-17 : un bourdon par groupe en marche, qui passe d'une oreille à l'autre dans le slalom
+          { p: Vp(249, 18, 516), son: 'transfo', r: 220, vol: 0.07 }, // V-42 : les transformateurs du poste
+          { p: Vp(carr.x, carr.y + 8, carr.z), son: 'concasseur', r: 160, vol: 0.22 }, // V-78
+          { p: h.helicoP, son: 'helico', r: 320, vol: 0.28 }, // V-82
+          ...[P(K.rampe + 6), P(K.traverse + 3), P(K.traverse + 6), P(K.culee + 6), P(K.belvedere + 4)].map(i => ({ p: Vp(S[i].x, S[i].y, S[i].z), son: 'foret', r: 260, vol: 0.14 })), // V-62 : le vent dans les mélèzes, dans la montée et la descente
+          { p: Vp(tunM.x, tunM.y + 5, tunM.z), son: 'souffle', r: 170, vol: 0.2, int: 1 }, // V-69 : la ventilation du tunnel
+          ...[40, 2760].map(i => { const [x, z] = bord(S[i], i < 100 ? 1 : -1, S[i].w + 4); return { p: Vp(x, S[i].y + 7, z), son: 'hautParleur', r: 90, vol: 0.25 }; })]); // V-33 : les haut-parleurs de la rue
         const pos = car => Vp(car.x, car.y || 0, car.z); let iAv = -1, tOis = 3, trompe = 0, craq = 0;
         TICK.push((dt, car) => { if (!car) return; const i = car.idx, v = Math.hypot(car.vx, car.vz);
-          chute.occ = i > iH0 && i < iH1 ? 0.75 : 0; trA.vol = RA.vc ? 0.7 : 0; trB.vol = RB.vc ? 0.8 : 0; scie.vol = h.arbre() < 1 || h.arbre() > 6 ? 0.45 : 0; // dans la halle, la chute est derrière les murs ; les rames à l'arrêt se taisent ; la scie s'arrête quand l'arbre tombe
+          chute.occ = i > iH0 && i < iH1 ? 0.75 : 0; trA.vol = RA.vc ? 0.28 : 0; trB.vol = RB.vc ? 0.32 : 0; scie.vol = h.arbre() < 1 || h.arbre() > 6 ? 0.25 : 0; // dans la halle, la chute est derrière les murs ; les rames à l'arrêt se taisent ; la scie s'arrête quand l'arbre tombe
           if (h.arbre() > 1.5 && !craq) { craq = 1; SON.bref('craque', scie.p, 1, 260); } if (h.arbre() < 0) craq = 0; // V-59
           { const d = Math.hypot(RB.x - car.x, RB.z - car.z); if (RB.vc && d < 150 && !trompe) { trompe = 1; SON.bref('trompe', RB, 1, 320); } if (d > 260) trompe = 0; } // V-24 : la trompe de la locomotive, une fois par rencontre
           if (i !== iAv) { iAv = i;
-            if (i > iP0 + 6 && i < iP1 - 6 && i % 11 === 0) SON.bref('joint', pos(car), Math.min(1, v / 45), 50); // V-54 : les joints du tablier
+            if (i > iP0 + 6 && i < iP1 - 6 && i % 11 === 0) SON.bref('joint', pos(car), 0.7 * Math.min(1, v / 45), 50); // V-54 : les joints du tablier
             if (i > iM0 + 6 && i < iM1 && (i - iM0 - 6) % 14 === 0) { const sd = ((i - iM0 - 6) / 14) & 1 ? 1 : -1, s = S[i], [x, z] = bord(s, sd, s.w + 1.2); SON.bref('souffle', Vp(x, s.y + 2, z), Math.min(1, v / 55), 40); } } // V-70 : chaque lampadaire de la crête passe en soufflant
           if ((i > P(K.rampe) && i < T0 - 20) || (i > P(K.culee) + 40 && i < P(K.descente))) { if ((tOis -= dt) < 0) { tOis = 2 + Math.random() * 4; const s = S[(i + 20) % N], [x, z] = bord(s, Math.random() < 0.5 ? 1 : -1, s.w + 12); SON.bref('oiseau', Vp(x, s.y + 8, z), 1, 200); } } // V-62 : les oiseaux du matin, en forêt
-          if (i > 280 && i < 345 && Math.random() < dt * 0.5) SON.bref('marteau', Vp(68, 30, 530), 0.7, 220); }); // V-43 : le chantier
-        borne(P(K.crete) + 12, () => SON.bref('corne', Vp(70, YC, -70), 1, 900)); // V-71 : la corne de brume, en entrant sur la crête
+          if (i > 280 && i < 345 && Math.random() < dt * 0.5) SON.bref('marteau', Vp(68, 30, 530), 1.5, 220); }); // V-43 : le chantier
+        borne(P(K.crete) + 12, () => SON.bref('corne', Vp(70, YC, -70), 0.7, 900)); // V-71 : la corne de brume, en entrant sur la crête
         borne(2150, () => SON.bref('clairon', camp, 1, 300)); // V-76 : le clairon du camp
         for (const i of [388, 2462]) borne(i, car => SON.bref('gresille', pos(car), 0.8, 60)); // V-84 : sous les lignes à 500 kV
         for (const i of [1235, 1298, 1700]) borne(i, () => SON.bref('trompe', Vp(170, 15, 400), 1, 1300)); } // V-28 : la trompe d'un train monte de la vallée
@@ -668,6 +668,7 @@
       { // V-03 : dans le banc de brouillard de la crête, un halo orange sur chaque lampadaire, visible à 170 m : la chaîne des lampes dessine la route. Additif, hors brouillard, dessiné après le voile du banc (renderOrder 51)
         const LP = lampes.filter(([x, y, z]) => y > YC - 6 && z < 120).map(([x, y, z, r]) => [x + Math.cos(r) * 2.1, y + 8.8, z - Math.sin(r) * 2.1]), g = new THREE.BufferGeometry(), C = new Float32Array(LP.length * 3), a = P(K.crete), b = P(74);
         g.setAttribute('position', new THREE.Float32BufferAttribute(LP.flat(), 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+        for (const [x, y, z] of LP) h.lum(near(h, x, z), x, y - 0.6, z, 0xffa040, 30, 0.65); // la vraie lumière : un luminaire du moteur par lampe, qui éclaire la chaussée et les parapets ; le halo n'en est que la lueur dans l'air
         const pts = new THREE.Points(g, new THREE.PointsMaterial({ map: h.tx('brumeGES'), size: 8, vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); pts.frustumCulled = false; pts.renderOrder = 51; pts.userData.dyn = 1; h.scene.add(pts);
         VUE.push(car => { const i = car.idx, d = i < a ? a - i : i > b ? i - b : 0, k = Math.max(0, 1 - d / 90); pts.visible = k > 0.01; if (!pts.visible) return;
           LP.forEach(([x, , z], j) => { const f = k * Math.max(0, 1 - Math.hypot(x - car.x, z - car.z) / 170); C[j * 3] = 0.75 * f; C[j * 3 + 1] = 0.42 * f; C[j * 3 + 2] = 0.12 * f; }); g.attributes.color.needsUpdate = true; }); }

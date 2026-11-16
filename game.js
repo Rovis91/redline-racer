@@ -333,7 +333,7 @@
   // NL luminaires ponctuels (les plus proches le long de la piste + feux des voitures), le faisceau des phares à coupure nette,
   // l'ombre de la voiture par lancer de rayon sur sa boîte (elle balaie route et murs à chaque luminaire franchi),
   // et sur les surfaces brillantes (route mouillée, flaques = alpha de la texture, carrosserie) le reflet étiré de chaque source.
-  const LUMS = [], lum = (i, x, y, z, col, r, k = 1, tun = 0) => LUMS.push({ i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun });
+  const LUMS = [], lum = (i, x, y, z, col, r, k = 1, tun = 0) => { const l = { i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun }; LUMS.push(l); return l; }; // rend le luminaire : un décor peut faire respirer sa couleur (l.c) dans son tick (feu de camp de chapada)
   const NUIT = TH.phares / 2.6; // force des feux de voiture : pleine de nuit, faible à l'aube et au couchant
   let pharesV = TH.phares, nuitV = NUIT; // th.pharesBrume : dans un banc de brouillard (th.brume à quatre valeurs), les feux des voitures s'allument à cette force, au prorata du banc ; sans l'option, pharesV = TH.phares et nuitV = NUIT
   const SUNC = new THREE.Color(TH.sun[0]).multiplyScalar(TH.sun[1]);

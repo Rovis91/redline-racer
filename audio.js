@@ -523,10 +523,10 @@
   const coteO = (dx, dz, d) => clamp((dz * Math.cos(OREILLE.th) - dx * Math.sin(OREILLE.th)) / Math.max(d, 10), -1, 1) * 0.85; // de -1 (à gauche) à 1 (à droite) de la voiture écoutée
   function lieuxFrame(t, car, state, tun) {
     if (!LIEUX.length) return; const actif = lieuxId === M.id && state !== 'title';
-    OREILLE.x = car.x; OREILLE.y = car.y || 0; OREILLE.z = car.z; OREILLE.th = car.th;
+    OREILLE.x = car.x || 0; OREILLE.y = car.y || 0; OREILLE.z = car.z || 0; OREILLE.th = car.th || 0; // (le banc d'écoute n'a pas de voiture posée : elle est à l'origine)
     for (const l of LIEUX) {
       if (!l.g || l.ac !== AC) { if (!actif) continue; l.ac = AC; l.pan = AC.createStereoPanner(); l.pan.connect(V.amb); l.lp = filt('lowpass', 800, 0.7, l.pan); l.g = gain(0, l.lp); SONS[l.son](l.g); }
-      const dx = l.p.x - car.x, dz = l.p.z - car.z, d = Math.hypot(dx, dz, (l.p.y || 0) - OREILLE.y), a = clamp(1 - d / l.r, 0, 1), o = l.occ || 0;
+      const dx = l.p.x - OREILLE.x, dz = l.p.z - OREILLE.z, d = Math.hypot(dx, dz, (l.p.y || 0) - OREILLE.y), a = clamp(1 - d / l.r, 0, 1), o = l.occ || 0;
       regle(l.g.gain, actif ? l.vol * a * a * (l.int ? 1 : 1 - 0.85 * tun) * (1 - o) : 0, t, 0.12); regle(l.pan.pan, coteO(dx, dz, d), t, 0.1); regle(l.lp.frequency, 500 + 9000 * a * a * (1 - 0.7 * o), t, 0.15);
     }
   }
@@ -545,7 +545,7 @@
   };
   function coupLieu(nom, p, vol = 1, r = 200) {
     if (!AC || !nbuf || lieuxId !== M.id || !COUPS[nom]) return; const t = AC.currentTime + 0.02, dx = p.x - OREILLE.x, dz = p.z - OREILLE.z, d = Math.hypot(dx, dz, (p.y || 0) - OREILLE.y), a = clamp(1 - d / r, 0, 1); if (a <= 0) return;
-    const pan = AC.createStereoPanner(); pan.pan.value = coteO(dx, dz, d); pan.connect(V.amb); COUPS[nom](t, gain(vol * a * a, pan)); setTimeout(() => pan.disconnect(), 6000);
+    const pan = AC.createStereoPanner(); pan.pan.value = coteO(dx, dz, d); pan.connect(V.amb); COUPS[nom](t, gain(0.2 * vol * a * a, pan)); // 0,2 : crêtes ramenées vers -25 dB, sous la musique (banc d'écoute, mesure hors ligne) setTimeout(() => pan.disconnect(), 6000);
   }
   function buildAmb() {
     if (M.id === 'canal') rafaleBuf(HELICO); if (M.id === 'givre' && !(GREL && GREL.ac === AC)) GREL = Object.assign(grelots(), { ac: AC }); // l'hélicoptère, écrit maintenant plutôt qu'en course
