@@ -370,7 +370,7 @@ L'auteur a validé tous les points ; ils ont été réalisés puis jugés un par
 | 2-L1, 3-L1 | Flammes ; les feux de l'escalier s'allument devant la voiture | 372, 456 |
 | 6-E2 | Cascades striées qui tombent, bouillon au pied | 790 |
 | 6-M2 | Pétales en travers de la route | 776 |
-| 7-L1, 7-L2 | Lanternes qui se balancent ; un puits de jour sous chaque lanterneau | 900, 906 |
+| 7-L1 | Lanternes qui se balancent (le puits de jour 7-L2, validé puis jugé irréaliste par l'auteur, est retiré) | 900 |
 | 1-S1 à 8-S1 | Son par zone (mesure hors ligne au banc d'écoute et lecture du code) | — |
 
 ### En place, refusé par l'agent (à juger en jouant)
@@ -382,7 +382,7 @@ L'auteur a validé tous les points ; ils ont été réalisés puis jugés un par
 | 1-V1 | Pigeons sur la chaussée : trop petits, envol non démontré par la rafale |
 | 1-V2, 7-V1, 8-V2 | Silhouettes : présentes, mais peu nombreuses dans le village, de tons neutres sous la voûte, et lues comme des caisses de loin |
 | 2-V1 | Caravane : chameaux visibles mais petits, à demi masqués par un autel ; hommes non reconnus |
-| 8-V1 | Vol de pigeons : quatre oiseaux visibles sur vingt-cinq, haut dans le ciel (forme d'aile corrigée depuis, non revalidée) |
+| 8-V1 | Vol de pigeons : retiré après le retour de l'auteur, remplacé par un groupe de pigeons de paris sur la chaussée |
 | 8-V3, 6-E3, 8-M3 | Marcheurs, jets, linge : le mouvement ne se prouve pas sur une rafale prise voiture en marche |
 | 1-I1, 7-I1, 7-I2, 8-I1 | Objets percutables par tronçon : trop petits pour se distinguer sur une image |
 | 5-I1 | Poussière au choc dans la salle : défaut de logique trouvé par l'agent, corrigé, non revalidé |
@@ -401,6 +401,23 @@ La charrette à âne en trafic réel (§2.3) : elle touche `sim.js` et change le
 - `audio.js` : lits par zone (`AMBZ`), événements de perse selon l'endroit, `ESP.<carte>.lieux` (réverbération plus forte sous la Porte et dans la salle), ambiance maintenue sous la voûte pour une carte à zones.
 - `ecoute/ecoute.js` : cinq scènes d'ambiance de perse. `outils/plan.js` : `--ecart=n` (rafale espacée, pour voir ce qui bouge lentement).
 - Aucun de ces changements n'agit sur une autre carte tant qu'elle ne déclare pas les options ; ville, canal, stade, chapada, plage et barrage se chargent sans erreur.
+
+### Retours de l'auteur après avoir joué
+
+| Retour | Ce qui a été fait | Plan avant/après |
+|---|---|---|
+| « Les trous au plafond dans le bazar ne sont pas réalistes » | Les lanterneaux, leurs cônes de lumière et leurs taches au sol sont retirés : la voûte de brique est continue, ce sont les lanternes qui éclairent | `captures/plans/perse/898.duo.jpg` |
+| « Les oiseaux ne sont pas beaux, reprends ceux de la carte Paris » | Le vol qui tournait au-dessus de la rue et sa forme maison sont retirés. Tous les oiseaux sont les pigeons de paris (même forme, même taille, même envol) : deux groupes sur la chaussée de la plaine (150, 260), un dans la rue du bazar (vers 1099) | `1124.duo.jpg`, `135.duo.jpg`, `135-rafale.jpg`, `1082-rafale.jpg` |
+| « Le dernier mur à gauche avant la fin a un trou » | Le mur de terre du départ commence 8 m plus tôt et recouvre la fin de la dernière façade | `1162.duo.jpg` |
+| Couper les aplats qui battent avec la musique | `th.sansRythme: 1` sur perse ; `rythme.js` arrête la boucle précédente puis sort si la carte le demande. Vérifié en jeu : aucune boucle sur perse, boucle lancée sur ville | — |
+| De la vraie lumière, pas de la fausse | Chaque feu porte un luminaire du moteur (`h.lum`) que le tick fait vaciller avec la flamme ; dans l'escalier la lumière s'allume avec le feu ; braise et lumière fixes aux points de freinage. Sous la voûte, un luminaire par lanterne, à sa place, qui se balance avec elle. Les cônes et taches de lumière peints sont retirés. `lum` de `game.js` rend le luminaire (ligne reprise de la branche `vie-chapada`) | `456.duo.jpg`, `372.duo.jpg`, `944.duo.jpg` |
+
+Verdict des agents sur ces cinq retours (un agent par retour, duo avant/après) :
+
+- **Conformes** : le plafond du bazar, le mur du départ, le rythme coupé (lecture du code ; en jeu, aucune boucle sur perse, boucle lancée sur ville).
+- **Oiseaux** : les oiseaux en croix ont bien disparu ; les pigeons de paris, à leur taille (30 cm), ne se lisent pas sur une image fixe à 30 m. À juger en jouant.
+- **Lumière** : refusée trois fois. Les murs proches des feux sont bien éclairés en orange, mais sur la chaussée l'effet se lit comme une dominante chaude, sans flaque nette ; sous la voûte, la lumière des lanternes se confond avec la clarté propre du décor (`th.tun.ambiant: 1` et matières émissives). Pour que les luminaires dominent, il faudrait baisser cette clarté ou le soleil du couchant : c'est un choix d'image, laissé à l'auteur.
+- Réserve relevée par l'agent sur le rythme, déjà vraie avant : au changement de carte, les couleurs de la carte quittée restent à leur dernière valeur modulée.
 
 ### Relevé en passant, non traité
 
