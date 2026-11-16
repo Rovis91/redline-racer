@@ -328,7 +328,7 @@
   if (voileBr) { voileBr.renderOrder = 50; voileBr.visible = false; voileBr.frustumCulled = false; voileBr.userData.dyn = 1; scene.add(voileBr); }
 
   const hemi = new THREE.HemisphereLight(TH.hemi[0], TH.hemi[1], TH.hemi[2] * Math.PI); scene.add(hemi); // bleu d'en haut, rebond magenta de la ville
-  const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const OMBD = 2, OMBI = 3, OMBF = 4; // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
+  const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const OMBD = 2, OMBI = 3, OMBF = 4, ombM = []; // ombM : les objets des calques OMBD et OMBI (voir ombres) // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
   // th.ombre = { taille, champ, doux } (docs/MOTEUR-OPTIONS-CARTES.md) : côté de la carte d'ombre en texels (2048), demi-côté couvert en m (390), filtrage bilinéaire des bords (4 lectures au lieu d'une)
   const OMBO = TH.ombre || {}, OTX = OMBO.taille || 2048, OCH = OMBO.champ || 300 * LOIN;
   sun.shadow.mapSize.set(OTX, OTX); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.5;
@@ -512,14 +512,14 @@
     tunMats.push(mat('chaussee', { lum: 1, side: THREE.DoubleSide, gloss: u.gloss ?? 0.3 }, ...u.sol), mat((u.tex || [])[0] || 'paroi', LUMI2, u.murs[0], u.paroi, u.carreaux), mat((u.tex || [])[0] || 'paroi', LUMI2, u.murs[1], u.paroi, u.carreaux), mat((u.tex || [])[1] || 'plafond', LUMI2, u.plafond)); /* th.tun.tex : autres textures des parois et de la voûte (chapada : la roche de la grotte) */
     tunMats.forEach((m, i) => m.color.setScalar(m.userData.amb = TH.alarme && (i === 1 || i === 2) ? 0.85 : u.ambiant ?? TUN_AMB)); // th.tun.ambiant : autre part d'ambiante sous la voûte ; ville : les parois gardent leurs bandes néon vives
     { // luminaires en quinconce, un à gauche, un à droite : la lumière et l'ombre de la voiture changent de côté à chaque luminaire franchi
-      const d = new THREE.Object3D(), fx = u.neons.map(c => new THREE.InstancedMesh(geo('luminaireTunnel'), mat('peinture', { lum: 1, c, fog: false }), Math.ceil(cT / LUM_PAS))), nf = [0, 0];
+      const d = new THREE.Object3D(), fx = u.neons.map(c => new THREE.InstancedMesh(geo('luminaireTunnel'), mat('peinture', { lum: 1, c, fog: false }), Math.ceil(cT / LUM_PAS))), nf = [0, 0], secours = mat('peinture', { lum: 1, c: u.portail }); // secours : une matière pour tous les boîtiers (une par boîtier les laissait hors de la fusion, une passe de dessin chacun)
       for (let i = T.t0 + 2, k = 0; i < T.t1 - 1; i += LUM_PAS, k++) {
         const s = S[i % N], sd = k & 1 ? 1 : -1, x = s.x - s.tz * sd * (tw(s) - 1.7), z = s.z + s.tx * sd * (tw(s) - 1.7), yl = FT ? plaf(s, tw(s) - 1.7) - 0.15 : 7.85;
         if (FT && ouvert(i - T.t0)) continue;
         if (!SANS.has('lumieres')) lum(i % N, x, s.y + yl - 0.65, z, u.neons[k & 1], 21, 3, 1);
         if (SANS.has('luminaires')) continue;
         d.position.set(x, s.y + yl, z); d.rotation.set(0, across(s), 0); d.updateMatrix(); fx[k & 1].setMatrixAt(nf[k & 1]++, d.matrix);
-        if (k % 6 === 3) pose('boitierSecours', mat('peinture', { lum: 1, c: u.portail }), scene, [s.x - s.tz * (tw(s) - 0.1), s.y + 2.6, s.z + s.tx * (tw(s) - 0.1)]).rotation.y = across(s); // boîtier de secours lumineux sur la paroi de droite
+        if (k % 6 === 3) pose('boitierSecours', secours, scene, [s.x - s.tz * (tw(s) - 0.1), s.y + 2.6, s.z + s.tx * (tw(s) - 0.1)]).rotation.y = across(s); // boîtier de secours lumineux sur la paroi de droite
       }
       fx.forEach((m, c) => { m.count = nf[c]; scene.add(m); });
     }
@@ -971,7 +971,7 @@
     tri.forEach((i, k) => { for (let j = 0; j < 9; j++) A[k * 9 + j] = me.P0[i + j] + me.d[i + j]; U.set(uv.subarray(i / 3 * 2, i / 3 * 2 + 6), k * 6); });
     ge.setAttribute('position', new THREE.BufferAttribute(A, 3)); ge.setAttribute('uv', new THREE.BufferAttribute(U, 2)); ge.computeVertexNormals(); ge.computeBoundingBox();
     const m = new THREE.Mesh(ge, me.o.material); m.castShadow = true; m.layers.mask = me.o.layers.mask; return m; });
-  function debris(m, v) { m.userData.dyn = 1; m.layers.set(OMBD); m.castShadow = true; scene.add(m); DEB.push({ m, v, w: new V3(jit(10), jit(10), jit(10)), y0: m.position.y - 1, dort: 0 });
+  function debris(m, v) { m.userData.dyn = 1; m.layers.set(OMBD); ombM.push(m); m.castShadow = true; scene.add(m); DEB.push({ m, v, w: new V3(jit(10), jit(10), jit(10)), y0: m.position.y - 1, dort: 0 });
     while (DEB.length > DEBMAX) { const o = DEB.shift(); scene.remove(o.m); o.m.geometry.dispose(); } }
   function tombe(g, p, ms, parent, vx, vz) { // une pièce qui se détache, lancée vers l'extérieur ; une optique laisse en plus des éclats
     g.updateMatrixWorld(true); const q = parent.getWorldQuaternion(new THREE.Quaternion()), c = new V3(), y0 = g.position.y;
@@ -1181,6 +1181,12 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     scene.updateMatrixWorld(true);
     const simple = o => { const m = o.material, g = o.geometry; return !Array.isArray(m) && !m.transparent && g.drawRange.count === Infinity && !Object.keys(g.morphAttributes).length && fixe(o); };
     scene.traverse(o => { if (o.isMesh && !o.isInstancedMesh && simple(o)) cand.push(o); });
+    // une famille de matières (userData.famille, déclarée par la carte : même texture, teintes différentes) n'a qu'une matière fondue, la teinte de chaque pièce en couleur de sommet : une passe pour toutes les teintes au lieu d'une par teinte.
+    // La pièce est remplacée dans cand par son double (reel : le maillage d'origine, retiré s'il est fondu). La carte garantit que ces matières ne changent pas en course
+    const FAM = new Map(), unc = new Map(), coul = g => unc.get(g) || unc.set(g, g.clone().setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3))).get(g);
+    cand.forEach((o, i) => { const m = o.material, fa = m.userData.famille; if (!fa || !m.vertexColors && o.geometry.attributes.color || m.vertexColors && !o.geometry.attributes.color) return;
+      const kf = [fa, m.type, m.side, m.vertexColors, m.emissive ? m.emissive.getHex() : ''].join('|'), fm = FAM.get(kf) || FAM.set(kf, Object.assign(m.clone(), { vertexColors: true })).get(kf); fm.color.setRGB(1, 1, 1);
+      cand[i] = { reel: o, geometry: m.vertexColors ? o.geometry : coul(o.geometry), material: fm, matrixWorld: o.matrixWorld, scale: o.scale, col: m.color, castShadow: o.castShadow, receiveShadow: o.receiveShadow, frustumCulled: o.frustumCulled, renderOrder: o.renderOrder, layers: o.layers, userData: {}, children: [] }; });
     // le décor posé en nombre (InstancedMesh immobile) y passe aussi : chaque exemplaire devient une pièce, fondue avec tout ce qui a sa matière (une passe de dessin en moins par forme et par zone, ombres et reflets compris) ;
     // sa teinte par exemplaire passe dans une couleur de sommet, sur une copie de la matière. Au-delà de INST sommets, l'instance reste : ce serait trop de mémoire. Ses pièces ne sont pas découpées en pavés (elle était dessinée entière, en une passe), sauf au-delà de 100 000 sommets : les 15 500 blocs du canal (560 000 sommets) coûtaient 1,5 ms de GPU par image, entiers dans la vue et dans chaque face du cube des reflets
     const INST = 600000, inst = [], vc = new Map(), ni = new Map(), uni = g => ni.get(g) || ni.set(g, g.index ? g.toNonIndexed() : g).get(g);
@@ -1198,13 +1204,16 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     // un lot lourd (plus de GROS sommets) est découpé en pavés de PAVE mètres, pour que ce qui est hors champ ne soit pas dessiné ; les grandes pièces (sol, rubans) restent entières
     for (const [k, l] of [...lots]) {
-      if (l.reduce((s, o) => s + (o.geometry.index || o.geometry.attributes.position).count, 0) < GROS) continue;
+      const ns = l.reduce((s, o) => s + (o.geometry.index || o.geometry.attributes.position).count, 0); if (ns < GROS) continue;
       lots.delete(k);
+      // le pavé grandit pour garder environ GROS sommets chacun : un lot à peine lourd étalé sur tout le port de Wan-9 faisait 14 pavés de 800 sommets, autant de passes de dessin pour presque rien d'écarté
+      const bx = [1e9, -1e9, 1e9, -1e9]; for (const o of l) { v.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld); bx[0] = Math.min(bx[0], v.x); bx[1] = Math.max(bx[1], v.x); bx[2] = Math.min(bx[2], v.z); bx[3] = Math.max(bx[3], v.z); }
+      const P = Math.max(PAVE, Math.sqrt(Math.max(bx[1] - bx[0], PAVE) * Math.max(bx[3] - bx[2], PAVE) * 2 * GROS / ns)); // environ 2 × GROS sommets par pavé
       for (const o of l) { const g = o.geometry, r = g.boundingSphere.radius * o.matrixWorld.getMaxScaleOnAxis(); v.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
-        const kp = k + '|' + (r < PAVE / 2 && (!o.virt || o.enorme) ? Math.floor(v.x / PAVE) + ':' + Math.floor(v.z / PAVE) : 'grand'); if (!lots.has(kp)) lots.set(kp, []); lots.get(kp).push(o); }
+        const kp = k + '|' + (r < PAVE / 2 && (!o.virt || o.enorme) ? Math.floor(v.x / P) + ':' + Math.floor(v.z / P) : 'grand'); if (!lots.has(kp)) lots.set(kp, []); lots.get(kp).push(o); }
     }
     for (const l of lots.values()) {
-      if (l.length < 2 && !l[0].virt) { ombre.push([l[0].geometry, l[0].matrixWorld, l[0]]); continue; } // un exemplaire seul est fondu quand même : son instance disparaît entière
+      if (l.length < 2 && !l[0].virt) { const o = l[0].reel || l[0]; ombre.push([o.geometry, o.matrixWorld, o]); continue; } // un exemplaire seul est fondu quand même : son instance disparaît entière
       // indexé si toutes les pièces le sont : un sommet partagé n'est calculé qu'une fois par le GPU (une boîte : 24 sommets au lieu de 36), et la scène est surtout limitée par ses sommets
       const ix = l.every(o => o.geometry.index), src = l.map(o => ix ? o.geometry : uni(o.geometry)), n = src.reduce((s, g) => s + g.attributes.position.count, 0), G = new THREE.BufferGeometry();
       if (ix) { const I = new (n > 65535 ? Uint32Array : Uint16Array)(src.reduce((s, g) => s + g.index.count, 0)); let b = 0, p = 0;
@@ -1227,8 +1236,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       }
       const o0 = l[0], m = new THREE.Mesh(G, o0.material); m.castShadow = o0.castShadow; m.receiveShadow = o0.receiveShadow; m.frustumCulled = o0.frustumCulled; m.renderOrder = o0.renderOrder; m.layers.mask = o0.layers.mask;
       m.matrixAutoUpdate = false; m.userData.petit = l.some(o => o.userData.petit); scene.add(m); ombre.push([G, null, m]);
-      if (window.__origines) m.userData.src = l.map(o => { let p = o.virt || o; while (p && !p.userData.origine) p = p.parent; return [p ? p.userData.origine : '?', (o.geometry.index || o.geometry.attributes.position).count]; }); // outils/profil.js : d'où viennent les pièces fondues
-      for (const o of l) o.userData.fondu = 1;
+      if (window.__origines) m.userData.src = l.map(o => { let p = o.virt || o.reel || o; while (p && !p.userData.origine) p = p.parent; return [p ? p.userData.origine : '?', (o.geometry.index || o.geometry.attributes.position).count]; }); // outils/profil.js : d'où viennent les pièces fondues
+      for (const o of l) (o.reel || o).userData.fondu = 1;
     }
     // l'ombre du décor fixe (voir ombres) ne lit que la profondeur : tout ce qui la porte, fondu ou seul, y est dessiné en un maillage de positions par pavé et par face d'ombre, sur le calque OMBF que seule la caméra d'ombre voit,
     // au lieu d'une passe par matière (jusqu'à 110 passes de dessin dans l'image où la lune change de pas). Restent à part ce dont la profondeur dépend de la matière (découpe alphaTest, déplacement, plans de coupe)
@@ -1244,10 +1253,10 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
         const m = new THREE.Mesh(G, MO.get(sd) || MO.set(sd, new THREE.MeshBasicMaterial({ shadowSide: sd })).get(sd)); m.castShadow = true; m.layers.set(OMBF); m.matrixAutoUpdate = false; scene.add(m);
         if (window.__origines) m.userData.origine = 'moteur ombre du décor fixe'; } }
     for (const o of inst) o.parent.remove(o); // toutes ses pièces sont fondues (même seules dans leur lot)
-    for (const o of cand.reverse()) if (o.userData.fondu && !o.virt) { if (o.children.length) o.layers.set(31); else o.parent.remove(o); } // les enfants d'abord ; un parent qui en garde reste dans l'arbre sans être dessiné (calque 31)
+    for (const c of cand.reverse()) { const o = c.reel || c; if (o.userData.fondu && !c.virt) { if (o.children.length) o.layers.set(31); else o.parent.remove(o); } } // les enfants d'abord ; un parent qui en garde reste dans l'arbre sans être dessiné (calque 31)
   }
   { const fixe = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn || !p.visible) return false; return true; }; // les ombres mobiles (voir ombres) : tout ce qui porte une ombre sans être fixe
-    scene.traverse(o => { if (o.isLight) { o.layers.enable(OMBD); o.layers.enable(OMBI); } else if (o.castShadow && !fixe(o)) o.layers.set(o.isInstancedMesh ? OMBI : OMBD); }); } // les lumières aussi : sans elles, la passe des ombres mobiles changeait l'éclairage de three, qui recompilait alors la clé de chaque matière à chaque image
+    scene.traverse(o => { if (o.isLight) { o.layers.enable(OMBD); o.layers.enable(OMBI); } else if (o.castShadow && !fixe(o)) { o.layers.set(o.isInstancedMesh ? OMBI : OMBD); ombM.push(o); } }); } // les lumières aussi : sans elles, la passe des ombres mobiles changeait l'éclairage de three, qui recompilait alors la clé de chaque matière à chaque image
   const bouge = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn) return true; return false; };
   scene.traverse(o => { if (o.isInstancedMesh) { if (bouge(o) && !o.userData.casse) o.frustumCulled = false; else { o.computeBoundingSphere(); if (o.userData.casse) o.boundingSphere.radius += 30; } } if (o.material) eclaire(o.material); }); for (const sc of [scene, repliScene]) sc.traverse(o => { for (const m of [].concat(o.material || [])) m.forceSinglePass = true; }); // r149+ : une transparente double face se dessinait en deux passes (éclat doublé en additif) ; le décor posé en nombre est écarté hors champ sur l'étendue de ses instances (sphère calculée une fois)  ; ce qui bouge reste toujours dessiné, sauf le décor renversable (h.cassable), écarté sur l'étendue de sa pose plus 30 m (shortcut: un exemplaire projeté plus loin peut disparaître avec son lot hors champ ; à revoir si une carte en lance plus loin)
   for (const g of [carG, ...opps]) salePeint(g); // la saleté se greffe sur le shader d'eclaire de chaque livrée
@@ -1800,7 +1809,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   }
 
   // la lune suit la voiture par pas de CEL (64 texels de l'ombre, 24 m) : entre deux pas, la carte d'ombre du décor fixe ne change pas (voir ombres)
-  const LR = new V3().crossVectors(new V3(0, 1, 0), SD).normalize(), LU = new V3().crossVectors(SD, LR), TX = 2 * OCH / OTX, CEL = TX * 64, tmp = new V3();
+  const LR = new V3().crossVectors(new V3(0, 1, 0), SD).normalize(), LU = new V3().crossVectors(SD, LR), TX = 2 * OCH / OTX, CEL = TX * 64, tmp = new V3(), ombS = new THREE.Sphere();
   function sunFollow(car) {
     tmp.set(car.x, 0, car.z);
     const a = Math.round(tmp.dot(LR) / CEL), b = Math.round(tmp.dot(LU) / CEL), c = Math.round(tmp.dot(SD) / CEL);
@@ -1817,7 +1826,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = packDepthToRGBA(texture2D(t, v).x); }' }),
     ombScene = new THREE.Scene(), ombProf = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.BackSide }), ombProfI = ombProf.clone(), // une par calque : la même pour les deux faisait refaire à three la clé du programme à chaque passage de l'un à l'autre
     ombNul = new THREE.WebGLRenderTarget(1, 1), ombFixe = new THREE.OrthographicCamera(-1e-6, 1e-6, 1e-6, -1e-6, 0, 1e-6); // ombFixe : ne voit rien (loin sous la carte, champ nul) et seulement le calque 0 : le rendu qui la prend ne fait que l'ombre du décor fixe (shadowMap.render ne s'appelle pas hors d'un rendu)
-  ombFixe.position.set(0, -1e7, 0); ombFixe.updateMatrixWorld();
+  ombFixe.position.set(0, -1e7, 0); ombFixe.updateMatrixWorld(); ombFixe.layers.set(30); sun.layers.enable(30); // calque 30 : le soleil seul ; sans lui, ce rendu dessinait dans sa cible d'un pixel tout ce qui n'est pas écarté hors champ (particules, eau : une vingtaine de passes)
   const ombQ = new THREE.Mesh(quad.geometry, OMB); ombQ.frustumCulled = false; ombScene.add(ombQ);
   sun.shadow.camera.layers.set(OMBD); renderer.shadowMap.autoUpdate = false;
   const copie = (src, dst, m) => { ombQ.material = m; m.uniforms.t.value = src; renderer.setRenderTarget(dst); renderer.autoClear = false; renderer.render(ombScene, postCam); renderer.autoClear = true; };
@@ -1834,9 +1843,14 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const bx = Math.min(b[0], p[0]), by = Math.min(b[1], p[1]); S.map.scissorTest = true;
     if (!fixe) { S.map.scissor.set(bx, by, Math.max(b[2], p[2]) - bx, Math.max(b[3], p[3]) - by); copie(O.C.texture, S.map, OMB); } // la copie : ce carré et celui de l'image d'avant
     S.map.scissor.set(b[0], b[1], b[2] - b[0], b[3] - b[1]); O.b = b;
+    // un objet mobile dont l'ombre ne peut pas tomber dans le carré (sa sphère, vue du soleil, est hors du carré) n'est pas dessiné : la passe coûtait toutes les voitures et tout le décor mobile de la carte
+    const caches = []; for (let i = ombM.length - 1; i >= 0; i--) { const o = ombM[i]; if (!o.parent) { ombM.splice(i, 1); continue; } if (!o.visible || !o.frustumCulled || !o.geometry) continue; // un groupe qui porte castShadow n'est pas dessiné lui-même
+      if (!o.isInstancedMesh && !o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const sp = o.isInstancedMesh ? o.boundingSphere : o.geometry.boundingSphere; if (!sp) continue;
+      ombS.copy(sp).applyMatrix4(o.matrixWorld); tmp.copy(ombS.center).applyMatrix4(S.matrix); const rp = ombS.radius / TX;
+      if (tmp.x * W + rp < b[0] || tmp.x * W - rp > b[2] || tmp.y * W + rp < b[1] || tmp.y * W - rp > b[3]) { o.visible = false; caches.push(o); } }
     renderer.autoClear = false; renderer.setRenderTarget(S.map);
     for (const [c, m] of [[OMBD, ombProf], [OMBI, ombProfI]]) { S.camera.layers.set(c); scene.overrideMaterial = m; renderer.render(scene, S.camera); }
-    renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false;
+    renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false; for (const o of caches) o.visible = true;
   }
 
   const ROUGE = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLEU = new THREE.Color(0x3a9cff), PHARE = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOITE = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc); // BOITE : englobe toute la caisse, pour l'ombre (un point dedans ou dessus n'est pas ombré)
