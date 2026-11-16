@@ -11,11 +11,13 @@
       for (let i = 0; i < 46; i++) { const x = alea() * 62 | 0, y = alea() * 62 | 0; R(g, alea() < 0.6 ? '#8a8440' : '#5e7038', x, y, 2, 2); R(g, '#a89a50', x + 1, y - 1, 1, 1); }
     }],
     // falaise d'ocre : strates horizontales du rouge sang au jaune, ravines verticales, éboulis au pied ; le haut de la texture est le haut de la butte, coiffé de garrigue
-    falaiseOcre: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o, B = [['#6a7038', 4], ['#e8c070', 6], ['#e09848', 9], ['#d8702c', 8], ['#c84a20', 10], ['#e08a3c', 7], ['#b83c1c', 9], ['#c8683a', 11]]; let y = 0;
-      for (const [c, hh] of B) { R(g, c, 0, y, 64, hh); for (let x = 0; x < 64; x += 2) if (alea() < 0.5) R(g, c, x, y - 1 - (alea() * 2 | 0), 2, 3); y += hh; }
-      voile(g, 0.22, () => { for (let i = 0; i < 26; i++) R(g, alea() < 0.7 ? '#000' : '#fff', alea() * 64 | 0, 4 + (alea() * 30 | 0), 1 + (alea() * 2 | 0), 10 + (alea() * 30 | 0)); });
-      for (let i = 0; i < 150; i++) R(g, alea() < 0.5 ? '#a04a24' : '#e0a060', alea() * 64 | 0, 4 + alea() * 60 | 0, 2, 1);
+    falaiseOcre: () => [128, 128, (g, o) => {
+      const { R, alea, voile } = o, B = [['#6a7038', 8], ['#e8c070', 12], ['#e09848', 18], ['#d8702c', 16], ['#c84a20', 20], ['#e08a3c', 14], ['#b83c1c', 18], ['#c8683a', 22]]; let y = 0;
+      for (const [c, hh] of B) { R(g, c, 0, y, 128, hh); for (let x = 0; x < 128; x += 2) if (alea() < 0.5) R(g, c, x, y - 1 - (alea() * 4 | 0), 2, 5); y += hh; }
+      voile(g, 0.12, () => { for (let k = 8; k < 128; k += 3) R(g, alea() < 0.5 ? '#000' : '#fff', 0, k, 128, 1); }); // litage fin dans chaque strate
+      voile(g, 0.22, () => { for (let i = 0; i < 90; i++) R(g, alea() < 0.7 ? '#000' : '#fff', alea() * 128 | 0, 8 + (alea() * 60 | 0), 1 + (alea() * 3 | 0), 20 + (alea() * 60 | 0)); }); // ravines
+      for (let i = 0; i < 600; i++) R(g, alea() < 0.5 ? '#a04a24' : '#e0a060', alea() * 128 | 0, 8 + alea() * 120 | 0, 2, 1);
+      voile(g, 0.3, () => { for (let i = 0; i < 160; i++) R(g, alea() < 0.5 ? '#8a3a1c' : '#d8a060', alea() * 128 | 0, 112 + alea() * 16 | 0, 2 + (alea() * 3 | 0), 2); }); // éboulis au pied
     }],
     // botte de paille : brins dorés, deux ficelles
     paille: () => [32, 32, (g, o) => {
