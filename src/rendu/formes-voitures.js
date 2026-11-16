@@ -128,6 +128,56 @@
         R2('feu', 0.07, -2.01, 0.72, 0.4), R2('feu', 0.07, -2.01, 0.72, 0.6), B('caisse', 0.22, 0.05, 1.56, -1.9, 0.93, 0, 1), // deux feux ronds de chaque côté, becquet
         B('noir', 0.04, 0.05, 1.3, -0.15, 1.24, 0), B('noir', 0.04, 0.05, 1.3, -0.85, 1.25, 0), B2('noir', 0.8, 0.03, 0.04, -0.5, 1.27, 0.5), ['noir', new THREE.CylinderGeometry(0.3, 0.3, 0.17, 10), -0.5, 1.37, 0], // galerie et roue de secours
         B2('noir', 0.03, 0.22, 0.24, -1.57, 0.2, 0.72), B2('caisse', 0.14, 0.09, 0.14, 0.4, 0.86, 0.8, 1)] // bavettes, rétroviseurs
+    },
+    // Cocotero (inventé, Playa 307) : buggy de plage à moteur arrière. Baquet ouvert sans portes, nez rond et court, pare-brise seul, arceau qui porte deux longue-portée
+    // et une planche de surf, moteur à plat nu sur la poupe avec ses deux filtres, pare-buffles tubulaires, voie arrière élargie
+    buggy: {
+      dessus: [[1.86, 0.32], [1.92, 0.55], [1.78, 0.74], [1.25, 0.84], [0.6, 0.8], [-0.75, 0.78], [-1.2, 0.86], [-1.7, 0.84], [-1.88, 0.64], [-1.86, 0.32]], bas: 0.32, w: 1.7,
+      cab: [[0.68, 0.8], [0.38, 1.2], [0.06, 1.2], [0.14, 0.8]], wc: 1.36, roues: [-1.15, 1.2, 0.34, 0.3, 0.1], portes: [0.62, -0.72], plaque: 0.5,
+      pieces: (B, B2, R2, E2) => [B2('noir', 0.12, 0.42, 0.42, -0.36, 0.98, 0.34), B2('noir', 0.46, 0.06, 0.42, -0.1, 0.82, 0.34), // baquets : dossiers et assises
+        B2('noir', 0.07, 0.6, 0.07, -0.6, 1.08, 0.62), B('noir', 0.07, 0.07, 1.31, -0.6, 1.38, 0), B2('noir', 0.07, 0.07, 0.32, -0.6, 1.36, 0.46), // arceau
+        ...[1, -1].map(s => ['noir', new THREE.BoxGeometry(1.0, 0.06, 0.06).rotateZ(0.52), -1.02, 1.12, s * 0.62]), // jambes de force vers la poupe
+        B('noir', 0.12, 0.12, 0.9, -0.52, 1.48, 0), R2('phare', 0.09, -0.44, 1.48, 0.28), // longue-portée sur l'arceau
+        B('caisse', 1.9, 0.05, 0.46, -0.2, 1.47, 0, 1), B2('noir', 0.04, 0.24, 0.04, 0.3, 1.32, 0.16), // planche de surf sur l'arceau et le pare-brise
+        B('noir', 0.52, 0.22, 0.78, -1.42, 0.96, 0), ...[1, -1].map(s => ['noir', new THREE.CylinderGeometry(0.1, 0.1, 0.12, 8), -1.36, 1.12, s * 0.22]), // moteur et filtres
+        ...[1, -1].map(s => ['noir', new THREE.CylinderGeometry(0.045, 0.045, 0.3, 6).rotateZ(Math.PI / 2), -1.98, 0.52, s * 0.22]), // échappements
+        R2('phare', 0.1, 1.9, 0.6, 0.5), B('noir', 0.08, 0.08, 1.5, 1.98, 0.42, 0), B2('noir', 0.06, 0.24, 0.06, 1.95, 0.52, 0.4), // phares ronds, pare-buffle
+        B('noir', 0.08, 0.08, 1.6, -1.92, 0.42, 0), B2('feu', 0.04, 0.1, 0.18, -1.88, 0.62, 0.58)]
+    },
+    // Garrigue (inventée, Spéciale des Ocres) : berlinette de rallye des années 70 à moteur central, en coin : nez bas et court, pare-brise très couché, pavillon bref,
+    // capot moteur à persiennes jusqu'à une poupe tronquée et son becquet. Rampe de quatre longue-portée sur le nez, bavettes, écope de toit
+    berlinette: {
+      dessus: [[1.86, 0.24], [1.9, 0.44], [1.72, 0.6], [0.9, 0.78], [0.55, 0.8], [-1.2, 0.88], [-1.8, 0.9], [-1.88, 0.72], [-1.86, 0.24]], bas: 0.24, w: 1.76,
+      cab: [[0.6, 0.79], [-0.08, 1.17], [-0.62, 1.17], [-1.22, 0.89]], wc: 1.42, roues: [-1.1, 1.1, 0.31, 0.26, 0.04], portes: [0.56, -0.5], plaque: 0.46,
+      pieces: (B, B2, R2, E2) => [B('noir', 0.1, 0.16, 1.24, 1.95, 0.52, 0), R2('phare', 0.09, 2.0, 0.52, 0.18), R2('phare', 0.09, 2.0, 0.52, 0.46), // rampe de phares
+        B2('phare', 0.03, 0.06, 0.26, 1.6, 0.66, 0.56), B('noir', 0.2, 0.08, 1.7, 1.9, 0.24, 0), // feux de position sur l'aile, lame avant
+        B('caisse', 0.24, 0.05, 1.32, -0.66, 1.19, 0, 1), B('caisse', 0.24, 0.05, 1.72, -1.8, 0.96, 0, 1), B2('noir', 0.08, 0.06, 0.04, -1.8, 0.91, 0.7), // becquets du pavillon et de la poupe
+        B('noir', 0.24, 0.07, 0.34, -0.22, 1.2, 0), B('noir', 0.2, 0.16, 1.7, -1.86, 0.3, 0), R2('feu', 0.075, -1.89, 0.7, 0.62), R2('feu', 0.075, -1.89, 0.7, 0.42), // écope, bouclier, feux ronds
+        B2('noir', 0.03, 0.22, 0.24, -1.5, 0.2, 0.74), B2('noir', 0.03, 0.18, 0.22, 0.72, 0.2, 0.74), B2('caisse', 0.14, 0.09, 0.14, 0.46, 0.88, 0.82, 1)] // bavettes, rétroviseurs
+    },
+    // Boréale (inventée, Nuit Blanche) : coupé de Groupe B des années 80, tout en angles : bicorps court à hayon, caissons d'ailes carrés, lame avant plus large que la caisse,
+    // grand aileron sur le hayon, phares carrés et deux longue-portée ronds dans la calandre, écope de toit, bavettes
+    groupeb: {
+      dessus: [[2.0, 0.22], [2.06, 0.36], [2.02, 0.62], [1.0, 0.82], [0.62, 0.84], [-1.4, 0.9], [-1.95, 0.92], [-2.0, 0.6], [-1.96, 0.22]], bas: 0.22, w: 1.8,
+      cab: [[0.62, 0.84], [0.0, 1.32], [-1.2, 1.33], [-1.86, 0.92]], wc: 1.48, roues: [-1.12, 1.12, 0.32, 0.27, 0.02], portes: [0.56, -0.62], plaque: 0.44,
+      pieces: (B, B2, R2, E2) => [E2(profil([[1.66, 0.24], [1.68, 0.8], [0.62, 0.83], [0.6, 0.24]], 0.24, [1.12], 0.32, 0.35), 0.16, 0.9, 0.04), // caissons d'ailes
+        E2(profil([[-0.6, 0.24], [-0.64, 0.88], [-1.7, 0.91], [-1.72, 0.24]], 0.24, [-1.12], 0.32, 0.35), 0.18, 0.9, 0.04),
+        B('noir', 0.32, 0.1, 1.96, 1.98, 0.22, 0), B2('phare', 0.04, 0.14, 0.3, 2.04, 0.5, 0.6), R2('phare', 0.08, 2.06, 0.48, 0.24), // lame, phares carrés, longue-portée
+        B('caisse', 0.42, 0.05, 1.84, -1.86, 1.2, 0, 1), B2('noir', 0.12, 0.26, 0.06, -1.86, 1.06, 0.6), B2('caisse', 0.36, 0.2, 0.04, -1.86, 1.16, 0.92, 1), // aileron sur montants, dérives
+        B('noir', 0.3, 0.08, 0.42, -0.3, 1.36, 0), B2('feu', 0.04, 0.12, 0.36, -1.99, 0.7, 0.58), B('noir', 0.22, 0.16, 1.82, -1.94, 0.3, 0), // écope, feux, bouclier
+        B2('noir', 0.03, 0.24, 0.26, -1.53, 0.2, 0.8), B2('caisse', 0.14, 0.09, 0.14, 0.52, 0.92, 0.86, 1)] // bavettes, rétroviseurs
+    },
+    // Mastiff (inventé, Grand Vacarme) : pick-up de stade sur châssis tubulaire. Cabine courte, plateau, très haut sur grandes roues, pare-buffle, rampe de quatre phares
+    // sur le toit, cage dans le plateau qui porte un aileron
+    pickup: {
+      dessus: [[2.1, 0.42], [2.15, 0.8], [2.06, 0.98], [1.0, 1.06], [0.62, 1.08], [-0.6, 1.1], [-2.1, 1.1], [-2.16, 0.94], [-2.14, 0.42]], bas: 0.42, w: 1.94,
+      cab: [[0.62, 1.07], [0.26, 1.62], [-0.48, 1.62], [-0.6, 1.1]], wc: 1.62, roues: [-1.35, 1.4, 0.44, 0.36, 0.06], portes: [0.56, -0.5], plaque: 0.62,
+      pieces: (B, B2, R2, E2) => [B('noir', 0.12, 0.12, 1.4, 0.16, 1.74, 0), R2('phare', 0.07, 0.23, 1.74, 0.2), R2('phare', 0.07, 0.23, 1.74, 0.5), B2('noir', 0.06, 0.12, 0.06, 0.16, 1.64, 0.6), // rampe de toit
+        B2('noir', 0.07, 0.56, 0.07, -0.78, 1.36, 0.86), B('noir', 0.07, 0.07, 1.79, -0.78, 1.62, 0), ...[1, -1].map(s => ['noir', new THREE.BoxGeometry(1.3, 0.07, 0.07).rotateZ(0.32), -1.38, 1.42, s * 0.82]), // cage
+        B('caisse', 0.46, 0.05, 1.96, -1.94, 1.56, 0, 1), B2('noir', 0.06, 0.4, 0.06, -1.94, 1.34, 0.72), B2('caisse', 0.5, 0.26, 0.04, -1.94, 1.5, 0.98, 1), // aileron et dérives
+        B('noir', 0.12, 0.12, 1.7, 2.22, 0.62, 0), B2('noir', 0.06, 0.42, 0.06, 2.2, 0.8, 0.5), B('noir', 0.06, 0.06, 1.06, 2.2, 1.0, 0), // pare-buffle
+        B2('phare', 0.04, 0.12, 0.3, 2.14, 0.86, 0.62), B2('feu', 0.04, 0.2, 0.12, -2.16, 0.86, 0.84), B('noir', 0.14, 0.14, 1.84, -2.18, 0.56, 0),
+        B2('caisse', 0.14, 0.1, 0.14, 0.52, 1.2, 0.9, 1)]
     }
   };
 
