@@ -97,5 +97,22 @@
       return [...paire(sd => [['pierre', 26, T, 4, sd * (R + 13), T / 2, 0], ['ombre', 2.2, 2.6, 3.6, sd * (R - 1.1), H - 0.9, 0], ['clair', 2.2, 17, 1, sd * (R + 3.4), 8.5, 2.3], ['clair', 3, 1, 1.6, sd * (R + 3.4), 17.5, 2.3]]).flat(),
         ['pierre', 2 * R, T - H - 0.4, 4, 0, H + 0.4 + (T - H - 0.4) / 2, 0], ...FORMES.arc(R, 1.3, 1.2, 11, y0, 0, 2.3), ['clair', 2 * R + 12, 1, 1.4, 0, 18.5, 2.3],
         ['relief', 2.6, 4.2, 0.5, 0, 12.6, 2.2], ['relief', 1.5, 1.5, 0.5, 0, 15.5, 2.2], ['or', 1.9, 0.3, 0.55, 0, 16.25, 2.2], ['relief', 5.4, 0.7, 0.5, 0, 13.8, 2.2], ...paire(sd => ['relief', 0.7, 2, 0.5, sd * 2.6, 12.9, 2.2])]; },
+    // ---------- la faune (propositions/VIE-chapada.md §3) : des silhouettes qui se lisent en roulant, la tête vers +X, origine au sol ou aux pattes ----------
+    // un oiseau en vol (ara, vautour) : corps, tête, bec, longue queue ; les ailes sont à part (aileOiseau, sur un pivot à l'épaule, pour battre). l = longueur de la queue
+    oiseauVol: (l = 1) => [['plume', 0.9, 0.3, 0.32, 0, 0, 0], ['plume', 0.3, 0.28, 0.28, 0.55, 0.06, 0], ['bec', 0.2, 0.14, 0.12, 0.76, 0.02, 0], ['queue', l, 0.08, 0.24, -0.4 - l / 2, 0, 0]],
+    aileOiseau: (e = 1.5) => [['plume', 0.55, 0.06, e, 0, 0, e / 2], ['queue', 0.4, 0.05, e * 0.5, -0.1, 0, e * 1.2]], // origine à l'épaule, l'aile part vers +Z
+    // deux ailes en V, l'envergure le long de Z, le nez vers +X : une seule pièce, qu'on écrase en hauteur (échelle Y de -0,7 à 1) pour la faire battre ; chauves-souris, aigrettes en vol
+    ailesV: (e = 1, co = 1, ha = 0.42) => { const g = new THREE.BufferGeometry(), P = []; for (const sd of [-1, 1]) { const a = [0.22 * co, 0, sd * 0.06], b = [-0.2 * co, 0, sd * 0.06], c = [0.05 * co, ha * e, sd * e], d = [-0.34 * co, ha * 0.4 * e, sd * e * 0.55]; /* co : la corde (largeur de l'aile) ; ha : de combien le bout de l'aile se relève (un V franc se voit aussi de profil) */ P.push(...a, ...b, ...c, ...b, ...d, ...c); }
+      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(24), 2)); g.computeVertexNormals(); return g; },
+    // deux ailes rectangulaires peu relevées (un oiseau qui plane ou bat lentement : aigrettes) ; mêmes conventions que ailesV, qui finit en pointe et sert aux chauves-souris
+    ailesOiseau: (e = 1, co = 1, ha = 0.3) => { const g = new THREE.BufferGeometry(), P = []; for (const sd of [-1, 1]) { const a = [0.24 * co, 0, sd * 0.1], b = [-0.22 * co, 0, sd * 0.1], c = [0.14 * co, ha * e, sd * e], d = [-0.2 * co, ha * e, sd * e]; P.push(...a, ...b, ...d, ...a, ...d, ...c); }
+      g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(24), 2)); g.computeVertexNormals(); return g; },
+    // aigrette en vol : le corps à l'horizontale, le cou tendu, les pattes en arrière (les ailes : ailesV)
+    aigretteVol: () => [['plume', 0.8, 0.26, 0.3, 0, 0, 0], ['plume', 0.75, 0.1, 0.1, 0.72, 0.06, 0], ['plume', 0.2, 0.16, 0.14, 1.16, 0.1, 0], ['bec', 0.2, 0.1, 0.08, 1.34, 0.06, 0], ['patte', 0.95, 0.05, 0.08, -0.85, -0.03, 0]], // fin et long : c'est la ligne cou-corps-pattes qui fait l'échassier en vol
+    // singe capucin assis : tronc, tête, museau clair, queue en crochet
+    singe: () => [['poil', 0.42, 0.72, 0.42, 0, 0.36, 0], ['poil', 0.36, 0.36, 0.36, 0.04, 0.92, 0], ['face', 0.1, 0.22, 0.26, 0.2, 0.9, 0], ...paire(sd => ['poil', 0.1, 0.14, 0.1, 0.02, 1.12, sd * 0.16]),
+      ...paire(sd => ['poil', 0.13, 0.5, 0.13, 0.08, 0.42, sd * 0.28]), ...paire(sd => ['poil', 0.42, 0.14, 0.14, 0.26, 0.08, sd * 0.17]), ['poil', 0.09, 1, 0.09, -0.26, -0.3, 0], ['poil', 0.3, 0.09, 0.09, -0.4, -0.8, 0]],
+    // capybara debout : un tonneau sur quatre pattes courtes
+    capivara: () => [['poil', 1.05, 0.6, 0.5, 0, 0.62, 0], ['poil', 0.46, 0.46, 0.42, 0.68, 0.78, 0], ['face', 0.14, 0.2, 0.3, 0.94, 0.72, 0], ...paire(sd => ['face', 0.1, 0.1, 0.08, 0.6, 1.04, sd * 0.14]), ...paire(a => paire(b => ['face', 0.14, 0.36, 0.14, a * 0.36, 0.18, b * 0.16])).flat()],
   });
 })();

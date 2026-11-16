@@ -204,3 +204,17 @@ th: { depart: [accent, ossature, texte, 'departJungle'],   // 4e valeur : nom d'
                                                             // Demande th.poussiere (c'est dans sa boucle par voiture) ; sur une carte sans surface à poussière, th.poussiere ne fait qu'allumer la gerbe d'eau des zones mouillées
 ```
 
+
+## 14. Phase « vie » : ce que chapada a demandé au moteur
+
+Trois retouches, toutes sans effet sur une carte qui ne s'en sert pas.
+
+```js
+th: { embruns: [[32, 33, 0.9], [49, 52, 0.5]] }   // entre ces points du tracé, des gouttes se posent sur l'objectif, comme sous une pluie de cette force (les embruns d'une chute, d'une rivière)
+const l = h.lum(i, x, y, z, couleur, portée, force);  // h.lum rend maintenant son luminaire : le tick d'un décor peut faire respirer sa couleur (l.c, une THREE.Color) ; avant, il rendait un nombre que personne ne lisait
+```
+- **`th.embruns`** réutilise les gouttes d'objectif de la pluie (`gt`, passe finale) : mêmes gouttes, même chasse par le vent de la course. Fondu de 60 m à l'entrée et à la sortie de la zone. Absent : rien.
+- **`h.lum` rend le luminaire.** Le moteur relit `l.c` à chaque image : un feu de camp ou un brasero peut vaciller avec sa flamme. Ne pas changer `l.x`, `l.y`, `l.z` : le tri par distance est fait sur ces valeurs.
+- **Réception d'un saut dans l'eau.** `c.eauT` (temps passé dans l'eau, décor seulement) repart de zéro quand la voiture est en l'air : à la réception dans une zone noyée, la gerbe refait son coup d'étrave. Avant, seule la première entrée dans l'eau le donnait. Concerne toute carte qui a un saut dans une zone `mouille` pleine (chapada : les deux seuils de la rivière).
+
+Piège relevé au passage : **un `InstancedMesh` immobile est fondu dans le décor fixe** (une copie de chaque exemplaire reste à sa place de repos). Un lot dont on bouge les exemplaires par `setMatrixAt` doit porter `userData.dyn = 1`.
