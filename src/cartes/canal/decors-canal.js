@@ -33,19 +33,24 @@
 
       // --- les tribunes suivent la piste par l'extérieur, sans trou : un module de 14 m tous les 7 échantillons. Il s'élargit à l'extérieur des courbes
       // pour refermer l'éventail, et perd de la profondeur (75 %, 50 %) là où une autre portion de piste passe derrière ; un sur quatre porte un mât ---
-      const trib = [[], []], PAS = 7, PROF = 53;
+      const trib = [[], []], PAS = 7, PROF = 53, olaI = []; // olaI : chaque module avec, en dernier, son échantillon de piste (pour la ola)
       const pied = i => { const s = S[i % N]; return [...bord(s, -1, s.w + 12), s.tz, -s.tx]; }; // façade et direction du fond (côté gauche = extérieur de l'ovale)
       for (let i = 0, k = 0; i < N; i += PAS, k++) {
         const [x, z, ox, oz] = pied(i), sc = [1, 0.75, 0.5].find(c => [0, 0.35, 0.7, 1].every(f => g.dAt(x + f * PROF * c * ox, z + f * PROF * c * oz) > W + 9));
         if (!sc || ![-7, 7].every(u => g.dAt(x + u * oz, z - u * ox) > W + 9)) continue;
         const [x2, z2, ox2, oz2] = pied(i + PAS), large = Math.max(1, Math.hypot(x2 + 40 * sc * ox2 - x - 40 * sc * ox, z2 + 40 * sc * oz2 - z - 40 * sc * oz) / 14 + 0.05);
         const y = Math.min(g.hAt(x, z), g.hAt(x + 20 * sc * ox, z + 20 * sc * oz)) - 0.6, mat = k % 4 === 0 ? 1 : 0;
-        trib[mat].push([x, y, z, Math.atan2(ox, oz), large, sc, sc]);
+        trib[mat].push([x, y, z, Math.atan2(ox, oz), large, sc, sc]); olaI.push([...trib[mat][trib[mat].length - 1], i]);
         if (mat) { const s = S[i], [lx, lz] = bord(s, -1, W + 2); h.lum(i, lx, s.y + 20, lz, 0xfff0d8, 50, 0.5); } // le mât éclaire la piste ; au couchant, un appoint
       }
       const foule = net(h.mat('foule', {}, '#4a4250', '#e83f8c')), foule2 = net(h.mat('foule', {}, '#3e3848', '#2aa39a'));
       const peauT = { beton, banderole: h.mat('banderole', {}, 0), banderole2: h.mat('banderole', {}, 2), foule, foule2, escalier: h.mat('marches'), loge: h.mat('loges', LUM), acier, toit: h.mat('toleToit'), lampe, drapeau: h.mat('damier', { lum: 1, net: 1, side: THREE.DoubleSide }, '#f4f0e0') };
       trib.forEach((l, m) => insts(h, 'tribune', peauT, l, { a: [m] }));
+      // la ola (comme au Stade) : une copie bras levés de la foule du bas, levée sur les tribunes proches de la voiture suivie, cachée sous le sol ailleurs ; elle court avec elle
+      // shortcut: elle suit la voiture que le décor reçoit (celle du joueur), pas la tête de course
+      const A1 = Math.atan2(14, 24), go = h.geo('boite', 14, 0.6, 27.8); go.rotateX(-A1); go.translate(0, 11.2, 14);
+      const fo = net(h.mat('foule', {}, '#4a4458', '#f4f0e0')); fo.map.offset.y = 0.5;
+      const ola = inst(h, go, fo, olaI.map(p => p.slice(0, 7))), o4 = new THREE.Object3D(); ola.userData.dyn = 1; ola.frustumCulled = false;
       const ecrans = [[240, 70], [1250, 110], [1600, 140]];
 
       // --- le parking derrière les tribunes : des milliers de voitures, des camping-cars au bout des virages ---
@@ -144,7 +149,12 @@
       const tours = h.mat('tourLoin', { lum: 1, fog: false }, '#2a1c3a', ['#ffc04a'], 40);
       for (let i = 0; i < 34; i++) { const hh = 120 + rnd() * rnd() * 380, w = 50 + rnd() * 70; boite(h, tours, w, hh, w, -2300 + rnd() * 900, hh / 2, -500 + rnd() * 1300); }
       // la foule bouge : chaque étage de gradins passe par moments à sa variante bras levés ; le dirigeable fait le tour en une vingtaine de minutes
-      return (dt, now) => {
+      return (dt, now, car) => {
+        if (car) {
+          olaI.forEach((p, k) => { const d = (p[7] - car.idx + N * 1.5) % N - N / 2, e = Math.max(0, 1 - Math.abs(d - 14) / 28); // écart signé en échantillons ; vague centrée 14 (28 m) devant la voiture
+            o4.position.set(p[0], p[1] + (e ? e * 1.6 - 1 : -60), p[2]); o4.rotation.set(0, p[3], 0); o4.scale.set(p[4], p[5], p[6]); o4.updateMatrix(); ola.setMatrixAt(k, o4.matrix); });
+          ola.instanceMatrix.needsUpdate = true;
+        }
         foule.map.offset.y = Math.sin(now * 0.0021) + Math.sin(now * 0.0057) > 0.7 ? 0.5 : 0;
         foule2.map.offset.y = Math.sin(now * 0.0017 + 2) + Math.sin(now * 0.0049) > 0.5 ? 0.5 : 0;
         const t = now * 0.00006; dg.position.set(760 + Math.cos(t) * 520, 125, 110 + Math.sin(t) * 260); dg.rotation.y = -t - Math.PI / 2;
