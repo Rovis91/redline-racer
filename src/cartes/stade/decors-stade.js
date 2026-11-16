@@ -47,13 +47,19 @@
       const peauF = { acier, lampe, treillis: h.mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide, rep: [(Z1 - Z0) / 6.2, 1] }, '#3a3e4a') };
       for (let x = -230; x <= 380; x += 70) h.pose('fermeToit', peauF, h.scene, [x, HT - 4.5, cz], Z1 - Z0 + 100);
       // le cube d'affichage au-dessus de l'aire, et un écran géant à chaque bout de la salle (deux images qui alternent)
-      // ses quatre écrans passent la course en direct : une caméra de télévision suit la voiture et change de plan toutes les 4 s (hélicoptère, travelling, face, tribune) ;
-      // rendue en 192 × 108, une image sur quatre (15 images/s à 60), jusqu'à 400 m, écrans du cube cachés pendant sa prise (ils ne peuvent pas se lire eux-mêmes)
-      const ecranT = h.mat('tableauStade', LUM), RTV = new THREE.WebGLRenderTarget(192, 108), tv = new THREE.PerspectiveCamera(50, 16 / 9, 1, 400), vif = new THREE.MeshBasicMaterial({ map: RTV.texture, fog: false });
-      const ecransTV = h.pose('cubeScore', { ecran: ecranT, acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [CX, HT - 30, CZ]).filter(m => m.material === ecranT);
-      ecransTV.forEach(m => { m.material = vif; m.userData.dyn = 1; });
+      h.pose('cubeScore', { ecran: h.mat('tableauStade', LUM), acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [CX, HT - 30, CZ]);
       const ecranG = h.mat('ecranGeant', LUM); ecranG.map.repeat.set(1, 0.5);
       for (const x of [X1 + RE + 34, X0 - RW - 34]) boite(h, ecranG, 1, 18, 84, x, 50, cz);
+      // la course en direct sur trois écrans suspendus au-dessus de la piste, au bout des trois lignes droites, face à la voiture qui arrive : la caméra de course est basse,
+      // le cube et les écrans du fond n'y prenaient pas 2 % de l'image (plan.js, pixels comptés). 40 × 17 m, le bas à 12 m (au-dessus des sauts), pendus au toit.
+      // Une caméra de télévision suit la voiture et change de plan toutes les 4 s (hélicoptère, travelling, face, tribune au téléobjectif), rendue en 320 × 136,
+      // une image sur quatre, jusqu'à 400 m ; les écrans sont cachés pendant sa prise (ils ne peuvent pas se lire eux-mêmes)
+      const RTV = new THREE.WebGLRenderTarget(320, 136), tv = new THREE.PerspectiveCamera(30, 40 / 17, 1, 400), vif = new THREE.MeshBasicMaterial({ map: RTV.texture, fog: false });
+      const gEc = new THREE.PlaneGeometry(40, 17), geants = [3, 17, 23].map(p => { const s = S[pt(h, p)], y = s.y + 12, m = new THREE.Mesh(gEc, vif), a = Math.atan2(-s.tx, -s.tz); // face à qui arrive
+        m.position.set(s.x, y + 8.5, s.z); m.rotation.y = a; m.userData.dyn = 1; m.userData.ecranTV = 1; h.scene.add(m);
+        const dos = boite(h, acier, 41.4, 18.4, 1, s.x + s.tx * 0.6, y + 8.5, s.z + s.tz * 0.6); dos.rotation.y = a; // le caisson, derrière l'image
+        for (const sd of [-1, 1]) boite(h, acier, 0.25, HT - y - 17, 0.25, s.x - s.tz * sd * 18, (HT + y + 17) / 2, s.z + s.tx * sd * 18); // les suspentes
+        return m; });
       // la scène (elle ferme l'est de l'aire), le mur de la butte et l'arche de feu entre les deux : ce sont les piles de M.place
       const chev = h.mat('banderoleSaut', { lum: 1, rep: [4, 1] });
       h.pose('sceneArene', { beton, ecran: h.mat('banderoleStade', LUM, 4), bande: h.mat('peinture', { lum: 1, c: 0xffc21a }), chevrons: h.mat('banderoleSaut', { lum: 1, rep: [6, 1] }), acier,
@@ -160,13 +166,13 @@
       };
       tick.direct = R => { // appelé par game.js avant le rendu de la première vue
         const c = suivie; if (!c || nTV++ % 4) return;
-        const fx = Math.cos(c.th), fz = Math.sin(c.th), plan = Math.floor(tNow / 4000) % 4; tv.fov = 50;
+        const fx = Math.cos(c.th), fz = Math.sin(c.th), plan = Math.floor(tNow / 4000) % 4; tv.fov = 30;
         if (plan === 0) tv.position.set(c.x - fx * 26, c.y + 18, c.z - fz * 26); // hélicoptère, derrière et au-dessus
         else if (plan === 1) tv.position.set(c.x - fz * 13, c.y + 2.5, c.z + fx * 13); // travelling, à hauteur de roue
         else if (plan === 2) tv.position.set(c.x + fx * 20, c.y + 1.6, c.z + fz * 20); // de face, elle arrive sur nous
-        else { const p = grad.reduce((a, b) => ((b[0] - c.x) ** 2 + (b[2] - c.z) ** 2 < (a[0] - c.x) ** 2 + (a[2] - c.z) ** 2 ? b : a)); tv.position.set(p[0], p[1] + 14, p[2]); tv.fov = 22; } // la tribune la plus proche, au téléobjectif
+        else { const p = grad.reduce((a, b) => ((b[0] - c.x) ** 2 + (b[2] - c.z) ** 2 < (a[0] - c.x) ** 2 + (a[2] - c.z) ** 2 ? b : a)); tv.position.set(p[0], p[1] + 14, p[2]); tv.fov = 14; } // la tribune la plus proche, au téléobjectif
         tv.updateProjectionMatrix(); tv.lookAt(c.x + c.vx * 0.15, c.y + 0.8, c.z + c.vz * 0.15); tv.updateMatrixWorld();
-        ecransTV.forEach(m => { m.visible = false; }); R.setRenderTarget(RTV); R.render(h.scene, tv); ecransTV.forEach(m => { m.visible = true; }); };
+        geants.forEach(m => { m.visible = false; }); R.setRenderTarget(RTV); R.render(h.scene, tv); geants.forEach(m => { m.visible = true; }); };
       return tick;
     },
   });
