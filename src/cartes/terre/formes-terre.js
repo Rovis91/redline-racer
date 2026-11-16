@@ -20,7 +20,7 @@
     fourgon: () => [['caisse', 5.4, 2.1, 2.1, 0, 1.55, 0, null, 1], ['vitre', 0.1, 0.8, 1.9, 2.72, 2, 0], ['vitre', 1.1, 0.7, 2.14, 1.9, 2.05, 0], ['chassis', 5.3, 0.3, 2, 0, 0.45, 0], ['chassis', 3, 0.1, 1.6, -0.8, 2.7, 0],
       ...[-1.7, 1.7].flatMap(x => [-1, 1].map(sd => ['pneu', 0.75, 0.75, 0.3, x, 0.38, sd * 0.95]))],
     // chapelle : nef le long de Z, toit de tuiles à deux pans, clocher carré au chevet (-Z) coiffé de tuiles, porte au pignon (+Z) ; origine au sol
-    chapelle: () => [['mur', 6, 5, 11, 0, 2.5, 0, null, 1], ['mur', 2.6, 1.2, 11, 0, 5.4, 0], ...[-1, 1].map(sd => ['toit', 4.2, 0.35, 11.6, sd * 1.6, 5.7, 0, [0, 0, -sd * 0.5], 1]),
+    chapelleTerre: () => [['mur', 6, 5, 11, 0, 2.5, 0, null, 1], ['mur', 2.6, 1.2, 11, 0, 5.4, 0], ...[-1, 1].map(sd => ['toit', 4.2, 0.35, 11.6, sd * 1.6, 5.7, 0, [0, 0, -sd * 0.5], 1]),
       ['mur', 3.2, 12, 3.2, 0, 6, -6.5, null, 1], ['toit', 3.8, 0.5, 3.8, 0, 12.2, -6.5], ['toit', 2.2, 1.2, 2.2, 0, 13, -6.5], ['volet', 1.2, 2.4, 0.15, 0, 1.2, 5.5], ...[-1, 1].map(sd => ['volet', 0.15, 1.4, 0.8, sd * 1.6, 10, -6.5])],
     // hélicoptère de la télévision, le nez vers +X : cabine vitrée, fuselage, poutre de queue, dérive et rotor anticouple, patins, boule de caméra sous le nez ; le rotor principal est à part (rotorHelico) pour tourner. Origine au centre de la cabine
     helico: () => [['caisse', 3.6, 1.8, 1.9, 0, 0, 0, null, 1], ['vitre', 1.4, 1.3, 1.7, 1.9, 0.2, 0, [0, 0, -0.35]], ['vitre', 1.6, 0.8, 1.95, 0.4, 0.35, 0], ['caisse', 2, 0.7, 1.2, -0.4, 1.1, 0],
