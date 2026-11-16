@@ -17,7 +17,7 @@ const { spawn } = require('child_process'), fs = require('fs'), path = require('
 const RACINE = path.join(__dirname, '..'), DBG = +process.env.DBG || 9400, PORT = +process.env.PORT || 8900 + [...RACINE].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % 90, BASE = 'http://127.0.0.1:' + PORT + '/';
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));
 const args = process.argv.slice(2), val = k => (args.find(a => a.startsWith('--' + k + '=')) || '').split('=')[1], opt = k => args.includes('--' + k);
-const ids = fs.readFileSync(path.join(RACINE, 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)), [carte, ...demandes] = args.filter(a => !a.startsWith('--'));
+const ids = fs.readFileSync(path.join(RACINE, 'src', 'donnees', 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)), [carte, ...demandes] = args.filter(a => !a.startsWith('--'));
 const NOMS = path.join(__dirname, 'plans.json'), noms = fs.existsSync(NOMS) ? JSON.parse(fs.readFileSync(NOMS, 'utf8')) : {};
 const req = (u, m = 'GET') => new Promise((r, j) => { const q = http.request(u, { method: m }, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => r(d)); }); q.on('error', j); q.end(); });
 const dort = ms => new Promise(r => setTimeout(r, ms)), repond = async u => { try { await req(u); return true; } catch { return false; } };

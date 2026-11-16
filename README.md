@@ -1,452 +1,74 @@
-<p align="center"><img src="icon.svg" width="96" alt="icône"></p>
+<p align="center"><img src="assets/icon.svg" width="96" alt="Game icon"></p>
 
-<h1 align="center">VILLE À PLEIN RÉGIME</h1>
-<p align="center"><b>夜間タイムアタック</b> · <i>contre-la-montre nocturne</i></p>
+<h1 align="center">Ville à plein régime</h1>
+<p align="center"><b>夜間タイムアタック</b> · <i>Night time attack — an arcade racer for the browser</i></p>
 
-<p align="center"><img src="docs/titre.png" alt="Écran titre"></p>
+<p align="center"><img src="docs/images/titre.png" alt="Title screen"></p>
 
-<p align="center"><b>★ ★ ★ NOUVEAU ! ★ ★ ★</b><br>
-<b>LA NUIT EST À VOUS. LA VILLE AUSSI.</b></p>
+A pixel-art 3D arcade racing game built with [three.js](https://threejs.org). Single player, up to four players on one screen, or online peer-to-peer. It is a static site: no build step, no install, no server of its own.
 
----
+<p align="center"><img src="docs/images/course-1.png" alt="Racing with rivals in the rear-view mirrors"></p>
 
-### 🌃 Minuit. Les néons s'allument. Le compte-tours grimpe.
+## Features
 
-Prenez le volant d'une bête de 500 chevaux et lâchez-la dans les artères d'une mégalopole cyberpunk qui ne dort jamais. Pluie, gratte-ciel, enseignes en katakana : chaque virage est une carte postale, chaque ligne droite une invitation à passer la sixième.
+- **12 tracks**, each with its own layout, car, radio stations, scenery and HUD: a neon highway city, a mountain pass, a bay expressway, Paris at dawn, a Los Angeles canal at sunset, an indoor arena, a snowy pass, a dirt-road rally stage, a Persian bazaar, a dam, a lost jungle city and a beach.
+- **Game modes**: time attack (ghost medals: bronze, silver, gold), drift, race against three AI rivals, elimination and a full-night **Tour** with points and a trophy.
+- **Up to 4 players** on one screen (gamepads, Joy-Cons or shared keyboard), or **online** with a 4-letter room code over WebRTC.
+- **Driving model** inspired by a real Japanese GT: automatic or manual gearbox, handbrake slides, nitro, slipstream, destructible scenery.
+- **Live-synthesised soundtrack**: 3+ radio stations per track (darksynth, eurobeat, g-funk, rumba…) that react to how you drive.
+- **Demo mode**: leave the pad alone and the game plays itself, track after track.
+- Challenge links: send a lap to a friend as a URL, they race your ghost.
 
-Et quand la ville ne suffit plus : **HUIT CARTES**, du col de montagne japonais à l'autoroute de la baie, des rues de Paris à l'aube au canal de Los Angeles à l'heure dorée, d'une arène couverte pleine à craquer à un col enneigé, jusqu'à une spéciale de rallye sur la terre ocre. Chacune avec **sa voiture, ses rivaux, ses radios et son tableau de bord**.
+<p align="center"><img src="docs/images/course-2.png" alt="233 km/h through the city"></p>
 
-<p align="center"><img src="docs/course-1.png" alt="En course, les adversaires dans les rétros"></p>
+## Play
 
-### 🏁 CINQ MODES DE JEU EXPLOSIFS !
-
-- **CONTRE-LA-MONTRE** : enchaînez les tours, battez vos records… et rattrapez le **fantôme** de la médaille que vous visez : **bronze**, **argent**, puis **or** ! Un tour dont vous êtes fier ? Envoyez-le à un ami par un simple **lien de défi** : il affrontera votre fantôme.
-- **GLISSE** : 2 tours pour le style. Plus ça glisse vite, de travers et longtemps, plus ça paie… et le **multiplicateur** grimpe tant que vous enchaînez sans toucher un mur !
-- **COURSE** : 3 tours, 3 rivaux sans pitié. **KENJI**, **REI** et **JUN** ne vous feront aucun cadeau… et ils ont des choses à vous dire : **la référence** vous toise, **la tête brûlée** joue des portières, **la recrue** tremble sur la grille !
-- **ÉLIMINATION** : 4 voitures, 4 tours. À chaque passage sur la ligne, **le dernier sort**. Jusqu'au duel final !
-- **TOURNÉE** : **une nuit entière**, de 18 h 40 sur la terre ocre au premier métro de 5 h 30 à Paris. Huit manches, des points à chaque manche, grille inversée… et un **trophée** au bout !
-
-<p align="center"><img src="docs/depart.png" alt="La grille de départ"></p>
-
-### 👥 JUSQU'À QUATRE SUR LE MÊME ÉCRAN… OU EN LIGNE !
-
-Des amis sur le canapé ? Choisissez **ÉCRAN PARTAGÉ** (2 à 4 joueurs). Loin les uns des autres ? **EN LIGNE**, un code de salon de 4 lettres suffit, sans serveur ni inscription. À deux : l'écran se coupe en deux, **joueur 1 en haut, joueur 2 en bas**, chacun sa caméra, son compteur, sa nitro… et son moteur dans les oreilles !
-
-- **COURSE** : 3 tours, vous deux et les **deux rivaux les plus rapides** de la carte. L'aspiration de l'autre est à prendre !
-- **ÉLIMINATION** : 4 voitures, 4 tours, le dernier sort. Éliminé ? Votre écran suit le meneur jusqu'au bout.
-- **GLISSE EN DUEL** : 2 tours, vous deux seuls en piste, **le meilleur score gagne**. Un coup de portière casse l'enchaînement… des deux !
-
-Sur l'**écran d'inscription**, chacun appuie sur un bouton de ce qu'il tient : **une manette chacun**, **un Joy-Con chacun** (tenu à l'horizontale), ou **le clavier partagé**, ZQSD d'un côté, flèches de l'autre. À l'arrivée : **REVANCHE** ! Rien n'est enregistré à deux, ni record ni trophée : c'est une partie de canapé.
-
-### ⚙️ UNE MÉCANIQUE DE PRO
-
-- Boîte **automatique ou manuelle** : passez vos rapports comme un vrai pilote !
-- **Frein à main** et glisses contrôlées : prenez les épingles en travers !
-- **Nitro** : une jauge à remplir en prenant des risques, à dépenser où vous voulez
-- Physique inspirée d'une **vraie GT japonaise** : couple, rapports, aéro, tout y est !
-- Frottez les murs… et regardez voler les **étincelles** !
-
-<p align="center"><img src="docs/course-2.png" alt="233 km/h dans les rues de la ville"></p>
-
-### 📻 25 STATIONS DE RADIO EN DIRECT
-
-La bande-son est **composée en temps réel** et **réagit à votre conduite**. Plus vous appuyez, plus elle s'emballe ! Trois stations ou plus par carte, de la darksynth à l'eurobeat, du g-funk à la rumba gitane : branchez-vous sur **NEON CITY FM** ou zappez d'une touche.
-
-### 🕹️ MODE DÉMO
-
-Posez la manette : au bout de 25 secondes, le jeu court tout seul, carte après carte, dans l'ordre de la nuit. Une touche, et la main est à vous.
-
-<p align="center"><img src="docs/arrivee.png" alt="Classement à l'arrivée"></p>
-
-### 💾 AUCUNE INSTALLATION !
-
-Pas de disquette, pas de CD, pas de téléchargement de 40 Go. **Un navigateur, et c'est parti.**
-
-| | |
-|---|---|
-| 🎮 Genre | Course arcade |
-| 👤 Joueurs | 1 à 4 sur le même écran, ou en ligne |
-| 🖥️ Plateforme | Tout navigateur moderne |
-| ⏱️ Chargement | Instantané |
-| 💰 Prix | **GRATUIT** |
-
-<p align="center"><b>DISPONIBLE DÈS MAINTENANT DANS TOUS LES BONS NAVIGATEURS.</b><br>
-<sub>Le pilotage nocturne doit se pratiquer en toute sécurité, sur écran uniquement.</sub></p>
-
----
-
-# Pour les développeurs
-
-Jeu de course arcade en 3D pixelisée, seul, jusqu'à quatre sur le même écran, ou en ligne. Huit cartes, chacune avec son tracé, sa voiture, sa radio, son décor et son interface ; la musique réagit à la course.
-
-| Carte | Conduite | Voiture | Radio |
-|---|---|---|---|
-| Ville à plein régime | viaduc et échangeur de nuit, presque tout à fond | Raijin GT-Z | darksynth, techno industrielle, big beat |
-| Karasu-tōge | col de montagne : montée rapide, quatre épingles en descente | Tengu R7 Spirit | eurobeat, fusion jazz-rock, city pop, nightcore |
-| Wan-9 | autoroute de baie à 270 km/h, boucle serrée, camions à doubler | Kairyu RZ | trance, drum and bass, techno de Detroit |
-| Premier métro | rues de Paris à l'aube, pavés, relances entre des angles | Lutèce 5 Turbo Maxi | house filtrée, eurodance, disco spatiale |
-| Canal 6 | canal de Los Angeles au couchant, large et glissant | Sidewinder GTS | g-funk, electro-funk, rock du désert |
-| Grand Vacarme | arène couverte, tremplins et murs roulables | Mastiff V8 Arena | hard rock, fanfare funk, happy hardcore |
-| Nuit Blanche | col enneigé à l'aube, neige et plaques de glace | Boréale S1 E2 | cold wave, dub techno, synth-pop |
-| Spéciale des Ocres | spéciale de rallye sur terre, en fin de journée | Garrigue 2000 Gr.4 | punk rock, ska, rumba gitane |
-
-Les voitures portent des noms inventés ; leurs fiches techniques s'inspirent de voitures réelles (voir « Crédits »).
-
-Le menu principal choisit la carte, le nombre de joueurs, le mode et la boîte (haut / bas pour la ligne, gauche / droite pour la valeur, Entrée pour démarrer). Modes : **contre-la-montre** (tours lancés, record et fantôme par carte), **glisse**, **course** (3 tours, départ en grille contre 3 IA, classement à l'arrivée), **élimination** et **Tournée**. La ligne MODE du menu fait aussi défiler la difficulté de la course (détente, normal, chaud : `DIFF` dans `sim.js`). En contre-la-montre, chaque carte a ses médailles de temps, calculées sur le tour lancé du pilote automatique (`med` dans `cartes.js`). Changer de carte reconstruit le décor sans recharger la page ; on peut aussi la choisir par l'adresse : `?carte=touge`, `wangan`, `paris`, `canal`, `stade`, `givre`, `terre`, `ville`.
-
-Tout tourne dans le navigateur, sans étape de build ni dépendance à installer.
-
-## Lancer
-
-- **Le plus simple** : double-cliquer sur `index.html`.
-- **Avec un serveur local** (recommandé pour développer) :
+Open `index.html` in a modern browser, or serve the folder with any static server. For development, use the bundled server, which disables caching and serves the tools too:
 
 ```bash
-python outils/capture.py 8123
+python outils/capture.py 8123   # then open http://localhost:8123/
 ```
 
-(ce serveur sert la copie du jeu où il se trouve et interdit le cache au navigateur. Avec `python -m http.server`, le navigateur peut garder un ancien `sim.js` à côté d'un `game.js` neuf, et la course plante à la fin du 3, 2, 1.)
+Pick the track with `?carte=<id>` (`ville`, `touge`, `wangan`, `paris`, `canal`, `stade`, `givre`, `terre`, `perse`, `barrage`, `chapada`, `plage`).
 
-puis ouvrir l'une de ces pages (le même serveur les sert toutes) :
+## Repository layout
 
-| Application | Adresse | À quoi elle sert |
-|---|---|---|
-| **Le jeu** | http://localhost:8123/ | jouer ; `?carte=ville`, `touge`, `wangan`, `paris` ou `canal` pour choisir la carte |
-| **Les sons** (banc d'écoute) | http://localhost:8123/ecoute.html | écouter chaque station, ambiance et bruitage seul, régler le mélange de course par famille, mesurer les niveaux |
-| **La musique** (éditeur) | http://localhost:8123/editeur.html | modifier une station comme dans un séquenceur : pistes et blocs du morceau, instrument de chaque piste, motifs en grille de pas, basse et thème en piano-roll, mixeur, accords |
+```
+index.html        the game (entry point)
+src/moteur/       physics (sim.js), rendering and game loop (game.js), network, input
+src/donnees/      track data (cartes.js), gold ghost traces
+src/audio/        procedural audio engine, samples, instruments
+src/rendu/        shared texture / shape / scenery catalogues
+src/cartes/<id>/  per-track textures, shapes and scenery placement
+pages/            web tools: sound bench, music editor, gamepad diagnostic
+assets/           fonts, samples, icon, shared CSS
+vendor/           three.js r187, PeerJS
+tests/            Node tests (physics, tracks, i18n, input, session)
+outils/           benchmarks, screenshot tools, generators, git hook
+docs/             documentation (see docs/INDEX.md)
+```
 
-Les trois partagent le même moteur audio (`audio.js`). Les réglages de l'éditeur de musique sont enregistrés dans le navigateur : pour les entendre en course, ouvrir le jeu **à la même adresse** (même hôte, même port) que l'éditeur, puis recharger la page. « Fichier → Copier mes réglages » dans l'éditeur donne le texte à conserver ou à inscrire dans `cartes.js`.
+## Development
 
-Autres pages d'outils : `manette.html` (diagnostic de la manette) et `styles.html` (planche des styles visuels).
-
-## Commandes
-
-| Touche | Action |
-|---|---|
-| Haut / bas, gauche / droite, Entrée | menu principal : carte, joueurs, mode, boîte, démarrer |
-| ↑ ↓ ← → ou ZQSD | accélérer, freiner, tourner |
-| Espace | frein à main (déclenche la glisse) |
-| X ou N | nitro : dépense la jauge (gaz ouverts, roues au sol) |
-| G | boîte automatique / manuelle |
-| A / E | rapport inférieur / supérieur (en manuelle) |
-| C | station de radio suivante |
-| M | couper / remettre la musique |
-| F | fantôme du contre-la-montre : bronze, argent, or, aucun, son propre record (au menu et en piste) |
-| L | copier le lien de défi du dernier tour bouclé (contre-la-montre) |
-| Échap ou P | menu pause (reprendre, recommencer, boîte, radio, musique, fantôme, lien de défi, quitter) |
-| R | recommencer (en solo ; à deux : RECOMMENCER dans le menu de pause) |
-| Manette | stick ou croix : volant et menus · ZR ou B : gaz · ZL ou Y : frein · A : glisse · X : nitro · clic du stick : radio · L / R : rapports · − : boîte manuelle / automatique · + : pause · B : valider |
-| À deux, clavier de gauche | ZQSD : accélérer, freiner, tourner · Espace : frein à main · X : nitro · A / E : rapports · G : boîte automatique / manuelle |
-| À deux, clavier de droite | ↑ ↓ ← → : accélérer, freiner, tourner · Maj droite : frein à main · la touche à gauche de Maj droite (« ! » en AZERTY, « / » en QWERTY) ou Entrée du pavé numérique : nitro · boîte automatique seulement |
-| À deux, manettes et Joy-Con | les mêmes boutons qu'en solo, chacun pour sa voiture ; l'un ou l'autre met en pause, navigue dans les menus et change de station |
-| À deux, écran d'inscription | une touche de son côté du clavier ou un bouton de sa manette : prendre une place · Échap ou + : la libérer (sans place : refermer) · Entrée ou B : partir, les deux places prises |
-| I | à deux, au menu principal : rouvrir l'écran d'inscription pour changer de périphérique |
-| Joy-Con seul, à l'horizontale | touche J une fois pour l'autoriser (Chrome ou Edge ; deux Joy-Con au plus, un par joueur) · stick : volant et menus · bouton de droite : gaz et valider · gauche : boîte manuelle / automatique · haut / bas : rapport supérieur / inférieur · SR : glisse · SL : nitro · Home ou Capture : radio · + ou − : pause |
-
-### Nitro et aspiration
-
-La jauge de nitro (en bas à droite) remplace l'ancien boost automatique de sortie de glisse. Elle se remplit :
-
-- en tenant une glisse (plus elle dure et plus elle va vite, plus elle remplit) ;
-- en frottant un mur sans le taper ;
-- en doublant un camion au ras, sans le toucher ;
-- en roulant dans l'aspiration d'un rival, en course (on y gagne aussi de la vitesse ; les rivaux en profitent autant).
-
-X ou N la dépense : une jauge pleine pousse 3 secondes, gaz ouverts et roues au sol (rien en l'air), y compris au-delà du rupteur. Un choc franc contre un mur ou un camion la vide. Réglages : `NI` en tête de `sim.js`.
-
-Les médailles se mesurent toujours au tour lancé du pilote automatique, qui part avec une jauge pleine et la dépense en ligne droite. La physique ayant changé, les records d'avant la V2 (clés `vpr6.*`) ne comptent plus : le menu le signale une fois.
-
-### Fantôme des médailles
-
-En contre-la-montre, un fantôme roule avec le joueur. La touche F (au menu ou en piste) ou la ligne « fantôme » du menu de pause choisit lequel : **bronze**, **argent**, **or**, aucun, ou son propre **record**. Le choix est gardé par carte (clé `vpr7.<carte>.fantome`) ; au premier lancement, c'est la première médaille pas encore gagnée. Le fantôme porte la couleur de sa médaille (cyan pour le record), sur la piste comme sur la minicarte.
-
-- Un fantôme de médaille boucle son tour exactement au temps du seuil : le battre, c'est gagner la médaille. Le fantôme passe alors de lui-même à la médaille suivante, et après l'or au record du joueur.
-- **Bronze et argent** : la trace du tour de référence des médailles (`tourRef` dans `sim.js` : le pilote automatique, jauge pleine), ralentie au ratio de la médaille (`etire`). Calculée au chargement de la carte.
-- **Or** : le pilote automatique ne glisse pas, il ne sait pas faire un tour en or. Chaque carte a donc une trace de référence embarquée dans `traces-or.js`, ramenée au temps du seuil or. Faute de tours conduits à la main, ces traces viennent de la simulation : `node outils/traces-or.js` fait rouler un pilote qui glisse au frein à main et dépense sa nitro, balaie ses réglages et garde le meilleur tour lancé. Les neuf traces passent sous le seuil or ; huit sans toucher un mur, celle de `wangan` en en touchant un (aucun réglage essayé n'y passe sous l'or proprement). Pour remplacer une trace par un vrai tour, coller dans `traces-or.js` ce qui suit `#defi=` dans un lien de défi : c'est le même format.
-- À relancer si la physique ou un tracé change : `node outils/traces-or.js` (ou `node outils/traces-or.js wangan` pour une seule carte). `test-cartes.js` échoue si une trace sort de la route ou n'est plus sous le seuil or.
-
-Les médailles sont des temps de tour lancé : au premier tour, départ arrêté, le fantôme part devant.
-
-### Défi par lien
-
-Après un tour de contre-la-montre, la touche L (ou « copier le lien de défi » dans le menu de pause) copie dans le presse-papiers un lien qui porte ce tour. Celui qui l'ouvre arrive sur la bonne carte, en contre-la-montre, face au fantôme de l'expéditeur (en rose) : le menu affiche le temps à battre, chaque tour dit de combien le défi est manqué ou battu, et L renvoie un lien à son tour. Il n'y a pas de serveur : tout est dans l'adresse.
-
-- Forme : `…/index.html#defi=<version>.<carte>.<données>`. Tout tient dans le fragment (après `#`), que le navigateur n'envoie jamais au serveur.
-- Les données : le temps du tour, puis la position et le cap de la voiture cinq fois par seconde, quantifiés à 10 cm et à 1/256 de tour, écrits en différences (en différences secondes pour x et z : presque toujours un octet par valeur), avec deux octets de contrôle, le tout en base64 pour URL. Environ 27 caractères par seconde de tour : 1 100 pour un tour de 38 s, 2 600 pour le plus long tour plausible (`wangan` au temps de bronze, chiffre affiché par `test-cartes.js`). Certaines messageries coupent les liens de cette taille : un lien coupé est refusé, il ne donne jamais un fantôme faux.
-- On transporte des positions, jamais des commandes : la simulation ne donne pas exactement le même résultat d'un navigateur à l'autre. Entre deux points, le fantôme est interpolé en ligne droite (moins d'un mètre d'écart à la trace d'origine).
-- La version est celle de la physique (`DEFI_V` dans `sim.js`, la même que celle des clés de records `vpr7`) : à augmenter avec elle. Un lien d'une autre version, abîmé, tronqué, ou pour une carte inconnue est refusé avec un message au menu, et le jeu s'ouvre normalement.
-- `defiCode(carte, temps, trace)` et `defiLit(lien)` sont des fonctions pures de `sim.js`, testées sous Node (aller-retour à la précision de quantification, liens tronqués à toute longueur, abîmés à tout caractère, d'une autre version). Le fantôme reçu n'est pas enregistré : il vit le temps de la page.
-
-### Mode Glisse
-
-Troisième mode du menu, sur toutes les cartes : deux tours, départ arrêté, à points.
-
-- Une glisse rapporte, par seconde, sa vitesse × son angle de dérive (plafonné) × le multiplicateur.
-- À la sortie d'une glisse d'au moins 0,8 s, ses points sont versés au score et le multiplicateur monte d'un cran (jusqu'à x5). Plus courte, elle ne rapporte rien.
-- Un choc contre un mur ou un camion perd la glisse en cours et ramène le multiplicateur à x1 ; 3 secondes sans glisser aussi. Frotter un mur ne casse rien.
-- Le score ne compte que si les deux tours sont bouclés dans le délai affiché sous le chrono : deux tours au temps de la médaille de bronze du contre-la-montre, plus 30 %.
-- Une glisse encore en cours sur la ligne d'arrivée n'est pas comptée.
-
-Le HUD montre le score, le multiplicateur, et au centre les points de la glisse en cours (en blanc tant qu'elle est trop courte pour compter). Record et médailles par carte (clé `vpr7.<carte>.glisse`).
-
-Le score est tenu dans `sim.js` pour chaque voiture (`c.score`, `c.cours`, `c.mult`, réglages `GL`), à part de la physique : aucun temps au tour n'en dépend. Les seuils de médailles sont dans `game.js` (`GLM`, en points, par carte) : le pilote en glisse de `test-cartes.js`, qui ne glisse que pour aller vite, y fait à peu près le bronze. Une carte sans ligne dans `GLM` reçoit des seuils au mètre de piste, à régler après essais.
-
-### Course à élimination
-
-Variante de la course, au menu des modes (« ÉLIMINATION », aux trois difficultés). Il y a autant de tours que de voitures. Chaque fois que le meneur passe la ligne, à partir de la fin du tour 2, la voiture classée dernière sort : elle se range sur le côté, clignote et disparaît, sans plus gêner personne. Le premier tour est protégé, le dernier se joue à deux. Un bandeau rouge prévient le joueur tant qu'il est dernier. Le classement final est l'ordre inverse des sorties.
-
-Dans `sim.js` : `newRace(T, tours, niveaux, élastique, { elim: true })` ; une voiture sortie porte `c.out` (le temps de sa sortie), et `raceOrder(R)` donne le classement.
-
-### Tournée
-
-Au menu des modes (« TOURNEE », aux trois difficultés) : une nuit, toutes les cartes du jeu à la suite du crépuscule à l'aube, en courses de 3 tours contre les rivaux de chaque carte. L'ordre et l'heure de chaque manche sont `SOIREE` dans `cartes.js` : Spéciale des Ocres 18:40, Canal 6 19:50, Grand Vacarme 22:00, Ville 00:00, Karasu-tōge 02:00, Wan-9 03:30, Nuit Blanche 05:00, Premier métro 05:30. L'heure s'affiche au départ de chaque manche et au classement général (« SUITE : 03:30 · WAN-9 »).
-
-- Barème par manche : 10, 6, 3 et 1 points du premier au dernier.
-- Après chaque manche, le classement général s'affiche, avec ce que la manche a rapporté et la place de départ de la suivante.
-- La grille de départ est l'ordre inverse du classement général : le meneur part dernier. À égalité de points, le joueur est classé devant.
-- Les rivaux changent de nom à chaque carte ; les points suivent leur rang dans la liste des rivaux de la carte (le premier nommé hérite des points du premier nommé de la carte d'avant), pas leur nom.
-- La Tournée est sauvegardée après chaque manche close (une par difficulté). Quitter en cours de manche ne perd que cette manche : au menu, « REPRENDRE » la relance, depuis n'importe quelle carte. Une manche est close quand on quitte son tableau d'arrivée (Entrée ou Échap) ; fermer l'onglet avant, c'est la rejouer.
-- Au bout de la dernière carte, finir sur le podium donne le trophée de la difficulté (or, argent, bronze), affiché au menu. Ni échelle ni rétrogradation.
-
-La liste des manches est `SOIREE` (`cartes.js`) : une carte ajoutée doit y prendre sa place et son heure (`test-cartes.js` vérifie que chaque carte y est une fois et que les heures avancent). Le calcul est une fonction pure de `sim.js`, `tournee(points, arrivée)`, qui rend les points, le classement et la grille ; `newRace` prend la grille par `{ grille }`. Dans `game.js`, voir « Tournée » : état dans `localStorage` sous `vpr8.tournee` (nouvelle clé depuis l'ordre de la nuit : une Tournée commencée dans l'ancien ordre repart de zéro) (par difficulté : prochaine manche et points) et `vpr7.trophee`. On passe d'une carte à l'autre sans recharger la page ; la mémoire tenue d'une carte à l'autre se mesure avec `chaine()` de `outils/perf.js` (voir « Performances »).
-
-### Rivaux
-
-Les trois rivaux d'une carte (`rivaux` dans `cartes.js`, sinon KENJI, REI, JUN) ont un caractère, tenu par leur rang du plus rapide au moins rapide : **la référence**, **la tête brûlée**, **la recrue**. Chacun a sa couleur (`OPP` dans `game.js`) et ses répliques (`PIQUES`) : une sur la grille, une quand on le double, une quand il nous double. Elles s'affichent 3 s à la couleur du rival, une toutes les 7 s au plus, en solo seulement (ni à plusieurs, ni en ligne, ni en démo). Un dépassement compte à 3 m d'écart, pour qu'une voiture côte à côte ne parle pas à chaque image. L'anglais de chaque réplique est dans `langue.js`.
-
-### Mode démo
-
-À l'écran titre (accueil ou menu principal, en solo), 25 s sans rien toucher (`DEMO_ATTENTE` dans `game.js`) lancent une Course conduite par le pilote automatique, sous un bandeau « DEMO · heure · carte ». Au bout de 50 s (`DEMO_DUREE`), la démo passe à la carte suivante dans l'ordre de la nuit (`SOIREE`). Une touche, un bouton, un clic, ou le volant et les pédales d'une manette rendent la main : on revient sur l'écran (accueil ou menu) et sur la carte d'où l'on venait. Rien n'est enregistré, le mode choisi au menu ne change pas. Entre deux cartes, l'état passe par `sessionStorage` (`vpr.demo`, retour par `vpr.demoFin`). `__g.demo` et `__g.inactif` le montrent dans la console.
-
-### Écran partagé
-
-Ligne « JOUEURS » du menu principal : à 2, l'écran est coupé en deux vues superposées (joueur 1 en haut), et les deux joueurs courent dans la même course. Le choix est gardé (clé `vpr7.joueurs`). Spec et tickets : `docs/SPEC-ECRAN-PARTAGE.md`.
-
-- **Modes à deux** (`MODES2` dans `game.js`) : Course (3 tours, les deux joueurs et les deux rivaux les plus rapides de la carte : toujours quatre voitures), Élimination (les mêmes, 4 tours), Glisse en duel (2 tours, sans rival, le délai du solo pour chacun ; un choc entre les deux voitures casse l'enchaînement des deux). Ni contre-la-montre ni Tournée. Les deux joueurs partent sur les deux dernières places de la grille ; l'élastique des rivaux se règle sur la moyenne des deux. Le mode et la difficulté choisis à deux ont leurs propres clés (`vpr7.mode2`, `vpr7.diff2`) : revenir à un joueur rend le solo tel qu'on l'a laissé.
-- **Inscription** : au premier départ, chaque périphérique qui appuie prend la première place libre (clavier de gauche, clavier de droite, manette, Joy-Con). Les places sont gardées pour la session (`PLACES`), changement de carte compris : une revanche ne redemande rien, et la touche I du menu rouvre l'écran. Une manette inscrite qui disparaît en course met en pause et rouvre l'inscription pour sa place ; n'importe quel périphérique libre peut la reprendre.
-- **Dans la simulation** (`sim.js`) : `newRace(T, tours, niveaux, élastique, { humains: 2 })` met les humains en tête de la liste des voitures (0 = joueur 1, 1 = joueur 2), et `stepRace(R, entrées, H)` prend une entrée par humain ; une entrée absente fait conduire le pilote automatique (`?auto`, joueur arrivé). `{ delai }` est le temps limite de la Glisse en duel. À un humain, rien ne change : les temps de référence des tests sont les mêmes.
-- **Les vues** (`VUES` dans `game.js`, une par joueur ; une seule en solo) : chaque vue porte sa caméra, sa cible de rendu (avec sa profondeur, et une seconde cible pour les reflets de la route mouillée sur les cartes où il pleut), son canvas de HUD et tout l'état lissé « par caméra » (cap, tangage, roulis, secousse, fondus de nitro et de tunnel, régime affiché, tri des luminaires, gouttes de pluie, bandeaux). Chaque image, la simulation avance une fois ; puis `vueFrame` pose la caméra de chaque vue, règle lumière, brouillard et pluie pour sa voiture, dessine son HUD, la scène dans sa cible, et joue la passe finale dans sa moitié d'écran. Chaque vue garde la grille de 270 lignes du solo : le canvas en fait 540, avec un trait de 2 pixels entre les deux. `joueurs(n)` ajoute ou retire la deuxième vue ; `libere()` rend au GPU ce que chacune tient.
-- **L'état par joueur** est dans sa vue : son périphérique (`vu.periph`), son entrée de l'image (`vu.inp`), « arrivé » (`vu.fini`), « éliminé, regarde le meneur » (`vu.spec` : la vue affiche ÉLIMINÉ 3 secondes, puis suit le meneur), ses compteurs du tour. La voiture du joueur est `race.cars[vu.n]`. Le score, la jauge de nitro et la boîte sont sur la voiture, dans `sim.js`, comme en solo.
-- **Les écrans communs** (menu, inscription, pause, tableau d'arrivée, fin du duel de Glisse) sont dessinés une fois, par `ecrans()`, sur une couche plein écran posée par-dessus les deux vues (`COM`, `couche()`). Le décompte de départ reste dans chaque vue.
-- **Le son** (`audio.js`) : moteur, boîte et pneus sont joués une fois par joueur (joueur 1 un peu à gauche, joueur 2 un peu à droite). La radio, l'ambiance, le tunnel et la pluie sont uniques, pilotés par le joueur le mieux placé encore en course.
-- **Rien n'est enregistré à deux** : ni record, ni médaille, ni fantôme, ni trophée, ni Tournée, en lecture comme en écriture ; les touches F et L ne font rien. Seuls le nombre de joueurs, le mode et la difficulté à deux sont gardés. La boîte du joueur 1 est la préférence du solo ; celle du joueur 2 repart en automatique à chaque départ.
-- **Par l'adresse** : `?joueurs=2` (ou `1`) passe devant la préférence du menu sans y toucher, et y reste d'une carte à l'autre. Avec `?auto`, les deux voitures sont conduites par le pilote automatique, sans inscription : c'est ce qui sert aux captures et au banc de mesure (`?perf&auto&joueurs=2`, voir « Performances »). Un lien de défi s'ouvre toujours en solo ; les styles de comparaison (`?style=`) restent à une vue.
-
-Limites connues :
-
-- **Joy-Con gauche** : sa table de boutons est déduite du format du rapport, pas essayée (seul un Joy-Con droit l'a été). S'il arrive inversé, lui donner sa table dans `hidLire` (`game.js`).
-- **Clavier partagé** : beaucoup de claviers ne transmettent pas plus de trois ou quatre touches à la fois, selon leur position. C'est un dépannage ; deux manettes sont la bonne façon de jouer. Le clavier de droite n'a pas de boîte manuelle.
-- **Menus à deux** : la couche commune est un canvas de la page posé sur celui du jeu. Elle ne passe pas par la passe finale : menu, pause et tableau d'arrivée n'ont à deux ni scanlines ni tramage.
-- L'ombre portée d'une voiture sous les luminaires n'existe que dans la vue de son joueur ; la caméra libre à la souris ne tourne que la vue du joueur 1.
-
-Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/E sur un clavier QWERTY. Les autres commandes sont lues par la lettre tapée.
-
-## Fichiers
-
-| Fichier | Rôle |
-|---|---|
-| `index.html` | page, polices, icône, ordre de chargement des scripts |
-| `icon.svg` | icône de l'app (favicon) |
-| `docs/` | captures d'écran du README, spec de l'écran partagé (`SPEC-ECRAN-PARTAGE.md`) |
-| `cartes.js` | **les cartes**, en données : tracé, largeur, adhérence, voiture, stations de radio, thème (couleurs, ciel, lumière, interface). Ajouter une carte commence ici. |
-| `sim.js` | **physique**, sans aucun rendu : piste, moteur et boîte, glisse, murs, pilote automatique, course contre IA à un ou deux humains, trafic, traces des fantômes et liens de défi. Partagé entre le jeu et les tests. |
-| `game.js` | rendu three.js, décor de la ville, effets, interface, commandes et périphériques, vues de l'écran partagé, boucle de jeu |
-| `audio.js` | tout le son, synthétisé : trois stations de radio par carte (données `RADIO` dans `cartes.js`), chacune avec ses timbres (`PATCH`), sa batterie (`KIT`), ses effets et sa forme en sections ; musique de menu, ambiance du lieu par zones, tunnels, moteur, boîte, pneus, bruitages. Exposé au jeu par `window.SON`. |
-| `editeur.html`, `editeur/` | éditeur de musique, sur un seul écran : en haut les pistes et le morceau bloc par bloc (clic sur une case : la piste joue ou non dans la section), en bas les outils en onglets. `editeur.html` n'est qu'une coquille ; le code est dans `editeur/` : `noyau.js` (état, annulation, enregistrement, catalogue des instruments), `arrangement.js` (pistes, blocs, sections), `motifs.js` (grille de pas), `rouleau.js` (piano-roll), `instrument.js` (instrument de la piste, volume, octave, stéréo, son sombre ↔ clair, réverbération, écho, clavier), `mixeur.js` (mixeur, réglages de la station, accords, situation de course), `principal.js` (barre du haut, raccourcis, horloge d'affichage), `editeur.css`. Joue le vrai moteur, enregistre dans le navigateur (`vpr.musique`), le jeu reprend les réglages ; « Fichier → Copier mes réglages » pour les inscrire dans `cartes.js` |
-| `ui.css` | style commun des deux outils (éditeur de musique, banc d'écoute) : police pixel du jeu pour les étiquettes, chasse fixe pour les valeurs, touches à rebord, curseurs carrés |
-| `ecoute.html`, `ecoute/` | banc d'écoute, sur un seul écran (familles de sons en onglets à gauche, situation de course à droite ; `ecoute.html` est la coquille, le code est dans `ecoute/ecoute.js`, le style dans `ecoute/ecoute.css`) : chaque station, ambiance et bruitage joué seul (amplifié pour l'écoute, vumètre, « tout arrêter »), le mélange de course avec un curseur par famille, et trois vérifications : auto-test des boutons, niveaux (RMS et crête) et variété des stations (corrélation des spectres), par rendu hors ligne |
-| `textures.js` | **catalogue des textures** : l'aspect de chaque surface, aplat (`nom: 0xrrggbb`) ou dessin sur canvas. Ni forme, ni emplacement. |
-| `formes.js` | **catalogue des formes** : la géométrie de chaque objet, forme simple ou assemblage de boîtes à zones nommées. Ni texture, ni emplacement. Un assemblage posé est fondu en une géométrie par zone ; `insts()` (decors.js) le pose en nombre, une passe de dessin par zone. |
-| `decors-<carte>.js` | **placement** du décor d'une carte, un fichier par carte (`decors-touge.js`, `decors-paris.js`…) : où poser quelle forme avec quelle texture, par `h.pose`, `h.geo`, `h.mat`. Chacun ajoute sa fonction par `Object.assign(DECORS, { … })`, avec les aides propres à sa carte. Le placement de la piste et de la ville est dans `game.js`. |
-| `decors.js` | **poseurs partagés** du placement, chargé avant les `decors-<carte>.js` : `inst`, `insts`, `boite`, `bord`, `repere`, `soude`, `near`, `pt`, `terrain`, exposés dans `POSEURS`. Crée `DECORS`, vide. |
-| `rythme.js` | **essai indépendant** : les aplats lumineux du décor battent avec la grosse caisse de la radio. Pour le retirer, supprimer sa ligne dans `index.html` ; pour comparer, ajouter `&rythme=0` à l'adresse. |
-| `traces-or.js` | trace de référence du fantôme or de chaque carte (produit par `outils/traces-or.js`) |
-| `test-cartes.js` | tests de toutes les cartes |
-| `propositions/` | pages de conception : celle d'origine des cartes (historique), et `casse.html`, le bac à sable des dégâts et du décor destructible (voir `docs/SPEC-CASSE.md`) |
-| `samples.js` | sons de batterie encodés en base64 (généré depuis `samples/`) |
-| `instruments.js` | instruments échantillonnés (FluidR3_GM, CC BY 3.0) et formes d'onde de synthés (AKWF, CC0), généré par `outils/instruments.py` |
-| `samples/` | sons de Roland TR-808 d'origine et leur note d'auteur |
-| `fonts/` | polices pixel |
-| `three/` | three.js r187 (module ES : `three.module.js` + `three.core.js`), posé dans `window.THREE` par `index.html` ; les autres scripts sont `defer` |
-| `test.js` | tests de la physique |
-| `outils/perf.js` | banc de mesure : performances à une et à deux vues, mémoire sur un enchaînement de cartes (voir « Performances ») |
-| `outils/plan.js` | la capture d'un endroit d'une carte en deux secondes, avec avant/après et planches : `node outils/plan.js <carte> <plan>` (voir `METHODE-DECOR.md`) |
-| `outils/verifie.sh` | tous les tests en une commande ; `outils/hooks/pre-commit` le lance avant chaque commit de code |
-| `outils/banc.js` | le banc en une commande : `node outils/banc.js [carte]`, SUCCÈS ou ÉCHEC par carte (voir « Performances ») |
-| `outils/chocs.js` | mesure des chocs en vraie course, sans écran : `node outils/chocs.js [carte]`, et rejeu du modèle de dégâts de `docs/SPEC-CASSE.md` par profil de pilote |
-
-`game.js` est un seul fichier découpé en sections repérées par `// ----------` : rendu et passe finale, outils des trois entités du décor (`tx`, `mat`, `geo`, `pose`), piste, ville, horizon, voiture et effets, état de jeu et commandes, interface, boucle.
-
-## Tests
-
-Node 22.12 ou plus récent : les tests chargent three par `require` d'un module ES (`three/three.module.js`).
+Requires Node 22.12+ (the tests `require` three.js as an ES module).
 
 ```bash
-sh outils/verifie.sh
+sh outils/verifie.sh                        # run all tests
+git config core.hooksPath outils/hooks      # run them before each commit
+node outils/banc-rapide.js [track]          # performance budget check
+node outils/plan.js <track> <plan>          # screenshot a spot on a track
 ```
 
-Lance tous les `test*.js` et s'arrête au premier rouge. Le crochet de pré-commit le fait avant chaque commit qui touche un fichier `.js` ; il se branche une fois par clone : `git config core.hooksPath outils/hooks`. Le détail de chaque test :
+The code, comments and developer documentation are written in French. Start with [docs/INDEX.md](docs/INDEX.md); the developer guide is [docs/DEVELOPPEUR.md](docs/DEVELOPPEUR.md) (see "Où régler quoi" to find a setting). A French player-facing README is in [docs/README.fr.md](docs/README.fr.md). Contribution notes: [CONTRIBUTING.md](CONTRIBUTING.md).
 
-```bash
-node test.js
-```
+## Credits
 
-Vérifie sur la ville la géométrie du circuit, un tour complet au pilote automatique, les performances de la voiture (0 à 100 km/h, vitesses de passage des rapports, rupteur), la glisse, la jauge de nitro (remplissage, poussée, choc, vol), l'aspiration, la course contre IA, le score du mode Glisse (une glisse rapide rapporte plus qu'une lente, l'enchaînement multiplie, un choc le casse, des zigzags lents ne rapportent rien) la course à élimination (personne ne sort au premier tour, classement = ordre inverse des sorties) et la Tournée (points et grille sur des classements donnés, départ sur la grille demandée), la course à deux humains (chacun suit sa propre entrée, entrée absente = pilote automatique, grille, élastique sur la moyenne des deux, arrivée de l'un sans arrêter l'autre, élimination, Glisse en duel et son délai, aspiration et chocs identiques à ceux d'un humain contre une IA), les traces des fantômes de médaille et les liens de défi (aller-retour, liens invalides refusés). Ses temps de référence sont figés : s'ils bougent, les records de la ville ne sont plus comparables.
+- [three.js](https://threejs.org) r187 (MIT), [PeerJS](https://peerjs.com) 1.5.4 (MIT).
+- Fonts Press Start 2P and DotGothic16 (SIL Open Font License).
+- Drum samples: Roland TR-808 recordings by Michael Fischer (Technopolis, 1994), freely distributed by their author without a formal license; see `assets/samples/TR808.TXT`.
+- Instruments: FluidR3_GM (CC BY 3.0) and AKWF waveforms (CC0).
+- Cars have invented names; their specs are inspired by real cars. Tracks, scenery, station names and music are original.
 
-```bash
-node test-cartes.js
-```
+## License
 
-Passe chaque carte dans la physique : tracé sans recoupement, tour bouclé au pilote automatique, 0 à 100 km/h plausible, glisse au frein à main, trafic, trace or du fantôme (lisible, sur la route, sous le seuil or). Affiche longueur, temps au tour et vitesses de chaque carte.
-
-Le rendu, le HUD, les commandes et le son de l'écran partagé ne sont pas testés automatiquement : à la main dans le navigateur, avec `?auto&joueurs=2` pour voir les deux vues sans manette.
-
-Dans le navigateur, `?auto` fait conduire le pilote automatique (les deux voitures à deux joueurs), et `window.__g` expose l'état du jeu pour le débogage.
-
-## Performances
-
-**En une commande** : `node outils/banc.js` (toutes les cartes) ou `node outils/banc.js canal` (une carte), `--joueurs=2` pour l'écran partagé. Le serveur démarre tout seul (port 8851, ou `PORT=`), une fenêtre Chrome s'ouvre le temps de la mesure (ne pas la masquer), puis le terminal affiche par carte la moyenne et la pire image, et SUCCÈS ou ÉCHEC contre `BUDGET` (`ms` et `cpuMax`). Code de sortie : 0 tout passe, 1 une carte échoue, 2 le banc n'a pas tourné. Le son est forcé (`--autoplay-policy`) : la mesure est celle d'une partie avec le son. Il pèse peu en moyenne (0,1 ms par image), mais chaque réglage audio envoyé peut attendre le fil audio du navigateur : `audio.js` n'envoie donc une cible (`regle`) que si elle a bougé (57 envois par image avant, 11 après ; pire image du son de 9 à 2,7 ms). `--sans-ecran` lance Chrome sans fenêtre, mais Windows le bride : chiffres 2 à 3 fois trop lents. Les millisecondes varient d'un passage à l'autre sur un portable (de 1 à 3 fois selon l'état de la machine) : pour comparer deux versions, les mesurer l'une après l'autre dans la même minute.
-
-**Banc rapide, pour travailler** : `node outils/banc-rapide.js [cartes…]` fait la même mesure (`tour()` de `outils/perf.js`, même verdict sur `ms` et `cpuMax`) dans un seul Chrome **sans fenêtre**, lancé au premier appel puis gardé ouvert (`--fermer` le ferme) : rien ne s'ouvre à l'écran, le son est calculé mais coupé, et une carte se charge en 2 à 4 s au lieu de relancer un navigateur. En mode `--headless=new` avec le GPU, les chiffres sont ceux de la fenêtre (Ville 1,84 à 2,60 ms en fenêtre, 1,88 à 2,26 ms sans, mesurés en alternance). Une carte en échec est remesurée aussitôt : SUCCÈS, ÉCHEC (deux fois) ou INSTABLE (une fois sur deux : souvent la machine), avec la charge du processeur pendant la mesure et si l'à-coup retombe au même endroit du tracé (alors il vient de la carte). Le serveur doit servir cette copie du jeu : le banc refuse un port tenu par un autre worktree (`PORT=8862 node outils/banc-rapide.js`). Résultats : `captures/banc-rapide.json`.
-
-`--profil` ajoute, par carte, un tour mesuré par `outils/profil.js` et résumé dans le terminal (détail : `captures/profil-<carte>.json`, comparé au profil précédent, gardé en `profil-<carte>.prec.json`) :
-- par passe (scène, ombres fixes, ombres mobiles, reflets, post) : passes de dessin, triangles, temps cpu et temps GPU (minuterie du GPU) ;
-- par vingtième du tracé (échantillons de `T.S`) : où le temps et les passes de dessin montent ;
-- **par objet du décor** : passes de dessin et sommets par image, rapportés à la ligne qui l'a posé (`decors-touge.js:203`, `formes-touge.js:40` ; `moteur game.js:…` pour la voiture, la route et les effets). `outils/origines.js`, chargé en tête de page pour le profil seulement, note l'appelant de chaque `add()`, et la fusion garde l'origine de ses pièces (`userData.src`). Une géométrie fondue partage sa passe entre ses pièces au prorata des sommets ;
-- les pires images et ce qui s'y passait (ombres fixes refaites, shader compilé, texture ou géométrie envoyée, part du son) ;
-- le son : temps de `SON.frame` et coupures comptées par Chrome (`AudioContext.playbackStats`, `underrunEvents`).
-Les passes de dessin et les sommets ne dépendent pas de la machine : ce sont eux qu'on compare avant et après une retouche. Les millisecondes varient de ±15 % d'un tour à l'autre sur la machine partagée (charge de 40 à 70 %).
-
-**Corriger une carte qui sort de la référence** (méthode) :
-1. **Verdict** : `node outils/banc-rapide.js` sur toutes les cartes. Ne traiter que les ÉCHEC ; une carte INSTABLE se remesure plus tard, machine calme.
-2. **Classer l'échec** : `ms` trop haut (coût moyen, toute la carte ou une section) ou `cpuMax` trop haut (à-coup isolé). Un à-coup qui ne retombe pas au même endroit au second tour, sans événement dans `pires`, est la machine : ne rien corriger.
-3. **Profil** : `node outils/banc-rapide.js --profil <carte>`. Lire dans l'ordre : la passe la plus chère (GPU et passes de dessin), les sections chaudes, puis les objets en tête de liste.
-4. **Corriger dans la carte, par ordre de rendement** :
-   - un objet qui coûte beaucoup de passes de dessin sans être fondu (`seuls`, `(instances)` dans la liste) : le rendre fusionnable (opaque, immobile, une seule matière, sans `dyn` inutile), partager sa matière avec ses voisins (une matière par teinte crée un lot par teinte), ou le passer en `InstancedMesh` ;
-   - beaucoup de sommets : moins de segments (cylindres, sphères, rubans), pas de détail sous le pixel à 480 × 270 ; un objet lointain ou caché par le relief se retire ;
-   - passe `ombre-dyn` chère : un objet mobile qui porte une ombre sans que ça se voie perd son `castShadow` ;
-   - passe `reflets` chère : le décor proche de la route compte six fois (cube map) ; alléger ce qui longe la piste ;
-   - à-coup avec « ombres fixes refaites » : trop de décor qui porte ombre dans cette zone (`castShadow` sur les petits objets) ; « shader compilé » ou « texture envoyée » : une matière ou une texture qui apparaît en course au lieu du préchauffage ; part du son élevée : voir `audio.js` (`differe`, `tampon`).
-5. **Vérifier** : `--profil` à nouveau (les passes de dessin et sommets doivent baisser, l'écart s'affiche entre parenthèses), une capture de la zone pour voir que l'image n'a pas changé, puis `node outils/banc-rapide.js` sur toutes les cartes et `node test-cartes.js`.
-Le moteur (`game.js`, `three.min.js`, `audio.js`) ne se retouche que si plusieurs cartes ont le même problème ; ses optimisations sont listées plus bas et ne doivent pas être défaites.
-
-`index.html?perf&auto` mesure toutes les cartes à la suite (une minute en tout) : le pilote automatique fait un tour en course contre 3 adversaires, à pas fixe, sans rien afficher, et chaque image est chronométrée. Le tableau sort dans la console et dans `localStorage['vpr.perf']`. Le banc est dans `outils/perf.js`, avec la référence que **toute carte doit tenir** (`BUDGET`) :
-
-Pour la mémoire sur un enchaînement de cartes sans rechargement (Tournée) : `index.html?auto`, mode course, puis dans la console `(await import('./outils/perf.js')).chaine()`. Chaque carte est chargée à la suite de la précédente, deux fois toute la liste, et on relève les géométries, textures et shaders tenus par le GPU et le tas JS. Référence : les chiffres d'une carte sont les mêmes au second passage qu'au premier (relevé du 12/11/2026 sur 7 cartes et 3 passages : identiques, de 56 géométries et 45 textures au barrage à 267 et 159 sur le Wangan, 24 à 32 shaders ; tas JS entre 24 et 100 Mo sans tendance à la hausse).
-
-| mesure | référence | ce que c'est |
-|---|---|---|
-| `ms` | ≤ 3 ms | temps moyen d'une image, GPU compris |
-| `msMax` | ≤ 4,5 ms | la même chose sur la pire demi-seconde du tour |
-| `cpuMax` | ≤ 8,3 ms | la pire image isolée (à-coup) : aucune ne doit dépasser une image à 120 Hz |
-| `appelsMax` | ≤ 300 | passes de dessin par image, ombres comprises (le seul chiffre qui ne dépend pas de la machine) |
-
-Référence relevée le 16/11/2026 de 2 à 3 ms (et 3 à 4,5) : la scène est dessinée sur 540 lignes depuis la fusion de moteur-540, ce qui coûte 2 à 3 ms par image sur la machine de mesure.
-
-Les millisecondes valent pour la machine de mesure (portable à puce graphique intégrée Intel Arc 140T, image de 480 × 270) ; sur une autre, comparer les cartes entre elles et surveiller `appelsMax`. Une carte qui sort du tableau : `sectMs` et `sectAppels` disent sur quel dixième du tracé, `piresCpu` où tombent les à-coups et s'ils viennent du rendu ou du son.
-
-**À deux vues** : `index.html?perf&auto&joueurs=2` refait la même mesure avec l'écran partagé, les deux vues dessinées à chaque image (les deux joueurs au pilote automatique, deux adversaires). Le tableau est le même, avec une colonne `vues`, et sort dans `localStorage['vpr.perf2']` sans toucher à celui du solo. La référence vaut **par vue** (`budget(2)` dans `outils/perf.js`) : deux fois les passes de dessin du solo, et un temps d'image qui reste sous une image à 120 Hz.
-
-| mesure à deux vues | référence |
-|---|---|
-| `appelsMax` | ≤ 600 |
-| `ms`, `msMax`, `cpuMax` | ≤ 8,3 ms |
-
-Relevé du 13/11/2026 sur les huit cartes, pour le seul chiffre qui ne dépend pas de la machine : `appelsMax` va de 252 (Nuit Blanche) à 556 (Wan-9) à deux vues, pour 131 à 256 en solo. Les millisecondes à deux vues restent à relever sur la machine de mesure, fenêtre visible : à deux, l'image compte jusqu'à quatre fois les pixels du solo (deux vues, chacune deux fois plus large), c'est donc le temps du GPU (`ms`) qu'il faut regarder en premier. `chaine()` à deux, sur deux passages : mêmes géométries et textures au second passage qu'au premier.
-
-Le banc écrit toujours le nombre de vues dans l'adresse (`joueurs=1` ou `2`) : la mesure du solo ne dépend pas de la préférence du menu. `chaine()` marche aussi à deux, depuis `index.html?auto&joueurs=2` (sa colonne `vues` dit ce qui a été mesuré).
-
-Ce qui tient ces chiffres, et qu'il ne faut pas défaire :
-
-- **Fusion du décor fixe** (`game.js`, « fusion ») : après la construction, tous les maillages immobiles d'une même matière sont fondus en un seul. Poser mille boîtes ne coûte donc qu'une passe de dessin. Ce qui bouge ou clignote par sa visibilité doit porter `userData.dyn = 1` (lui ou un parent), sinon il serait figé : `(await import('./outils/perf.js')).mobiles()` dans la console liste les oublis.
-- **Préchauffage** : la première image dessine tout le décor une fois, même hors champ, pour que shaders, géométries et textures partent au GPU pendant le chargement et non au premier passage en course.
-- **Changement de carte sans rechargement** (`changeCarte` dans `game.js`) : `lanceJeu` (tout `game.js`) puis `lanceRythme` sont rejoués sur la nouvelle carte, sans recharger de script ; `sim.js` ne lit aucune carte globale (`buildTrack(THREE, carte)` : la piste porte sa carte, `T.carte`, `T.car`, `T.kt`). Le renderer (donc ses shaders compilés) et le son restent. Tout ce que `game.js` branche sur la page passe par son `addEventListener` local, coupé d'un coup à l'arrêt ; un nouvel écouteur, minuteur ou élément de page doit être défait dans `fin()`, et toute ressource GPU hors de la scène libérée dans `libere()`.
-- Pas de tableau créé à chaque image dans les boucles par goutte ou par particule (le ramasse-miettes fait des à-coups).
-- **Dans les cartes** (`decors-<carte>.js`, poseurs de `decors.js`) : `insts` indexe les zones d'un assemblage (24 sommets par boîte au lieu de 36) ; `soude(h, groupe)` fond les pièces d'un groupe mobile en une géométrie par matière (navires qui passent, traîneau en vol) ; un objet posé qui ne bouge pas ne porte pas `dyn` (il est fondu). `h.mat` crée une matière neuve à chaque appel : partager les matières de mêmes réglages (`M` du Wangan) fond leurs objets ensemble, **mais `h.mat` doit être appelé quand même** (ses textures tirent dans `rnd` : sauter un appel déplace le décor), et une matière lumineuse ne se partage pas entre un petit et un grand objet (`rythme.js`). Une instance fondue n'est pas découpée en pavés : un engin posé en nombre sur toute la carte se pose un par un (`poses` du Wangan) pour que ceux hors champ ne soient pas dessinés. Un conteneur ou une voiture de parking perd les faces que son voisin ou le sol cache.
-- **Le coût est surtout le nombre de passes de dessin** (~10 µs chacune entre three et le processus GPU), puis les sommets ; les pixels comptent peu (un quart des pixels : −4 %). La fusion prend aussi le décor instancié immobile (`InstancedMesh`), garde l'indexation des géométries (24 sommets par boîte au lieu de 36) et découpe en pavés une instance de plus de 100 000 sommets. Une `InstancedMesh` qui bouge doit porter `userData.dyn = 1`, comme un maillage.
-- **Ombres en deux temps** (`ombres` dans `game.js`) : le décor fixe n'est redessiné dans la carte d'ombre que quand la lune change de pas (24 m), puis gardé ; chaque image ne redessine que les objets mobiles (calques `OMBD` / `OMBI`, posés à la construction ; un objet ajouté en course qui porte une ombre doit y être mis), dans un carré de 120 m autour de la voiture.
-- Les quatre roues d'une voiture sont une seule instance (`rouesInst`) ; les matrices de la scène sont calculées une fois par vue ; la cube map des reflets refait une face toutes les 6 images.
-- `three/three.module.js` est retouché (lignes marquées `// vpr`) : les uniformes en tableau (les 20 luminaires, les matrices d'ombre) ne sont renvoyés que s'ils ont changé. À refaire à chaque mise à jour de three. `LUX.uLP` / `uLC` sont des `Float32Array` à plat.
-- Au chargement d'une carte, `renderer.compile` lance tous ses shaders : le décor écarté hors champ (culling par instance) ne compile plus le sien en pleine course.
-- **Son** : les sons ponctuels (choc, rapport, pétarade…) créent leurs nœuds juste après l'image (`differe` dans `audio.js`) ; une série de coups brefs s'écrit dans un tampon (`coup`, `tampon`, `rafale`) plutôt qu'en dizaines de nœuds ; le moteur physique d'un véhicule inaudible ne calcule plus (`dors`). Ne pas recréer des centaines de nœuds dans une image : chaque création peut attendre le fil audio.
-- **Banc rapide** : `node outils/banc-rapide.js [cartes]` fait la mesure de `banc.js` dans un seul Chrome gardé ouvert (hors écran, son coupé mais calculé), un onglet par carte. Les deux bancs coupent le son (`--mute-audio`).
-- **Route mouillée** (`game.js`, `ssr` et `repli`) : sur une carte où il pleut, la route écrit dans l'alpha de la cible de la vue combien elle est mouillée (`1 - EAU × mouillure`), et tout autre opaque y écrit 1. Une passe plein écran suit ensuite le rayon réfléchi dans la profondeur de la vue et ajoute ce qu'il touche : voitures, néons, feux. Les rubans de reflet (`TH.reflets`, reflets des tubes) sont dessinés après, et seulement là où ce rayon n'a rien trouvé. Coût mesuré à la minuterie GPU : 0,54 ms par image pour quatre vues de 360 × 270, et une passe de dessin de plus par vue. Une matière qui écrirait son propre alpha dans la cible passerait pour de l'eau. Ce qui est transparent et additif (gouttes, impacts, particules) fait monter l'alpha et coupe le reflet sous lui.
-
-## Où régler quoi
-
-Dans `cartes.js`, pour chaque carte :
-
-| Champ | Effet |
-|---|---|
-| `grip` | adhérence en virage (m/s²). 44 sur la ville (arcade), 15 à 24 ailleurs (proche d'une vraie voiture en pneus de course). Plus haut : on tourne plus serré, on freine moins. |
-| `W`, `sc`, `pts` | demi-largeur de route, échelle et points de contrôle `[x, z, altitude]` du tracé |
-| `tun`, `chaud`, `sect` | tunnel, secteur où la musique se déchaîne, temps intermédiaires (indices de points) |
-| `car` | la voiture : rapports de boîte, courbe de couple, masse, aérodynamique, motricité, silhouette (`look.type` : le modèle de `formes-voitures.js`) |
-| `radio` | les stations (`RADIO`, en tête de `cartes.js`) : tempo, batterie, timbres, couleur, progressions, motifs, thèmes, sections et forme · `amb` : les zones où l'on entend l'ambiance du lieu |
-| `th` | le thème : ciel, brume, lumières, couleurs de route, style et couleurs de l'interface |
-| `th.hud` | l'interface de la carte : `style` des panneaux (`cyber`, `trait`, `panneau` et `plaque` aux coins arrondis, `bloc`, `tableau` de stade, `rallye` à bande de chantier, `givre`), `jauge` du compte-tours (égaliseur par défaut, `aiguille` à cadran, `led` en barre de diodes), `mph: 1` pour un compteur en miles (Canal 6), `jp` étiquettes japonaises |
-| `th.pluie` | `1` = pluie partout ; ou des zones `[point a, point b, force]` (1 = pluie normale ; au-delà, averse : plus de gouttes, traînées plus longues ; Wan-9 : averse de force 3 sur le port, rien avant la sortie du pont), coupée en tunnel. Calculée une fois par `buildTrack` (`T.pluie`, lue par le dessin et le son ; posée sur chaque sommet de la route, elle règle ses reflets calculés à l'écran : voir « Route mouillée ») |
-| Surfaces | `SURF` en tête de `sim.js` : un jeu de coefficients par surface (`sec`, `mouille`, `glace`, `neige`, `terre`) : `vir` lacet perdu en courbe, `frein` et `trac` freinage et motricité, `colle` retard de la vitesse sur le nez (la voiture chasse), `vaq`/`aq`/`aqc` aquaplaning, `roul` frein de roulement, `gl` glisse qui part plus tôt. `buildTrack` en tire `T.surf[i]`, le jeu de coefficients de chaque échantillon (fondu aux bords des zones). Le pilote auto et les IA lisent la même table (virages, freinage) |
-| `surf` | surface de la route : `{ fond: 'neige', zones: [[point a, point b, 'glace', force], …] }` (`fond` partout, zones par-dessus, fondues sur 20 m ; `force` de 0 à 1, 1 par défaut). Aucune des six cartes n'en déclare ; `test-cartes.js` l'essaie sur une copie du touge |
-| Pluie sur la conduite | une averse est la surface `mouille` dosée par `(force − 1) / 2`, nulle en tunnel : la force 1 (la ville) ne change rien. Aquaplaning au-delà de 230 − 40·m km/h. Wan-9 : +6 % au tour |
-| Pluie au son | `pluieFrame` d'`audio.js`, famille « pluie » (bouton « Pluie » d'`ecoute.html`) : rideau étouffé par la carrosserie, qui suit la force (`T.pluie`) et la vitesse, coupé en tunnel ; gerbe grave en aquaplaning (`car.aq`) |
-| `th.objets`, `th.objetsEn` | objets à renverser sur la carte (plage, chapada…) ; `h.cassable` y ajoute des pièces du décor (perse) |
-| `th.loin` | portée minimale de la caméra, pour garder des lointains hors brouillard |
-| `trafic` | nombre de camions sur la route |
-| `sauts`, `cuv` | le relief (carte Grand Vacarme) : tremplins `[point, longueur, hauteur, fosse, profondeur]` et murs roulables `[a, b, largeur, rayon]`. Déclarer l'un ou l'autre donne à la voiture une hauteur et une gravité (`GRAV`, `DROOP`, `LAND0`, `LANDK`, `LANDX` en tête de `sim.js` : pesanteur, débattement avant de « voler », seuil et pente de la perte de vitesse à la réception). Sans eux, la carte reste à plat comme avant. |
-
-Dans `sim.js` : `TOP` est la vitesse de référence pour le braquage et les effets visuels, `AI_LVL` le niveau de chaque adversaire du mode course (1 = tour propre du pilote automatique).
-
-Dans `game.js` :
-
-| Chercher | Effet |
-|---|---|
-| `function sched(` (dans `audio.js`) | le séquenceur musical et ses couches adaptatives |
-| `function audioFrame(` (dans `audio.js`) | son du moteur, des pneus, du vent, et pilotage de la musique par la course |
-| `NL`, `LUM_GAIN`, `LUM_PAS`, `TUN_AMB` (en tête de fichier) | lumière dynamique : nombre de luminaires calculés, force de tous les luminaires et des phares, espacement des luminaires de tunnel, lumière ambiante des tunnels |
-| `QUANT`, `TRAME`, `TREMBLE` (en tête de fichier) | rendu rétro : niveaux de couleur par canal, force du tramage de Bayer, tremblement des sommets (0 = éteint) |
-| `lum(` | chaque luminaire du décor : échantillon de piste, position, couleur, portée, force (aussi dans `decors-<carte>.js` : `h.lum(`) |
-| `const LU_F` | le calcul de lumière ajouté à tous les matériaux : luminaires, phares, ombre de la voiture, reflets |
-| `post.uniforms.amt.value` | intensité du flou de vitesse |
-| `c += bl *` | intensité du halo des néons |
-| `cam.fov =` | grand-angle de la caméra selon la vitesse |
-| `function drawHUD(` | toute l'interface et les écrans |
-| `const pauseItems` | entrées du menu pause |
-| `const OPP = [` | noms et couleurs des adversaires |
-
-Les records, le fantôme et les préférences sont stockés dans le navigateur sous les clés `vpr7.*` pour la ville et `vpr7.<carte>.*` pour les autres. Quand la physique change au point de rendre les anciens temps incomparables, incrémenter ce préfixe.
-
-Pour régénérer `samples.js` après avoir changé un son dans `samples/`, réencoder chaque fichier `.ogg` en base64 dans l'objet `window.SMP`.
-
-`instruments.js` se régénère avec `python -I outils/instruments.py <FluidR3_GM> <AKWF> <ffmpeg> > instruments.js` (les fichiers `*-mp3.js` de gleitz/midi-js-soundfonts et des `.wav` d'AKWF-FREE). Crédits : instruments FluidR3_GM de Frank Wen, licence CC BY 3.0 ; formes d'onde Adventure Kid Waveforms de Kristoffer Ekstrand, domaine public.
-
-## État du code
-
-Ce qui est solide : la physique est isolée, testée, et ne dépend pas du rendu.
-
-Dette connue, à traiter avant d'ajouter beaucoup de contenu :
-
-- `game.js` fait environ 700 lignes dans une seule fermeture.
-- La physique tourne à 120 Hz sans interpolation de l'affichage : légère saccade possible sur un écran 144 Hz.
-- La ville compte plusieurs centaines d'objets dessinés séparément. Sans souci sur une machine récente, à fusionner si le jeu doit tourner sur du matériel modeste.
-- L'interface est entièrement redessinée à chaque image.
-- Aucun test automatique ne couvre le rendu ni le son.
-- La lumière dynamique demande WebGL 2 (dérivées dans le shader) ; l'ombre portée sous les luminaires n'existe que pour la voiture du joueur (à deux : chacun la sienne, dans sa vue).
-
-## Déployer
-
-Le jeu est un site statique : il suffit de servir le dossier tel quel. Sur GitHub Pages, activer Pages sur la branche `main`, dossier racine. Sur l'offre gratuite, cela demande un dépôt public : relire d'abord la section suivante.
-
-**En ligne** (choix « EN LIGNE » après l'accueil) : aucun serveur à nous. Les navigateurs se parlent en pair-à-pair (WebRTC, `peerjs.min.js`) ; ils se trouvent par le serveur public gratuit de PeerJS (0.peerjs.com), joint au code du salon. L'hôte crée le salon (code de 4 lettres, lien `?salon=CODE` copié), choisit la carte au menu et lance une Course ; il fait tourner la course pour tous (`reseau.js`). Sans relais TURN, certains réseaux stricts (4G, entreprise) ne se connectent pas. Le site doit être servi en HTTPS (GitHub Pages l'est) ou depuis `localhost`.
-
-## Crédits et licences
-
-- **three.js** r187, licence MIT (`three/LICENSE`).
-- **PeerJS** 1.5.4, licence MIT.
-- **Polices** Press Start 2P et DotGothic16, licence SIL Open Font.
-- **Sons de TR-808** : enregistrés par Michael Fischer (Technopolis, 1994) et distribués gratuitement par leur auteur, sans licence formelle. Voir `samples/TR808.TXT`. À vérifier ou à remplacer avant toute diffusion commerciale.
-- **Données des voitures** : les voitures du jeu portent des noms inventés. Leurs fiches s'inspirent de voitures réelles : celle de la ville, de la fiche technique d'une GT japonaise de 500 ch (rapports de boîte, couple, puissance, masse ; courbe de couple, Cx et pertes de transmission estimés) ; les autres, de fiches saisies de mémoire, avec des rapports de boîte parfois estimés.
-- **Cartes** : tracés, décors et noms originaux, inspirés de lieux réels et de l'ambiance de films et de mangas, sans en reprendre les circuits, personnages ni visuels. Noms des voitures et des stations de radio inventés.
-- **Musique** : compositions originales, synthétisées en direct.
-
-Le code du jeu n'a pas encore de licence : à choisir avant de rendre le dépôt public.
+[MIT](LICENSE) for the game code. Third-party components keep their own licenses (see Credits); the TR-808 samples have no formal license.

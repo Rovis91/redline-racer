@@ -1,5 +1,5 @@
-# Fabrique instruments.js : instruments échantillonnés (FluidR3_GM, CC BY 3.0) et formes d'onde de synthés (AKWF, CC0).
-# Usage : python -I outils/instruments.py <dossier FluidR3 *-mp3.js> <dossier AKWF *.wav> <ffmpeg> <dossier VCSL *.wav> > instruments.js
+# Fabrique src/audio/instruments.js : instruments échantillonnés (FluidR3_GM, CC BY 3.0) et formes d'onde de synthés (AKWF, CC0).
+# Usage : python -I outils/instruments.py <dossier FluidR3 *-mp3.js> <dossier AKWF *.wav> <ffmpeg> <dossier VCSL *.wav> > src/audio/instruments.js
 # Batterie (VCSL, CC0) : caisses claires, cercle, cross-stick, claps, charleston acoustique, shaker, tambourin, nommés comme dans PERC ci-dessous.
 # Une note sur quatre demi-tons est gardée, en mono, en Opus 32 kb/s, coupée à 3 s avec un fondu : le moteur transpose les autres.
 import sys, os, re, base64, subprocess, tempfile, wave, struct, cmath, json

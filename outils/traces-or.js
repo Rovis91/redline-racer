@@ -3,8 +3,8 @@
 // Faute de tour conduit à la main, la trace vient de la simulation : le pilote en glisse de sim.js (piloteGlisse) (frein à main dans les virages serrés, nitro dès qu'il accélère),
 // dont on balaie les réglages. On garde, parmi les tours lancés sans réception dure : sous le seuil or, celui qui touche le moins les murs, puis le plus rapide ; à défaut, le plus rapide sans choc.
 // Pour la remplacer par un vrai tour : coller dans traces-or.js ce qui suit « #defi= » dans un lien de défi (même format).
-const fs = require('fs'), THREE = require('../three/three.module.js'), F = __dirname + '/../traces-or.js';
-require('../cartes.js'); require('../sim.js');
+const fs = require('fs'), THREE = require('../vendor/three/three.module.js'), F = __dirname + '/../src/donnees/traces-or.js';
+require('../src/donnees/cartes.js'); require('../src/moteur/sim.js');
 const H = 1 / 120, wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), qui = process.argv.slice(2);
 try { require(F); } catch (e) { globalThis.TRACES_OR = {}; }
 for (const M of CARTES) {

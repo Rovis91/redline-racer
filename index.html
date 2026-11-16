@@ -3,70 +3,70 @@
 <head>
 <meta charset="utf-8">
 <title>Ville à plein régime</title>
-<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
 <style>
   /* polices pixel embarquées (SIL Open Font License) ; tout le HUD est dessiné dans le canvas du jeu */
-  @font-face { font-family: "Press Start 2P"; src: url(fonts/press-start-2p-latin-400-normal.woff2) format("woff2"); }
-  @font-face { font-family: DotGothic16; src: url(fonts/dotgothic16-japanese-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: "Press Start 2P"; src: url(assets/fonts/press-start-2p-latin-400-normal.woff2) format("woff2"); }
+  @font-face { font-family: DotGothic16; src: url(assets/fonts/dotgothic16-japanese-400-normal.woff2) format("woff2"); }
   html, body { margin: 0; height: 100%; background: #08080c; overflow: hidden; }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 </style>
 </head>
 <body>
 <!-- three.js r187 (ES module, dossier three/) posé dans window.THREE ; les scripts suivants sont « defer » : ils s'exécutent après lui, dans cet ordre -->
-<script type="module">import * as THREE from "./three/three.module.js"; window.THREE = THREE;</script>
-<script defer src="cartes.js"></script>
-<script defer src="traces-or.js"></script>
-<script defer src="sim.js"></script>
-<script defer src="session.js"></script>
-<script defer src="samples.js"></script>
-<script defer src="instruments.js"></script>
-<script defer src="audio.js"></script>
-<script defer src="textures.js"></script>
-<script defer src="formes.js"></script>
-<script defer src="textures-paris.js"></script>
-<script defer src="formes-paris.js"></script>
-<script defer src="textures-canal.js"></script>
-<script defer src="formes-canal.js"></script>
-<script defer src="textures-stade.js"></script>
-<script defer src="formes-stade.js"></script>
-<script defer src="textures-givre.js"></script>
-<script defer src="formes-givre.js"></script>
-<script defer src="textures-terre.js"></script>
-<script defer src="formes-terre.js"></script>
-<script defer src="textures-touge.js"></script>
-<script defer src="formes-touge.js"></script>
-<script defer src="textures-wangan.js"></script>
-<script defer src="textures-barrage.js"></script>
-<script defer src="formes-barrage.js"></script>
-<script defer src="formes-wangan.js"></script>
-<script defer src="textures-perse.js"></script>
-<script defer src="formes-perse.js"></script>
-<script defer src="textures-chapada.js"></script>
-<script defer src="formes-chapada.js"></script>
-<script defer src="textures-plage.js"></script>
-<script defer src="formes-plage.js"></script>
-<script defer src="textures-voitures.js"></script>
-<script defer src="formes-voitures.js"></script>
-<script defer src="formes-ville.js"></script>
-<script defer src="decors.js"></script>
-<script defer src="decors-ville.js"></script>
-<script defer src="decors-touge.js"></script>
-<script defer src="decors-wangan.js"></script>
-<script defer src="decors-paris.js"></script>
-<script defer src="decors-canal.js"></script>
-<script defer src="decors-stade.js"></script>
-<script defer src="decors-givre.js"></script>
-<script defer src="decors-terre.js"></script>
-<script defer src="decors-perse.js"></script>
-<script defer src="decors-barrage.js"></script>
-<script defer src="decors-chapada.js"></script>
-<script defer src="decors-plage.js"></script>
-<script defer src="langue.js"></script>
-<script defer src="peripheriques.js"></script>
-<script defer src="peerjs.min.js"></script>
-<script defer src="reseau.js"></script>
-<script defer src="game.js"></script>
-<script defer src="rythme.js"></script> <!-- essai : décor au rythme de la radio ; supprimer cette ligne pour le retirer -->
+<script type="module">import * as THREE from "./vendor/three/three.module.js"; window.THREE = THREE;</script>
+<script defer src="src/donnees/cartes.js"></script>
+<script defer src="src/donnees/traces-or.js"></script>
+<script defer src="src/moteur/sim.js"></script>
+<script defer src="src/moteur/session.js"></script>
+<script defer src="src/audio/samples.js"></script>
+<script defer src="src/audio/instruments.js"></script>
+<script defer src="src/audio/audio.js"></script>
+<script defer src="src/rendu/textures.js"></script>
+<script defer src="src/rendu/formes.js"></script>
+<script defer src="src/cartes/paris/textures-paris.js"></script>
+<script defer src="src/cartes/paris/formes-paris.js"></script>
+<script defer src="src/cartes/canal/textures-canal.js"></script>
+<script defer src="src/cartes/canal/formes-canal.js"></script>
+<script defer src="src/cartes/stade/textures-stade.js"></script>
+<script defer src="src/cartes/stade/formes-stade.js"></script>
+<script defer src="src/cartes/givre/textures-givre.js"></script>
+<script defer src="src/cartes/givre/formes-givre.js"></script>
+<script defer src="src/cartes/terre/textures-terre.js"></script>
+<script defer src="src/cartes/terre/formes-terre.js"></script>
+<script defer src="src/cartes/touge/textures-touge.js"></script>
+<script defer src="src/cartes/touge/formes-touge.js"></script>
+<script defer src="src/cartes/wangan/textures-wangan.js"></script>
+<script defer src="src/cartes/barrage/textures-barrage.js"></script>
+<script defer src="src/cartes/barrage/formes-barrage.js"></script>
+<script defer src="src/cartes/wangan/formes-wangan.js"></script>
+<script defer src="src/cartes/perse/textures-perse.js"></script>
+<script defer src="src/cartes/perse/formes-perse.js"></script>
+<script defer src="src/cartes/chapada/textures-chapada.js"></script>
+<script defer src="src/cartes/chapada/formes-chapada.js"></script>
+<script defer src="src/cartes/plage/textures-plage.js"></script>
+<script defer src="src/cartes/plage/formes-plage.js"></script>
+<script defer src="src/rendu/textures-voitures.js"></script>
+<script defer src="src/rendu/formes-voitures.js"></script>
+<script defer src="src/cartes/ville/formes-ville.js"></script>
+<script defer src="src/rendu/decors.js"></script>
+<script defer src="src/cartes/ville/decors-ville.js"></script>
+<script defer src="src/cartes/touge/decors-touge.js"></script>
+<script defer src="src/cartes/wangan/decors-wangan.js"></script>
+<script defer src="src/cartes/paris/decors-paris.js"></script>
+<script defer src="src/cartes/canal/decors-canal.js"></script>
+<script defer src="src/cartes/stade/decors-stade.js"></script>
+<script defer src="src/cartes/givre/decors-givre.js"></script>
+<script defer src="src/cartes/terre/decors-terre.js"></script>
+<script defer src="src/cartes/perse/decors-perse.js"></script>
+<script defer src="src/cartes/barrage/decors-barrage.js"></script>
+<script defer src="src/cartes/chapada/decors-chapada.js"></script>
+<script defer src="src/cartes/plage/decors-plage.js"></script>
+<script defer src="src/moteur/langue.js"></script>
+<script defer src="src/moteur/peripheriques.js"></script>
+<script defer src="vendor/peerjs.min.js"></script>
+<script defer src="src/moteur/reseau.js"></script>
+<script defer src="src/moteur/game.js"></script>
+<script defer src="src/moteur/rythme.js"></script> <!-- essai : décor au rythme de la radio ; supprimer cette ligne pour le retirer -->
 </body>
 </html>

@@ -11,7 +11,7 @@ const { spawn } = require('child_process'), fs = require('fs'), path = require('
 const RACINE = path.join(__dirname, '..'), PORT = +process.env.PORT || 8851, DBG = +process.env.DBG || 9400, BASE = 'http://127.0.0.1:' + PORT + '/index.html';
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));
 const args = process.argv.slice(2), opt = k => args.includes('--' + k), PROFIL = opt('profil'), J = opt('joueurs=2') ? 2 : 1;
-const ids = fs.readFileSync(path.join(RACINE, 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)), voulues = args.filter(a => !a.startsWith('--')), cartes = voulues.length ? voulues : ids;
+const ids = fs.readFileSync(path.join(RACINE, 'src', 'donnees', 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)), voulues = args.filter(a => !a.startsWith('--')), cartes = voulues.length ? voulues : ids;
 const req = (u, m = 'GET') => new Promise((r, j) => { const q = http.request(u, { method: m }, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => r(d)); }); q.on('error', j); q.end(); });
 const dort = ms => new Promise(r => setTimeout(r, ms)), repond = async u => { try { await req(u); return true; } catch { return false; } };
 const attends = async (u, n) => { for (let i = 0; i < n; i++) { if (await repond(u)) return true; await dort(250); } return false; };

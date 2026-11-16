@@ -1,8 +1,8 @@
 // Temps passé près du rupteur sur un tour lancé du pilote automatique (sim.js, sans navigateur) : node outils/regime.js chapada touge givre
 // Sortie par carte : part du temps à plus de 85 % et 92 % du rupteur, vitesse moyenne et maxi, part du temps par rapport, nombre de freinages.
 // CAR='{"ratios":[…],"final":3.9}' fusionne des réglages dans la voiture de la première carte nommée, PTS='[[x,z,y],…]' remplace son tracé (essais de proposition).
-const THREE = require('../three/three.module.js'); globalThis.window = globalThis;
-require('../cartes.js'); require('../traces-or.js'); require('../sim.js');
+const THREE = require('../vendor/three/three.module.js'); globalThis.window = globalThis;
+require('../src/donnees/cartes.js'); require('../src/donnees/traces-or.js'); require('../src/moteur/sim.js');
 const H = 1 / 120, ids = process.argv.slice(2);
 ids.forEach((id, k) => {
   const M = CARTES.find(m => m.id === id); if (!M) return console.log('carte inconnue : ' + id);

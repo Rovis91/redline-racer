@@ -14,7 +14,7 @@ const attends = async (test, s) => { for (let i = 0; i < s * 2; i++) { if (await
 
 (async () => {
   if (!CHROME) fin(2, 'ÉCHEC : Chrome introuvable (variable CHROME=chemin du navigateur)');
-  if (carte) { const ids = fs.readFileSync(path.join(RACINE, 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)); if (!ids.includes(carte)) fin(2, 'ÉCHEC : carte inconnue « ' + carte + ' » (cartes : ' + ids.join(', ') + ')'); }
+  if (carte) { const ids = fs.readFileSync(path.join(RACINE, 'src', 'donnees', 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)); if (!ids.includes(carte)) fin(2, 'ÉCHEC : carte inconnue « ' + carte + ' » (cartes : ' + ids.join(', ') + ')'); }
   if (!(await repond())) { enfants.push(spawn('python', [path.join('outils', 'capture.py'), String(PORT)], { cwd: RACINE, stdio: 'ignore' })); if (!(await attends(repond, 10))) fin(2, 'ÉCHEC : le serveur ne démarre pas sur le port ' + PORT); }
   fs.rmSync(sortie, { force: true });
   const url = 'http://127.0.0.1:' + PORT + '/index.html?perf&auto&joueurs=' + (deux ? 2 : 1) + (carte ? '&seule&carte=' + carte : '');

@@ -2,7 +2,7 @@
 // Chaque carte : une course de 3 tours (3 IA) par profil du joueur, et le contre-la-montre de wangan avec ses camions (trafic).
 // On note chaque choc comme le jeu le voit (c.hit : mur ou camion, c.bump : voiture ; même lecture que dgPas dans game.js) et on rejoue dessus le modèle de dégâts
 // de docs/SPEC-CASSE.md (« Mécanique des chocs ») : usure par zone [avant, arrière, gauche, droite], plafonnée hors du mode CASSE (usure et USURE de sim.js).
-const THREE = require('../three/three.module.js'); require('../cartes.js'); require('../sim.js');
+const THREE = require('../vendor/three/three.module.js'); require('../src/donnees/cartes.js'); require('../src/moteur/sim.js');
 const H = 1 / 120;
 const BACS = [4, 6, 10, 15, 20, 30, 1e9], bac = v => BACS.findIndex(b => v < b);
 const choc = (Z, lx, lz, vn, type, Z0) => usure(Z, Z0, lx, lz, vn, type); // le modèle du jeu (sim.js), hors mode CASSE

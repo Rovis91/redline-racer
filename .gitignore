@@ -1,5 +1,4 @@
 .claude/*
 !.claude/launch.json
 captures/
-music original/
-essais-musique/
+local/

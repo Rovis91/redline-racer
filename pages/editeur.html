@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Éditeur de musique — Ville à plein régime</title>
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/ui.css">
+<link rel="stylesheet" href="editeur/editeur.css">
+</head>
+<body>
+<!-- Éditeur de musique : le vrai moteur du jeu (audio.js) ; chaque réglage est enregistré dans ce navigateur (vpr.musique) et repris par le jeu au prochain chargement.
+     La page n'est qu'une coquille : le logiciel est dans editeur/ (noyau, arrangement, motifs, rouleau, instrument, reglages, principal). -->
+<header id="barre">
+  <button id="play" title="Barre d'espace">Lecture</button>
+  <button id="boucle" aria-pressed="false" title="Fait tourner en boucle la section choisie (clique l'en-tête d'une section, en haut des colonnes, pour la choisir), au lieu de dérouler le morceau">⟲ Boucle</button>
+  <select id="station" aria-label="Station" title="Station"></select>
+  <label>Tempo <input type="number" id="bpm" min="60" max="200" step="1"></label>
+  <button id="bAccords" title="Les accords de la station, mesure par mesure">Accords</button>
+  <button id="bStation" title="Tempo, swing, réverbération, écho, graves et aigus de toute la station">Réglages</button>
+  <span id="now">à l'arrêt</span>
+  <div id="vu" role="img" aria-label="Niveau de sortie"><i></i></div><span id="db">—</span>
+  <button id="undo" title="Annuler (Ctrl+Z)" disabled>↶</button>
+  <button id="redo" title="Rétablir (Ctrl+Y)" disabled>↷</button>
+  <button id="ab" aria-pressed="false" title="Maintenir pour entendre la station telle qu'elle est dans le jeu, relâcher pour revenir à tes réglages">Original</button>
+  <details id="fichier"><summary>Fichier</summary>
+    <div>
+      <p>Tes réglages sont enregistrés tout seuls dans ce navigateur ; le jeu les reprend au prochain chargement (même adresse).</p>
+      <button id="export">Copier mes réglages</button> <button id="import">Importer le texte ci-dessous</button>
+      <textarea id="out" spellcheck="false" aria-label="Réglages exportés, ou réglages à importer"></textarea>
+      <button id="resetSt" class="danger">Réinitialiser cette station</button> <button id="resetAll" class="danger">Tout réinitialiser</button>
+      <p><a href="ecoute.html">Banc d'écoute des sons</a> · <a href="../index.html">Le jeu</a></p>
+    </div>
+  </details>
+</header>
+<div id="zarr"><div id="arr"></div></div>
+<nav id="onglets" aria-label="Outils"></nav>
+<main id="dock"></main>
+<dialog id="dlg" aria-labelledby="dlgT"><header><b id="dlgT" class="pix"></b><button id="dlgX" aria-label="Fermer" title="Fermer (Échap)">×</button></header><div id="dlgC"></div></dialog>
+
+<script>/* le serveur local laisse le navigateur garder d'anciens fichiers : on charge toujours les scripts du jour */
+for (const f of ["../src/donnees/cartes.js", "../src/audio/samples.js", "../src/audio/instruments.js", "../src/audio/audio.js", ...["noyau", "arrangement", "motifs", "rouleau", "instrument", "reglages", "principal"].map(n => "editeur/" + n + ".js")]) document.write('<script src="' + f + "?v=" + Date.now() + '"><\/script>');</script>
+</body>
+</html>
