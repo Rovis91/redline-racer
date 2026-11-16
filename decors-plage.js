@@ -506,7 +506,6 @@
       });
       { // les flamants (LA-1) : deux lots aux mêmes rangs (debout, en vol). Le groupe du point 38 décolle à l'approche, traverse la digue au-dessus de la route et se repose de l'autre côté
         const FL = L.flamants, PV = { plume: col(0xf0836a, { side: D }), patte: col(0xe78a8c, { side: D }), bec: col(0x2a2a2a, { side: D }) }, fA = vifs('flamant', FL, { a: [0] }), fV = vifs('flamantVol', FL, {}, PV);
-        [...fA, ...fV].forEach(m => { m.castShadow = false; });   // idem pour les flamants : leur ombre se perd dans l'eau de la lagune
         const ici = FL.map(p => [p[0], p[2], p[3]]), but = (k0, i0) => Array.from({ length: 16 }, (_, j) => { const i = i0 + (hz(j, 51) * 16 | 0); return [...off(i, -(S[i].w + 15 + hz(j, 52) * 12)), 3.14 + hz(j, 53) * 0.6]; });
         const G = [{ k0: 16, i0: P(38), dec: car => pres(car, P(38), 30) }].map(g => ({ ...g, de: ici.slice(g.k0, g.k0 + 16), a: but(g.k0, g.i0), en: 0, t: 9, T: 4.6 }));
         const repose = k => { const p = ici[k]; met(fA, k, p[0], -1.2, p[1], p[2]); cache(fV, k); }; FL.forEach((p, k) => repose(k));
