@@ -11,7 +11,7 @@
     // tunnel dans l'éperon de la culée ouest, crête, épaule du versant est (deux épingles), retour à la cité.
     barrage(h) {
       const { THREE, S, N, W, rnd } = h, PP = h.M.pts.map((_, k) => pt(h, k)), P = k => PP[k], T0 = h.T.t0, T1 = h.T.t1, LUMI = { lum: 1 }, DS = { side: THREE.DoubleSide }, IX = new Map(S.map((s, i) => [s, i]));
-      const mc = new Map(), mat = (n, o = {}, ...a) => { const k = n + JSON.stringify(o) + JSON.stringify(a); if (!mc.has(k)) mc.set(k, h.mat(n, o, ...a)); return mc.get(k); }; // une matière par réglage : le jeu fond ensuite les pièces qui la partagent
+      const LET = new Set(), mc = new Map(), mat = (n, o = {}, ...a) => { const k = n + JSON.stringify(o) + JSON.stringify(a); if (!mc.has(k)) { mc.set(k, h.mat(n, o, ...a)); if (n === 'lettres') LET.add(mc.get(k)); } return mc.get(k); }; // une matière par réglage : le jeu fond ensuite les pièces qui la partagent
       const lots = new Map(), ruban = (...a) => { const m = h.ribbon(...a); (lots.get(m.material) || lots.set(m.material, []).get(m.material)).push(m); return m; }; // rubans regroupés par matière à la fin (fond)
       const fond = () => { for (const [m, L] of lots) { if (L.length < 2) continue; const P3 = [], N3 = [], UV = [], I = []; for (const o of L) { const g = o.geometry, b = P3.length / 3; P3.push(...g.attributes.position.array); N3.push(...g.attributes.normal.array); UV.push(...g.attributes.uv.array); I.push(...Array.from(g.index.array, i => i + b)); h.scene.remove(o); g.dispose(); }
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N3, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.setIndex(I); const o = new THREE.Mesh(g, m); o.receiveShadow = true; h.scene.add(o); } };
@@ -683,6 +683,12 @@
           LP.forEach(([x, , z], j) => { const f = k * Math.max(0, 1 - Math.hypot(x - car.x, z - car.z) / 170); C[j * 3] = 0.75 * f; C[j * 3 + 1] = 0.42 * f; C[j * 3 + 2] = 0.12 * f; }); g.attributes.color.needsUpdate = true; }); }
 
       fond();
+      // atlas des panneaux peints (matière « lettres », une texture de 256 × 64 par texte) : toutes les pièces partagent une matière, donc une passe de dessin ; les uv de chaque boîte sont renvoyés sur sa case (le moteur les fond ensuite)
+      { const M = [...LET].filter(m => m.map), CW = 4, CH = Math.ceil(M.length / CW), AW = 1024, AH = 64 * 2 ** Math.ceil(Math.log2(CH)), cv = document.createElement('canvas'), cx = cv.getContext('2d'), idx = new Map(M.map((m, i) => [m, i])); cv.width = AW; cv.height = AH;
+        M.forEach((m, i) => cx.drawImage(m.map.image, (i % CW) * 256, (i / CW | 0) * 64)); // les cases se rangent du haut ; flipY : v = 1 en haut de l'image
+        const t = new THREE.CanvasTexture(cv); t.magFilter = M[0].map.magFilter; t.minFilter = M[0].map.minFilter; t.anisotropy = M[0].map.anisotropy; t.wrapS = t.wrapT = THREE.RepeatWrapping; const am = M[0].clone(); am.map = t; const vu = new Set();
+        h.scene.traverse(o => { if (!o.isMesh || !idx.has(o.material)) return; let g = o.geometry; if (vu.has(g)) g = o.geometry = g.clone(); vu.add(g); const i = idx.get(o.material), u0 = (i % CW) * 256 / AW, v0 = (AH - 64 - (i / CW | 0) * 64) / AH, uv = g.attributes.uv; for (let k = 0; k < uv.count; k++) uv.setXY(k, u0 + uv.getX(k) * 256 / AW, v0 + uv.getY(k) * 64 / AH); o.material = am; });
+        for (const m of M) m.map.dispose(); }
       let tv = 0; const tick = (dt, now, car) => { dt = Math.min(dt, 0.1); tv += dt; for (const f of TICK) f(dt, car, tv); }; tick.vue = car => { for (const f of VUE) f(car); }; return tick;
     },
   });
