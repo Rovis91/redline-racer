@@ -15,6 +15,8 @@ globalThis.window = globalThis; require('../src/rendu/decors.js'); for (const M 
   assert.deepStrictEqual(SOIREE.map(M => M.id).sort(), CARTES.map(M => M.id).sort(), 'NUIT : chaque carte une fois dans la Tournée');
   assert(SOIREE.every((M, i) => /^\d\d:\d\d$/.test(M.heure) && (!i || (M.heure < '12' ? '24' + M.heure : M.heure) > (SOIREE[i - 1].heure < '12' ? '24' + SOIREE[i - 1].heure : SOIREE[i - 1].heure))), 'NUIT : les heures avancent, du soir au matin');
   console.log('OK  inventaire : décor, trace or et titre de ' + CARTES.length + ' cartes'); }
+// le gué des Ocres lave vite la voiture (game.js, saleFrame : seuil aq > 0.08) : la route la plus mouillée de la carte doit le franchir
+{ const q = buildTrack(THREE, CARTES.find(M => M.id === 'terre')).surf; assert(Math.max(...q.map(s => s.aq)) > 0.08, 'terre : le gué n’atteint pas le seuil de lavage (0,08)'); }
 const H = 1 / 120, deg = r => r * 180 / Math.PI; let surfTxt = '', surfCarte = '', lienMax = [0], orTxt = [];
 for (const M of CARTES) {
   surfCarte = '';

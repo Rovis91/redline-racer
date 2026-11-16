@@ -1133,7 +1133,7 @@
   const saleDe = g => g.userData.sale || (g.userData.sale = { n: 0, c: new THREE.Color(0.45, 0.43, 0.4), u: { uSale: { value: 0 }, uSaleH: { value: VO.plan.bas }, uSaleC: { value: null } } });
   function saleFrame(c, dt) { const g = modele(c), sl = saleDe(g), sp = Math.hypot(c.vx, c.vz); if (sp < 3 || c.air) return;
     const q = T.surf[c.idx], k = Math.min(1, sp / 20) * (1 + Math.min(0.5, Math.abs(c.slide || 0))), lave = q.aq > 0.02 || pluieAt(c.idx) > 0; // plus vite et en travers, plus elle en prend
-    if (lave) sl.n = Math.max(0, sl.n - (q.aq > 0.12 ? 0.5 : 0.06) * k * dt); // le gué (beaucoup d'eau) lave d'un coup, la pluie et le mouillé doucement
+    if (lave) sl.n = Math.max(0, sl.n - (q.aq > 0.08 ? 0.5 : 0.06) * k * dt); // le gué (aq plafonne à 0,1 : seuil 0,08, l'ancien 0,12 n'était jamais atteint) lave d'un coup, la pluie et le mouillé doucement
     else { const t = SALES[genre(q)], a = t[3] * k * dt * (1 - sl.n * 0.5); sl.c.lerp(TMP.setRGB(t[0], t[1], t[2]), a / (sl.n + a)); sl.n = Math.min(1, sl.n + a); }
     sl.u.uSale.value = sl.n; }
   const SALE_F = `float sHb = clamp((vSaleP.y - uSaleH) / 1.15, 0.0, 1.0), sL = uSale * (1.7 - 1.4 * sHb); // niveau local : le bas de caisse 1,7 fois plus vite, le toit 0,3 fois
