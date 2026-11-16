@@ -413,7 +413,7 @@
       // voiture inventée : un pick-up de stade à châssis tubulaire, V8 atmosphérique de 6 L, 600 ch, 1300 kg, propulsion, grands débattements ;
       // 5e un peu courte (pointe 245 km/h au rupteur, atteinte seulement sur la ligne du départ et dans le grand virage ouest) : ce plafond laisse le niveau des rivaux jouer en ligne droite (test-cartes : un rival à 0,95 perd 2,5 %)
       car: car({ nom: 'MASTIFF V8 ARENA', ratios: [2.9, 1.95, 1.47, 1.18, 1.08], final: 3.7, wheel: 0.36, mass: 1375, idle: 900, red: 7200, cd: 0.45, area: 2.3,
-        tq: [0, 380, 500, 580, 640, 660, 640, 590, 480], son: 0.85, moteur: 'v8', look: { col: 0xffc21a, l: 0.9, w: 1.04, h: 1.2, nez: 0.45, cab: [-0.1, 1.9, 0.62], aileron: 2, bandes: 0x16161c } }),
+        tq: [0, 380, 500, 580, 640, 660, 640, 590, 480], son: 0.85, moteur: 'v8', look: { type: 'pickup', col: 0xffc21a, l: 0.9, w: 1.04, h: 1.2, nez: 0.45, cab: [-0.1, 1.9, 0.62], aileron: 2, bandes: 0x16161c } }),
       radio: RADIO.stade,
       th: { decor: 'stade', fog: 0x0e0c18, fogD: [120, 900], sky: [[0, '#05050a'], [1, '#05050a']], stars: 0,
         astre: { dir: [0.2, 0.95, 0.25], col: '#05050a', ombre: '#05050a', taille: 1 }, hemi: [0xe6ecff, 0x3c3c48, 0.85], sun: [0xffffff, 0.5], phares: 0.3, bloom: 0.1, scan: 0.08, ciel: 'SOUS LE TOIT', // glis : 0 = le décor pose les glissières (game.js n'en double pas une, qui transparaissait au ras du sol de l'aire) ; echap : 0 = pas d'air chaud d'échappement à l'écran (au rupteur l'image ondulait)

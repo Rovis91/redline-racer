@@ -77,6 +77,8 @@
       if (K === 'buggy') { grille(g, o, p.av, 0.3, 0.36, 0.46); plaque(g, o, p.av, 0.4, 0.4); rv(g, p.dessus, -0.74, -W + 0.1, 0.6, W - 0.1, '#1e1c1a'); } // baquet ouvert : le fond de l'habitacle
       if (K === 'berlinette') { grille(g, o, p.av, 0.5, 0.28, 0.36); voile(g, 0.8, () => { for (let x = -1.3; x > -1.72; x -= 0.07) rv(g, p.dessus, x, -0.6, x - 0.03, 0.6, SOMBRE); }); } // persiennes du capot moteur
       if (K === 'groupeb') { grille(g, o, p.av, 0.42, 0.42, 0.58); ph(0.44, 0.78, 0.43, 0.57); for (let k = 0; k < 3; k++) rv(g, p.cote, -0.66 - k * 0.07, 0.5, -0.69 - k * 0.07, 0.72, SOMBRE); }
+      if (K === 'pickup') { grille(g, o, p.av, 0.5, 0.7, 0.96, 3); ph(0.46, 0.8, 0.78, 0.94); rv(g, p.dessus, -2.06, -W + 0.1, -0.64, W - 0.1, '#1a1a1e'); // plateau, et le numéro dans son rond blanc sur la portière
+        { const [cx, cy] = p.cote(0.05, 0.78); g.beginPath(); g.arc(cx, cy, 6, 0, 7); g.fillStyle = '#f0ece0'; g.fill(); R(g, '#16161c', (cx | 0) - 1, (cy | 0) - 4, 2, 8); R(g, '#16161c', (cx | 0) - 2, (cy | 0) - 3, 1, 1); } }
       voile(g, 0.5, () => { for (const s of [-1, 1]) rv(g, p.ar, s * 0.62, 0.24, s * 0.76, 0.3, SOMBRE); }); // sorties d'échappement
       plaque(g, o, p.ar, p.plaque);
       // usure légère : projections au bas de caisse et derrière les roues
@@ -90,7 +92,7 @@
       const disque = (r, c) => { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fillStyle = c; g.fill(); };
       disque(26, '#1a1a1e'); voile(g, 0.4, () => { g.strokeStyle = '#3a3a40'; g.beginPath(); g.arc(cx, cy, 23, 0, 7); g.stroke(); });
       disque(rj + 1, '#9a9ca4'); disque(rj - 1, '#26262c'); R(g, '#6a2024', 41, 20, 3, 5); // fond de jante, disque et étrier
-      const c = { buggy: '#f0f0ec', berlinette: '#d8c890', groupeb: '#d4b050' }[K] || (K === 'onca' ? '#e2ddcc' : K === 'peykan' ? '#e4dcc8' : K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84');
+      const c = { buggy: '#f0f0ec', berlinette: '#d8c890', groupeb: '#d4b050', pickup: '#b0b2b8' }[K] || (K === 'onca' ? '#e2ddcc' : K === 'peykan' ? '#e4dcc8' : K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84');
       const n = { gtr: 12, fd: 5, a80: 5, gts: 5, berlinette: 8, groupeb: 6 }[K] || 0;
       if (n) { g.strokeStyle = c; g.lineWidth = n > 6 ? 2 : K === 'a80' ? 5 : 3.5; for (let i = 0; i < n; i++) { const a = i * 2 * Math.PI / n; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * rj, cy + Math.sin(a) * rj); g.stroke(); } }
       else { disque(rj - 1, c); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.6; R(g, '#26262c', Math.round(cx + Math.cos(a) * 11) - 2, Math.round(cy + Math.sin(a) * 11) - 2, 4, 4); } }
