@@ -15,13 +15,13 @@
     // poteau de bois rond d'1 m de haut (à étirer) ; origine au pied
     poteauBois: () => { const g = new THREE.CylinderGeometry(0.1, 0.12, 1, 6); g.translate(0, 0.5, 0); return g; },
     // bouée de balisage : petite sphère de 1 m de diamètre à mettre à l'échelle ; origine au centre
-    bouee: () => new THREE.IcosahedronGeometry(0.5, 1),
+    boueePlage: () => new THREE.IcosahedronGeometry(0.5, 1),
     // corde tendue le long de X entre deux poteaux : tube fin d'1 m de long (à étirer en X)
     corde: () => { const g = new THREE.CylinderGeometry(0.03, 0.03, 1, 4); g.rotateZ(Math.PI / 2); return g; },
     // transat de plage tourné vers +X : châssis, toile, dossier relevé
     transat: () => [['bois', 1.8, 0.08, 0.7, 0, 0.35, 0], ['toile', 1.2, 0.05, 0.6, -0.25, 0.42, 0], ['toile', 0.8, 0.05, 0.6, 0.6, 0.65, 0, [0, 0, 0.6]], ...paire(sz => ['bois', 0.06, 0.35, 0.06, -0.8, 0.17, sz * 0.3]), ...paire(sz => ['bois', 0.06, 0.35, 0.06, 0.8, 0.17, sz * 0.3])],
     // barque de pêcheur, la proue vers +X : coque blanche, bande peinte (zone teinte), bancs, moteur hors-bord ; origine au fond de la coque
-    barque: () => [['coque', 5, 0.7, 1.7, 0, 0.35, 0, null, 1], ['coque', 1.2, 0.7, 1.1, 2.9, 0.4, 0, [0, 0, 0.2]], ['bande', 5.1, 0.18, 1.74, 0, 0.62, 0], ['bande', 1.25, 0.18, 1.14, 2.95, 0.66, 0, [0, 0, 0.2]],
+    barquePlage: () => [['coque', 5, 0.7, 1.7, 0, 0.35, 0, null, 1], ['coque', 1.2, 0.7, 1.1, 2.9, 0.4, 0, [0, 0, 0.2]], ['bande', 5.1, 0.18, 1.74, 0, 0.62, 0], ['bande', 1.25, 0.18, 1.14, 2.95, 0.66, 0, [0, 0, 0.2]],
       ['bois', 0.35, 0.08, 1.5, 0.8, 0.55, 0], ['bois', 0.35, 0.08, 1.5, -1, 0.55, 0], ['moteur', 0.4, 0.8, 0.35, -2.7, 0.6, 0]],
     // façade de la rue tournée vers -Z (la route) : bloc crépi de 2 étages, acrotère crénelé, balcon, auvent de toile au rez-de-chaussée ; L = largeur, H = hauteur. Origine au sol, milieu de la façade
     facadePlaya: (L = 10, H = 8) => [['mur', L, H, 9, 0, H / 2, 4.5, null, 1], ...Array.from({ length: Math.round(L / 1.6) }, (_, k) => ['mur', 0.8, 0.6, 0.4, -L / 2 + 0.4 + k * (L - 0.8) / Math.max(1, Math.round(L / 1.6) - 1), H + 0.3, 0.2]),
@@ -37,7 +37,7 @@
     // stalactite : cône pointe en bas, 1 m de long et 0,5 m de rayon à la racine (à mettre à l'échelle) ; origine à la racine (au plafond)
     stalactite: () => { const g = new THREE.ConeGeometry(0.5, 1, 6); g.rotateX(Math.PI); g.translate(0, -0.5, 0); return g; },
     // rocher de calcaire : bloc arrondi de 1 m de rayon, à mettre à l'échelle ; origine au centre
-    rocher: () => { const g = new THREE.DodecahedronGeometry(1, 0); g.scale(1, 0.75, 1); return g; },
+    rocherPlage: () => { const g = new THREE.DodecahedronGeometry(1, 0); g.scale(1, 0.75, 1); return g; },
     // buisson de garrigue : boule basse, 1 m de rayon ; origine au sol
     buisson: () => { const g = new THREE.IcosahedronGeometry(1, 0); g.scale(1, 0.6, 1); g.translate(0, 0.35, 0); return g; },
     // muret de pierre sèche, L m le long de X
@@ -90,7 +90,7 @@
     // cône ouvert du rayon de lumière (fiche 6) : 1 m de haut, rayon 1 en bas et 0,7 en haut ; origine en haut (au trou du plafond), il descend
     coneRayon: () => { const g = new THREE.CylinderGeometry(0.7, 1, 1, 14, 1, true); g.translate(0, -0.5, 0); return g; },
     // disque posé à plat, 1 m de rayon : trou de lumière du plafond, tache de soleil au sol ; origine au centre
-    disque: () => { const g = new THREE.CircleGeometry(1, 16); g.rotateX(-Math.PI / 2); return g; },
+    disquePlage: () => { const g = new THREE.CircleGeometry(1, 16); g.rotateX(-Math.PI / 2); return g; },
     // bac à ferry de Cozumel, la proue vers +X : coque blanche, bande, deux ponts ; origine à la flottaison
     ferry: () => [['coque', 40, 4, 9, 0, 1, 0], ['bande', 40.2, 0.8, 9.2, 0, 2.2, 0], ['coque', 26, 3, 8, -3, 4.5, 0], ['vitre', 26.2, 1, 8.2, -3, 4.8, 0], ['coque', 12, 2.5, 6, -6, 7.2, 0]],
   });
@@ -133,12 +133,12 @@
     chapelle: () => [['blanc', 9, 6.5, 15, 0, 3.25, 1, null, 1], ['blanc', 9.4, 2, 0.7, 0, 7.4, -6.2], ['blanc', 5.4, 1.6, 0.7, 0, 9.1, -6.2], ['blanc', 2.2, 1.2, 0.7, 0, 10.4, -6.2], ['ombre', 2.4, 3.6, 0.2, 0, 1.8, -6.62], ['ombre', 1.2, 1.2, 0.2, 0, 5.6, -6.62],
       ['blanc', 3.2, 14, 3.2, 6.6, 7, -4.8, null, 1], ['ombre', 1.4, 2, 3.3, 6.6, 11.6, -4.8], ['ombre', 3.3, 2, 1.4, 6.6, 11.6, -4.8], ['toitR', 3.8, 0.5, 3.8, 6.6, 14.2, -4.8], ['toitR', 2.4, 0.7, 2.4, 6.6, 14.8, -4.8], ['croix', 0.18, 1.8, 0.18, 6.6, 16, -4.8], ['croix', 1, 0.18, 0.18, 6.6, 16.3, -4.8], ['croix', 0.18, 1.6, 0.18, 0, 11.8, -6.2], ['croix', 0.9, 0.18, 0.18, 0, 12.1, -6.2]],
     // château d'eau du bourg (D-1) : cuve sur quatre pieds contreventés, 18 m ; zone texte = le nom peint
-    chateauEau: () => [['cuve', 7, 5, 7, 0, 15.5, 0, null, 1], ['cuve', 7.6, 0.4, 7.6, 0, 18.2, 0], ['texte', 6.2, 1.8, 0.1, 0, 15.6, -3.56], ...paire(a => paire(b => ['pied', 0.6, 13, 0.6, a * 2.8, 6.5, b * 2.8, null, 1])).flat(),
+    chateauEauPlage: () => [['cuve', 7, 5, 7, 0, 15.5, 0, null, 1], ['cuve', 7.6, 0.4, 7.6, 0, 18.2, 0], ['texte', 6.2, 1.8, 0.1, 0, 15.6, -3.56], ...paire(a => paire(b => ['pied', 0.6, 13, 0.6, a * 2.8, 6.5, b * 2.8, null, 1])).flat(),
       ...paire(b => ['pied', 6, 0.25, 0.25, 0, 5, b * 2.8, [0, 0, 0.6]]), ...paire(b => ['pied', 6, 0.25, 0.25, 0, 9.5, b * 2.8, [0, 0, -0.6]])],
     // antenne rouge et blanche de 30 m
     antenne: () => suite(6, k => [k % 2 ? 'blanc' : 'rouge', 0.7, 5, 0.7, 0, 2.5 + k * 5, 0]),
     // kiosque à musique de la place : socle octogonal approché, huit poteaux, garde-corps ; le toit (cône) est posé à part
-    kiosque: () => [['dalle', 8, 1.1, 8, 0, 0.55, 0, null, 1], ['dalle', 9.6, 0.5, 2.4, 0, 0.25, -4.6], ...suite(8, k => { const a = (k + 0.5) / 8 * 6.2832; return ['fer', 0.2, 3.6, 0.2, Math.cos(a) * 3.7, 2.9, Math.sin(a) * 3.7]; }), ['fer', 7.8, 0.12, 7.8, 0, 4.7, 0]],
+    kiosquePlage: () => [['dalle', 8, 1.1, 8, 0, 0.55, 0, null, 1], ['dalle', 9.6, 0.5, 2.4, 0, 0.25, -4.6], ...suite(8, k => { const a = (k + 0.5) / 8 * 6.2832; return ['fer', 0.2, 3.6, 0.2, Math.cos(a) * 3.7, 2.9, Math.sin(a) * 3.7]; }), ['fer', 7.8, 0.12, 7.8, 0, 4.7, 0]],
     // scène de la feria : plateau, portique de tubes, toit, deux murs d'enceintes, fond de scène (zone texte)
     scene: () => [['noir', 14, 1.3, 8, 0, 0.65, 0, null, 1], ...paire(a => paire(b => ['fer', 0.3, 7, 0.3, a * 6.8, 4.8, b * 3.8])).flat(), ['fer', 14.4, 0.5, 8.4, 0, 8.4, 0, null, 1], ['texte', 12.4, 4.4, 0.2, 0, 5, 3.6], ...paire(a => ['noir', 1.8, 4.2, 1.6, a * 8.4, 2.1, -2.6, null, 1])],
     // manège (carrousel) à l'arrêt : socle, mât, plateau haut ; le toit rayé (cône) est posé à part
@@ -163,7 +163,7 @@
     // poteau électrique de béton de la 307, 9 m, traverse
     poteauElec: () => [['beton', 0.3, 9, 0.3, 0, 4.5, 0], ['beton', 2.2, 0.14, 0.14, 0, 8.4, 0]],
     // banc de bois
-    banc: () => [['bois', 1.8, 0.1, 0.5, 0, 0.45, 0], ['bois', 1.8, 0.5, 0.08, 0, 0.75, 0.24], ...paire(a => ['fer', 0.08, 0.45, 0.5, a * 0.8, 0.22, 0])],
+    bancPlage: () => [['bois', 1.8, 0.1, 0.5, 0, 0.45, 0], ['bois', 1.8, 0.5, 0.08, 0, 0.75, 0.24], ...paire(a => ['fer', 0.08, 0.45, 0.5, a * 0.8, 0.22, 0])],
     // ceiba (REFS §5, selva du Quintana Roo) : fût droit à contreforts, branches horizontales, houppier plat en parasol fait de plateaux de feuillage étagés ; 14 m, à mettre à l'échelle. Zone feuille teintée
     ceiba: () => [['tronc', 0.9, 9.4, 0.9, 0, 4.7, 0, null, 1], ['tronc', 1.7, 1.5, 1.7, 0, 0.75, 0], ...paire(a => ['tronc', 5.2, 0.34, 0.34, a * 2.3, 9.7, 0, [0, 0, a * 0.32]]), ...paire(a => ['tronc', 0.34, 0.34, 5.2, 0, 9.9, a * 2.3, [-a * 0.32, 0, 0]]),
       ['feuille', 11, 1.3, 9, 0, 11.3, 0, [0, 0.3, 0], 1], ['feuille', 8, 1.1, 10, 1, 12.3, -0.5, [0, 1.1, 0], 1], ['feuille', 6, 1, 5, -1.5, 13.2, 1, [0, 0.6, 0]], ['feuille', 4, 1.5, 4, 5, 10.5, 2, [0, 0.4, 0.1]], ['feuille', 4, 1.4, 4.4, -5, 10.6, -2.5, [0, 0.9, -0.1]]],
@@ -172,6 +172,6 @@
     // palmes en cône à quatre pans (toit de kiosque, de bar, de manège) : rayon 1, hauteur 1, base à y = 0
     toit4: () => { const g = new THREE.ConeGeometry(1, 1, 4, 1, true); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return g; },
     // arbre de la selva : houppier en boule aplatie à facettes, plus large que le buisson
-    houppier: () => { const g = new THREE.IcosahedronGeometry(1, 1); g.scale(1, 0.55, 1); g.translate(0, 0.3, 0); return g; },
+    houppierPlage: () => { const g = new THREE.IcosahedronGeometry(1, 1); g.scale(1, 0.55, 1); g.translate(0, 0.3, 0); return g; },
   });
 })();

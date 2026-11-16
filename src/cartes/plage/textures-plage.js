@@ -146,12 +146,6 @@
       for (let x = 0; x < 64; x++) { R(g, '#3fd8c0', x, 112 + (Math.sin(x * 0.4) * 2 | 0), 1, 2); if (alea() < 0.4) R(g, '#9ff4e4', x, 110 + (alea() * 6 | 0), 1, 1); } // reflets de l'eau
       grain(g, o, 500, ['#5a4e3a', '#b0a080'], 64, 128);
     }],
-    // voûte de la grotte : roche sombre, fissures, pointes de stalactites en taches claires
-    vouteGrotte: () => [64, 64, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#4a4232', 0, 0, 64, 64); grain(g, o, 700, ['#3a3426', '#5e5440', '#2c2820']);
-      for (let i = 0; i < 8; i++) { let x = alea() * 64, y = alea() * 64; for (let k = 0; k < 30; k++) { R(g, '#1c1a14', x | 0, y | 0, 1, 1); x += alea() * 2 - 1; y += 1; } }
-      voile(g, 0.6, () => { for (let i = 0; i < 30; i++) R(g, '#b0a07a', alea() * 64 | 0, alea() * 64 | 0, 2, 2); });
-    }, 6],
     // sol de la grotte : calcaire mouillé et lissé, flaques claires qui renvoient la lumière, sable fin dans les creux
     solGrotte: () => [64, 128, (g, o) => {
       const { R, alea, voile } = o; R(g, '#5e5442', 0, 0, 64, 128); grain(g, o, 1200, ['#4e4636', '#6e6450', '#7a6e56'], 64, 128);
@@ -196,7 +190,7 @@
 (() => {
   Object.assign(TEXTURES, {
     // fil de banderoles de la feria (T-2) : triangles pointe en bas aux trois accents (rose, turquoise, jaune), fond transparent ; se répète le long du fil
-    banderole: () => [96, 16, (g, { R }) => { g.clearRect(0, 0, 96, 16); ['#e8468c', '#1fb5a8', '#f2c230', '#e8468c', '#f2c230', '#1fb5a8'].forEach((c, k) => { g.fillStyle = c; g.beginPath(); g.moveTo(k * 16 + 1, 1); g.lineTo(k * 16 + 15, 1); g.lineTo(k * 16 + 8, 15); g.fill(); }); R(g, '#4a3a2c', 0, 0, 96, 1); }],
+    banderolePlage: () => [96, 16, (g, { R }) => { g.clearRect(0, 0, 96, 16); ['#e8468c', '#1fb5a8', '#f2c230', '#e8468c', '#f2c230', '#1fb5a8'].forEach((c, k) => { g.fillStyle = c; g.beginPath(); g.moveTo(k * 16 + 1, 1); g.lineTo(k * 16 + 15, 1); g.lineTo(k * 16 + 8, 15); g.fill(); }); R(g, '#4a3a2c', 0, 0, 96, 1); }],
     // guirlande d'ampoules de couleur (grotte, muelle) : un fil et des ampoules aux trois accents, fond transparent
     ampoules: () => [96, 8, (g, { R }) => { g.clearRect(0, 0, 96, 8); R(g, '#2a2420', 0, 1, 96, 1); ['#ffd070', '#e8468c', '#1fb5a8', '#ffd070', '#f2c230', '#e8468c'].forEach((c, k) => { R(g, c, k * 16 + 6, 2, 3, 4); }); }],
     // dallage de la Quinta (REFS §3) : pavés rose brique de tailles inégales, bandes de pierre claire en travers tous les 8 m ; teintes voisines, pas de motif périodique fin

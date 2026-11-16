@@ -100,7 +100,7 @@
     cypres: () => { const g = new THREE.ConeGeometry(1.3, 12, 6, 1); g.translate(0, 6.6, 0); return g; },
     // REFS §10 : bassin rond du jardin : margelle (anneau bas), l'eau est un disque posé à part
     margelle: () => { const g = new THREE.CylinderGeometry(1, 1, 1, 24, 1, true); g.translate(0, 0.5, 0); return g; },
-    disque: () => { const g = new THREE.CircleGeometry(1, 24); g.rotateX(-Math.PI / 2); return g; },
+    disque: () => { const g = new THREE.CircleGeometry(1, 16); g.rotateX(-Math.PI / 2); return g; },
     // REFS §10 : massif de fleurs : bourrelet bas
     massif: () => B(1, 0.6, 1),
     // REFS §12 : lanterne du bazar

@@ -128,7 +128,7 @@
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
         const me = new THREE.Mesh(g, m); h.scene.add(me); return me;
       };
-      const mBand = h.mat('banderole', { lum: 1, transparent: true, alphaTest: 0.5, side: D }), mAmp = h.mat('ampoules', { lum: 1, transparent: true, alphaTest: 0.5, side: D, fog: false });
+      const mBand = h.mat('banderolePlage', { lum: 1, transparent: true, alphaTest: 0.5, side: D }), mAmp = h.mat('ampoules', { lum: 1, transparent: true, alphaTest: 0.5, side: D, fog: false });
       const L = { poteaux: [], cocos: [], buis: [], houp: [], troncs: [], lamp: [], poteauxE: [], palapas: [], etals: [], bancs: [], mangles: [], flamants: [], barques: [], cubes: [], fanions: [], pickups: [], motos: [], transats: [], piscines: [] };
       // la vie : VIE = les fonctions (dt, voiture) du tick ; ce qui bouge porte userData.dyn (hors fusion du moteur, hors redécoupage final). Les listes ci-dessous sont remplies par le décor fixe et animées plus bas
       const VIE = [], GENS = [], PIN = [], PIL = [], D0 = new THREE.Object3D(), dyn = o => { o.userData.dyn = 1; o.frustumCulled = false; return o; }; D0.rotation.order = 'YXZ';
@@ -158,7 +158,7 @@
       // ---------- la place de la feria (à droite de la route, entre la rue et la halle) : étals au bord, chapelle, kiosque, scène, grande roue, manège ----------
       rangee(i17 - 2, i18 - 2 - i17 + 2, 1, 3, (s, i) => { const [x, z] = off(i, s.w + 2.6); L.etals.push([x, s.y - 0.05, z, face(s, 1), 1, 1, 1, FETE[i % 3]]); return 4.2; });
       { const s = S[i17 + 1], [x, z] = off(i17 + 1, s.w + 13); pose('chapelle', x, -0.05, z, face(s, 1)); } // au bord de la rue, là où on la voit en arrivant
-      pose('kiosque', 590, -0.05, 250, -Math.PI / 2); pose('scene', 578, -0.05, 276, -Math.PI / 2);
+      pose('kiosquePlage', 590, -0.05, 250, -Math.PI / 2); pose('scene', 578, -0.05, 276, -Math.PI / 2);
       pose('grandeRoue', 628, -0.05, 244, Math.PI / 2).scale.setScalar(1.6); pose('manege', 612, -0.05, 278); // la grande roue (38 m) dépasse des toits : on la voit de la rue. Fixes, sans animation : de près, la roue et le manège sont hors du champ de la caméra de course
       inst(h, h.geo('toit4'), col(0xc8452e, { side: D }), [[590, 4.7, 250, 0, 5.8, 2.6, 5.8]]); inst(h, h.geo('toitPalapa'), h.mat('toldo', { side: D }, '#e8468c', '#f4ecd8'), [[612, 5.4, 278, 0, 5.6, 2.2, 5.6]]);
       for (let k = 0; k < 14; k++) { const x = 560 + (k % 7) * 13 + rnd() * 3, z = 212 + (k / 7 | 0) * 66 + rnd() * 4; arbre(x, z, 9 + rnd() * 3, 7 + rnd() * 2, 0x3f7a32); }
@@ -225,7 +225,7 @@
       for (let k = 0; k < 150; k++) { const a = rnd() * 3.14, r = 650 + rnd() * 700; buisson(320 + Math.cos(a) * r, 380 + Math.sin(a) * r, 22 + rnd() * 18, 9 + rnd() * 7, -1); }
 
       // ---------- les repères communs, au centre de la boucle (D-1) ----------
-      pose('chateauEau', 300, -0.05, 168, Math.PI); pose('antenne', 440, -0.05, 300);
+      pose('chateauEauPlage', 300, -0.05, 168, Math.PI); pose('antenne', 440, -0.05, 300);
 
       // ---------- le fil continu (T-2) : une ligne de poteaux et de banderoles à droite de la route sur tout le tour ; guirlande d'ampoules dans la grotte ----------
       { const pts = [], amp = [], o = s => s.w + 1.4; let dernier = -99;
@@ -346,7 +346,7 @@
         { const xs = SALLE.map(p => p[0]), zs = SALLE.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), dx = Math.max(...xs) - x0, dz = Math.max(...zs) - z0;
           for (let k = 0; k < 420; k++) { const x = x0 + rnd() * dx, z = z0 + rnd() * dz; if (!dans(SALLE, x, z) || dans(PLG, x, z) || ecart(x, z) < 1.5) continue; const sc = 0.7 + rnd() * rnd() * 2.2; roc(x, -9.1 + sc * 0.5 + rnd() * 0.9, z, sc); } }
         for (let k = 0; k < AVANT.length; k += 2) roc(AVANT[k][0] + (rnd() - 0.5) * 3, -7.3 + rnd() * 0.5, AVANT[k][1] + (rnd() - 0.5) * 3, 0.6 + rnd() * 0.9);
-        colore(inst(h, h.geo('rocher'), PEAU.feuille, ROC), ROC);
+        colore(inst(h, h.geo('rocherPlage'), PEAU.feuille, ROC), ROC);
 
         // stalactites : des cônes de roche épais (pas d'aiguilles : elles scintillaient), enfoncés dans la voûte, jamais plus bas que 6,6 m au-dessus de la passerelle ; matière de roche ordinaire, éclairée comme le reste
         { const stal = [], xs = SALLE.map(p => p[0]), zs = SALLE.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), dx = Math.max(...xs) - x0, dz = Math.max(...zs) - z0;
@@ -453,7 +453,7 @@
         const rouleaux = [0, 1, 2, 3].map(k => flot(plan(1800, 1), mEc('ecumeLarge', k), 300, -0.04, -100)), ressac = flot(plan(1800, 1), mEc('ecumeMer', 5), 300, -0.03, -44);
         VIE.push(() => { rouleaux.forEach((o, k) => { const p = (TV / 15 + k / 4) % 1; o.position.z = -130 + 85 * p; o.scale.z = 4 + 7 * p; o.material.opacity = Math.min(1, p * 5, (1 - p) * 5); });
           const r = Math.sin(TV * 0.85); ressac.position.z = -44.4 + 2.1 * r; ressac.scale.z = 3.4 + 0.9 * r; });
-        const pl = PIL.filter(p => p[2] < -46 && ![505, 515, 525].includes(p[0]))   /* les pilotis du bord seulement : sous le tablier, personne ne les voit */, ec = dyn(inst(h, h.geo('disque'), h.mat('peinture', { c: 0xffffff, lum: 1, transparent: true, opacity: 0.5, depthWrite: false }), pl.map(p => [p[0], -0.1, p[2], 0, 1]))); ec.castShadow = ec.receiveShadow = false;
+        const pl = PIL.filter(p => p[2] < -46 && ![505, 515, 525].includes(p[0]))   /* les pilotis du bord seulement : sous le tablier, personne ne les voit */, ec = dyn(inst(h, h.geo('disquePlage'), h.mat('peinture', { c: 0xffffff, lum: 1, transparent: true, opacity: 0.5, depthWrite: false }), pl.map(p => [p[0], -0.1, p[2], 0, 1]))); ec.castShadow = ec.receiveShadow = false;
         VIE.push(() => { pl.forEach((p, k) => met([ec], k, p[0], -0.1, p[2], 0, 0.8 + 0.55 * (0.5 + 0.5 * Math.sin(TV * 1.3 + k * 1.7)))); ec.instanceMatrix.needsUpdate = true; });
       }
 
@@ -474,7 +474,7 @@
           maj([toile, queue, fil]); });
       }
       { // sous la halle (HA-5) : une piñata basse éclate en confettis au passage de la voiture
-        const iP = i18 + 21, sP = S[iP]; PIN.push([sP.x, sP.y + 5.4, sP.z, 0, 1.7, 1.7, 1.7, ROSE]); const kP = PIN.length - 1, pin = dyn(colore(inst(h, h.geo('bouee'), col(0xffffff), PIN), PIN));
+        const iP = i18 + 21, sP = S[iP]; PIN.push([sP.x, sP.y + 5.4, sP.z, 0, 1.7, 1.7, 1.7, ROSE]); const kP = PIN.length - 1, pin = dyn(colore(inst(h, h.geo('boueePlage'), col(0xffffff), PIN), PIN));
         const conf = grains(220, () => [sP.x + alea(1.5), sP.y + 5.4 + alea(1.2), sP.z + alea(1.5), alea(7), 1 + Math.random() * 4, alea(7), 2.2], { taille: 0.16, coul: [[0.91, 0.27, 0.55], [0.12, 0.71, 0.66], [0.95, 0.76, 0.19], [1, 1, 1]], g: 7 });
         let eclate = 0;
         VIE.push((dt, car) => { if (!eclate && pres(car, iP, 9)) { eclate = 1; conf.salve(); cache([pin], kP); pin.instanceMatrix.needsUpdate = true; } else if (eclate && loin(car, iP)) { eclate = 0; const p = PIN[kP]; met([pin], kP, p[0], p[1], p[2], p[3], p[4]); pin.instanceMatrix.needsUpdate = true; } });
@@ -549,10 +549,10 @@
       }
       // ---------- lots : une passe de dessin par forme ----------
       inst(h, h.geo('poteauBois'), mBois, L.poteaux); insts(h, 'cocotier', PEAU, L.cocos, { a: [0] }); colore(inst(h, h.geo('buisson'), grain('#ffffff', ['#e8e8e8', '#d8d8d8']), L.buis), L.buis);
-      colore(inst(h, h.geo('houppier'), grain('#ffffff', ['#e4e4e4', '#cacaca']), MANG), MANG);
+      colore(inst(h, h.geo('houppierPlage'), grain('#ffffff', ['#e4e4e4', '#cacaca']), MANG), MANG);
       insts(h, 'ceiba', PEAU, ARB[0], { teinte: 'feuille' }); insts(h, 'arbreSelva', PEAU, ARB[1], { teinte: 'feuille' });
-      insts(h, 'lampadaire', PEAU, L.lamp); insts(h, 'poteauElec', PEAU, L.poteauxE); insts(h, 'banc', PEAU, L.bancs); insts(h, 'etalPlaya', PEAU, L.etals, { teinte: 'toile' }); insts(h, 'mangle', PEAU, L.mangles);
-      insts(h, 'barque', PEAU, L.barques, { teinte: 'bande' }); colore(inst(h, h.geo('boite', 1, 1, 1), mCrepi, L.cubes), L.cubes); colore(inst(h, h.geo('fanion'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), L.fanions), L.fanions).castShadow = true;
+      insts(h, 'lampadaire', PEAU, L.lamp); insts(h, 'poteauElec', PEAU, L.poteauxE); insts(h, 'bancPlage', PEAU, L.bancs); insts(h, 'etalPlaya', PEAU, L.etals, { teinte: 'toile' }); insts(h, 'mangle', PEAU, L.mangles);
+      insts(h, 'barquePlage', PEAU, L.barques, { teinte: 'bande' }); colore(inst(h, h.geo('boite', 1, 1, 1), mCrepi, L.cubes), L.cubes); colore(inst(h, h.geo('fanion'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), L.fanions), L.fanions).castShadow = true;
       for (const o of h.scene.children.slice(n0)) if (o.isInstancedMesh && o.count > 120 && !o.userData.dyn) {
         const cases = new Map(), M4 = new THREE.Matrix4(), C = new THREE.Color();
         for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M4); const k = Math.floor(M4.elements[12] / 350) + ':' + Math.floor(M4.elements[14] / 350); if (!cases.has(k)) cases.set(k, []); cases.get(k).push(i); }

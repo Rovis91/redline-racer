@@ -179,7 +179,7 @@ pages/                outils web : ecoute.html (banc d'écoute) · editeur.html 
                       et leur code : pages/ecoute/, pages/editeur/
 assets/               fonts/ · samples/ (TR-808 d'origine) · icon.svg · ui.css (style commun des pages)
 vendor/               three/ (three.js r187) · peerjs.min.js
-tests/                test.js (physique) · test-cartes.js · test-langue.js · test-peripheriques.js · test-session.js
+tests/                test.js (physique) · test-cartes.js · test-langue.js · test-peripheriques.js · test-session.js · test-catalogues.js (un nom de forme ou de texture n'est défini qu'une fois)
 outils/               bancs de mesure, captures, générateurs, crochet de pré-commit (voir ci-dessous)
 docs/                 documentation : voir docs/INDEX.md
 local/                ignoré par git : musiques de référence, essais

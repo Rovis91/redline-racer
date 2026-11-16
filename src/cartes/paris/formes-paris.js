@@ -76,7 +76,7 @@
       ['fer', 0.12, 3.6, 0.12, 1.9, 1.8, 0.9], ['panneau', 1.3, 0.45, 0.1, 1.9, 3.4, 0.9], ['lampe', 0.35, 0.35, 0.35, 1.9, 3.85, 0.9]],
     // arc de triomphe : 45 m de large (X), 22 de profondeur (Z), 50 de haut. Grande arche de 14,6 m sous 29 m dans l'axe Z, arches latérales de 8,4 m sous 18,7 m dans l'axe X ;
     // quatre piles à socle et groupes sculptés, voûtes en gradins, corniche, frise, attique à écussons. Zones : pierre, relief (parties sculptées)
-    arc: () => {
+    arcParis: () => {
       const L = [];
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) L.push(['pierre', 15.2, 22, 6.8, sx * 14.9, 11, sz * 7.6, null, 1], ['pierre', 16, 1.4, 7.6, sx * 14.9, 0.7, sz * 7.6],
         ['relief', 8, 11, 0.6, sx * 14.9, 9.5, sz * 11.1], ['pierre', 15.8, 0.7, 7.4, sx * 14.9, 22.2, sz * 7.6]);

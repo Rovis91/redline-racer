@@ -48,7 +48,7 @@ Chaque session travaille dans son worktree et n'écrit que dans son périmètre 
 | voitures | `src/rendu/formes-voitures.js`, `src/rendu/textures-voitures.js` | section « voiture » de `src/moteur/game.js` | — |
 | départ | forme `depart` de `src/rendu/formes.js` | bloc « ligne et portique de départ » de `src/moteur/game.js` | — |
 
-`src/rendu/formes.js` et `src/rendu/textures.js` (catalogues communs) se lisent, ne se modifient pas — sauf la session « départ » pour sa forme. Les fichiers par carte complètent les catalogues par `Object.assign(FORMES, { … })` et `Object.assign(TEXTURES, { … })`, et le placement par `Object.assign(DECORS, { … })` ; les poseurs que les cartes partagent (`inst`, `insts`, `boite`, `terrain`…) sont dans `src/rendu/decors.js`. Personne ne touche à `src/audio/audio.js`.
+`src/rendu/formes.js` et `src/rendu/textures.js` (catalogues communs) se lisent, ne se modifient pas — sauf la session « départ » pour sa forme. Les fichiers par carte complètent les catalogues par `Object.assign(FORMES, { … })` et `Object.assign(TEXTURES, { … })` — un nom n'y existe qu'une fois dans tout le dépôt, sinon le dernier fichier chargé écrase l'autre en silence : on suffixe par la carte (`kiosquePlage`, `chapelleTerre`), `tests/test-catalogues.js` le vérifie —, et le placement par `Object.assign(DECORS, { … })` ; les poseurs que les cartes partagent (`inst`, `insts`, `boite`, `terrain`…) sont dans `src/rendu/decors.js`. Personne ne touche à `src/audio/audio.js`.
 
 ## Terminé quand
 

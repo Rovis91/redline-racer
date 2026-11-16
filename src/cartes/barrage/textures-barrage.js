@@ -139,7 +139,7 @@
     // garde-corps d'acier à barreaux (côté vide de la crête) : lisse haute, lisse basse, un barreau tous les 25 cm, un montant tous les 2 m ; le reste est à jour
     gardeCorps: (c = '#e8761e') => [32, 16, (g, o) => { const { R } = o; g.clearRect(0, 0, 32, 16); for (let x = 0; x < 32; x += 4) R(g, c, x, 0, 1, 16); R(g, c, 0, 0, 32, 2); R(g, c, 0, 13, 32, 1); R(g, '#8a4a14', 0, 0, 2, 16); }, 2],
     // la fresque du premier immeuble (mosaïque de pignon, années 70) : soleil et rayons, le mur du barrage, une ligne à haute tension, un ouvrier et une ouvrière de profil, le mot d'ordre du 1er mai
-    fresque: () => [96, 120, (g, o) => {
+    fresqueBarrage: () => [96, 120, (g, o) => {
       const { R, alea } = o, poly = (c, ...p) => { g.fillStyle = c; g.beginPath(); g.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) g.lineTo(p[k], p[k + 1]); g.fill(); };
       R(g, '#d8c9a0', 0, 0, 96, 120);
       for (let k = 0; k < 9; k++) { const a = -0.15 + k * 0.2; poly(k & 1 ? '#e0b060' : '#c9603c', 24, 26, 24 + Math.cos(a) * 130, 26 + Math.sin(a) * 130, 24 + Math.cos(a + 0.2) * 130, 26 + Math.sin(a + 0.2) * 130); } // rayons

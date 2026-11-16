@@ -25,16 +25,16 @@
     chevron: () => new THREE.PlaneGeometry(5, 2.5), pileViaduc: () => B(5, 1, 5, 24), tubeNeon: () => B(0.35, 7, 0.35), refletTube: () => new THREE.PlaneGeometry(7, 1.6),
     faisceau: () => { const g = new THREE.PlaneGeometry(26, 900); g.translate(0, 450, 0); return g; }, hologramme: () => new THREE.PlaneGeometry(90, 45),
     // mobilier de route
-    matLampadaire: () => B(0.3, 10, 0.3), teteLampadaire: (l = 3.2) => B(l, 0.25, 0.7), reverbere: () => B(0.25, 7, 0.25), lanterne: () => B(0.7, 0.8, 0.7),
-    catadioptre: () => B(0.18, 0.3, 0.18), cone: () => B(0.4, 0.7, 0.4), balise: () => B(0.5, 6.2, 0.5), murFresque: () => new THREE.PlaneGeometry(15.8, 5),
+    matLampadaire: () => B(0.3, 10, 0.3), teteLampadaire: (l = 3.2) => B(l, 0.25, 0.7), reverbere: () => B(0.25, 7, 0.25), lanterneRue: () => B(0.7, 0.8, 0.7),
+    catadioptre: () => B(0.18, 0.3, 0.18), coneRoute: () => B(0.4, 0.7, 0.4), balise: () => B(0.5, 6.2, 0.5), murFresque: () => new THREE.PlaneGeometry(15.8, 5),
     // végétation
     cedre: () => new THREE.ConeGeometry(3.6, 15, 5), tronc: () => B(0.5, 5.2, 0.5), houppier: () => new THREE.IcosahedronGeometry(3.4, 0),
     troncPalmier: () => B(0.55, 1, 0.55, 14), palme: () => new THREE.IcosahedronGeometry(4, 0),
     // véhicules et fret
     auto: () => B(4.1, 1.3, 1.75), conteneur: () => B(12, 2.6, 2.5), wagon: () => B(17, 4.2, 3.2), cheminee: () => B(0.8, 2, 2.2), clim: () => B(3, 2, 3.4), reservoir: () => new THREE.CylinderGeometry(2.2, 2.2, 4.4, 8),
-    remorque: () => B(8, 3.1, 2.5), cabine: () => B(2.2, 2.6, 2.4), feuxCamion: () => B(0.15, 0.5, 2.3),
+    remorque: () => B(8, 3.1, 2.5), feuxCamion: () => B(0.15, 0.5, 2.3),
     // grands repères
-    pyloneHT: () => B(1.6, 48, 1.6), brasHT: () => B(1, 1, 16), dome: (r, seg, ann) => new THREE.SphereGeometry(r, seg, ann, 0, 6.283, 0, 1.6),
+    brasHT: () => B(1, 1, 16), dome: (r, seg, ann) => new THREE.SphereGeometry(r, seg, ann, 0, 6.283, 0, 1.6),
 
     // ---------- assemblages ----------
     // piste (W = demi-largeur de chaussée)

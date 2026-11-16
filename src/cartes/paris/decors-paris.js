@@ -85,7 +85,7 @@
       // l'arc au milieu, grande arche dans l'axe de la traversée ; ses piles sont des obstacles (sim.js). Sa pierre est mise en lumière, dorée, comme à l'aube : on le voit du bout des avenues,
       // c'est le repère de la place (gris comme les façades, il s'y perdait)
       const dore = m => { m.emissive.setHex(0xffb860); m.emissiveMap = m.map; m.emissiveIntensity = 0.5; return m; };
-      h.pose('arc', { pierre: dore(h.mat('pierre')), relief: dore(h.mat('basRelief')) }, h.scene, [C[0], 0.02, C[1]]).forEach(m => m.rotation.y = PL.a);
+      h.pose('arcParis', { pierre: dore(h.mat('pierre')), relief: dore(h.mat('basRelief')) }, h.scene, [C[0], 0.02, C[1]]).forEach(m => m.rotation.y = PL.a);
       // ---- le terre-plein de l'arc (sim.js : place.ile) : dallage de granit clair, étoile à douze branches en pavés roses, cent bornes de granit reliées par des chaînes,
       // ouvertes dans l'axe de la grande arche ; sous l'arche, la dalle et la flamme ; dix candélabres. L'anneau de chaussée autour reste nu : c'est là qu'on glisse.
       { const [RI, OUV] = PL.ile, A0 = Math.PI / 2 - PL.a, cs = Math.cos(PL.a), sn = Math.sin(PL.a), P2 = (r, a) => [C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r];
@@ -156,7 +156,7 @@
       // une géométrie chacun : la pierre règle la densité de sa texture sur la boîte
       inst(h, h.geo('bloc'), h.mat('pierre'), corniche); inst(h, h.geo('bloc'), h.mat('zinc'), comble); inst(h, h.geo('cheminee'), h.mat('brique'), souches);
       inst(h, h.geo('bloc'), h.mat('matGris'), comble.map(([x, y, z, ry, sx, sy, sz]) => [x, y + sy / 2 + 0.05, z, ry, sx - 1.4, 0.1, sz - 1.4])); // le terrasson, plat, au-dessus du brisis
-      inst(h, h.geo('reverbere'), h.mat('fonte'), mats); inst(h, h.geo('lanterne'), h.mat('lanterne', LUM), lant);
+      inst(h, h.geo('reverbere'), h.mat('fonte'), mats); inst(h, h.geo('lanterneRue'), h.mat('lanterne', LUM), lant);
       inst(h, h.geo('tronc'), h.mat('tronc'), troncs); inst(h, h.geo('houppier'), h.mat('feuillage'), houp);
       const garees = autos.flatMap((l, i) => l.map(p => [...p, 1, 1, 1, [0x2a3a5a, 0x8a8a90, 0x5a1a1a, 0xd8d4c8][i]]));
       insts(h, 'voitureGaree', { caisse: h.mat('laque'), vitre: h.mat('vitreSombre'), chassis: h.mat('matGris'), roue: h.mat('roue'), pneu: h.mat('pneu'), feuRouge: h.mat('feuRouge', LUM), feuBlanc: h.mat('lampe', LUM) }, garees, { teinte: 'caisse' });
@@ -196,7 +196,7 @@
       { const s = S[iE], ox = -s.tz * sdE, oz = s.tx * sdE, [x, z] = bord(s, sdE, s.w + 3.7), rv = [], ln = [];
         h.pose('escalierButte', { marche: h.mat('pierre', {}, '#b8b0a0'), muret: h.mat('pierre'), fer: h.mat('fonte') }, h.scene, [x, s.y + 0.22, z]).forEach(m => m.rotation.y = Math.atan2(-ox, -oz));
         for (const [k, dy] of [[-0.6, 0], [8.4, 3.74]]) { const px = x + ox * k + s.tx * 2.3, pz = z + oz * k + s.tz * 2.3; rv.push([px, s.y + 0.22 + dy + 3.2, pz]); ln.push([px, s.y + 0.22 + dy + 6.8, pz]); h.lum(iE, px, s.y + dy + 6.5, pz, 0xffd05a, 15, 1.6); }
-        inst(h, h.geo('reverbere'), h.mat('fonte'), rv); inst(h, h.geo('lanterne'), h.mat('lanterne', LUM), ln); }
+        inst(h, h.geo('reverbere'), h.mat('fonte'), rv); inst(h, h.geo('lanterneRue'), h.mat('lanterne', LUM), ln); }
       // la boulangerie qui lève son rideau de fer quand on arrive : devanture, store, la lumière du fournil
       const rideau = (() => { const s = S[iB], [fx, fz] = bord(s, sdB, s.w + TYPES.rue.recul - 1.05), ry = h.across(s) - sdB * 1.5708, P = [fx, s.y + 0.22, fz, ry], sn = Math.sin(ry), cs = Math.cos(ry);
         inst(h, h.geo('devanture'), h.mat('devanture', {}, ...GENRES[1]), [P]); insts(h, 'store', { toile: h.mat('toileRayee', { side: THREE.DoubleSide }), fer: h.mat('fonte') }, [[...P, 1, 1, 1, 0x2a5a8a]], { teinte: 'toile' });

@@ -447,7 +447,7 @@
       radio: RADIO.terre,
       th: { decor: 'terre', fog: 0xe8c898, fogD: [150, 1500], sky: [[0, '#3f6fb0'], [0.3, '#3f6fb0'], [0.31, '#7fa8cc'], [0.42, '#7fa8cc'], [0.43, '#e8d0a0'], [0.49, '#e8d0a0'], [0.5, '#e8c898'], [1, '#e8c898']], stars: 0,
         astre: { dir: [-0.6, 0.35, 0.5], col: '#fff2c0', ombre: '#fff2c0', taille: 220 }, hemi: [0xc8d8f0, 0xb07848, 0.9], sun: [0xffd8a0, 0.9], phares: 0.15, bloom: 0.03, scan: 0.05,
-        murH: 0.9, poussiere: [0.82, 0.62, 0.42], route: ['#a86a3a', '#8a5228', '#96602f', '#b87a48', '#7a6a3a', '#8a7444', false, 'terre'], mur: ['#8a5a30', '#6a7a3a', '#7a4c28', '#6e4424'], depart: [0xe8482a, 0x3a2a1c, '#f4f0e0'],
+        murH: 0.9, poussiere: [0.82, 0.62, 0.42], routeTex: 'chausseeTerre', route: ['#a86a3a', '#8a5228', '#96602f', '#b87a48', '#7a6a3a', '#8a7444', false], mur: ['#8a5a30', '#6a7a3a', '#7a4c28', '#6e4424'], depart: [0xe8482a, 0x3a2a1c, '#f4f0e0'],
         hud: { y: '#ffffff', c: '#ffb03a', r: '#e8482a', fond: 'rgba(70,36,16,.9)', style: 'rallye', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'SPECIALE 7 · FIN DE JOURNEE'], titre: ['SPECIALE', 'DES OCRES'] } } },
     // Route royale (spec : docs/SPEC-PERSE.md) : Persépolis au couchant. La plaine en S (la seule droite), le grand escalier de la terrasse (pavés, +14 m), la Porte des Nations et son épingle,
     // la salle aux cent colonnes (une place où l'on roule partout entre 15 colonnes), le jardin au canal turquoise qui redescend, puis les coudes à 90° du bazar couvert (pavés, voûte de briques).

@@ -74,11 +74,10 @@
       for (let j = 0; j < 2; j++) { const [t, f, c] = l[(k + j) % l.length], x = j * 96; o.R(g, f, x, 0, 96, 20); o.R(g, '#08080c', x, 0, 1, 20); texte(g, t, x + 48, 10.5, 10, c, 88); } // 4 px de marge de chaque côté : un nom long (RADIO CAILLOU 88.8) ne déborde plus sur l'annonceur voisin
     }],
   });
-  // la piste en terre : th.route[7] = 'terre' repeint la chaussée commune en terre battue (ni rapiéçages, ni joints, ni bordures en damier).
+  // la piste en terre (th.routeTex = 'chausseeTerre', mêmes réglages que chaussee) : la chaussée commune repeinte en terre battue (ni rapiéçages, ni joints, ni bordures en damier).
   // Le dessin commun passe d'abord : il tire rnd autant de fois qu'avant, le décor ne bouge pas ; la terre est peinte avec alea, par-dessus
-  const chaussee = TEXTURES.chaussee;
-  TEXTURES.chaussee = (...a) => {
-    const t = chaussee(...a); if (a[7] !== 'terre') return t;
+  TEXTURES.chausseeTerre = (...a) => {
+    const t = TEXTURES.chaussee(...a);
     const [asph, spk, edge, dash, k1, k2] = a, d = t[2];
     t[2] = (g, o) => {
       d(g, o); const { R, alea, voile } = o, px = n => alea() * n | 0;
