@@ -165,7 +165,7 @@
         const G3 = [[105, YH, 65], [60, YH, 84], [15, YH, 65]]; // la voie passe au sud du premier, au nord du deuxième, au sud du troisième, à 4 m des cuves
         inst(h, h.geo('alternateur'), vert, G3); inst(h, h.geo('capot'), vertS, G3.map(([x, y, z]) => [x, y + 5, z]));
         { const tourne = G3.map(([x, y, z]) => { const g = new THREE.Group(); g.position.set(x, y, z); g.userData.dyn = 1; h.scene.add(g); h.pose('collier', mat('bandeOrange'), g, [0, 0, 0]); h.pose('excitatrice', rouge, g, [0, 6.8, 0]); // V-15 : le collier rayé et l'excitatrice tournent (hors de la fusion) ; les deux groupes à l'arrêt ne bougent pas
-            for (const a of [0, 2.1, 4.2]) h.pose('boite', mat('peinture', { c: 0xe8e4d8 }), g, [Math.cos(a) * 1.62, 8, Math.sin(a) * 1.62], 0.5, 1.6, 0.5).rotation.y = -a; return g; }); // trois plaques claires sur l'excitatrice : sans elles sa rotation ne se voit pas
+            for (const a of [0, 2.1, 4.2]) h.pose('boite', mat('peinture', { c: 0xe8e4d8 }), g, [Math.cos(a) * 1.62, 8, Math.sin(a) * 1.62], 0.5, 1.6, 0.5).rotation.y = -a; soude(h, g); return g; }); // trois plaques claires sur l'excitatrice : sans elles sa rotation ne se voit pas
           TICK.push(dt => { for (const g of tourne) g.rotation.y += dt * 2.6; }); }
         inst(h, h.geo('boite', 4, 1.4, 0.1), mat('lettres', {}, 'ГА', '#5fa89a', '#e8e4d8'), G3.flatMap(([x, y, z]) => [[x + 5.05, y + 3, z, Math.PI / 2], [x - 5.05, y + 3, z, Math.PI / 2]]));
         inst(h, h.geo('couvercle'), mat('peinture', { c: 0x8a9a6a }), [[82, YH + 0.06, 52], [38, YH + 0.06, 52], [128, YH + 0.06, 52], [-8, YH + 0.06, 52]]); // deux groupes à l'arrêt : couvercles au ras du sol
@@ -269,7 +269,7 @@
           for (const e of [-1, 1]) B(e * 5.5, 0.95, 4, 2.4, 0.3, 0.8, 0xc8281e); };
         // la grande roue du parc : 22 m, nacelles de couleur, guérite
         lieu(iF(220), -1, 12, 5, (B, mot, o) => { const g = new THREE.Group(); g.position.set(o.x, o.Y, o.z); g.rotation.y = o.r; h.scene.add(g); const jaune = mat('peinture', { c: 0xd8b820 }), fer = mat('peinture', { c: 0x3a5a7a });
-          const ro = new THREE.Group(); ro.position.set(0, 12.6, 0); ro.userData.dyn = 1; g.add(ro); ro.add(new THREE.Mesh(new THREE.TorusGeometry(10, 0.22, 5, 28), jaune)); for (let k = 0; k < 6; k++) h.pose('boite', jaune, ro, [0, 0, 0], 20, 0.16, 0.16).rotation.z = k * Math.PI / 6; // V-31 : la roue tourne (un tour en 40 s), les nacelles restent d'aplomb
+          const ro = new THREE.Group(); ro.position.set(0, 12.6, 0); ro.userData.dyn = 1; g.add(ro); ro.add(new THREE.Mesh(new THREE.TorusGeometry(10, 0.22, 5, 28), jaune)); for (let k = 0; k < 6; k++) h.pose('boite', jaune, ro, [0, 0, 0], 20, 0.16, 0.16).rotation.z = k * Math.PI / 6; soude(h, ro); // V-31 : la roue tourne (un tour en 40 s), les nacelles restent d'aplomb
           for (const e of [-1, 1]) for (const f of [-1, 1]) { const p = h.pose('boite', fer, g, [e * 2.4, 6.3, f * 1.1], 0.4, 13.6, 0.4); p.rotation.z = e * 0.37; } h.pose('boite', fer, g, [0, 12.6, 0], 1, 1, 2.6);
           { const nac = Array.from({ length: 12 }, (_, k) => mb(mob(), 0, 0, 0, 0, 1.5, 1.5, 1.3, [0xc8281e, 0x2a6aa8, 0xe8e4d8, 0x3a8a4a][k % 4])); let A = 0;
             TICK.push(dt => { A += dt * Math.PI / 20; ro.rotation.z = A; nac.forEach((q, k) => { const a = k * Math.PI / 6 + 0.26 + A, u = Math.cos(a) * 10; mobA(q, o.x + o.c * u, o.Y + 12.6 + Math.sin(a) * 10 - 0.9, o.z - o.sn * u, o.r); }); }); }
@@ -384,7 +384,7 @@
         bloc(gris, -12.2, -11.8, 148.8, 149.2, YB, YB + 14); drapeau(-12, YB + 12.5, 149.2, 4.4, 2.6); // V-13
         { const g = new THREE.Group(); g.position.set(-10, YB + 7.5, 274); g.userData.dyn = 1; h.scene.add(g); const P1 = (m, p, w, ht, d) => h.pose('boite', m, g, p, w, ht, d); // V-11 : l'antenne de veille en râteau, qui tourne vite (un tour en 4 s), vue dès la sortie de la halle
           P1(olive, [0, 2, 0], 0.5, 4, 0.5); P1(olive, [0, 4.4, 0], 11, 0.3, 0.3); P1(olive, [0, 6.6, 0], 11, 0.3, 0.3); for (let k = -5; k <= 5; k += 1.25) P1(mat('peinture', { c: 0xc8ccc0 }), [k, 5.5, 0], 0.16, 3.4, 0.16); P1(olive, [0, 5.5, -0.9], 11.6, 3.8, 0.1);
-          bloc(olive, -11.4, -8.6, 272.6, 275.4, YB + 7.5, YB + 8.7); TICK.push(dt => { g.rotation.y += dt * 1.05; }); }
+          bloc(olive, -11.4, -8.6, 272.6, 275.4, YB + 7.5, YB + 8.7); soude(h, g); TICK.push(dt => { g.rotation.y += dt * 1.05; }); }
         { const tr = []; for (let k = 0; k < 7; k++) { const z = 183 + k * 5.4; tr.push([4.5, YB + 1.7, z, 0, 5.4, 2.2, 2.6, 0x5a6844], [-0.1, YB + 1.5, z, 0, 2.4, 2.4, 2.5, kaki], [3, YB + 0.5, z, 0, 7.4, 1, 2.7, 0x1e2020]); } // sept camions bâchés, le nez vers la route : bâche, cabine, châssis
           for (const z of [229, 240]) tr.push([-6, YB + 1.2, z, 0, 7, 1.5, 3.1, kaki], [-5.4, YB + 2.3, z, 0, 2.6, 0.8, 1.8, kaki], [-9.2, YB + 2.4, z, 0, 4.6, 0.25, 0.25, 0x2a2e26]); // deux blindés, tourelle et canon
           const m = inst(h, h.geo('bloc'), mat('peinture'), tr), c = new THREE.Color(); tr.forEach((q, k) => m.setColorAt(k, c.setHex(q[7]))); m.instanceColor.needsUpdate = true; }
@@ -617,7 +617,7 @@
         TICK.push((dt, car, t) => { for (const [o, cx, cy, cz, R, w, ph] of OIS) { const a = t * w + ph; mobA(o, cx + Math.cos(a) * R, cy + Math.sin(a * 0.7) * 1.5, cz + Math.sin(a) * R, Math.atan2(-Math.cos(a), -Math.sin(a))); } }); }
       { // V-82 : un hélicoptère militaire fait le tour de la vallée (forme de terre), rotor qui tourne
         const heli = new THREE.Group(), rotor = new THREE.Group(), peauH = { caisse: mat('peinture', { c: 0x4a5a3a }), vitre: mat('vitreSombre'), chassis: gris, pale: gris }; heli.userData.dyn = 1; heli.scale.setScalar(2); rotor.position.y = 1.65; heli.add(rotor); h.scene.add(heli);
-        h.pose('helico', peauH, heli); h.pose('rotorHelico', peauH, rotor);
+        h.pose('helico', peauH, heli); h.pose('rotorHelico', peauH, rotor); soude(h, rotor); heli.remove(rotor); soude(h, heli); heli.add(rotor); // une passe par matière, rotor mis à part (il tourne)
         TICK.push((dt, car, t) => { const a = t * 0.085; heli.position.set(40 + Math.cos(a) * 170, 96 + Math.sin(a * 2) * 6, 500 + Math.sin(a) * 340); heli.rotation.y = Math.atan2(-Math.cos(a) * 340, -Math.sin(a) * 170); rotor.rotation.y += dt * 25; }); h.helicoP = heli.position; }
       { // V-64 : le câble-grue du chantier, tendu d'un versant à l'autre ; sa benne va et vient au-dessus de la vallée
         const A = [-430, hAt(-430, 470) + 22, 470], B = [470, hAt(470, 470) + 22, 470], lg = new THREE.BufferGeometry(), pts = []; for (let k = 0; k < 16; k++) for (const u of [k / 16, (k + 1) / 16]) pts.push(A[0] + (B[0] - A[0]) * u, A[1] + (B[1] - A[1]) * u - 60 * u * (1 - u), A[2]);
@@ -631,7 +631,7 @@
         const tour = [], orangeL = mat('lampe', { lum: 1, c: 0xff9a20 });
         for (const x of [-65, 120]) { const s = S[near(h, x, CZ - Math.sqrt(RA * RA - x * x))], g = new THREE.Group(); g.position.set(s.x, s.y + 21.6, s.z); g.userData.dyn = 1; h.scene.add(g); h.pose('boite', orangeL, g, [0, 0, 0], 2.8, 0.7, 0.7); h.pose('boite', gris, g, [0, -0.5, 0], 0.6, 0.6, 0.6); tour.push([g, 'y', 2.2]); const l = h.lum(IX.get(s), s.x, s.y + 14, s.z, 0xff8a20, 30, 1), c0 = l.c.clone(); TICK.push((dt, car, t) => { l.c.copy(c0).multiplyScalar(0.6 + 0.4 * Math.sin(t * 2.2)); }); } // le feu éclaire pour de vrai le portique et la chaussée dessous
         for (const i of [T0 + 24, T0 + 64]) for (const o of [-3.4, 3.4]) { const s = S[i], [x, z] = bord(s, 1, o), g = new THREE.Group(), ro = new THREE.Group(); g.position.set(x, s.y + 6.3, z); g.rotation.y = Math.atan2(-s.tz, s.tx); g.userData.dyn = 1; g.add(ro); h.scene.add(g);
-          const c = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 2.2, 10, 1, true), mat('peinture', { c: 0x6d726d, side: THREE.DoubleSide })); c.rotation.z = Math.PI / 2; g.add(c); h.pose('boite', noir, ro, [0, 0, 0], 0.12, 1.1, 0.24); h.pose('boite', noir, ro, [0, 0, 0], 0.12, 0.24, 1.1); tour.push([ro, 'x', 14]); }
+          const c = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.62, 2.2, 10, 1, true), mat('peinture', { c: 0x6d726d, side: THREE.DoubleSide })); c.rotation.z = Math.PI / 2; g.add(c); h.pose('boite', noir, ro, [0, 0, 0], 0.12, 1.1, 0.24); h.pose('boite', noir, ro, [0, 0, 0], 0.12, 0.24, 1.1); soude(h, ro); tour.push([ro, 'x', 14]); }
         TICK.push(dt => { for (const [g, ax, w] of tour) g.rotation[ax] += dt * w; }); }
       // ---------- le son du lieu (SON.lieux, SON.bref de audio.js) : sources posées dans le décor, entendues selon la distance et le côté ; événements liés au passage de la voiture ----------
       if (window.SON && SON.lieux) { const Vp = (x, y, z) => ({ x, y, z }), [RA, RB] = h.trains, coupe = S[P(K.rampe + 3)], camp = Vp(396, hAt(396, 362), 362), carr = S[(QA + QB) >> 1], tunM = S[(T0 + T1) >> 1];
