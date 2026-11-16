@@ -723,10 +723,12 @@
     g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('age', new THREE.BufferAttribute(A, 1));
     const d = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { col: { value: new THREE.Color(...col) }, ech: dEch, op: { value: op }, tl: { value: taille }, pr: { value: pres } },
       vertexShader: 'attribute float age; varying float a, f; uniform float ech, tl, pr; void main() { a = age; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; f = pr > 0.0 ? clamp(-p.z / pr - 1.0, 0.0, 1.0) : 1.0; gl_PointSize = age < 1.0 ? tl * ech * projectionMatrix[1][1] * (1.1 + 6.0 * age) / -p.z : 0.0; }',
-      fragmentShader: 'varying float a, f; uniform vec3 col; uniform float op; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || a >= 1.0) discard; gl_FragColor = vec4(col, (1.0 - r * r) * (1.0 - a) * min(1.0, 0.15 + a * 4.0) * op * f); }' })); d.frustumCulled = false; scene.add(d);
-    return { d, emit(x, y, z, vx, vy, vz) { const k = i++ % N; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); A[k] = 0; },
-      step(dt) { const fr = Math.exp(-frein * dt); for (let k = 0; k < N; k++) if (A[k] < 1) { const j = k * 3; A[k] += dt / vie; V[j] *= fr; V[j + 2] *= fr; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; }
-        g.attributes.position.needsUpdate = g.attributes.age.needsUpdate = true; } };
+      fragmentShader: 'varying float a, f; uniform vec3 col; uniform float op; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || a >= 1.0) discard; gl_FragColor = vec4(col, (1.0 - r * r) * (1.0 - a) * min(1.0, 0.15 + a * 4.0) * op * f); }' })); d.frustumCulled = false; d.visible = false; scene.add(d);
+    // vifs : particules en vie ; un nuage vide n'est ni dessiné (une passe de dessin par vue, reflets compris) ni renvoyé au GPU
+    let vifs = 0;
+    return { d, emit(x, y, z, vx, vy, vz) { const k = i++ % N; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); A[k] = 0; vifs = 1; d.visible = true; },
+      step(dt) { if (!vifs) return; const fr = Math.exp(-frein * dt); vifs = 0; for (let k = 0; k < N; k++) if (A[k] < 1) { const j = k * 3; A[k] += dt / vie; V[j] *= fr; V[j + 2] *= fr; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; vifs++; }
+        g.attributes.position.needsUpdate = g.attributes.age.needsUpdate = true; d.visible = vifs > 0; } };
   };
   const POUS = TH.poussiere && flou(480, TH.poussiere, 0.5), GERBE = TH.poussiere && T.surf.some(q => q.aq) && flou(500, [0.92, 0.93, 0.9], 0.4, 0.35), GERBE1 = GERBE && flou(900, [0.86, 0.85, 0.78], 0.45, 0.35, 0, 0.18, 2.5), ECUME = GERBE && flou(700, [0.9, 0.89, 0.83], 0.9, 0.4, 0, 0.15, 2), FUM = flou(600, [0.68, 0.68, 0.72], 0.55), poussiere = (...a) => POUS.emit(...a), FEU = TH.poussiere && TH.feuilles && (() => { /* th.feuilles : teintes des feuilles mortes que les voitures soulèvent (chapada). De petits carrés nets, opaques (les nuages flous se lisaient en halos) : ils montent, tournoient, retombent */
     const n = 260, P = new Float32Array(n * 3).fill(-1e4), V = new Float32Array(n * 3), L = new Float32Array(n), C = new Float32Array(n * 3), g = new THREE.BufferGeometry(); let i = 0;
@@ -758,7 +760,9 @@
   const VAPS = VAP.map(([x, y, z]) => { const c = new THREE.Color(0.2, 0.2, 0.23); let lb = null, db = 900;
     for (const l of LUMS) { const d = (l.x - x) ** 2 + (l.z - z) ** 2; if (d < db) { db = d; lb = l; } }
     if (lb) c.lerp(lb.c.clone().multiplyScalar(0.6 / Math.max(lb.c.r, lb.c.g, lb.c.b, 1e-3)), 0.7 * (1 - Math.sqrt(db) / 30));
-    return { f: flou(40, [c.r, c.g, c.b], 0.18, 4), x, y, z, t: 0 }; });
+    const f = flou(40, [c.r, c.g, c.b], 0.18, 4); // panache borné (5 m de montée, moins de 3 m de dérive, disques qui grossissent) : hors champ, il n'est pas dessiné (une passe par bouche sinon, Ville en a une trentaine)
+    f.d.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(x, y + 3, z), 10); f.d.frustumCulled = true;
+    return { f, x, y, z, t: 0 }; });
   // traits additifs, étirés le long de leur vitesse, tête vive et queue éteinte : étincelles du palier de glisse, lignes de vitesse de la nitro
   const VN = 400, VK = 11, vP = new Float32Array(VN * 6), vCo = new Float32Array(VN * 6), vS = new Float32Array(VN * VK), vGeo = new THREE.BufferGeometry(); let vi = 0;
   vGeo.setAttribute('position', new THREE.BufferAttribute(vP, 3)); vGeo.setAttribute('color', new THREE.BufferAttribute(vCo, 3));
@@ -1847,6 +1851,14 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const plein = state === 'title' || state === 'pause' || ses.raceEnd && state === 'race'; COM.c.hidden = !plein; if (!plein) return;
     hg = COM.g; hg.clearRect(0, 0, COM.c.width, HH); ecrans(COM.c.width);
   }
+  // affiche : décale les voitures de dec secondes (et l'horloge du trafic) pour l'image ; rends les remet où la physique les a laissées, sauf si quelqu'un les a déplacées entre-temps
+  const AFFV = [];
+  let decT = 0; // le trafic n'avance plus après l'arrivée (tTraf), les voitures si
+  const affiche = (cars, dec, trafic) => { AFFV.length = 0; if (!(dec > 0)) return dec; decT = trafic ? dec : 0; tTraf += decT;
+    for (const c of cars) { const x = c.x + c.vx * dec, z = c.z + c.vz * dec, th = c.th + (c.air ? 0 : (c.yaw || 0) * (Math.sign(c.vf) || 1) * dec); AFFV.push(c, c.x, c.z, c.th, x, z, th); c.x = x; c.z = z; c.th = th; }
+    return dec; };
+  const rends = dec => { if (!(dec > 0)) return; tTraf -= decT;
+    for (let i = 0; i < AFFV.length; i += 7) { const c = AFFV[i]; if (c.x === AFFV[i + 4] && c.z === AFFV[i + 5] && c.th === AFFV[i + 6]) { c.x = AFFV[i + 1]; c.z = AFFV[i + 2]; c.th = AFFV[i + 3]; } } AFFV.length = 0; };
   function frame(now) {
     const dt = state === 'pause' ? 0 : clamp((now - last) / 1000 || 0, 0, 0.1); last = Math.max(last, now); // en pause le temps s'arrête, l'image reste
     if (state === 'count') {
@@ -1880,6 +1892,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       }
     }
     if (race && state === 'race' && enLigne()) { if (invite()) NET.entree(VUES[0].inp); else NET.diffuse(race); }
+    // l'image montre chaque voiture à l'instant de l'image et non au dernier pas de 1/120 s : avancée du reste (acc) à sa vitesse, rendue au pas suivant (affiche / rends, en fin d'image).
+    // Sans ça le mouvement saccade dès que l'écran ne bat pas à un diviseur de 120 Hz (144 Hz : une image sur six n'avance pas ; 60 Hz qui hésite : 1 ou 3 pas) — regularite() de outils/perf.js
+    const AFF = affiche(race ? race.cars : VUES.map(v => v.moi), state === 'race' ? acc : 0, !ses.raceEnd);
     if (COM && race && race.elim && state === 'race') for (const vu of VUES) { const moi = vu.moi; // à deux, joueur éliminé depuis 3 s : sa vue passe sur le meneur, et le suit s'il change
       if (moi.out && race.t - moi.out > 3) { const m = race.cars.find(c => c.pos === 1); if (vu.car !== m) { vu.car = m; vu.cth = m.th; vu.carY = m.y; vu.spec = true; } } }
     const beat = SON.beat, pulse = SON.pulse; // battement calé sur le kick
@@ -1939,6 +1954,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       renderer.setScissor(0, (HH - 1) * KL, VUES[0].w * KL, 2 * KL); renderer.setClearColor(C); renderer.clear(true, false, false); renderer.setClearColor(0);
       couche();
     }
+    rends(AFF);
   }
   // Une vue : la caméra derrière sa voiture (plus basse, plus proche et plus grand-angle avec la vitesse), puis tout ce qui dans la scène dépend de qui regarde
   // (ciel, lune et son ombre, brouillard, lumière dynamique, feux lointains, pluie), son HUD, la scène dans sa cible et la passe finale.
