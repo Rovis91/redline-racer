@@ -61,7 +61,7 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 | Faisceau tourné vers la caméra | `h.beams` | ville `src/rendu/decors.js:238` |
 | Groupe mobile en une passe | `soude(h, grp, fam)` | `src/rendu/decors.js:30` |
 | Objet du décor renversable | `h.cassable(pièces, x, y, z, r, h, éclats)` | barils du stade, jarres de perse |
-| Écran qui passe la course en direct | `tick.direct(renderer)` (cible 320 × 136, une image sur quatre) | stade : trois écrans suspendus au bout des lignes droites (le cube et les écrans du fond ne se voyaient pas de la caméra de course) |
+| Écran qui passe la course en direct | `tick.direct(renderer)` (cible 320 × 136, une image sur quatre) | stade : cube vidéo suspendu au-dessus de l'aire, faces tournées vers le public, assez bas pour la caméra de course |
 
 ### Formes prêtes mais jamais posées
 

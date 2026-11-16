@@ -46,20 +46,17 @@
       const toit = h.mat('toitArene', LUM); boite(h, toit, X1 + RE - X0 + RW + 120, 1, Z1 - Z0 + 120, cx, HT + 0.5, cz);
       const peauF = { acier, lampe, treillis: h.mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide, rep: [(Z1 - Z0) / 6.2, 1] }, '#3a3e4a') };
       for (let x = -230; x <= 380; x += 70) h.pose('fermeToit', peauF, h.scene, [x, HT - 4.5, cz], Z1 - Z0 + 100);
-      // le cube d'affichage au-dessus de l'aire, et un écran géant à chaque bout de la salle (deux images qui alternent)
-      h.pose('cubeScore', { ecran: h.mat('tableauStade', LUM), acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [CX, HT - 30, CZ]);
+      // le cube vidéo : suspendu au toit au-dessus de l'aire centrale, ses quatre faces tournées vers les quatre côtés de la salle passent la course en direct au public.
+      // La piste passe entre l'aire et les tribunes : le joueur voit la face qui regarde sa tribune. Faces de 40 × 17 m, le bas à 7 m (à l'écart du raccourci, personne ne passe dessous) (le cube d'affichage d'avant,
+      // 24 × 13 m le bas à 26 m, n'occupait pas 1 % de l'image de la caméra de course) ; décalé de 30 m au sud de l'arche de feu pour que ses flammes ne le touchent pas.
+      // Une caméra de télévision suit la voiture et change de plan toutes les 4 s (hélicoptère, travelling, face, tribune au téléobjectif), rendue en 320 × 136,
+      // une image sur quatre, jusqu'à 400 m ; les écrans sont cachés pendant sa prise (ils ne peuvent pas se lire eux-mêmes). Un écran géant à chaque bout de la salle (deux images qui alternent)
+      const RTV = new THREE.WebGLRenderTarget(320, 136), tv = new THREE.PerspectiveCamera(30, 40 / 17, 1, 400), vif = new THREE.MeshBasicMaterial({ map: RTV.texture, fog: false });
+      const ecranT = h.mat('tableauStade', LUM), KX = CX - 5, KZ = CZ - 30, KY = 17, cube = h.pose('cubeScore', { ecran: ecranT, acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [KX, KY, KZ]);
+      cube.forEach(m => m.scale.set(40 / 24, 17 / 13, 40 / 24)); const geants = cube.filter(m => m.material === ecranT); geants.forEach(m => { m.material = vif; m.userData.dyn = 1; m.userData.ecranTV = 1; });
+      for (const a of [-1, 1]) for (const b of [-1, 1]) boite(h, acier, 0.3, HT - KY - 30, 0.3, KX + a * 15, (HT + KY + 30) / 2, KZ + b * 15); // les suspentes, du haut du cube au toit
       const ecranG = h.mat('ecranGeant', LUM); ecranG.map.repeat.set(1, 0.5);
       for (const x of [X1 + RE + 34, X0 - RW - 34]) boite(h, ecranG, 1, 18, 84, x, 50, cz);
-      // la course en direct sur trois écrans suspendus au-dessus de la piste, au bout des trois lignes droites, face à la voiture qui arrive : la caméra de course est basse,
-      // le cube et les écrans du fond n'y prenaient pas 2 % de l'image (plan.js, pixels comptés). 40 × 17 m, le bas à 12 m (au-dessus des sauts), pendus au toit.
-      // Une caméra de télévision suit la voiture et change de plan toutes les 4 s (hélicoptère, travelling, face, tribune au téléobjectif), rendue en 320 × 136,
-      // une image sur quatre, jusqu'à 400 m ; les écrans sont cachés pendant sa prise (ils ne peuvent pas se lire eux-mêmes)
-      const RTV = new THREE.WebGLRenderTarget(320, 136), tv = new THREE.PerspectiveCamera(30, 40 / 17, 1, 400), vif = new THREE.MeshBasicMaterial({ map: RTV.texture, fog: false });
-      const gEc = new THREE.PlaneGeometry(40, 17), geants = [3, 17, 23].map(p => { const s = S[pt(h, p)], y = s.y + 12, m = new THREE.Mesh(gEc, vif), a = Math.atan2(-s.tx, -s.tz); // face à qui arrive
-        m.position.set(s.x, y + 8.5, s.z); m.rotation.y = a; m.userData.dyn = 1; m.userData.ecranTV = 1; h.scene.add(m);
-        const dos = boite(h, acier, 41.4, 18.4, 1, s.x + s.tx * 0.6, y + 8.5, s.z + s.tz * 0.6); dos.rotation.y = a; // le caisson, derrière l'image
-        for (const sd of [-1, 1]) boite(h, acier, 0.25, HT - y - 17, 0.25, s.x - s.tz * sd * 18, (HT + y + 17) / 2, s.z + s.tx * sd * 18); // les suspentes
-        return m; });
       // la scène (elle ferme l'est de l'aire), le mur de la butte et l'arche de feu entre les deux : ce sont les piles de M.place
       const chev = h.mat('banderoleSaut', { lum: 1, rep: [4, 1] });
       h.pose('sceneArene', { beton, ecran: h.mat('banderoleStade', LUM, 4), bande: h.mat('peinture', { lum: 1, c: 0xffc21a }), chevrons: h.mat('banderoleSaut', { lum: 1, rep: [6, 1] }), acier,
@@ -75,7 +72,7 @@
       const gf = new THREE.PlaneGeometry(1, 1); gf.translate(0, 0.5, 0);
       const mf = new THREE.InstancedMesh(gf, h.mat('flamme', AD), feux.length), o3 = new THREE.Object3D(); mf.frustumCulled = false; mf.userData.dyn = 1; h.scene.add(mf);
       // deux éventails de lasers sous le cube, quatre faisceaux de poursuite qui balaient la piste, et les flashs des appareils photo dans les gradins
-      const lasers = [0x30ff70, 0xff30c0].map(c => h.pose('eventailLaser', { rayon: h.mat('peinture', { ...AD, c }) }, h.scene, [CX, HT - 38, CZ])[0]);
+      const lasers = [0x30ff70, 0xff30c0].map(c => h.pose('eventailLaser', { rayon: h.mat('peinture', { ...AD, c }) }, h.scene, [KX, KY - 11, KZ])[0]); // sous le cube vidéo
       const gc = new THREE.ConeGeometry(9, 56, 10, 1, true); gc.translate(0, -28, 0); const mc = h.mat('faisceau', AD);
       const cones = [[-60, 60], [80, 250], [220, 70], [330, 240]].map(([x, z]) => { const m = new THREE.Mesh(gc, mc); m.position.set(x, HT - 6, z); h.scene.add(m); return m; });
       const fl = []; for (let k = 0; k < 900; k++) { const p = grad[(h.rnd() * grad.length) | 0], t = h.rnd(), lx = (h.rnd() - 0.5) * 13 * p[4], lz = 2 + 26 * t, c = Math.cos(p[3]), s = Math.sin(p[3]); fl.push(p[0] + lx * c + lz * s, p[1] + 5.5 + 15 * t, p[2] - lx * s + lz * c); }
