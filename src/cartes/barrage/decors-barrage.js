@@ -160,7 +160,7 @@
         bloc(mat('solHalle'), HX0, HX1, HZ0, HZ1, YH - 2, YH - 0.2); // une dalle pleine dessous : aucun trou entre les dalles qui suivent la route
         // le sol : deux dalles de part et d'autre de la chaussée, qui la suivent (rien n'est posé sur la route)
         tranche(iH0 - 2, iH1 + 2, (i, l) => { ruban(i, l, s => -(s.w + 0.1), 0.03, s => -Math.max(s.w + 0.2, s.z - HZ0 - 1), 0.03, mat('solHalle'), 6); ruban(i, l, s => s.w + 0.1, 0.03, s => Math.max(s.w + 0.2, HZ1 - 1 - s.z), 0.03, mat('solHalle'), 6); });
-        { const gc = mat('glissiere', DS, ['#e8761e', '#1e1e1c', '#e8761e', '#c86a1a']); for (const sd of [-1, 1]) tranche(iH0 - 2, iH1 + 2, (i, l) => ruban(i, l, s => sd * (s.w + 0.4), 1, s => sd * (s.w + 0.4), 0, gc, 4)); } // la voie, bordée de garde-corps orange
+        { const gc = mat('glissiere', DS, ['#e8761e', '#1e1e1c', '#e8761e', '#c86a1a']); for (const sd of [-1, 1]) tranche(iH0 - 2, iH1 + 2, (i, l) => h.glis(sd, i, l, s => sd * (s.w + 0.4), 1, s => sd * (s.w + 0.4), 0, gc, 4)); } // la voie, bordée de garde-corps orange
         // les trois groupes côté mur : cuve vert d'eau, collier rayé, capot, excitatrice rouge, plaque
         const G3 = [[105, YH, 65], [60, YH, 84], [15, YH, 65]]; // la voie passe au sud du premier, au nord du deuxième, au sud du troisième, à 4 m des cuves
         inst(h, h.geo('alternateur'), vert, G3); inst(h, h.geo('capot'), vertS, G3.map(([x, y, z]) => [x, y + 5, z]));
@@ -185,7 +185,7 @@
       // ---------- la route : glissière continue hors ouvrages (comme touge) et ses catadioptres ; parapet de béton sur le pont et côté lac de la crête ; garde-corps ajouré côté vide ; trottoirs dans la cité ----------
       const para = mat('parapet', DS), glis = mat('glissiere', DS, h.TH.mur);
       const parapet = (a, b, sd) => tranche(a, b, (i, l) => { const o = s => sd * (s.w + 0.3), o2 = s => sd * (s.w + 0.9); ruban(i, l, o, 1.15, o, -2, para, 3); ruban(i, l, o2, 1.15, o2, -2, para, 3); ruban(i, l, o, 1.15, o2, 1.15, para, 3); });
-      const glissiere = (a, b, sd) => tranche(a, b, (i, l) => ruban(i, l, s => sd * (s.w + 0.4), 1.05, s => sd * (s.w + 0.4), 0.25, glis, 4));
+      const glissiere = (a, b, sd) => tranche(a, b, (i, l) => h.glis(sd, i, l, s => sd * (s.w + 0.4), 1.05, s => sd * (s.w + 0.4), 0.25, glis, 4)); // h.glis : la glissière du jeu, qui s'abîme aux chocs (ni regroupée ni fixe)
       const iP0 = Math.min(...pontI) - 12, iP1 = Math.max(...pontI) + 12, iM0 = T1 - 2, iM1 = Math.max(...murI) + 10, iV0 = P(K.entreeVille) - 6, iV1 = P(K.sortieVille) + 6; // pont, mur, cité (de iV0 à iV1 en passant par la ligne)
       const enVille = i => ((i - iV0 + N) % N) <= ((iV1 - iV0 + N) % N), surPont = i => i >= iP0 && i <= iP1, surMur = i => i >= iM0 && i <= iM1, enTunnel = i => i >= T0 - 2 && i <= T1 + 2;
       for (const sd of [-1, 1]) { parapet(iP0, iP1, sd); glissiere(iP1, T0 + 2, sd); glissiere(iM1, iV0, sd); glissiere(iV1, iH0 - 3, sd); glissiere(iH1 + 3, iP0, sd); }
