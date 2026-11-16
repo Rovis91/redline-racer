@@ -108,17 +108,10 @@
     ailesOiseau: (e = 1, co = 1, ha = 0.3) => { const g = new THREE.BufferGeometry(), P = []; for (const sd of [-1, 1]) { const a = [0.24 * co, 0, sd * 0.1], b = [-0.22 * co, 0, sd * 0.1], c = [0.14 * co, ha * e, sd * e], d = [-0.2 * co, ha * e, sd * e]; P.push(...a, ...b, ...d, ...a, ...d, ...c); }
       g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(24), 2)); g.computeVertexNormals(); return g; },
     // aigrette en vol : le corps à l'horizontale, le cou tendu, les pattes en arrière (les ailes : ailesV)
-    aigretteVol: () => [['plume', 1, 0.44, 0.48, 0, 0, 0], ['plume', 0.5, 0.22, 0.22, 0.65, 0.1, 0], ['plume', 0.26, 0.24, 0.24, 0.98, 0.16, 0], ['bec', 0.3, 0.09, 0.09, 1.24, 0.14, 0], ['plume', 0.5, 0.1, 0.16, -0.7, -0.04, 0]],
+    aigretteVol: () => [['plume', 0.8, 0.26, 0.3, 0, 0, 0], ['plume', 0.75, 0.1, 0.1, 0.72, 0.06, 0], ['plume', 0.2, 0.16, 0.14, 1.16, 0.1, 0], ['bec', 0.2, 0.1, 0.08, 1.34, 0.06, 0], ['patte', 0.95, 0.05, 0.08, -0.85, -0.03, 0]], // fin et long : c'est la ligne cou-corps-pattes qui fait l'échassier en vol
     // singe capucin assis : tronc, tête, museau clair, queue en crochet
     singe: () => [['poil', 0.42, 0.72, 0.42, 0, 0.36, 0], ['poil', 0.36, 0.36, 0.36, 0.04, 0.92, 0], ['face', 0.1, 0.22, 0.26, 0.2, 0.9, 0], ...paire(sd => ['poil', 0.1, 0.14, 0.1, 0.02, 1.12, sd * 0.16]),
       ...paire(sd => ['poil', 0.13, 0.5, 0.13, 0.08, 0.42, sd * 0.28]), ...paire(sd => ['poil', 0.42, 0.14, 0.14, 0.26, 0.08, sd * 0.17]), ['poil', 0.09, 1, 0.09, -0.26, -0.3, 0], ['poil', 0.3, 0.09, 0.09, -0.4, -0.8, 0]],
-    // l'onça (jaguar) couchée, la tête relevée : la voiture porte son nom et sa robe
-    onca: () => [['robe', 1.7, 0.5, 0.6, 0, 0.3, 0], ['robe', 0.5, 0.42, 0.46, 1, 0.6, 0], ['museau', 0.2, 0.2, 0.3, 1.3, 0.52, 0], ...paire(sd => ['tache', 0.1, 0.14, 0.1, 0.92, 0.86, sd * 0.16]),
-      ['robe', 1.1, 0.1, 0.1, -1.3, 0.12, 0.2, [0, 0.4, 0]], ...paire(sd => ['robe', 0.6, 0.16, 0.16, 0.75, 0.1, sd * 0.24]), ['tache', 1.2, 0.06, 0.4, -0.1, 0.57, 0]],
-    // toucan perché : corps noir, plastron blanc, grand bec orange
-    toucan: () => [['plume', 0.3, 0.5, 0.3, 0, 0.3, 0], ['plume', 0.26, 0.26, 0.26, 0.06, 0.66, 0], ['face', 0.1, 0.3, 0.24, 0.14, 0.42, 0], ['bec', 0.5, 0.14, 0.12, 0.42, 0.66, 0], ['plume', 0.34, 0.06, 0.16, -0.26, 0.14, 0]],
-    // caïman (jacaré) au ras de l'eau : le dos, la tête, la queue ; origine à la surface
-    jacare: () => [['peau', 1.6, 0.16, 0.5, 0, 0.02, 0], ['peau', 1.3, 0.12, 0.14, -0.1, 0.14, 0], ['oeil', 0.5, 0.05, 0.3, 1.2, 0.1, 0], ['peau', 0.8, 0.14, 0.36, 1.1, 0.02, 0], ['peau', 1.4, 0.1, 0.22, -1.4, 0, 0], ...paire(sd => ['oeil', 0.1, 0.1, 0.1, 0.86, 0.12, sd * 0.14])],
     // capybara debout : un tonneau sur quatre pattes courtes
     capivara: () => [['poil', 1.05, 0.6, 0.5, 0, 0.62, 0], ['poil', 0.46, 0.46, 0.42, 0.68, 0.78, 0], ['face', 0.14, 0.2, 0.3, 0.94, 0.72, 0], ...paire(sd => ['face', 0.1, 0.1, 0.08, 0.6, 1.04, sd * 0.14]), ...paire(a => paire(b => ['face', 0.14, 0.36, 0.14, a * 0.36, 0.18, b * 0.16])).flat()],
   });

@@ -38,6 +38,60 @@ Priorités : **I** indispensable, **B** bien, **b** bonus. « Socle n » renvoie
 
 ---
 
+## 0. Passe « caméra par défaut » (16 novembre)
+
+Règle de l'auteur, ajoutée à `METHODE-VIE.md` : on juge depuis la caméra de course, sur la trajectoire, sans jamais la déplacer. Chaque idée visuelle de la grille est repassée ici. **Cette section prime sur la grille du §2** : une idée « retirée » ou « son seul » ci-dessous ne doit plus être lue comme proposée.
+
+**Comment c'est mesuré.**
+- *Dans le champ* : calculé sur un tour lancé du pilote automatique (`sim.js`), caméra 6,5 m derrière la voiture à 3,2 m de haut, champ horizontal de ±44° (62° vertical en 16/9), portée limitée à 85 % de la fin du brouillard de la zone (`fogD`, `th.brume`). Le calcul ignore ce qui cache : il dit seulement où l'objet *pourrait* se voir.
+- *Vu* : constaté sur une capture de la caméra de course (`node outils/plan.js chapada @idx`, sans `--vue`). Les deux vues de côté utilisées pendant la réalisation (camp, bassin sacré) ne comptent plus.
+
+**Ce que la mesure apprend d'abord : la grande chute n'est dans le champ que de `idx` 853 à 881, soit 1,1 seconde.** Avant 853 elle est dans le brouillard du pont (portée 110 m), après 881 elle sort par la gauche du cadre. C'est la pièce maîtresse de la carte et la première demande de l'auteur. Tout ce qu'on y ajoute se joue dans cette seconde ; le son, lui, porte de 700 à 930. À traiter en décor ou en réglage (brouillard du pont moins dense, ou chute plus près de l'axe) : voir §5.
+
+| Idée | Dans le champ (`idx`, durée, au plus près) | Vu depuis la caméra de course | Décision |
+|---|---|---|---|
+| S5 vapeur, voile et nuage de la chute | 853 → 881, 1,1 s, 61 m | Oui (835 dans la brume, 860, 885 en bord gauche) | **Gardé** : indispensable, mais une seconde |
+| S5 embruns en travers du pont, gouttes d'objectif | sur la route, 840 → 900, 1,3 s | Oui (860, 885) | **Gardé** |
+| S5 vautours de la gorge | 816 → 849, 1,4 s, 51 m | Oui (835, 860), sur le ciel | **Gardé** |
+| S5 singes des obélisques du pont | 769 → 814, 2 s, 18 m | Oui, celui de gauche (806) ; sommets au bord haut du cadre de près | **Gardé**, bonus |
+| S5 tablier mouillé côté chute | sur la route | Non fait | **Retiré** : les planches ne lisent pas la mouillure |
+| S6 sol de la grotte mouillé | sur la route, 923 → 1069, 2,8 s | Oui (940, 1000) | **Gardé** |
+| S6 braseros des portails | 864 → 914, 1,9 s, 12 m | Oui (905) depuis qu'ils sont sortis de l'éboulis ; avant, masqués par les rochers | **Gardé** |
+| S6 chauves-souris | 872 → 922, 1,9 s, 9 m | Oui (915, 917) | **Gardé** |
+| S6 filets d'eau sur les côtes de roche | dans le tunnel | Non fait | **Retiré** : sombre, à 200 km/h |
+| S2 envol d'aigrettes | 155 → 201, 1,4 s, 18 m | Oui (200, 206), des deux côtés | **Gardé** |
+| S2 brume du matin | 162 → 193, 1 s, 42 m | À peine : elle se confond avec le brouillard de la zone | **Déclassé** en bonus ; à retirer si on élague |
+| S2 caïman | 176 → 222, 1,5 s, 16 m | Non : trop bas, il se confond avec les nénuphars | **Retiré** de l'image. Pas de son propre (les grenouilles disent le marais) |
+| S2 reflets sur l'eau du marais | sur la route et ses bords, 135 → 276 | Non fait (socle) | **Gardé** comme demande au socle : c'est tout le champ pendant 2,3 s |
+| S3 aras | 297 → 374, 4 s, 9 m | Oui (362), petits, en partie sous le feuillage | **Gardé** ; leur cri les annonce |
+| S3 paillettes du bassin sacré | 311 → 333, 1,2 s, 33 m | Non : le bassin est une bande au bord gauche du cadre (332). Validé sur une vue de côté seulement | **Retiré** |
+| S3 houppier du fromager qui remue | dans l'axe de la chicane | Non fait (socle) | **Retiré** : dans l'axe d'un freinage |
+| S4 feuilles qui tombent | devant la voiture, 537 → 598 et 647 → 768 | Oui (570, 700) | **Gardé** |
+| S4 canopée qui respire | au-dessus de la route | Non fait (socle) | **Gardé** comme demande au socle |
+| S4 vautours de la trouée | 585 → 609 | Non fait | **Retiré** : dans l'axe du freinage |
+| S1 feu de camp et fumée | 1732 → 24, 3 s, 11 m ; depuis la grille, à 70-140 m | Oui (10), petit à gauche ; pas vu à 30 (dépassé) | **Gardé** : c'est la grille. À vérifier voiture à l'arrêt |
+| S1 guirlande de lanternes | 1739 → 29, 2,8 s, 11 m | Oui (10, 45), au bord gauche de la route | **Gardé**, bonus (le balancement ne se lit qu'à l'arrêt) |
+| S1 feux du mât radio | 1750 → 14, 2 s, 58 m | Non : derrière les arbres et les tentes. Validé sur une vue de côté seulement | **Retiré** |
+| S1 toucan | 1703 → 1789, 3,1 s, 14 m | Présent sur le portique mais illisible (1785) | **Son seul** : son croassement sur la grille est écrit |
+| S7 éclat d'or de l'idole | 1124 → 1186, 2,5 s, 40 m | Oui (1165), dans l'axe | **Gardé**, discret |
+| S7 singes avant le saut | statue 1176 → 1251 (4 s, 11 m) ; obélisques 1229 → 1279 (2,6 s, 17 m) | Un seul, à droite (1264, 1270) | **Déclassé** : garder ceux des obélisques, retirer ceux de la statue et des degrés |
+| S8 embruns des seuils, écume vive | 1254 → 1377, 5,9 s, sur la route | Oui (1290, 1322, 1340) | **Gardé** |
+| S8 branches au fil de l'eau | sur la rivière, 1290 → 1396 | Oui (1300, 1376) | **Gardé**, bonus |
+| S8 onça sur le tronc | 1343 → 1388, 2 s, 33 m | Petite tache ocre à droite (1376) : non validée | **Son seul** (le râle est écrit), ou la poser sur un rocher de rive à 10 m de la route |
+| S9 traînées mouillées | sur la route | Oui sous l'arc (1408), faible ailleurs (272, 1425) | **Gardé** |
+| S9 vautours posés sur le temple | 1445 → 1486, 2,2 s, 67 m | Non : trop loin | **Retiré** |
+| S10 paillettes et sillages du gué | sur la route, 1590 → 1635, 1,1 s | Oui (1608, 1612) | **Gardé** |
+| S10 capybaras | 1547 → 1612, 2,9 s, 21 m | Oui (1612), à droite dans l'eau | **Gardé**, bonus |
+| S10 barque qui tangue | 1583 → 1637, 2,3 s, 19 m | La barque se lit comme une planche ; le tangage ne se voit pas | **Retiré** (garder seulement la barque remontée à la surface) |
+
+**Bilan.** Gardés : 19. Déclassés : 2. Passés en son seul : 2. Retirés : 10, dont six jamais faits. Aucune idée de son n'est touchée par la règle.
+
+**État réel : ces idées sont déjà réalisées.** L'auteur les a validées dans cette session le 15 novembre et la réalisation est sur la branche `vie-chapada` (compte rendu : `VIE-chapada-REALISATION.md`). Si l'auteur confirme cette passe, il reste à retirer du code : caïman, paillettes du bassin sacré, feux du mât radio, toucan, onça (ou la déplacer), vautours du temple, tangage de la barque, singes de la statue et des degrés. Rien n'a été retiré : aucun code touché depuis ce message.
+
+**Ce que je n'ai pas vérifié.** Le calcul du champ ignore l'occultation et prend la trajectoire du pilote automatique : un joueur qui coupe autrement voit un peu autre chose. Le champ s'élargit de 10° à pleine vitesse (`game.js:1951`) : les fenêtres sont donc un peu plus longues en course. La vue depuis la grille, voiture à l'arrêt, n'a pas été capturée.
+
+---
+
 ## 1. État des lieux : ce qui bouge déjà
 
 **Bon, à garder tel quel.**
@@ -312,6 +366,9 @@ Constats faits sur les plans, sans solution détaillée : c'est le travail de `M
 - **Le retour au camp (S10, 1640 → 1780)** : sept secondes de forêt nue entre le gué et le portique (plans 19, 20). Les « traces de l'expédition » (`decors-chapada.js:148` : une caisse, une barque) ne se voient pas à l'image.
 - **Le haut de la descente (S7, 1069 → 1125)** : la sortie de grotte débouche sur une ligne droite de forêt sans rien avant l'idole (plan 13).
 - **Le camp vu de la route** : sur les plans 1780, 15, 45 et 60, on ne voit ni les tentes, ni le feu, ni les 4×4. Ils sont à gauche, derrière le sous-bois, hors du champ de la caméra de course. Le camp ne « pose » pas l'ambiance au départ lancé ; à vérifier depuis la grille.
+
+**Vu trop peu de temps.**
+- **La grande chute** n'est dans le champ de la caméra de course que de `idx` 853 à 881 (1,1 s) : avant, le brouillard du pont la cache (portée 110 m pour un objet à 160 m) ; après, elle sort par la gauche. Deux leviers de décor : alléger `th.brume` sur le pont (`[29, 34, 0.68]`), ou rapprocher le cirque de l'axe du pont. Mesure : §0.
 
 **Trop chargé ou cassé.**
 - **Sortie de la grotte (`idx` 1068)** : de grands aplats orange et beige, sans texture, barrent l'image au portail de sortie. On dirait la façade ou un rocher de l'éboulis vu de l'intérieur, à contre-face. À regarder en premier : c'est un défaut visible à chaque tour.
