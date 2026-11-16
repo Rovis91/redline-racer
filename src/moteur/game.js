@@ -862,7 +862,9 @@
   ];
   let pique = null, piqueT = 0; // pique = { s : texte, c : couleur, T : temps restant à l'écran } ; piqueT : délai avant la suivante
   const VOIX = [[110, 7], [160, 10], [240, 8]]; // voix radio de chaque rival (SON.radio) : hauteur en Hz et syllabes par seconde — grave et posé, nerveux, jeune
-  const pic = (c, ev) => { if (c.k < 0 || c.k > 2 || piqueT > 0) return; const L = PIQUES[c.k][ev], l = L[Math.random() * L.length | 0]; pique = { n: OPP[c.k][0], s: l, c: OPP[c.k][1], T: 3 }; piqueT = 7; SON.radio(Math.min(10, Math.ceil(l.split(' ').length * 1.6)), ...VOIX[c.k]); };
+  const dits = new Set(); // répliques déjà dites dans cette course (donnees/repliques.js : celles de plus, par caractère, par événement et par carte ; une réplique ne revient qu'une fois sa liste épuisée)
+  const pic = (c, ev, E) => { if (c.k < 0 || c.k > 2 || piqueT > 0) return; const p = REPL.choisis(E || [...PIQUES[c.k][ev], ...REPL.rival[c.k][ev]], dits), l = typeof p === 'string' ? p : p[0]; pique = { n: OPP[c.k][0], s: l, c: OPP[c.k][1], T: 3 }; piqueT = 7; SON.radio(Math.min(10, Math.ceil(l.split(' ').length * 1.6)), ...VOIX[c.k]); };
+  const picE = (E, p = 1) => { const r = race.cars.filter(c => c.k >= 0 && c.k < 3 && !c.out); if (r.length && Math.random() < p) pic(r[Math.random() * r.length | 0], '', E); }; // un événement du joueur : un rival au hasard le commente (p : chance)
   const J1 = ['J1', TH.hud.y], pil = c => c.k >= 0 ? OPP[c.k] : J1, modele = c => c.k >= 0 ? opps[c.k] : carG;
   // les voitures humaines, une par place de joueur (vu.hu de la vue de rang n : HUM[n]) : modèle, caisse (roulis), roues, feu stop, flammes de nitro et traînées. Une copie de carG a les mêmes enfants dans le même ordre : caisse, quatre roues, deux flammes.
   // Le joueur 2 a donc toute l'animation du joueur 1, alors que les adversaires gardent leurs roues fixes
@@ -1368,7 +1370,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (race) race.cars.forEach((c, i) => { c.k = i < nj ? (i ? 2 + i : -1) : i - nj; c.rl = c.rlT = c.bl = 0; }); // et ses tours : dernier tour compté, son heure, meilleur tour (voir frame) // rang de chaque voiture dans OPP et opps : le joueur 2 prend le dernier modèle, les rivaux les premiers
     const seule = race ? null : newCar(T); VUES.forEach((vu, i) => { suit(vu, race ? race.cars[i] : seule); vu.gear = 0; vu.splitMsg = null; }); VUES[0].moi.manual = manuel1(); // (hors course, un mode sans rivaux lancé à deux : les deux vues suivent la seule voiture)
     state = 'count'; count = 3; shown = 0; tTraf = 0; acc = 0; dgRaz();
-    pique = null; piqueT = 0; if (race && enCourse() && VUES.length === 1 && !demo && !enLigne()) { const r = race.cars.filter(c => c.k >= 0 && c.k < 3); pic(r[Math.random() * r.length | 0], 'grille'); }
+    pique = null; piqueT = 0; dits.clear(); if (race && enCourse() && VUES.length === 1 && !demo && !enLigne()) { const r = race.cars.filter(c => c.k >= 0 && c.k < 3); pic(r[Math.random() * r.length | 0], 'grille'); }
   }
   // Mode démo : à l'écran titre (accueil ou menu principal, en solo), DEMO_ATTENTE secondes sans rien toucher, le pilote automatique court une Course, carte après carte dans l'ordre de la nuit (SOIREE).
   // Rien n'est enregistré (une Course n'écrit rien) et le mode choisi au menu ne bouge pas. Une touche, un bouton ou un clic rend l'écran d'où l'on venait, sur la carte d'où l'on venait.
@@ -1914,7 +1916,15 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (vu && ln < race.laps) vu.result = { n: ln, t: lt, pos: c.pos, of: vivantes().length, T: 5, b: bilan(vu) };
     }
     if (state === 'race' && race && VUES.length === 1 && !demo && !enLigne() && !car.fin && !car.out) for (const c of race.cars) { // répliques des rivaux : un dépassement dans un sens ou dans l'autre
-      const d = c.dist - car.dist; if (c === car || c.fin || c.out || Math.abs(d) < 3) continue; const dev = d > 0; if (c.dev !== undefined && dev !== c.dev) pic(c, dev ? 'passe' : 'double'); c.dev = dev; }
+      const d = c.dist - car.dist; if (c === car || c.fin || c.out) continue; if (Math.abs(d) < 10) { if ((c.pro = (c.pro || 0) + dt) > 4) { c.pro = -30; pic(c, '', REPL.evt.serre); } } else if (c.pro > 0) c.pro = 0; // collé au joueur plus de 4 s : une fois, puis 30 s de répit
+      if (Math.abs(d) < 3) continue; const dev = d > 0; if (c.dev !== undefined && dev !== c.dev) pic(c, dev ? 'passe' : 'double'); c.dev = dev; }
+    if (state === 'race' && race && VUES.length === 1 && !demo && !enLigne() && !car.fin && !car.out) { // les autres événements du joueur, déjà connus du moteur : mur, contact, nitro, passage de ligne, saleté
+      if (car.nWall > (car.nwv | 0)) { car.nwv = car.nWall; picE(REPL.evt.choc, 0.6); }
+      if (car.bump > 2) { if (!car.bmp) picE(REPL.evt.bump); car.bmp = 1; } else car.bmp = 0;
+      if (car.boost > 0) { if (!car.nit_) picE(REPL.evt.nitro, 0.35); car.nit_ = 1; } else car.nit_ = 0;
+      if (car.lap !== car.lapV) { const n = vivantes().length, ev = car.lap === race.laps ? (car.pos === 1 ? 'dernierTete' : car.pos === n ? 'dernierQueue' : 'dernier') : car.pos === 1 ? 'tete' : car.pos === n ? 'queue' : 'lieu'; if (car.lapV) picE(ev === 'lieu' ? REPL.carte[M.id] : REPL.evt[ev]); car.lapV = car.lap; }
+      if (race.t > 20 && !dits.has('lieu') && dits.add('lieu')) picE(REPL.carte[M.id]); // une réplique du décor vers 20 s
+      if (!dits.has('sale') && saleDe(carG).n > 0.6 && dits.add('sale')) picE(REPL.evt.sale); }
     if (state === 'race' && mode === 'solo') {
       const sp = ses.enregistre(car, carY); if (sp) J.splitMsg = { ...sp, T: 2.5 };
     }

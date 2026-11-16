@@ -47,6 +47,7 @@
     'ARENE COUVERTE · COMPLET': 'INDOOR ARENA · SOLD OUT', 'COL FERME': 'PASS CLOSED', 'AUBE': 'DAWN', '5 H 30': '5:30 AM', 'SPECIALE 7 · FIN DE JOURNEE': 'STAGE 7 · LATE AFTERNOON', 'HEURE DOREE': 'GOLDEN HOUR',
     'ROUTE ROYALE': 'ROYAL ROAD', 'COUCHANT': 'SUNSET', 'BARRAGE': 'DAM', 'VIDANGE DE PRINTEMPS': 'SPRING RELEASE', '6 H 40': '6:40 AM', 'MANUSCRIT': 'MANUSCRIPT', 'LA CITE PERDUE': 'THE LOST CITY', 'MIDI': 'NOON',
   };
+  if (G.REPL) for (const L of [...G.REPL.rival.flatMap(r => Object.values(r)), ...Object.values(G.REPL.evt), ...Object.values(G.REPL.carte)]) for (const [fr, en] of L) EN[fr] = en; // répliques de donnees/repliques.js : [français, anglais]
   const EN_RX = new RegExp('(?<![A-Z0-9])(' + Object.keys(EN).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![A-Z])', 'g');
   const ORD = n => n + (n % 100 > 10 && n % 100 < 14 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
   const traduit = (s, langue) => langue !== 'en' || typeof s !== 'string' ? s : s.replace(/[À-ÖØ-Ýà-öø-ý]/g, c => c.normalize('NFD')[0]).replace(/(\d+)ER?(?![A-Z])/g, (_, n) => ORD(+n))
