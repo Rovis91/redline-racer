@@ -1,6 +1,13 @@
 // Textures propres à « wangan » : complète le catalogue de textures.js, mêmes conventions. Voir METHODE-DECOR.md.
 (() => {
   Object.assign(TEXTURES, {
+    // dalles claires du quartier et de la promenade (tuile de 8 m, 8 px/m ; trottoir, 16 px étirés sur des centaines de mètres, en faisait 0,1) :
+    // dalles de 1 m à joints, teintes inégales, quelques taches ; peu contrasté, c'est un sol
+    dallesQuai: () => [64, 64, (g, { R, alea, voile }) => {
+      R(g, '#a09888', 0, 0, 64, 64);
+      for (let y = 0; y < 64; y += 8) for (let x = (y & 8) ? 4 : 0; x < 64 + 4; x += 8) { const v = alea() * 14 - 7 | 0; R(g, `rgb(${184 + v},${176 + v},${162 + v})`, x % 64, y + 1, 7, 7); if (x % 64 > 57) R(g, `rgb(${184 + v},${176 + v},${162 + v})`, 0, y + 1, x % 64 - 57, 7); }
+      voile(g, 0.12, () => { for (let i = 0; i < 300; i++) R(g, alea() < 0.5 ? '#000' : '#fff', alea() * 64 | 0, alea() * 64 | 0, 1, 1); for (let i = 0; i < 6; i++) R(g, '#000', alea() * 56 | 0, alea() * 56 | 0, 4 + (alea() * 6 | 0), 3 + (alea() * 5 | 0)); });
+    }, 8],
     // sol du port, une tuile de 32 m : dalles de béton de 4 m aux teintes inégales et joints sombres, taches d'huile, flaques sombres et lisses,
     // une paire de rails noyés (portiques sur rails), une ligne jaune de voie de circulation et des cases blanches de stockage
     solPort: () => [128, 128, (g, { R, alea }) => {

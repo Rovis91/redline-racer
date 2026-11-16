@@ -270,7 +270,7 @@
       { const X0 = 1040, X1 = 1720, ZQ = CH0 - 2; let hz = 31; const al = () => (hz = hz * 16807 % 2147483647) / 2147483647;
         const dansTour = (x, z, m) => tl.some(l => l.some(t => Math.abs(x - t[0]) < t[4] / 2 + m && Math.abs(z - t[2]) < t[6] / 2 + m));
         const terre = (x, z, m = 6) => g.dAt(x, z) > W + m && g.hAt(x, z) > -1.5 && z < ZQ - 1 && !dansTour(x, z, 2);
-        boite(h, M('trottoir'), X1 - X0, 0.3, ZQ + 230, (X0 + X1) / 2, -0.4, (ZQ - 230) / 2); // dalles claires sur tout le quartier (au-dessus des rues, sous la route qui monte)
+        boite(h, M('dallesQuai'), X1 - X0, 0.3, ZQ + 230, (X0 + X1) / 2, -0.4, (ZQ - 230) / 2); // dalles claires sur tout le quartier (au-dessus des rues, sous la route qui monte)
         boite(h, beton, X1 - X0, 4, 3, (X0 + X1) / 2, -2, ZQ + 1.5); // le quai
         const palmT = [], palmP = [], bancs = [], rev = [], bornes = [], feux = [], autos = [], stores = [], terr = [], gens = [], lumF = [], lumC = [];
         for (let x = X0 + 8; x < X1; x += 16) { if (!terre(x, ZQ - 4, 3)) continue; bornes.push([x, -0.25, ZQ - 2]); feux.push(x, 0.8, ZQ - 2); // bornes du quai, comme à la marina
@@ -333,7 +333,7 @@
       const roue2 = new THREE.Points(rg, new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, vertexColors: true, fog: false })); roue2.frustumCulled = false; rotor.add(roue2);
       // le pied de la roue : esplanade dallée, guichets, manège qui tourne, file d'attente, guirlandes ; la roue sort de la terre gardée entre les deux bassins de la marina
       const manege = new THREE.Group(); manege.userData.dyn = 1; manege.position.set(672, 0.05, 46); h.scene.add(manege);
-      { boite(h, M('trottoir'), 150, 0.3, 46, 620, -0.1, 37);
+      { boite(h, M('dallesQuai'), 150, 0.3, 46, 620, -0.1, 37);
         h.pose('carrousel', { socle: M('planches', { c: 0xd8b07a }), mat: M('metalClair', { c: 0xe8c040 }), toit: M('metalClair', { c: 0xc8304a }), barre: M('metalClair', { c: 0xe8c040 }), cheval: M('metalClair', { c: 0xf4f0ea }) }, manege);
         const lm = [], lc = []; for (let k = 0; k < 40; k++) { const a = k / 40 * 6.283; lm.push(Math.cos(a) * 8, 6.4, Math.sin(a) * 8); lc.push(...[[1, 0.85, 0.3], [1, 0.3, 0.6], [0.3, 0.9, 1]][k % 3]); }
         const mg2 = new THREE.BufferGeometry(); mg2.setAttribute('position', new THREE.Float32BufferAttribute(lm, 3)); mg2.setAttribute('color', new THREE.Float32BufferAttribute(lc, 3));
@@ -362,7 +362,7 @@
       const fete = []; // groupes de guirlandes du yacht, que tick fait clignoter tour à tour
       { const bords = [[30, 540], [700, 1040]], blancB = M('metalClair', { c: 0xf2f0ea }), hub = M('tourFenetres', LUM, ['#ffd27a', '#f4f1e0']), planches = M('planches', { c: 0xb89a70 });
         for (const [x0, x1] of bords) { boite(h, eau, x1 - x0, 1, CH0 - MQ, (x0 + x1) / 2, -3.5, (MQ + CH0) / 2); boite(h, beton, x1 - x0, 4, 3, (x0 + x1) / 2, -2, MQ); // l'eau du bassin et son quai
-          boite(h, M('trottoir'), x1 - x0, 0.3, MQ - W - 6.5, (x0 + x1) / 2, -0.1, (MQ - 1.5 + W + 5) / 2); } // la promenade, de la route au quai
+          boite(h, M('dallesQuai'), x1 - x0, 0.3, MQ - W - 6.5, (x0 + x1) / 2, -0.1, (MQ - 1.5 + W + 5) / 2); } // la promenade, de la route au quai
         const bornes = [], feux = [], pontons = [], voiliers = [], vedettes = [];
         for (const [x0, x1] of bords) {
           for (let x = x0 + 6; x < x1; x += 15) { bornes.push([x, 0, MQ - 2]); feux.push(x, 1.05, MQ - 2); if ((x - x0) % 30 < 15) h.lum(near(h, x, 0), x, 3, MQ + 4, 0xffe0a8, 36, 2.2); } // bornes de quai ; une sur trois éclaire (jusqu'à la route)
