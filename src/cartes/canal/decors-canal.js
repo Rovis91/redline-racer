@@ -51,7 +51,8 @@
       // la foule (bras levés, ola) : src/rendu/foule.js, partagé avec le stade
       // shortcut: la ola suit la voiture que le décor reçoit (celle du joueur), pas la tête de course
       const foulée = POSEURS.foule(h, { ola: { mods: olaI, larg: 14, prof: 27.8, pente: Math.atan2(14, 24), y: 10, z: 14, ecart: (k, car) => Math.max(0, 1 - Math.abs((olaI[k][7] - car.idx + N * 1.5) % N - N / 2 - 14) / 28) }, // vague centrée 14 échantillons (28 m) devant la voiture
-        etages: [{ mat: foule, f1: 0.0021, f2: 0.0057, ph: 0, seuil: 0.7 }, { mat: foule2, f1: 0.0017, f2: 0.0049, ph: 2, seuil: 0.5 }] });
+        etages: [{ mat: foule, f1: 0.0021, f2: 0.0057, ph: 0, seuil: 0.7 }, { mat: foule2, f1: 0.0017, f2: 0.0049, ph: 2, seuil: 0.5 }],
+        pancartes: { double: [['ALLEZ !', '#f4f0e0', '#e83f8c'], ['VAS-Y !', '#ffc04a', '#1a1420'], ['BRAVO !', '#2aa39a', '#f4f0e0']], tete: [['N°1', '#ffc04a', '#1a1420'], ['EN TÊTE !', '#e83f8c', '#f4f0e0']], choc: [['AÏE !', '#f4f0e0', '#1a1420'], ['OUCH', '#1a1420', '#ffc04a']] } });
 
       // --- le parking derrière les tribunes : des milliers de voitures, des camping-cars au bout des virages ---
       const autos = [], cc = [], COUL = [0xf4f0e0, 0x1a1a1e, 0xc8102e, 0x9aa0a8, 0x1848c8, 0x5a5e66, 0xd8d0c0, 0x2a5a3a, 0xffc04a];

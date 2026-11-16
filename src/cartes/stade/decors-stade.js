@@ -116,7 +116,9 @@
       // shortcut: elle suit la voiture que le décor reçoit (celle du joueur), pas la tête de course ; il faudrait que game.js passe la voiture de tête au décor
       // (code de la foule et de la ola : src/rendu/foule.js, partagé avec canal)
       const ag = grad.map(p => Math.atan2(p[2] - cz, p[0] - cx)), foulée = POSEURS.foule(h, { ola: { mods: grad, larg: 14, prof: 30, pente: Math.atan2(15, 26), y: 11.5, z: 15, ecart: (k, car) => Math.max(0, 1 - Math.abs(wrap(ag[k] - Math.atan2(car.z - cz, car.x - cx) + 0.12)) / 0.22) },
-        etages: [{ mat: foule, f1: 0.0023, f2: 0.0061, ph: 0, seuil: 0.6 }, { mat: foule2, f1: 0.0019, f2: 0.0047, ph: 2, seuil: 0.5 }] }), BAS = new THREE.Vector3(0, -1, 0), vise = new THREE.Vector3();
+        etages: [{ mat: foule, f1: 0.0023, f2: 0.0061, ph: 0, seuil: 0.6 }, { mat: foule2, f1: 0.0019, f2: 0.0047, ph: 2, seuil: 0.5 }],
+        pancartes: { double: [['ALLEZ !', '#f4f0e0', '#e8362a'], ['VAS-Y !', '#ffc21a', '#16161c'], ['BRAVO !', '#1c3fa8', '#f4f0e0']], tete: [['N°1', '#ffc21a', '#16161c'], ['EN TÊTE !', '#e8362a', '#f4f0e0']], // pancartes de la foule quand on double, prend la tête, tape ; saute ou passe sous l'arche (levées ici)
+          choc: [['AÏE !', '#f4f0e0', '#16161c'], ['OUCH', '#16161c', '#ffc21a']], saut: [['QUEL SAUT !', '#16161c', '#ffc21a'], ['10/10', '#f4f0e0', '#1c3fa8']], feu: [['OLÉ !', '#ff8a1a', '#16161c'], ['RACCOURCI !', '#16161c', '#ff8a1a']] } }), BAS = new THREE.Vector3(0, -1, 0), vise = new THREE.Vector3();
       // confettis de l'arrivée : ils tombent en tournoyant au-dessus de la ligne, repartent du toit tant que le tableau d'arrivée est là
       const NC = 700, pc = new Float32Array(NC * 3), cc = new Float32Array(NC * 3), gc2 = new THREE.BufferGeometry(), teintes = [[1, 0.76, 0.1], [0.91, 0.21, 0.16], [0.11, 0.25, 0.66], [0.96, 0.94, 0.88]];
       for (let k = 0; k < NC; k++) { const c = teintes[k % 4]; cc.set(c, k * 3); pc[k * 3 + 1] = -99; }
@@ -131,9 +133,9 @@
           if (car.air && car.airT > 0.2 && !parti) { parti = true; tE = 0;
             for (let k = 0; k < NE; k++) { pe[k * 3] = car.x + car.vx * 0.8 + (Math.random() - 0.5) * 14; pe[k * 3 + 1] = HT - 8 - Math.random() * 3; pe[k * 3 + 2] = car.z + car.vz * 0.8 + (Math.random() - 0.5) * 14;
               ve[k * 3] = (Math.random() - 0.5) * 3; ve[k * 3 + 1] = -Math.random() * 4; ve[k * 3 + 2] = (Math.random() - 0.5) * 3; } }
-          if (car.air) vol = Math.max(vol, car.airT); else { if (vol > 0.6) rejoue = now + 4000; vol = 0; parti = false; }
-          // l'arche de feu : passer dessous (le raccourci par l'aire) fait cracher ses six flammes
-          const zR = car.z - CZ; if (zA !== null && Math.sign(zR) !== Math.sign(zA) && car.x > CX - 23 && car.x < CX + 10 && car.y < 8) feuT = now + 1600; zA = zR;
+          if (car.air) vol = Math.max(vol, car.airT); else { if (vol > 0.6) { rejoue = now + 4000; foulée.leve(car, 'saut', 30); } vol = 0; parti = false; }
+          // l'arche de feu : passer dessous (le raccourci par l'aire) fait cracher ses six flammes et lever la salle
+          const zR = car.z - CZ; if (zA !== null && Math.sign(zR) !== Math.sign(zA) && car.x > CX - 23 && car.x < CX + 10 && car.y < 8) { feuT = now + 1600; foulée.leve(car, 'feu', 30); } zA = zR;
         }
         if (tE < 4) { tE += dt; for (let k = 0; k < NE * 3; k++) { if (k % 3 === 1) ve[k] -= 9.81 * dt; pe[k] += ve[k] * dt; } ge.attributes.position.needsUpdate = true; me.opacity = Math.max(0, 1 - tE / 4); }
         etin.visible = tE < 4;
@@ -154,7 +156,7 @@
         if (arrive && !fete) { const s = S[0]; for (let k = 0; k < NC; k++) { pc[k * 3] = s.x + (Math.random() - 0.5) * 70; pc[k * 3 + 1] = 15 + Math.random() * (HT - 20); pc[k * 3 + 2] = s.z + (Math.random() - 0.5) * 40; } }
         fete = arrive; conf.visible = fete;
         if (fete) { for (let k = 0; k < NC; k++) { const j = k * 3; pc[j] += Math.sin(now * 0.003 + k) * 1.5 * dt; pc[j + 1] -= (2 + k % 3) * dt; pc[j + 2] += Math.cos(now * 0.0027 + k * 1.3) * 1.5 * dt; if (pc[j + 1] < 0) pc[j + 1] = HT - 8; } gc2.attributes.position.needsUpdate = true; }
-        gfl.setDrawRange(Math.floor(now / 70) * 7919 % 860, 40);
+        gfl.setDrawRange(Math.floor(now / 70) * 7919 % (foulée.debout() ? 700 : 860), foulée.debout() ? 200 : 40); // la salle debout : une rafale de flashs
       };
       tick.direct = R => { // appelé par game.js avant le rendu de la première vue
         const c = suivie; if (!c || nTV++ % 4) return;

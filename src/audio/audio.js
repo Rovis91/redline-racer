@@ -1,7 +1,7 @@
 // Redline Racer — audio : tout est synthétisé (bande-son originale et adaptative). Stations de chaque carte : RADIO dans cartes.js.
 // Interface (window.SON) : init() au premier geste · frame(dt, e) à chaque image · quitter() / reprendre(m) autour d'un changement de carte au menu · setStation(i), toggleMusic(), carte(M), volume(famille, v) ·
 // beep(f), radio(syllabes, hauteur, débit), crash(), stinger(rec), tonnerre() · éditeur de musique : ecoute, recale(), note(partie, n), fond, pas, timbres, kits · lus par le jeu : station, nom, fq, genre, musicOn, beat, pulse, ana · banc d'écoute et mesure :
-// init(contexte hors ligne), pump(), pret, live, vol, stations, evenement(), moniteur(gain), vu, et les bruitages ponctuels clac(), levier(), choc(v), pschitt(),
+// init(contexte hors ligne), pump(), pret, live, vol, stations, evenement(), clameur(v), moniteur(gain), vu, et les bruitages ponctuels clac(), levier(), choc(v), pschitt(),
 // boost(), petarade() · prises de test : ac, out, smp.
 // Chaîne : timbres (PATCH) → tranche de la partie → (batterie (KIT) | bus pompé → filtre balayé → saturation de bus) → coupure de station →
 // couleur de la station (3 bandes) → musique oui/non → filtre de vitesse et de tunnel → famille « mus » → master → compresseur. Familles réglables : mus, mot (moteur, boîte), pneu, vent, amb (lieu), pluie, choc (chocs, frottement, boost), ui (bips, jingle, radio).
@@ -623,6 +623,9 @@
     if (en(Z.cite)) { for (let k = 0, n = 4 + Math.random() * 4 | 0; k < n; k++) { const f = rnd(3000, 4200), o = osc('sine', f, t + k * 0.08, 0.06, 0.035, d); o && o.frequency.exponentialRampToValueAtTime(f * 1.3, t + k * 0.08 + 0.05); } return rnd(2, 5); } // un jacassement de perruches au-dessus de la place
     return rnd(1.5, 4); // ailleurs : le lit seul (feuillage, cigales)
   }
+  function clameur(t, v) { // la foule : une clameur qui monte et retombe, et quelques sifflets ; v = force (1 : celle des tribunes du stade)
+    const rnd = (a, b) => a + Math.random() * (b - a), c = nz(t, 2.6, 0.22 * v, ambBed, 'bandpass', 900, 0.6, nbuf, 0.5); c && c.frequency.linearRampToValueAtTime(1300, t + 0.8);
+    for (let i = 0; i < 3; i++) { const f = rnd(1800, 2600), o = osc('sine', f, t + rnd(0.3, 1.5), 0.35, 0.025 * v, ambBed); o && o.frequency.linearRampToValueAtTime(f * 1.25, t + 2); } }
   function ambEvent(t) { // événements du lieu, espacés au hasard ; renvoie le délai avant le suivant
     const id = M.id, rnd = (a, b) => a + Math.random() * (b - a);
     if (id === 'chapada') return evChapada(t);
@@ -633,8 +636,7 @@
     if (id === 'canal') { rafale(HELICO, t, ambBed, 'lowpass', 260); return rnd(30, 50); } // hélicoptère qui passe au loin
     if (id === 'ville') { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(620, t); for (let i = 0; i < 4; i++) { o.frequency.linearRampToValueAtTime(840, t + i + 0.5); o.frequency.linearRampToValueAtTime(620, t + i + 1); }
       o.connect(filt('lowpass', 1200, 0.7, g)); g.connect(ambBed); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 1.5); g.gain.linearRampToValueAtTime(0, t + 4); o.start(t); o.stop(t + 4.1); return rnd(25, 50); } // sirène lointaine
-    if (id === 'stade') { const c = nz(t, 2.6, 0.22, ambBed, 'bandpass', 900, 0.6, nbuf, 0.5); c && c.frequency.linearRampToValueAtTime(1300, t + 0.8); // clameur qui monte et retombe
-      for (let i = 0; i < 3; i++) { const f = rnd(1800, 2600), o = osc('sine', f, t + rnd(0.3, 1.5), 0.35, 0.025, ambBed); o && o.frequency.linearRampToValueAtTime(f * 1.25, t + 2); } return rnd(6, 12); } // + quelques sifflets
+    if (id === 'stade') { clameur(t, 1); return rnd(6, 12); }
     if (id === 'givre') { joue((GREL && GREL.ac === AC ? GREL : GREL = Object.assign(grelots(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // grelots d'un traîneau, au loin
     if (id === 'perse') { const p = ambPos, D = ambEvG; // l'endroit décide de l'événement : fractions du tour, ou la voûte (ambSous)
       if (ambSous > 0.5) { if (Math.random() < 0.6) { const f = rnd(1900, 2700), n = 3 + Math.random() * 4 | 0; for (let i = 0; i < n; i++) osc('triangle', f * (i % 2 ? 1.5 : 1), t + i * 0.19, 0.09, 0.035, D); } // le marteau d'un dinandier
@@ -1089,7 +1091,7 @@ registerProcessor('moteur', Moteur);`;
     tonnerre: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // grondement + craquement dans le médium
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },
     volume(fam, v) { vol[fam] = v; if (V[fam]) V[fam].gain.value = v; },
-    evenement: () => { ambT = 0; }, get live() { return live; },
+    evenement: () => { ambT = 0; }, clameur: (v = 1.5) => AC && ambBed && clameur(AC.currentTime, v), // la foule réagit à la course (src/rendu/foule.js) get live() { return live; },
     clac: down => AC && clac(down), levier: down => AC && levier(down), choc: v => AC && choc(v), contact: v => AC && contact(v), boost: () => AC && boostFx(), petarade: () => AC && petarade(), pschitt: () => AC && pschitt(), reception: l => AC && reception(l), klaxon: () => AC && klaxon(),
     moniteur(v) { if (outG) outG.gain.value = OUT * v; }, get vu() { return vu; }, // gain d'écoute du banc : sans effet sur le jeu
     get vol() { return vol; }, get pret() { return pret; }, get stations() { return ST; },

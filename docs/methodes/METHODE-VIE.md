@@ -52,7 +52,8 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 | Déclenché à l'approche | rideau de fer, pigeons qui s'envolent | paris `src/rendu/decors.js:1551-1561` |
 | Réaction à la course | ola, étincelles au saut, confettis, salle éteinte au dernier tour | stade `src/rendu/decors.js:419-453` |
 | Clignotement | `visible` alterné, `color.setHex` | givre `577`, touge `882` |
-| Foule à deux poses | `map.offset.y` 0 ou 0,5 | stade `438`, canal `1706` |
+| Foule à deux poses, ola | `POSEURS.foule(h, { etages, ola })` | `src/rendu/foule.js` (stade, canal) |
+| Foule qui réagit à la course | `POSEURS.foule(…, pancartes)`, `tick.leve(car, sorte)`, `SON.clameur()` | `src/rendu/foule.js` (stade, canal) |
 | Flammes instanciées | échelle par `setMatrixAt` | stade `442` |
 | Bande de sommets ondulante | aurores | givre `569-582` |
 | Points qui montent | vapeur `VAP` | chapada `2758` |
