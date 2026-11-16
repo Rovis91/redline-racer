@@ -3,7 +3,7 @@
 //   ses = nouvelleSession({ T, carte, cartes, store, prefs, auto, defi, ref, med })
 //     store : records de la carte, { get(k), set(k, v) } en JSON (le jeu : localStorage sous le préfixe de la carte) ; prefs : clés communes à toutes les cartes, { get(k, d), set(k, v) } en texte
 //     ref = tourRef(T) (temps et trace du tour de référence des médailles) ; med = [bronze, argent, or] en multiples de ref.t ; defi = le tour reçu par lien (defiLit), sinon null ; auto : le pilote automatique joue, rien n'est enregistré
-//   ses.start({ mode, diff, nj, ia, duel }) crée la course (rendue, null en contre-la-montre et en Glisse seul). ia : mode contre les IA ; duel : Glisse à deux ; nj : nombre d'humains.
+//   ses.start({ mode, diff, nj, ia, duel, tours }) crée la course (rendue, null en contre-la-montre et en Glisse seul). ia : mode contre les IA ; duel : Glisse à deux ; nj : nombre d'humains.
 //   ses.pas(car, dt) après chaque pas de physique en course, tant que !ses.raceEnd : rend les évènements du pas (objet réutilisé) :
 //     arrives = humains arrivés à ce pas (indices), tour = résultat du tour bouclé en contre-la-montre, fantome = le fantôme vient de passer à la médaille suivante, glisse = les deux tours de Glisse bouclés, fin = la course est finie pour le jeu
 //   ses.enregistre(car, y) en contre-la-montre à chaque image : trace du fantôme et secteurs ; rend le secteur franchi, sinon null.
@@ -36,10 +36,10 @@
       TNS[d] = fin ? null : { manche: t.manche + 1, pts: r.pts }; prefs.set(TNK, JSON.stringify(TNS));
       if (fin && rang <= 3 && !AUTO && !(S.trophee(d) && S.trophee(d) <= rang)) { TROPHEE[d] = rang; prefs.set('vpr7.trophee', JSON.stringify(TROPHEE)); } // le pilote automatique ne gagne pas de trophée
     };
-    S.start = ({ mode, diff, nj = 1, ia = false, duel = false }) => {
+    S.start = ({ mode, diff, nj = 1, ia = false, duel = false, tours = 3 }) => { // tours : par manche de Tournée (les autres modes gardent 3)
       S.mode = mode; S.diff = diff; S.tnFin = null;
       S.race = duel ? G.newRace(T, 2, [], 0, { humains: nj, delai: GLT }) // Glisse en duel : les deux joueurs seuls en piste, le délai du solo pour chacun
-        : ia ? G.newRace(T, 3, G.AI_LVL.slice(0, 4 - nj).map(l => l * G.DIFF[diff].k), G.DIFF[diff].el, { elim: mode === 'elim', casse: mode === 'casse', grille: mode === 'tournee' && G.tournee(S.tnOu(diff).pts).grille, humains: nj }) : null; // à deux : toujours quatre voitures
+        : ia ? G.newRace(T, mode === 'tournee' ? tours : 3, G.AI_LVL.slice(0, 4 - nj).map(l => l * G.DIFF[diff].k), G.DIFF[diff].el, { elim: mode === 'elim', casse: mode === 'casse', grille: mode === 'tournee' && G.tournee(S.tnOu(diff).pts).grille, humains: nj }) : null; // à deux : toujours quatre voitures
       S.raceEnd = false; S.glFin = null; fini = []; si = 0; cur = []; recG = []; S.tRace = 0; S.lapN = 1;
       return S.race;
     };
