@@ -13,7 +13,7 @@
 (function (G) {
   const _ = null;
   // voiture : up / down = régimes de passage de la boîte auto ; trac = accélération maxi que les pneus passent au sol (m/s²) ;
-  // rwd = propulsion : accélérer fort prend sur l'adhérence latérale des roues arrière ; son = hauteur du moteur ; moteur = architecture (l4 l5 l6 v8 v10 rot, timbre : MOT dans audio.js), turbo = sifflement et soupape ; look = silhouette (type : le modèle de formes-voitures.js, gtr fd a80 r5 gts) ;
+  // rwd = propulsion : accélérer fort prend sur l'adhérence latérale des roues arrière ; son = hauteur du moteur ; moteur = architecture (l4 l5 l6 v8 v10 rot, timbre : MOT dans audio.js), turbo = sifflement et soupape ; look = silhouette (type : le modèle de formes-voitures.js, gtr par défaut) ;
   // grip = adhérence de la voiture (défaut 1, voir KT0 dans sim.js) : multiplie ce qu'elle passe en virage et la vitesse à laquelle elle se remet dans l'axe
   const car = (o) => Object.assign({ up: o.red * 0.94, down: o.red * 0.775, eff: 0.88, trac: 8.5, rwd: 1, son: 1 }, o);
 
@@ -552,7 +552,7 @@
         [214, 440, -6], [186, 432, -6], [110, 426, -5.2], [38, 418, -3], [8, 392, 0], [-6, 345, 0], [-20, 292, 0], [-10, 238, 0], [10, 186, 0], [8, 135, 0], [0, 90, 0], [0, 26, 0], [14, 4, 0], [80, 0, 0]], // muelle : voies qui s'évasent vers la tête (un seul tablier, 2,5 m au-dessus de l'eau) ; crête de la 307 (pts 23-25), rampe et galerie droite (26), puis le S de la passerelle dans la grotte du cénote (27-33, −6 m) et la galerie de sortie (34) ; S de la digue
       // voiture inventée : un buggy de plage à moteur arrière, 4 cylindres à plat de 2,3 L turbo, 300 ch, 760 kg, propulsion
       car: car({ nom: 'COCOTERO 2.3 TURBO', ratios: [3.0, 2.0, 1.45, 1.13, 0.92], final: 3.7, wheel: 0.31, mass: 840, idle: 950, red: 7400, cd: 0.38, area: 1.75,
-        tq: [0, 160, 230, 275, 300, 310, 305, 285, 250], trac: 10.5, son: 1.15, moteur: 'l4', turbo: 1, look: { type: 'r5', col: 0x19c7c9, l: 0.82, w: 1, h: 0.95, nez: 0.35, cab: [-0.3, 2.1, 0.55], aileron: 0, bandes: 0xff3d7f } }),
+        tq: [0, 160, 230, 275, 300, 310, 305, 285, 250], trac: 10.5, son: 1.15, moteur: 'l4', turbo: 1, look: { type: 'buggy', col: 0x19c7c9, l: 0.82, w: 1, h: 0.95, nez: 0.35, cab: [-0.3, 2.1, 0.55], aileron: 0, bandes: 0xff3d7f } }),
       radio: [ // compositions originales, déclarées ici et non dans RADIO (l'éditeur de musique ne les voit pas) : cumbia de la côte, reggaeton de la Quinta, surf rock du ponton. Thèmes de 8 mesures, calés sur la progression
         // cumbia : güiro ou guacharaca en croches, tambours (congas), basse simple sur 1 et 3, accordéon ou orgue au thème ; ni charleston, ni clap, ni nappe
         st({ name: 'CUMBIA 307', cO: -12, bat: { sS: 'rim', sR: 0.9, hS: 'shk', hA: 'shk' }, fq: '90.7', vol: 1.2, genre: 'CUMBIA', bpm: 96, sw: 0.04, gamme: 'majeur', key: 55, kit: 'acou', eq: [1, 2200, 2, 2], rev: 0.14, echo: [3, 0.16], pump: 1, // güiro (shaker) et congas, basse qui saute de la fondamentale à la quinte, orgue au thème
