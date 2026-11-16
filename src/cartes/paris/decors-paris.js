@@ -107,8 +107,8 @@
           const P2 = (r, b = a) => [C[0] + Math.cos(b) * r, 0.22, C[1] + Math.sin(b) * r, -b - Math.PI / 2], k = n++; // posé sur le trottoir, face à l'arc
           if (k % 27 === 13) metros.push(P2(PL.r + 3)); else if (k % 20 === 8) morris.push(P2(PL.r + 2.2)); else if (k === 45) kqPlace.push(P2(PL.r + 3.6)); else { troncs.push([x, 2.82, z]); houp.push([x, 7.82, z, k * 1.7, 1, 0.9, 1]); }
           if (k % 5 === 2) bancs.push(P2(PL.r + 4.8, a + pas / 2)); } }
-      const fm = ['#d9c9a8', '#cfc0a0', '#e0d4b8', '#e8cfa0', '#c8b4a8', '#d8c8a0'].map(p => h.mat('facadeParis', {}, p)), lots = fm.map(() => []); // les trois dernières : la descente de la butte
-      const fb = ['#e8dcc0', '#d8c8b0'].map(p => h.mat('facadeParis', {}, p, 1)), bas = fb.map(() => []); // maisons basses de la butte
+      const fm = ['#d9c9a8', '#cfc0a0', '#e0d4b8', '#e8cfa0', '#c8b4a8', '#d8c8a0'].map(p => h.mat('facadeParisFine', {}, p)), lots = fm.map(() => []); // les trois dernières : la descente de la butte
+      const fb = ['#e8dcc0', '#d8c8b0'].map(p => h.mat('facadeParisFine', {}, p, 1)), bas = fb.map(() => []); // maisons basses de la butte
       for (let i = 0; i < N; i += 2) {
         const s = S[i], t = TYPES[type[i]], ry = h.across(s), tun = h.zone(i, 14) > 0;
         for (const sd of [-1, 1]) {

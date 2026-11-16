@@ -22,6 +22,10 @@ Object.assign(TEXTURES, {
   //   genre : cafe, boulangerie, librairie, pharmacie, fleuriste, fromagerie, mode, boucherie ; fond = couleur de la boiserie ; or = couleur des lettres
   devanture: (genre, nom, fond, or) => [256, 88, (g, { R, alea, voile }) => {
     R(g, fond, 0, 0, 256, 88); voile(g, 0.25, () => { R(g, '#000', 0, 20, 256, 2); R(g, '#fff', 0, 0, 256, 1); });
+    // la boiserie elle-même : fil du bois, cadre mouluré de l'enseigne, panneaux des pilastres (une boiserie sombre, vue de près, n'est plus un aplat)
+    voile(g, 0.1, () => { for (let i = 0; i < 260; i++) R(g, alea() < 0.5 ? '#fff' : '#000', alea() * 256 | 0, alea() * 88 | 0, 1, 3 + (alea() * 9 | 0)); });
+    voile(g, 0.3, () => { const cadre = (x, y, w, h, c) => { R(g, c, x, y, w, 1); R(g, c, x, y + h - 1, w, 1); R(g, c, x, y, 1, h); R(g, c, x + w - 1, y, 1, h); };
+      cadre(3, 3, 250, 15, '#fff'); cadre(4, 4, 248, 13, '#000'); for (let x = 0; x < 256; x += 16) { cadre(x + 3, 30, 10, 22, '#fff'); cadre(x + 3, 56, 10, 22, '#fff'); } });
     g.fillStyle = or; g.font = 'bold 15px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(nom, 128, 11, 236);
     const porte = alea() < 0.5 ? 12 : 214, vit = [[8, 52], [70, 52], [134, 52], [196, 52]].filter(([x]) => Math.abs(x + 26 - porte - 15) > 30);
     R(g, '#1c1e22', porte, 26, 30, 62); R(g, '#3a4a58', porte + 4, 30, 22, 30); R(g, or, porte + 24, 58, 2, 4); // porte vitrée, poignée
@@ -75,4 +79,41 @@ Object.assign(TEXTURES, {
     for (let i = 0; i < 22; i++) { const x = alea() * 58 | 0, y = alea() * 54 | 0, w = 3 + alea() * 6 | 0, h = 6 + alea() * 10 | 0; R(g, '#5e5038', x + 1, y + 2, w, h); R(g, '#e8dcc0', x, y, w, h - 2); R(g, '#d4c4a2', x, y + 2, w, h - 4); }
     voile(g, 0.3, () => { R(g, '#000', 0, 0, 64, 1); R(g, '#000', 0, 63, 64, 1); });
   }, 8],
+  // façade haussmannienne fine (128 px, 6 px/m) : le dessin de facadeParis (textures.js) passe d'abord, tel quel, puis est agrandi deux fois :
+  // mêmes tirages de rnd (le décor ne bouge pas), mêmes fenêtres allumées. Par-dessus, tiré avec alea : assises de pierre, encadrements clairs, petits-bois,
+  // garde-corps des balcons filants, joints du zinc, devantures du rez-de-chaussée en pierre à refends (le bandeau sombre n'est plus un aplat noir)
+  facadeParisFine: (p, bas) => { const [, , d] = TEXTURES.facadeParis(p, bas); return [128, 128, (g, o) => {
+    const { R, alea, voile } = o; d(g, o); const t = document.createElement('canvas'); t.width = t.height = 64; t.getContext('2d').drawImage(g.canvas, 0, 0, 64, 64, 0, 0, 64, 64);
+    g.imageSmoothingEnabled = false; g.drawImage(t, 0, 0, 64, 64, 0, 0, 128, 128);
+    voile(g, 0.1, () => { for (let y = 22; y < 104; y += 4) R(g, '#000', 0, y, 128, 1); for (let i = 0; i < 500; i++) R(g, alea() < 0.5 ? '#fff' : '#000', alea() * 128 | 0, 18 + alea() * 86 | 0, 2, 1); }); // assises, grain de la pierre
+    voile(g, 0.2, () => { for (let x = 1; x < 128; x += 4) R(g, '#000', x, 0, 1, 18); }); // joints debout du zinc
+    const nf = bas ? 2 : 5, hf = bas ? 24 : 12;
+    for (let f = 0; f < nf; f++) for (let x = 8; x < 128; x += 16) { const y = 24 + f * (bas ? 36 : 16);
+      voile(g, 0.45, () => { R(g, '#f4ecd8', x - 1, y - 2, 10, 2); R(g, '#f4ecd8', x - 1, y, 1, hf); R(g, '#f4ecd8', x + 8, y, 1, hf); }); // linteau et tableaux de pierre claire
+      voile(g, 0.5, () => { R(g, '#2a2e36', x + 3, y, 2, hf); R(g, '#2a2e36', x, y + (hf >> 1), 8, 1); }); } // petits-bois
+    if (!bas) for (const y of [36, 84]) { R(g, '#26262c', 0, y, 128, 1); voile(g, 0.7, () => { for (let x = 0; x < 128; x += 2) R(g, '#26262c', x, y + 1, 1, 3); }); R(g, '#26262c', 0, y + 4, 128, 1); } // balcons filants
+    R(g, '#b8ad98', 0, 104, 128, 24); voile(g, 0.25, () => { for (let y = 108; y < 128; y += 5) R(g, '#000', 0, y, 128, 1); }); // rez-de-chaussée en pierre à refends
+    for (let x = 6; x < 128; x += 32) { R(g, '#2a2622', x, 108, 20, 20); voile(g, 0.35, () => R(g, '#9ab0c8', x + 2, 110, 16, 6)); R(g, '#4a4640', x + 9, 108, 2, 20); } // baies du rez-de-chaussée, reflet
+    for (let x = 4; x < 128; x += 32) R(g, x % 64 > 30 ? '#c8102e' : '#1d4a3a', x, 104, 24, 4); // lambrequins des stores, comme avant
+  }]; },
+  // tunnel des voies sur berge, paroi (128 px : x de 0 = haut à 128 = bas, y le long de la route, 16 m) : le dessin de paroi (textures.js) passe d'abord
+  // pour tirer rnd comme avant, puis est recouvert : béton peint en haut, rampe lumineuse en caissons, carrelage biseauté crème à joints, filet vert, plinthe encrassée
+  paroiParis: (neonC, p, carreaux) => { const [, , d] = TEXTURES.paroi(neonC, p, carreaux); return [128, 128, (g, o) => {
+    const { R, alea, voile } = o; d(g, o);
+    R(g, '#8e8a80', 0, 0, 128, 128); voile(g, 0.15, () => { for (let i = 0; i < 300; i++) R(g, alea() < 0.6 ? '#000' : '#fff', alea() * 34 | 0, alea() * 128 | 0, 1 + (alea() * 3 | 0), 1 + (alea() * 4 | 0)); }); // béton peint
+    R(g, p[1], 0, 0, 128, 4); R(g, '#3a3a40', 34, 0, 16, 128);
+    for (let y = 0; y < 128; y += 32) R(g, neonC, 37, y + 2, 10, 26); // rampe : un caisson lumineux tous les 4 m
+    R(g, "#a29d8c", 52, 0, 64, 128); for (let x = 52; x < 116; x += 6) for (let y = 0; y < 128; y += 4) { const v = alea() * 8 | 0; R(g, `rgb(${178 + v},${172 + v},${154 + v})`, x, y, 5, 3); } // carreaux biseautés, joints à peine plus sombres
+    R(g, '#1d4a3a', 52, 0, 128 - 52 - 74, 128); R(g, '#1d4a3a', 82, 0, 2, 128); // filet vert
+    voile(g, 0.5, () => { for (let x = 92; x < 116; x++) R(g, '#000', x, 0, 1, 128); }); voile(g, 0.06, () => { for (let x = 96; x < 116; x += 2) R(g, '#000', x, 0, 2, 128); }); // le bas noirci par la route
+    voile(g, 0.25, () => { for (let i = 0; i < 40; i++) R(g, '#000', 60 + alea() * 50 | 0, alea() * 128 | 0, 1 + (alea() * 2 | 0), 4 + (alea() * 20 | 0)); }); // coulures
+    R(g, p[3], 116, 0, 12, 128);
+  }]; },
+  // plafond du tunnel (128 px) : le dessin de plafond passe d'abord (rnd), puis dalles de béton coffré à joints, chemin de câbles, taches d'humidité
+  plafondParis: pp => { const [, , d] = TEXTURES.plafond(pp); return [128, 128, (g, o) => {
+    const { R, alea, voile } = o; d(g, o); R(g, pp[0], 0, 0, 128, 128);
+    voile(g, 0.2, () => { for (let i = 0; i < 500; i++) R(g, alea() < 0.5 ? '#000' : '#fff', alea() * 128 | 0, alea() * 128 | 0, 1 + (alea() * 3 | 0), 1); for (let y = 0; y < 128; y += 16) R(g, '#000', 0, y, 128, 1); });
+    voile(g, 0.3, () => { for (let i = 0; i < 6; i++) { const x = alea() * 110 | 0, y = alea() * 110 | 0; R(g, '#000', x, y, 10 + (alea() * 14 | 0), 6 + (alea() * 10 | 0)); } }); // humidité
+    R(g, pp[3], 0, 62, 128, 3); R(g, pp[3], 56, 0, 14, 128); voile(g, 0.4, () => { for (let y = 0; y < 128; y += 8) R(g, '#000', 56, y, 14, 1); }); // joint central, chemin de câbles et ses attaches
+  }]; },
 });
