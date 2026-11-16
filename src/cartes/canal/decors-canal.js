@@ -46,12 +46,12 @@
       const foule = net(h.mat('foule', {}, '#4a4250', '#e83f8c')), foule2 = net(h.mat('foule', {}, '#3e3848', '#2aa39a'));
       const peauT = { beton, banderole: h.mat('banderole', {}, 0), banderole2: h.mat('banderole', {}, 2), foule, foule2, escalier: h.mat('marches'), loge: h.mat('loges', LUM), acier, toit: h.mat('toleToit'), lampe, drapeau: h.mat('damier', { lum: 1, net: 1, side: THREE.DoubleSide }, '#f4f0e0') };
       trib.forEach((l, m) => insts(h, 'tribune', peauT, l, { a: [m] }));
-      // la ola (comme au Stade) : une copie bras levés de la foule du bas, levée sur les tribunes proches de la voiture suivie, cachée sous le sol ailleurs ; elle court avec elle
-      // shortcut: elle suit la voiture que le décor reçoit (celle du joueur), pas la tête de course
-      const A1 = Math.atan2(14, 24), go = h.geo('boite', 14, 0.6, 27.8); go.rotateX(-A1); go.translate(0, 11.2, 14);
-      const fo = net(h.mat('foule', {}, '#4a4458', '#f4f0e0')); fo.map.offset.y = 0.5;
-      const ola = inst(h, go, fo, olaI.map(p => p.slice(0, 7))), o4 = new THREE.Object3D(); ola.userData.dyn = 1; ola.frustumCulled = false;
       const ecrans = [[240, 70], [1250, 110], [1600, 140]];
+
+      // la foule (bras levés, ola) : src/rendu/foule.js, partagé avec le stade
+      // shortcut: la ola suit la voiture que le décor reçoit (celle du joueur), pas la tête de course
+      const foulée = POSEURS.foule(h, { ola: { mods: olaI, larg: 14, prof: 27.8, pente: Math.atan2(14, 24), y: 10, z: 14, ecart: (k, car) => Math.max(0, 1 - Math.abs((olaI[k][7] - car.idx + N * 1.5) % N - N / 2 - 14) / 28) }, // vague centrée 14 échantillons (28 m) devant la voiture
+        etages: [{ mat: foule, f1: 0.0021, f2: 0.0057, ph: 0, seuil: 0.7 }, { mat: foule2, f1: 0.0017, f2: 0.0049, ph: 2, seuil: 0.5 }] });
 
       // --- le parking derrière les tribunes : des milliers de voitures, des camping-cars au bout des virages ---
       const autos = [], cc = [], COUL = [0xf4f0e0, 0x1a1a1e, 0xc8102e, 0x9aa0a8, 0x1848c8, 0x5a5e66, 0xd8d0c0, 0x2a5a3a, 0xffc04a];
@@ -150,13 +150,7 @@
       for (let i = 0; i < 34; i++) { const hh = 120 + rnd() * rnd() * 380, w = 50 + rnd() * 70; boite(h, tours, w, hh, w, -2300 + rnd() * 900, hh / 2, -500 + rnd() * 1300); }
       // la foule bouge : chaque étage de gradins passe par moments à sa variante bras levés ; le dirigeable fait le tour en une vingtaine de minutes
       return (dt, now, car) => {
-        if (car) {
-          olaI.forEach((p, k) => { const d = (p[7] - car.idx + N * 1.5) % N - N / 2, e = Math.max(0, 1 - Math.abs(d - 14) / 28); // écart signé en échantillons ; vague centrée 14 (28 m) devant la voiture
-            o4.position.set(p[0], p[1] + (e ? e * 1.6 - 1 : -60), p[2]); o4.rotation.set(0, p[3], 0); o4.scale.set(p[4], p[5], p[6]); o4.updateMatrix(); ola.setMatrixAt(k, o4.matrix); });
-          ola.instanceMatrix.needsUpdate = true;
-        }
-        foule.map.offset.y = Math.sin(now * 0.0021) + Math.sin(now * 0.0057) > 0.7 ? 0.5 : 0;
-        foule2.map.offset.y = Math.sin(now * 0.0017 + 2) + Math.sin(now * 0.0049) > 0.5 ? 0.5 : 0;
+        foulée(dt, now, car);
         const t = now * 0.00006; dg.position.set(760 + Math.cos(t) * 520, 125, 110 + Math.sin(t) * 260); dg.rotation.y = -t - Math.PI / 2;
       };
     },

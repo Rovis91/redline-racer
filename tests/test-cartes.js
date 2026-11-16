@@ -3,7 +3,7 @@
 const assert = require('assert'), THREE = require('../vendor/three/three.module.js');
 require('../src/donnees/cartes.js'); require('../src/donnees/traces-or.js'); require('../src/moteur/sim.js');
 // inventaire : une carte se monte de son entrée de cartes.js, de son décor (decors-<carte>.js, chargé par index.html après decors.js), de sa trace or (traces-or.js) et de son titre anglais (TITRE_EN de langue.js, sinon le titre du HUD)
-globalThis.window = globalThis; require('../src/rendu/decors.js'); for (const M of CARTES) require('../src/cartes/' + M.th.decor + '/decors-' + M.th.decor + '.js'); require('../src/moteur/langue.js');
+globalThis.window = globalThis; require('../src/rendu/decors.js'); require('../src/rendu/foule.js'); for (const M of CARTES) require('../src/cartes/' + M.th.decor + '/decors-' + M.th.decor + '.js'); require('../src/moteur/langue.js');
 { const EN = TITRE_EN, PAGE = require('fs').readFileSync(__dirname + '/../index.html', 'utf8');
   for (const M of CARTES) {
     assert(typeof DECORS[M.th.decor] === 'function', M.id + ' : pas de décor ' + M.th.decor + ' dans decors-' + M.th.decor + '.js');

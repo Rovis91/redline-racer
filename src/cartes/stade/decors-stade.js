@@ -102,9 +102,9 @@
       const me = new THREE.PointsMaterial({ color: 0xffb040, size: 0.7, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false }), etin = new THREE.Points(ge, me); etin.frustumCulled = false; etin.visible = false; h.scene.add(etin);
       // la ola : une copie bras levés de la foule de l'anneau bas, levée sur les gradins proches de la voiture suivie et cachée sous le sol ailleurs ; elle court avec elle autour de la salle
       // shortcut: elle suit la voiture que le décor reçoit (celle du joueur), pas la tête de course ; il faudrait que game.js passe la voiture de tête au décor
-      const A1 = Math.atan2(15, 26), go = h.geo('boite', 14, 0.6, 30); go.rotateX(-A1); go.translate(0, 12.7, 15);
-      const fo = net(h.mat('foule', {}, '#4a4458', '#f4f0e0')); fo.map.offset.y = 0.5;
-      const ola = inst(h, go, fo, grad), ag = grad.map(p => Math.atan2(p[2] - cz, p[0] - cx)), o4 = new THREE.Object3D(), BAS = new THREE.Vector3(0, -1, 0), vise = new THREE.Vector3();
+      // (code de la foule et de la ola : src/rendu/foule.js, partagé avec canal)
+      const ag = grad.map(p => Math.atan2(p[2] - cz, p[0] - cx)), foulée = POSEURS.foule(h, { ola: { mods: grad, larg: 14, prof: 30, pente: Math.atan2(15, 26), y: 11.5, z: 15, ecart: (k, car) => Math.max(0, 1 - Math.abs(wrap(ag[k] - Math.atan2(car.z - cz, car.x - cx) + 0.12)) / 0.22) },
+        etages: [{ mat: foule, f1: 0.0023, f2: 0.0061, ph: 0, seuil: 0.6 }, { mat: foule2, f1: 0.0019, f2: 0.0047, ph: 2, seuil: 0.5 }] }), BAS = new THREE.Vector3(0, -1, 0), vise = new THREE.Vector3();
       // confettis de l'arrivée : ils tombent en tournoyant au-dessus de la ligne, repartent du toit tant que le tableau d'arrivée est là
       const NC = 700, pc = new Float32Array(NC * 3), cc = new Float32Array(NC * 3), gc2 = new THREE.BufferGeometry(), teintes = [[1, 0.76, 0.1], [0.91, 0.21, 0.16], [0.11, 0.25, 0.66], [0.96, 0.94, 0.88]];
       for (let k = 0; k < NC; k++) { const c = teintes[k % 4]; cc.set(c, k * 3); pc[k * 3 + 1] = -99; }
@@ -119,9 +119,6 @@
             for (let k = 0; k < NE; k++) { pe[k * 3] = car.x + car.vx * 0.8 + (Math.random() - 0.5) * 14; pe[k * 3 + 1] = HT - 8 - Math.random() * 3; pe[k * 3 + 2] = car.z + car.vz * 0.8 + (Math.random() - 0.5) * 14;
               ve[k * 3] = (Math.random() - 0.5) * 3; ve[k * 3 + 1] = -Math.random() * 4; ve[k * 3 + 2] = (Math.random() - 0.5) * 3; } }
           if (car.air) vol = Math.max(vol, car.airT); else { if (vol > 0.6) rejoue = now + 4000; vol = 0; parti = false; }
-          const ac = Math.atan2(car.z - cz, car.x - cx);
-          grad.forEach((p, k) => { const e = Math.max(0, 1 - Math.abs(wrap(ag[k] - ac + 0.12)) / 0.22); o4.position.set(p[0], p[1] + (e ? e * 1.6 - 1 : -60), p[2]); o4.rotation.set(0, p[3], 0); o4.scale.set(p[4], 1, 1); o4.updateMatrix(); ola.setMatrixAt(k, o4.matrix); });
-          ola.instanceMatrix.needsUpdate = true;
         }
         if (tE < 4) { tE += dt; for (let k = 0; k < NE * 3; k++) { if (k % 3 === 1) ve[k] -= 9.81 * dt; pe[k] += ve[k] * dt; } ge.attributes.position.needsUpdate = true; me.opacity = Math.max(0, 1 - tE / 4); }
         etin.visible = tE < 4;
@@ -130,9 +127,7 @@
         const der = !!(car && car.lap === 3), arrive = der && car.dist >= 3 * N;
         eteint += ((der && !arrive ? 1 : 0) - eteint) * Math.min(1, dt * 1.5);
         toit.color.setScalar(1 - 0.8 * eteint); lampe.color.setScalar(1 - 0.85 * eteint); mc.color.setScalar(1 + 2 * eteint);
-        // la foule bouge : chaque anneau passe par moments à sa variante bras levés
-        foule.map.offset.y = Math.sin(now * 0.0023) + Math.sin(now * 0.0061) > 0.6 ? 0.5 : 0;
-        foule2.map.offset.y = Math.sin(now * 0.0019 + 2) + Math.sin(now * 0.0047) > 0.5 ? 0.5 : 0;
+        foulée(dt, now, car); // la foule bouge : bras levés par moments, et la ola
         ecranG.map.offset.y = now < rejoue ? Math.floor(now / 200) % 2 * 0.5 : Math.floor(now / 2500) % 2 * 0.5; // après un saut, « QUEL SAUT ! » clignote
         // les flammes tremblent, et chaque lance-flammes crache un grand coup toutes les 3 s, à son tour
         feux.forEach(([x, y, z, r, w, ht], k) => { const coup = (now * 0.001 + k * 0.37) % 3.2 < 0.45 ? 1.9 : 1, f = 0.75 + 0.25 * Math.sin(now * 0.021 + k * 1.7) * Math.sin(now * 0.013 + k);
