@@ -1,12 +1,12 @@
-<p align="center"><a href="https://rovis91.github.io/ville-a-plein-regime/"><img src="docs/images/promo.jpg" alt="Ville à plein régime: night time attack, an arcade racer for the browser"></a></p>
+<p align="center"><a href="https://rovis91.github.io/redline-racer/"><img src="docs/images/promo.jpg" alt="Redline Racer: night time attack, an arcade racer for the browser"></a></p>
 
-<p align="center"><b><a href="https://rovis91.github.io/ville-a-plein-regime/">▶ Play now in your browser</a></b> · no install, no download</p>
+<p align="center"><b><a href="https://rovis91.github.io/redline-racer/">▶ Play now in your browser</a></b> · no install, no download</p>
 
 <p align="center"><img src="docs/images/circuits.jpg" alt="The 12 tracks"></p>
 
 ## How to play
 
-Open the [live version](https://rovis91.github.io/ville-a-plein-regime/) (or `index.html` locally) in a modern browser. Pick a track, the number of players, a mode and a gearbox in the main menu (arrows to move, Enter to start), then drive.
+Open the [live version](https://rovis91.github.io/redline-racer/) (or `index.html` locally) in a modern browser. Pick a track, the number of players, a mode and a gearbox in the main menu (arrows to move, Enter to start), then drive.
 
 | Control | Keyboard | Gamepad |
 |---|---|---|
