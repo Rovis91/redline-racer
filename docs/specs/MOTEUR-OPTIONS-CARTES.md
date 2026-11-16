@@ -137,7 +137,7 @@ th: { cielSeg: 48,
 ```
 - `tun.sans` : ce que le moteur ne pose pas dans le tunnel. `'portails'` : les deux portails. `'luminaires'` : les boîtiers des luminaires et les boîtiers de secours (les lumières restent). `'lumieres'` : aucune lumière de luminaire ; il ne reste que le jour des ouvertures (`ouv`, `rayons`). `'parois'` (tunnel de forme libre seulement) : ni parois, ni voûte, ni coque ; il reste le sol, les lumières, le noir et les colonnes de lumière, et le décor de la carte fait la salle.
 - `tun.cielJour: 1` : sous le tunnel, le ciel garde sa couleur au lieu de prendre celle du brouillard du tunnel. On voit le jour par la bouche de sortie et par les ouvertures.
-- `cielSeg` : nombre de facettes de la sphère du ciel (16 par défaut). Sur un ciel de jour à paliers serrés près de l'horizon, 16 facettes cassent les paliers en éventail.
+- `cielSeg` : nombre de facettes de la sphère du ciel (48 par défaut : à 16, la bande claire de l'horizon avait des arêtes en dents de scie et un ciel à paliers serrés cassait en éventail).
 - `astre.rayons` (1 par défaut) : force du halo de l'astre dans la passe finale. À baisser quand un sol clair en plein midi blanchit (plage : 0,3).
 Coût : nul. Sans ces options, rien ne change (ville, wangan, paris : mêmes géométries, même ciel).
 

@@ -576,7 +576,7 @@
             '17 - - - 20 - 24 - 20 - - - . - - - | 19 - - - 15 - 12 - 15 - - - . - - - | 23 - - - 19 - 14 - 11 - - - . - - - | 19 - - - - - - - . - - - . - - -'],
           sec: { i: 'b0 c0', a: 'k0 s0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
       ],
-      th: { decor: 'plage', fog: 0xcfe6f0, fogD: [220, 1900], loin: 3000, sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, cielSeg: 48,
+      th: { decor: 'plage', fog: 0xcfe6f0, fogD: [220, 1900], loin: 3000, sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, 
         astre: { dir: [-0.25, 0.85, 0.45], col: '#fffbe8', ombre: '#fffbe8', taille: 200, rayons: 0.3 }, hemi: [0xa8d0ee, 0x7a6a4e, 0.6], sun: [0xfff0d0, 0.72], phares: 0, bloom: 0.015, scan: 0, sansCones: 1,
         objets: [[0xd98a2c, 0.36, 0.36, 0.4, null, [0.95, 0.55, 0.1]], [0xc8a060, 0.34, 0.28, 0.5], [0xe8d08a, 0.12, 0.42, 0.5], [0xff3d7f, 0.55, 0.55, 0.28], [0x1fb5a8, 0.36, 0.36, 0.55], [0xe0cf9c, 0.12, 0.55, 0.6, null, [0.88, 0.8, 0.6]]], // cagette de fruits (éclats orange), panier, pile de sombreros ; bouée, glacière, château de sable (gerbe de sable) ; pas de plots aux virages (sansCones) : tout est posé par objetsEn
         objetsEn: [[540, 9.6, 0], [541, 9.5, 1], [544, -9.6, 2], [545, -9.5, 0], [548, 9.6, 1], [549, 9.5, 2], [552, -9.6, 0], [553, -9.5, 1], [560, 9.6, 2], [561, 9.5, 0], [564, -9.6, 1], [565, -9.5, 2], [568, 9.6, 0], [569, 9.5, 1], [572, -9.6, 2], // HA-2 : la halle, au ras de la chaussée devant les poteaux (rien sous la piñata, 556)

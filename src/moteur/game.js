@@ -319,7 +319,7 @@
 
   // ciel en bandes (nuit, aube ou couchant selon la carte), étoiles, lune ou soleil
   const skyMat = mat('ciel', { lum: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars);
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.cielSeg || 16, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.cielSeg || 48, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
   const SD = new V3(...TH.astre.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('astre', TH.astre.col, TH.astre.ombre) }));
   sunDisc.scale.set(TH.astre.taille, TH.astre.taille, 1); scene.add(sunDisc);
