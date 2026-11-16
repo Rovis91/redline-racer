@@ -58,7 +58,7 @@
   //   remplissage, en jauge par seconde : gl = glisse tenue (à TOP, plein débit après 0,6 s de glisse) ; mur = frotter un mur sans le taper ; corde = rouler à moins d'un mètre du mur sans le toucher, là où la carte le dit (M.corde) ; cam = doubler un camion au ras ; asp = dans l'aspiration d'un rival
   //   un choc franc (mur ou camion) la vide
   // Aspiration (course) : derrière une voiture, de 3 à ad m, dans un cône qui s'ouvre de ac par mètre : jusqu'à acx de traînée en moins, tout près
-  const NI = { dur: 3, acc: 6, rep: 1, gl: 0.3, mur: 0.5, corde: 0.5, cam: 0.6, asp: 0.12, ad: 30, ac: 0.08, acx: 0.5 };
+  const NI = { dur: 3, sec: 0.1, acc: 6, rep: 1, gl: 0.3, mur: 0.5, corde: 0.5, cam: 0.6, asp: 0.12, ad: 30, ac: 0.08, acx: 0.5 };
   const gagne = (c, x) => { c.nitro = Math.min(1, c.nitro + x); };
   // Mode Glisse : le score, calculé à part de la physique (points() ne fait que lire la voiture : aucun temps au tour n'en dépend). Tenu pour toute voiture, lu par le mode Glisse.
   //   c.cours = points de la glisse en cours ; c.score = points acquis ; c.mult = multiplicateur d'enchaînement
@@ -156,7 +156,7 @@
     const i = T.n - 8, s = T.S[i]; // 16 m avant la ligne
     return { x: s.x, z: s.z, th: Math.atan2(s.tz, s.tx), vx: 0, vz: 0, steer: 0, yaw: 0, idx: i, dist: -8, d: 0, hit: 0, vf: 0, vl: 0,
       score: 0, cours: 0, mult: 1, glD: 0, glT: 0, // mode Glisse (voir GL) ; glD, glT : durée de la glisse en cours, temps depuis la dernière
-      drift: false, slide: 0, driftT: 0, dd: 0, sa: 0, nitro: 0, boost: 0, asp: 0, stun: 0, nDrift: 0, nBoost: 0, nWall: 0, // nitro : la jauge ; boost : elle pousse ; asp : aspiration reçue (0 à 1, course) ; n… : bilan (glisses, coups de nitro, chocs mur)
+      drift: false, slide: 0, driftT: 0, dd: 0, sa: 0, nitro: 0, sec: 1, boost: 0, asp: 0, stun: 0, nDrift: 0, nBoost: 0, nWall: 0, // nitro : la jauge ; boost : elle pousse ; asp : aspiration reçue (0 à 1, course) ; n… : bilan (glisses, coups de nitro, chocs mur)
       manual: false, gear: 0, lastGear: 0, shiftT: 0, rpm: T.car.idle,
       y: s.y, vy: 0, air: false, airT: 0, land: 0 }; // relief : hauteur, vitesse verticale, en l'air, durée du vol en cours, vitesse d'impact à la réception (un seul pas)
   }
@@ -218,7 +218,7 @@
     if (c.gear !== c.lastGear) { c.shiftT = 0.25; c.lastGear = c.gear; }
     const ratio = CARD.ratios[c.gear], wr = av * K * ratio, er = Math.max(wr, c.gear === 0 && inp.gas ? 3500 : CARD.idle); // en 1re, l'embrayage patine vers 3500 tr/min au démarrage
     c.rpm += (Math.min(er, CARD.red + 150) - c.rpm) * Math.min(1, dt * 18);
-    const pousse = inp.nitro && inp.gas && c.nitro > 0 ? 1 : 0; if (pousse && !c.boost) c.nBoost++;
+    const pousse = inp.nitro && inp.gas && c.nitro > 0 && !c.sec ? 1 : 0; if (pousse && !c.boost) c.nBoost++;
     let acc = 0, rup = false;
     if (c.shiftT > 0) c.shiftT -= dt;
     else if (wr > CARD.red && !(pousse && c.gear === CARD.ratios.length - 1)) { acc = -6 * Math.sign(vf); rup = true; } // surrégime : rupteur et gros frein moteur
@@ -229,6 +229,7 @@
     if (ca && acc > 0) acc *= ca.p; // moteur abîmé : moins de poussée
     c.boost = pousse; // (sur le dernier rapport la nitro passe le rupteur : elle pousse aussi une voiture en bout de course ; sur les autres le rupteur tient, sinon une 1re tenue en boîte manuelle garderait tout son couple au-delà du régime maxi)
     if (pousse) { c.nitro = Math.max(0, c.nitro - dt / NI.dur); acc += NI.acc * (rup ? 1 : 1 + NI.rep * Math.max(0, 1 - av / TOP)); } // au rupteur, la poussée de base seulement : il tient toujours
+    if (c.nitro <= 0) c.sec = 1; else if (c.nitro >= NI.sec) c.sec = 0; // jauge à sec : la nitro attend un segment (NI.sec) ; sinon la glisse, l'aspiration ou le mur la font pousser sans fin sur un filet, jauge affichée vide
     if (c.stun > 0) { c.stun -= dt; if (acc > 0) acc *= 0.2; }
     vf += acc * dt;
     const s0 = S[c.idx]; if (Math.abs(vf) > 1) vf -= 9.81 * s0.sl * (fx * s0.tx + fz * s0.tz) * dt; // la pente pousse ou retient

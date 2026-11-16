@@ -1708,7 +1708,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     if (car.boost > 0) tag('NITRO', HW - 66, HH - 92, C); else if (car.asp > 0.15) tag('ASPIRATION', HW - 66, HH - 92, Y); // au-dessus du compteur : au centre, il chassait les étiquettes des rivaux vers le ciel
     if (state !== 'title') { // jauge de nitro, dans le panneau de vitesse : 10 segments ; elle monte en glisse, au ras d'un mur ou d'un camion, dans l'aspiration ; pleine, elle clignote ; elle se vide tant qu'on la déclenche
-      const f = car.nitro, plein = f >= 1 && blink, n = Math.round(f * 10); txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
+      const f = car.nitro, plein = f >= 1 && blink, n = car.sec ? Math.floor(f * 10) : Math.ceil(f * 10); // un segment allumé = de la nitro utilisable (à sec, sim.js NI.sec, elle attend un segment plein) txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
       // th.frole : frôler le mur remplit la jauge (sim.js, mur) ; la jauge s'éclaire tant que ça frotte, et 0,3 s après, le segment qui se remplit en blanc
       const fro = TH.frole && (vu.fro = car.rub && Math.hypot(car.vx, car.vz) > 15 ? 0.3 : Math.max(0, (vu.fro || 0) - dt)) > 0 && car.boost <= 0;
       for (let i = 0; i < 10; i++) R(hg, fro && i === Math.min(n, 9) ? '#ffffff' : i >= n ? '#30303c' : car.boost > 0 ? C : plein ? '#ffffff' : fro ? '#fff2a0' : Y, HW - 108 + i * 10, HH - 17 - (fro && i === Math.min(n, 9)), 8, 7 + 2 * (fro && i === Math.min(n, 9)));
