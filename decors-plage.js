@@ -491,6 +491,7 @@
       // hirondelles de grotte qui s'envolent de la tranchée, devant la bouche de la galerie, à l'approche (CE-2) ; au jour : dans l'ombre de la bouche on ne les voyait pas
       { const s = S[tT - 8]; groupe(Array.from({ length: 16 }, (_, k) => ({ x: s.x - s.tz * (hz(k, 41) - 0.5) * 8, y: s.y + 1.5 + hz(k, 42) * 3, z: s.z + s.tx * (hz(k, 41) - 0.5) * 8, e: 1.4, c: GRIS, vx: -s.tx * 9 + (hz(k, 43) - 0.5) * 5, vy: 3 + hz(k, 44) * 3, vz: -s.tz * 9 + (hz(k, 43) - 0.5) * 5 })), car => pres(car, tT - 8, 22), car => loin(car, tT), { T: 3.2, del: 0.06 }); }
       const PLU = { plumage: col(0xffffff, { side: D, lum: 1, transparent: true })   /* en aplat : éclairé par le dessous, un oiseau blanc sortait brun ; transparent : rythme.js ne le fait pas battre */, bec: col(0x2a2a2a, { side: D }) }, lo = OIS.map(o => [o.x || 0, -99, o.z || 0, 0, o.e, o.e, o.e, o.c]), oP = vifs('oiseauPose', lo, { teinte: 'plumage' }, PLU), oV = vifs('oiseau', lo, { teinte: 'plumage' }, PLU);
+      [...oP, ...oV].forEach(m => { m.castShadow = false; });   // l'ombre d'une mouette (2 m) tient dans un pixel : 4 passes de moins dans la carte d'ombre mobile
       OIS.forEach((o, k) => { cache(oV, k); o.pose ? met(oP, k, o.x, o.y, o.z, o.r, o.e) : cache(oP, k); });
       VIE.push((dt, car) => {
         OIS.forEach((o, k) => {
@@ -505,6 +506,7 @@
       });
       { // les flamants (LA-1) : deux lots aux mêmes rangs (debout, en vol). Le groupe du point 38 décolle à l'approche, traverse la digue au-dessus de la route et se repose de l'autre côté
         const FL = L.flamants, PV = { plume: col(0xf0836a, { side: D }), patte: col(0xe78a8c, { side: D }), bec: col(0x2a2a2a, { side: D }) }, fA = vifs('flamant', FL, { a: [0] }), fV = vifs('flamantVol', FL, {}, PV);
+        [...fA, ...fV].forEach(m => { m.castShadow = false; });   // idem pour les flamants : leur ombre se perd dans l'eau de la lagune
         const ici = FL.map(p => [p[0], p[2], p[3]]), but = (k0, i0) => Array.from({ length: 16 }, (_, j) => { const i = i0 + (hz(j, 51) * 16 | 0); return [...off(i, -(S[i].w + 15 + hz(j, 52) * 12)), 3.14 + hz(j, 53) * 0.6]; });
         const G = [{ k0: 16, i0: P(38), dec: car => pres(car, P(38), 30) }].map(g => ({ ...g, de: ici.slice(g.k0, g.k0 + 16), a: but(g.k0, g.i0), en: 0, t: 9, T: 4.6 }));
         const repose = k => { const p = ici[k]; met(fA, k, p[0], -1.2, p[1], p[2]); cache(fV, k); }; FL.forEach((p, k) => repose(k));
