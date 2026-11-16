@@ -1819,6 +1819,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // tous les shaders de la scène lancés d'un coup (le pilote les compile en parallèle) : le décor écarté hors champ au départ ne compile plus son shader en pleine course
   // à sa première apparition ; compile et non compileAsync : sans fond, tout doit finir d'un trait (voir plus haut)
   renderer.compile(scene, VUES[0].cam);
+  // le verre des éclats (MeshStandardMaterial + envMap) fait son PMREM et son shader à la première casse : un éclat de chaque verre rendu une fois dans une cible 8 px, en plein chargement
+  { const rt = new THREE.WebGLRenderTarget(8, 8), ts = VERRE.map(mv => { const t = new THREE.InstancedMesh(ECLAT, mv, 1); t.frustumCulled = false; scene.add(t); return t; }), r0 = renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.render(scene, VUES[0].cam); renderer.setRenderTarget(r0); ts.forEach(t => { scene.remove(t); t.dispose(); }); rt.dispose(); }
   // Un ou deux joueurs : autant de vues. À deux, chacun a son périphérique et la couche plein écran commune est posée sur le canvas du jeu. Se règle au menu : appelé en course, on y revient.
   // Le périphérique de chacun vient de l'écran d'inscription (PLACES) ; le mode et la difficulté sont relus dans les préférences de ce nombre de joueurs. Les styles de comparaison (?style=) restent à une vue.
   const joueurs = n => {
