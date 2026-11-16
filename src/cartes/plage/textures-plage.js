@@ -2,6 +2,14 @@
 (() => {
   const grain = (g, o, n, cols, w = 64, h = 64) => { for (let i = 0; i < n; i++) o.R(g, cols[o.alea() * cols.length | 0], o.alea() * w | 0, o.alea() * h | 0, 1, 1); };
   Object.assign(TEXTURES, {
+    // bruit fin des grandes masses de plage (sable, sol, roche, eau ; le grain() de decors-plage.js) : 128 px pour la tuile de bruit (64), 8 à 11 px/m.
+    // Tire dans rnd exactement comme bruit (le décor ne bouge pas) et en garde le dessin, doublé et en voile, pour les taches larges ; le grain fin est tiré avec alea.
+    // k : force du grain fin (la piste est plus calme que ses abords)
+    bruitFin: (fond, grains, k = 1) => [128, 128, (g, { R, rnd, alea, voile }) => {
+      R(g, fond, 0, 0, 128, 128);
+      voile(g, 0.22 * k, () => { for (const c of grains) for (let i = 0; i < 160; i++) R(g, c, (rnd() * 64 | 0) * 2, (rnd() * 64 | 0) * 2, (1 + (rnd() * 2 | 0)) * 2, 2); });
+      voile(g, k, () => { for (const c of grains) for (let i = 0; i < 700; i++) R(g, c, alea() * 128 | 0, alea() * 128 | 0, 1 + (alea() * 2 | 0), 1); });
+    }],
     // sable sec de la plage : presque blanc, grains, petites rides du vent, traces de pas
     sableSec: () => [64, 64, (g, o) => {
       const { R, alea, voile } = o; R(g, '#cab890', 0, 0, 64, 64); grain(g, o, 700, ['#baa680', '#dccca6', '#ae9a74']);
@@ -145,12 +153,6 @@
       voile(g, 0.5, () => R(g, '#2a2418', 0, 96, 64, 32)); voile(g, 0.3, () => R(g, '#2a2418', 0, 0, 64, 18)); // pied mouillé, haut dans l'ombre
       for (let x = 0; x < 64; x++) { R(g, '#3fd8c0', x, 112 + (Math.sin(x * 0.4) * 2 | 0), 1, 2); if (alea() < 0.4) R(g, '#9ff4e4', x, 110 + (alea() * 6 | 0), 1, 1); } // reflets de l'eau
       grain(g, o, 500, ['#5a4e3a', '#b0a080'], 64, 128);
-    }],
-    // sol de la grotte : calcaire mouillé et lissé, flaques claires qui renvoient la lumière, sable fin dans les creux
-    solGrotte: () => [64, 128, (g, o) => {
-      const { R, alea, voile } = o; R(g, '#5e5442', 0, 0, 64, 128); grain(g, o, 1200, ['#4e4636', '#6e6450', '#7a6e56'], 64, 128);
-      voile(g, 0.5, () => { for (let i = 0; i < 14; i++) R(g, '#9a8c70', alea() * 56 | 0, alea() * 120 | 0, 6 + (alea() * 14 | 0), 4 + (alea() * 10 | 0)); });
-      for (let i = 0; i < 10; i++) { const x = alea() * 50 | 0, y = alea() * 116 | 0, w = 6 + (alea() * 10 | 0); R(g, '#2a5a58', x, y, w, 4); R(g, '#7ad8c8', x + 1, y + 1, w - 3, 1); } // flaques
     }],
     // eau du cénote souterrain : turquoise vif sur fond de sable, plus sombre vers le profond (le haut de la texture est le bord de la paroi), réseau de lumière ondulante
     eauGrotte: () => [64, 64, (g, o) => {

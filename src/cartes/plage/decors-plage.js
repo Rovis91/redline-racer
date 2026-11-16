@@ -11,7 +11,7 @@
       const { THREE, S, N, W, T, rnd } = h, D = THREE.DoubleSide, P = i => pt(h, i), IX = new Map(S.map((s, i) => [s, i])), n0 = h.scene.children.length;
       const off = (i, o) => { const s = S[(i % N + N) % N]; return [s.x - s.tz * o, s.z + s.tx * o]; }; // point à o mètres de l'axe (positif = à droite) à l'échantillon i
       const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-      const grain = (fond, g, o = {}) => h.mat('bruit', o, fond, g);
+      const grain = (fond, g, o = {}, k) => h.mat('bruitFin', o, fond, g, k); // k : force du grain fin (textures-plage.js)
       // nappe : un polygone horizontal [[x, z], …] à l'altitude y (trous = polygones retirés) ; la texture se répète tous les t mètres
       const nappe = (pts, y, m, t = 12, trous = []) => {
         const V = a => a.map(([x, z]) => new THREE.Vector2(x, z)), c = V(pts), ho = trous.map(V), tous = [...c, ...ho.flat()], pos = [], uv = [], nor = [], idx = [];
@@ -33,9 +33,9 @@
       const ligne = (i0, i1, o, pas = 2) => { const l = []; for (let i = i0; i <= i1; i += pas) l.push(off(i, typeof o === 'function' ? o(S[i % N], i) : o)); return l; };
 
       // matières des grandes masses (grain non directionnel)
-      const mSable = grain('#cdbb8e', ['#c2ae80', '#d8c89e', '#b8a476']), mPiste = grain('#a8946c', ['#9c8860', '#b4a078', '#8e7c58'], OFF), mSol = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462']);
+      const mSable = grain('#cdbb8e', ['#c2ae80', '#d8c89e', '#b8a476']), mPiste = grain('#a8946c', ['#9c8860', '#b4a078', '#8e7c58'], OFF, 0.3), mSol = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462']);
       const mDalle = h.mat('dallageQuinta'), mRoche = grain('#ddd2b2', ['#c8bc98', '#ece2c6', '#b4a884'], { side: D }), mRocheS = grain('#8e8a78', ['#7c7868', '#a09c88', '#5e6654'], { side: D });
-      const mSascab = grain('#d2c8ae', ['#c4baa0', '#ddd4bc'], OFF), mEnroche = grain('#a8a294', ['#8e887a', '#c0baac', '#787266'], { side: D }), mBois = h.mat('planches', { side: D }), mPlanches = h.mat('planchesMuelle');
+      const mSascab = grain('#d2c8ae', ['#c4baa0', '#ddd4bc'], OFF, 0.3), mEnroche = grain('#a8a294', ['#8e887a', '#c0baac', '#787266'], { side: D }), mBois = h.mat('planches', { side: D }), mPlanches = h.mat('planchesMuelle');
       const mMerB = grain('#9fe3d2', ['#b4ecde', '#8ad8c8'], { lisse: 1 }), mMer = grain('#4fcbc3', ['#62d4cc', '#42bfb8'], { lisse: 1 }), mMerL = grain('#146a8c', ['#1a7496', '#105e80'], { lisse: 1 });
       const mLagune = grain('#5d9480', ['#689e8a', '#528874', '#7a9a6a'], { lisse: 1 }), mCenote = grain('#2fb3d0', ['#49c4dc', '#27a6c4'], { lisse: 1, transparent: true, opacity: 0.5, depthWrite: false });
       const mFond = h.mat('peinture', { c: 0x0b3f63 }), mHaut = grain('#d8d2b8', ['#c4c0a4', '#e6e2cc']);
@@ -86,11 +86,11 @@
       h.ribbon(...tr(11, 20, 4, 18), s => -s.w, 0.02, s => s.w, 0.02, h.mat('dallageQuinta', { ...OFF, rep: [3, 1] }), 8); // dallage du bourg
       h.ribbon(i25 + 10, tT - i25 - 10, s => -s.w, 0.02, s => s.w, 0.02, mSascab, 12); h.ribbon(t1, ix - t1 + 14, s => -s.w, 0.02, s => s.w, 0.02, mSascab, 12); // sascab du cénote
       // bitume de la 307 et de la digue (X-1, X-10) : gris usé à grain, ligne de rive jaune, axe discontinu ; posé par le décor, sans les flaques brillantes de la chaussée du moteur
-      { const mBit = grain('#6e7378', ['#666b70', '#787d82', '#5e6368', '#747a80'], OFF), jaune = col2(0xe8b84a), blanc = col2(0xe8e0c8);
+      { const mBit = grain('#6e7378', ['#666b70', '#787d82', '#5e6368', '#747a80'], OFF, 0.3), jaune = col2(0xe8b84a), blanc = col2(0xe8e0c8);
         for (const [i0, n] of [[P(20) + 15, i25 + 10 - P(20) - 15], [P(42) - 4, (P(43) + 10 - P(42) + N) % N]]) { h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mBit, 12);
           for (const sg of [-1, 1]) h.ribbon(i0, n, s => sg * (s.w - 0.75), 0.04, s => sg * (s.w - 0.5), 0.04, jaune, 8); ruban(i0, n, -0.12, 0.04, 0.12, 0.04, blanc, i => i % 9 < 3, 8); } }
       // le chemin de la mangrove (retour de l'auteur) : une chaussée de terre claire bordée de madriers sur pieux, au ras de l'eau, au lieu du bitume
-      { const i0 = ix + 14, n = P(42) - 4 - i0, mTerre = grain('#c2b48e', ['#b4a680', '#cec29e', '#a89a74'], OFF); h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mTerre, 12);
+      { const i0 = ix + 14, n = P(42) - 4 - i0, mTerre = grain('#a99a74', ['#9e8f6a', '#b4a680', '#94865f'], OFF, 0.3); h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mTerre, 12);
         for (const sg of [-1, 1]) { h.ribbon(i0, n, s => sg * (s.w + 0.05), 0.4, s => sg * (s.w + 0.05), -0.5, mBois, 6); h.ribbon(i0, n, s => sg * (s.w + 0.05), 0.4, s => sg * (s.w + 0.5), 0.4, mBois, 6); h.ribbon(i0, n, s => sg * (s.w + 0.5), 0.4, s => sg * (s.w + 0.5), -1.2, mBois, 6); } }
       // talus de la crête de la 307 (la route passe au-dessus du sol plat)
       for (const sg of [-1, 1]) ruban(P(22), P(25) + 20 - P(22), s => sg * (s.w + 0.4), -0.03, s => sg * (s.w + 0.6 + 2.6 * Math.max(0, s.y)), s => -s.y - 0.07, mSol, i => S[i].y > 0.08, 12);
