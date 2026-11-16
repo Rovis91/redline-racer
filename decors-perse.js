@@ -427,23 +427,26 @@
 
       // --- les envols : des oiseaux posés qui partent quand la voiture arrive, reposés au tour suivant (les pigeons de paris : même forme, même taille, même envol). Deux groupes sur la chaussée de la plaine, un dans la rue du bazar
       { let graine = 7; const al = () => (graine = graine * 16807 % 2147483647) / 2147483647, vols = [], gris = { plume: h.mat('peinture', { c: 0x7a7c84 }), tete: h.mat('peinture', { c: 0x4a5058 }) };
-        const vol = (peau, i0, avance, ech, n, pos, vit) => { const p = Array.from({ length: n }, (_, j) => { const [x, y, z] = pos(j), [vx, vy, vz] = vit(j); return { x, y, z, r: al() * 6.28, vx, vy, vz }; }); vols.push({ i0, avance, ech, en: 0, t: 0, p, m: dyn(Is('pigeon', peau, p.map(q => [q.x, q.y, q.z, q.r, ech, ech, ech]))) }); };
+        const vol = (peau, i0, avance, ech, n, pos, vit) => { const p = Array.from({ length: n }, (_, j) => { const [x, y, z] = pos(j), [vx, vy, vz] = vit(j); return { x, y, z, r: al() * 6.28, vx, vy, vz }; }); vols.push({ i0, avance, ech, en: 0, t: 0, p, k0: vols.reduce((n, v) => n + v.p.length, 0) }); };
         for (const i0 of [150, 260, T.t1 + 70]) vol(gris, i0, 22, 1, 12, () => { const s = S[(i0 + (al() * 8 | 0)) % N], d = al() * 10 - 5; return [s.x - s.tz * d, s.y, s.z + s.tx * d]; }, () => [al() * 6 - 3, 3 + al() * 3, al() * 6 - 3]);
+        { const mV = dyn(Is('pigeon', gris, vols.flatMap(v => v.p.map(q => [q.x, q.y, q.z, q.r, v.ech, v.ech, v.ech])))); for (const v of vols) v.m = mV; } // un seul lot pour les trois envols : une passe de dessin par zone, pas par envol
         TICKS.push((dt, car) => { if (!car) return; for (const v of vols) { const e = (v.i0 - car.idx + N) % N;
-          if (!v.en && e < v.avance && e > 0) { v.en = 1; v.t = 0; } else if (v.en && e > 300 && e < N - 300) { v.en = 0; v.p.forEach((q, j) => place(v.m, j, q.x, q.y, q.z, q.r, 0, 1, 0, 0, v.ech, v.ech, v.ech)); maj(v.m); }
-          if (v.en && v.t < 5) { v.t += dt; const t = v.t; v.p.forEach((q, j) => { const e2 = t < 4.5 ? v.ech : 0; place(v.m, j, q.x + q.vx * t, q.y + q.vy * t + 0.3 * t * t, q.z + q.vz * t, Math.atan2(-q.vz, q.vx), 0, 1, 0, 0, e2, e2, e2, 0.5 * Math.sin(t * 14 + j)); }); maj(v.m); } } }); }
+          if (!v.en && e < v.avance && e > 0) { v.en = 1; v.t = 0; } else if (v.en && e > 300 && e < N - 300) { v.en = 0; v.p.forEach((q, j) => place(v.m, v.k0 + j, q.x, q.y, q.z, q.r, 0, 1, 0, 0, v.ech, v.ech, v.ech)); maj(v.m); }
+          if (v.en && v.t < 5) { v.t += dt; const t = v.t; v.p.forEach((q, j) => { const e2 = t < 4.5 ? v.ech : 0; place(v.m, v.k0 + j, q.x + q.vx * t, q.y + q.vy * t + 0.3 * t * t, q.z + q.vz * t, Math.atan2(-q.vz, q.vx), 0, 1, 0, 0, e2, e2, e2, 0.5 * Math.sin(t * 14 + j)); }); maj(v.m); } } }); }
 
       // --- les silhouettes fixes : toutes celles que les rues ont déposées en se construisant (plus grandes que nature : à 1,7 m elles ne se lisaient pas depuis la voiture) ; sous la voûte elles ont la clarté du décor
       { const peauG = e => ({ robe: h.mat('peinture', { c: 0xffffff, ...e }), peau: h.mat('peinture', { c: 0xc89a6a, ...e }), coiffe: h.mat('peinture', { c: 0xe8dcc0, ...e }) }), peauA = { poil: h.mat('peinture', { c: 0x8a7a68 }), bat: h.mat('peinture', { c: 0xc8323c }) }, bat = h.mat('peinture', { c: 0xc8323c });
         sansOmbre(Is('personnage', peauG({}), VIE.gens, { teinte: 'robe' })); sansOmbre(Is('personnage', peauG({ emissive: 0x4a3828 }), VIE.gensT, { teinte: 'robe' })); sansOmbre(Is('ane', peauA, VIE.anes));
         // --- la caravane du tribut : cinq chameaux, un âne, trois hommes, en file derrière le muret de gauche de l'allée des feux ; elle marche vers l'escalier, on la double à chaque tour
+        const COLS = [[0x7a2a2a, 0x1f3a6e, 0xe8dcc0], [0x2aa39a, 0xf0b840, 0xc8323c, 0xf4ead0], [0x1f3a6e, 0xf4ead0, 0xe87a2a, 0xc8323c]]; let mP, mA; // caravane, bazar côté droit, bazar côté gauche
         { const pts = []; for (let i = 356; i <= 432; i++) { const s = S[i], [x, , z] = au(s, -(s.w + 1.8)); pts.push([x, Math.max(sol(x, z), s.y - 0.4), z]); }
-          const p0 = [...pts[0], 0], mC = dyn(Is('chameau', { poil: h.mat('peinture', { c: 0x8a5a30 }), bat }, Array.from({ length: 5 }, () => p0))), mA = dyn(Is('ane', peauA, [p0])), mP = dyn(Is('personnage', peauG({}), [0x7a2a2a, 0x1f3a6e, 0xe8dcc0].map(c => [...p0, 1, 1, 1, c]), { teinte: 'robe' }));
+          const p0 = [...pts[0], 0], mC = dyn(Is('chameau', { poil: h.mat('peinture', { c: 0x8a5a30 }), bat }, Array.from({ length: 5 }, () => p0)));
+          mA = dyn(Is('ane', peauA, [p0, p0])); mP = dyn(Is('personnage', peauG({}), COLS.flat().map(c => [...p0, 1, 1, 1, c]), { teinte: 'robe' })); // tous les marcheurs (caravane, deux côtés du bazar) dans un seul lot de personnages et un d'ânes : une passe de dessin par zone, pas par groupe
           marche(chemin(pts), [[mP, 0, 0, 1.6, 0], [mC, 0, 5, 1.7, 1], [mC, 1, 13, 1.7, 1], [mC, 2, 21, 1.6, 1], [mP, 1, 26, 1.6, 0], [mC, 3, 31, 1.7, 1], [mC, 4, 39, 1.6, 1], [mA, 0, 45.5, 1.6, 1], [mP, 2, 49, 1.6, 0]], 1.2, 0, 70); }
         // --- les marcheurs de la rue du bazar : quatre par côté, au pied des façades, qui vont et reviennent ; un âne suit le sien
         for (const sd of [-1, 1]) { const pts = []; for (let i = T.t1 + 50; i <= T.t1 + 125; i += 3) { const s = S[i % N], [x, , z] = au(s, sd * (s.w - (sd > 0 ? 0.15 : 0.55))); pts.push([x, s.y, z]); }
-          const p0 = [...pts[0], 0], cols = sd > 0 ? [0x2aa39a, 0xf0b840, 0xc8323c, 0xf4ead0] : [0x1f3a6e, 0xf4ead0, 0xe87a2a, 0xc8323c], mP = dyn(Is('personnage', peauG({}), cols.map(c => [...p0, 1, 1, 1, c]), { teinte: 'robe' })), file = cols.map((c, k) => [mP, k, k * 71 + (sd > 0 ? 30 : 0), 1.35, 0]);
-          if (sd < 0) file.push([dyn(Is('ane', peauA, [p0])), 0, 2 * 71 + 2, 1.35, 1]);
+          const cols = COLS[sd > 0 ? 1 : 2], k0 = sd > 0 ? 3 : 7, file = cols.map((c, k) => [mP, k0 + k, k * 71 + (sd > 0 ? 30 : 0), 1.35, 0]);
+          if (sd < 0) file.push([mA, 1, 2 * 71 + 2, 1.35, 1]);
           marche(chemin(pts.concat(pts.slice().reverse())), file, 1.3, 1); } }
 
       // --- un choc dans la salle aux cent colonnes soulève une poussière de pierre (car.hit : la vitesse du choc, à l'image où il a lieu ; car.stun : l'étourdissement qui le suit, car un second pas de simulation dans l'image remet hit à zéro)
