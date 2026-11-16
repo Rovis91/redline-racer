@@ -411,7 +411,7 @@
       // --- les feux : la braise devient flamme (l'échelle tremble, chaque feu à son rythme, penché par le vent). Ceux de l'escalier s'embrasent 40 m devant la voiture et restent allumés jusqu'au tour suivant ; au dernier tour ils brûlent tous. Aux points de freinage, la braise reste fixe
       { const L = VIE.flamL, m = dyn(VIE.flam), feu = L.map(p => ({ i: p[7], esc: p[7] >= i9 + 2 && p[7] < i12 - 16, fixe: freine(p[7]), a: 0, on: 0 })), LU = VIE.flamLum, c0 = new THREE.Color(0xff8a30); let t = 0;
         LU.forEach((l, k) => { if (feu[k].fixe) l.c.copy(c0).multiplyScalar(0.5); }); // aux points de freinage : une braise, une lumière fixe
-        TICKS.push((dt, car) => { t += dt; const dernier = car && car.lap === 3; // shortcut: dernier tour = car.lap === 3, comme au stade (toute course contre l'IA fait 3 tours) ; à revoir si le nombre de tours devient réglable
+        TICKS.push((dt, car) => { t += dt; const dernier = car && car.lap === h.tours(); // h.tours() : 0 hors course
           L.forEach((p, k) => { const f = feu[k]; if (f.fixe) return; let a = 1;
             if (f.esc) { const e = car ? (f.i - car.idx + N) % N : N; if (dernier || e < 20 || e > N - 4) f.on = 1; else if (e > 300 && e < N - 300) f.on = 0; f.a += (f.on - f.a) * Math.min(1, dt * 6); a = f.a; }
             const tr = 0.8 + 0.2 * Math.sin(t * 13 + k * 1.7) * Math.sin(t * 8.3 + k), ht = 1 + a * (0.9 + 0.5 * tr), la = 1 + a * 0.25 * tr; LU[k].c.copy(c0).multiplyScalar(f.esc ? 0.12 + a * (0.6 + 0.4 * tr) : 0.6 + 0.4 * tr); // la lumière suit la flamme : braise faible, puis pleine clarté qui vacille

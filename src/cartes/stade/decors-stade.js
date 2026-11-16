@@ -126,8 +126,7 @@
         if (tE < 4) { tE += dt; for (let k = 0; k < NE * 3; k++) { if (k % 3 === 1) ve[k] -= 9.81 * dt; pe[k] += ve[k] * dt; } ge.attributes.position.needsUpdate = true; me.opacity = Math.max(0, 1 - tE / 4); }
         etin.visible = tE < 4;
         // dernier tour : la salle s'éteint, les quatre poursuites viennent se braquer sur la voiture ; arrivée : confettis
-        // shortcut: dernier tour = car.lap === 3 (session.js : toute course contre l'IA fait 3 tours) ; à revoir si le nombre de tours devient réglable
-        const der = !!(car && car.lap === 3), arrive = der && car.dist >= 3 * N;
+        const nT = h.tours(), der = !!(car && nT && car.lap === nT), arrive = der && car.dist >= nT * N; // h.tours() : 0 hors course
         eteint += ((der && !arrive ? 1 : 0) - eteint) * Math.min(1, dt * 1.5);
         toit.color.setScalar(1 - 0.8 * eteint); lampe.color.setScalar(1 - 0.85 * eteint); mc.color.setScalar(1 + 2 * eteint);
         // la foule bouge : chaque anneau passe par moments à sa variante bras levés

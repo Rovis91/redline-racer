@@ -613,7 +613,7 @@
   fond && await souffle();
   // ---------- décor de la carte : decors-<carte>.js ----------
   const VAP = [], vapeur = (x, y, z) => VAP.push([x, y, z]); // bouches de vapeur déclarées par le décor (panaches : voir flou)
-  const beams = [], CASS = [], decorTick = window.DECORS[TH.decor]({ cassable: (...a) => CASS.push(a), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, flou: (...a) => flou(...a), temps: () => race ? -1 : tTraf }); // flou : les particules du jeu ouvertes aux décors, à appeler depuis le tick (elles n'existent pas encore au chargement) ; le décor appelle lui-même step(dt) // pas de trafic en course : les adversaires ne savent pas l'éviter
+  const beams = [], CASS = [], decorTick = window.DECORS[TH.decor]({ cassable: (...a) => CASS.push(a), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, flou: (...a) => flou(...a), temps: () => race ? -1 : tTraf, tours: () => race ? race.laps : 0 }); // tours : ceux de la course en cours (0 hors course), pour le dernier tour des décors // flou : les particules du jeu ouvertes aux décors, à appeler depuis le tick (elles n'existent pas encore au chargement) ; le décor appelle lui-même step(dt) // pas de trafic en course : les adversaires ne savent pas l'éviter
 
   // pluie : traînées nettes qui s'allongent et foncent vers la caméra avec la vitesse, penchées par le vent ; tête claire, queue qui s'éteint (mélange additif, aucun flou)
   // force 1 = 400 gouttes ; au-delà (averse, zones de pluie > 1), plus de gouttes, plus longues ; et des impacts qui rejaillissent sur la chaussée devant la voiture
