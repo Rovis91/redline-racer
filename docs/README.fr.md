@@ -2,7 +2,7 @@
 
 <p align="center"><img src="../assets/icon.svg" width="96" alt="icône"></p>
 
-<h1 align="center">VILLE À PLEIN RÉGIME</h1>
+<h1 align="center">REDLINE RACER</h1>
 <p align="center"><b>夜間タイムアタック</b> · <i>contre-la-montre nocturne</i></p>
 
 <p align="center"><img src="images/titre.png" alt="Écran titre"></p>

@@ -1,4 +1,4 @@
-# Ville à plein régime
+# Redline Racer
 
 Jeu de course three.js, site statique sans étape de build. Carte du dépôt et documentation : `docs/INDEX.md`. Guide développeur : `docs/DEVELOPPEUR.md` (« Où régler quoi » pour trouver un réglage). `README.md` est en anglais, pour le public.
 

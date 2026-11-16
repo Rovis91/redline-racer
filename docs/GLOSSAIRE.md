@@ -1,4 +1,4 @@
-# Ville à plein régime
+# Redline Racer
 
 Jeu de course arcade en 3D pixelisée, sur huit cartes. Ce glossaire fixe le vocabulaire du jeu : ce qu'on lance depuis le menu, comment une course se découpe, ce qu'elle rapporte.
 

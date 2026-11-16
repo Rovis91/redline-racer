@@ -1,4 +1,4 @@
-# Spec V2 — Ville à plein régime
+# Spec V2 — Redline Racer
 
 État de départ vérifié le 12/11/2026 : `main` a une carte et est en retard de 111 commits sur `claude/perf`, qui contient les six cartes, la pluie physique, le trafic, les médailles, la difficulté et **le relief (hauteur, gravité, sauts, murs roulables)**. La V2 part de `claude/perf`.
 

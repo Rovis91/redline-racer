@@ -1,4 +1,4 @@
-// Ville à plein régime — rendu, effets, HUD, commandes et boucle de jeu. La piste et la physique sont dans sim.js.
+// Redline Racer — rendu, effets, HUD, commandes et boucle de jeu. La piste et la physique sont dans sim.js.
 // Plan du fichier (chercher « // ---------- ») : rendu et passe finale · les trois entités du décor (textures.js, formes.js, placement) · piste · ville · horizon · voiture et effets ·
 // état de jeu et commandes · HUD · boucle. Voir README.md pour savoir où régler quoi.
 (window.lanceJeu = async (CARTE = window.CARTE, fond = false) => {
@@ -136,17 +136,14 @@
   let hg = null; // contexte 2D du HUD en cours de dessin (celui de la vue, ou de la couche commune), pour txt, panel, tag
   // air devant l'objectif, commun aux deux passes finales : décalage de lecture de l'image (xy) et assombrissement (z)
   // gt[i] = goutte sur l'objectif (centre, rayon en hauteur d'écran, allongement vertical) : elle montre l'image derrière elle retournée et rapetissée, bord sombre
-  // ch.w = force de la chaleur sur la route (ch.xyz : inutilisés depuis le retrait de l'air chaud derrière l'échappement, qui déformait la voiture du joueur au rupteur) ; cr = point de la route au loin à l'écran (x, y), temps
-  const AIR = `uniform vec4 gt[8], ch, cr;
+  const AIR = `uniform vec4 gt[8];
       vec3 air(vec2 v, vec2 px){ vec3 o = vec3(0., 0., 1.); vec2 as = vec2(px.y / px.x, 1.);
         for (int i = 0; i < 8; i++) { vec4 g = gt[i]; if (g.z <= 0.) continue; vec2 q = (v - g.xy) * as / g.z; q.y /= g.w; float r2 = dot(q, q);
           if (r2 < 1.) { o.xy += -(v - g.xy) * (1.6 + .4 * r2); o.z *= 1. - .3 * r2 * r2; } }
-        if (ch.w > 0.) { float y = (cr.y - v.y) / .07, k = ch.w * step(0., y) * exp(-y * y) * exp(-pow((v.x - cr.x) * 2.2, 2.)); // juste sous le point de fuite de la route : le mirage
-          o.xy += k * vec2(sin(v.y * 420. + cr.z * 9.) * .004, sin(v.y * 260. - cr.z * 6.) * .0016); }
         return o; }`;
   const post = new THREE.ShaderMaterial({
     uniforms: { t: { value: null }, h: { value: null }, hb: { value: null }, dz: { value: null }, ex: { value: 1 }, amt: { value: 0 }, ab: { value: 0 }, vig: { value: 0 }, res: { value: 270 }, bloom: { value: TH.bloom }, scan: { value: TH.scan }, px: { value: new THREE.Vector2(1 / 480, 1 / 270) },
-      gt: { value: Array.from({ length: 8 }, () => new THREE.Vector4()) }, ch: { value: new THREE.Vector4() }, cr: { value: new THREE.Vector4() },
+      gt: { value: Array.from({ length: 8 }, () => new THREE.Vector4()) },
       ray: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, rayC: { value: [0, 1, 2, 3].map(() => new THREE.Color(0)) } }, // rayons : position à l'écran (xy), profondeur de la source (z), 1 / rayon² du halo (w) ; couleur × force
     vertexShader: 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
     fragmentShader: `uniform sampler2D t, h, hb; uniform float amt, ab, vig, res, scan, ex; uniform vec2 px; varying vec2 v; ${AIR}
@@ -1189,7 +1186,6 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       const g = o.geometry; if (!g.boundingSphere) g.computeBoundingSphere();
       const k = [o.material.uuid, +o.castShadow, +o.receiveShadow, +o.frustumCulled, o.renderOrder, o.layers.mask, Object.keys(g.attributes).sort().map(n => n + g.attributes[n].itemSize).join()].join('|');
       if (!lots.has(k)) lots.set(k, []); lots.get(k).push(o);
-      o.userData.petit = g.boundingSphere.radius * Math.max(o.scale.x, o.scale.y, o.scale.z) <= 60; // rythme.js trie les aplats lumineux sur la taille de l'objet d'origine
     }
     // un lot lourd (plus de GROS sommets) est découpé en pavés de PAVE mètres, pour que ce qui est hors champ ne soit pas dessiné ; les grandes pièces (sol, rubans) restent entières
     for (const [k, l] of [...lots]) {
@@ -1259,7 +1255,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // Langue de l'interface : 'fr' ou 'en', choisie à l'écran d'accueil et gardée (vpr.langue). Traduction et titres anglais : langue.js
   let langue = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr';
   const tr = s => traduit(s, langue);
-  const appliqueLangue = () => { document.documentElement.lang = langue; document.title = langue === 'en' ? 'Full Throttle City' : 'Ville à plein régime'; };
+  const appliqueLangue = () => { document.documentElement.lang = langue; document.title = 'Redline Racer'; };
   appliqueLangue();
   let msel = 5; // ligne du menu principal
   // écran d'accueil : le navigateur n'autorise le son qu'après un geste ; on le demande d'abord, pour que la musique soit là quand le menu s'affiche
@@ -1400,7 +1396,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     construit(c).then(api => {
       if (window.__voulu !== c.id || window.__g === api) return;
       setPref('vpr.carte', c.id); try { sessionStorage.setItem('vpr.menu', 1); history.replaceState(null, '', location.pathname + '?carte=' + c.id + (Q.has('joueurs') ? '&joueurs=' + VUES.length : '')); } catch (e) { } // le nombre de joueurs suit la préférence ; forcé par l'adresse (?joueurs=), il y reste d'une carte à l'autre
-      SON.carte(c); api.reprend(); if (window.lanceRythme) lanceRythme();
+      SON.carte(c); api.reprend();
     });
   }
   function menuAct(d) {
@@ -1711,7 +1707,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     if (car.boost > 0) tag('NITRO', HW - 66, HH - 92, C); else if (car.asp > 0.15) tag('ASPIRATION', HW - 66, HH - 92, Y); // au-dessus du compteur : au centre, il chassait les étiquettes des rivaux vers le ciel
     if (state !== 'title') { // jauge de nitro, dans le panneau de vitesse : 10 segments ; elle monte en glisse, au ras d'un mur ou d'un camion, dans l'aspiration ; pleine, elle clignote ; elle se vide tant qu'on la déclenche
-      const f = car.nitro, plein = f >= 1 && blink, n = car.sec ? Math.floor(f * 10) : Math.ceil(f * 10); // un segment allumé = de la nitro utilisable (à sec, sim.js NI.sec, elle attend un segment plein) txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
+      const f = car.nitro, plein = f >= 1 && blink, n = car.sec ? Math.floor(f * 10) : Math.ceil(f * 10); // un segment allumé = de la nitro utilisable (à sec, sim.js NI.sec, elle attend un segment plein)
+      txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
       // th.frole : frôler le mur remplit la jauge (sim.js, mur) ; la jauge s'éclaire tant que ça frotte, et 0,3 s après, le segment qui se remplit en blanc
       const fro = TH.frole && (vu.fro = car.rub && Math.hypot(car.vx, car.vz) > 15 ? 0.3 : Math.max(0, (vu.fro || 0) - dt)) > 0 && car.boost <= 0;
       for (let i = 0; i < 10; i++) R(hg, fro && i === Math.min(n, 9) ? '#ffffff' : i >= n ? '#30303c' : car.boost > 0 ? C : plein ? '#ffffff' : fro ? '#fff2a0' : Y, HW - 108 + i * 10, HH - 17 - (fro && i === Math.min(n, 9)), 8, 7 + 2 * (fro && i === Math.min(n, 9)));
@@ -2066,10 +2063,6 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       g.a += dt; g.y += dt * (-0.015 + 0.12 * ve * ve + 1.6 * chasse); if (g.y > 1.15 || g.y < -0.1) g.a = g.vie;
       u.set(g.x, g.y, g.r * Math.min(1, (g.vie - g.a) * 2, g.a * 8), 1 + 1.5 * ve * ve + 1.5 * chasse); // apparaît vite, s'évapore en rapetissant
     }
-    // chaleur (voir AIR) : au loin sur la route des cartes chaudes (th.chaleur), en plein soleil, sans pluie
-    const ch = U.ch.value, cr = U.cr.value; cr.z = now / 1000 % 600;
-    ch.set(0, 0, 0, 0);
-    if (TH.chaleur) { const s = S[(car.idx + 80) % N]; tmp.set(s.x, s.y, s.z).project(cam); cr.x = tmp.x / 2 + 0.5; cr.y = tmp.y / 2 + 0.5; ch.w = tmp.z < 1 ? TH.chaleur * (1 - lm) * (1 - Math.min(1, pl)) : 0; }
     if (!chaud) { // première image : tout est dessiné une fois sans tri de visibilité, pour que shaders, géométries et textures partent au GPU maintenant et non au premier passage en course (à-coups de 40 ms)
       chaud = true; const caches = [], tri = [];
       scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { tri.push(o); o.frustumCulled = false; } });

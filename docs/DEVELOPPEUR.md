@@ -1,6 +1,6 @@
 # Guide du développeur
 
-Jeu de course arcade en 3D pixelisée, seul, jusqu'à quatre sur le même écran, ou en ligne. Huit cartes, chacune avec son tracé, sa voiture, sa radio, son décor et son interface ; la musique réagit à la course.
+Redline Racer : jeu de course arcade en 3D pixelisée, seul, jusqu'à quatre sur le même écran, ou en ligne. Huit cartes, chacune avec son tracé, sa voiture, sa radio, son décor et son interface ; la musique réagit à la course.
 
 | Carte | Conduite | Voiture | Radio |
 |---|---|---|---|
@@ -170,7 +170,7 @@ Le pilotage (ZQSD, A/E) est lu en position physique des touches, donc WASD et Q/
 index.html            le jeu : page, polices, ordre de chargement des scripts (aucun JS à la racine)
 src/
   moteur/             sim.js (physique, sans rendu) · game.js (rendu three.js, interface, boucle) · session.js · langue.js
-                      peripheriques.js · reseau.js (en ligne, WebRTC) · rythme.js (essai)
+                      peripheriques.js · reseau.js (en ligne, WebRTC)
   donnees/            cartes.js (les cartes, en données) · traces-or.js (fantômes or, généré)
   audio/              audio.js (tout le son, synthétisé) · samples.js · instruments.js (générés) · essais-radio.js
   rendu/              catalogues et poseurs partagés : textures.js · formes.js · decors.js · *-voitures.js
@@ -199,7 +199,6 @@ Nom de fichier unique dans tout le dépôt : `decors-perse.js`, `textures-perse.
 | `src/rendu/formes.js` | **catalogue des formes** : la géométrie de chaque objet, forme simple ou assemblage de boîtes à zones nommées. Ni texture, ni emplacement. `insts()` (decors.js) pose un assemblage en nombre, une passe de dessin par zone. |
 | `src/rendu/decors.js` | **poseurs partagés** du placement, chargé avant les `decors-<carte>.js` : `inst`, `insts`, `boite`, `bord`, `repere`, `soude`, `near`, `pt`, `terrain`, exposés dans `POSEURS`. Crée `DECORS`, vide. |
 | `src/cartes/<carte>/decors-<carte>.js` | **placement** du décor d'une carte : où poser quelle forme avec quelle texture, par `h.pose`, `h.geo`, `h.mat`. Ajoute sa fonction par `Object.assign(DECORS, { … })`, avec les aides propres à sa carte. Ses `textures-<carte>.js` et `formes-<carte>.js` complètent les catalogues. |
-| `src/moteur/rythme.js` | **essai indépendant** : les aplats lumineux du décor battent avec la grosse caisse de la radio. Pour le retirer, supprimer sa ligne dans `index.html` ; pour comparer, ajouter `&rythme=0` à l'adresse. |
 | `src/donnees/traces-or.js` | trace de référence du fantôme or de chaque carte (produit par `outils/traces-or.js`) |
 | `pages/editeur.html`, `pages/editeur/` | éditeur de musique, sur un seul écran : en haut les pistes et le morceau bloc par bloc, en bas les outils en onglets. `editeur.html` n'est qu'une coquille ; le code est dans `pages/editeur/` (`noyau.js`, `arrangement.js`, `motifs.js`, `rouleau.js`, `instrument.js`, `reglages.js`, `principal.js`). |
 | `pages/ecoute.html`, `pages/ecoute/` | banc d'écoute, sur un seul écran : chaque station, ambiance et bruitage joué seul, mélange de course par famille, mesure des niveaux. Coquille + `ecoute/ecoute.js` + `ecoute/ecoute.css`. |
