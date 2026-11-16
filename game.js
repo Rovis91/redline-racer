@@ -661,13 +661,13 @@
   const CUBE = new THREE.WebGLCubeRenderTarget(32, { generateMipmaps: false, minFilter: THREE.LinearFilter }), refCam = new THREE.CubeCamera(0.5, 300, CUBE); refCam.coordinateSystem = renderer.coordinateSystem; refCam.updateCoordinateSystem(); refCam.children.forEach(c => { c.layers.enable(OMBD); c.layers.enable(OMBI); }); // r187 n'oriente les six faces que dans update(), que le jeu n'appelle pas (une face par image) // les objets mobiles qui portent une ombre
   let refF = 0;
   const refFace = () => { // la voiture du joueur 1 ne se voit pas dans sa propre cube map ; l'ombre du soleil n'est pas recalculée pour si peu
-    if (refF++ % 6) return; const f = (refF / 6 | 0) % 6, P = refCam.position, sp = sky.position.clone(), dp = sunDisc.position.clone(), ds = sunDisc.scale.x;
+    if (refF++ % 6) return; const f = (refF / 6 | 0) % 6, P = refCam.position, sp = sky.position.clone(), dp = sunDisc.position.clone(), ds = sunDisc.scale.x, ks = sky.scale.x;
     P.set(carG.position.x, carG.position.y + 0.9, carG.position.z); refCam.updateMatrixWorld(true);
     sky.position.copy(P); sky.scale.setScalar(0.1); sunDisc.position.copy(P).addScaledVector(SD, 200); sunDisc.scale.setScalar(ds / 10); sky.updateMatrixWorld(); sunDisc.updateMatrixWorld();
     const vis = carG.visible, rt = renderer.getRenderTarget(); carG.visible = false;
     renderer.setRenderTarget(CUBE, f); renderer.render(scene, refCam.children[f]);
     carG.visible = vis; renderer.setRenderTarget(rt);
-    sky.position.copy(sp); sky.scale.setScalar(1); sunDisc.position.copy(dp); sunDisc.scale.set(ds, ds, 1); sky.updateMatrixWorld(); sunDisc.updateMatrixWorld();
+    sky.position.copy(sp); sky.scale.setScalar(ks); sunDisc.position.copy(dp); sunDisc.scale.set(ds, ds, 1); sky.updateMatrixWorld(); sunDisc.updateMatrixWorld();
   };
   const reflete = m => { // le masque : rouge = part du reflet (specularMap de three)
     const src = m.map.image.getContext('2d').getImageData(0, 0, 128, 128).data;
@@ -1936,6 +1936,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // (ciel, lune et son ombre, brouillard, lumière dynamique, feux lointains, pluie), son HUD, la scène dans sa cible et la passe finale.
   const ASTRE = new THREE.Color(TH.astre.col), RAYS = 0.25; // RAYS : force des rayons de lumière (passe finale)
   const [V0, V1] = (M.vit || [130, 200]).map(v => v / 3.6 / (M.kmh || 1)); // plage des effets de vitesse de la carte, en m/s vrais
+  const LOIN_MIN = { touge: 3000, barrage: 2400 }; // shortcut: table du moteur ; à passer en option de carte (th.loin) si une troisième carte en a besoin
   function vueFrame(vu, dt, now) {
     const { cam, car, carY, pitch, roll, lm, cth, stun, lookA, lookP, pluieO, splP, splA, splD, inp } = vu, pulse = SON.pulse, G = modele(car);
     if (decorTick && decorTick.vue) decorTick.vue(car); // le décor qui dépend de la voiture suivie (wangan : le caboteur avance d'un tour à l'autre), réglé pour chaque vue avant son rendu
@@ -1963,10 +1964,13 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const photo = window.__g.vue; // shortcut: debug console seulement, __g.vue = [angle° autour de la voiture, distance, hauteur] pour inspecter le modèle ; à remplacer par un vrai mode photo si on en veut un
     if (photo) { const a = car.th + photo[0] * Math.PI / 180; cam.position.set(car.x + Math.cos(a) * photo[1], carY + photo[2], car.z + Math.sin(a) * photo[1]); cam.lookAt(car.x, carY + 0.7, car.z); cam.fov = 45; }
     cam.updateProjectionMatrix();
-    sky.position.copy(cam.position); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000); const pasL = sunFollow(car);
+    const pasL = sunFollow(car);
     // brouillard et ciel : nuit néon ↔ tunnel ; éclairs : flash double sur le ciel et l'éclairage (le tonnerre part de fxFrame)
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN * (BRUME ? BRUME[car.idx] : 1), 320, lm);
     let kBr = 0; for (const [z, n0, n1] of brumeZ) { const k = z(car.idx, 90); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
+    { const far = Math.min(3000, Math.max(scene.fog.far * 1.5, LOIN_MIN[TH.decor] || 0)), kf = far * 0.95 / 2500; // la caméra ne dessine plus au-delà du brouillard ; ciel (2 500 m) et astre (2 000 m) sont ramenés dans la portée ; LOIN_MIN : portée minimale des cartes dont les lointains hors brouillard (fog: false : sommets du barrage, silhouettes et halo de touge) dépassent 1,5 × le brouillard
+      if (far !== cam.far) { cam.far = far; cam.updateProjectionMatrix(); }
+      sky.position.copy(cam.position); sky.scale.setScalar(kf); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000 * kf); sunDisc.scale.set(TH.astre.taille * kf, TH.astre.taille * kf, 1); }
     pharesV = Math.max(TH.phares, (TH.pharesBrume || 0) * kBr); nuitV = pharesV / 2.6;
     if (voileBr) { voileBr.visible = kBr > 0.01; voileBr.position.copy(cam.position); voileBr.material.opacity = Math.min(1, kBr * 1.6); voileBr.material.color.copy(scene.fog.color); } // th.brume : un banc de brouillard sur une portion du tracé
     skyMat.color.copy(WHITE).lerp(FOG_IN, TH.tun && TH.tun.cielJour ? 0 : lm); // th.tun.cielJour : le ciel garde sa couleur sous le tunnel (on voit le jour par la bouche et par les ouvertures)
