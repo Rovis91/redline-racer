@@ -6,7 +6,7 @@
     // ---------- Playa 307 (Riviera Maya, midi, jour de la Feria del Carmen) : refonte d'après propositions/PROPOSITION-plage.md ----------
     // Un bourg balnéaire traversé par une route : plage des hôtels et sa place de sable, muelle en un seul tablier, rue, place de la feria, halle, route 307, cénote ouvert (lac),
     // abri sous roche puis salle (le tunnel du moteur, nu : th.tun.sans), digue de la lagune. Le nord (z < 0) est la mer. Sources : docs/REFS-plage.md et la proposition.
-    // Statique : rien ne bouge (pas de tick). Règle de texture : aucune bande ondulée sur les grandes surfaces (grain 'bruit' et accidents posés par le décor).
+    // Le décor fixe d'abord, puis « la vie » (propositions/VIE-plage.md) : ce qui bouge s'inscrit dans VIE et le tick renvoyé à la fin le fait avancer. Règle de texture : aucune bande ondulée sur les grandes surfaces (grain 'bruit' et accidents posés par le décor).
     plage(h) {
       const { THREE, S, N, W, T, rnd } = h, D = THREE.DoubleSide, P = i => pt(h, i), IX = new Map(S.map((s, i) => [s, i])), n0 = h.scene.children.length;
       const off = (i, o) => { const s = S[(i % N + N) % N]; return [s.x - s.tz * o, s.z + s.tx * o]; }; // point à o mètres de l'axe (positif = à droite) à l'échantillon i
@@ -124,6 +124,9 @@
       };
       const mBand = h.mat('banderole', { lum: 1, transparent: true, alphaTest: 0.5, side: D }), mAmp = h.mat('ampoules', { lum: 1, transparent: true, alphaTest: 0.5, side: D, fog: false });
       const L = { poteaux: [], cocos: [], buis: [], houp: [], troncs: [], lamp: [], poteauxE: [], palapas: [], etals: [], bancs: [], mangles: [], flamants: [], barques: [], cubes: [], fanions: [], pickups: [], motos: [], transats: [], piscines: [] };
+      // la vie : VIE = les fonctions (dt, voiture) du tick ; ce qui bouge porte userData.dyn (hors fusion du moteur, hors redécoupage final). Les listes ci-dessous sont remplies par le décor fixe et animées plus bas
+      const VIE = [], GENS = [], PIN = [], PIL = [], D0 = new THREE.Object3D(), dyn = o => { o.userData.dyn = 1; o.frustumCulled = false; return o; }; D0.rotation.order = 'YXZ';
+      let VOUTE = null, PUITS = [];
       const coco = (x, z, y = -0.05, t = 1) => L.cocos.push([x, y, z, rnd() * 6.28, t * (0.85 + rnd() * 0.35)]);
       const VERTS = [0x66763f, 0x58703a, 0x7a8048, 0x4e6a34, 0x8c8a4e];
       const buisson = (x, z, w, ht, y = -0.2, c = VERTS[rnd() * 5 | 0]) => L.buis.push([x, y, z, rnd() * 6.28, w, ht, w * (0.8 + rnd() * 0.4), c]);
@@ -148,9 +151,12 @@
 
       // ---------- la place de la feria (à droite de la route, entre la rue et la halle) : étals au bord, chapelle, kiosque, scène, grande roue, manège ----------
       rangee(i17 - 2, i18 - 2 - i17 + 2, 1, 3, (s, i) => { const [x, z] = off(i, s.w + 2.6); L.etals.push([x, s.y - 0.05, z, face(s, 1), 1, 1, 1, FETE[i % 3]]); return 4.2; });
-      { const s = S[i17 + 1], [x, z] = off(i17 + 1, s.w + 13); pose('chapelle', x, -0.05, z, face(s, 1)); } // au bord de la rue, là où on la voit en arrivant pose('kiosque', 590, -0.05, 250, -Math.PI / 2); pose('scene', 578, -0.05, 276, -Math.PI / 2); pose('grandeRoue', 628, -0.05, 244, Math.PI / 2).scale.setScalar(1.6); // 38 m : elle dépasse des toits, on la voit du muelle, de la rue et de la digue pose('manege', 612, -0.05, 278);
+      { const s = S[i17 + 1], [x, z] = off(i17 + 1, s.w + 13); pose('chapelle', x, -0.05, z, face(s, 1)); } // au bord de la rue, là où on la voit en arrivant
+      pose('kiosque', 590, -0.05, 250, -Math.PI / 2); pose('scene', 578, -0.05, 276, -Math.PI / 2);
+      pose('grandeRoue', 628, -0.05, 244, Math.PI / 2).scale.setScalar(1.6); pose('manege', 612, -0.05, 278); // la grande roue (38 m) dépasse des toits : on la voit de la rue. Fixes, sans animation : de près, la roue et le manège sont hors du champ de la caméra de course
       inst(h, h.geo('toit4'), col(0xc8452e, { side: D }), [[590, 4.7, 250, 0, 5.8, 2.6, 5.8]]); inst(h, h.geo('toitPalapa'), h.mat('toldo', { side: D }, '#e8468c', '#f4ecd8'), [[612, 5.4, 278, 0, 5.6, 2.2, 5.6]]);
       for (let k = 0; k < 14; k++) { const x = 560 + (k % 7) * 13 + rnd() * 3, z = 212 + (k / 7 | 0) * 66 + rnd() * 4; arbre(x, z, 9 + rnd() * 3, 7 + rnd() * 2, 0x3f7a32); }
+      for (const l of ARB) for (let k = l.length - 1; k >= 0; k--) { const [x, , z] = l[k]; if (Math.hypot(x - 612, z - 278) < 10 || Math.hypot(x - 628, z - 244) < 13 || (x > 568 && x < 605 && z > 262 && z < 290)) l.splice(k, 1); } // pas d'arbre dans le manège, la roue, la scène ni son public
       for (let k = 0; k < 10; k++) L.etals.push([596 + k * 4.4, -0.05, 258, 0, 1, 1, 1, FETE[k % 3]]);
 
       // ---------- la halle (D-5) : toit de palmes large et bas à deux pans sur poteaux de bois, ouverte des quatre côtés, jours dans le toit ; étals serrés des deux côtés ----------
@@ -170,7 +176,7 @@
         for (const [px, pz, , , nom] of PL.piles) { const x = PX + px * ca + pz * sa, z = PZ - px * sa + pz * ca; if (nom === 'torre') tor.push([x, -0.05, z, PL.a]); else if (nom === 'lancha') L.barques.push([x, -0.05, z, PL.a, 1, 1, 1, FETE[L.barques.length % 3]]); else if (nom === 'filet') vol.push([x, -0.05, z, PL.a + Math.PI / 2]); else coco(x, z); }
         insts(h, 'torreSalvavidas', PEAU, tor); insts(h, 'voley', PEAU, vol); }
       // laisse de mer : sable mouillé, écume, paquets de sargasses
-      nappe([[-900, -44], [900, -44], [900, -40], [-900, -40]], -0.05, grain('#9c8a6a', ['#8e7c5e', '#a89878'], OFF), 8); nappe([[-900, -45.2], [900, -45.2], [900, -44], [-900, -44]], -0.04, col(0xffffff, OFF));
+      nappe([[-900, -44], [900, -44], [900, -40], [-900, -40]], -0.05, grain('#9c8a6a', ['#8e7c5e', '#a89878'], OFF), 8); // le liseré d'écume est le ressac, animé avec la vie
       for (let k = 0; k < 150; k++) { const x = -300 + rnd() * 1100; cube(x, -0.02, -38.5 + rnd() * 1.6, rnd() * 0.3, 1.5 + rnd() * 5, 0.08, 0.5 + rnd() * 0.8, 0x3a2e22); }
 
       // ---------- le muelle (D-4) : garde-corps continu, pilotis, allée centrale, palapa-bar ronde au centre de l'épingle ----------
@@ -179,7 +185,7 @@
         mur(bord, 3.38, 3.5, mBois); mur(bord, 2.92, 3.02, mBois);
         for (let k = 0; k < bord.length - 1; k++) { const [x0, z0] = bord[k], [x1, z1] = bord[k + 1], n = Math.max(1, Math.round(Math.hypot(x1 - x0, z1 - z0) / pas)); for (let j = 0; j < n; j++) { const x = x0 + (x1 - x0) * j / n, z = z0 + (z1 - z0) * j / n; L.poteaux.push([x, 2.46, z, 0, 1, 1.06, 1]); if (j % 2 === 0) pil.push([x, -2.5, z, 0, 3.4, 5, 3.4]); } }
         for (let z = -36; z > -160; z -= 9) for (const x of [505, 515, 525]) pil.push([x, -2.5, z, 0, 3.4, 5, 3.4]);
-        inst(h, h.geo('poteauBois'), gris, pil);
+        inst(h, h.geo('poteauBois'), gris, pil); PIL.push(...pil);
         for (let z = -44; z >= -116; z -= 12) { L.lamp.push([515, 2.46, z, 0]); if (z % 24) L.bancs.push([513.6, 2.46, z - 6, Math.PI / 2], [516.4, 2.46, z - 6, -Math.PI / 2]); }
         guirlande([...Array.from({ length: 13 }, (_, k) => [515, 7.3 - (k % 2) * 0.6, -44 - k * 6])], 0.6, mBand, 6);
         inst(h, h.geo('toitPalapa'), mChaume, [[515, 5.6, -138, 0, 6.2, 3.6, 6.2], [515, 5.4, -52, 0, 3.4, 2.2, 3.4]]).castShadow = true;
@@ -289,7 +295,7 @@
         for (const i of [iA - 1, iB + 1]) mur([off(i, -(S[i].w + 4.5)), off(i, S[i].w + 4.5)], -12, S[i].y, mRocheS);
 
         // la voûte de la salle : un champ de facettes, bas le long des parois (8 m au-dessus de la passerelle), haut au milieu (plus de 12 m) ; les puits de lumière y sont laissés ouverts
-        const PU = [[259.7, 453, 6.5], [203, 428.5, 8], [224.5, 477.5, 4], [233.7, 445, 5.5]];   // puits [x, z, rayon] : au-dessus du gros rocher (dans l'axe de la sortie de la galerie), de la plage (le soleil tombe 5 m plus au nord), du bassin secondaire, du second rocher (à droite de la dernière ligne droite)
+        const PU = [[259.7, 453, 6.5], [203, 428.5, 8], [224.5, 477.5, 4], [233.7, 445, 5.5]]; PUITS = PU;   // puits [x, z, rayon] : au-dessus du gros rocher (dans l'axe de la sortie de la galerie), de la plage (le soleil tombe 5 m plus au nord), du bassin secondaire, du second rocher (à droite de la dernière ligne droite)
         const dMur = (x, z) => { let b = 1e9; for (const p of SALLE) b = Math.min(b, Math.hypot(p[0] - x, p[1] - z)); return b; }, plaf = (x, z) => 2 + 4.6 * ss(2, 20, dans(SALLE, x, z) ? dMur(x, z) : 0);
         { const xs = SALLE.map(p => p[0]), zs = SALLE.map(p => p[1]), x0 = Math.min(...xs) - 6, z0 = Math.min(...zs) - 6, nx = Math.ceil((Math.max(...xs) + 6 - x0) / 4), nz = Math.ceil((Math.max(...zs) + 6 - z0) / 4), pos = [], uv = [], cl = [];
           const V = (a, b) => { const x = x0 + a * 4 + 2.4 * (hz(a, b + 7) - 0.5), z = z0 + b * 4 + 2.4 * (hz(a + 3, b) - 0.5); return [x, plaf(x, z) + 1.1 * hz(a * 3 + 1, b * 5 + 2), z]; };
@@ -297,7 +303,7 @@
             if (PU.some(([x, z, r]) => Math.hypot(cx - x, cz - z) < r + 2.2) || !(dans(SALLE, cx, cz) || dMur(cx, cz) < 7)) continue;
             [[0, 1, 2], [1, 3, 2]].forEach((t, f) => { C3.set(teinte(a + f * 2, b * 7 + a, K * 0.85)); for (const k of t) { pos.push(...q[k]); uv.push(q[k][0] / 8, q[k][2] / 8); cl.push(C3.r, C3.g, C3.b); } }); }
           const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(cl, 3)); g.computeVertexNormals();
-          const me = new THREE.Mesh(g, mRocV); me.castShadow = me.receiveShadow = true; h.scene.add(me); }
+          const me = new THREE.Mesh(g, mRocV); me.castShadow = me.receiveShadow = true; h.scene.add(me); VOUTE = g; }
         // chaque puits : un col de roche du plafond jusqu'au-dessus de la butte (sa lèvre basse passe sous les facettes voisines), des lianes qui pendent de la lèvre, des buissons au bord, en haut
         const VERTL = [0x6aa832, 0x4f8a2a, 0x86b83a, 0x3f7a22];
         PU.forEach(([x, z, r], n) => { const yl = plaf(x, z) - 0.4, cols = [];
@@ -326,6 +332,7 @@
         { const sg = (() => { const [a, b] = AVANT, l = Math.hypot(b[0] - a[0], b[1] - a[1]), m = [(a[0] + b[0]) / 2 + (b[1] - a[1]) / l, (a[1] + b[1]) / 2 - (b[0] - a[0]) / l]; return dans(PLG, m[0], m[1]) ? -1 : 1; })();   // le côté de l'eau
           peau(AVANT.map((p, k) => { const a = AVANT[Math.max(0, k - 1)], b = AVANT[Math.min(AVANT.length - 1, k + 1)], l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1, nx = sg * (b[1] - a[1]) / l, nz = -sg * (b[0] - a[0]) / l; return [[p[0], -6.3, p[1], 0xcdbb8e], [p[0] + nx * 2, -6.75, p[1] + nz * 2, 0xc8b88c], [p[0] + nx * 5, -7.9, p[1] + nz * 5, 0xbfb48a]]; })).castShadow = false; }
         for (const [x, z, t] of [[205, 420.5, 0.7], [211, 417, 0.55], [200.5, 425.5, 0.55]]) coco(x, z, ySable(x, z) - 0.1, t);
+        for (const [x, z, r] of [[207, 423.5, 0.6], [203.5, 421.5, 2.2], [209.5, 420.5, 4]]) GENS.push([x, ySable(x, z), z, r, 0, 0]);   // deux ou trois baigneurs sur la plage du cénote (CN-6)
 
         // rochers : le gros rocher du milieu et deux plus petits, des blocs clairs posés sur le fond (certains affleurent ou émergent), d'autres au pied de la plage
         const ROC = [], RT = [0xe6dcc0, 0xd2c29c, 0xbca67a, 0xc8c0a8], roc = (x, y, z, sc) => ROC.push([x, y, z, rnd() * 6.28, sc * (0.8 + rnd() * 0.5), sc * (0.7 + rnd() * 0.6), sc * (0.8 + rnd() * 0.5), RT[rnd() * 4 | 0]]);
@@ -368,7 +375,7 @@
         const [tx, tz] = off(i, s.w + 4.0), b = boite(h, h.mat('ecrit', { lum: 1 }, 96, 28, '#d8271c', '#ffe14a', 'XOXO', 24), 6.5, 1.25, 0.12, tx, 3.75, tz); b.rotation.y = r; } // enseigne inventée (pas la vraie marque), à plat sur la façade
       // ---------- la halle (X-9) : franges de hamacs aux deux pignons, piñatas sous le faîtage, marchandises sur les étals ----------
       for (const i of [i18, i20]) { const s = S[i], n = Math.round((s.w + 8) / 1.5); for (let k = -n; k <= n; k++) { if (Math.abs(k * 1.5) < s.w - 1) continue; const [x, z] = off(i, k * 1.5); cube(x, s.y + 3.7, z, face(s, 1) + 1.5708, 0.12, 1.9, 1.3, [0xf6f2e8, ROSE, TURQ, JAUNE, 0xff6a2b][(k + 40) % 5]); } }
-      { const pin = []; for (let i = i18 + 6; i < i20; i += 7) { const s = S[i]; pin.push([s.x, s.y + 7.6, s.z, rnd() * 6, 1.3, 1.3, 1.3, FETE[(i / 7 | 0) % 3]]); } colore(inst(h, h.geo('bouee'), col(0xffffff), pin), pin);
+      { const pin = []; for (let i = i18 + 6; i < i20; i += 7) { const s = S[i]; pin.push([s.x, s.y + 7.6, s.z, rnd() * 6, 1.3, 1.3, 1.3, FETE[(i / 7 | 0) % 3]]); } PIN.push(...pin);
         chaque([i18, i20 - i18], 4, (s, i) => { for (const sg of [-1, 1]) for (let k = 0; k < 3; k++) { const [x, z] = off(i + k - 1, sg * (s.w + 3.3)); cube(x, s.y + 1.05 + (k % 2) * 0.08, z, rnd() * 3, 0.7, 0.3 + (k % 2) * 0.25, 0.7, [0xd8b96a, 0x2c4fa3, 0xd8362a, 0xd8b96a, 0xf2c230][(i + k) % 5]); } }); }
 
       // ---------- la plage (X-6) : palapas et transats sur les terrasses des hôtels, piquets à corde côté mer, barques de la procession au large, ferry, Cozumel ----------
@@ -401,20 +408,153 @@
       inst(h, h.geo('toitPalapa'), mChaume, L.palapas.map(([x, z, r, y]) => [x, y, z, 0, r, r * 0.6, r])).castShadow = true; L.palapas.forEach(([x, z, r, y]) => L.poteaux.push([x, -0.2, z, 0, 1.3, y + 0.3, 1.3]));
       insts(h, 'transat', PEAU, L.transats, { teinte: 'toile' }); insts(h, 'pickup', PEAU, L.pickups, { teinte: 'caisse' }); insts(h, 'mototaxi', PEAU, L.motos, { teinte: 'caisse' });
       RES.forEach(([Lg, Nv], v) => insts(h, 'resort', PEAU, RL[v], { a: [Lg, Nv], teinte: 'crepi' })); insts(h, 'piscine', PEAU, L.piscines);
+      // =====================================================================================================================
+      // La vie (propositions/VIE-plage.md) : eau, lumière, mécanique, vivant, réactions à la course. Numéros entre parenthèses : ceux de la proposition.
+      // Un seul vent, la brise de mer, du nord vers le sud (+z). Tout avance sur dt : la pause fige tout. Hasard : hz (fixe) ou Math.random, jamais rnd (le décor validé ne bouge pas).
+      // Rien n'est percutable, rien ne se pose dans ce qui se roule (ecart).
+      // =====================================================================================================================
+      let TV = 0; VIE.push(dt => { TV += dt; });   // l'horloge de la vie, en secondes
+      const met = (ms, k, x, y, z, ry = 0, e = 1, ey = e, rx = 0, rz = 0, ez = e) => { D0.position.set(x, y, z); D0.rotation.set(rx, ry, rz); D0.scale.set(e, ey, ez); D0.updateMatrix(); for (const m of ms) m.setMatrixAt(k, D0.matrix); };
+      const cache = (ms, k) => met(ms, k, 0, -99, 0, 0, 1e-4), maj = ms => { for (const m of ms) m.instanceMatrix.needsUpdate = true; };
+      const vifs = (nom, list, o, peau = PEAU) => insts(h, nom, peau, list, o).map(dyn);   // un lot qui bouge : hors fusion, hors redécoupage
+      const AX = new THREE.Vector3(1, 0, 0), DV = new THREE.Vector3(), tend = (m, k, ax, ay, az, bx, by, bz) => { DV.set(bx - ax, by - ay, bz - az); const l = DV.length() || 1; D0.position.set((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2); D0.quaternion.setFromUnitVectors(AX, DV.divideScalar(l)); D0.scale.set(l, 1, 1); D0.updateMatrix(); m.setMatrixAt(k, D0.matrix); }; // un fil tendu de a à b (boîte de 1 m le long de X)
+      const cap = (dx, dz) => Math.atan2(-dz, dx);   // rotation Y qui tourne +X vers (dx, dz)
+      const COULE = [], coule = (m, u, v) => { COULE.push([m.map, u, v]); return m; };   // une texture qui glisse (répétitions par seconde), comme l'eau de chapada
+      VIE.push(dt => { for (const [t, u, v] of COULE) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; } });
+      const flot = (g, m, x, y, z) => { const o = dyn(new THREE.Mesh(g, m)); o.position.set(x, y, z); h.scene.add(o); return o; };
+      // grains : un nuage de points. nait(k) rend [x, y, z, vx, vy, vz, vie]. o = { taille, c, op, add, g (pesanteur), map, coul (teintes par point), fondu (le grain s'allume puis s'éteint, en additif), vers ([de, à] : le grain passe d'une teinte à l'autre en vieillissant), continu }.
+      // Sans `continu`, les grains attendent une salve.
+      const grains = (n, nait, o = {}) => {
+        const Pp = new Float32Array(n * 3).fill(-999), Vt = new Float32Array(n * 3), A = new Float32Array(n).fill(1e9), Vi = new Float32Array(n).fill(1), C = o.coul || o.fondu || o.vers ? new Float32Array(n * 3) : null, VA = o.vers && o.vers.map(c => new THREE.Color(c)), geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(Pp, 3)); if (C) { if (o.coul) for (let k = 0; k < n; k++) C.set(o.coul[k % o.coul.length], k * 3); geo.setAttribute('color', new THREE.BufferAttribute(C, 3)); }
+        const pts = dyn(new THREE.Points(geo, new THREE.PointsMaterial({ size: o.taille || 0.2, color: o.c ?? 0xffffff, map: o.map || null, vertexColors: !!C, transparent: true, opacity: o.op ?? 1, depthWrite: false, blending: o.add || o.fondu ? THREE.AdditiveBlending : THREE.NormalBlending }))); pts.renderOrder = 5; h.scene.add(pts);
+        const lance = k => { const r = nait(k); Pp.set([r[0], r[1], r[2]], k * 3); Vt.set([r[3], r[4], r[5]], k * 3); Vi[k] = r[6]; A[k] = 0; };
+        if (o.continu) for (let k = 0; k < n; k++) { lance(k); A[k] = hz(k, 71) * Vi[k]; for (let j = 0; j < 3; j++) Pp[k * 3 + j] += Vt[k * 3 + j] * A[k]; }
+        VIE.push(dt => { for (let k = 0; k < n; k++) { if (A[k] > Vi[k]) { if (!o.continu) { Pp[k * 3 + 1] = -999; continue; } lance(k); } A[k] += dt; if (o.g) Vt[k * 3 + 1] -= o.g * dt; for (let j = 0; j < 3; j++) Pp[k * 3 + j] += Vt[k * 3 + j] * dt;
+            if (o.fondu) C[k * 3] = C[k * 3 + 1] = C[k * 3 + 2] = o.fondu * Math.sin(Math.PI * Math.sqrt(Math.min(1, A[k] / Vi[k])));
+            if (VA) { const u = Math.min(1, A[k] / Vi[k]) ** 1.5; C[k * 3] = VA[0].r + (VA[1].r - VA[0].r) * u; C[k * 3 + 1] = VA[0].g + (VA[1].g - VA[0].g) * u; C[k * 3 + 2] = VA[0].b + (VA[1].b - VA[0].b) * u; } }
+          geo.attributes.position.needsUpdate = true; if (o.fondu || VA) geo.attributes.color.needsUpdate = true; });
+        return { salve: () => { for (let k = 0; k < n; k++) lance(k); } };
+      };
+      const alea = (a = 1) => (Math.random() - 0.5) * a, brumeTx = h.tx('brume');
+      // fumée : des bouffées grises qui montent de ht mètres et que le vent couche vers le sud ; en vieillissant elles prennent la teinte `vers` (celle du ciel pour un panache lointain : il s'y fond)
+      const fumee = (x, y, z, ht, taille, n = 14, op = 0.4, vers = [0x8c8c88, 0xe6e6e2]) => grains(n, () => { const vy = ht / (5 + ht * 0.14); return [x + alea(taille * 0.3), y, z + alea(taille * 0.3), alea(0.3), vy, 0.5 + ht * 0.03, ht / vy]; }, { taille, map: brumeTx, op, vers, continu: 1 });
+      const pres = (car, i0, a = 24) => { if (!car) return false; const e = (i0 - car.idx + N) % N; return e > 0 && e < a; }, loin = (car, i0) => { if (!car) return true; const e = (i0 - car.idx + N) % N; return e > 300 && e < N - 300; };
+
+      // ---------- l'eau ----------
+      { // la mer (PL-1, MU-1) : rouleaux d'écume qui viennent du large et meurent sur la laisse, ressac, écume au pied des pilotis du bord
+        const plan = (lx, lz, nx = 1, nz = 1) => new THREE.PlaneGeometry(lx, lz, nx, nz).rotateX(Math.PI / 2), mEc = (nom, k) => { const m = h.mat(nom, { lum: 1, transparent: true, depthWrite: false, side: D, rep: [72, 1] }); m.map.offset.x = k * 0.37; return m; };
+        const rouleaux = [0, 1, 2, 3].map(k => flot(plan(1800, 1), mEc('ecumeLarge', k), 300, -0.04, -100)), ressac = flot(plan(1800, 1), mEc('ecumeMer', 5), 300, -0.03, -44);
+        VIE.push(() => { rouleaux.forEach((o, k) => { const p = (TV / 15 + k / 4) % 1; o.position.z = -130 + 85 * p; o.scale.z = 4 + 7 * p; o.material.opacity = Math.min(1, p * 5, (1 - p) * 5); });
+          const r = Math.sin(TV * 0.85); ressac.position.z = -44.4 + 2.1 * r; ressac.scale.z = 3.4 + 0.9 * r; });
+        const pl = PIL.filter(p => p[2] < -46 && ![505, 515, 525].includes(p[0]))   /* les pilotis du bord seulement : sous le tablier, personne ne les voit */, ec = dyn(inst(h, h.geo('disque'), h.mat('peinture', { c: 0xffffff, lum: 1, transparent: true, opacity: 0.5, depthWrite: false }), pl.map(p => [p[0], -0.1, p[2], 0, 1]))); ec.castShadow = ec.receiveShadow = false;
+        VIE.push(() => { pl.forEach((p, k) => met([ec], k, p[0], -0.1, p[2], 0, 0.8 + 0.55 * (0.5 + 0.5 * Math.sin(TV * 1.3 + k * 1.7)))); ec.instanceMatrix.needsUpdate = true; });
+      }
+
+      // ---------- la lumière ----------
+      // reflets d'eau sur la voûte de la salle (CN-2) : deux couches de mailles claires, en additif, sur la géométrie de la voûte
+      if (VOUTE) for (const [rep, u, v, op] of [[0.5, 0.008, 0.014, 0.13], [0.31, -0.011, 0.006, 0.1]]) { const m = coule(h.addMat(h.tx('caustique'), { opacity: op }), u, v); m.map.repeat.set(rep, rep); h.scene.add(new THREE.Mesh(VOUTE, m)); }
+      { const eau = PUITS.map(([x, z, r]) => h.lum(near(h, x, z), x, EAU + 3, z, 0x7fe8dc, 14 + r, 1.6)), c0 = eau.map(l => l.c.clone());   // la lumière que l'eau renvoie sous chaque puits : un luminaire turquoise qui respire
+        VIE.push(() => eau.forEach((l, k) => l.c.copy(c0[k]).multiplyScalar(0.75 + 0.25 * Math.sin(TV * 1.3 + k * 1.7)))); }
+
+      // ---------- le mouvement mécanique ----------
+      { // cerfs-volants au-dessus de la place de sable (PL-4) : amarrés aux lanchas et à la tour de sauvetage (les piles de la place), ils tirent vers le sud ; fil, losange, queue qui ondule
+        const ca = Math.cos(PL.a), sa = Math.sin(PL.a), A = PL.piles.filter(p => p[4] === 'lancha' || p[4] === 'torre').map(([px, pz, , , nom]) => [PX + px * ca + pz * sa, nom === 'torre' ? 4.3 : 1.2, PZ - px * sa + pz * ca]), n = A.length, NQ = 9;
+        const CV = [ROSE, JAUNE, TURQ, 0xff6a2b, 0x7a4bd6, 0xf6f2e8], blanc = col(0xffffff, { side: D, lum: 1 }), lc = A.map((a, k) => [0, -99, 0, 0, 1, 1, 1, CV[k % 6]]), lq = A.flatMap((a, k) => Array.from({ length: NQ }, (_, j) => [0, -99, 0, 0, 1, 1, 1, CV[(k + j) % 6]]));
+        const toile = dyn(colore(inst(h, h.geo('boite', 3, 3, 0.05), blanc, lc), lc)), queue = dyn(colore(inst(h, h.geo('boite', 0.4, 0.4, 0.04), blanc, lq), lq)), fil = dyn(inst(h, h.geo('boite', 1, 0.04, 0.04), col(0xf6f2e8), lc));
+        VIE.push(() => { A.forEach(([ax, ay, az], k) => { const H = 20 + (k * 5) % 10, x = ax + 2.6 * Math.sin(TV * 0.45 + k * 1.3), y = ay + H + 1.3 * Math.sin(TV * 0.8 + k), z = az + 1.6 * H + 1.6 * Math.sin(TV * 0.6 + k * 2);
+            met([toile], k, x, y, z, 0, 1, 1, -0.5, 0.785 + 0.12 * Math.sin(TV * 1.1 + k)); tend(fil, k, ax, ay, az, x, y - 1.3, z + 0.6);
+            for (let j = 0; j < NQ; j++) met([queue], k * NQ + j, x + 0.1 * (j + 1) * Math.sin(TV * 3.2 - j * 0.9 + k), y - 1.8 - j * 0.6, z + 0.9 + j * 0.33, 0, 1, 1, -0.5, TV * 2 + j); });
+          maj([toile, queue, fil]); });
+      }
+      { // sous la halle (HA-5) : une piñata basse éclate en confettis au passage de la voiture
+        const iP = i18 + 21, sP = S[iP]; PIN.push([sP.x, sP.y + 5.4, sP.z, 0, 1.7, 1.7, 1.7, ROSE]); const kP = PIN.length - 1, pin = dyn(colore(inst(h, h.geo('bouee'), col(0xffffff), PIN), PIN));
+        const conf = grains(220, () => [sP.x + alea(1.5), sP.y + 5.4 + alea(1.2), sP.z + alea(1.5), alea(7), 1 + Math.random() * 4, alea(7), 2.2], { taille: 0.16, coul: [[0.91, 0.27, 0.55], [0.12, 0.71, 0.66], [0.95, 0.76, 0.19], [1, 1, 1]], g: 7 });
+        let eclate = 0;
+        VIE.push((dt, car) => { if (!eclate && pres(car, iP, 9)) { eclate = 1; conf.salve(); cache([pin], kP); pin.instanceMatrix.needsUpdate = true; } else if (eclate && loin(car, iP)) { eclate = 0; const p = PIN[kP]; met([pin], kP, p[0], p[1], p[2], p[3], p[4]); pin.instanceMatrix.needsUpdate = true; } });
+      }
+      for (let i = i12 + 2; i < i17 - 2; i += 10) { const s = S[i], y = Math.min(hFac(i, -1), hFac(i, 1)) + 0.9, o = s.w + 2.4, [x0, z0] = off(i, -o), [x1, z1] = off(i, o); h.lum(i, s.x, s.y + y - 1.2, s.z, 0xffd08a, 16, 0.4); guirlande([[x0, s.y + y, z0], [(x0 * 3 + x1) / 4, s.y + y - 0.7, (z0 * 3 + z1) / 4], [s.x, s.y + y - 0.95, s.z], [(x0 + x1 * 3) / 4, s.y + y - 0.7, (z0 + z1 * 3) / 4], [x1, s.y + y, z1]], 0.4, mAmp, 3); } // guirlandes d'ampoules en travers de la rue (RU-1)
+      // fumées (RU-3, R7-2) : grills de la rue au bord du trottoir, brûlis au loin
+      const BRAISES = []; for (const [i, sd] of [[440, -1], [468, 1], [494, -1]]) { const s = S[i], [x, z] = off(i, sd * (s.w + 0.7)); cube(x, s.y + 0.5, z, face(s, sd), 1, 1, 0.6, 0x3a3a3e); fumee(x, s.y + 1.2, z, 8, 3, 14, 0.6, [0x6a6a68, 0xdcdcd8]); BRAISES.push(h.lum(i, x, s.y + 1.2, z, 0xff7a20, 9, 0.7)); }
+      { const c0 = BRAISES.map(l => l.c.clone()); VIE.push(() => BRAISES.forEach((l, k) => l.c.copy(c0[k]).multiplyScalar(0.7 + 0.3 * Math.abs(Math.sin(TV * 9 + k * 2) * Math.sin(TV * 5.3 + k))))); }   // la braise des grills éclaire le trottoir et vacille
+      fumee(150, 8, 455, 80, 32, 34, 0.55, [0x6e6e6c, 0xc4e0ee]);   // dans l'axe de la ligne droite de la crête, derrière la butte du cénote
+
+      // ---------- le vivant ----------
+      // Les oiseaux : un lot posé et un lot en vol, aux mêmes rangs. Un oiseau tourne en rond (R), ou attend, posé ou caché, de s'envoler avec son groupe (ENV).
+      const OIS = [], ENV = [], NOIR = 0x1e2024, GRIS = 0x2a3038;
+      const ronde = (n, cx, cy, cz, R, w, e, c, bat, dy = 0) => { for (let k = 0; k < n; k++) OIS.push({ cx, cy: cy + (hz(k, cx) - 0.5) * 6, cz, R: R * (0.75 + 0.5 * hz(k, cz)), w: w * (0.85 + 0.3 * hz(k, 8)), ph: k / n * 6.2832 + hz(k, 9), e, c, bat, dy }); };
+      const groupe = (liste, dec, lointain, o = {}) => { const ks = liste.map(b => OIS.push(b) - 1); ENV.push({ ks, dec, loin: lointain, T: 5, del: 0.05, bat: 14, en: 0, t: 9, ...o }); };
+      ronde(6, 500, 17, 452, 12, 0.5, 2.6, 0x18181a, 0, 2);   // zopilotes qui tournent bas dans le couloir de la 307, entre les deux rangs d'arbres (R7-1)
+      // mouettes posées sur la place de sable, à gauche de la piste : elles s'envolent vers le sud, en travers de la piste, quand la voiture approche (PL-9)
+      groupe(Array.from({ length: 16 }, (_, k) => ({ pose: 1, x: 270 + (hz(k, 21) - 0.5) * 18, y: -0.05, z: 50 + (hz(k, 22) - 0.5) * 11, r: hz(k, 23) * 6.28, e: 2, c: 0xf4f4f0, vx: (hz(k, 24) - 0.5) * 8, vy: 3 + hz(k, 25) * 3, vz: 5 + hz(k, 26) * 4 })),
+        car => !!car && Math.hypot(car.x - 270, car.z - 50) < 62, car => !car || Math.hypot(car.x - 270, car.z - 50) > 190);
+      // hirondelles de grotte qui s'envolent de la tranchée, devant la bouche de la galerie, à l'approche (CE-2) ; au jour : dans l'ombre de la bouche on ne les voyait pas
+      { const s = S[tT - 8]; groupe(Array.from({ length: 16 }, (_, k) => ({ x: s.x - s.tz * (hz(k, 41) - 0.5) * 8, y: s.y + 1.5 + hz(k, 42) * 3, z: s.z + s.tx * (hz(k, 41) - 0.5) * 8, e: 1.4, c: GRIS, vx: -s.tx * 9 + (hz(k, 43) - 0.5) * 5, vy: 3 + hz(k, 44) * 3, vz: -s.tz * 9 + (hz(k, 43) - 0.5) * 5 })), car => pres(car, tT - 8, 22), car => loin(car, tT), { T: 3.2, del: 0.06 }); }
+      const PLU = { plumage: col(0xffffff, { side: D, lum: 1, transparent: true })   /* en aplat : éclairé par le dessous, un oiseau blanc sortait brun ; transparent : rythme.js ne le fait pas battre */, bec: col(0x2a2a2a, { side: D }) }, lo = OIS.map(o => [o.x || 0, -99, o.z || 0, 0, o.e, o.e, o.e, o.c]), oP = vifs('oiseauPose', lo, { teinte: 'plumage' }, PLU), oV = vifs('oiseau', lo, { teinte: 'plumage' }, PLU);
+      OIS.forEach((o, k) => { cache(oV, k); o.pose ? met(oP, k, o.x, o.y, o.z, o.r, o.e) : cache(oP, k); });
+      VIE.push((dt, car) => {
+        OIS.forEach((o, k) => {
+          if (o.R) { const a = o.ph + TV * o.w, sg = Math.sign(o.w); met(oV, k, o.cx + Math.cos(a) * o.R, o.cy + o.dy * Math.sin(TV * 0.4 + o.ph), o.cz + Math.sin(a) * o.R, cap(-sg * Math.sin(a), sg * Math.cos(a)), o.e, o.e * (o.bat ? Math.cos(TV * o.bat + k * 1.7) * 0.85 + 0.15 : 0.75 + 0.2 * Math.sin(TV * 1.3 + k))); }
+        });
+        for (const g of ENV) {
+          if (!g.en && g.t >= g.T && g.dec(car)) { g.en = 1; g.t = 0; } else if (g.en && g.t >= g.T && g.loin(car)) { g.en = 0; for (const k of g.ks) { const o = OIS[k]; if (o.pose) met(oP, k, o.x, o.y, o.z, o.r, o.e); } }
+          if (g.en && g.t < g.T) { g.t += dt; g.ks.forEach((k, j) => { const o = OIS[k], t = g.t - j * g.del; if (t <= 0) return; const y = o.y + o.vy * t, vu = g.t < g.T - 0.05;
+              cache(oP, k); vu ? met(oV, k, o.x + o.vx * t, y, o.z + o.vz * t, cap(o.vx, o.vz), o.e, o.e * (Math.cos(TV * g.bat + k) * 0.85 + 0.15)) : cache(oV, k); }); }
+        }
+        maj(oP); maj(oV);
+      });
+      { // les flamants (LA-1) : deux lots aux mêmes rangs (debout, en vol). Le groupe du point 38 décolle à l'approche, traverse la digue au-dessus de la route et se repose de l'autre côté
+        const FL = L.flamants, PV = { plume: col(0xf0836a, { side: D }), patte: col(0xe78a8c, { side: D }), bec: col(0x2a2a2a, { side: D }) }, fA = vifs('flamant', FL, { a: [0] }), fV = vifs('flamantVol', FL, {}, PV);
+        const ici = FL.map(p => [p[0], p[2], p[3]]), but = (k0, i0) => Array.from({ length: 16 }, (_, j) => { const i = i0 + (hz(j, 51) * 16 | 0); return [...off(i, -(S[i].w + 15 + hz(j, 52) * 12)), 3.14 + hz(j, 53) * 0.6]; });
+        const G = [{ k0: 16, i0: P(38), dec: car => pres(car, P(38), 30) }].map(g => ({ ...g, de: ici.slice(g.k0, g.k0 + 16), a: but(g.k0, g.i0), en: 0, t: 9, T: 4.6 }));
+        const repose = k => { const p = ici[k]; met(fA, k, p[0], -1.2, p[1], p[2]); cache(fV, k); }; FL.forEach((p, k) => repose(k));
+        VIE.push((dt, car) => { let ch = 0;
+          for (const g of G) {
+            if (!g.en && g.dec(car)) { g.en = 1; g.t = 0; } else if (g.en && g.t >= g.T && loin(car, g.i0)) { g.en = 0; ch = 1; for (let j = 0; j < 16; j++) { ici[g.k0 + j] = g.de[j]; repose(g.k0 + j); } }
+            if (g.en && g.t < g.T) { g.t += dt; ch = 1; for (let j = 0; j < 16; j++) { const k = g.k0 + j, u = ss(0, 3.6, g.t - j * 0.06), d = g.de[j], a = g.a[j];
+                if (u <= 0) continue; if (u >= 1) { if (ici[k] !== a) { ici[k] = a; repose(k); } continue; } ici[k] = null; cache(fA, k);
+                met(fV, k, d[0] + (a[0] - d[0]) * u, 0.3 + 6.2 * Math.sin(Math.PI * u), d[1] + (a[1] - d[1]) * u, cap(a[0] - d[0], a[1] - d[1]), 1, Math.cos(TV * 9 + k) * 0.85 + 0.15); } }
+          }
+          if (ch) { maj(fA); maj(fV); }
+        });
+      }
+      { // les gens (RU-4, HA-3, PL-10, CN-6) : deux lots aux mêmes rangs (bras le long du corps, bras levés). GENS = [x, y, z, rotation, mode, échantillon, teinte, échelle] ;
+        // mode 0 : calme, un bras levé de temps en temps ; 1 : public, salue la voiture qui arrive à son échantillon
+        const HAB = [ROSE, TURQ, JAUNE, 0xf6f2e8, 0xff6a2b, 0x2c4fa3, 0xd8362a, 0x7a4bd6], gens = (x, y, z, r, mode = 0, i = 0, e = 1) => { if (ecart(x, z) > 0.3) GENS.push([x, y, z, r, mode, i, undefined, e]); };
+        const ETR = [[420, -1], [430, -1], [450, -1], [460, -1], [470, -1], [480, -1], [503, -1], [425, 1], [435, 1], [445, 1], [455, 1], [475, 1], [485, 1], [495, 1]];   // étals de la rue [échantillon, côté] : hors des poteaux du fil continu (à droite, tous les 10) et des grills
+        for (const [i, sd] of ETR) { const s = S[i], [x, z] = off(i, sd * (s.w + 1.05)); L.etals.push([x, s.y - 0.05, z, face(s, sd), 0.85, 0.85, 0.85, [ROSE, TURQ, JAUNE, 0xf6f2e8, 0xff6a2b][(i + (sd > 0 ? 2 : 0)) % 5]]); }   // à 85 % : leur toile passe sous le bord des auvents
+        for (let i = 418; i < 506; i += 4) for (const sd of [-1, 1]) { if (hz(i, sd + 70) < 0.3 || (sd > 0 && i % 10 === 0) || ETR.some(([e, c]) => c === sd && Math.abs(e - i) < 3)) continue; const s = S[i], [x, z] = off(i, sd * (s.w + 0.4 + hz(i, sd + 71) * 0.5)); gens(x, s.y, z, face(s, sd) + 1.5708, 1, i, 1.15); }   // la rue : au bord du trottoir, entre les étals
+        chaque([i18, i20 - i18], 2, (s, i) => { if ((i - i18) % 4 === 0) return; for (const sg of [-1, 1]) { if (hz(i, sg + 72) < 0.5) continue; const [x, z] = off(i, sg * (s.w + 1.3 + hz(i, sg + 73) * 0.9)); gens(x, s.y, z, face(s, sg) + (hz(i, sg + 74) < 0.5 ? 1.5708 : -1.5708), hz(i, sg + 75) < 0.5 ? 1 : 0, i, 1.15); } });   // la halle : vendeurs et clients entre la chaussée et les étals, hors des rangs de poteaux
+        chaque(plageT, 5, (s, i, k) => { const [x, z] = off(i, s.w + [2.4, 3.2, 5.6, 6.4][(k / 5 | 0) % 4]); gens(x, 0.12, z, face(s, 1) + 1.5708, (k / 5 | 0) % 2, i); });                                                                               // le malecón de la plage
+        const lg = GENS.map((p, k) => [p[0], p[1], p[2], p[3], p[7] || 1, p[7] || 1, p[7] || 1, p[6] || HAB[(k * 5 + (k >> 3)) % 8]]), PG = { bas: col(0x2a3a5a), habit: col(0xffffff), peau: col(0xc68a5a) }, gA = vifs('gente', lg, { a: [0], teinte: 'habit' }, PG), gB = vifs('gente', lg, { a: [1], teinte: 'habit' }, PG), etat = new Int8Array(GENS.length).fill(-1);
+        VIE.push((dt, car) => { let ch = 0; GENS.forEach((p, k) => { const e = car ? (p[5] - car.idx + N) % N : 99, leve = p[4] === 1 && (e < 26 || e > N - 5) ? (TV * 3 + k * 0.37) % 1 < 0.75 : p[4] === 0 && Math.sin(TV * 0.8 + k * 1.9) > 0.93;
+            if (etat[k] === +leve) return; etat[k] = +leve; ch = 1; const s = p[7] || 1; met(leve ? gB : gA, k, p[0], p[1], p[2], p[3], s); cache(leve ? gA : gB, k); }); if (ch) { maj(gA); maj(gB); } });
+        // le vendeur à vélo du malecón (PL-10) : il longe la promenade, aller et retour
+        const [v0, vn] = plageT, velo = vifs('velo', [[0, -99, 0]]), cyc = vifs('gente', [[0, -99, 0, 0, 1, 1, 1, 0xf6f2e8]], { a: [0], teinte: 'habit' }, PG);
+        VIE.push(() => { const T2 = vn / 2, w = (TV % (2 * T2)), u = w < T2 ? w * 2 : (2 * T2 - w) * 2, j = (v0 + Math.floor(u)) % N, f = u - Math.floor(u), a = S[j], b = S[(j + 1) % N], d = w < T2 ? 1 : -1, o = a.w + 7, x = a.x + (b.x - a.x) * f - a.tz * o, z = a.z + (b.z - a.z) * f + a.tx * o, r = cap(d * a.tx, d * a.tz);
+          met(velo, 0, x, 0.12, z, r); met(cyc, 0, x, 0.5, z, r); maj(velo); maj(cyc); });
+      }
+
+      // ---------- les réactions à la course ----------
+      { // confettis de la feria quand la voiture arrive sur la ligne (PL-13) : elle roule dessous
+        const s0 = S[0], conf = grains(420, () => { const o = alea(2 * s0.w); return [s0.x - s0.tz * o + alea(3), s0.y + 6.5 + Math.random() * 2.5, s0.z + s0.tx * o + alea(3), alea(1.5), -1.6 - Math.random() * 1.2, 0.8 + alea(1.5), 4.5]; }, { taille: 0.15, coul: [[0.91, 0.27, 0.55], [0.12, 0.71, 0.66], [0.95, 0.76, 0.19], [1, 1, 1]] });
+        let avant = false; VIE.push((dt, car) => { const va = pres(car, N, 26); if (va && !avant) conf.salve(); avant = va; });
+      }
       // ---------- lots : une passe de dessin par forme ----------
       inst(h, h.geo('poteauBois'), mBois, L.poteaux); insts(h, 'cocotier', PEAU, L.cocos, { a: [0] }); colore(inst(h, h.geo('buisson'), grain('#ffffff', ['#e8e8e8', '#d8d8d8']), L.buis), L.buis);
       colore(inst(h, h.geo('houppier'), grain('#ffffff', ['#e4e4e4', '#cacaca']), MANG), MANG);
       insts(h, 'ceiba', PEAU, ARB[0], { teinte: 'feuille' }); insts(h, 'arbreSelva', PEAU, ARB[1], { teinte: 'feuille' });
-      insts(h, 'lampadaire', PEAU, L.lamp); insts(h, 'poteauElec', PEAU, L.poteauxE); insts(h, 'banc', PEAU, L.bancs); insts(h, 'etalPlaya', PEAU, L.etals, { teinte: 'toile' }); insts(h, 'mangle', PEAU, L.mangles); insts(h, 'flamant', PEAU, L.flamants, { a: [0] });
+      insts(h, 'lampadaire', PEAU, L.lamp); insts(h, 'poteauElec', PEAU, L.poteauxE); insts(h, 'banc', PEAU, L.bancs); insts(h, 'etalPlaya', PEAU, L.etals, { teinte: 'toile' }); insts(h, 'mangle', PEAU, L.mangles);
       insts(h, 'barque', PEAU, L.barques, { teinte: 'bande' }); colore(inst(h, h.geo('boite', 1, 1, 1), mCrepi, L.cubes), L.cubes); colore(inst(h, h.geo('fanion'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), L.fanions), L.fanions).castShadow = true;
-      for (const o of h.scene.children.slice(n0)) if (o.isInstancedMesh && o.count > 120) {
+      for (const o of h.scene.children.slice(n0)) if (o.isInstancedMesh && o.count > 120 && !o.userData.dyn) {
         const cases = new Map(), M4 = new THREE.Matrix4(), C = new THREE.Color();
         for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M4); const k = Math.floor(M4.elements[12] / 350) + ':' + Math.floor(M4.elements[14] / 350); if (!cases.has(k)) cases.set(k, []); cases.get(k).push(i); }
         if (cases.size < 2) continue;
         for (const l of cases.values()) { const m = new THREE.InstancedMesh(o.geometry, o.material, l.length); l.forEach((i, j) => { o.getMatrixAt(i, M4); m.setMatrixAt(j, M4); if (o.instanceColor) { o.getColorAt(i, C); m.setColorAt(j, C); } }); m.castShadow = o.castShadow; m.receiveShadow = o.receiveShadow; h.scene.add(m); }
         h.scene.remove(o);
       }
-      for (const o of h.scene.children.slice(n0)) if (o.isInstancedMesh && o.count) { o.computeBoundingSphere(); o.frustumCulled = true; }
+      for (const o of h.scene.children.slice(n0)) if (o.isInstancedMesh && o.count && !o.userData.dyn) { o.computeBoundingSphere(); o.frustumCulled = true; }
+      const tick = (dt, now, car) => { dt = Math.min(dt, 0.1); for (const f of VIE) f(dt, car); }; tick(0); return tick;
     },
   });
 })();
