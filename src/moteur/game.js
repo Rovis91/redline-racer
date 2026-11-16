@@ -484,12 +484,13 @@
     side: THREE.DoubleSide, gloss: TH.gloss ?? (TH.route[6] ? 0.2 : 0.08) }, ...TH.route), 32); /* th.gloss : autre brillance de la chaussée (reflet du soleil et des luminaires) */ route.material.userData.mo = 1;
   if (SSR) { route.material.userData.mou = 1; route.geometry.setAttribute('mou', new THREE.Float32BufferAttribute(Array.from({ length: (cO + 1) * 2 }, (_, j) => mouAt((T.t1 + (j >> 1)) % N)), 1)); } // pluie par échantillon : ssr ne reflète que là où il pleut
   const barrier = mat('glissiere', { lum: TH.tubes, side: THREE.DoubleSide }, TH.mur); // ville : liseré néon, lumineux par lui-même ; ailleurs la glissière prend la lumière
-  const MURS = {}; // les deux glissières (côté -1 et +1), qui gardent la forme des chocs (voir « décor qui s'abîme »)
-  if (!T.vert) { MURS[-1] = ribbon(T.t1, cO, -W, TH.murH, -W, -2, barrier); MURS[1] = ribbon(T.t1, cO, W, TH.murH, W, -2, barrier); }
+  const MURS = { '-1': [], 1: [] }; // les glissières de chaque côté (-1 et +1), des bandes { M, i0, n } qui gardent la forme des chocs (voir « décor qui s'abîme ») ; h.glis y ajoute celles du décor
+  const murBande = (sg, i0, n, ...r) => { const M = ribbon(i0, n, ...r); MURS[sg].push({ M, i0, n }); return M; };
+  if (!T.vert) { murBande(-1, T.t1, cO, -W, TH.murH, -W, -2, barrier); murBande(1, T.t1, cO, W, TH.murH, W, -2, barrier); }
   else { // carte à relief : la glissière suit le haut des murs roulables, et chaque paroi est un quart de tube en 16 facettes, du pied du plat au mur
     const haut = s => paroi(s, s.w), tube = mat(TH.paroi || 'beton', { side: THREE.DoubleSide });
     for (const sg of [-1, 1]) {
-      if (TH.glis ?? 1) MURS[sg] = ribbon(T.t1, cO, s => sg * s.w, s => haut(s) + TH.murH, s => sg * s.w, s => haut(s) - 2, barrier); // th.glis = 0 : le décor pose lui-même ses glissières (stade : pas sur l'aire centrale), celle-ci doublerait la sienne
+      if (TH.glis ?? 1) murBande(sg, T.t1, cO, s => sg * s.w, s => haut(s) + TH.murH, s => sg * s.w, s => haut(s) - 2, barrier); // th.glis = 0 : le décor pose lui-même ses glissières (stade : pas sur l'aire centrale), celle-ci doublerait la sienne
       for (let i = 0; i < N; i++) if (S[i].rc && !S[(i - 1 + N) % N].rc) { let c = 0; while (S[(i + c + 1) % N].rc) c++;
         for (let j = 0; j < 16; j++) { const o = k => s => sg * (W + (s.w - W) * k / 16), y = k => s => paroi(s, W + (s.w - W) * k / 16); ribbon(i, c, o(j), y(j), o(j + 1), y(j + 1), tube, 16); } } // 16 facettes : avec 6, la corde passait jusqu'à 0,7 m au-dessus de la paroi de sim.js, la voiture s'y enfonçait
     }
@@ -613,7 +614,7 @@
   fond && await souffle();
   // ---------- décor de la carte : decors-<carte>.js ----------
   const VAP = [], vapeur = (x, y, z) => VAP.push([x, y, z]); // bouches de vapeur déclarées par le décor (panaches : voir flou)
-  const beams = [], CASS = [], decorTick = window.DECORS[TH.decor]({ cassable: (...a) => CASS.push(a), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, flou: (...a) => flou(...a), temps: () => race ? -1 : tTraf, tours: () => race ? race.laps : 0 }); // tours : ceux de la course en cours (0 hors course), pour le dernier tour des décors // flou : les particules du jeu ouvertes aux décors, à appeler depuis le tick (elles n'existent pas encore au chargement) ; le décor appelle lui-même step(dt) // pas de trafic en course : les adversaires ne savent pas l'éviter
+  const beams = [], CASS = [], decorTick = window.DECORS[TH.decor]({ cassable: (...a) => CASS.push(a), glis: (sg, ...r) => murBande(sg, ...r), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, flou: (...a) => flou(...a), temps: () => race ? -1 : tTraf, tours: () => race ? race.laps : 0 }); // tours : ceux de la course en cours (0 hors course), pour le dernier tour des décors // flou : les particules du jeu ouvertes aux décors, à appeler depuis le tick (elles n'existent pas encore au chargement) ; le décor appelle lui-même step(dt) // pas de trafic en course : les adversaires ne savent pas l'éviter
 
   // pluie : traînées nettes qui s'allongent et foncent vers la caméra avec la vitesse, penchées par le vent ; tête claire, queue qui s'éteint (mélange additif, aucun flou)
   // force 1 = 400 gouttes ; au-delà (averse, zones de pluie > 1), plus de gouttes, plus longues ; et des impacts qui rejaillissent sur la chaussée devant la voiture
@@ -1034,13 +1035,14 @@
   // Glissières : chaque côté (MURS) garde la forme des chocs, dz[i] = recul de l'échantillon i (m). La collision de sim.js ne bouge pas : un rail embouti laisse un creux derrière la voiture, pas devant.
   // Peinture : un anneau de MN segments sur les parois (bande de la teinte de la voiture + rayure claire), recalé sur la glissière quand elle recule.
   // Cônes et poubelles : posés au bord des virages, ils volent au contact d'une voiture (qui n'en sait rien) et restent où ils tombent.
-  const DS = T.len / N, OFF = s => T.vert ? s.w : W, MDZ = { '-1': new Float32Array(N), 1: new Float32Array(N) }, MP0 = {}; // OFF : où est la paroi ; MP0 : les glissières intactes
-  for (const sg in MURS) { MURS[sg].userData.dyn = 1; MP0[sg] = MURS[sg].geometry.attributes.position.array.slice(); }
+  const DS = T.len / N, OFF = s => T.vert ? s.w : W, MDZ = { '-1': new Float32Array(N), 1: new Float32Array(N) }; // OFF : où est la paroi
+  for (const sg in MURS) for (const B of MURS[sg]) { B.M.userData.dyn = 1; B.P0 = B.M.geometry.attributes.position.array.slice(); }
   const murK = i => (i - T.t1 + N) % N; // le rang de l'échantillon i dans un ruban qui part de T.t1 (au-delà de cO : dans le tunnel, pas de glissière)
-  function murEcrit(sg, a, b) { const M = MURS[sg]; if (!M) return; const P = M.geometry.attributes.position.array, d = MDZ[sg];
-    for (let j = a; j <= b; j++) { const i = (j + N) % N, k = murK(i); if (k > cO) continue; const s = S[i], nx = -s.tz * sg, nz = s.tx * sg;
-      for (let v = 0; v < 2; v++) { const q = (k * 2 + v) * 3; P[q] = MP0[sg][q] + nx * d[i]; P[q + 2] = MP0[sg][q + 2] + nz * d[i]; } }
-    M.geometry.attributes.position.needsUpdate = true; }
+  function murEcrit(sg, a, b) { const d = MDZ[sg];
+    for (const { M, i0, n, P0 } of MURS[sg]) { const P = M.geometry.attributes.position.array;
+      for (let j = a; j <= b; j++) { const i = (j + N) % N, k = (i - i0 + N) % N; if (k > n) continue; const s = S[i], nx = -s.tz * sg, nz = s.tx * sg; // au-delà de n : hors de la bande (tunnel, ouvrage)
+        for (const kk of k === 0 && n >= N ? [0, N] : [k]) for (let v = 0; v < 2; v++) { const q = (kk * 2 + v) * 3; P[q] = P0[q] + nx * d[i]; P[q + 2] = P0[q + 2] + nz * d[i]; } } // bande qui fait le tour : le dernier échantillon est le premier
+      M.geometry.attributes.position.needsUpdate = true; } }
   function murTord(i, sg, vn) { if (vn <= 6) return; const d = Math.min(0.3, 0.03 * (vn - 6)), R = Math.max(1, Math.round((1.5 + 0.12 * vn) / DS)), D = MDZ[sg];
     for (let j = -R; j <= R; j++) { const u = 1 - Math.abs(j) / (R + 1), i2 = (i + j + N) % N; D[i2] = Math.min(0.45, D[i2] + d * u * u * (3 - 2 * u)); }
     murEcrit(sg, i - R, i + R); marquesSuivent(sg); }
@@ -1081,11 +1083,11 @@
   // shortcut: le sens du virage (signe de S.k) donne l'extérieur ; si une carte définit k à l'envers, les objets seraient à l'intérieur : à vérifier carte par carte au premier passage
   const objEcrit = o => { const m = new THREE.Matrix4().compose(o.p, o.q, new V3(1, 1, 1)); if (!o.pieces) { o.S.im.setMatrixAt(o.k, m); o.S.im.instanceMatrix.needsUpdate = true; return; }
     m.multiply(new THREE.Matrix4().makeTranslation(-o.x0, -o.y0 - o.S.h / 2, -o.z0)); for (const [im, k, m0] of o.pieces) { im.setMatrixAt(k, new THREE.Matrix4().multiplyMatrices(m, m0)); im.instanceMatrix.needsUpdate = true; } }; // pièces du décor : le déplacement depuis la pose de départ, appliqué à chacune
-  function decorRaz() { for (const sg in MDZ) { MDZ[sg].fill(0); if (MURS[sg]) { MURS[sg].geometry.attributes.position.array.set(MP0[sg]); MURS[sg].geometry.attributes.position.needsUpdate = true; } }
+  function decorRaz() { for (const sg in MDZ) { MDZ[sg].fill(0); for (const B of MURS[sg]) { B.M.geometry.attributes.position.array.set(B.P0); B.M.geometry.attributes.position.needsUpdate = true; } }
     mB.fill(0); mP.fill(0); mEnvoie();
     for (const o of OBJ) { o.p.set(o.x0, o.y0 + o.S.h / 2, o.z0); o.v.set(0, 0, 0); o.w.set(0, 0, 0); o.q.identity(); o.dort = 1; objEcrit(o); } }
   decorRaz();
-  function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg]) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
+  function murChoc(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; marque(c, sg, c.hit); if (MURS[sg].length) murTord(c.idx, sg, c.hit); } // un choc franc contre la paroi (pas un camion : loin du bord)
   // particules pixel des moteurs abîmés : des carrés nets (comme le reste du jeu), une couleur et une taille par palier d'âge, pas de dégradé
   //   fumee : la vapeur grise qui sort de l'avant dès 0,6 d'usure ; noire : la fumée d'un moteur en feu ; feu (mode CASSE) : il couve à 0,7, flambe à 0,85, embrase la voiture hors d'usage
   const PXN = 900, pxP = new Float32Array(PXN * 3).fill(-1e4), pxV = new Float32Array(PXN * 3), pxC = new Float32Array(PXN * 3), pxA = new Float32Array(PXN), pxS = new Float32Array(PXN), pxL = new Float32Array(PXN), pxL0 = new Float32Array(PXN), pxK = new Uint8Array(PXN), pxGeo = new THREE.BufferGeometry(); let pxi = 0;
