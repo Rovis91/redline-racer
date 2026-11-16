@@ -56,7 +56,7 @@ const session = (store = memoire(), prefs = reglages(), auto = false) => nouvell
 
 // ---------- Tournée : une manche close, la suivante sur la grille des points, le trophée à la dernière ----------
 {
-  const prefs = reglages(), S = session(memoire(), prefs);
+  const prefs = reglages(), S = session(memoire(), prefs), avance = session(memoire(), prefs); // avance : une carte construite en fond avant la manche (le jeu en prépare d'avance)
   assert(S.tn(1) === null && S.tnOu(1).manche === 0 && S.trophee(1) === 0, 'pas de Tournée en cours');
   const R = S.start({ mode: 'tournee', diff: 1, ia: true }); assert(R.cars.length === 4 && R.cars[0].pos === 4, 'première manche : le joueur en fond de grille');
   R.cars[0].fin = 1; S.pas(R.cars[0], H); assert(S.raceEnd && !S.tnFin);
@@ -65,6 +65,7 @@ const session = (store = memoire(), prefs = reglages(), auto = false) => nouvell
   assert.deepStrictEqual(JSON.parse(prefs.o['vpr8.tournee'])[1], { manche: 1, pts: f.pts }, 'Tournée sauvegardée par difficulté');
   S.clos(); assert(S.tnFin === f, 'une manche ne se compte qu’une fois');
   const S2 = session(memoire(), prefs); assert(S2.tn(1).manche === 1 && S2.tn(0) === null, 'la carte suivante relit la Tournée');
+  assert(avance.tn(1).manche === 1, 'une carte construite avant la manche relit aussi la Tournée (sinon elle renvoie à la carte d’avant, qui la renvoie à elle : la page gèle)');
   assert.deepStrictEqual(S2.start({ mode: 'tournee', diff: 1, ia: true }).cars.map(c => c.pos), tournee(f.pts).grille.map(k => k + 1), 'manche suivante : grille inversée des points (le meneur dernier)');
   prefs.o['vpr8.tournee'] = JSON.stringify([null, { manche: CARTES.length - 1, pts: [20, 0, 0, 0] }]);
   const S3 = session(memoire(), prefs), R3 = S3.start({ mode: 'tournee', diff: 1, ia: true }); R3.cars[0].fin = 1; S3.pas(R3.cars[0], H); S3.toMenu();

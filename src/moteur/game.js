@@ -1465,7 +1465,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       else if (key === 'i' && deux()) inscrit(); // à deux : rouvrir l'inscription pour changer de périphérique (les places prises ne sont plus redemandées au départ)
       return;
     }
-    if (mode === 'tournee' && ses.raceEnd) { if (e.code === 'Enter') { if (!ses.tnFin) ses.clos(); else if (ses.tnFin.fini) toMenu(); else start(); } } // Tournée : arrivée, puis classement général, puis manche suivante (pas de « rejouer »)
+    if (mode === 'tournee' && ses.raceEnd) { if (e.code === 'Enter' && performance.now() - tFin > 1500) { ses.clos(); if (ses.tnFin.fini) toMenu(); else start(); } } // Tournée : l'écran de fin de manche, puis la suivante (pas de « rejouer ») ; Entrée attend 1,5 s, comme à deux
     else if (ses.raceEnd && deux()) { // tableau commun : REVANCHE ou MENU, au choix de l'un ou de l'autre. Entrée (le bouton de gaz d'une manette) ne compte qu'1,5 s après l'arrivée : on ne relance pas une course en passant la ligne
       if (/^Arrow|^Key[WASD]$/.test(e.code)) fsel ^= 1; else if (e.code === 'Enter' && performance.now() - tFin > 1500) { if (fsel) toMenu(); else start(); return; } }
     else if ((e.code === 'Enter' && ses.raceEnd) || (key === 'r' && !deux())) start(); // à deux, R ne relance pas : la touche voisine du rapport + du joueur 1 (E) ; RECOMMENCER est au menu de pause
@@ -1758,14 +1758,25 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       panel(cx - 150, 52, 300, 166); txt((car.out ? (race.casse ? "HORS D'USAGE : " : 'ELIMINE : ') : 'ARRIVEE : ') + car.pos + (car.pos === 1 ? 'ER' : 'E'), cx, 60, 16, Y, 'center', 1); const t1 = raceOrder(race)[0].fin;
       raceOrder(race).forEach((c, i) => { const j = c !== car; txt((i + 1) + '. ' + (j ? pil(c)[0] : 'VOUS'), cx - 138, 86 + i * 15, 8, j ? pil(c)[1] : Y); txt(c.fin ? fmt(c.fin) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.out ? 138 : 50), 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); if (race.casse) txt(cassePts(c) + ' PTS', cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); else if (i && c.fin) txt('+' + (c.fin - t1).toFixed(2), cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); });
       txt('MEILLEUR TOUR ' + fmt(moi.bl), cx, 152, 8, C, 'center'); txt(race.casse ? 'TAKEDOWNS ' + car.ca.td + '  POINTS ' + cassePts(car) : 'GLISSES ' + car.nDrift + '  NITRO ' + car.nBoost + '  MURS ' + car.nWall, cx, 166, 8, race.casse ? Y : '#e8e8e4', 'center'); txt('NIVEAU ' + DIFF[diff].nom, cx, 180, 8, '#e8e8e4', 'center');
-      txt(!ses.raceEnd ? (VUES.length > 2 ? "D'AUTRES JOUEURS ROULENT ENCORE" : "L'AUTRE JOUEUR ROULE ENCORE") : mode === 'tournee' ? 'ENTREE : CLASSEMENT GENERAL' : 'ENTREE : REJOUER   ECHAP : MENU', cx, 200, 8, C, 'center'); // (à deux : Entrée et Échap n'agissent qu'une fois les deux joueurs arrivés)
+      txt(!ses.raceEnd ? (VUES.length > 2 ? "D'AUTRES JOUEURS ROULENT ENCORE" : "L'AUTRE JOUEUR ROULE ENCORE") : 'ENTREE : REJOUER   ECHAP : MENU', cx, 200, 8, C, 'center'); // (à deux : Entrée et Échap n'agissent qu'une fois les deux joueurs arrivés)
     }
-    if (ses.tnFin && state === 'race') { // Tournée, manche close : le classement général, ce que la manche a rapporté, et la suite (ou le trophée après la dernière)
-      const f = ses.tnFin, nb = CARTES.length, ord = n => n + (n === 1 ? 'ER' : 'E');
-      panel(cx - 150, 52, 300, 166); txt(f.fini ? 'TOURNEE TERMINEE' : 'CLASSEMENT GENERAL', cx, 60, 16, Y, 'center', 1); txt('APRES LA MANCHE ' + (f.manche + 1) + '/' + nb, cx, 82, 8, C, 'center');
-      f.classement.forEach((j, i) => { const y = 98 + i * 15, c = j ? '#e8e8e4' : Y; txt((i + 1) + '. ' + (j ? OPP[j - 1][0] : 'VOUS'), cx - 138, y, 8, j ? OPP[j - 1][1] : Y); txt('+' + (f.pts[j] - f.avant[j]), cx + 50, y, 8, c, 'right'); txt(f.pts[j] + ' PTS', cx + 138, y, 8, c, 'right'); });
-      if (f.fini) { txt(f.rang <= 3 ? 'TROPHEE ' + MEDN[3 - f.rang] : 'PAS DE TROPHEE', cx, 164, 8, f.rang <= 3 ? MEDC[3 - f.rang] : RD, 'center'); txt('NIVEAU ' + DIFF[diff].nom, cx, 180, 8, '#e8e8e4', 'center'); txt('ENTREE : MENU', cx, 200, 8, C, 'center'); }
-      else { txt('SUITE : ' + SOIREE[f.manche + 1].heure + ' · ' + SOIREE[f.manche + 1].nom, cx, 164, 8, '#e8e8e4', 'center'); txt('DEPART ' + ord(f.grille[0] + 1) + ' SUR LA GRILLE', cx, 180, 8, '#e8e8e4', 'center'); txt('ENTREE : SUITE   ECHAP : QUITTER', cx, 200, 8, C, 'center'); }
+    if (ses.tnFin && state === 'race') { // Tournée, manche close : à gauche l'arrivée et les points gagnés, à droite le classement général, dessous la suite (ou le trophée après la dernière)
+      const f = ses.tnFin, nb = CARTES.length, ord = n => n + (n === 1 ? 'ER' : 'E'), a = (performance.now() - tFin) / 1000, k = (t0, d) => clamp((a - t0) / d, 0, 1), lisse = x => x * x * (3 - 2 * x);
+      const nm = j => j ? pil(race.cars[j])[0] : 'VOUS', co = j => j ? pil(race.cars[j])[1] : Y, podium = i => i < 3 ? MEDC[2 - i] : '#e8e8e4';
+      const ligne = (y, x, w, j) => { if (!j) R(hg, 'rgba(255,210,58,' + (0.12 + 0.08 * Math.sin(a * 6)) + ')', x, y - 3, w, 13); }; // le joueur : une bande qui respire sous sa ligne
+      panel(cx - 176, 40, 352, 188); txt(f.fini ? 'TOURNEE TERMINEE' : 'MANCHE ' + (f.manche + 1) + '/' + nb + ' : ' + ord(f.rang), cx, 48, 16, Y, 'center', 1); txt(M.heure + ' · ' + M.nom, cx, 68, 8, C, 'center');
+      txt('ARRIVEE', cx - 170, 84, 8, C); txt('GENERAL', cx + 8, 84, 8, C);
+      raceOrder(race).forEach((c, i) => { const j = race.cars.indexOf(c), y = 98 + i * 15, g = f.pts[j] - f.avant[j], n = Math.round(g * lisse(k(0.3 + i * 0.15, 0.5))); // les points tombent l'un après l'autre, du premier au dernier
+        ligne(y, cx - 174, 170, j); txt((i + 1) + '.', cx - 170, y, 8, podium(i)); txt(nm(j), cx - 154, y, 8, co(j)); txt(c.fin ? fmt(c.fin) : '--', cx - 38, y, 8, '#e8e8e4', 'right');
+        txt('+' + n, cx - 8, y - (n === g && g ? 2 * (1 - k(0.8 + i * 0.15, 0.2)) : 0), 8, n === g && g ? Y : '#e8e8e4', 'right'); });
+      const avant = tournee(f.avant).classement, m = lisse(k(1.6, 0.6)); // le général d'avant la manche, puis chacun glisse à sa nouvelle place (après que les points sont tombés)
+      f.classement.forEach((j, i) => { const y = Math.round(98 + (avant.indexOf(j) + (i - avant.indexOf(j)) * m) * 15), p = Math.round(f.avant[j] + (f.pts[j] - f.avant[j]) * lisse(k(0.8, 0.8)));
+        ligne(y, cx + 4, 170, j); txt((m < 1 ? avant.indexOf(j) + 1 : i + 1) + '.', cx + 8, y, 8, podium(m < 1 ? avant.indexOf(j) : i)); txt(nm(j), cx + 24, y, 8, co(j)); txt(p + ' PTS', cx + 170, y, 8, j ? '#e8e8e4' : Y, 'right'); });
+      if (m === 1 && f.rang < avant.indexOf(0) + 1) txt('+' + (avant.indexOf(0) + 1 - f.rang), cx + 110, 98 + (f.rang - 1) * 15, 8, '#3ae87a', 'right'); // places gagnées au général
+      txt('MEILLEUR TOUR ' + fmt(moi.bl), cx, 162, 8, '#e8e8e4', 'center');
+      if (f.fini) { txt(f.rang <= 3 ? 'TROPHEE ' + MEDN[3 - f.rang] : 'PAS DE TROPHEE', cx, 178, 8, f.rang <= 3 ? MEDC[3 - f.rang] : RD, 'center'); txt('NIVEAU ' + DIFF[diff].nom, cx, 192, 8, '#e8e8e4', 'center'); }
+      else { txt('SUITE : ' + SOIREE[f.manche + 1].heure + ' · ' + SOIREE[f.manche + 1].nom, cx, 178, 8, '#e8e8e4', 'center'); txt('DEPART ' + ord(f.grille[0] + 1) + ' SUR LA GRILLE', cx, 192, 8, '#e8e8e4', 'center'); }
+      if (a > 1.5) txt(f.fini ? 'ENTREE : MENU' : 'ENTREE : COURSE SUIVANTE   ECHAP : QUITTER', cx, 210, 8, C, 'center');
     }
     if (pique && state !== 'title' && (pique.T -= dt) > 0) { // la réplique d'un rival, façon radio : une ligne sans fond, contour noir, nom à sa couleur ; s'efface sur la dernière demi-seconde
       hg.globalAlpha = Math.min(1, pique.T * 2); fonte('8px ' + PS); const n = tr(pique.n) + ' ', wn = hg.measureText(n).width, x = Math.round(cx - (wn + hg.measureText(tr(pique.s)).width) / 2);
@@ -1878,7 +1889,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (state === 'race' && !ses.raceEnd) { // fin de course, tour bouclé, Glisse finie : la session décide, on montre et on fait entendre
         tTraf += H; const ev = ses.pas(car, H);
         for (const i of ev.arrives) if (VUES[i]) { VUES[i].fini = true; SON.arrivee(race.cars[i].pos); } // en ligne, les autres humains n'ont pas de vue ici
-        if (ev.fin && race) tFin = performance.now();
+        if (ev.fin && race) { tFin = performance.now(); if (mode === 'tournee') ses.clos(); } // Tournée : la manche se clôt à l'arrivée, un seul écran montre la course et le classement général
         if (ev.tour) { VUES[0].result = { ...ev.tour, T: 5, b: bilan(VUES[0]) }; if (ev.fantome) padDit('FANTÔME : ' + nomF()); SON.stinger(ev.tour.rec); } // le temps du tour, affiché 4 s
         if (ev.glisse) SON.stinger(ses.glFin.rec);
       }
