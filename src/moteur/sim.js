@@ -270,7 +270,8 @@
     c.d = (c.x - s.x) * nx + (c.z - s.z) * nz; c.hit = 0; c.rub = 0; c.wallT = (c.wallT || 0) - dt;
     const o = Math.abs(c.d) - L, P = T.carte.place, pr = P ? Math.hypot(c.x - P.c[0], c.z - P.c[1]) - (P.r - 1.1) : Infinity; // pr > 0 : hors du cercle de la place
     if (o > 0 && pr > 0) { // hors de la chaussée et hors de la place : le mur le plus proche
-      if (pr < o) { const dx = (c.x - P.c[0]) / (pr + P.r - 1.1), dz = (c.z - P.c[1]) / (pr + P.r - 1.1), t = c.vx * -dz + c.vz * dx > 0 ? 1 : -1; mur(c, dx, dz, pr, -dz * t, dx * t, -t, 1 / P.r, dt); }
+      // P.ecart : le cercle n'est un mur qu'à plus de ecart m de la chaussée, là où le décor le dessine ; plus près, le mur de chaussée continue tout droit (un trou entre les deux, au raccord)
+      if (pr < o && o > (P.ecart || 0)) { const dx = (c.x - P.c[0]) / (pr + P.r - 1.1), dz = (c.z - P.c[1]) / (pr + P.r - 1.1), t = c.vx * -dz + c.vz * dx > 0 ? 1 : -1; mur(c, dx, dz, pr, -dz * t, dx * t, -t, 1 / P.r, dt); }
       else { const sg = Math.sign(c.d); c.d = sg * L; mur(c, nx * sg, nz * sg, o, s.tx, s.tz, sg, -s.k * sg, dt); }
     }
     if (T.corde && !c.rub && o > -1 && Math.hypot(c.vx, c.vz) > 15 && (b - T.corde[0] + n) % n < (T.corde[1] - T.corde[0] + n) % n) gagne(c, NI.corde * dt); // la corde au ras du mur, sans le toucher (M.corde)

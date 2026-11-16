@@ -201,8 +201,9 @@
       // --- la terrasse, de la Porte à la salle : une voie processionnelle. Muret à bordure de tapis et file de colonnes des deux côtés de la route, braseros ; autour, les palais en ruine :
       // à droite de la ligne droite, au ras de la route, le palais de Darius (dans le creux du virage, la caméra ne le voyait pas) ; à gauche le portique du palais de Xerxès, qui file jusqu'à la salle ; contre la montagne, les murs du Trésor ---
       { const a = i12 + 26, b = i14 + 6, allee = [], etendT = [], portes = [], murets = paroi(h.mat('murSalle', DS), 8), socles = [];
-        for (const sd of [-1, 1]) { let fin = b; while (fin < i20 && !dansSalle(...[0, 2].map(q => au(S[fin], sd * (S[fin].w + 0.25))[q]))) fin++; // le muret va jusqu'au mur de la salle : entre les deux, 140 m de limite de piste sans rien à voir
-          muret(a, fin - a, sd); muret(i20 - 34, 34, sd);
+        for (const sd of [-1, 1]) { let fin = b; while (fin < i20 && !dansSalle(...[0, 2].map(q => au(S[fin], sd * (S[fin].w + 0.25))[q]), -1.1)) fin++; // -1,1 m : le muret va jusqu'au cercle de collision (sim.js : r - 1,1), là où la hitbox de la chaussée rejoint celle du cercle ; sans muret, ce bout de mur était invisible // le muret va jusqu'au mur de la salle : entre les deux, 140 m de limite de piste sans rien à voir
+          let sort = fin; while (sort < i20 && dansSalle(...[0, 2].map(q => au(S[sort], sd * (S[sort].w + 0.25))[q]), -1.1)) sort++; // sortie de la place : le muret reprend là (il ne reprenait que 34 m avant le perron : de la place au perron, la limite de piste était invisible)
+          muret(a, fin - a, sd); muret(sort, i20 - sort, sd);
           for (let i = a + 3; i < b; i += 12) { const s = S[i], [x, , z] = au(s, sd * (s.w + 5.5)); if (dansSalle(x, z, 6)) continue; allee.push([x, YT - 0.1, z, 0, 1, [0.74, 0.5, 0.74, 0.62, 0.74, 0.38][(i + (sd > 0)) % 6], 1]); brasero(i + 6, sd * (S[(i + 6) % N].w + 3), 1.4); } }
         ruines.push(...allee);
         const palais = (px, pz, lx, lz, ry) => { const c = Math.cos(ry), s = Math.sin(ry), P = (u, v) => [px + c * u + s * v, pz - s * u + c * v]; socles.push([px, YT + 0.6, pz, ry, lx + 6, 1.4, lz + 6]); // un palais en ruine : socle, encadrements de portes debout, pans de mur de brique crue, colonnes
@@ -225,7 +226,8 @@
         for (const e of [-1, 1]) h.ribbon(i14 + 10, nTapis, e * 3.5, 0.035, e * 3.85, 0.035, h.mat('peinture', { lum: 1, c: 0xf4ead0, side: THREE.DoubleSide }), 4);
         h.ribbon(i14 + 9, 1, -3.85, 0.035, 3.85, 0.035, h.mat('peinture', { lum: 1, c: 0xf4ead0, side: THREE.DoubleSide }), 4); // la frange ivoire, au début du tapis // liserés ivoire : l'allée se lit sur le tapis
         { const d = nappe(h.mat('dallage', DS), 8), i0 = i14 + 10, n = (i20 - i14 + N) % N - 10; // jusqu'à la lèvre du perron, sur toute la largeur : avant, tapis, chaussée grise et terre s'y côtoyaient. Le damier vient jusqu'au liseré du tapis : la chaussée grise qui dépassait de chaque côté se lisait comme une seconde piste
-          for (let k = 0; k < n; k++) { const a = S[(i0 + k) % N], b = S[(i0 + k + 1) % N]; if ((!dansSalle(a.x, a.z, -1) || !dansSalle(b.x, b.z, -1)) && k < n / 2) continue; for (const sd of [-1, 1]) d.quad(au(a, sd * 3.85, 0.03), au(b, sd * 3.85, 0.03), au(a, sd * a.w, 0.03), au(b, sd * b.w, 0.03)); } d.fin().castShadow = false; }
+          for (let k = 0; k < n; k++) { const a = S[(i0 + k) % N], b = S[(i0 + k + 1) % N]; for (const sd of [-1, 1]) { const dehors = s => { const [x, , z] = au(s, sd * s.w); return !dansSalle(x, z, 1.5); }; if (dehors(a) && dehors(b) && k < n / 2) continue; // le damier couvre la chaussée jusqu'au pied du pourtour, là où s'arrête le muret (la bande grise la dépassait de plusieurs mètres)
+            d.quad(au(a, sd * 3.85, 0.03), au(b, sd * 3.85, 0.03), au(a, sd * a.w, 0.03), au(b, sd * b.w, 0.03)); } } d.fin().castShadow = false; }
         for (let x = CX - 84; x <= CX + 84; x += 12) for (let z = CZ - 72; z <= CZ + 72; z += 12) if (!dansSalle(x, z, 4) && g.dAt(x, z) > W + 4) foret.push([x, YS, z, 0]);
         foret.push(...portique, ...cols); // avec le portique de la terrasse et les quinze colonnes de la place, qu'on percute
         Is('colonnePerse', { pierre: h.mat('pierre', { c: 0xa8a098, emissive: 0x1a1612 }), fut: h.mat('cannelure', { c: 0xa49e94, emissive: 0x1a1612 }), sculpte: h.mat('sculpte', { emissive: 0x1a1612 }), or }, foret, { a: [HC] });
@@ -234,7 +236,7 @@
         boite(h, h.mat('plafondCedre', { emissive: 0x4a3424, c: 0x8a8078 }), 2 * HX + 6, 0.8, 2 * HZ + 6, CX, YS + HM - 1.2, CZ); for (const [w, d, x, z] of [[2 * HX + 9, 2.4, CX, CZ - HZ - 3], [2 * HX + 9, 2.4, CX, CZ + HZ + 3], [2.4, 2 * HZ + 9, CX - HX - 3, CZ], [2.4, 2 * HZ + 9, CX + HX + 3, CZ]]) boite(h, noir, w, 2.8, d, x, YS + HM - 0.6, z); // l'entablement de pierre sombre
         // le pourtour de la place où l'on roule : un mur de 1,5 m d'épaisseur (une feuille, avant), frise des Immortels sur ses deux faces, dessus et bouts de pierre, là où il ne coupe pas la chaussée
         const tour = paroi(frise, 3.6, 1, 4), tourX = paroi(frise, 3.6, 1, 4), pierreD = h.mat('pierre', DS), dessus = nappe(pierreD, 4), bouts = nappe(pierreD), EP = 1.5, y1 = YS + 3, y0 = YS - 0.6, f = (j, r) => [CX + Math.cos(j * Math.PI / 48) * r, CZ + Math.sin(j * Math.PI / 48) * r];
-        const plein = k => { const [x, z] = f(k + 0.5, PL.r), s = S[near(h, x, z)]; return Math.hypot(s.x - x, s.z - z) >= s.w + 0.5; };
+        const plein = k => { const [x, z] = f(k + 0.5, PL.r - 1.1), s = S[near(h, x, z)]; return Math.hypot(s.x - x, s.z - z) >= s.w + 0.5; };
         for (let k = 0; k < 96; k++) { if (!plein(k)) continue; const p = f(k, PL.r), q = f(k + 1, PL.r), P = f(k, PL.r + EP), Q = f(k + 1, PL.r + EP);
           tour.seg(p[0], p[1], q[0], q[1], y1, y0); tourX.seg(P[0], P[1], Q[0], Q[1], y1, y0); dessus.quad([p[0], y1, p[1]], [q[0], y1, q[1]], [P[0], y1, P[1]], [Q[0], y1, Q[1]]);
           for (const [bout, kk] of [[!plein((k + 95) % 96), k], [!plein((k + 1) % 96), k + 1]]) if (bout) { const a = f(kk, PL.r), b = f(kk, PL.r + EP); bouts.quad([a[0], y1, a[1]], [a[0], y0, a[1]], [b[0], y1, b[1]], [b[0], y0, b[1]]); } }
