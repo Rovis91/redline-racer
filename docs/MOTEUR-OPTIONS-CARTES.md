@@ -169,6 +169,9 @@ Le nombre d'appels varie de ±30 d'une mesure à l'autre avec le même code (per
 ```js
 th: { fogD: [70, 1000], brume: [[68, 75, 30, 380]] }   // entre les points 68 et 75 du tracé, le brouillard commence à 30 m et bouche tout à 380 m
 ```
+
+`th.loin` (en m) : la caméra ne dessine pas au-delà de 1,5 × la fin du brouillard (3 000 m au plus) ; `loin` fixe une portée minimale pour les cartes dont des lointains sont posés hors brouillard (`fog: false` : sommets, halo, silhouettes) plus loin que cela, sans quoi ils disparaissent (barrage : 2400, touge : 3000).
+
 Entre deux points de contrôle du tracé, le début et la fin du brouillard de la carte glissent vers les valeurs données, avec un fondu de 180 m à l'entrée et à la sortie de la zone. C'est le vrai brouillard de la scène (aucune texture plate posée dans le décor) : tout ce qui reçoit le brouillard y disparaît, ce qui est posé hors brouillard (`fog: false`, les lointains) reste net. La zone ne doit pas enjamber la ligne de départ. En écran partagé, chaque vue a le brouillard de sa voiture. La zone agit aussi sous un tunnel : si elle commence à la sortie d'un tunnel, son fondu de 180 m remplit la fin du tunnel et le brouillard est entier à la sortie (barrage : `[68, 79, 0, 55]`).
 Dans la zone, un voile de la couleur du brouillard est tendu à 700 m autour de la caméra : il cache ce qui échappe au brouillard (le ciel, l'astre, les lointains posés hors brouillard). Son opacité suit la force de la zone. Un brouillard serré (`[68, 73, 0, 55]` sur barrage : on voit à 55 m) est donc un vrai brouillard, sans horizon net au-dessus.
 Coût : une passe de dessin dans la zone seulement. Sans `th.brume`, rien ne change (le voile n'est pas créé).

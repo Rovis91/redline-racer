@@ -1936,7 +1936,6 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // (ciel, lune et son ombre, brouillard, lumière dynamique, feux lointains, pluie), son HUD, la scène dans sa cible et la passe finale.
   const ASTRE = new THREE.Color(TH.astre.col), RAYS = 0.25; // RAYS : force des rayons de lumière (passe finale)
   const [V0, V1] = (M.vit || [130, 200]).map(v => v / 3.6 / (M.kmh || 1)); // plage des effets de vitesse de la carte, en m/s vrais
-  const LOIN_MIN = { touge: 3000, barrage: 2400 }; // shortcut: table du moteur ; à passer en option de carte (th.loin) si une troisième carte en a besoin
   function vueFrame(vu, dt, now) {
     const { cam, car, carY, pitch, roll, lm, cth, stun, lookA, lookP, pluieO, splP, splA, splD, inp } = vu, pulse = SON.pulse, G = modele(car);
     if (decorTick && decorTick.vue) decorTick.vue(car); // le décor qui dépend de la voiture suivie (wangan : le caboteur avance d'un tour à l'autre), réglé pour chaque vue avant son rendu
@@ -1968,7 +1967,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // brouillard et ciel : nuit néon ↔ tunnel ; éclairs : flash double sur le ciel et l'éclairage (le tonnerre part de fxFrame)
     scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * LOIN, 15, lm); scene.fog.far = lerp(TH.fogD[1] * LOIN * (BRUME ? BRUME[car.idx] : 1), 320, lm);
     let kBr = 0; for (const [z, n0, n1] of brumeZ) { const k = z(car.idx, 90); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
-    { const far = Math.min(3000, Math.max(scene.fog.far * 1.5, LOIN_MIN[TH.decor] || 0)), kf = far * 0.95 / 2500; // la caméra ne dessine plus au-delà du brouillard ; ciel (2 500 m) et astre (2 000 m) sont ramenés dans la portée ; LOIN_MIN : portée minimale des cartes dont les lointains hors brouillard (fog: false : sommets du barrage, silhouettes et halo de touge) dépassent 1,5 × le brouillard
+    { const far = Math.min(3000, Math.max(scene.fog.far * 1.5, TH.loin || 0)), kf = far * 0.95 / 2500; // la caméra ne dessine plus au-delà du brouillard ; ciel (2 500 m) et astre (2 000 m) sont ramenés dans la portée ; th.loin : portée minimale des cartes dont les lointains hors brouillard (fog: false : sommets du barrage, silhouettes et halo de touge) dépassent 1,5 × le brouillard
       if (far !== cam.far) { cam.far = far; cam.updateProjectionMatrix(); }
       sky.position.copy(cam.position); sky.scale.setScalar(kf); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000 * kf); sunDisc.scale.set(TH.astre.taille * kf, TH.astre.taille * kf, 1); }
     pharesV = Math.max(TH.phares, (TH.pharesBrume || 0) * kBr); nuitV = pharesV / 2.6;

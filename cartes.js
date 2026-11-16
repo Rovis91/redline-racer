@@ -335,7 +335,7 @@
         up: 7500, down: 6200, trac: 11, rwd: 0, son: 1, moteur: 'l6', turbo: 1, // 4 roues motrices : ~1,1 g de motricité, pas de survirage à l'accélérateur
         look: { type: 'gtr', col: 0xff2030, l: 1, w: 1, h: 1, nez: 0.62, cab: [-0.5, 2.1, 0.5], aileron: 1, neon: 0x00f0ff } },
       radio: RADIO.ville,
-      th: { decor: 'ville', fog: 0x1f0a36, fogD: [60, 800], sky: [[0, '#03020a'], [0.36, '#120a2e'], [0.47, '#5a1058'], [0.5, '#1f0a36'], [1, '#1f0a36']], stars: 140,
+      th: { decor: 'ville', fog: 0x1f0a36, fogD: [60, 800], loin: 2400, sky: [[0, '#03020a'], [0.36, '#120a2e'], [0.47, '#5a1058'], [0.5, '#1f0a36'], [1, '#1f0a36']], stars: 140,
         astre: { dir: [0.45, 0.8, 0.4], col: '#d8e8ff', ombre: '#a8b8e0', taille: 170 }, hemi: [0x5a6cff, 0xff2a6a, 0.55], sun: [0x8fb0ff, 0.35], phares: 2.6, bloom: 0.13, scan: 0.12,
         pluie: 1, orage: 1, alarme: 1, chev: 1, piles: -61, tubes: 1, reflets: '#004a54', pubs: 1, murH: 1.4,
         route: ['#2c2c3a', '#383848', '#fcee0a', '#d8d8e0', '#fcee0a', '#08080c', true], mur: ['#12121a', '#00f0ff', '#fcee0a', '#0a0a10'], depart: [0xfcee0a, 0x00f0ff, '#fcee0a'],
@@ -350,7 +350,7 @@
       car: car({ nom: 'TENGU R7 SPIRIT', ratios: [3.483, 2.015, 1.391, 1.000, 0.719], final: 4.1, wheel: 0.318, mass: 1345, idle: 900, red: 8000, cd: 0.31, area: 1.8,
         tq: [0, 150, 220, 270, 300, 314, 308, 290, 240], son: 1.5, moteur: 'rot', turbo: 1, look: { type: 'fd', col: 0xf4f0e0, l: 0.95, w: 0.96, h: 0.9, nez: 0.72, cab: [-0.35, 1.9, 0.48], aileron: 1 } }),
       radio: RADIO.touge,
-      th: { decor: 'touge', fog: 0x0b1614, fogD: [45, 560], sky: [[0, '#02040a'], [0.4, '#0a1420'], [0.49, '#1a2a30'], [0.5, '#0b1614'], [1, '#0b1614']], stars: 240,
+      th: { decor: 'touge', fog: 0x0b1614, fogD: [45, 560], loin: 3000, sky: [[0, '#02040a'], [0.4, '#0a1420'], [0.49, '#1a2a30'], [0.5, '#0b1614'], [1, '#0b1614']], stars: 240,
         astre: { dir: [-0.3, 0.75, 0.5], col: '#f4f8ff', ombre: '#c8d0e0', taille: 230 }, hemi: [0x7a96c0, 0x16302a, 0.55], sun: [0xbfd0ff, 0.5], phares: 3.2, bloom: 0.1, scan: 0.1,
         chev: 1, murH: 1.1, route: ['#26282c', '#34363c', '#e8e6da', '#ff8c1a', '#26282c', '#26282c', false], mur: ['#34363a', '#e8e6da', '#a8a69c', '#101214'], depart: [0xff8c1a, 0xe8e6da, '#e8e6da'],
         hud: { y: '#f4f0e0', c: '#ff8c1a', r: '#ff2a3a', fond: 'rgba(6,12,10,.84)', style: 'trait', jauge: 'aiguille', split: 0, jp: ['ラップ', 'スピード'], sur: ['烏峠ダウンヒル', 'DESCENTE DE NUIT'], titre: ['KARASU', 'TOGE'] } } },
@@ -362,7 +362,7 @@
       car: car({ nom: 'KAIRYU RZ', ratios: [3.827, 2.360, 1.685, 1.312, 1.000, 0.793], final: 3.266, wheel: 0.318, mass: 1585, idle: 800, red: 6800, cd: 0.32, area: 1.95,
         tq: [0, 180, 300, 400, 427, 420, 400, 340, 260], son: 0.95, moteur: 'l6', turbo: 1, look: { type: 'a80', col: 0x4a4e5c, l: 1.02, w: 1, h: 0.96, nez: 0.66, cab: [-0.45, 2.1, 0.5], aileron: 2 } }),
       radio: RADIO.wangan,
-      th: { decor: 'wangan', pluie: [[9, 31, 3]], fog: 0x0c1424, fogD: [90, 1300], sky: [[0, '#02030a'], [0.38, '#0a1024'], [0.47, '#4a2c18'], [0.5, '#0c1424'], [1, '#0c1424']], stars: 40,
+      th: { decor: 'wangan', pluie: [[9, 31, 3]], fog: 0x0c1424, fogD: [90, 1300], loin: 3000, sky: [[0, '#02030a'], [0.38, '#0a1024'], [0.47, '#4a2c18'], [0.5, '#0c1424'], [1, '#0c1424']], stars: 40,
         astre: { dir: [0.5, 0.7, -0.4], col: '#e8e0d0', ombre: '#b8b0a0', taille: 120 }, hemi: [0x4a5a8a, 0xff9a2e, 0.55], sun: [0x8fa0d0, 0.25], phares: 2.4, bloom: 0.1, scan: 0.1,
         chev: 1, piles: -14, murH: 0.8, route: ['#24262e', '#30323c', '#f4f1e0', '#f4f1e0', '#24262e', '#24262e', false], mur: ['#3a3e46', '#c9ced6', '#ff9a2e', '#16181e'], depart: [0x1f8f5a, 0xc9ced6, '#f4f1e0'],
         tun: { sol: ['#3e3426', '#524432', '#f4f1e0', '#f4f1e0', '#3e3426', '#3e3426'], murs: ['#ffc878', '#ffc878'], paroi: ['#6a5434', '#a8844a', '#c8a464', '#2a2010'], plafond: ['#3a2e1c', '#ffc878', '#ffc878', '#5a4a34'], // éclairci après essai : on n'y voyait pas les parois
@@ -394,7 +394,7 @@
       car: car({ nom: 'SIDEWINDER GTS', ratios: [2.66, 1.78, 1.30, 1.00, 0.74, 0.50], final: 3.07, wheel: 0.333, mass: 1610, idle: 800, red: 6000, cd: 0.35, area: 1.9,
         tq: [0, 420, 560, 640, 664, 625, 540, 400, 0], son: 0.8, moteur: 'v10', look: { type: 'gts', col: 0x1848c8, l: 1.03, w: 1.05, h: 0.88, nez: 0.7, cab: [-0.95, 1.7, 0.46], aileron: 0, bandes: 0xf4f0e0 } }),
       radio: RADIO.canal,
-      th: { decor: 'canal', fog: 0xe89060, fogD: [160, 1700], sky: [[0, '#3d2a5c'], [0.24, '#3d2a5c'], [0.25, '#7a4078'], [0.36, '#7a4078'], [0.37, '#d85a50'], [0.44, '#d85a50'], [0.45, '#ff9a4a'], [0.49, '#ff9a4a'], [0.5, '#e89060'], [1, '#e89060']], stars: 0,
+      th: { decor: 'canal', fog: 0xe89060, fogD: [160, 1700], loin: 3000, sky: [[0, '#3d2a5c'], [0.24, '#3d2a5c'], [0.25, '#7a4078'], [0.36, '#7a4078'], [0.37, '#d85a50'], [0.44, '#d85a50'], [0.45, '#ff9a4a'], [0.49, '#ff9a4a'], [0.5, '#e89060'], [1, '#e89060']], stars: 0,
         astre: { dir: [-0.85, 0.11, 0.35], col: '#fff4c0', ombre: '#fff4c0', taille: 340 }, hemi: [0xb898c8, 0xb8ad9a, 0.85], sun: [0xffa860, 0.9], phares: 0.4, bloom: 0.03, scan: 0.05, chaleur: 0.7, // chaleur : mirage au loin sur la route (game.js, AIR)
         murH: 1.3, route: ['#4c4a50', '#58565c', '#f4f0e0', '#2aa39a', '#e83f8c', '#f4f0e0', false], mur: ['#f4f0e0', '#e83f8c', '#1848c8', '#e4ddd0'], depart: [0xff7a3d, 0x3d2a5c, '#f4f0e0'],
         hud: { y: '#ffc04a', c: '#ff7a3d', r: '#e83f8c', fond: 'rgba(40,24,56,.9)', style: 'bloc', jauge: 'led', mph: 1, split: 0, jp: null, sur: [null, 'SPEEDWAY · HEURE DOREE'], titre: ['CANAL', 'SIX'] } } },
@@ -432,7 +432,7 @@
       car: car({ nom: 'BOREALE S1 E2', ratios: [3.5, 2.27, 1.63, 1.27, 1.04, 0.85], final: 4.3, wheel: 0.31, mass: 1165, idle: 1000, red: 8000, cd: 0.45, area: 2.0,
         tq: [0, 180, 300, 430, 540, 590, 580, 520, 400], trac: 11, rwd: 0, son: 1.1, moteur: 'l5', turbo: 1, look: { type: 'gtr', col: 0xf4f0e0, l: 0.9, w: 1.03, h: 1.06, nez: 0.5, cab: [-0.2, 2.1, 0.58], aileron: 2, bandes: 0xf4c020 } }),
       radio: RADIO.givre,
-      th: { decor: 'givre', neige: 1.6, fog: 0x8a9cc0, fogD: [70, 1100], sky: [[0, '#070c24'], [0.3, '#16224a'], [0.4, '#3a4a80'], [0.46, '#b07a98'], [0.49, '#f0b890'], [0.5, '#8a9cc0'], [1, '#8a9cc0']], stars: 90,
+      th: { decor: 'givre', neige: 1.6, fog: 0x8a9cc0, fogD: [70, 1100], loin: 3000, sky: [[0, '#070c24'], [0.3, '#16224a'], [0.4, '#3a4a80'], [0.46, '#b07a98'], [0.49, '#f0b890'], [0.5, '#8a9cc0'], [1, '#8a9cc0']], stars: 90,
         astre: { dir: [-0.55, 0.3, 0.5], col: '#f4f8ff', ombre: '#aab8d8', taille: 150 }, hemi: [0x8aa4e0, 0xc8d4f0, 0.8], sun: [0xc0d0ff, 0.45], phares: 0.35, bloom: 0.08, scan: 0.06, // phares faibles (comme les autres cartes à l'aube) et neige tassée grise : sur une route blanche, un faisceau plein noie la piste et les plaques de glace
         chev: 0, murH: 0, route: ['#7e8ca6', '#93a1b9', '#f4f8ff', '#7e8ca6', '#f4f8ff', '#dfe8f6', false], mur: ['#dfe8f6', '#f8fbff', '#c4d0e4', '#b4c2da'], depart: [0xe8482a, 0x1c2a4a, '#f4f8ff'],
         hud: { y: '#ffffff', c: '#8fd0ff', r: '#ff5a4a', fond: 'rgba(14,24,52,.9)', style: 'givre', jauge: 'aiguille', split: 0, jp: null, sur: [null, 'COL FERME · -14 °C · AUBE'], titre: ['NUIT', 'BLANCHE'] } } },
@@ -465,7 +465,7 @@
       car: car({ nom: 'PEYKAR 1725 RALLYE', ratios: [3.35, 2.14, 1.39, 1.0, 0.8], final: 4.3, wheel: 0.3, mass: 940, idle: 950, red: 7400, cd: 0.42, area: 1.9,
         tq: [0, 150, 190, 215, 228, 232, 228, 216, 180], trac: 10, son: 1.15, moteur: 'l4', look: { type: 'peykan', col: 0xf0e6cc, l: 0.95, w: 0.98, h: 1.06, nez: 0.5, cab: [-0.2, 2.2, 0.6], aileron: 0, bandes: 0x2aa39a } }),
       radio: RADIO.perse,
-      th: { decor: 'perse', sansRythme: 1, fog: 0xe6b07c, fogD: [140, 1600], sky: [[0, '#3a3f78'], [0.26, '#3a3f78'], [0.27, '#8a5a86'], [0.38, '#8a5a86'], [0.39, '#e08a62'], [0.45, '#e08a62'], [0.46, '#f6c98a'], [0.5, '#e6b07c'], [1, '#e6b07c']], stars: 0,
+      th: { decor: 'perse', sansRythme: 1, fog: 0xe6b07c, fogD: [140, 1600], loin: 3000, sky: [[0, '#3a3f78'], [0.26, '#3a3f78'], [0.27, '#8a5a86'], [0.38, '#8a5a86'], [0.39, '#e08a62'], [0.45, '#e08a62'], [0.46, '#f6c98a'], [0.5, '#e6b07c'], [1, '#e6b07c']], stars: 0,
         astre: { dir: [-0.8, 0.14, -0.35], col: '#ffd890', ombre: '#ffd890', taille: 320 }, hemi: [0xa8a8d8, 0xd0b890, 0.9], sun: [0xffc080, 0.85], phares: 0.3, bloom: 0.04, scan: 0.05,
         chev: 0, murH: 0, objets: [[0xb5683c, 0.2, 0.3, 0.8], [0xc8a060, 0.34, 0.28, 0.5], [0xd8b860, 0.45, 0.45, 0.6, [1175, 340], [0.85, 0.72, 0.38]], [0xd9a21b, 0.03, 0.34, 0.5, [871, 1031], [0.85, 0.63, 0.1]], [0xc8742e, 0.3, 0.2, 0.3, [871, 1031], null, 'metal'], [0x9a3a2a, 0.36, 0.36, 0.4, [1031, 1175], [0.75, 0.2, 0.15]]], /* jarre, panier ; par tronçon : ballot de paille (plaine), cône d'épices et cuivre qui sonne (bazar couvert), cageot de grenades (rue du bazar) */ sansObjets: [[530, 610], [620, 760]], objetsTun: 1, nObjets: 24, /* pas d'objets dans la salle (ses colonnes suffisent) ; objetsTun : il y en a aussi sous la voûte du bazar ; nObjets : 24 entrées de virage garnies au lieu de 14, pour que la rue du bazar ait les siennes */ routeTex: 'chausseeFine', route: ['#8a7a66', '#938370', '#a89880', '#8a7a66', '#9a8a74', '#8a7a66', false], mur: ['#f4ead0', '#c8323c', '#1d3a8a', '#d8b878'], depart: [0xf0b840, 0x1d3a8a, '#f4ead0'],
         tun: { sol: ['#4a4644', '#54504c', '#8a8078', '#4a4644', '#c8323c', '#2a1a10'], murs: ['#c8323c', '#2aa39a'], paroi: ['#7a4428', '#9a5a38', '#c8323c', '#3a2014'], plafond: ['#8a5234', '#a8643e', '#9a5a38', '#5a3420'], // voûte lapis et or au-dessus d'une chaussée claire : la route se détache de la brique
@@ -500,7 +500,7 @@
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], son: 0.85, moteur: 'v8', look: { type: 'zil', col: 0x14161a, l: 1.12, w: 1.04, h: 1.02, nez: 0.55, cab: [-0.3, 2.2, 0.6], aileron: 0 } }),
       radio: RADIO.barrage,
       th: { decor: 'barrage', sansRythme: 1, pluie: [[39, 45, 0.6], [68, 74, 0.15]], mouilleVisible: 1, ombre: { doux: 1 }, frole: 1, oeil: { tun: 0.7, noir: 0.5, clair: 0.15 }, routeTex: 'chausseeGES', lisse: ['eauGES', 'ecumeGES', 'brumeGES'], // options moteur (docs/MOTEUR-OPTIONS-CARTES.md) : bitume fin sans flaques (textures-barrage.js), eau lissée
-        fog: 0xb0babc, fogD: [40, 760], sky: [[0, '#62748a'], [0.3, '#97a6ae'], [0.47, '#d4ccb6'], [0.5, '#b0babc'], [1, '#b0babc']], stars: 0,
+        fog: 0xb0babc, fogD: [40, 760], loin: 2400, sky: [[0, '#62748a'], [0.3, '#97a6ae'], [0.47, '#d4ccb6'], [0.5, '#b0babc'], [1, '#b0babc']], stars: 0,
         astre: { dir: [0.70, 0.38, 0.60], col: '#fff0d0', ombre: '#fff0d0', taille: 260 }, hemi: [0xb8c6d2, 0x55554c, 0.8], sun: [0xffecc8, 0.75], phares: 0, pharesBrume: 1.6, refletPente: 1, bloom: 0.04, scan: 0.05, // feux allumés dans le banc de la crête seulement ; reflets mouillés sur la pente de la chaussée ; soleil du matin au sud-est, à 22° : le parement aval est éclairé en biais, le versant est reste à l'ombre
         objets: [[0xff6a10, 0.03, 0.22, 0.7], [0x3a5a7a, 0.3, 0.3, 0.9], [0xc8a040, 0.36, 0.36, 0.5], [0x7a5a3a, 0.26, 0.26, 0.6], [0xc8281e, 0.07, 0.12, 1]], // cône (aux entrées de virage, comme avant), fût, caisse de kvas, billot, balise
         objetsEn: [[22, 11.1, 2], [46, -11.1, 4], [66, 11.1, 2], [84, -11.1, 4], [2712, 11.1, 2], [2738, -11.1, 4], [2766, 11.1, 2], [250, -8.65, 1], [272, -8.65, 1], [294, -8.65, 1], [314, -8.65, 1], [788, 8.65, 4], [796, 8.65, 4], [804, 8.65, 4], [930, 8.65, 3], [938, 8.65, 3], [946, 8.65, 3]], // V-37, V-46, V-57, V-65 : caisses et balises du défilé dans les rues droites, fûts du chantier, balises du pont côté amont, billots de la coupe de bois
@@ -574,7 +574,7 @@
             '17 - - - 20 - 24 - 20 - - - . - - - | 19 - - - 15 - 12 - 15 - - - . - - - | 23 - - - 19 - 14 - 11 - - - . - - - | 19 - - - - - - - . - - - . - - -'],
           sec: { i: 'b0 c0', a: 'k0 s0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
       ],
-      th: { decor: 'plage', sansRythme: 1, fog: 0xcfe6f0, fogD: [220, 1900], sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, cielSeg: 48,
+      th: { decor: 'plage', sansRythme: 1, fog: 0xcfe6f0, fogD: [220, 1900], loin: 3000, sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, cielSeg: 48,
         // midi, soleil haut côté terre (les ombres tombent vers la mer, sur la piste) ; pas de mirage (chaleur) : il faisait onduler tout l'horizon
         astre: { dir: [-0.25, 0.85, 0.45], col: '#fffbe8', ombre: '#fffbe8', taille: 200, rayons: 0.3 }, hemi: [0xa8d0ee, 0x7a6a4e, 0.6], sun: [0xfff0d0, 0.72], phares: 0, bloom: 0.015, scan: 0, chaleur: 0, sansCones: 1, routeTex: 'chausseeFine', ombre: { doux: 1 }, oeil: { tun: 0.6, noir: 0.5, clair: 0.12 }, frole: 1,
         murH: 0, route: ['#6e7378', '#7a7f84', '#e8b84a', '#e8e0c8', '#6e7378', '#6e7378', false], mur: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], depart: [0xe8468c, 0x1fb5a8, '#fff4e0'], // bitume de la 307 et de la digue, ligne de rive jaune ; le décor pose le sable dur, les planches, le dallage et le sascab par-dessus
