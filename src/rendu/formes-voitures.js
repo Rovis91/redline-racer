@@ -144,6 +144,17 @@
         R2('phare', 0.1, 1.9, 0.6, 0.5), B('noir', 0.08, 0.08, 1.5, 1.98, 0.42, 0), B2('noir', 0.06, 0.24, 0.06, 1.95, 0.52, 0.4), // phares ronds, pare-buffle
         B('noir', 0.08, 0.08, 1.6, -1.92, 0.42, 0), B2('feu', 0.04, 0.1, 0.18, -1.88, 0.62, 0.58)]
     },
+    // Garrigue (inventée, Spéciale des Ocres) : berlinette de rallye des années 70 à moteur central, en coin : nez bas et court, pare-brise très couché, pavillon bref,
+    // capot moteur à persiennes jusqu'à une poupe tronquée et son becquet. Rampe de quatre longue-portée sur le nez, bavettes, écope de toit
+    berlinette: {
+      dessus: [[1.86, 0.24], [1.9, 0.44], [1.72, 0.6], [0.9, 0.78], [0.55, 0.8], [-1.2, 0.88], [-1.8, 0.9], [-1.88, 0.72], [-1.86, 0.24]], bas: 0.24, w: 1.76,
+      cab: [[0.6, 0.79], [-0.08, 1.17], [-0.62, 1.17], [-1.22, 0.89]], wc: 1.42, roues: [-1.1, 1.1, 0.31, 0.26, 0.04], portes: [0.56, -0.5], plaque: 0.46,
+      pieces: (B, B2, R2, E2) => [B('noir', 0.1, 0.16, 1.24, 1.95, 0.52, 0), R2('phare', 0.09, 2.0, 0.52, 0.18), R2('phare', 0.09, 2.0, 0.52, 0.46), // rampe de phares
+        B2('phare', 0.03, 0.06, 0.26, 1.6, 0.66, 0.56), B('noir', 0.2, 0.08, 1.7, 1.9, 0.24, 0), // feux de position sur l'aile, lame avant
+        B('caisse', 0.24, 0.05, 1.32, -0.66, 1.19, 0, 1), B('caisse', 0.24, 0.05, 1.72, -1.8, 0.96, 0, 1), B2('noir', 0.08, 0.06, 0.04, -1.8, 0.91, 0.7), // becquets du pavillon et de la poupe
+        B('noir', 0.24, 0.07, 0.34, -0.22, 1.2, 0), B('noir', 0.2, 0.16, 1.7, -1.86, 0.3, 0), R2('feu', 0.075, -1.89, 0.7, 0.62), R2('feu', 0.075, -1.89, 0.7, 0.42), // écope, bouclier, feux ronds
+        B2('noir', 0.03, 0.22, 0.24, -1.5, 0.2, 0.74), B2('noir', 0.03, 0.18, 0.22, 0.72, 0.2, 0.74), B2('caisse', 0.14, 0.09, 0.14, 0.46, 0.88, 0.82, 1)] // bavettes, rétroviseurs
+    },
   };
 
   Object.assign(FORMES, {
