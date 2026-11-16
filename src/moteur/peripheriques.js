@@ -37,8 +37,8 @@
     // Présentés comme des manettes « standard », pour que poll les traite comme les autres. shortcut: stick en tout-ou-rien, passer au rapport 0x30 (stick 12 bits + étalonnage) pour un volant progressif.
     const hids = [null, null];
     const hidLire = (e, p) => {
-      // Chrome (son pilote de manettes Nintendo) peut passer le Joy-Con en rapport complet 0x30 peu après la connexion : tout appui suivant serait ignoré. On redemande 0x3f (sous-commande 0x03), une fois par seconde au plus.
-      if (e.reportId === 0x30 || e.reportId === 0x31) { const t = Date.now(); if (!(p.redit > t)) { p.redit = t + 1000; p.n = (p.n + 1) & 15 || 1; Promise.resolve(p.dev.sendReport && p.dev.sendReport(1, new Uint8Array([p.n, 0, 1, 0x40, 0x40, 0, 1, 0x40, 0x40, 3, 0x3f]))).catch(() => { }); } }
+      // Chrome (son pilote de manettes Nintendo) peut passer le Joy-Con en rapport complet 0x30 peu après la connexion : tout appui suivant serait ignoré. On redemande 0x3f (sous-commande 0x03), une fois par seconde au plus (compté sur l'appareil : partagé par les instances des cartes).
+      if (e.reportId === 0x30 || e.reportId === 0x31) { const t = Date.now(), v = p.dev; if (!(v.redit > t)) { v.redit = t + 1000; p.n = (p.n + 1) & 15 || 1; Promise.resolve(p.dev.sendReport && p.dev.sendReport(1, new Uint8Array([p.n, 0, 1, 0x40, 0x40, 0, 1, 0x40, 0x40, 3, 0x3f]))).catch(() => { }); } }
       if (e.reportId !== 0x3f) return; const d = new Uint8Array(e.data.buffer, e.data.byteOffset), h = d[2], set = (i, v) => { p.buttons[i].pressed = !!v; p.buttons[i].value = v ? 1 : 0; };
       [8, 5, 4, 0, 3, 1].forEach((b, i) => set(b, d[0] & 1 << i)); set(9, d[1] & 3); set(10, d[1] & 48); // (radio = Home ou Capture : bits 16 et 32, d'après le format du rapport, non essayé ; pas le clic du stick, que le pouce enfonce en serrant SL pour la nitro) · Joy-Con (R) couché, SL / SR vers le haut : bits gauche et haut (constatés par l'auteur), bas et droite (déduits), SL, SR -> boîte manuelle / automatique, rapport +, rapport -, gaz et valider, nitro, glisse (choix de l'auteur, qui ne freine pas à la manette)
       p.axes = [h > 0 && h < 4 ? 1 : h > 4 && h < 8 ? -1 : 0, h === 7 || h < 2 ? -1 : h > 2 && h < 6 ? 1 : 0];
@@ -48,7 +48,7 @@
       if (!d || pris() || !JOYCON(d)) return;
       try { if (!d.opened) await d.open(); } catch (e) { return; }
       const n = hids.indexOf(null); if (n < 0 || pris()) return; // revérifié après l'attente : deux recherches peuvent ouvrir le même Joy-Con en même temps
-      const p = hids[n] = { hid: 'joycon' + n, dev: d, connected: true, axes: [0, 0], buttons: Array.from({ length: 11 }, () => ({ pressed: false, value: 0 })) }; d.oninputreport = e => hidLire(e, p);
+      const p = hids[n] = { hid: 'joycon' + n, dev: d, connected: true, axes: [0, 0], buttons: Array.from({ length: 11 }, () => ({ pressed: false, value: 0 })) }; on(d, 'inputreport', e => hidLire(e, p)); // pas oninputreport : une instance par carte, chacune doit recevoir les rapports, pas seulement la dernière construite
     };
     const hidDemande = () => nav.hid && nav.hid.requestDevice({ filters: [{ vendorId: 0x057e }] }).then(l => l.forEach(hidOuvre)).catch(() => { }); // touche J : fenêtre du navigateur pour autoriser le Joy-Con (une fois)
     // Joy-Con par défaut : au premier geste (l'accueil), la fenêtre d'autorisation s'ouvre d'elle-même si aucun Joy-Con n'est encore autorisé ; ensuite Chrome s'en souvient et cherche() les ouvre sans fenêtre

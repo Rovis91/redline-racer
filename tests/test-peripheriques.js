@@ -62,9 +62,10 @@ const MENU = { menu: true, accueil: false, deux: false };
     pads.splice(pads.indexOf(a), 1); win.emet('gamepaddisconnected', { gamepad: a }); assert.deepStrictEqual(dits, ['MANETTE DÉCONNECTÉE'], 'la retenue qui part est annoncée');
   }
   // Joy-Con (WebHID) : rapport 0x3f, gaz, radio sur Home / Capture, stick en 8 directions, puis débranché
-  { let rapport; const ec = {}, dev = { productId: 0x2007, opened: false, open: async () => { dev.opened = true; }, set oninputreport(f) { rapport = f; } };
+  { const ec = {}, lus = [], dev = { productId: 0x2007, opened: false, open: async () => { dev.opened = true; }, addEventListener: (ev, f) => ev === 'inputreport' && lus.push(f) }, rapport = e => lus.forEach(f => f(e));
     const hid = { getDevices: async () => [dev], requestDevice: async () => [dev], addEventListener: (ev, f) => { ec[ev] = f; } };
     const { P } = monte({ hid }); await P.cherche();
+    const { P: autre } = monte({ hid: { ...hid, addEventListener: () => { } } }); await autre.cherche(); // une autre carte construite après : le Joy-Con doit encore répondre à la première
     const envoie = (b0, b1, h) => rapport({ reportId: 0x3f, data: new DataView(new Uint8Array([b0, b1, h]).buffer) });
     envoie(8, 0, 8); assert.deepStrictEqual(codes(P.poll(MENU)), ['Enter@joycon0'], 'gaz et valider');
     assert.strictEqual(P.entree('joycon0').gas, 1);
