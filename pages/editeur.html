@@ -39,6 +39,6 @@
 <dialog id="dlg" aria-labelledby="dlgT"><header><b id="dlgT" class="pix"></b><button id="dlgX" aria-label="Fermer" title="Fermer (Échap)">×</button></header><div id="dlgC"></div></dialog>
 
 <script>/* le serveur local laisse le navigateur garder d'anciens fichiers : on charge toujours les scripts du jour */
-for (const f of ["../src/donnees/cartes.js", "../src/audio/samples.js", "../src/audio/instruments.js", "../src/audio/audio.js", ...["noyau", "arrangement", "motifs", "rouleau", "instrument", "reglages", "principal"].map(n => "editeur/" + n + ".js")]) document.write('<script src="' + f + "?v=" + Date.now() + '"><\/script>');</script>
+for (const f of ["../src/donnees/cartes.js", "../src/audio/samples.js", "../src/audio/instruments.js", "../src/audio/instruments-notes.js", "../src/audio/audio.js", ...["noyau", "arrangement", "motifs", "rouleau", "instrument", "reglages", "principal"].map(n => "editeur/" + n + ".js")]) document.write('<script src="' + f + "?v=" + Date.now() + '"><\/script>');</script>
 </body>
 </html>

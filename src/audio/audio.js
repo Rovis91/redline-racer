@@ -270,14 +270,19 @@
     disco: { kf: 120, ke: 55, ks: 0.02, kd: 0.12, kc: 0.45, kcf: 3500, sT: [210, 300], sTd: 0.05, sN: ['bandpass', 4800, 0.6], sNd: 0.14, hM: 1, hF: 9000, hD: 0.04, hO: 0.32, hum: 0.005, fill: 'toms', tom: [260, 200, 150], tomD: 0.15, room: 0.15 },
   };
   // instruments enregistrés bruts, pour l'éditeur de musique : un timbre « e_<nom> » par instrument d'instruments.js. shortcut: niveaux (lv) non mesurés, à régler par timbre si une station du dépôt en adopte un
-  for (const n in window.INS || {}) PATCH['e_' + n] = { smp: n, o: [['triangle']], a: 0.005, d: 2, s: 0.7, r: 0.15, rv: 0.2, lv: 2.5 };
+  for (const n of window.INS_NOMS || Object.keys(window.INS || {})) PATCH['e_' + n] = { smp: n, o: [['triangle']], a: 0.005, d: 2, s: 0.7, r: 0.15, rv: 0.2, lv: 2.5 };
   const smp = {};
   // le kit d'une station : sa boîte à rythmes, complétée par ses propres sons (st.bat : caisse claire, charleston…), refait si l'éditeur change l'un ou l'autre
   const kitDe = st => { if (!st.bat) return KIT[st.kit] || KIT.k909; const de = st.kit + JSON.stringify(st.bat); return st.Kb && st.Kb.de === de ? st.Kb : (st.Kb = { ...(KIT[st.kit] || KIT.k909), ...st.bat, de }); };
   // instruments échantillonnés (timbre smp, voir instruments.js) : décodés seulement pour les stations en jeu (décodé, un instrument pèse ~6 Mo)
   const ins = {}, insP = {};
+  // les notes (instruments-notes.js, 3,7 Mo compressés) arrivent à la première station, pas au démarrage : en attendant, les timbres jouent leurs oscillateurs (o)
+  let notesP = null, derniers = [];
+  const notes = () => notesP || (notesP = new Promise(ok => { if (typeof document === 'undefined') return ok(); const s = document.createElement('script'); s.src = 'src/audio/instruments-notes.js'; s.onload = s.onerror = ok; document.head.appendChild(s); }));
   function charger(...radios) {
-    if (!AC || !window.INS) return Promise.resolve(); const j = JSON.stringify(radios), noms = new Set(Object.keys(PATCH).filter(k => PATCH[k].smp && j.includes('"' + k + '"')).map(k => PATCH[k].smp));
+    derniers = radios;
+    if (AC && !window.INS) return notes().then(() => window.INS && charger(...derniers)); // les stations ont pu changer pendant le téléchargement
+    if (!AC) return Promise.resolve(); const j = JSON.stringify(radios), noms = new Set(Object.keys(PATCH).filter(k => PATCH[k].smp && j.includes('"' + k + '"')).map(k => PATCH[k].smp));
     if (radios.length === 1) for (const n of Object.keys(ins)) if (!noms.has(n)) { delete ins[n]; delete insP[n]; }
     return Promise.all([...noms].filter(n => INS[n]).map(n => insP[n] || (insP[n] = Promise.all(Object.entries(INS[n]).map(([m, b64]) => new Promise(ok => // un décodage déjà lancé est attendu, pas relancé
       AC.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer, b => { (ins[n] = ins[n] || {})[m] = b; ok(); }, ok)))))));

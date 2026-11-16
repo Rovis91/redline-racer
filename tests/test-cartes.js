@@ -183,7 +183,7 @@ console.log(`OK  fantômes or : ${orTxt.join(' · ')} ; lien de défi le plus lo
 const SRC = require('fs').readFileSync(__dirname + '/../src/audio/audio.js', 'utf8'), seen = new Set();
 new Function(SRC); // audio.js se lit sans erreur de syntaxe (sinon le jeu reste muet : SON n'existe pas)
 const GAMME = { mineur: [0, 2, 3, 5, 7, 8, 10], majeur: [0, 2, 4, 5, 7, 9, 11] }, NOMS = ['do', 'do#', 'ré', 'mib', 'mi', 'fa', 'fa#', 'sol', 'lab', 'la', 'sib', 'si'];
-require('../src/audio/essais-radio.js'); require('../src/audio/instruments.js'); // les essais de stations (hors du jeu) passent les mêmes contrôles
+require('../src/audio/essais-radio.js'); require('../src/audio/instruments.js'); require('../src/audio/instruments-notes.js'); // les essais de stations (hors du jeu) passent les mêmes contrôles
 for (const M of [...CARTES, { id: 'essais', radio: MUS.ESSAIS }]) {
   assert(M.id === 'essais' || M.radio.length === 3 || M.radio.length === 4, M.id + ' : il faut trois stations (quatre au plus)');
   for (const s of M.radio) {
