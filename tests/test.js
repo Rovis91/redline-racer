@@ -463,7 +463,7 @@ console.log(`OK  fantôme des médailles : ${fantTxt}`);
   console.log(`OK  trajectoire qui sèche : ville, après 60 s de course, ligne ${ligne.toFixed(2)}, bord ${bord.toFixed(2)} ; virage perdu ${s.vir.toFixed(3)} mouillé, ${q.vir.toFixed(3)} sur la ligne`);
 }
 
-// usure des voitures (docs/SPEC-CASSE.md) : frotter ne casse rien ; une zone prend au plus 0,4 par tour et jamais plus de 0,7 hors du mode CASSE ; en CASSE, jusqu'à l'épave
+// usure des voitures (docs/specs/SPEC-CASSE.md) : frotter ne casse rien ; une zone prend au plus 0,4 par tour et jamais plus de 0,7 hors du mode CASSE ; en CASSE, jusqu'à l'épave
 {
   const Z = [0, 0, 0, 0], Z0 = [0, 0, 0, 0];
   assert.strictEqual(usure(Z, Z0, 1, 0, 5.9), 0, 'sous 6 m/s contre un mur, rien');
@@ -479,7 +479,7 @@ console.log(`OK  fantôme des médailles : ${fantTxt}`);
   console.log(`OK  usure : 14 m/s → ${a[0].toFixed(3)}, 20 m/s → ${b[0].toFixed(3)} ; plafonds 0,4 par tour et 0,7`);
 }
 
-// mode CASSE (docs/SPEC-CASSE.md) : les dégâts jouent sur la conduite, de façon déterministe ; une course ordinaire n'en sait rien
+// mode CASSE (docs/specs/SPEC-CASSE.md) : les dégâts jouent sur la conduite, de façon déterministe ; une course ordinaire n'en sait rien
 {
   const course = casse => { const R = newRace(T, 3, AI_LVL, 0, { casse }); let t = 0; while (!R.done && t < 400) { const c = R.cars[0]; stepRace(R, { ...autopilot(c, T, 1.05, R.cars), gas: 1, brake: 0 }, H); t += H; } return R; };
   const A = course(true), B = course(true), O = course(false), j = A.cars[0];

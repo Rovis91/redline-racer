@@ -14,8 +14,17 @@ But : une session par carte, en parallèle, qui ne se marchent pas dessus et où
 Règles d'économie :
 - **L'orchestrateur ne lit aucune image.** Seuls les sous-agents Sonnet ouvrent les captures ; ils rendent du texte, court, avec le nom du fichier et l'échantillon de piste.
 - **Un critique lit des planches** (12 vues par image), jamais les captures une à une. Un tour complet tient en deux planches.
-- **Un critique par secteur ou par étape**, avec ses planches et une question précise. Deux critiques ne reçoivent pas les mêmes images.
+- **Un critique par zone ou par étape**, avec ses planches et une question précise. Deux critiques ne reçoivent pas les mêmes images.
 - On ne refait le tour complet qu'à l'étape 4 ; entre-temps, seulement les plans touchés, en duo avant/après.
+
+## Où poser un décor : là où le joueur le voit
+
+Erreur la plus fréquente sur les dernières cartes : du décor posé dans les espaces vides de la carte, mais hors du champ de la caméra de course. On ne le voit qu'à l'arrêt en tournant la caméra : il coûte sans rien apporter.
+
+- **On part de la caméra, pas du plan de la carte.** Les vides à remplir sont ceux que montrent les captures en caméra de course, pas ceux qu'on voit sur la carte vue de dessus. Le joueur ne déplace pas sa caméra : un objet caché par un bâtiment, hors du champ ou vu seulement de très loin n'existe pas pour lui (sur plage, la grande roue, vue de loin puis cachée de près entre deux bâtiments).
+- **Plus c'est loin, plus c'est gros.** Le détail fin ne se lit qu'au bord (0 à 15 m). Au plan moyen (15 à 80 m), on lit des volumes. Au fond (au-delà de 80 m), seulement une silhouette : elle doit être grande pour exister.
+- **Plus c'est sur le côté, plus c'est simple.** En vision périphérique et à pleine vitesse, un objet se comprend par sa forme et sa couleur, franches et contrastées avec le fond. Un objet chargé de petits détails sur le côté se lit comme du bruit.
+- **On valide en roulant.** Un décor est accepté quand on le voit et le reconnaît sur `node outils/plan.js <carte> <plan> --pas=15`, en caméra de course, à la vitesse du tour. `--vue=` sert à inspecter le modèle ; il ne prouve jamais qu'on le voit. Ce qui n'apparaît sur aucune capture en caméra de course est déplacé ou retiré.
 
 ## L'outil de capture
 

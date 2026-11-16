@@ -5,7 +5,7 @@
   Object.assign(DECORS, {
     // ---------- Playa 307 (Riviera Maya, midi, jour de la Feria del Carmen) : refonte d'après docs/propositions/PROPOSITION-plage.md ----------
     // Un bourg balnéaire traversé par une route : plage des hôtels et sa place de sable, muelle en un seul tablier, rue, place de la feria, halle, route 307, cénote ouvert (lac),
-    // abri sous roche puis salle (le tunnel du moteur, nu : th.tun.sans), digue de la lagune. Le nord (z < 0) est la mer. Sources : docs/REFS-plage.md et la proposition.
+    // abri sous roche puis salle (le tunnel du moteur, nu : th.tun.sans), digue de la lagune. Le nord (z < 0) est la mer. Sources : docs/refs/REFS-plage.md et la proposition.
     // Le décor fixe d'abord, puis « la vie » (docs/propositions/VIE-plage.md) : ce qui bouge s'inscrit dans VIE et le tick renvoyé à la fin le fait avancer. Règle de texture : aucune bande ondulée sur les grandes surfaces (grain 'bruit' et accidents posés par le décor).
     plage(h) {
       const { THREE, S, N, W, T, rnd } = h, D = THREE.DoubleSide, P = i => pt(h, i), IX = new Map(S.map((s, i) => [s, i])), n0 = h.scene.children.length;

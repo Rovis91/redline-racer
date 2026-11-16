@@ -20,7 +20,7 @@ Dépôt : voir [`README.md`](../README.md) (anglais, public) pour la carte des d
 | `refs/` | références visuelles et documentaires par carte (`REFS-*.md`) |
 | `images/` | captures du README, enregistrements avant/après |
 | `propositions/` | archives de conception par carte (propositions, étapes, critiques, vie) ; historique, non maintenu |
-| `cahier-feedback/` | archives des retours de revue ; historique, non maintenu |
+| `cahier-feedback/` | retours de l'auteur par carte, point par point (`<carte>/CAHIER.md`) ; les cahiers de perse, barrage, chapada et plage et `PROMPT-FABLE.md` sont historiques |
 | `styles/` | planches comparatives de styles visuels (vues par `pages/styles.html`) |
 
 Les chemins cités dans les documents partent de la racine du dépôt.

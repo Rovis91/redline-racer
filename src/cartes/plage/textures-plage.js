@@ -107,7 +107,7 @@
       for (let y = 0; y < 64; y++) for (let x = 0; x < 16; x++) { const a = Math.max(0, 1 - Math.abs(x - 7.5) / 8) ** 1.5 * (1 - y / 64) * 0.4; g.fillStyle = `rgba(255,243,192,${a.toFixed(3)})`; g.fillRect(x, y, 1, 1); }
     }],
 
-    // ---------- V2 (docs/REFS-plage.md) ----------
+    // ---------- V2 (docs/refs/REFS-plage.md) ----------
     // sable mouillé de la laisse de mer, entre le sable sec et l'écume : plus sombre, lisse, reflets du ciel en traînées
     sableMouille: () => [64, 64, (g, o) => {
       const { R, alea, voile } = o; R(g, '#a89270', 0, 0, 64, 64); grain(g, o, 500, ['#9a8462', '#b49e7c', '#8e7a58']);

@@ -1,6 +1,6 @@
 # Guide du développeur
 
-Redline Racer : jeu de course arcade en 3D pixelisée, seul, jusqu'à quatre sur le même écran, ou en ligne. Huit cartes, chacune avec son tracé, sa voiture, sa radio, son décor et son interface ; la musique réagit à la course.
+Redline Racer : jeu de course arcade en 3D pixelisée, seul, jusqu'à quatre sur le même écran, ou en ligne. Douze cartes, chacune avec son tracé, sa voiture, sa radio, son décor et son interface ; la musique réagit à la course.
 
 | Carte | Conduite | Voiture | Radio |
 |---|---|---|---|
@@ -143,7 +143,7 @@ Les trois rivaux d'une carte (`rivaux` dans `src/donnees/cartes.js`, sinon KENJI
 
 ### Écran partagé
 
-Ligne « JOUEURS » du menu principal : à 2, l'écran est coupé en deux vues superposées (joueur 1 en haut), et les deux joueurs courent dans la même course. Le choix est gardé (clé `vpr7.joueurs`). Spec et tickets : `docs/SPEC-ECRAN-PARTAGE.md`.
+Ligne « JOUEURS » du menu principal : à 2, l'écran est coupé en deux vues superposées (joueur 1 en haut), et les deux joueurs courent dans la même course. Le choix est gardé (clé `vpr7.joueurs`). Spec et tickets : `docs/specs/SPEC-ECRAN-PARTAGE.md`.
 
 - **Modes à deux** (`MODES2` dans `src/moteur/game.js`) : Course (3 tours, les deux joueurs et les deux rivaux les plus rapides de la carte : toujours quatre voitures), Élimination (les mêmes, 4 tours), Glisse en duel (2 tours, sans rival, le délai du solo pour chacun ; un choc entre les deux voitures casse l'enchaînement des deux). Ni contre-la-montre ni Tournée. Les deux joueurs partent sur les deux dernières places de la grille ; l'élastique des rivaux se règle sur la moyenne des deux. Le mode et la difficulté choisis à deux ont leurs propres clés (`vpr7.mode2`, `vpr7.diff2`) : revenir à un joueur rend le solo tel qu'on l'a laissé.
 - **Inscription** : au premier départ, chaque périphérique qui appuie prend la première place libre (clavier de gauche, clavier de droite, manette, Joy-Con). Les places sont gardées pour la session (`PLACES`), changement de carte compris : une revanche ne redemande rien, et la touche I du menu rouvre l'écran. Une manette inscrite qui disparaît en course met en pause et rouvre l'inscription pour sa place ; n'importe quel périphérique libre peut la reprendre.

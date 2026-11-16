@@ -63,7 +63,7 @@
       if (ix < nx - 1 && iz < nz - 1) idx.push(k, k + nx, k + 1, k + 1, k + nx, k + nx + 1);
     }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
-    // couches (o.couches, sinon th.couches ; docs/MOTEUR-OPTIONS-CARTES.md) : jusqu'à 4 textures par-dessus o.mat, chacune avec son poids par sommet (pente, distance à la route, altitude) ; même passe de dessin
+    // couches (o.couches, sinon th.couches ; docs/specs/MOTEUR-OPTIONS-CARTES.md) : jusqu'à 4 textures par-dessus o.mat, chacune avec son poids par sommet (pente, distance à la route, altitude) ; même passe de dessin
     const couches = o.couches || h.TH.couches; let mt = o.mat;
     if (couches && mt.map) {
       const N = g.attributes.normal.array, C = new Float32Array(nx * nz * 4), ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };

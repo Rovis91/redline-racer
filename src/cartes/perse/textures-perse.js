@@ -1,4 +1,4 @@
-// Textures propres à « perse » (Route royale, Persépolis au couchant) : complète le catalogue de textures.js (mêmes conventions). Voir METHODE-DECOR.md et docs/SPEC-PERSE.md.
+// Textures propres à « perse » (Route royale, Persépolis au couchant) : complète le catalogue de textures.js (mêmes conventions). Voir METHODE-DECOR.md et docs/specs/SPEC-PERSE.md.
 // Miniature persane : aplats sans dégradé, contours nets, motifs répétés partout hors de la piste. Palette de la spec (§2).
 (() => {
   const ROUGE = '#c8323c', OR = '#f0b840', TURQ = '#2aa39a', LAPIS = '#1d3a8a', CYPRES = '#2f5a3a', PIERRE = '#d8b878', GRISE = '#8a8478', IVOIRE = '#f4ead0', BRIQUE = '#9a5a38', NUIT = '#1d2a5a';
@@ -99,7 +99,7 @@
       for (const x of [10, 40]) { R(g, '#4a3020', x, 18, 14, 30); R(g, '#4a3020', x - 6, 26, 26, 10); R(g, '#2a1a10', x + 4, 36, 6, 12); }
     }],
 
-    // ---------- V2 (fiches de docs/REFS-perse.md) ----------
+    // ---------- V2 (fiches de docs/refs/REFS-perse.md) ----------
     // REFS §1 : appareil de la terrasse, grands blocs horizontaux à joints fins, gris miel ; 8 m par motif
     appareil: () => [64, 64, (g, { R, alea }) => {
       R(g, '#3e342d', 0, 0, 64, 64); const T = ['#a88e73', '#9c846c', '#b09680', '#948070', '#a48a74'];

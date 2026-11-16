@@ -3,7 +3,7 @@
   const { inst, near, pt, indexe, insts, LUM, boite, bord, repere, soude, terrain } = POSEURS;
 
   Object.assign(DECORS, {
-    // ---------- Route royale (docs/SPEC-PERSE.md) : la plaine de Marvdasht, le grand escalier, la Porte des Nations, la salle aux cent colonnes (M.place), le jardin, le bazar couvert ----------
+    // ---------- Route royale (docs/specs/SPEC-PERSE.md) : la plaine de Marvdasht, le grand escalier, la Porte des Nations, la salle aux cent colonnes (M.place), le jardin, le bazar couvert ----------
     // Miniature persane : la route reste sobre, l'ornement va aux murs, au sol hors piste et au fond. formes-perse.js, textures-perse.js.
     perse(h) {
       const { THREE, S, N, W, M, T, rnd } = h, PL = M.place, [CX, CZ] = PL.c, P0 = i => pt(h, i), VIE = { gens: [], gensT: [], anes: [], chutes: [], flamLum: [], lanLum: [] }, ROBES = [0xc8323c, 0x1f3a6e, 0x2aa39a, 0xf0b840, 0xf4ead0, 0xe87a2a, 0xf4ead0, 0x1d3a8a];

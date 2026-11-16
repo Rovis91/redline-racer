@@ -7,7 +7,7 @@
 //   --joueurs=2 : écran partagé (budget(2))      --fenetre : Chrome avec une fenêtre hors de l'écran au lieu de sans fenêtre      --fermer : ferme le Chrome gardé, puis sort
 // Bruit : la machine partagée fausse les temps (pas les passes de dessin ni les sommets). Une carte en échec est remesurée une fois : SUCCÈS, ÉCHEC (deux fois), ou INSTABLE (une sur deux),
 // avec la charge de la machine pendant la mesure. Au-delà de 40 % de charge, les millisecondes ne sont pas fiables.
-// Code de sortie 0 = tout passe. Variables : OPT (options de carte à essayer, JSON fusionné dans la carte : docs/MOTEUR-OPTIONS-CARTES.md), CHROME, PORT (8851, serveur outils/capture.py), DBG (9400, port de débogage du Chrome gardé).
+// Code de sortie 0 = tout passe. Variables : OPT (options de carte à essayer, JSON fusionné dans la carte : docs/specs/MOTEUR-OPTIONS-CARTES.md), CHROME, PORT (8851, serveur outils/capture.py), DBG (9400, port de débogage du Chrome gardé).
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
 const RACINE = path.join(__dirname, '..'), PORT = +process.env.PORT || 8851, DBG = +process.env.DBG || 9400, BASE = 'http://127.0.0.1:' + PORT + '/index.html';
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));

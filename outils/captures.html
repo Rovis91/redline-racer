@@ -14,7 +14,7 @@
 //   force=mur|murG|droit|nitro|glisse   avec idx : sur les 40 échantillons avant chaque capture, la voiture est poussée contre le mur de droite (murG : de gauche), ou va tout droit, cap bloqué 150 images (droit : dans le mur d'un virage ; en course le jeu appelle le pilote de sim.js sans passer par ce relais), ou la nitro tenue, ou la nitro tenue en glisse (pilote en glisse de sim.js) (le pilote auto ne fait ni l'un ni l'autre)
 //   taille=1920x1080   taille de la page du jeu (960x540 par défaut) : avec le style net, la scène est rendue à cette résolution (plus fine que le jeu, pour la critique de détail)
 //   jeu=1   chaque capture met côte à côte, à la même hauteur, le rendu réel du jeu (270 lignes, pixels agrandis, HUD) à gauche et le rendu du style (net par défaut) à droite
-//   opt={"th":{…}}   options de carte essayées sans toucher à cartes.js (fusionnées dans la carte par game.js ; docs/MOTEUR-OPTIONS-CARTES.md)
+//   opt={"th":{…}}   options de carte essayées sans toucher à cartes.js (fusionnées dans la carte par game.js ; docs/specs/MOTEUR-OPTIONS-CARTES.md)
 // Résultat : captures/<carte>-NN.jpg et captures/<carte>.json = { vues: [{ n, t, idx, kmh, tunnel }], erreurs, msParImage, tour }.
 // Quand le titre de la page passe à « FINI », tout est écrit.
 (async () => {

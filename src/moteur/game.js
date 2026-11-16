@@ -8,7 +8,7 @@
   const souffle = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = r; c.port2.postMessage(0); }); // pas setTimeout : bridé à 1 par seconde en arrière-plan
   let actif = false; // seule l'instance affichée écoute clavier, souris et fenêtre
   const arret = new AbortController(), addEventListener = (ev, f) => window.addEventListener(ev, e => { if (actif) f(e); }, { signal: arret.signal }); // tous les écouteurs de ce fichier tombent d'un coup à l'arrêt
-  { // essai des options de carte sans toucher à cartes.js : ?opt={"th":{"lisse":["eau"]}} fusionné dans la carte (voir docs/MOTEUR-OPTIONS-CARTES.md) ; outil de revue, rien n'est gardé
+  { // essai des options de carte sans toucher à cartes.js : ?opt={"th":{"lisse":["eau"]}} fusionné dans la carte (voir docs/specs/MOTEUR-OPTIONS-CARTES.md) ; outil de revue, rien n'est gardé
     const o = new URLSearchParams(location.search).get('opt'), fu = (a, b) => { for (const k in b) a[k] = b[k] && b[k].constructor === Object && a[k] && a[k].constructor === Object ? fu({ ...a[k] }, b[k]) : b[k]; return a; };
     if (o) CARTE = fu({ ...CARTE }, JSON.parse(o));
   }
@@ -24,7 +24,7 @@
   const ambZ = (M.amb || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)), ambAt = i => Math.max(0, ...ambZ.map(z => z(i, 60)));
   // th.embruns : [[point a, point b, force], …] : entre ces points du tracé, des gouttes se posent sur l'objectif comme sous la pluie (les embruns d'une chute, d'une rivière) ; absent : rien
   const embZ = (TH.embruns || []).map(([a, b, k]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), k]), embAt = i => Math.max(0, ...embZ.map(([z, k]) => k * z(i, 30)));
-  // brouillard par zone (th.brume : [[point a, point b, début, fin en mètres], …]) : entre ces deux points du tracé, le brouillard de la carte se resserre, fondu de 180 m à l'entrée et à la sortie (docs/MOTEUR-OPTIONS-CARTES.md)
+  // brouillard par zone (th.brume : [[point a, point b, début, fin en mètres], …]) : entre ces deux points du tracé, le brouillard de la carte se resserre, fondu de 180 m à l'entrée et à la sortie (docs/specs/MOTEUR-OPTIONS-CARTES.md)
   const brumeZ = (TH.brume || []).filter(z => z.length > 3).map(([a, b, n0, n1]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), n0, n1]);
   const chevSauf = (TH.chevSauf || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)); // th.chevSauf : [[point a, point b], …], pas de panneaux de virage entre ces points du tracé
   // pluie (thème) : force par échantillon calculée dans sim.js (T.pluie : zones [point a, point b, force], fondu de 120 m) ; coupée en tunnel au dessin
@@ -262,7 +262,7 @@
   };
   addEventListener('resize', resize);
 
-  const lisse = t => { t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; return t; }; // filtrage linéaire et mipmaps : ?lisse=1 partout, th.lisse ou mat(…, { lisse: 1 }) pour une carte (docs/MOTEUR-OPTIONS-CARTES.md)
+  const lisse = t => { t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; return t; }; // filtrage linéaire et mipmaps : ?lisse=1 partout, th.lisse ou mat(…, { lisse: 1 }) pour une carte (docs/specs/MOTEUR-OPTIONS-CARTES.md)
   const tex = (w, h, draw, nom) => {
     const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'));
     const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapLinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); // MipmapLinear : fondu entre deux niveaux de mipmap, plus de lignes de palier qui avancent sur le sol avec la caméra ; anisotropie au maximum de la carte graphique : sans elle, les paliers de mipmap du sol vu en rasant avancent avec la voiture, à 10-100 m (on croit voir les textures se charger) ; jamais de filtrage linéaire, sauf ?lisse=1
@@ -329,7 +329,7 @@
 
   const hemi = new THREE.HemisphereLight(TH.hemi[0], TH.hemi[1], TH.hemi[2] * Math.PI); scene.add(hemi); // bleu d'en haut, rebond magenta de la ville
   const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const OMBD = 2, OMBI = 3; // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
-  // th.ombre = { taille, champ, doux } (docs/MOTEUR-OPTIONS-CARTES.md) : côté de la carte d'ombre en texels (2048), demi-côté couvert en m (390), filtrage bilinéaire des bords (4 lectures au lieu d'une)
+  // th.ombre = { taille, champ, doux } (docs/specs/MOTEUR-OPTIONS-CARTES.md) : côté de la carte d'ombre en texels (2048), demi-côté couvert en m (390), filtrage bilinéaire des bords (4 lectures au lieu d'une)
   const OMBO = TH.ombre || {}, OTX = OMBO.taille || 2048, OCH = OMBO.champ || 300 * LOIN;
   sun.shadow.mapSize.set(OTX, OTX); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.5;
   Object.assign(sun.shadow.camera, { left: -OCH, right: OCH, top: OCH, bottom: -OCH, near: 10, far: 800 * LOIN });
@@ -499,7 +499,7 @@
   const tunMats = [];
   if (T.tun) {
     const u = TH.tun;
-    // forme du tunnel (docs/MOTEUR-OPTIONS-CARTES.md) : th.tun.h (hauteur sous voûte, 8 m), th.tun.voute (flèche de la voûte, 0 = plafond plat), th.tun.ouv (ouvertures du plafond [[f0, f1], …]),
+    // forme du tunnel (docs/specs/MOTEUR-OPTIONS-CARTES.md) : th.tun.h (hauteur sous voûte, 8 m), th.tun.voute (flèche de la voûte, 0 = plafond plat), th.tun.ouv (ouvertures du plafond [[f0, f1], …]),
     // th.tun.rayons (couleur des colonnes de lumière sous les ouvertures). h et voute : un nombre, des clés [[f, valeur], …] ou une fonction (f, s) ; f = 0 à l'entrée, 1 à la sortie.
     // Avec l'une d'elles, parois et sol suivent la demi-largeur roulable s.w (M.large de sim.js : les murs de la physique) au lieu de W. Sans elles, rien ne change.
     let sol; const FT = u.h != null || !!u.voute || !!u.ouv, FI = new Map(); for (let k = 0; k <= cT; k++) FI.set(S[(T.t0 + k) % N], k / cT);
@@ -704,7 +704,7 @@
     return { hist: [], P, C, geo, tr, gR: [[], []], gOn: [0, 0], gP, gC, gGeo, vAcc: 0 };
   };
   // traces au sol : un ruban par roue arrière, un point tous les GD mètres au plus, gardé toute la course (les GN derniers points de chaque roue)
-  // TR : ce que chaque surface garde (docs/SPEC-CASSE.md) : gomme noire sur le bitume sec, sillons sur la terre et ornières dans la neige (même en roulant), rien sur la glace ni le mouillé
+  // TR : ce que chaque surface garde (docs/specs/SPEC-CASSE.md) : gomme noire sur le bitume sec, sillons sur la terre et ornières dans la neige (même en roulant), rien sur la glace ni le mouillé
   const TR = { sec: { c: [0.02, 0.02, 0.025], a: 0.7, roule: 0, w: 1 }, terre: { c: [0.2, 0.12, 0.06], a: 0.8, roule: 0.38, w: 1.25 }, neige: { c: [0.55, 0.6, 0.7], a: 0.8, roule: 0.4, w: 1.35 } };
   const genre = q => q.vir >= 0.2 && q.vir < 0.4 && q.roul > 0.1 ? 'neige' : q.roul >= 0.2 && q.vir < 0.2 ? 'terre' : 'sec'; // neige : glissante et roulante ; terre : roulante, peu glissante (un fondu terre-bitume reste de la terre, pas de la neige)
   const trSol = q => q.vir >= 0.4 || q.aq > 0.05 ? null : TR[genre(q)]; // rien sur la glace ni le mouillé (la bruine de la ville, à 30 % du mouillé, garde la gomme)
@@ -878,7 +878,7 @@
 
   fond && await souffle();
   // ---------- dégâts : purement visuels et sonores (la conduite et les temps n'en savent rien : fantômes, médailles et réseau intacts), remis à zéro à chaque départ ----------
-  // Le modèle des chocs est celui de sim.js (usure, docs/SPEC-CASSE.md) : seule la vitesse normale casse, plafonds 0,4 par tour et 0,7 par zone.
+  // Le modèle des chocs est celui de sim.js (usure, docs/specs/SPEC-CASSE.md) : seule la vitesse normale casse, plafonds 0,4 par tour et 0,7 par zone.
   // Par modèle (g.userData.dg) : z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] ; z0 = les zones au début du tour ; la caisse s'enfonce autour de chaque impact, d'autant plus que le choc a usé ;
   // les pièces pendent puis tombent à des seuils de leur zone (une seule pend à la fois, dessinée à part sur sa charnière) ; ph / fe = phare / feu tombé de chaque côté [z < 0, z > 0] : sa lumière dynamique s'éteint (vueFrame) ;
   // les débris restent au sol toute la course (au plus DEBMAX, le plus vieux disparaît), poussés par les voitures qui passent ; fumée du capot ; vitre fêlée peinte sur la livrée.
@@ -1015,7 +1015,7 @@
       if (d.dort) continue;
       d.v.y -= 15 * dt; p.addScaledVector(d.v, dt); d.m.rotation.x += d.w.x * dt; d.m.rotation.y += d.w.y * dt; d.m.rotation.z += d.w.z * dt;
       if (p.y < d.y0 + 0.06) { p.y = d.y0 + 0.06; d.v.y *= -0.3; d.v.x *= 0.5; d.v.z *= 0.5; d.w.multiplyScalar(0.5); if (d.v.length() < 0.4) { d.dort = 1; d.m.castShadow = false; } } } // posé : il ne porte plus d'ombre (une passe de moins)
-    // shortcut: un débris dort à la hauteur de la voiture d'où il est tombé ; chassé loin dans une pente, il peut flotter ou s'enfoncer un peu ; dans un second temps, un seul maillage pour les débris posés (docs/SPEC-CASSE.md)
+    // shortcut: un débris dort à la hauteur de la voiture d'où il est tombé ; chassé loin dans une pente, il peut flotter ou s'enfoncer un peu ; dans un second temps, un seul maillage pour les débris posés (docs/specs/SPEC-CASSE.md)
     for (const D of DGM) { const P = D.pend; if (!P || !D.c) continue; const c = D.c, sp = Math.hypot(c.vx, c.vz); P.t += dt; // la pièce qui pend bat avec la vitesse ; un bout qui traîne crache des étincelles
       P.piv.rotation.x = P.a * (1 + Math.min(1, sp / 15) * 0.3 * Math.sin(P.t * (4 + sp * 0.25)));
       if (sp > 6 && P.piv.parent && Math.random() < dt * 20) { const w = P.piv.localToWorld(P.bout.clone()); emit(w.x, Math.max(w.y, modele(c).position.y + 0.05), w.z, c.vx * 0.5 + jit(2), Math.random() * 2, c.vz * 0.5 + jit(2), 0.4, 1, 0.7, 0.3, 22); } }
@@ -1032,7 +1032,7 @@
     g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.frustumCulled = false; m.renderOrder = 51; m.userData.dyn = 1; m.visible = false; scene.add(m); return m; })() : null; // renderOrder 51 : après le voile du banc (50)
 
-  // ---------- décor qui s'abîme (docs/SPEC-CASSE.md, prototype 2) : purement visuel, comme les dégâts ; remis à zéro à chaque départ (decorRaz) ----------
+  // ---------- décor qui s'abîme (docs/specs/SPEC-CASSE.md, prototype 2) : purement visuel, comme les dégâts ; remis à zéro à chaque départ (decorRaz) ----------
   // Glissières : chaque côté (MURS) garde la forme des chocs, dz[i] = recul de l'échantillon i (m). La collision de sim.js ne bouge pas : un rail embouti laisse un creux derrière la voiture, pas devant.
   // Peinture : un anneau de MN segments sur les parois (bande de la teinte de la voiture + rayure claire), recalé sur la glissière quand elle recule.
   // Cônes et poubelles : posés au bord des virages, ils volent au contact d'une voiture (qui n'en sait rien) et restent où ils tombent.
@@ -1130,7 +1130,7 @@
     // shortcut: un objet dort à la hauteur de sa place de départ et peut traverser le mur ; projeté loin dans une pente, il flotte ou s'enfonce un peu
   }
 
-  // ---------- saleté et huile (docs/SPEC-CASSE.md, prototype 3) : visuel ----------
+  // ---------- saleté et huile (docs/specs/SPEC-CASSE.md, prototype 3) : visuel ----------
   // Saleté : chaque voiture a son niveau (0 à 1) et sa couleur, mêlée au fil des surfaces (terre : boue, neige : neige, bitume sec : poussière lente) ; la pluie, le mouillé et le gué la lavent.
   // Dans la livrée (salePeint, après eclaire) : chaque cellule de la caisse a son seuil, éclaboussures fines puis plaques, plus vite en bas qu'au toit ; mate et sans reflet sous la saleté.
   const SALES = { terre: [0.42, 0.28, 0.15, 0.025], neige: [0.92, 0.94, 0.97, 0.02], sec: [0.45, 0.43, 0.4, 0.002] }, TMP = new THREE.Color();
