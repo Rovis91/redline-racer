@@ -88,8 +88,11 @@
           h.ribbon(t1, cO, s => sd * s.w, 0, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), bordM, 8); h.ribbon(t1, cO, s => sd * (s.w + 0.25 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), bordM, 8);
           h.ribbon(t1, cO, s => sd * (s.w + 0.85 * e(s)), s => 0.3 * e(s), s => sd * (s.w + 6 * e(s)), s => -1.1 * e(s), talusM, 8); } }
       // la traînée mouillée à la sortie de chaque passage noyé : la chaussée (bandes du décor comprises) est sombre sur 120 m, de moins en moins ; le moteur n'y mouille que sa bande centrale, sur 20 m (th.mouilleVisible)
-      { const sortie = i => { while (gue(S[i % N])) i++; return i; }, voile = Array.from({ length: 10 }, (_, k) => h.mat('peinture', { c: 0x0a140e, transparent: true, opacity: 0.56 * (1 - k / 10), depthWrite: false, side: THREE.DoubleSide }));
-        for (const i0 of [sortie(P(3) - 6), sortie(iR1 - 4), sortie(P(64) - 4)]) voile.forEach((m, k) => { h.ribbon(i0 + k * 6, 6, s => -s.w, 0.045, s => s.w, 0.045, m, 8).userData.dyn = 1; }); }
+      { const sortie = i => { while (gue(S[i % N])) i++; return i; }, voile = h.mat('peinture', { c: 0x0a140e, transparent: true, opacity: 1, depthWrite: false, side: THREE.DoubleSide, vertexColors: true }); // les 30 rubans (3 sites, 10 bandes d'opacité décroissante) en un maillage : l'opacité de chaque bande est l'alpha de ses sommets
+        const P3 = [], I3 = [], C3 = [], N3 = []; for (const i0 of [sortie(P(3) - 6), sortie(iR1 - 4), sortie(P(64) - 4)]) for (let k = 0; k < 10; k++) { const m = h.ribbon(i0 + k * 6, 6, s => -s.w, 0.045, s => s.w, 0.045, voile, 8), g = m.geometry, o = P3.length / 3; h.scene.remove(m);
+          P3.push(...g.attributes.position.array); N3.push(...g.attributes.normal.array); for (const j of g.index.array) I3.push(j + o); for (let j = 0; j < g.attributes.position.count; j++) C3.push(1, 1, 1, 0.56 * (1 - k / 10)); }
+        const G3 = new THREE.BufferGeometry(); G3.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); G3.setAttribute('normal', new THREE.Float32BufferAttribute(N3, 3)); G3.setAttribute('color', new THREE.Float32BufferAttribute(C3, 4)); G3.setIndex(I3);
+        const M3 = new THREE.Mesh(G3, voile); M3.receiveShadow = true; M3.userData.dyn = 1; h.scene.add(M3); }
       // ---------- l'eau : un seul ruban qui suit la rivière, plat par bief, incliné aux ressauts ----------
       { const pos = [], uv = [], idx = [];
         RIV.forEach((p, j) => { const q = RIV[Math.min(RIV.length - 1, j + 1)], o = RIV[Math.max(0, j - 1)], dx = q.x - o.x, dz = q.z - o.z, l = Math.hypot(dx, dz), nx = -dz / l, nz = dx / l, w = p.w + 2;
