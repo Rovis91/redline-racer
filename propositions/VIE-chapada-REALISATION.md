@@ -58,7 +58,7 @@ Validé = l'agent a rendu « VALIDÉ » sur les dernières captures.
 
 ## Retours de l'auteur après essai (16 novembre)
 
-Captures avant et après dans  (celles de la première phase sont rangées dans ).
+Captures avant et après dans `captures/plans/chapada/` (celles de la première phase sont rangées dans `premiere-phase/`).
 
 | N° | Retour | Fait | Plan |
 |---|---|---|---|
@@ -66,12 +66,12 @@ Captures avant et après dans  (celles de la première phase sont rangées dans 
 | 2 | Les flamants presque blancs, pas gracieux, trop gros | Roses (rose franc non éclairé : la lumière ne les délave plus), échelle 2,5 → 1,5, battement trois fois plus lent, silhouette fine (cou tendu, pattes en arrière) | 200, 206 |
 | 3 | Les feuilles qui tombent font un effet de feu | Retirées. Les feuilles soulevées par la voiture restent | 570, 700 |
 | 4 | Entrée de la grotte trop étroite, trop de brouillard | L'éboulis recule de 5 m de chaque côté et de 5 m en hauteur, les braseros s'écartent ; la brume de la gorge s'arrête à l'entrée du pont au lieu du portail ; les embruns ne dépassent plus le milieu du pont. On voit le portail dès le bout du pont | 895, 905 |
-| 5 | Des torches murales dans la grotte, pas les lumières du plafond | Luminaires du moteur retirés (). Quatorze torches scellées dans la paroi, un côté puis l'autre tous les 20 m, chacune avec son luminaire () : elles éclairent le sol mouillé et la voiture. Le pied est à 1,2 m de haut, la flamme à 5 m : rien dans le gabarit des voitures | 950, 1000, 1040 |
-| 6 | Un objet de la descente avance par sauts en clignotant ; le félin sur le tronc | C'étaient les branches qui descendent le courant : elles étaient posées d'échantillon en échantillon (2 m) ; leur position est maintenant interpolée, calée sur . L'onça est retirée | 1300, 1340, 1376 |
+| 5 | Des torches murales dans la grotte, pas les lumières du plafond | Luminaires du moteur retirés (`th.tun.sans`). Quatorze torches scellées dans la paroi, un côté puis l'autre tous les 20 m, chacune avec son luminaire (`h.lum`) : elles éclairent le sol mouillé et la voiture. Le pied est à 1,2 m de haut, la flamme à 5 m : rien dans le gabarit des voitures | 950, 1000, 1040 |
+| 6 | Un objet de la descente avance par sauts en clignotant ; le félin sur le tronc | C'étaient les branches qui descendent le courant : elles étaient posées d'échantillon en échantillon (2 m) ; leur position est maintenant interpolée, calée sur `dt`. L'onça est retirée | 1300, 1340, 1376 |
 | 7 | Des poteaux en pleine route devant le temple | Trois des huit stèles du temple étaient sur la chaussée (décor d'origine). Elles sont retirées ; restent celles qui sont hors de la route | 1485, 1492, 1500 |
 | — | Retirer les idées invisibles | Caïman, paillettes du bassin sacré, feux du mât radio, toucan, onça, vautours du temple, tangage de la barque, singes de la statue et des degrés : retirés, avec leurs formes. Le croassement du toucan et le râle de l'onça restent au son | 1785, 1455, 1396 |
-| A | Plus de clignotement avec la musique |  et  modifié comme demandé. Vérifié en jeu : 71 aplats lumineux, aucun changement de couleur sur 90 images, la boucle de rythme n'est pas lancée | — |
-| B | De la vraie lumière | Torches de la grotte, braseros, feu de camp, torches de la route et de la cité : un luminaire  chacun. Trois lanternes de la guirlande sur six en reçoivent un. Le halo additif ajouté sur l'idole est retiré : elle est éclairée par ses deux torches | 1000 |
+| A | Plus de clignotement avec la musique | `th.sansRythme: 1` et `rythme.js` modifié comme demandé. Vérifié en jeu : 71 aplats lumineux, aucun changement de couleur sur 90 images, la boucle de rythme n'est pas lancée | — |
+| B | De la vraie lumière | Torches de la grotte, braseros, feu de camp, torches de la route et de la cité : un luminaire `h.lum` chacun. Trois lanternes de la guirlande sur six en reçoivent un. Le halo additif ajouté sur l'idole est retiré : elle est éclairée par ses deux torches | 1000 |
 
 Ce qui reste des tableaux plus haut : les lignes caïman, toucan, onça, vautours du temple, barque qui tangue, paillettes du bassin sacré, mât radio et feuilles qui tombent ne sont plus dans le code.
 
