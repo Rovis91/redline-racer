@@ -101,7 +101,7 @@ const PAGE = `(() => {
       throw new Error('plan inconnu : ' + p + ' (1 à 20, tour, @échantillon' + (noms[carte] ? ', ' + Object.keys(noms[carte]).join(', ') : '') + ')');
     });
     for (const p of plans) {
-      const r = await evalue(`__plan.va(${p.idx}, ${JSON.stringify(p.vue)}, ${JSON.stringify(p.nom + ' @' + p.idx)}, ${rafale}, ${+val('pas') || 1})`);
+      const r = await evalue(`__plan.va(${p.idx}, ${JSON.stringify(p.vue)}, ${JSON.stringify(p.nom + ' @' + p.idx)}, ${rafale}, ${+val('pas') || +val('ecart') || 1})`);
       console.log(('plan ' + p.nom).padEnd(14), ('échantillon ' + r.idx + '/' + n).padEnd(22), r.kmh + ' km/h');
     }
     const dossier = path.join(RACINE, 'captures', 'plans', carte), suf = opt('avant') ? '.avant' : '', ecrit = (nom, b64) => { fs.mkdirSync(dossier, { recursive: true }); const f = path.join(dossier, nom + '.jpg'); fs.writeFileSync(f, Buffer.from(b64, 'base64')); console.log(path.relative(RACINE, f).replace(/\\/g, '/')); };

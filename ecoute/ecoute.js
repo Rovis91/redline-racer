@@ -53,6 +53,12 @@
     lieu: ['amb', 'Ambiance du lieu', 'telle qu\'on l\'entend dans sa zone, à l\'arrêt', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1 })],
     arene: ['amb', 'Ambiance : arène', 'Grand Vacarme : la foule des tribunes, une clameur par clic', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1 }), () => { SON.carte(CARTES.find(c => c.id === 'stade')); SON.evenement(); }],
     laponie: ['amb', 'Ambiance : Laponie', 'Nuit Blanche : le vent dans les sapins, des grelots par clic', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1 }), () => { SON.carte(CARTES.find(c => c.id === 'givre')); SON.evenement(); }],
+    // Route royale : un lit et des événements par zone (AMBZ et ambEvent de audio.js) ; idx = l'endroit du tour, en millièmes (le banc a un tour de 1000 échantillons)
+    persePlaine: ['amb', 'Ambiance : Perse, la plaine', 'vent tiède ; un chien ou un bêlement par clic', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1, idx: 100 }), () => { SON.carte(CARTES.find(c => c.id === 'perse')); SON.evenement(); }],
+    perseCaravane: ['amb', 'Ambiance : Perse, la caravane', 'les grelots des chameaux, par clic', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1, idx: 330 }), () => { SON.carte(CARTES.find(c => c.id === 'perse')); SON.evenement(); }],
+    perseJardin: ['amb', 'Ambiance : Perse, le jardin', 'eau vive ; des oiseaux par clic', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1, idx: 680 }), () => { SON.carte(CARTES.find(c => c.id === 'perse')); SON.evenement(); }],
+    perseBazar: ['amb', 'Ambiance : Perse, le bazar couvert', 'brouhaha sous la voûte ; marteau de dinandier ou appel de marchand par clic', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1, idx: 800, tun: 1 }), () => { SON.carte(CARTES.find(c => c.id === 'perse')); SON.evenement(); }],
+    perseRue: ['amb', 'Ambiance : Perse, la rue du bazar', 'brouhaha à ciel ouvert ; cri de marchand et sabots par clic, une flûte lointaine une fois par tour', ['amb'], 20, () => course({ r: 0, sp: 0, amb: 1, idx: 950 }), () => { SON.carte(CARTES.find(c => c.id === 'perse')); SON.evenement(); }],
     evt: ['amb', 'Événement du lieu', 'grillons, oiseaux, corne, hélicoptère ou sirène selon la carte', ['amb'], 16, () => course({ r: 0, sp: 0, amb: 1 }), () => SON.evenement()],
     tonnerre: ['amb', 'Tonnerre', 'orage de la ville', ['amb'], 12, null, () => SON.tonnerre()],
     pluie: ['pluie', 'Pluie', 'la pluie à travers la carrosserie, plus claire avec la vitesse', ['pluie'], 10, () => averse()],
@@ -83,7 +89,7 @@
   function etat(sc, x) {
     const o = sc && sc[5] ? sc[5](x) : { state: 'pause' }, r = o.r || 0;
     return { mur: o.mur || 0, autres: o.autres, state: o.state, tour: Math.max(0, u.tour), tours: u.tour < 0 ? 0 : 3, T: { h0: 500, h1: 700, n: 1000 }, hot: o.plein ? 1 : 0, tun: o.tun || 0, amb: o.amb || 0, pluie: o.pluie || 0,
-      car: { manual: !!o.manuel, dd: o.dd || 0, driftT: o.driftT || 0, vl: o.slide ? 4 + 14 * o.slide : 0, boost: o.boost || 0, sol: o.sol, idx: o.plein ? 600 : 0, dist: 1, drift: !!o.drift, rub: o.rub || 0 },
+      car: { manual: !!o.manuel, dd: o.dd || 0, driftT: o.driftT || 0, vl: o.slide ? 4 + 14 * o.slide : 0, boost: o.boost || 0, sol: o.sol, idx: o.idx != null ? o.idx : o.plein ? 600 : 0, dist: 1, drift: !!o.drift, rub: o.rub || 0 },
       r, sp: o.sp || 0, gas: o.gas || 0, hit: o.hitV || (pulse.hit ? 9 : 0), bump: o.bump || 0, up: !!pulse.up, down: !!pulse.down, rpm: o.rpm || 0.2, load: o.load || 0, spool: o.spool || 0, stun: o.stun || 0 };
   }
   const son = () => SON.ac && SON.live;

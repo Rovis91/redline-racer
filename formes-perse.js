@@ -53,7 +53,7 @@
     // REFS §9 : autel du feu achéménide (Naqsh-e Rostam) : socle à degrés, fût carré, coupe à degrés ; la flamme est posée à part
     autel: () => [['pierre', 1.4, 0.4, 1.4, 0, 0.2, 0], ['pierre', 0.8, 1.3, 0.8, 0, 1.05, 0], ['pierre', 1.2, 0.3, 1.2, 0, 1.85, 0], ['pierre', 1.5, 0.3, 1.5, 0, 2.15, 0], ['or', 1.55, 0.08, 1.55, 0, 2.34, 0]],
     // REFS §15 : tente noire des nomades : lés tendus en deux pans, rebord bas
-    tente: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
+    tenteNomade: () => [['tente', 9, 1.4, 5, 0, 0.7, 0], ['tente', 9.4, 0.12, 3.2, 0, 1.9, -1.1, [0.45, 0, 0]], ['tente', 9.4, 0.12, 3.2, 0, 1.9, 1.1, [-0.45, 0, 0]]],
     // REFS §12 : arc transversal brisé du bazar couvert (repère de la route) : deux piles et l'arc en six segments, de la naissance à 3,8 m jusqu'à la clé à 6,2 m ; entre deux arcs, la coupole monte à 7,9 m
     arcBazar: (W = 10) => { const n = 6, R0 = W - 0.45, pt = k => { const t = k / n, x = R0 * (1 - t); return [x, 3.8 + 2.4 * Math.pow(t, 0.62)]; }, segs = [];
       for (let k = 0; k < n; k++) { const [x0, y0] = pt(k), [x1, y1] = pt(k + 1), l = Math.hypot(x1 - x0, y1 - y0), a = Math.atan2(y1 - y0, x1 - x0); for (const sd of [-1, 1]) segs.push(['brique', l + 0.3, 0.7, 1.1, sd * (x0 + x1) / 2, (y0 + y1) / 2, 0, [0, 0, sd > 0 ? a : -a]]); }
