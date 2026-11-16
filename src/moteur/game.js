@@ -613,7 +613,7 @@
   fond && await souffle();
   // ---------- décor de la carte : decors-<carte>.js ----------
   const VAP = [], vapeur = (x, y, z) => VAP.push([x, y, z]); // bouches de vapeur déclarées par le décor (panaches : voir flou)
-  const beams = [], CASS = [], decorTick = window.DECORS[TH.decor]({ cassable: (...a) => CASS.push(a), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, flou: (...a) => flou(...a), temps: () => race ? -1 : tTraf }); // flou : les particules du jeu ouvertes aux décors, à appeler depuis le tick (elles n'existent pas encore au chargement) ; le décor appelle lui-même step(dt) // pas de trafic en course : les adversaires ne savent pas l'éviter
+  const beams = [], CASS = [], decorTick = window.DECORS[TH.decor]({ cassable: (...a) => CASS.push(a), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, lum, geo, mat, tx, addMat, box, concrete, beams, pose, zones, habille, vapeur, flou: (...a) => flou(...a), temps: () => race ? -1 : tTraf, tours: () => race ? race.laps : 0 }); // tours : ceux de la course en cours (0 hors course), pour le dernier tour des décors // flou : les particules du jeu ouvertes aux décors, à appeler depuis le tick (elles n'existent pas encore au chargement) ; le décor appelle lui-même step(dt) // pas de trafic en course : les adversaires ne savent pas l'éviter
 
   // pluie : traînées nettes qui s'allongent et foncent vers la caméra avec la vitesse, penchées par le vent ; tête claire, queue qui s'éteint (mélange additif, aucun flou)
   // force 1 = 400 gouttes ; au-delà (averse, zones de pluie > 1), plus de gouttes, plus longues ; et des impacts qui rejaillissent sur la chaussée devant la voiture
@@ -2095,6 +2095,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // les matrices de la scène une fois pour les trois rendus de la vue (reflets, ombres mobiles, scène) : chacun les recalculait toutes
     rouesInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n) refFace();
     ombres(vu, pasL, car, carY);
+    if (decorTick && decorTick.direct && !vu.n) decorTick.direct(renderer); // un écran du décor qui passe la course en direct (stade) : sa prise, avant la scène qui l'affiche
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
     if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       REPLI.rDz.value = vu.rt.depthTexture; REPLI.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(repliScene, cam); renderer.autoClear = true; }

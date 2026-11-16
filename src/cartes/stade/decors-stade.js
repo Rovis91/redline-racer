@@ -46,8 +46,15 @@
       const toit = h.mat('toitArene', LUM); boite(h, toit, X1 + RE - X0 + RW + 120, 1, Z1 - Z0 + 120, cx, HT + 0.5, cz);
       const peauF = { acier, lampe, treillis: h.mat('treillisPortique', { alphaTest: 0.5, side: THREE.DoubleSide, rep: [(Z1 - Z0) / 6.2, 1] }, '#3a3e4a') };
       for (let x = -230; x <= 380; x += 70) h.pose('fermeToit', peauF, h.scene, [x, HT - 4.5, cz], Z1 - Z0 + 100);
-      // le cube d'affichage au-dessus de l'aire, et un écran géant à chaque bout de la salle (deux images qui alternent)
-      h.pose('cubeScore', { ecran: h.mat('tableauStade', LUM), acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [CX, HT - 30, CZ]);
+      // le cube vidéo : suspendu au toit au-dessus de l'aire centrale, ses quatre faces tournées vers les quatre côtés de la salle passent la course en direct au public.
+      // La piste passe entre l'aire et les tribunes : le joueur voit la face qui regarde sa tribune. Faces de 40 × 17 m, le bas à 7 m (à l'écart du raccourci, personne ne passe dessous) (le cube d'affichage d'avant,
+      // 24 × 13 m le bas à 26 m, n'occupait pas 1 % de l'image de la caméra de course) ; décalé de 30 m au sud de l'arche de feu pour que ses flammes ne le touchent pas.
+      // Une caméra de télévision suit la voiture et change de plan toutes les 4 s (hélicoptère, travelling, face, tribune au téléobjectif), rendue en 320 × 136,
+      // une image sur quatre, jusqu'à 400 m ; les écrans sont cachés pendant sa prise (ils ne peuvent pas se lire eux-mêmes). Un écran géant à chaque bout de la salle (deux images qui alternent)
+      const RTV = new THREE.WebGLRenderTarget(320, 136), tv = new THREE.PerspectiveCamera(30, 40 / 17, 1, 400), vif = new THREE.MeshBasicMaterial({ map: RTV.texture, fog: false });
+      const ecranT = h.mat('tableauStade', LUM), KX = CX - 5, KZ = CZ - 30, KY = 17, cube = h.pose('cubeScore', { ecran: ecranT, acier, bande: h.mat('peinture', { lum: 1, c: 0xffc21a }) }, h.scene, [KX, KY, KZ]);
+      cube.forEach(m => m.scale.set(40 / 24, 17 / 13, 40 / 24)); const geants = cube.filter(m => m.material === ecranT); geants.forEach(m => { m.material = vif; m.userData.dyn = 1; m.userData.ecranTV = 1; });
+      for (const a of [-1, 1]) for (const b of [-1, 1]) boite(h, acier, 0.3, HT - KY - 30, 0.3, KX + a * 15, (HT + KY + 30) / 2, KZ + b * 15); // les suspentes, du haut du cube au toit
       const ecranG = h.mat('ecranGeant', LUM); ecranG.map.repeat.set(1, 0.5);
       for (const x of [X1 + RE + 34, X0 - RW - 34]) boite(h, ecranG, 1, 18, 84, x, 50, cz);
       // la scène (elle ferme l'est de l'aire), le mur de la butte et l'arche de feu entre les deux : ce sont les piles de M.place
@@ -59,12 +66,13 @@
       // les flammes : deux lance-flammes au bout de chaque tremplin (leur lueur éclaire la butte), une rangée sur l'arche et une sur la scène. [x, y, z, rotation, largeur, hauteur]
       const feux = [];
       for (const [p] of M.sauts) { const i = pt(h, p), s = S[i]; h.lum(i, s.x, s.y + 4, s.z, 0xff7a20, 30, 0.45); for (const sd of [-1, 1]) feux.push([...au(s, sd * (s.w - 0.8)), h.across(s), 2.4, 6]); }
+      const iArche = feux.length; // les six flammes de l'arche : elles s'emballent quand on passe dessous
       for (let k = 0; k < 6; k++) feux.push([CX - 20 + k * 5.4, 12, CZ, 0, 2, 4.5]);
       for (let k = 0; k < 5; k++) feux.push([CX + 14 + k * 10, 4.5, CZ, 0, 2.4, 5]);
       const gf = new THREE.PlaneGeometry(1, 1); gf.translate(0, 0.5, 0);
       const mf = new THREE.InstancedMesh(gf, h.mat('flamme', AD), feux.length), o3 = new THREE.Object3D(); mf.frustumCulled = false; mf.userData.dyn = 1; h.scene.add(mf);
       // deux éventails de lasers sous le cube, quatre faisceaux de poursuite qui balaient la piste, et les flashs des appareils photo dans les gradins
-      const lasers = [0x30ff70, 0xff30c0].map(c => h.pose('eventailLaser', { rayon: h.mat('peinture', { ...AD, c }) }, h.scene, [CX, HT - 38, CZ])[0]);
+      const lasers = [0x30ff70, 0xff30c0].map(c => h.pose('eventailLaser', { rayon: h.mat('peinture', { ...AD, c }) }, h.scene, [KX, KY - 11, KZ])[0]); // sous le cube vidéo
       const gc = new THREE.ConeGeometry(9, 56, 10, 1, true); gc.translate(0, -28, 0); const mc = h.mat('faisceau', AD);
       const cones = [[-60, 60], [80, 250], [220, 70], [330, 240]].map(([x, z]) => { const m = new THREE.Mesh(gc, mc); m.position.set(x, HT - 6, z); h.scene.add(m); return m; });
       const fl = []; for (let k = 0; k < 900; k++) { const p = grad[(h.rnd() * grad.length) | 0], t = h.rnd(), lx = (h.rnd() - 0.5) * 13 * p[4], lz = 2 + 26 * t, c = Math.cos(p[3]), s = Math.sin(p[3]); fl.push(p[0] + lx * c + lz * s, p[1] + 5.5 + 15 * t, p[2] - lx * s + lz * c); }
@@ -97,45 +105,51 @@
         const s = S[i0], sd = Math.hypot(...bord(s, 1, 1).map((v, j) => v - [CX, CZ][j])) < Math.hypot(...bord(s, -1, 1).map((v, j) => v - [CX, CZ][j])) ? 1 : -1, [x, z] = bord(s, sd, s.w + 9);
         const mt = new THREE.Group(); mt.position.set(x, g.hAt(x, z), z); mt.rotation.y = h.across(s) + Math.PI / 2 + 0.5; h.scene.add(mt);
         h.pose('monsterTruck', { caisse: h.mat('peinture', { c: 0x2ab84a }), flammes: h.mat('peinture', { c: 0xff8a1a }), vitre: h.mat('vitreSombre'), chassis: h.mat('matGris'), acier, pneu: h.mat('pneu'), lampe }, mt); }
+      // l'aire centrale est un terrain de jeu : des grappes de barils debout, à renverser (h.cassable : chaque baril part seul, visuel seulement, la voiture n'est pas freinée).
+      // Hors de la chaussée du tracé, hors de la scène et du mur de la butte, et des deux côtés de l'arche, là où passe qui coupe
+      { const bar = [], cols = [0xe8362a, 0x1c3fa8, 0xffc21a, 0xf4f0e0, 0x16161c], libre = (x, z) => { const s = S[near(h, x, z)]; return Math.hypot(s.x - x, s.z - z) > s.w + 2.5 && dansAire(x, z, -4) && !(Math.abs(z - CZ) < 5 && (x > CX + 8 || x < CX - 21)); };
+        const centres = [[CX - 6, CZ - 14], [CX - 6, CZ + 14], ...[0, 1, 2, 3, 4, 5, 6, 7].map(k => [CX + Math.cos(k * 0.785 + 0.4) * 36, CZ + Math.sin(k * 0.785 + 0.4) * 36])];
+        for (const [cx0, cz0] of centres) if (libre(cx0, cz0)) for (let k = 0; k < 7; k++) { const a = k * 1.047, r = k ? 1.05 : 0, x = cx0 + Math.cos(a) * r, z = cz0 + Math.sin(a) * r; if (libre(x, z)) bar.push([x, 0.55, z, rnd() * 3, 1, 1, 1, cols[(k + bar.length) % 5]]); }
+        const mb = inst(h, new THREE.CylinderGeometry(0.45, 0.45, 1.1, 10), h.mat('peinture', { c: 0xffffff }), bar); bar.forEach((p, k) => mb.setColorAt(k, new THREE.Color(p[7]))); if (bar.length) mb.instanceColor.needsUpdate = true;
+        bar.forEach((p, k) => h.cassable([[mb, k]], p[0], 0, p[2], 0.45, 1.1, [0.85, 0.3, 0.2])); }
       // étincelles : à chaque décollage, une gerbe tombe de la charpente au-dessus de la voiture suivie (une seule gerbe à la fois)
       const NE = 160, pe = new Float32Array(NE * 3), ve = new Float32Array(NE * 3), ge = new THREE.BufferGeometry(); ge.setAttribute('position', new THREE.BufferAttribute(pe, 3));
       const me = new THREE.PointsMaterial({ color: 0xffb040, size: 0.7, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false }), etin = new THREE.Points(ge, me); etin.frustumCulled = false; etin.visible = false; h.scene.add(etin);
       // la ola : une copie bras levés de la foule de l'anneau bas, levée sur les gradins proches de la voiture suivie et cachée sous le sol ailleurs ; elle court avec elle autour de la salle
       // shortcut: elle suit la voiture que le décor reçoit (celle du joueur), pas la tête de course ; il faudrait que game.js passe la voiture de tête au décor
-      const A1 = Math.atan2(15, 26), go = h.geo('boite', 14, 0.6, 30); go.rotateX(-A1); go.translate(0, 12.7, 15);
-      const fo = net(h.mat('foule', {}, '#4a4458', '#f4f0e0')); fo.map.offset.y = 0.5;
-      const ola = inst(h, go, fo, grad), ag = grad.map(p => Math.atan2(p[2] - cz, p[0] - cx)), o4 = new THREE.Object3D(), BAS = new THREE.Vector3(0, -1, 0), vise = new THREE.Vector3();
+      // (code de la foule et de la ola : src/rendu/foule.js, partagé avec canal)
+      const ag = grad.map(p => Math.atan2(p[2] - cz, p[0] - cx)), foulée = POSEURS.foule(h, { ola: { mods: grad, larg: 14, prof: 30, pente: Math.atan2(15, 26), y: 11.5, z: 15, ecart: (k, car) => Math.max(0, 1 - Math.abs(wrap(ag[k] - Math.atan2(car.z - cz, car.x - cx) + 0.12)) / 0.22) },
+        etages: [{ mat: foule, f1: 0.0023, f2: 0.0061, ph: 0, seuil: 0.6 }, { mat: foule2, f1: 0.0019, f2: 0.0047, ph: 2, seuil: 0.5 }],
+        pancartes: { double: [['ALLEZ !', '#f4f0e0', '#e8362a'], ['VAS-Y !', '#ffc21a', '#16161c'], ['BRAVO !', '#1c3fa8', '#f4f0e0']], tete: [['N°1', '#ffc21a', '#16161c'], ['EN TÊTE !', '#e8362a', '#f4f0e0']], // pancartes de la foule quand on double, prend la tête, tape ; saute ou passe sous l'arche (levées ici)
+          choc: [['AÏE !', '#f4f0e0', '#16161c'], ['OUCH', '#16161c', '#ffc21a']], saut: [['QUEL SAUT !', '#16161c', '#ffc21a'], ['10/10', '#f4f0e0', '#1c3fa8']], feu: [['OLÉ !', '#ff8a1a', '#16161c'], ['RACCOURCI !', '#16161c', '#ff8a1a']] } }), BAS = new THREE.Vector3(0, -1, 0), vise = new THREE.Vector3();
       // confettis de l'arrivée : ils tombent en tournoyant au-dessus de la ligne, repartent du toit tant que le tableau d'arrivée est là
       const NC = 700, pc = new Float32Array(NC * 3), cc = new Float32Array(NC * 3), gc2 = new THREE.BufferGeometry(), teintes = [[1, 0.76, 0.1], [0.91, 0.21, 0.16], [0.11, 0.25, 0.66], [0.96, 0.94, 0.88]];
       for (let k = 0; k < NC; k++) { const c = teintes[k % 4]; cc.set(c, k * 3); pc[k * 3 + 1] = -99; }
       gc2.setAttribute('position', new THREE.BufferAttribute(pc, 3)); gc2.setAttribute('color', new THREE.BufferAttribute(cc, 3));
       const conf = new THREE.Points(gc2, new THREE.PointsMaterial({ size: 0.45, vertexColors: true, fog: false })); conf.frustumCulled = false; conf.visible = false; h.scene.add(conf);
       const cone0 = cones.map(m => m.position.clone());
+      let feuT = 0, zA = null, suivie = null, nTV = 0, tNow = 0;
       let tE = 9, parti = false, vol = 0, rejoue = 0, eteint = 0, fete = false;
-      return (dt, now, car) => {
+      const tick = (dt, now, car) => { suivie = car; tNow = now;
         if (car) {
           // décollage franc (pas une bosse) : la gerbe part ; réception d'un vrai saut : l'écran le rejoue
           if (car.air && car.airT > 0.2 && !parti) { parti = true; tE = 0;
             for (let k = 0; k < NE; k++) { pe[k * 3] = car.x + car.vx * 0.8 + (Math.random() - 0.5) * 14; pe[k * 3 + 1] = HT - 8 - Math.random() * 3; pe[k * 3 + 2] = car.z + car.vz * 0.8 + (Math.random() - 0.5) * 14;
               ve[k * 3] = (Math.random() - 0.5) * 3; ve[k * 3 + 1] = -Math.random() * 4; ve[k * 3 + 2] = (Math.random() - 0.5) * 3; } }
-          if (car.air) vol = Math.max(vol, car.airT); else { if (vol > 0.6) rejoue = now + 4000; vol = 0; parti = false; }
-          const ac = Math.atan2(car.z - cz, car.x - cx);
-          grad.forEach((p, k) => { const e = Math.max(0, 1 - Math.abs(wrap(ag[k] - ac + 0.12)) / 0.22); o4.position.set(p[0], p[1] + (e ? e * 1.6 - 1 : -60), p[2]); o4.rotation.set(0, p[3], 0); o4.scale.set(p[4], 1, 1); o4.updateMatrix(); ola.setMatrixAt(k, o4.matrix); });
-          ola.instanceMatrix.needsUpdate = true;
+          if (car.air) vol = Math.max(vol, car.airT); else { if (vol > 0.6) { rejoue = now + 4000; foulée.leve(car, 'saut', 30); } vol = 0; parti = false; }
+          // l'arche de feu : passer dessous (le raccourci par l'aire) fait cracher ses six flammes et lever la salle
+          const zR = car.z - CZ; if (zA !== null && Math.sign(zR) !== Math.sign(zA) && car.x > CX - 23 && car.x < CX + 10 && car.y < 8) { feuT = now + 1600; foulée.leve(car, 'feu', 30); } zA = zR;
         }
         if (tE < 4) { tE += dt; for (let k = 0; k < NE * 3; k++) { if (k % 3 === 1) ve[k] -= 9.81 * dt; pe[k] += ve[k] * dt; } ge.attributes.position.needsUpdate = true; me.opacity = Math.max(0, 1 - tE / 4); }
         etin.visible = tE < 4;
         // dernier tour : la salle s'éteint, les quatre poursuites viennent se braquer sur la voiture ; arrivée : confettis
-        // shortcut: dernier tour = car.lap === 3 (session.js : toute course contre l'IA fait 3 tours) ; à revoir si le nombre de tours devient réglable
-        const der = !!(car && car.lap === 3), arrive = der && car.dist >= 3 * N;
+        const nT = h.tours(), der = !!(car && nT && car.lap === nT), arrive = der && car.dist >= nT * N; // h.tours() : 0 hors course
         eteint += ((der && !arrive ? 1 : 0) - eteint) * Math.min(1, dt * 1.5);
         toit.color.setScalar(1 - 0.8 * eteint); lampe.color.setScalar(1 - 0.85 * eteint); mc.color.setScalar(1 + 2 * eteint);
-        // la foule bouge : chaque anneau passe par moments à sa variante bras levés
-        foule.map.offset.y = Math.sin(now * 0.0023) + Math.sin(now * 0.0061) > 0.6 ? 0.5 : 0;
-        foule2.map.offset.y = Math.sin(now * 0.0019 + 2) + Math.sin(now * 0.0047) > 0.5 ? 0.5 : 0;
+        foulée(dt, now, car); // la foule bouge : bras levés par moments, et la ola
         ecranG.map.offset.y = now < rejoue ? Math.floor(now / 200) % 2 * 0.5 : Math.floor(now / 2500) % 2 * 0.5; // après un saut, « QUEL SAUT ! » clignote
         // les flammes tremblent, et chaque lance-flammes crache un grand coup toutes les 3 s, à son tour
-        feux.forEach(([x, y, z, r, w, ht], k) => { const coup = (now * 0.001 + k * 0.37) % 3.2 < 0.45 ? 1.9 : 1, f = 0.75 + 0.25 * Math.sin(now * 0.021 + k * 1.7) * Math.sin(now * 0.013 + k);
+        feux.forEach(([x, y, z, r, w, ht], k) => { const coup = now < feuT && k >= iArche && k < iArche + 6 ? 2.6 + 0.6 * Math.sin(now * 0.03 + k) : (now * 0.001 + k * 0.37) % 3.2 < 0.45 ? 1.9 : 1, f = 0.75 + 0.25 * Math.sin(now * 0.021 + k * 1.7) * Math.sin(now * 0.013 + k);
           o3.position.set(x, y, z); o3.rotation.set(0, r, 0); o3.scale.set(w * (0.85 + 0.15 * f), ht * f * coup, 1); o3.updateMatrix(); mf.setMatrixAt(k, o3.matrix); });
         mf.instanceMatrix.needsUpdate = true;
         lasers.forEach((m, k) => m.rotation.set(Math.sin(now * 0.0007 + k * 2) * 0.5, now * 0.0004 * (k ? -1 : 1) + k * 1.57, 0));
@@ -145,8 +159,18 @@
         if (arrive && !fete) { const s = S[0]; for (let k = 0; k < NC; k++) { pc[k * 3] = s.x + (Math.random() - 0.5) * 70; pc[k * 3 + 1] = 15 + Math.random() * (HT - 20); pc[k * 3 + 2] = s.z + (Math.random() - 0.5) * 40; } }
         fete = arrive; conf.visible = fete;
         if (fete) { for (let k = 0; k < NC; k++) { const j = k * 3; pc[j] += Math.sin(now * 0.003 + k) * 1.5 * dt; pc[j + 1] -= (2 + k % 3) * dt; pc[j + 2] += Math.cos(now * 0.0027 + k * 1.3) * 1.5 * dt; if (pc[j + 1] < 0) pc[j + 1] = HT - 8; } gc2.attributes.position.needsUpdate = true; }
-        gfl.setDrawRange(Math.floor(now / 70) * 7919 % 860, 40);
+        gfl.setDrawRange(Math.floor(now / 70) * 7919 % (foulée.debout() ? 700 : 860), foulée.debout() ? 200 : 40); // la salle debout : une rafale de flashs
       };
+      tick.direct = R => { // appelé par game.js avant le rendu de la première vue
+        const c = suivie; if (!c || nTV++ % 4) return;
+        const fx = Math.cos(c.th), fz = Math.sin(c.th), plan = Math.floor(tNow / 4000) % 4; tv.fov = 30;
+        if (plan === 0) tv.position.set(c.x - fx * 26, c.y + 18, c.z - fz * 26); // hélicoptère, derrière et au-dessus
+        else if (plan === 1) tv.position.set(c.x - fz * 13, c.y + 2.5, c.z + fx * 13); // travelling, à hauteur de roue
+        else if (plan === 2) tv.position.set(c.x + fx * 20, c.y + 1.6, c.z + fz * 20); // de face, elle arrive sur nous
+        else { const p = grad.reduce((a, b) => ((b[0] - c.x) ** 2 + (b[2] - c.z) ** 2 < (a[0] - c.x) ** 2 + (a[2] - c.z) ** 2 ? b : a)); tv.position.set(p[0], p[1] + 14, p[2]); tv.fov = 14; } // la tribune la plus proche, au téléobjectif
+        tv.updateProjectionMatrix(); tv.lookAt(c.x + c.vx * 0.15, c.y + 0.8, c.z + c.vz * 0.15); tv.updateMatrixWorld();
+        geants.forEach(m => { m.visible = false; }); R.setRenderTarget(RTV); R.render(h.scene, tv); geants.forEach(m => { m.visible = true; }); };
+      return tick;
     },
   });
 })();
