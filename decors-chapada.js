@@ -35,6 +35,7 @@
           if (!v.meme) { d3.position.set(q.x, q.y, q.z); d3.rotation.set(0, q.r, 0); met(v.ms, t === 0, 1); }
           d3.position.set(q.x + q.vx * t, q.y + q.vy * t + v.g * t * t, q.z + q.vz * t); d3.rotation.set(0, t || !v.meme ? Math.atan2(-q.vz, q.vx) : q.r, 0);
           if (v.meme) met(v.ms, t < v.T - 0.25, 1); else { met(v.vol, vol, 1); met(v.ailes, vol, f); } });
+        { const t = b === 1 ? v.t : 0, vol = t > 0 && t < v.T - 0.25; for (const m of v.vol) m.visible = vol; for (const m of v.ailes) m.visible = vol; for (const m of v.ms) { m.visible = v.meme ? t < v.T - 0.25 : t === 0; m.frustumCulled = t === 0; } } // ce qui est réduit à 1e-4 partout n'est plus dessiné (une passe par lot, ombres comprises) ; la première image dessine tout (game.js : chaud) ; posées, les bêtes sont vues par leur sphère englobante (tout le lot est au même endroit), en vol non
         for (const m of v.tous) m.instanceMatrix.needsUpdate = true; };
       const envol = (ms, betes, i0, o = {}) => { const v = { ms: [].concat(ms), vol: [], ailes: [], betes, i0, D: 22, T: 5, g: 0.3, bat: 0, meme: 0, en: 0, t: 0, ...o }; v.tous = [...v.ms, ...v.vol, ...v.ailes]; for (const m of v.tous) m.userData.dyn = 1; ENVOLS.push(v); placeEnvol(v, 2); };
       VIE.push((dt, car) => { if (car) for (const v of ENVOLS) { const e = (v.i0 - car.idx + N) % N;
@@ -112,7 +113,7 @@
           bouil.push([x, S[i + 4].y + 0.24, z, h.across(S[i + 4]), 2 * w, 0.02, 11]);
           for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) { const [rx, rz] = bord(S[i - 1], sd, s.w + 1.6 + k * 1.6); rives.push([rx, S[i - 1].y + 0.3, rz, rnd() * 6, 1.8 + rnd(), 1.4 + rnd(), 1.8 + rnd()]); } }
         { const s = S[P(49) + 6], [x, z] = bord(s, 0, 0); bouil.push([x, s.y + 0.24, z, h.across(s), 2 * s.w + 3, 0.02, 14]); } // là où l'on retombe du saut
-        inst(h, h.geo('rocher'), mat('rocheMousse'), rives); inst(h, h.geo('bloc'), ec, sill).userData.dyn = 1; inst(h, h.geo('bloc'), ecV, bouil).userData.dyn = 1;
+        inst(h, h.geo('rocher'), mat('rocheMousse'), rives); for (const l of [[ec, sill], [ecV, bouil]]) { const m = inst(h, h.geo('bloc'), ...l); m.userData.dyn = 1; m.frustumCulled = true; } // immobiles (seule la texture glisse) : hors du champ, plus dessinés
         { const pieds = [S[P(49) + 6], S[P(50) + 4], S[P(51) + 4]]; bouffees(110, () => { const q = pieds[alea() * 3 | 0], [x, z] = bord(q, alea() < 0.5 ? -1 : 1, alea() * q.w); return [x, q.y + 0.3, z]; }, { vie: 2.8, vy: 2.3, taille: 8.5, f: 0.46 }); } // un nuage d'embruns au pied de chaque seuil et à la réception du saut
         { const bois = mat('ecorceJungle', { c: 0xd8b890 }), br = Array.from({ length: 9 }, (_, k) => ({ g: mobile('troncCouche', { bois }, 0, 0, 0, 0, 0.95, 0, 8), u: iR0 + (iR1 - iR0) * k / 9, sd: k & 1 ? 1 : -1, r: alea() * 6 })); // des branches descendent le courant, le long des rives (hors de la trajectoire) : purement visuelles, rien à percuter
           VIE.push((dt, car, t) => { for (const b of br) { b.u += dt * 4.5; if (b.u > iR1) b.u = iR0; const i = b.u | 0, f = b.u - i, q = S[i], q1 = S[i + 1], [x, z] = bord(q, b.sd, q.w - 2.6), [x1, z1] = bord(q1, b.sd, q1.w - 2.6); // entre deux échantillons : elle glisse, elle ne saute plus de 2 m en 2 m
