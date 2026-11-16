@@ -37,6 +37,8 @@
     // Présentés comme des manettes « standard », pour que poll les traite comme les autres. shortcut: stick en tout-ou-rien, passer au rapport 0x30 (stick 12 bits + étalonnage) pour un volant progressif.
     const hids = [null, null];
     const hidLire = (e, p) => {
+      // Chrome (son pilote de manettes Nintendo) peut passer le Joy-Con en rapport complet 0x30 peu après la connexion : tout appui suivant serait ignoré. On redemande 0x3f (sous-commande 0x03), une fois par seconde au plus.
+      if (e.reportId === 0x30 || e.reportId === 0x31) { const t = Date.now(); if (!(p.redit > t)) { p.redit = t + 1000; p.n = (p.n + 1) & 15 || 1; Promise.resolve(p.dev.sendReport && p.dev.sendReport(1, new Uint8Array([p.n, 0, 1, 0x40, 0x40, 0, 1, 0x40, 0x40, 3, 0x3f]))).catch(() => { }); } }
       if (e.reportId !== 0x3f) return; const d = new Uint8Array(e.data.buffer, e.data.byteOffset), h = d[2], set = (i, v) => { p.buttons[i].pressed = !!v; p.buttons[i].value = v ? 1 : 0; };
       [8, 5, 4, 0, 3, 1].forEach((b, i) => set(b, d[0] & 1 << i)); set(9, d[1] & 3); set(10, d[1] & 48); // (radio = Home ou Capture : bits 16 et 32, d'après le format du rapport, non essayé ; pas le clic du stick, que le pouce enfonce en serrant SL pour la nitro) · Joy-Con (R) couché, SL / SR vers le haut : bits gauche et haut (constatés par l'auteur), bas et droite (déduits), SL, SR -> boîte manuelle / automatique, rapport +, rapport -, gaz et valider, nitro, glisse (choix de l'auteur, qui ne freine pas à la manette)
       p.axes = [h > 0 && h < 4 ? 1 : h > 4 && h < 8 ? -1 : 0, h === 7 || h < 2 ? -1 : h > 2 && h < 6 ? 1 : 0];

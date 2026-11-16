@@ -71,6 +71,9 @@ const MENU = { menu: true, accueil: false, deux: false };
     envoie(0, 16, 8); assert.deepStrictEqual(codes(P.poll(MENU)), ['c@joycon0'], 'Home = radio');
     envoie(0, 32, 8); P.poll(MENU); envoie(0, 0, 8); P.poll(MENU); envoie(0, 32, 8); assert.deepStrictEqual(codes(P.poll(MENU)), ['c@joycon0'], 'Capture = radio');
     envoie(0, 0, 2); P.poll({ menu: false }); assert.strictEqual(P.entree('joycon0').steer, 1, 'stick à droite');
+    const envois = []; dev.sendReport = async (id, b) => envois.push([id, b[9], b[10]]);
+    rapport({ reportId: 0x30, data: new DataView(new ArrayBuffer(48)) }); rapport({ reportId: 0x30, data: new DataView(new ArrayBuffer(48)) });
+    assert.deepStrictEqual(envois, [[1, 3, 0x3f]], 'rapport 0x30 : redemande le mode 0x3f, une fois');
     ec.disconnect({ device: dev }); P.poll(MENU); assert(!P.branche('joycon0'), 'Joy-Con débranché');
   }
   console.log('périphériques : OK');
