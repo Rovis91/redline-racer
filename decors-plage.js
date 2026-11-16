@@ -71,7 +71,13 @@
       nappe([[-900, 105], [60, 105], ...LAG.slice(1)], -1, mLagune, 16);
       mur([[-900, 105], ...LAG], -1.6, -0.02, mEnroche);
       { const B = [[-44, '#9fe3d2'], [-60, '#7fdacc'], [-85, '#62d0c6'], [-120, '#4cc2c0'], [-165, '#3aaeb8'], [-220, '#2c98ac'], [-290, '#2084a0'], [-380, '#187494'], [-2500, '#146a8c']]; // la mer en dégradé : neuf bandes de teintes voisines, plus de ligne entre turquoise et bleu
-        for (let k = 0; k < B.length - 1; k++) nappe([[-2500, B[k + 1][0]], [2500, B[k + 1][0]], [2500, B[k][0]], [-2500, B[k][0]]], -0.3, grain(B[k][1], [B[k + 1][1]], { lisse: 1 }), 16); }
+        // une seule matière blanche et la teinte de chaque bande en couleur de sommet : 1 passe de dessin au lieu de 8 (les grain() des bandes restent appelés : leurs textures tirent dans rnd)
+        const mMer8 = grain('#ffffff', ['#f2f2f2'], { lisse: 1 }), cs = [], ps = [], us = [], ns = [], ix = [], C8 = new THREE.Color(); mMer8.vertexColors = true;
+        for (let k = 0; k < B.length - 1; k++) { grain(B[k][1], [B[k + 1][1]], { lisse: 1 }); C8.set(B[k][1]);
+          for (const [x, z] of [[-2500, B[k + 1][0]], [2500, B[k + 1][0]], [2500, B[k][0]], [-2500, B[k][0]]]) { ps.push(x, -0.3, z); us.push(x / 16, z / 16); ns.push(0, 1, 0); cs.push(C8.r, C8.g, C8.b); }
+          ix.push(4 * k, 4 * k + 2, 4 * k + 1, 4 * k, 4 * k + 3, 4 * k + 2); }
+        const gm = new THREE.BufferGeometry(); gm.setAttribute('position', new THREE.Float32BufferAttribute(ps, 3)); gm.setAttribute('uv', new THREE.Float32BufferAttribute(us, 2)); gm.setAttribute('normal', new THREE.Float32BufferAttribute(ns, 3)); gm.setAttribute('color', new THREE.Float32BufferAttribute(cs, 3)); gm.setIndex(ix);
+        const mer8 = new THREE.Mesh(gm, mMer8); mer8.receiveShadow = true; h.scene.add(mer8); }
       nappe([[-900, -44], [-2500, -44], [-2500, 1500], [-900, 1500]], -0.3, mMerL, 16); nappe([[1500, -44], [2500, -44], [2500, 1500], [1500, 1500]], -0.08, mSol, 12);
 
       // ---------- revêtements posés sur la chaussée (le bitume de la 307 et de la digue est celui du moteur) ----------
