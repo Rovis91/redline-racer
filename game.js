@@ -653,7 +653,7 @@
     const st = new THREE.Group(); st.position.set(i ? xf : xr, rr, sg * (i ? zf : zr)); carG.add(st);
     part(wheelGeo, roueMat, 0, 0, 0, st);
   }
-  carG.traverse(o => { o.castShadow = true; });
+  carG.traverse(o => { o.castShadow = o.material !== lampMat && o.material !== brakeMat; }); // phares et feux (pièces de 20 cm) : leur ombre ne se voit pas
   // reflets : le vrai décor vu depuis la voiture du joueur 1, dans une cube map de 32 px par face, une face toutes les six images (refFace, chacune près de 100 passes de dessin : toutes les deux, elle coûtait 0,25 à 0,5 ms de GPU par image en moyenne ; le cube entier est refait en 0,3 s à 120 images/s, avant le rendu de la vue 1) ;
   // vue à 300 m seulement (à 3° le pixel, plus loin ne fait presque rien et coûte des passes de dessin) : le ciel et l'astre y sont ramenés au dixième, en deçà ;
   // la caisse l'ajoute à sa couleur (envMap), dosée pixel par pixel par un masque tiré de la livrée : vitrage (sombre, bleuté) fort, peinture modérée, joints et cadres presque rien.
@@ -687,7 +687,7 @@
     g.putImageData(d, 0, 0); });
   const solMat = new THREE.MeshBasicMaterial({ color: 0xff2030, map: tex(32, 32, g => { const r = g.createRadialGradient(16, 16, 0, 16, 16, 16); r.addColorStop(0, '#fff'); r.addColorStop(1, '#000'); g.fillStyle = r; g.fillRect(0, 0, 32, 32); }), blending: THREE.AdditiveBlending, transparent: true, opacity: 0, depthWrite: false, fog: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
   const flames = [-0.5, 0.5].map(z => { const g = new THREE.ConeGeometry(0.17, 1.6, 5); g.translate(0, 0.8, 0); const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0x60d0ff, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); m.rotation.z = Math.PI / 2; m.position.set(ENC.min.x, 0.42, z); m.visible = false; carG.add(m); return m; }); // pointe vers l'arrière
-  { const sol = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 3.6), solMat); sol.rotation.x = -Math.PI / 2; sol.position.set(ENC.min.x - 1.4, 0.05, 0); carG.add(sol); } // enfant 7 de carG, après les flammes
+  { const sol = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 3.6), solMat); sol.rotation.x = -Math.PI / 2; sol.position.set(ENC.min.x - 1.4, 0.05, 0); sol.visible = false; carG.add(sol); } // enfant 7 de carG, après les flammes
   const TN = 18, trailI = [], trailMat = addMat(null, { vertexColors: true, polygonOffset: false });
   for (let l = 0; l < 2; l++) for (let k = 0; k < TN - 1; k++) { const a = (l * TN + k) * 2; trailI.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); }
   const trainee = () => { // un jeu de traînées par voiture humaine (voir HUM) ; caché tant qu'aucune vue ne le tient : ses dernières positions et son ruban
@@ -847,7 +847,7 @@
   Object.assign(carG.userData, { feu: brakeMat, roue: roueMat, sol: solMat, col: new THREE.Color(L.col), liv: carMat }); // après les copies : Object3D.clone recopie userData en JSON
   // freinage d'une voiture (fr : force du frein, 0 à 1) sur son modèle g : feu stop, lueur au sol, et disques qui chauffent aux gros freinages (≈ 1,5 s à fond depuis la pointe) puis refroidissent en ~3 s
   const freins = (g, fr, sp, dt) => { const u = g.userData, h = u.ch = clamp((u.ch || 0) + (fr && sp > 12 ? fr * sp / TOP * 0.9 : -0.35) * dt, 0, 1); u.fr = fr;
-    u.feu.color.setHex(fr ? 0xff7080 : 0x8a1020); u.sol.opacity = fr * (0.25 + 0.5 * Math.min(1, nuitV)); u.roue.emissive.setRGB(1.6 * h * h, 0.55 * h ** 3, 0.12 * h ** 4); }; // rouge sombre, puis orange quand ça cogne
+    u.feu.color.setHex(fr ? 0xff7080 : 0x8a1020); u.sol.opacity = fr * (0.25 + 0.5 * Math.min(1, nuitV)); g.children[7].visible = fr > 0.001; u.roue.emissive.setRGB(1.6 * h * h, 0.55 * h ** 3, 0.12 * h ** 4); }; // rouge sombre, puis orange quand ça cogne ; g.children[7] : le plan de lueur, caché hors freinage (une passe de dessin de moins par voiture)
   // Les trois rivaux ont un caractère, tenu par leur rang (OPP, du plus rapide au moins rapide) : la référence, la tête brûlée, la recrue.
   // Une réplique au départ, quand on les double, quand ils nous doublent (en solo, hors démo ; une toutes les 7 s au plus, affichée 3 s). Textes en capitales sans accents : leur anglais est dans langue.js.
   const PIQUES = [
