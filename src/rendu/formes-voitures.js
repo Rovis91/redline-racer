@@ -155,6 +155,18 @@
         B('noir', 0.24, 0.07, 0.34, -0.22, 1.2, 0), B('noir', 0.2, 0.16, 1.7, -1.86, 0.3, 0), R2('feu', 0.075, -1.89, 0.7, 0.62), R2('feu', 0.075, -1.89, 0.7, 0.42), // écope, bouclier, feux ronds
         B2('noir', 0.03, 0.22, 0.24, -1.5, 0.2, 0.74), B2('noir', 0.03, 0.18, 0.22, 0.72, 0.2, 0.74), B2('caisse', 0.14, 0.09, 0.14, 0.46, 0.88, 0.82, 1)] // bavettes, rétroviseurs
     },
+    // Boréale (inventée, Nuit Blanche) : coupé de Groupe B des années 80, tout en angles : bicorps court à hayon, caissons d'ailes carrés, lame avant plus large que la caisse,
+    // grand aileron sur le hayon, phares carrés et deux longue-portée ronds dans la calandre, écope de toit, bavettes
+    groupeb: {
+      dessus: [[2.0, 0.22], [2.06, 0.36], [2.02, 0.62], [1.0, 0.82], [0.62, 0.84], [-1.4, 0.9], [-1.95, 0.92], [-2.0, 0.6], [-1.96, 0.22]], bas: 0.22, w: 1.8,
+      cab: [[0.62, 0.84], [0.0, 1.32], [-1.2, 1.33], [-1.86, 0.92]], wc: 1.48, roues: [-1.12, 1.12, 0.32, 0.27, 0.02], portes: [0.56, -0.62], plaque: 0.44,
+      pieces: (B, B2, R2, E2) => [E2(profil([[1.66, 0.24], [1.68, 0.8], [0.62, 0.83], [0.6, 0.24]], 0.24, [1.12], 0.32, 0.35), 0.16, 0.9, 0.04), // caissons d'ailes
+        E2(profil([[-0.6, 0.24], [-0.64, 0.88], [-1.7, 0.91], [-1.72, 0.24]], 0.24, [-1.12], 0.32, 0.35), 0.18, 0.9, 0.04),
+        B('noir', 0.32, 0.1, 1.96, 1.98, 0.22, 0), B2('phare', 0.04, 0.14, 0.3, 2.04, 0.5, 0.6), R2('phare', 0.08, 2.06, 0.48, 0.24), // lame, phares carrés, longue-portée
+        B('caisse', 0.42, 0.05, 1.84, -1.86, 1.2, 0, 1), B2('noir', 0.12, 0.26, 0.06, -1.86, 1.06, 0.6), B2('caisse', 0.36, 0.2, 0.04, -1.86, 1.16, 0.92, 1), // aileron sur montants, dérives
+        B('noir', 0.3, 0.08, 0.42, -0.3, 1.36, 0), B2('feu', 0.04, 0.12, 0.36, -1.99, 0.7, 0.58), B('noir', 0.22, 0.16, 1.82, -1.94, 0.3, 0), // écope, feux, bouclier
+        B2('noir', 0.03, 0.24, 0.26, -1.53, 0.2, 0.8), B2('caisse', 0.14, 0.09, 0.14, 0.52, 0.92, 0.86, 1)] // bavettes, rétroviseurs
+    },
   };
 
   Object.assign(FORMES, {
