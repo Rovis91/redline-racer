@@ -19,9 +19,9 @@
         const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), k = (i - iLip + N) % N, rE = Math.hypot(x - EAST[0], z - EAST[1]), tun = k >= nArena && k < nArena + nTun;
         if (k < nArena && d < s.w + 1) return y - (s.y + 0.08 + T.dent(x, z));             // from the lip to the tunnel the ground is what the car drives on: the ribbon (which comes down from the lip under the flight) plus the bowl and its small craters; it covers the engine's roadway
         const floor = rE < PL.r ? EAST[5] + 0.08 + T.dent(x, z) : null;                    // the arena: M.bowls and M.dents, as in the physics
-        const tE = bowl(EAST, x, z, y), tS = bowl(SOUTH, x, z, y);
-        let t = floor ?? (tE == null ? tS ?? y : tS == null || rE < EAST[3] ? tE : Math.min(tE, tS)); // inside the rim of the great crater its wall wins; where its outer slope meets the south basin the lower one wins: a cliff over the basin, the tunnel under it
-        if (tun) { if (d < W + 2.5 && t < s.y + 9.5) t = s.y - 0.4; return y - t; }        // the tunnel leaves from the floor: where the bowl is still lower than its vault the ground gives way to it (the engine's hull shows: a covered way into the wall)
+        const tE = bowl(EAST, x, z, y), t0 = bowl(SOUTH, x, z, y), tS = t0 == null ? null : t0 + Math.max(0, EAST[6] - t0) * (1 - ss((rE - EAST[3]) / 90)); // the basin bites into the rim of the great crater: over 90 m its ground climbs to that crest, in one slope
+        let t = floor ?? (tE == null ? tS ?? y : tS == null || rE < EAST[3] ? tE : Math.min(tE, tS)); // inside the rim of the great crater its wall wins; where its outer slope meets the south basin the lower one wins: one continuous slope from the crest down into the basin, the tunnel under it
+        if (tun) { if (d < W + 9) t = k - nArena > nTun / 2 ? Math.max(t, s.y + 10.5) : t < s.y + 9.5 ? s.y - 0.4 : t; return y - t; }        // the tunnel leaves from the floor: where the bowl is still lower than its vault the ground gives way to it (the engine's hull shows: a covered way into the wall); on the basin side the ground is kept above the vault to the very end, a mound over the mouth
         if (floor != null) return y - t;
         if (k >= nArena + nTun) t += (y - t) * (1 - ss((d - s.w - 6) / 40));               // elsewhere the road stays laid: its own level up to 6 m from the wall, the crater profile 40 m further
         let c = 0; for (const [cx, cz, r, f] of BESIDE) { const q = Math.hypot(x - cx, z - cz) / r; if (q < 1) c = Math.max(c, (t - f) * (1 - q ** P)); }
