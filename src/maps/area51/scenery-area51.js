@@ -10,6 +10,7 @@
   const BOWL = [560, 1010, 250, 100, 24]; // the rim round D1: centre, radius of the crest, half-width, height
   const B1 = [[1472, 1125], [850, 1220]]; // B1's two portals: between them the road runs under blocks, and the hill keeps 75 m off the axis instead of 22 (room for the halls)
   const FLATS = [[850, 2760, -400, 480, 0], [1360, 2330, 682, 852, 2]]; // graded ground, [x0, x1, z0, z1, altitude]: the lake bed with both runways, the apron. Slabs lie on it without the fan showing through
+  const PIT = [1210, 1262, 46, 7]; // the reactor pool of B1: centre, radius, depth below the hall floor (the road runs a gallery above it)
   const ss = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
   Object.assign(SCENERY, {
@@ -19,7 +20,7 @@
       const rise = (x, z) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), X = x / k, Z = z / k; let y = 130 * ss((Z - 1380) / 300) + 110 * ss((100 - X) / 300);
         for (const [cx, cz, rx, rz, ht] of HILLS) y += ht * ss(1 - Math.hypot((X - cx) / rx, (Z - cz) / rz));
         y += BOWL[4] * ss(1 - Math.abs(Math.hypot(X - BOWL[0], Z - BOWL[1]) - BOWL[2]) / BOWL[3]); return y * ss((d - (i >= t0 && i <= t1 ? 75 : 22)) / 45); };
-      const g = terrain(h, { stepSec: 10, margin: 400, hollow: (x, z, y) => { let f = 0, a = 0; for (const [x0, x1, z0, z1, alt] of FLATS) { const w = ss((x / k - x0) / 30) * ss((x1 - x / k) / 30) * ss((z / k - z0) / 30) * ss((z1 - z / k) / 30); if (w > f) { f = w; a = alt - 0.6; } } return f * (y - a) - (1 - f) * rise(x, z); }, mat: h.mat('paint', { c: 0xd69a72 }) });
+      const g = terrain(h, { stepSec: 10, margin: 400, hollow: (x, z, y) => { let f = 0, a = 0; for (const [x0, x1, z0, z1, alt] of FLATS) { const w = ss((x / k - x0) / 30) * ss((x1 - x / k) / 30) * ss((z / k - z0) / 30) * ss((z1 - z / k) / 30); if (w > f) { f = w; a = alt - 0.6; } } return f * (y - a) - (1 - f) * rise(x, z) + PIT[3] * ss((PIT[2] + 4 - Math.hypot(x / k - PIT[0], z / k - PIT[1])) / 8); }, mat: h.mat('paint', { c: 0xd69a72 }) });
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
       const smp = pk => S[Math.round(pk / LAP * N) % N], pk = (x, z) => idx(x, z) / N * LAP; // pk(x, z): chainage of the road point nearest to a plan position

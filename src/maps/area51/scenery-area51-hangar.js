@@ -7,7 +7,7 @@
   for (const x of [1860, 1560]) { for (const z of [842, 918]) mute(at('H1', OLIVE, x, z, 4, 26, 36)); mute(at('H1', OLIVE, x, 880, 4, 10, 40, 16)); } // gables: a 40 × 12 m door on the axis
   [[1795, 910], [1725, 850], [1655, 910], [1585, 850]].forEach(([x, z], i) => { at('PROTOTYPE ' + (i + 1), WHITE, x, z, 28, 7, 44, 6); mute(at('DOCK', AMBER, x, z, 34, 6, 30)); }); // an airframe on its dock, tail toward the lane
   at('H2', OLIVE, 2040, 880, 120, 20, 100); at('H3', OLIVE, 2180, 880, 120, 20, 100);         // the rest of the row, east of the fire alley the chicane takes
-  for (const [x, z] of [[1885, 820], [1930, 905]]) at('STOCK', BROWN, x, z, 8, 4, 8);          // in the alley, off the line
+  at('CAMION POMPIERS', 0xb5483c, 1885, 820, 10, 4, 4); at('ILOT MOUSSE', BROWN, 1930, 905, 8, 3, 8); // what the fire-alley chicane goes round: a parked crash tender, a foam-monitor island
   at('ATELIERS', SAND, 1710, 995, 200, 8, 30); at('PARC VEHICULES', SAND, 1960, 1000, 140, 0.5, 50); // back shops and motor pool, across the service road behind the row
   at("CHATEAU D'EAU", CONCRETE, 1650, 1090, 12, 26, 12);                                      // on the first rise above the base
 };

@@ -7,7 +7,7 @@
   const dish = (name, x, z, r, hs) => { at('SOCLE ' + name, CONCRETE, x, z, r / 2, hs, r / 2); mute(at(name, STEEL, x, z, r, r / 2, r, g.hAt(x, z) + hs - r / 4));
     const d = at(name, WHITE, x, z, 2 * r, 8, 2 * r, g.hAt(x, z) + hs); d.rotation.x = -0.4; d.rotation.z = 0.3; }; // pedestal, mount, and the dish as a tilted slab of its diameter
   dish('D1', 560, 1010, 60, 50);                                                            // the landmark of the lap: 120 m across, seen from the west portal of B1, then circled
-  at('CONTROLE', OLIVE, 615, 1065, 24, 7, 14); at('GENERATEUR', STEEL, 495, 1050, 12, 5, 10); at('CRYOGENIE', STEEL, 520, 945, 12, 6, 12); // inside the loop, round the pedestal
+  at('CONTROLE', OLIVE, 615, 1065, 24, 7, 14); at('GENERATEUR', STEEL, 372, 1085, 12, 5, 10); mute(at('MERLON', 0x97644f, 392, 1075, 6, 5, 30)); at('CRYOGENIE', STEEL, 520, 945, 12, 6, 12); // control and cryogenics at the pedestal; the generator is outside the loop behind a berm, so its noise stays out of the bowl
   put('RADOME', WHITE, pk(770, 1212), -1, 25, 14, 14, 14);                                    // left of the west portal; the right is kept clear: D1 is seen from the mouth
   apex('RADOME', WHITE, pk(700, 1185), 14, 14, 14, 8); apex('GRILLAGE', WIRE, pk(640, 1140), 1, 3, 60, 5); // the S down into the bowl goes round a fenced radome
   dish('D2', 690, 760, 20, 22); dish('D3', 805, 690, 20, 22); dish('D4', 712, 625, 20, 22); // on their pads either side of the arm: the kinks of the road dodge the pads
