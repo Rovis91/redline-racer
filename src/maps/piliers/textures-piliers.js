@@ -1,0 +1,50 @@
+// Textures specific to "piliers" (Sky Pillars): completes the textures.js catalogue (same conventions: 8 px per metre, a base tone, grain, joints, wear; `rand` only). See docs/ASSET-GENERATION.md.
+// These are the shared materials of the map (docs/proposals/sky-pillars/AMBIANCE-V2.html): each one is used by several asset families, so each tint is one draw pass for the whole map.
+(() => {
+  const grain = (g, { R, rand, veil }, n, a = 0.18, S = 64) => veil(g, a, () => { for (let i = 0; i < n; i++) R(g, i % 3 ? '#000' : '#fff', rand() * S | 0, rand() * S | 0, 1 + (rand() * 2 | 0), 1); });
+  Object.assign(TEXTURES, {
+    // stacked quartz sandstone, c = its tint (sage grey near, salmon on the descent, blue-grey for the far needles), a = strength of beds and joints (1 near; 0.45 far, a silhouette), m = moss on the ledges (0 to 1).
+    // 8 m per tile on the cut faces and 16 m on the towers: beds of uneven thickness and tone, a dark line under each, vertical joints that cross two or three beds, moss hanging from some ledges; rot = 1: turned a quarter, for a ribbon along the road (its u runs down the wall)
+    gresPiliers: (c = '#9b9a7e', a = 1, m = 1, rot = 0) => [64, 64, (g, o) => { const { R, rand, veil } = o; if (rot) g.setTransform(0, 1, 1, 0, 0, 0); R(g, c, 0, 0, 64, 64);
+      const beds = []; for (let y = 0; y < 64;) { const ht = 4 + (rand() * 9 | 0); beds.push([y, ht]); y += ht; }
+      veil(g, 0.24 * a, () => { for (const [y, ht] of beds) R(g, rand() < 0.5 ? '#000' : '#fff', 0, y, 64, ht); });
+      veil(g, 0.42 * a, () => { for (const [y] of beds) R(g, '#1a2420', 0, y, 64, 1); for (let i = 0; i < 12; i++) { const [y, ht] = beds[rand() * beds.length | 0]; R(g, '#1a2420', rand() * 64 | 0, y, 1, ht * (1 + (rand() * 3 | 0))); } });
+      veil(g, 0.5 * a * m, () => { for (const [y] of beds) if (rand() < 0.4) for (let x = rand() * 20 | 0; x < 64; x += 2 + (rand() * 14 | 0)) R(g, '#4e7752', x, y + 1, 1 + (rand() * 4 | 0), 1 + (rand() * 2 | 0)); });
+      grain(g, o, 240, 0.14); }, 8],
+    // ground of the shoulders, c = its tint (moss green in the forest, pale stone and moss on the plateau): low plants as dabs of two greens, a few pale stones, no direction; 8 m per tile
+    solPiliers: (c = '#4f6f4a') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); grain(g, o, 380, 0.16);
+      veil(g, 0.34, () => { for (let i = 0; i < 46; i++) R(g, i & 1 ? '#263e37' : '#82c98c', rand() * 60 | 0, rand() * 60 | 0, 2 + (rand() * 5 | 0), 2 + (rand() * 3 | 0)); });
+      veil(g, 0.4, () => { for (let i = 0; i < 9; i++) R(g, '#b6aa8f', rand() * 62 | 0, rand() * 62 | 0, 2, 1 + (rand() * 2 | 0)); }); }, 8],
+    // dressed stone of the road works (parapets, retaining walls, anchor blocks, portals): grey-cream courses 0.5 m high, blocks 0.75 to 1.5 m, staggered joints, uneven tones, lichen low down; 8 m per tile; rot = 1: turned a quarter, for a ribbon along the road
+    pierrePiliers: (rot = 0) => [64, 64, (g, o) => { const { R, rand, veil } = o; if (rot) g.setTransform(0, 1, 1, 0, 0, 0); R(g, '#cfc8b0', 0, 0, 64, 64);
+      for (let y = 0; y < 64; y += 4) for (let x = -(rand() * 6 | 0); x < 64;) { const w = 6 + (rand() * 7 | 0); veil(g, 0.14, () => R(g, rand() < 0.5 ? '#000' : '#fff', x, y, w, 4)); veil(g, 0.5, () => { R(g, '#5d5a4c', x, y, 1, 4); }); x += w; }
+      veil(g, 0.5, () => { for (let y = 0; y < 64; y += 4) R(g, '#5d5a4c', 0, y, 64, 1); });
+      veil(g, 0.3, () => { for (let i = 0; i < 16; i++) R(g, '#687c65', rand() * 62 | 0, 40 + (rand() * 22 | 0), 2 + (rand() * 3 | 0), 1); });
+      grain(g, o, 160, 0.12); }, 8],
+    // foliage, c = its tint (broadleaf green, dark pine, pale far crown): clumps of light on top and shade below, 4 m per tile
+    feuillagePiliers: (c = '#4e7752') => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 32, 32);
+      veil(g, 0.34, () => { for (let i = 0; i < 26; i++) { const x = rand() * 30 | 0, y = rand() * 30 | 0, w = 2 + (rand() * 3 | 0); R(g, '#c8e89a', x, y, w, 1); R(g, '#0c1c16', x, y + 2, w, 1); } });
+      grain(g, o, 60, 0.15, 32); }, 4],
+    // bark of the big trunks: vertical furrows of uneven length, moss at the foot of the tile; 4 m per tile
+    ecorcePiliers: () => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, '#5a4632', 0, 0, 32, 32);
+      veil(g, 0.4, () => { for (let x = 0; x < 32; x += 2 + (rand() * 3 | 0)) for (let y = rand() * 8 | 0; y < 32;) { const l = 4 + (rand() * 12 | 0); R(g, rand() < 0.7 ? '#20160e' : '#9a8468', x, y, 1, l); y += l + 2 + (rand() * 5 | 0); } });
+      veil(g, 0.4, () => { for (let i = 0; i < 12; i++) R(g, '#4e7752', rand() * 30 | 0, 24 + (rand() * 8 | 0), 2, 1); }); }, 4],
+    // painted steel of the bridge (towers, girders, railing): dark blue-grey plates 2 m long, a rivet row at each joint, rust runs; 4 m per tile
+    acierPiliers: () => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, '#24404c', 0, 0, 32, 32); grain(g, o, 70, 0.14, 32);
+      veil(g, 0.4, () => { for (let y = 0; y < 32; y += 16) { R(g, '#0a161c', 0, y, 32, 1); for (let x = 1; x < 32; x += 3) R(g, '#7e9aa4', x, y + 2, 1, 1); } R(g, '#0a161c', 0, 0, 1, 32); });
+      veil(g, 0.3, () => { for (let i = 0; i < 6; i++) R(g, '#8a4a2a', rand() * 32 | 0, (rand() < 0.5 ? 2 : 18) + (rand() * 3 | 0), 1, 3 + (rand() * 8 | 0)); }); }, 4],
+    // lacquered wood of the pavilion, c = its tint: boards 25 cm wide with dark joints, worn at the foot; 2 m per tile
+    laquePiliers: (c = '#a65949') => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 16, 16); veil(g, 0.35, () => { for (let x = 0; x < 16; x += 2) R(g, '#2a120c', x, 0, 1, 16); }); veil(g, 0.3, () => { for (let i = 0; i < 10; i++) R(g, '#e8c8a0', rand() * 16 | 0, 11 + (rand() * 5 | 0), 1, 1); }); }, 2],
+    // grey roof tiles in rows 25 cm apart, round tile ends every 25 cm, moss in places; 2 m per tile
+    tuilePiliers: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#59625c', 0, 0, 16, 16); veil(g, 0.4, () => { for (let y = 0; y < 16; y += 2) { R(g, '#1a2420', 0, y, 16, 1); for (let x = y & 2; x < 16; x += 2) R(g, '#aab4a8', x, y + 1, 1, 1); } }); veil(g, 0.4, () => { for (let i = 0; i < 6; i++) R(g, '#4e7752', rand() * 15 | 0, rand() * 15 | 0, 2, 1); }); }, 2],
+    // water of the basin and of the fall, c = its tint (turquoise basin, white fall): short pale strokes, no period; 4 m per tile
+    eauPiliers: (c = '#76aebe') => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 32, 32); veil(g, 0.45, () => { for (let i = 0; i < 30; i++) R(g, i % 4 ? '#f4fbfa' : '#30484b', rand() * 30 | 0, rand() * 32 | 0, 1, 2 + (rand() * 5 | 0)); }); }, 4],
+    // the sea of clouds seen from above: near-white with wide pale blue hollows and bright crests, 256 m per tile so no grid shows from the road
+    nuagePiliers: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#e6eef0', 0, 0, 64, 64);
+      veil(g, 0.22, () => { for (let i = 0; i < 46; i++) { const w = 5 + (rand() * 14 | 0); R(g, i % 3 ? '#8baab7' : '#ffffff', rand() * 64 | 0, rand() * 64 | 0, w, 2 + (rand() * (w / 3) | 0)); } }); }, 256],
+    // lining of the rock tunnel (walls and vault; the engine passes its own settings, ignored): rough-cut sandstone, darker than outside, drill lines, damp runs; 8 m per tile
+    tunnelPiliers: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#6a6c5c', 0, 0, 64, 64);
+      veil(g, 0.3, () => { for (let y = 0; y < 64; y += 4 + (rand() * 7 | 0)) R(g, '#1a2420', 0, y, 64, 1); for (let i = 0; i < 14; i++) R(g, i & 1 ? '#1a2420' : '#b6aa8f', rand() * 64 | 0, rand() * 50 | 0, 1, 5 + (rand() * 14 | 0)); });
+      grain(g, o, 300, 0.2); }, 8],
+  });
+})();
