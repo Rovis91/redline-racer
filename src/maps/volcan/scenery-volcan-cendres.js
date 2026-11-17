@@ -9,8 +9,7 @@
     lot('HAMEAU', CREAM, [[x, z], [x - 8, z + 30], [x + 44, z - 14]], 12, 8, 14); lot('', RUST, [[x + 26, z + 10], [x + 18, z - 26], [x - 30, z + 4]], 12, 7, 12);
     abs('CHAPELLE', WHITE, x + 4, z - 52, 8, 10, 12); abs('', WHITE, x + 4, z - 60, 4, 18, 4); abs('CITERNE', [ASH, 'cyl'], x - 34, z - 24, 8, 5, 8);
     lot('', [GREEN, 'cone'], [[x + 50, z + 20], [x - 26, z + 40], [x + 24, z + 44]], 6, 9, 6); }
-  row('SOUTENEMENT', ASH, [1156, 1706], 1, 10, 5, 1, 40);                                                     // retaining walls under the ledge, outside the bends
-  row('ARBUSTES', [OLIVE, 'cone'], [800, 1000, 1256, 1500, 1906, 2100], 1, 5, 5, 4, 5);
+  row('ARBUSTES', [OLIVE, 'cone'], [800, 1000, 1256, 1500, 1906, 2100], 1, 2, 5, 4, 5);
   row('EBOULIS', BASALT, [860, 1300, 1640, 2040], -1, 4, 7, 4, 9); row('', BASALT, [868, 1310, 1650, 2050], -1, 9, 5, 3, 6); // fallen rock at the foot of the slope, off the roadway
   row('MURET', CREAM, [1040, 1580, 2160], 1, 1, 1.5, 1.2, 60);
 };

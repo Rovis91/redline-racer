@@ -7,7 +7,7 @@
   row('CAISSES', WOOD, [120, 132, 144, 236, 248], 1, 12, 4, 3, 5); row('', WOOD, [126, 242], 1, 17, 4, 5, 5); // crates stacked on the quay
   row('BATEAU', CORAL, [106, 286, 486], 1, 85, 6, 4, 16, 0); row('MAT', [CREAM, 'cyl'], [106, 286, 486], 1, 87.5, 1, 14, 1, 0); // boats at anchor, each with its mast
   row('PONTON', WOOD, [200, 400], 1, 72, 40, 1.5, 5, 0);
-  row('BALISE', [RED, 'cyl'], [106, 256, 406, 556], 1, 8, 2, 6, 2);                                           // wind flags and beacons along the shore
+  row('BALISE', [RED, 'cyl'], [106, 256, 406, 556], 1, 4, 2, 6, 2);                                           // wind flags and beacons along the shore
   row('PALMIER', [GREEN, 'cone'], [330, 390, 450, 510, 570], -1, 5, 6, 10, 6);                                // sparse planting, island side
   put('MURET', CREAM, 606, 1, 1, 2, 1.2, 120);
   row('ROCHER', BASALT, [600, 640, 676], -1, 8, 14, 9, 18);                                                   // transition: the sheds stop, black rock begins

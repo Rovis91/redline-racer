@@ -7,6 +7,7 @@
   const CONE = { x: -113, z: -906, rim: 230, top: 360, slope: 1.23, floor: 170 };
   const inner = r => r < CONE.floor ? 0 : r < 185 ? (r - CONE.floor) * 4 : r < 205 ? 60 : 60 + (r - 205) * 6;
   const LAKE = { x: -25, z: -960, r: 70, y: 150 };                                        // lava lake: a level pit in the north-east of the floor, 3 to 14 m below the road that runs down along it (PK 4235 to 4375)
+  const LEDGE = 16, DECK = [3080, 3240, 46];                                              // sea side: the ground is level LEDGE m from the axis (9 m behind the wall), then falls; DECK [PK a, PK b, m] widens it for the belvedere of the pass
   const SIDE = { x: -690, z: -930, top: 95, slope: 0.8, pit: 28 };                        // parasitic cone on the west flank, with its own small crater
   const VOLCANO = [4000, 4780], SOUTH = 4520;                                             // PK of the road under the cone and in the crater; from SOUTH on the gallery is made of blocks (scenery-volcan-cratere.js)
   // shoreline: the coast road of the bible (x, z every 80 m), which this layout only follows on the south and east sides
@@ -19,11 +20,11 @@
       const inPoly = (x, z, n, px, pz) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) if ((pz(i) > z) !== (pz(j) > z) && x < (px(j) - px(i)) * (z - pz(i)) / (pz(j) - pz(i)) + px(i)) c = !c; return c; };
       const cx = i => COAST[i * 2], cz = i => COAST[i * 2 + 1], NC = COAST.length / 2;
       const toCoast = (x, z) => { let m = 1e9; for (let i = 0, j = NC - 1; i < NC; j = i++) { const ax = cx(j), az = cz(j), bx = cx(i) - ax, bz = cz(i) - az, k = Math.max(0, Math.min(1, ((x - ax) * bx + (z - az) * bz) / (bx * bx + bz * bz))); m = Math.min(m, Math.hypot(x - ax - bx * k, z - az - bz * k)); } return m; };
-      // land = inside the loop or inside the shoreline. Off the land the ground falls to a seabed at -8 m, 2 m per metre, from a 16 m ledge along the road (a 70 m quay along the harbour, PK 6100 to 700).
+      // land = inside the loop or inside the shoreline. Off the land the ground falls to a seabed at -8 m, 2 m per metre, from a LEDGE along the road (a 70 m quay along the harbour, PK 6100 to 700; the DECK of the belvedere).
       // On land the volcano stands where it is higher than the ground. Along the road an apron keeps it off the roadway: 140 m of gentle slope, or 10 m then a steep bank at the foot of the cone (the horseshoe of La Couronne runs 120 m from the rim).
       // Under the cone and in the crater (VOLCANO) the ground is the volcano itself, cut only where it is less than 12 m over the roadway (the mouths), and trenched 52 m wide along the south gallery, whose blocks fill the cut up to the slope.
       const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), pk = i / N * LAP;
-        if (!inPoly(x, z, P.length, k => P[k][0], k => P[k][1]) && !inPoly(x, z, NC, cx, cz)) return Math.min(y + 8, Math.max(0, pk > 6100 || pk < 700 ? d - 70 : Math.min(d - 16, toCoast(x, z))) * 2);
+        if (!inPoly(x, z, P.length, k => P[k][0], k => P[k][1]) && !inPoly(x, z, NC, cx, cz)) return Math.min(y + 8, Math.max(0, pk > 6100 || pk < 700 ? d - 70 : pk > DECK[0] && pk < DECK[1] ? d - DECK[2] : Math.min(d - LEDGE, toCoast(x, z))) * 2);
         const r = Math.hypot(x - CONE.x, z - CONE.z), q = Math.hypot(x - SIDE.x, z - SIDE.z);
         const c = Math.max(Math.min(CONE.top - Math.max(0, r - CONE.rim) * CONE.slope - y, inner(r)), SIDE.top - Math.max(q, SIDE.pit * 2 - q) * SIDE.slope);
         if (Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r) return y - LAKE.y;
@@ -38,8 +39,11 @@
         if (kind) b.children[0].geometry = kind === 'cone' ? new THREE.ConeGeometry(w / 2, ht, 6) : new THREE.CylinderGeometry(w / 2, w / 2, ht, 12);
         if (!label) b.remove(b.children[b.children.length - 1]); return b; };
       // put(label, colour, pk, side, off, w, ht, d, y): a block at chainage pk (m), side -1 = left (island) / 1 = right (sea), its near face `off` metres from the wall;
-      // w across the road, d along it. Set on the lowest ground under it (ht is kept above its centre), or at altitude y when given (water level: 0)
-      const put = (label, c, pk, sd, off, w, ht, d, y) => { const s = at(pk), [x, z] = edgePt(s, sd, s.w + off + w / 2), y1 = g.hAt(x, z);
+      // w across the road, d along it. Set on the lowest ground under it (ht is kept above its centre), or at altitude y when given (water level: 0).
+      // Sea side: keep off + w within 9 m of the wall (the ledge), or inside the quay or the DECK; beyond, the block hangs on the cliff.
+      // A block that ends up under the roadway although it was not given an altitude is misplaced (on a cliff, in a bank): the console says so.
+      const put = (label, c, pk, sd, off, w, ht, d, y) => { const s = at(pk), [x, z] = edgePt(s, sd, s.w + off + w / 2), y1 = Math.max(g.hAt(x, z), s.w + off + w <= LEDGE ? s.y - 0.2 : -1e9); // on the ledge: road level, not the dip the terrain digs beside the roadway
+        if (y == null && y1 + ht < s.y - 1) console.warn('volcan: block under the roadway', label || '(unnamed)', 'PK ' + pk, 'side ' + sd, Math.round(y1 + ht - s.y) + ' m');
         const y0 = y ?? Math.min(y1, ...[[w, 0], [-w, 0], [0, d], [0, -d]].map(([a, b]) => g.hAt(x + (b * s.tx - a * s.tz) / 2, z + (b * s.tz + a * s.tx) / 2)));
         return B(label, c, w, ht + (y ?? y1) - y0, d, x, y0, z, h.across(s)); };
       // abs(label, colour, x, z, w, ht, d): a block at a spot of the plan, set on the lowest ground under it
