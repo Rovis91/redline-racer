@@ -1,7 +1,7 @@
 // Scenery placement for "lune" (Lunar Outpost V3, blockout): terrain with its craters and the arena, roadway, guardrails, then the named blocks of each zone (scenery-lune-<zone>.js). See docs/methods/NEW-MAP.md, phase 2.
 (function () {
   const { near, block, edgePt, terrain } = PLACERS;
-  const ZONES = ['base', 'occidental', 'cretes', 'arene', 'bassin'], LAP = 3981; // LAP: plan length of the layout, the unit of its chainages (PK)
+  const ZONES = ['base', 'occidental', 'cretes', 'arene', 'bassin'], LAP = 5230; // LAP: plan length of the layout, the unit of its chainages (PK)
   // the two craters the road enters: [x east, z = -north, floor radius, rim radius, outer foot radius, floor altitude, rim altitude, altitude outside, height of the rock face at the foot of the wall]. EAST is the arena: its floor is M.place, and the rock face stands where the physics stops the car
   const EAST = [470, -200, 262, 450, 560, -30, 70, 20, 16], SOUTH = [283, 383, 89, 222, 282, -28, 25, 20, 0];
   // the craters the road only passes: [x, z, radius, floor altitude]: western crater, satellite impact, the two fresh impacts of the chicane
