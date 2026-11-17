@@ -8,6 +8,7 @@
   for (const p of [2900, 3040, 3180, 3330, 3480, 3630]) put('FALAISE', WARM, p, 1, 4, 24, 26, 70);  // continuous wall on the inside (right), warmer sandstone
   for (const p of [2960, 3260, 3560]) put('MURET', STONE, p, -1, 1, 1.5, 1.5, 80);                  // low wall on the outside (left): the sea of clouds under the road
   put('BUSE', DARK, 3290, -1, 3, 6, 3, 4);                                                           // buried culvert (east 924, north 217): the stream passes under the road, no water on it
-  for (const p of [3740, 3840, 3930]) { put('FORET', FOREST, p, -1, 6, 50, 14, 70); put('BOSQUET', FOREST, p + 40, 1, 8, 24, 10, 40); } // the woods close the horizon again before the line
+  for (const p of [3740, 3840, 3930]) { put('FORET', FOREST, p, -1, 14, 50, 14, 70); put('BOSQUET', FOREST, p + 40, 1, 8, 24, 10, 40); } // the woods close the horizon again before the line
+  for (let p = 3720, k = 0; p < 4030; p += 35, k++) put('ARBRE', 0x5a4632, p, k % 2 ? 1 : -1, 1.5, 3, 22, 3); // the slalom between the trunks starts again and runs through the line into zone 1
   put('MURET DE RACCORD', STONE, 3990, 1, 2, 1.5, 1.5, 40);
 };
