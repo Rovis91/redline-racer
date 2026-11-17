@@ -1,66 +1,66 @@
-// Redline Racer — audio : tout est synthétisé (bande-son originale et adaptative). Stations de chaque carte : RADIO dans cartes.js.
-// Interface (window.SON) : init() au premier geste · frame(dt, e) à chaque image · quitter() / reprendre(m) autour d'un changement de carte au menu · setStation(i), toggleMusic(), carte(M), volume(famille, v) ·
-// beep(f), radio(syllabes, hauteur, débit), crash(), stinger(rec), tonnerre() · éditeur de musique : ecoute, recale(), note(partie, n), fond, pas, timbres, kits · lus par le jeu : station, nom, fq, genre, musicOn, beat, pulse, ana · banc d'écoute et mesure :
-// init(contexte hors ligne), pump(), pret, live, vol, stations, evenement(), clameur(v), moniteur(gain), vu, et les bruitages ponctuels clac(), levier(), choc(v), pschitt(),
-// boost(), petarade() · prises de test : ac, out, smp.
-// Chaîne : timbres (PATCH) → tranche de la partie → (batterie (KIT) | bus pompé → filtre balayé → saturation de bus) → coupure de station →
-// couleur de la station (3 bandes) → musique oui/non → filtre de vitesse et de tunnel → famille « mus » → master → compresseur. Familles réglables : mus, mot (moteur, boîte), pneu, vent, amb (lieu), pluie, choc (chocs, frottement, boost), ui (bips, jingle, radio).
+// Redline Racer — audio: everything is synthesised (original, adaptive soundtrack). Each map's stations: RADIO in mapDefs.js.
+// Interface (window.SOUND): init() on the first gesture · frame(dt, e) every frame · quitGame() / reprendre(m) around a map change in the menu · setStation(i), toggleMusic(), mapDef(M), volume(family, v) ·
+// beep(f), radio(syllables, pitch, rate), crash(), stinger(rec), thunder() · music editor: audition, resync(), note(portion, n), backdrop, stepSec, timbres, kits · read by the game: station, name, fq, genre, musicOn, beat, pulse, ana · listening bench and measure:
+// init(offline context), pump(), readyMs, live, vol, stations, raceEvent(), roar(v), monitor(gain), vu, and the one-shot sounds clack(), lever(), impact(v), hiss(),
+// boost(), backfire() · prises de test : ac, out, smp.
+// Chain: timbres (PATCH) → slice of the part → (drums (KIT) | pumped bus → swept filter → bus saturation) → station cut-off →
+// station colour (3 bands) → music yes/no → speed and tunnel filter → "mus" family → master → compressor. Adjustable families: mus, mot (engine, gearbox), pneu (tyres), vent (wind), amb (place), pluie (rain), choc (impacts, rubbing, boost), ui (beeps, jingle, radio).
 (() => {
   const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-  let TR = 0; // transposition du dernier tour, en demi-tons
-  const hz = m => 440 * 2 ** ((m + TR - 69) / 12), R = -99, OUT = 0.56, CLAC = 0.6, LEV = 1; // R : silence dans un thème (voir mel() dans cartes.js)
-  let M = CARTE, ST = M.radio, TH = M.th;
-  // prises de l'éditeur de musique (editeur.html) : muet / solo par partie, section jouée en boucle, témoins (jusqu'à quand chaque partie sonne), section en cours
-  const EC = { mute: {}, solo: null, boucle: null, joue: {}, sec: '', pause: false }, jo = (p, t, d = 0.12) => { EC.joue[p] = t + d; };
-  const pv = (st, p) => (EC.solo ? EC.solo === p : !EC.mute[p]) ? (st.mx && st.mx[p] != null ? st.mx[p] : 1) : 0; // niveau d'une partie : st.mx, réglé dans l'éditeur
-  let AC, live = true, timer, pret = Promise.resolve(), ana, master, musicG, tuneG, drumG, hatG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motSend, nbuf, outG, vu;
+  let TR = 0; // transposition of the last lap, in half-tones
+  const hz = m => 440 * 2 ** ((m + TR - 69) / 12), R = -99, OUT = 0.56, CLACK = 0.6, LEV = 1; // R: silence in a theme (see mel() in mapDefs.js)
+  let M = MAP_DEF, ST = M.radio, TH = M.th;
+  // music editor hooks (editor.html): mute / solo per part, section played in a loop, indicators (until when each part sounds), current section
+  const EC = { mute: {}, solo: null, loopSec: null, nowPlaying: {}, sec: '', pause: false }, playNote = (p, t, d = 0.12) => { EC.nowPlaying[p] = t + d; };
+  const pv = (st, p) => (EC.solo ? EC.solo === p : !EC.mute[p]) ? (st.mx && st.mx[p] != null ? st.mx[p] : 1) : 0; // level of a part: st.mx, set in the editor
+  let AC, live = true, timer, readyMs = Promise.resolve(), ana, master, musicG, tuneG, drumG, hatG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motorSend, nbuf, outG, vu;
   let t0 = 0, nextT = 0, stp = 0, musicOn = true, lastHit = 0, lastMus = -9, lastN = 0, lastB = 0, menu = true;
-  const vol = { mus: 1, mot: 1, pneu: 1, vent: 1, amb: 1, choc: 1, ui: 1, pluie: 1 }, V = {}; // volume par famille (banc d'écoute) et leurs nœuds
-  // état musical piloté par la course : mix = secteur chaud, inten = vitesse, driftL = glisse, drums = batterie, fin = dernier secteur
-  const MX = { b: 1, d: 1.6, c: 2, g: 2, a: 2, l: 1.6 }; // niveau de chaque tranche : le médium et l'aigu ne doivent pas disparaître sous la basse
-  let tens = 0, glisse = false, acquis = false, acqDit = false, boostPend = false, boostL = false; // glisse : tension (0..1), en cours, boost acquis, palier déjà joué, relâchement à jouer, boost en cours
-  let lastRoll = -9, voixL = null; // voixL : voix du thème, gardée pour lier la note suivante // dernière mesure de montée : le drop la suit
-  let djF, djL, fad, entree = false, musIn, mixDry, mixW, dk = null, mixFait = null; // passage DJ (voir mix()) : coupe-bas, coupe-haut et fondu de la platine ; entree : la platine qui entre ne passe pas au refrain ; bus de mixage et sa compression ; dk : le passage en cours ; mixFait : la carte où il a mené
-  let bigS = false, lastFill = -9, sortie = -1, grit = 0, curRoot = 33, lap = 1, lapN = -1; let was = {}; // lap : 0 premier tour (sobre), 1 normal, 2 dernier tour (le plus intense) ; // refrain en cours ; dernière relance ; parties qui jouaient à la mesure précédente
-  let W = {}, strip = {}; // ondes sur mesure ; tranches de mixage par partie (b basse, d nappe, c g accords, a arpège, l thème)
-  let mix = 0, inten = 0, driftL = 0, drums = 0, fin = false, wasIn = false, wasNear = false, wasBoost = false;
-  let rubT = 0, satT = 0, platine = 0; // frottement bref entre voitures ; saturation de la musique après un choc ; ralenti de platine (1 → 0)
-  const VX = [], UN = [], PANJ = 0.35; // voix moteur + boîte + pneus : VX[0] celle du solo (au centre, branchée comme toujours), VX[1] et VX[2] celles de l'écran partagé (joueur 1 à gauche, joueur 2 à droite) ; UN : liste d'un seul joueur, réutilisée quand le jeu n'en passe pas
-  let scrapeG, windG, windL, windF, nitroG, gbuf, esp, AU = [], pluie, ambBed, ambT = 2, inZone = false, uiF, CH = null, ambZG = [], ambEvG = null, ambPos = 0, ambSous = 0, ambAppel = 0; // CH : les sons propres à chapada (sonChapada)
-  const auHasard = () => Math.random() * ST.length | 0; // à chaque carte, une de ses stations au hasard
-  let station = auHasard(), S16 = 60 / ST[station].bpm / 4;
+  const vol = { mus: 1, motorFam: 1, tire: 1, wind: 1, amb: 1, impact: 1, ui: 1, rainFx: 1 }, V = {}; // volume per family (listening bench) and their nodes
+  // musical state driven by the race: mix = hot sector, inten = speed, driftL = skid, drums = drums, fin = last sector
+  const MX = { b: 1, d: 1.6, c: 2, g: 2, a: 2, l: 1.6 }; // level of each slice: the mids and highs must not disappear under the bass
+  let tens = 0, glisse = false, acquired = false, acqSaid = false, boostPend = false, boostL = false; // skid: tension (0..1), in progress, boost earned, plateau already played, release to play, boost in progress
+  let lastRoll = -9, voiceL = null; // voiceL: theme voice, kept to tie the next note // last bar of the rise: the drop follows it
+  let djF, djL, fad, entering = false, musIn, mixDry, mixW, dk = null, mixDone = null; // DJ pass (see mix()): low cut, high cut and turntable fade; entering: the incoming turntable does not go to the chorus; mix bus and its compression; dk: the pass in progress; mixDone: the map where it led
+  let bigS = false, lastFill = -9, exitAt = -1, grit = 0, curRoot = 33, lap = 1, lapN = -1; let was = {}; // lap: 0 first lap (subdued), 1 normal, 2 last lap (the most intense); // chorus in progress; last restart; parts that were playing at the previous bar
+  let W = {}, strip = {}; // custom waves; mix slices per part (b bass, d pad, c g chords, a arpeggio, l theme)
+  let mix = 0, inten = 0, driftL = 0, drums = 0, ending = false, wasIn = false, wasNear = false, wasBoost = false;
+  let rubT = 0, satT = 0, turntable = 0; // brief friction between cars; saturation of the music after an impact; turntable slowdown (1 → 0)
+  const VX = [], UN = [], PANJ = 0.35; // engine + gearbox + tyre voices: VX[0] the solo one (centre, plugged in as always), VX[1] and VX[2] those of the split screen (player 1 on the left, player 2 on the right); UN: single-player list, reused when the game does not pass one
+  let scrapeG, windG, windL, windF, nitroG, gbuf, acoustic, AU = [], rainFx, ambBed, ambT = 2, inZone = false, uiF, CH = null, ambZG = [], ambEvG = null, ambPos = 0, ambUnder = 0, ambCall = 0; // CH: the sounds specific to chapada (soundChapada)
+  const randIndex = () => Math.random() * ST.length | 0; // on each map, one of its stations at random
+  let station = randIndex(), S16 = 60 / ST[station].bpm / 4;
 
-  // musique de menu : un seul morceau calme pour toutes les cartes — même tempo, mêmes accords (Dm7 BbM7 C7 A), même mélodie de cloches, même basse.
-  // Chaque carte n'en change que la couleur : timbre de la nappe (pad) et de la mélodie (arp), octave de la mélodie (oct), passe-bas (lp), niveau (v, réglé par mesure).
-  // Changer de carte au menu ne recharge plus la page : carte() garde la position du morceau et ouvre la nouvelle couleur en fondu (quitter() / reprendre() servent encore au rechargement).
+  // menu music: one calm track for all maps — same tempo, same chords (Dm7 BbM7 C7 A), same bell melody, same lowland.
+  // Each map only changes its colour: pad and melody (arp) timbre, melody octave (oct), low-pass (lp), level (v, set per bar).
+  // Changing map in the menu no longer reloads the page: mapDef() keeps the song's position and fades in the new colour (quitGame() / reprendre() still serve for reloading).
   const MENU = { bpm: 80, mel: '0...2...1...3...', CH: [[50, 57, 60, 65], [46, 53, 57, 62], [48, 55, 58, 64], [45, 52, 57, 61]],
     ville: { v: 1.55, pad: 'choir', arp: 'bell', oct: 0, lp: 3500 },      // chœur sombre, cloches
-    touge: { v: 1.84, pad: 'epFM', arp: 'pluck', oct: 0, lp: 6000 },      // piano électrique, cordes pincées
-    wangan: { v: 1.46, pad: 'warm', arp: 'pulseArp', oct: 12, lp: 1800 }, // nappe ronde et étouffée, impulsions à l'octave
-    paris: { v: 1.37, pad: 'strings', arp: 'bell', oct: 12, lp: 8000 },   // cordes claires, cloches à l'octave
-    canal: { v: 1.35, pad: 'warm', arp: 'epFM', oct: 0, lp: 2600 },       // nappe ronde, piano électrique
+    touge: { v: 1.84, pad: 'epFM', arp: 'pluck', oct: 0, lp: 6000 },      // electric piano, plucked strings
+    wangan: { v: 1.46, pad: 'warm', arp: 'pulseArp', oct: 12, lp: 1800 }, // round, muffled pad, octave pulses
+    paris: { v: 1.37, pad: 'strings', arp: 'bell', oct: 12, lp: 8000 },   // clear strings, octave bells
+    canal: { v: 1.35, pad: 'warm', arp: 'epFM', oct: 0, lp: 2600 },       // round pad, electric piano
   };
-  let reprise = false; // le morceau vient d'être repris en cours de mesure : la nappe et la basse entrent tout de suite, sans attendre la mesure suivante
-  // ambiance du lieu : lits de bruit filtré [type, fréquence, Q, niveau, vitesse et profondeur de la houle]
+  let resumed = false; // the track has just been resumed mid-bar: pad and bass come in at once, without waiting for the next bar
+  // place ambience: filtered noise beds [type, frequency, Q, level, speed and depth of the swell]
   const AMB = {
     ville: [['highpass', 6000, 0.5, 0.012], ['bandpass', 1400, 0.6, 0.03, 0.13, 0.3], ['lowpass', 110, 0.7, 0.2, 0.07, 0.4]], // pluie, rumeur de ville
-    touge: [['bandpass', 700, 0.5, 0.03, 0.1, 0.6], ['lowpass', 180, 0.7, 0.05, 0.05, 0.5]], // feuillage, air de la nuit (+ grillons)
-    chapada: [['bandpass', 800, 0.5, 0.03, 0.09, 0.6], ['highpass', 6200, 0.7, 0.008, 55, 0.9], ['highpass', 5200, 0.7, 0.006, 0.13, 0.9]], // feuillage de la forêt, cigales (un souffle aigu haché à 55 Hz) qui enflent et retombent (+ les bêtes de chaque secteur : evChapada)
-    wangan: [['bandpass', 350, 0.8, 0.07, 0.08, 0.7], ['lowpass', 90, 0.7, 0.2]], // vent de la baie, ronflement du port (+ corne de navire)
-    paris: [['lowpass', 140, 0.7, 0.15, 0.05, 0.3], ['highpass', 7000, 0.5, 0.004]], // ville qui s'éveille (+ oiseaux)
-    canal: [['lowpass', 500, 0.5, 0.06, 0.06, 0.7], ['bandpass', 220, 0.7, 0.06]], // vent sec, autoroute lointaine (+ hélicoptère)
-    stade: [['bandpass', 450, 0.6, 0.12, 0.09, 0.35], ['bandpass', 1100, 0.8, 0.05, 0.13, 0.5], ['lowpass', 120, 0.7, 0.1]], // la foule des tribunes, son brouhaha qui ondule (+ clameurs)
-    givre: [['bandpass', 320, 3, 0.05, 0.07, 0.8], ['lowpass', 200, 0.7, 0.05, 0.04, 0.5]], // le vent qui siffle dans les sapins (+ grelots au loin)
-    barrage: [['bandpass', 520, 0.5, 0.035, 0.09, 0.6], ['lowpass', 150, 0.7, 0.07]], // le vent de la vallée, l'eau au loin ; les sons du lieu (chute, turbines, trains…) sont posés par le décor : SON.lieux
-    perse: [['bandpass', 420, 0.6, 0.03, 0.07, 0.6], ['lowpass', 150, 0.7, 0.05]], // le vent tiède du couchant sur la plaine (+ les lits et les événements par zone : AMBZ)
+    touge: [['bandpass', 700, 0.5, 0.03, 0.1, 0.6], ['lowpass', 180, 0.7, 0.05, 0.05, 0.5]], // foliage, night air (+ crickets)
+    chapada: [['bandpass', 800, 0.5, 0.03, 0.09, 0.6], ['highpass', 6200, 0.7, 0.008, 55, 0.9], ['highpass', 5200, 0.7, 0.006, 0.13, 0.9]], // forest foliage, cicadas (a chopped high breath at 55 Hz) swelling and fading (+ the beasts of each sector: evChapada)
+    wangan: [['bandpass', 350, 0.8, 0.07, 0.08, 0.7], ['lowpass', 90, 0.7, 0.2]], // bay wind, port hum (+ ship horn)
+    paris: [['lowpass', 140, 0.7, 0.15, 0.05, 0.3], ['highpass', 7000, 0.5, 0.004]], // city waking up (+ birds)
+    canal: [['lowpass', 500, 0.5, 0.06, 0.06, 0.7], ['bandpass', 220, 0.7, 0.06]], // dry wind, distant motorway (+ helicopter)
+    stade: [['bandpass', 450, 0.6, 0.12, 0.09, 0.35], ['bandpass', 1100, 0.8, 0.05, 0.13, 0.5], ['lowpass', 120, 0.7, 0.1]], // the stands' crowd, its babble swaying (+ roars)
+    givre: [['bandpass', 320, 3, 0.05, 0.07, 0.8], ['lowpass', 200, 0.7, 0.05, 0.04, 0.5]], // wind whistling in the firs (+ distant bells)
+    barrage: [['bandpass', 520, 0.5, 0.035, 0.09, 0.6], ['lowpass', 150, 0.7, 0.07]], // valley wind, water in the distance; the place sounds (fall, turbines, trains…) are placed by the scenery: SOUND.spots
+    perse: [['bandpass', 420, 0.6, 0.03, 0.07, 0.6], ['lowpass', 150, 0.7, 0.05]], // warm westerly wind over the plain (+ the beds and events per zone: AMBZ)
   };
 
-  // Lits par zone, en plus du lit de la carte : de, a = fractions du tour entre lesquelles le lit sonne (à ciel ouvert) ; tun = le lit de la voûte, qui sonne en tunnel. c = couches, comme AMB.
-  // Une carte qui a des zones garde ses événements sous la voûte (ambEvent choisit selon l'endroit).
+  // Beds per zone, in addition to the map's bed: de, a = fractions of the lap between which the bed sounds (open air); tun = the vault's bed, which sounds in a tunnel. c = layers, as AMB.
+  // A map with zones keeps its events under the vault (ambEvent chooses by location).
   const AMBZ = {
-    perse: [{ de: 0.632, a: 0.72, c: [['highpass', 3200, 0.5, 0.02], ['bandpass', 1500, 0.8, 0.03, 0.9, 0.4]] }, // le jardin : l'eau vive des cascades et du canal
-      { tun: 1, c: [['bandpass', 520, 0.7, 0.07, 0.11, 0.4], ['bandpass', 1150, 0.9, 0.035, 0.17, 0.5], ['lowpass', 160, 0.7, 0.05]] }, // le bazar couvert : le brouhaha sous la voûte
-      { de: 0.872, a: 0.994, c: [['bandpass', 600, 0.8, 0.045, 0.13, 0.4], ['bandpass', 1300, 1, 0.02, 0.19, 0.5]] }], // la rue du bazar : le même, plus sec, à ciel ouvert
+    perse: [{ de: 0.632, a: 0.72, c: [['highpass', 3200, 0.5, 0.02], ['bandpass', 1500, 0.8, 0.03, 0.9, 0.4]] }, // the garden: running water from the cascades and the canal
+      { tun: 1, c: [['bandpass', 520, 0.7, 0.07, 0.11, 0.4], ['bandpass', 1150, 0.9, 0.035, 0.17, 0.5], ['lowpass', 160, 0.7, 0.05]] }, // the covered bazaar: the hubbub under the vault
+      { de: 0.872, a: 0.994, c: [['bandpass', 600, 0.8, 0.045, 0.13, 0.4], ['bandpass', 1300, 1, 0.02, 0.19, 0.5]] }], // the bazaar street: the same, drier, in the open air
   };
   const gain = (v, dest) => { const g = AC.createGain(); g.gain.value = v; g.connect(dest); return g; };
   const filt = (type, f, q, dest) => { const b = AC.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.connect(dest); return b; };
@@ -70,226 +70,226 @@
     if (vol < 0.002) return;
     const o = AC.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); o.detune.value = det; o.connect(env(dest, t, dur, vol)); o.start(t); o.stop(t + dur + 0.05); return o;
   }
-  // une rafale de n bruits (le i-e au volume vol(i), tous les pas secondes, chacun comme nz : attaque a, puis chute à -80 dB en dur) : écrite une fois dans un tampon, au chargement de la carte (buildAmb),
-  // puis jouée par une seule source. 110 appels à nz d'un coup (l'hélicoptère du canal) faisaient 1 100 appels audio dans une image, 7 à 17 ms d'attente
-  const RAF = new WeakMap(), HELICO = { n: 110, pas: 0.075, dur: 0.06, vol: i => 0.2 * Math.sin(Math.PI * i / 110), a: 0.005 };
-  function rafaleBuf(R) {
+  // a burst of n noises (the i-th at volume vol(i), every step seconds, each like nz: attack a, then drop to -80 dB hard): written once into a buffer, when the map loads (buildAmb),
+  // then played by a single source. 110 nz calls at once (the canal's helicopter) made 1,100 audio calls in one frame, 7 to 17 ms of waiting
+  const RAF = new WeakMap(), CHOPPER = { n: 110, stepSec: 0.075, dur: 0.06, vol: i => 0.2 * Math.sin(Math.PI * i / 110), a: 0.005 };
+  function gustBuf(R) {
     const c = RAF.get(R); if (c && c.ac === AC) return c.buf;
-    const sr = AC.sampleRate, L = Math.ceil((R.n * R.pas + R.dur) * sr), buf = AC.createBuffer(1, L, sr), x = buf.getChannelData(0), b = nbuf.getChannelData(0);
-    for (let i = 0; i < R.n; i++) { const v = R.vol(i), k0 = Math.round(i * R.pas * sr), o = Math.random() * b.length | 0; if (v < 0.002) continue;
+    const sr = AC.sampleRate, L = Math.ceil((R.n * R.stepSec + R.dur) * sr), buf = AC.createBuffer(1, L, sr), x = buf.getChannelData(0), b = nbuf.getChannelData(0);
+    for (let i = 0; i < R.n; i++) { const v = R.vol(i), k0 = Math.round(i * R.stepSec * sr), o = Math.random() * b.length | 0; if (v < 0.002) continue;
       for (let k = 0; k < R.dur * sr && k0 + k < L; k++) { const t = k / sr; x[k0 + k] = b[(o + k) % b.length] * (t < R.a ? v * t / R.a : v * Math.pow(0.0001 / v, (t - R.a) / (R.dur - R.a))); } }
     RAF.set(R, { ac: AC, buf }); return buf;
   }
-  // coups brefs écrits dans un tampon : coup(x, t0, dur, vol, a, f) ajoute à x, à t0 s, un coup comme osc (f : sinus de f Hz) ou nz (f nul : bruit blanc) — attaque a, chute à -80 dB en dur
-  const coup = (x, t0, dur, vol, a, f) => { const sr = AC.sampleRate, k0 = Math.round(t0 * sr), b = nbuf.getChannelData(0), o = Math.random() * b.length | 0, w = 2 * Math.PI * f / sr;
+  // short hits written into a buffer: strike(x, t0, dur, vol, a, f) adds to x, at t0 s, a hit like osc (f: sine at f Hz) or nz (f zero: white noise) — attack a, drop to -80 dB hard
+  const strike = (x, t0, dur, vol, a, f) => { const sr = AC.sampleRate, k0 = Math.round(t0 * sr), b = nbuf.getChannelData(0), o = Math.random() * b.length | 0, w = 2 * Math.PI * f / sr;
     for (let k = 0; k < dur * sr && k0 + k < x.length; k++) { const t = k / sr; x[k0 + k] += (f ? Math.sin(w * k) : b[(o + k) % b.length]) * (t < a ? vol * t / a : vol * Math.pow(0.0001 / vol, (t - a) / (dur - a))); } };
-  const tampon = (dur, ecrit) => { const buf = AC.createBuffer(1, Math.ceil(dur * AC.sampleRate), AC.sampleRate); ecrit(buf.getChannelData(0)); return buf; };
-  const joue = (buf, t, dest) => { const s = AC.createBufferSource(); s.buffer = buf; s.connect(dest); s.start(t); };
-  // grelots du traîneau (givre) : quatre tirages écrits au chargement, au lieu de 28 oscillateurs par passage
-  let GREL = null; const grelots = () => Array.from({ length: 4 }, () => tampon(1.8, x => { const f = 2300 + Math.random() * 400; for (let i = 0; i < 14; i++) { const d = i * 0.11 + Math.random() * 0.03; coup(x, d, 0.12, 0.012, 0.005, f); coup(x, d, 0.08, 0.006, 0.005, f * 1.51); } }));
-  const rafale = (R, t, dest, type, f, q = 1) => { const s = AC.createBufferSource(); s.buffer = rafaleBuf(R); s.connect(filt(type, f, q, dest)); s.start(t); };
-  function nz(t, dur, vol, dest, type, f, q = 1, buf = nbuf, a = 0.005) { // buf : bruit blanc, ou mbuf (métal des cymbales)
+  const rawBuf = (dur, written) => { const buf = AC.createBuffer(1, Math.ceil(dur * AC.sampleRate), AC.sampleRate); written(buf.getChannelData(0)); return buf; };
+  const nowPlaying = (buf, t, dest) => { const s = AC.createBufferSource(); s.buffer = buf; s.connect(dest); s.start(t); };
+  // sleigh bells (frost): four draws written at load, instead of 28 oscillators per pass
+  let BELLS = null; const bells = () => Array.from({ length: 4 }, () => rawBuf(1.8, x => { const f = 2300 + Math.random() * 400; for (let i = 0; i < 14; i++) { const d = i * 0.11 + Math.random() * 0.03; strike(x, d, 0.12, 0.012, 0.005, f); strike(x, d, 0.08, 0.006, 0.005, f * 1.51); } }));
+  const burstN = (R, t, dest, type, f, q = 1) => { const s = AC.createBufferSource(); s.buffer = gustBuf(R); s.connect(filt(type, f, q, dest)); s.start(t); };
+  function nz(t, dur, vol, dest, type, f, q = 1, buf = nbuf, a = 0.005) { // buf: white noise, or mbuf (cymbal metal)
     if (vol < 0.002) return;
     const s = AC.createBufferSource(), fl = filt(type, f, q, env(dest, t, dur, vol, a)); s.buffer = buf; s.loop = true; s.connect(fl); s.start(t, Math.random()); s.stop(t + dur + 0.05); return fl;
   }
   // ---------- timbres ----------
-  // ondes sur mesure (au-delà de sinus, scie, carré, triangle) : amplitudes des harmoniques
+  // custom waves (beyond sine, saw, square, triangle): harmonic amplitudes
   function waves() {
     const mk = h => { const re = new Float32Array(h.length + 1), im = new Float32Array(h.length + 1); h.forEach((a, i) => { im[i + 1] = a; }); return AC.createPeriodicWave(re, im); };
     const H = (n, f) => Array.from({ length: n }, (_, i) => f(i + 1));
-    W = { pulse: mk(H(40, n => Math.sin(n * Math.PI * 0.12) / n * 2)), // impulsion étroite : clavinet, basse séquencée, guitare étouffée
+    W = { pulse: mk(H(40, n => Math.sin(n * Math.PI * 0.12) / n * 2)), // narrow impulse: clavinet, sequenced bass, muted guitar
       organ: mk([1, 0.8, 0.5, 0.35, 0, 0.25, 0, 0.2]), // tirettes d'orgue
-      vox: mk(H(32, n => [7, 11, 13, 14].includes(n) ? 0 : Math.exp(-((n - 4) ** 2) / 6) + 0.6 * Math.exp(-((n - 9) ** 2) / 8) + 0.3 / n)), // voyelle : chœur, voix hachée (sans les partiels 7, 11, 13, 14, qui sonnent faux contre la gamme)
-      reed: mk(H(24, n => (n % 2 ? 1 : 0.35) / n ** 0.8)), // anche : saxophone, contrôleur à vent
-      glass: mk([1, 0, 0.3, 0.5, 0, 0.25, 0, 0.3, 0, 0, 0, 0.12]) }; // verre : octaves et quintes seulement
-    for (const [k, [re, im]] of Object.entries(window.ONDES || {})) W[k] = AC.createPeriodicWave(Float32Array.of(0, ...re), Float32Array.of(0, ...im)); // ak_… : formes d'onde de synthés relevées (instruments.js)
+      vox: mk(H(32, n => [7, 11, 13, 14].includes(n) ? 0 : Math.exp(-((n - 4) ** 2) / 6) + 0.6 * Math.exp(-((n - 9) ** 2) / 8) + 0.3 / n)), // vowel: choir, chopped voice (without partials 7, 11, 13, 14, which sound out of tune against the scale)
+      reed: mk(H(24, n => (n % 2 ? 1 : 0.35) / n ** 0.8)), // reed: saxophone, wind controller
+      glass: mk([1, 0, 0.3, 0.5, 0, 0.25, 0, 0.3, 0, 0, 0, 0.12]) }; // glass: octaves and fifths only
+    for (const [k, [re, im]] of Object.entries(window.WAVES || {})) W[k] = AC.createPeriodicWave(Float32Array.of(0, ...re), Float32Array.of(0, ...im)); // ak_… : synth waveforms captured (instruments.js)
   }
-  // Un timbre : o oscillateurs [onde, demi-tons, cents, niveau] · uni / sp unisson désaccordé · fm [rapport, indice, durée, reste] modulation de
-  // fréquence · a d s r enveloppe · flt [type, départ, fin, durée, Q, suit la note] · form formants de talkbox · nz bruit [type, f, Q, niveau, durée] ·
-  // vib [Hz, cents, retard] · gl glissé (s) · bus (sat, fuzz) · len tenue en pas · lv niveau · pan, rv réverbération, ec écho, ch chorus · str écart entre les cordes d'un accord gratté (s) · ks corde pincée (voir corde()), avec : niveau des oscillateurs mêlés à la corde · tenue durée d'un accord (pas) · sing voix chantée (F, H), syl ses voyelles · leg notes liées (vitesse du glissé d'une note à l'autre, s ; le glissé commence un peu avant la note, comme un chanteur)
+  // A timbre: o oscillators [wave, half-tones, cents, level] · uni / sp detuned unison · fm [ratio, index, duration, rest] FM modulation of
+  // frequency · a d s r envelope · flt [type, start, end, duration, Q, follows the note] · form formants of talkbox · nz noise [type, f, Q, level, duration] ·
+  // vib [Hz, cents, delay] · gl glide (s) · bus (sat, fuzz) · len hold in steps · lv level · pan, rv reverb, ec echo, ch chorus · str spacing between the strings of a strummed chord (s) · ks plucked string (see pluckString()), with: level of the oscillators mixed with the string · hold duration of a chord (steps) · sing sung voice (F, H), syl its vowels · leg tied notes (glide speed from one note to the next, s; the glide starts a bit before the note, like a singer)
   const PATCH = {
     // basses
-    bDark: { o: [['sawtooth', 0, -9], ['sawtooth', 0, 9], ['square', -12, 0, 0.7]], flt: ['lowpass', 2600, 300, 0.18, 6], d: 0.25, s: 0.5, bus: 'sat' }, // darksynth : scies saturées
-    bDist: { o: [['sawtooth'], ['square', 0, 9]], flt: ['lowpass', 900, 200, 0.2, 4], d: 0.2, s: 0.4, bus: 'fuzz', lv: 0.8 }, // écrêtée
-    bAcid: { o: [['sawtooth']], flt: ['lowpass', 3200, 250, 0.14, 16], d: 0.2, s: 0.3, gl: 0.05, bus: 'sat' }, // résonante façon TB-303
-    bFM: { o: [['sine'], ['sine', -12, 0, 0.6]], fm: [1, 3.5, 0.12, 0.2], d: 0.25, s: 0.3, lv: 1.3 }, // basse FM des années 80
-    bSlap: { o: [['pulse'], ['sawtooth', 0, 6, 0.5]], ks: { b: 0.7, t: 1.2, pos: 0.08 }, avec: 1, flt: ['lowpass', 5000, 500, 0.07, 6], nz: ['bandpass', 2500, 2, 0.25, 0.012], d: 0.2, s: 0.25, lv: 1.2 }, // claquée
-    bPick: { o: [['triangle'], ['pulse', 0, 0, 0.4]], ks: { b: 0.45, t: 1.6, pos: 0.12 }, avec: 1, flt: ['lowpass', 2200, 400, 0.1, 2], nz: ['bandpass', 1800, 2, 0.15, 0.01], d: 0.22, s: 0.35, lv: 1.4 }, // basse électrique au médiator
-    bMoog: { o: [['sawtooth'], ['triangle', 0, 5], ['sine', -12, 0, 0.5]], flt: ['lowpass', 700, 350, 0.2, 3], s: 0.8, gl: 0.07, len: 1, lv: 1.3 }, // ronde, à portamento
-    bReese: { o: [['sawtooth', 0, -14], ['sawtooth', 0, 14], ['sine', 0, 0, 0.9]], flt: ['lowpass', 600, 380, 1, 2], s: 1, r: 0.08, len: 1, lv: 1.2 }, // scies qui battent
-    bOff: { o: [['sawtooth', 0, -6], ['square', 0, 6]], flt: ['lowpass', 1800, 250, 0.1, 5], d: 0.12, s: 0.1, lv: 1.2 }, // pincée, à contretemps
-    bSeq: { o: [['pulse'], ['sine', 0, 0, 0.8]], flt: ['lowpass', 1500, 300, 0.08, 3], d: 0.1, s: 0.2, lv: 1.3 }, // impulsion séquencée
-    bFuzz: { o: [['sawtooth'], ['sawtooth', 7, 6, 0.7], ['square', 12, -5, 0.5]], s: 0.9, len: 1, bus: 'fuzz' }, // riff de guitare saturée
-    bBoost: { o: [['sine'], ['sine', 12, 0, 0.3], ['sawtooth', 0, 0, 0.2]], flt: ['lowpass', 900, 260, 0.15, 1], d: 0.4, s: 0.85, r: 0.06, len: 1, bus: 'sat', lv: 1.5 }, // « bass boosted » : sub énorme qui sature un peu
-    bCorde: { o: [['triangle'], ['pulse', 0, 0, 0.4]], ks: { b: 0.3, t: 2, pos: 0.2 }, avec: 1, flt: ['lowpass', 2200, 400, 0.1, 2], nz: ['bandpass', 1800, 2, 0.15, 0.01], d: 0.22, s: 0.35, lv: 1.4 }, // basse électrique : corde pincée mêlée à la basse au médiator
-    bGrit: { o: [['sawtooth', 0, -7], ['sawtooth', 0, 7], ['sine', -12, 0, 0.9]], flt: ['lowpass', 1100, 420, 0.25, 1.2], d: 0.35, s: 0.75, r: 0.05, len: 1, bus: 'sat', lv: 1.1 }, // big beat : grosse, sale et tenue, sans résonance qui rebondit
+    bDark: { o: [['sawtooth', 0, -9], ['sawtooth', 0, 9], ['square', -12, 0, 0.7]], flt: ['lowpass', 2600, 300, 0.18, 6], d: 0.25, s: 0.5, bus: 'sat' }, // darksynth: saturated saws
+    bDist: { o: [['sawtooth'], ['square', 0, 9]], flt: ['lowpass', 900, 200, 0.2, 4], d: 0.2, s: 0.4, bus: 'fuzz', lv: 0.8 }, // clipped
+    bAcid: { o: [['sawtooth']], flt: ['lowpass', 3200, 250, 0.14, 16], d: 0.2, s: 0.3, gl: 0.05, bus: 'sat' }, // resonant, TB-303 style
+    bFM: { o: [['sine'], ['sine', -12, 0, 0.6]], fm: [1, 3.5, 0.12, 0.2], d: 0.25, s: 0.3, lv: 1.3 }, // 80s FM bass
+    bSlap: { o: [['pulse'], ['sawtooth', 0, 6, 0.5]], ks: { b: 0.7, t: 1.2, pos: 0.08 }, using: 1, flt: ['lowpass', 5000, 500, 0.07, 6], nz: ['bandpass', 2500, 2, 0.25, 0.012], d: 0.2, s: 0.25, lv: 1.2 }, // slapped
+    bPick: { o: [['triangle'], ['pulse', 0, 0, 0.4]], ks: { b: 0.45, t: 1.6, pos: 0.12 }, using: 1, flt: ['lowpass', 2200, 400, 0.1, 2], nz: ['bandpass', 1800, 2, 0.15, 0.01], d: 0.22, s: 0.35, lv: 1.4 }, // electric bass with pick
+    bMoog: { o: [['sawtooth'], ['triangle', 0, 5], ['sine', -12, 0, 0.5]], flt: ['lowpass', 700, 350, 0.2, 3], s: 0.8, gl: 0.07, len: 1, lv: 1.3 }, // round, with portamento
+    bReese: { o: [['sawtooth', 0, -14], ['sawtooth', 0, 14], ['sine', 0, 0, 0.9]], flt: ['lowpass', 600, 380, 1, 2], s: 1, r: 0.08, len: 1, lv: 1.2 }, // beating saws
+    bOff: { o: [['sawtooth', 0, -6], ['square', 0, 6]], flt: ['lowpass', 1800, 250, 0.1, 5], d: 0.12, s: 0.1, lv: 1.2 }, // plucked, off-beat
+    bSeq: { o: [['pulse'], ['sine', 0, 0, 0.8]], flt: ['lowpass', 1500, 300, 0.08, 3], d: 0.1, s: 0.2, lv: 1.3 }, // sequenced pulse
+    bFuzz: { o: [['sawtooth'], ['sawtooth', 7, 6, 0.7], ['square', 12, -5, 0.5]], s: 0.9, len: 1, bus: 'fuzz' }, // distorted guitar riff
+    bBoost: { o: [['sine'], ['sine', 12, 0, 0.3], ['sawtooth', 0, 0, 0.2]], flt: ['lowpass', 900, 260, 0.15, 1], d: 0.4, s: 0.85, r: 0.06, len: 1, bus: 'sat', lv: 1.5 }, // "bass boosted": huge sub that saturates a little
+    bString: { o: [['triangle'], ['pulse', 0, 0, 0.4]], ks: { b: 0.3, t: 2, pos: 0.2 }, using: 1, flt: ['lowpass', 2200, 400, 0.1, 2], nz: ['bandpass', 1800, 2, 0.15, 0.01], d: 0.22, s: 0.35, lv: 1.4 }, // electric bass: plucked string mixed with the bass played with a pick
+    bGrit: { o: [['sawtooth', 0, -7], ['sawtooth', 0, 7], ['sine', -12, 0, 0.9]], flt: ['lowpass', 1100, 420, 0.25, 1.2], d: 0.35, s: 0.75, r: 0.05, len: 1, bus: 'sat', lv: 1.1 }, // big beat: big, dirty and held, without a bouncing resonance
     // claviers, nappes, accords
-    epFM: { o: [['sine'], ['triangle', 12, 0, 0.15]], fm: [1, 1.6, 0.35, 0.1], d: 0.9, s: 0.15, ch: 0.5, rv: 0.15, lv: 1.6, str: 0.006 }, // piano électrique
-    dxEp: { o: [['sine'], ['sine', 12, 3, 0.3]], fm: [3, 1.2, 0.2, 0.1], d: 0.7, s: 0.1, ch: 0.4, rv: 0.2, pan: -0.25, lv: 1.5, str: 0.006 }, // piano électrique FM brillant
+    epFM: { o: [['sine'], ['triangle', 12, 0, 0.15]], fm: [1, 1.6, 0.35, 0.1], d: 0.9, s: 0.15, ch: 0.5, rv: 0.15, lv: 1.6, str: 0.006 }, // electric piano
+    dxEp: { o: [['sine'], ['sine', 12, 3, 0.3]], fm: [3, 1.2, 0.2, 0.1], d: 0.7, s: 0.1, ch: 0.4, rv: 0.2, pan: -0.25, lv: 1.5, str: 0.006 }, // bright FM electric piano
     organ: { o: [['organ']], a: 0.005, s: 1, r: 0.04, vib: [6, 6, 0], lv: 0.9 },
-    clav: { o: [['pulse']], ks: { b: 0.7, t: 0.4, pos: 0.1 }, avec: 1, flt: ['highpass', 500, 500, 1, 0.7], d: 0.15, s: 0.1, pan: 0.3, lv: 1.1 },
-    brass: { o: [['sawtooth', 0, -7], ['sawtooth', 0, 7], ['reed', 0, 0, 0.5]], a: 0.025, flt: ['lowpass', 600, 4500, 0.06, 2], d: 0.2, s: 0.7, rv: 0.15, lv: 1.1 }, // cuivres de synthé
-    strings: { o: [['sawtooth']], uni: 4, sp: 14, a: 0.12, s: 1, r: 0.25, flt: ['highpass', 300, 300, 1, 0.7], ch: 0.6, rv: 0.3 }, // ensemble de cordes
-    super: { o: [['sawtooth']], uni: 5, sp: 22, a: 0.01, d: 0.3, s: 0.8, r: 0.12, rv: 0.3, str: 0.002 }, // mur de scies désaccordées
-    choeur: { o: [['sawtooth']], uni: 3, sp: 14, sing: 'F', syl: 'o', a: 0.3, s: 1, r: 0.5, rv: 0.5, ch: 0.3, lv: 0.9 }, // chœur qui chante « oh » (formants)
-    choir: { o: [['vox']], uni: 3, sp: 10, a: 0.25, s: 1, r: 0.4, rv: 0.5, lv: 1.4 },
+    kbd: { o: [['pulse']], ks: { b: 0.7, t: 0.4, pos: 0.1 }, using: 1, flt: ['highpass', 500, 500, 1, 0.7], d: 0.15, s: 0.1, pan: 0.3, lv: 1.1 },
+    brass: { o: [['sawtooth', 0, -7], ['sawtooth', 0, 7], ['reed', 0, 0, 0.5]], a: 0.025, flt: ['lowpass', 600, 4500, 0.06, 2], d: 0.2, s: 0.7, rv: 0.15, lv: 1.1 }, // synth brass
+    strings: { o: [['sawtooth']], unison: 4, sp: 14, a: 0.12, s: 1, r: 0.25, flt: ['highpass', 300, 300, 1, 0.7], ch: 0.6, rv: 0.3 }, // ensemble de cordes
+    super: { o: [['sawtooth']], unison: 5, sp: 22, a: 0.01, d: 0.3, s: 0.8, r: 0.12, rv: 0.3, str: 0.002 }, // wall of detuned saws
+    chorus: { o: [['sawtooth']], unison: 3, sp: 14, sing: 'F', syl: 'o', a: 0.3, s: 1, r: 0.5, rv: 0.5, ch: 0.3, lv: 0.9 }, // choir singing "oh" (formants)
+    choir: { o: [['vox']], unison: 3, sp: 10, a: 0.25, s: 1, r: 0.4, rv: 0.5, lv: 1.4 },
     glass: { o: [['glass']], fm: [2, 0.8, 1.5, 0.3], a: 0.15, s: 0.8, r: 0.5, rv: 0.5, ch: 0.4, lv: 1.3 },
     warm: { o: [['triangle'], ['sawtooth', 0, 7, 0.3]], flt: ['lowpass', 1200, 1200, 1, 0.7], a: 0.3, s: 1, r: 0.4, rv: 0.2, lv: 1.3 },
-    stabM7: { o: [['sawtooth', 0, -8], ['square', 0, 8, 0.6]], flt: ['lowpass', 3500, 500, 0.2, 4], d: 0.25, ec: 0.45, rv: 0.2, lv: 1.3, str: 0.001 }, // accord plaqué de Detroit
-    gtrMute: { o: [['pulse']], ks: { b: 0.6, t: 0.25, pos: 0.15 }, avec: 1, flt: ['bandpass', 1800, 1200, 0.05, 3], nz: ['bandpass', 3000, 2, 0.2, 0.008], d: 0.07, pan: 0.35, lv: 2, str: 0.009 }, // cocotte de guitare funk
-    pwr: { o: [['sawtooth', 0, -4], ['sawtooth', 0, 4]], ks: { b: 0.6, t: 1.5, pos: 0.15 }, avec: 1, s: 0.9, bus: 'fuzz', str: 0.012 }, // accords de puissance
-    gtrNylon: { o: [['triangle'], ['pulse', 0, 3, 0.35]], ks: { b: 0.35, t: 1.4, pos: 0.13 }, avec: 1, flt: ['lowpass', 3500, 1200, 0.15, 0.8], nz: ['bandpass', 3000, 2, 0.12, 0.01], d: 0.35, s: 0.15, r: 0.2, tenue: 5, rv: 0.25, pan: -0.2, lv: 1.4, str: 0.018 }, // guitare à cordes de nylon, grattée (rumba) : corde pincée mêlée au synthé
-    arpRond: { o: [['triangle'], ['sine', 12, 0, 0.3]], flt: ['lowpass', 2200, 900, 0.12, 1], d: 0.16, s: 0.1, ec: 0.25, rv: 0.15, pan: 0.2, lv: 1.4 }, // arpège rond, sans résonance
-    gtrClean: { o: [['sawtooth', 0, -5], ['pulse', 0, 5, 0.6]], ks: { b: 0.65, t: 2, pos: 0.15 }, avec: 1, flt: ['lowpass', 3200, 1100, 0.3, 0.8], d: 0.5, s: 0.25, r: 0.2, tenue: 4, rv: 0.3, ch: 0.35, pan: -0.25, lv: 1.3, str: 0.014 }, // guitare électrique claire, grattée : corde pincée mêlée au synthé
+    stabM7: { o: [['sawtooth', 0, -8], ['square', 0, 8, 0.6]], flt: ['lowpass', 3500, 500, 0.2, 4], d: 0.25, ec: 0.45, rv: 0.2, lv: 1.3, str: 0.001 }, // Detroit stab chord
+    gtrMute: { o: [['pulse']], ks: { b: 0.6, t: 0.25, pos: 0.15 }, using: 1, flt: ['bandpass', 1800, 1200, 0.05, 3], nz: ['bandpass', 3000, 2, 0.2, 0.008], d: 0.07, pan: 0.35, lv: 2, str: 0.009 }, // cocotte de guitare funk
+    pwr: { o: [['sawtooth', 0, -4], ['sawtooth', 0, 4]], ks: { b: 0.6, t: 1.5, pos: 0.15 }, using: 1, s: 0.9, bus: 'fuzz', str: 0.012 }, // accords de puissance
+    gtrNylon: { o: [['triangle'], ['pulse', 0, 3, 0.35]], ks: { b: 0.35, t: 1.4, pos: 0.13 }, using: 1, flt: ['lowpass', 3500, 1200, 0.15, 0.8], nz: ['bandpass', 3000, 2, 0.12, 0.01], d: 0.35, s: 0.15, r: 0.2, holdTime: 5, rv: 0.25, pan: -0.2, lv: 1.4, str: 0.018 }, // nylon-string guitar, strummed (rumba): plucked string mixed with the synth
+    arpRound: { o: [['triangle'], ['sine', 12, 0, 0.3]], flt: ['lowpass', 2200, 900, 0.12, 1], d: 0.16, s: 0.1, ec: 0.25, rv: 0.15, pan: 0.2, lv: 1.4 }, // round arpeggio, without resonance
+    gtrClean: { o: [['sawtooth', 0, -5], ['pulse', 0, 5, 0.6]], ks: { b: 0.65, t: 2, pos: 0.15 }, using: 1, flt: ['lowpass', 3200, 1100, 0.3, 0.8], d: 0.5, s: 0.25, r: 0.2, holdTime: 4, rv: 0.3, ch: 0.35, pan: -0.25, lv: 1.3, str: 0.014 }, // clean electric guitar, strummed: plucked string mixed with the synth
     pluck: { o: [['sawtooth', 0, -7], ['sawtooth', 0, 7]], flt: ['lowpass', 6000, 500, 0.12, 3], d: 0.15, ec: 0.4, rv: 0.15 },
     pulseArp: { o: [['pulse']], d: 0.12, ec: 0.35, pan: -0.2 },
     seqArp: { o: [['sawtooth']], flt: ['lowpass', 3000, 600, 0.1, 8], d: 0.12, ec: 0.3, pan: 0.2 },
-    seqInd: { o: [['pulse'], ['sawtooth', 0, 9, 0.6]], flt: ['lowpass', 1500, 220, 0.09, 3], d: 0.09, s: 0, ec: 0.25, rv: 0.2, pan: -0.15, lv: 1.6 }, // techno industrielle : stab sourd et court, l'écho fait le reste
-    pno: { o: [['triangle'], ['sine', 12, 0, 0.45], ['sawtooth', 0, 4, 0.2]], fm: [2, 1.4, 0.12, 0.1], flt: ['lowpass', 4500, 1600, 0.3, 0.7], d: 0.45, s: 0.06, rv: 0.2, ch: 0.25, lv: 1.4, str: 0.007 }, // piano de house des années 90 (M1)
+    seqInd: { o: [['pulse'], ['sawtooth', 0, 9, 0.6]], flt: ['lowpass', 1500, 220, 0.09, 3], d: 0.09, s: 0, ec: 0.25, rv: 0.2, pan: -0.15, lv: 1.6 }, // industrial techno: dull short stab, the echo does the rest
+    pno: { o: [['triangle'], ['sine', 12, 0, 0.45], ['sawtooth', 0, 4, 0.2]], fm: [2, 1.4, 0.12, 0.1], flt: ['lowpass', 4500, 1600, 0.3, 0.7], d: 0.45, s: 0.06, rv: 0.2, ch: 0.25, lv: 1.4, str: 0.007 }, // 90s house piano (M1)
     bell: { o: [['sine']], fm: [3, 1.2, 0.3, 0.05], d: 0.9, ec: 0.4, rv: 0.3, lv: 1.2 },
-    fmMetal: { o: [['sine']], fm: [1.41, 4, 0.2, 0.3], d: 0.25, rv: 0.3, lv: 1.2 }, // métal inharmonique
-    santour: { o: [['triangle']], ks: { b: 0.95, t: 1.6, pos: 0.07 }, avec: 0.3, flt: ['highpass', 400, 400, 1, 0.7], d: 0.4, s: 0.1, r: 0.3, ec: 0.35, rv: 0.3, pan: 0.2, lv: 1.3, str: 0.004 }, // santour persan : cordes frappées, brillantes et courtes, dans l'écho
-    // thèmes
-    ldTar: { o: [['pulse'], ['sawtooth', 0, 5, 0.4]], ks: { b: 0.85, t: 1.8, pos: 0.06 }, avec: 0.6, flt: ['lowpass', 3000, 1500, 0.2, 1.5], a: 0.003, d: 0.4, s: 0.45, r: 0.12, vib: [6, 18, 0.25], gl: 0.04, ec: 0.25, rv: 0.3, lv: 0.14 }, // tar persan : corde pincée près du chevalet, nasale, vibrato large
+    fmMetal: { o: [['sine']], fm: [1.41, 4, 0.2, 0.3], d: 0.25, rv: 0.3, lv: 1.2 }, // inharmonic metal
+    santour: { o: [['triangle']], ks: { b: 0.95, t: 1.6, pos: 0.07 }, using: 0.3, flt: ['highpass', 400, 400, 1, 0.7], d: 0.4, s: 0.1, r: 0.3, ec: 0.35, rv: 0.3, pan: 0.2, lv: 1.3, str: 0.004 }, // Persian santur: struck strings, bright and short, in the echo
+    // themes
+    ldTar: { o: [['pulse'], ['sawtooth', 0, 5, 0.4]], ks: { b: 0.85, t: 1.8, pos: 0.06 }, using: 0.6, flt: ['lowpass', 3000, 1500, 0.2, 1.5], a: 0.003, d: 0.4, s: 0.45, r: 0.12, vib: [6, 18, 0.25], gl: 0.04, ec: 0.25, rv: 0.3, lv: 0.14 }, // Persian tar: string plucked near the bridge, nasal, wide vibrato
     ldSaw: { o: [['sawtooth', 0, -10], ['sawtooth', 0, 10]], flt: ['lowpass', 5000, 5000, 1, 0.7], s: 0.8, vib: [5.5, 8, 0.2], ec: 0.3, rv: 0.2, lv: 0.08 },
-    ldSync: { o: [['sawtooth'], ['square', 0, 5, 0.5]], flt: ['bandpass', 600, 3500, 0.25, 5], s: 0.8, vib: [6, 10, 0.15], ec: 0.25, rv: 0.15, lv: 0.2 }, // formant balayé, façon synchronisation
-    ldEwi: { o: [['reed']], a: 0.03, flt: ['lowpass', 1500, 3200, 0.1, 3], s: 0.9, vib: [5.5, 12, 0.15], gl: 0.04, rv: 0.25, ch: 0.3, lv: 0.14 }, // contrôleur à vent
+    ldSync: { o: [['sawtooth'], ['square', 0, 5, 0.5]], flt: ['bandpass', 600, 3500, 0.25, 5], s: 0.8, vib: [6, 10, 0.15], ec: 0.25, rv: 0.15, lv: 0.2 }, // swept formant, sync style
+    ldEwi: { o: [['reed']], a: 0.03, flt: ['lowpass', 1500, 3200, 0.1, 3], s: 0.9, vib: [5.5, 12, 0.15], gl: 0.04, rv: 0.25, ch: 0.3, lv: 0.14 }, // wind controller
     ldSax: { o: [['reed'], ['sawtooth', 0, 4, 0.3]], flt: ['bandpass', 1300, 1500, 0.1, 1.5], nz: ['bandpass', 3000, 1, 0.08, 0.1], a: 0.04, s: 0.85, vib: [5, 14, 0.25], rv: 0.3, lv: 0.2 },
-    ldWhistle: { o: [['sine']], nz: ['bandpass', 4000, 3, 0.03, 0.2], a: 0.03, s: 0.9, gl: 0.09, vib: [5.5, 7, 0.2], ec: 0.35, rv: 0.3, lv: 0.12 }, // sifflement à portamento
-    ldTalk: { o: [['sawtooth'], ['triangle', 0, 0, 0.9]], form: 1, s: 0.9, gl: 0.05, vib: [5, 8, 0.2], lv: 0.3 }, // talkbox : voyelle « o », sans le sifflement à 2,6 kHz
-    ldMoog: { o: [['sawtooth'], ['square', 0, 6, 0.5]], flt: ['lowpass', 900, 2600, 0.12, 2], a: 0.02, s: 0.9, gl: 0.08, vib: [5, 10, 0.25], ec: 0.35, rv: 0.35, lv: 0.13 }, // synthé monophonique à portamento, façon « Magic Fly »
-    ldBrass: { o: [['sawtooth', 0, -8], ['sawtooth', 0, 8]], flt: ['lowpass', 500, 1600, 0.12, 1.2], a: 0.02, s: 0.85, vib: [5.5, 10, 0.3], rv: 0.3, ch: 0.3, lv: 0.11 }, // cuivres de synthé polyphonique des années 80, façon rock de stade
-    ldTwang: { o: [['pulse'], ['sawtooth', 0, 6, 0.5]], ks: { b: 0.8, t: 2.5, pos: 0.1 }, avec: 1, flt: ['lowpass', 2600, 1300, 0.25, 1.5], a: 0.004, d: 0.6, s: 0.55, r: 0.15, vib: [5.5, 14, 0.3], gl: 0.03, ec: 0.4, rv: 0.4, lv: 0.12 }, // guitare de western : corde pincée près du chevalet mêlée au synthé, dans l'écho et la réverbération
-    ldVoixF: { o: [['sawtooth'], ['triangle', 0, 0, 0.7]], sing: 'F', leg: 0.06, syl: 'aaoaei', a: 0.035, s: 0.9, r: 0.12, vib: [5.5, 9, 0.35], gl: 0.05, rv: 0.35, ec: 0.22, lv: 0.12 }, // voix de femme chantée (formants), façon Vocaloid
-    ldVoixH: { o: [['sawtooth'], ['triangle', 0, 0, 0.7]], sing: 'H', leg: 0.06, syl: 'oaoe', a: 0.04, s: 0.9, r: 0.12, vib: [5, 8, 0.35], gl: 0.06, rv: 0.3, ec: 0.2, lv: 0.12 }, // voix d'homme chantée
-    ldFroid: { o: [['triangle'], ['sawtooth', 0, 4, 0.25]], flt: ['lowpass', 2400, 1800, 0.2, 1], a: 0.04, s: 0.9, r: 0.25, leg: 0.05, vib: [5, 8, 0.3], rv: 0.4, ec: 0.3, lv: 0.14 }, // cold wave : thème lié, qui glisse d'une note à l'autre
-    ldNylon: { o: [['triangle'], ['pulse', 0, 0, 0.3]], ks: { b: 0.5, t: 2, pos: 0.12 }, avec: 1, flt: ['lowpass', 3000, 1400, 0.2, 1], a: 0.004, d: 0.5, s: 0.4, r: 0.15, vib: [5.5, 12, 0.25], gl: 0.03, rv: 0.3, ec: 0.15, lv: 0.16 }, // guitare à cordes de nylon, pincée : corde pincée mêlée au synthé
-    ldCrunch: { o: [['sawtooth', 0, -6], ['square', 0, 6, 0.5]], ks: { b: 0.6, t: 2, pos: 0.12 }, avec: 1, flt: ['lowpass', 1400, 1100, 0.2, 1], a: 0.01, s: 0.9, vib: [5.5, 12, 0.3], gl: 0.03, bus: 'sat', lv: 0.18 }, // guitare légèrement saturée et sombre : sans le sifflement de la guitare fuzz
-    ldElectro: { o: [['square'], ['square', 12, 3, 0.25]], flt: ['lowpass', 2400, 2400, 1, 0.7], a: 0.005, d: 0.25, s: 0.6, r: 0.08, ec: 0.25, rv: 0.15, lv: 0.12 }, // électro des années 80 : carré simple et net, filtré, sans glissé ni vibrato
+    ldWhistle: { o: [['sine']], nz: ['bandpass', 4000, 3, 0.03, 0.2], a: 0.03, s: 0.9, gl: 0.09, vib: [5.5, 7, 0.2], ec: 0.35, rv: 0.3, lv: 0.12 }, // portamento whistle
+    ldTalk: { o: [['sawtooth'], ['triangle', 0, 0, 0.9]], form: 1, s: 0.9, gl: 0.05, vib: [5, 8, 0.2], lv: 0.3 }, // talkbox: vowel "o", without the 2.6 kHz whistle
+    ldMoog: { o: [['sawtooth'], ['square', 0, 6, 0.5]], flt: ['lowpass', 900, 2600, 0.12, 2], a: 0.02, s: 0.9, gl: 0.08, vib: [5, 10, 0.25], ec: 0.35, rv: 0.35, lv: 0.13 }, // monophonic portamento synth, "Magic Fly" style
+    ldBrass: { o: [['sawtooth', 0, -8], ['sawtooth', 0, 8]], flt: ['lowpass', 500, 1600, 0.12, 1.2], a: 0.02, s: 0.85, vib: [5.5, 10, 0.3], rv: 0.3, ch: 0.3, lv: 0.11 }, // 80s polyphonic synth brass, stadium rock style
+    ldTwang: { o: [['pulse'], ['sawtooth', 0, 6, 0.5]], ks: { b: 0.8, t: 2.5, pos: 0.1 }, using: 1, flt: ['lowpass', 2600, 1300, 0.25, 1.5], a: 0.004, d: 0.6, s: 0.55, r: 0.15, vib: [5.5, 14, 0.3], gl: 0.03, ec: 0.4, rv: 0.4, lv: 0.12 }, // western guitar: string plucked near the bridge mixed with the synth, in the echo and reverb
+    ldVoiceF: { o: [['sawtooth'], ['triangle', 0, 0, 0.7]], sing: 'F', leg: 0.06, syl: 'aaoaei', a: 0.035, s: 0.9, r: 0.12, vib: [5.5, 9, 0.35], gl: 0.05, rv: 0.35, ec: 0.22, lv: 0.12 }, // sung female voice (formants), Vocaloid style
+    ldVoiceH: { o: [['sawtooth'], ['triangle', 0, 0, 0.7]], sing: 'H', leg: 0.06, syl: 'oaoe', a: 0.04, s: 0.9, r: 0.12, vib: [5, 8, 0.35], gl: 0.06, rv: 0.3, ec: 0.2, lv: 0.12 }, // sung male voice
+    ldCold: { o: [['triangle'], ['sawtooth', 0, 4, 0.25]], flt: ['lowpass', 2400, 1800, 0.2, 1], a: 0.04, s: 0.9, r: 0.25, leg: 0.05, vib: [5, 8, 0.3], rv: 0.4, ec: 0.3, lv: 0.14 }, // cold wave: tied theme, gliding from note to note
+    ldNylon: { o: [['triangle'], ['pulse', 0, 0, 0.3]], ks: { b: 0.5, t: 2, pos: 0.12 }, using: 1, flt: ['lowpass', 3000, 1400, 0.2, 1], a: 0.004, d: 0.5, s: 0.4, r: 0.15, vib: [5.5, 12, 0.25], gl: 0.03, rv: 0.3, ec: 0.15, lv: 0.16 }, // nylon-string guitar, plucked: plucked string mixed with the synth
+    ldCrunch: { o: [['sawtooth', 0, -6], ['square', 0, 6, 0.5]], ks: { b: 0.6, t: 2, pos: 0.12 }, using: 1, flt: ['lowpass', 1400, 1100, 0.2, 1], a: 0.01, s: 0.9, vib: [5.5, 12, 0.3], gl: 0.03, bus: 'sat', lv: 0.18 }, // slightly distorted, dark guitar: without the fuzz guitar's whistle
+    ldElectro: { o: [['square'], ['square', 12, 3, 0.25]], flt: ['lowpass', 2400, 2400, 1, 0.7], a: 0.005, d: 0.25, s: 0.6, r: 0.08, ec: 0.25, rv: 0.15, lv: 0.12 }, // 80s electro: plain, sharp square, filtered, without glide or vibrato
     ldEuro: { o: [['sawtooth', 0, -9], ['square', 0, 9, 0.6]], flt: ['lowpass', 3200, 1800, 0.2, 1], a: 0.01, d: 0.3, s: 0.7, ec: 0.3, rv: 0.25, lv: 0.1 }, // gimmick d'eurodance
-    ldGtr: { o: [['sawtooth', 0, -5], ['sawtooth', 0, 5]], s: 0.9, vib: [5.5, 16, 0.15], gl: 0.05, bus: 'fuzz', lv: 0.2 }, // guitare saturée
+    ldGtr: { o: [['sawtooth', 0, -5], ['sawtooth', 0, 5]], s: 0.9, vib: [5.5, 16, 0.15], gl: 0.05, bus: 'fuzz', lv: 0.2 }, // distorted guitar
     ldSiren: { o: [['triangle'], ['square', 0, 0, 0.3]], flt: ['lowpass', 3000, 3000, 1, 0.7], s: 1, gl: 0.15, ec: 0.3, lv: 0.1 },
-    ldVox: { o: [['vox']], uni: 2, sp: 8, a: 0.02, d: 0.2, s: 0.5, rv: 0.3, ec: 0.3, lv: 0.16 }, // voix hachée
+    ldVox: { o: [['vox']], unison: 2, sp: 8, a: 0.02, d: 0.2, s: 0.5, rv: 0.3, ec: 0.3, lv: 0.16 }, // chopped voice
     ldTri: { o: [['triangle']], a: 0.02, s: 0.8, vib: [5, 8, 0.2], rv: 0.35, ec: 0.3, lv: 0.14 },
-    ldStr: { o: [['sawtooth']], uni: 3, sp: 12, a: 0.08, s: 1, r: 0.15, flt: ['highpass', 500, 500, 1, 0.7], ch: 0.5, rv: 0.3, lv: 0.07 },    // instruments échantillonnés (smp : nom dans instruments.js ; o : les oscillateurs joués tant que l'instrument n'est pas décodé ; smpLv : niveau de l'échantillon)
-    ldEwiDoux: { o: [['reed'], ['sine', 0, 0, 0.4]], a: 0.07, flt: ['lowpass', 1300, 2400, 0.25, 1.5], s: 0.9, r: 0.18, leg: 0.07, vib: [5, 9, 0.3], gl: 0.09, rv: 0.3, ch: 0.3, lv: 0.13 }, // contrôleur à vent assoupli : notes liées qui glissent, attaque et filtre plus lents
-    rhodesDoux: { smp: 'rhodes', o: [['sine']], flt: ['lowpass', 2600, 1800, 0.4, 0.7], d: 2, s: 0.6, r: 0.3, ch: 0.4, rv: 0.28, pan: -0.2, lv: 5, str: 0.012 }, // piano électrique enregistré, adouci
-    gtCocotte: { smp: 'gtMute', o: [['pulse']], flt: ['highpass', 300, 300, 1, 0.7], d: 0.3, s: 0.5, r: 0.06, pan: 0.35, lv: 2.8, str: 0.01 }, // vraie guitare étouffée
-    voixOohs: { smp: 'oohs', o: [['vox']], a: 0.05, s: 1, r: 0.25, leg: 0.06, gl: 0.06, vib: [5.2, 8, 0.35], rv: 0.4, ec: 0.25, lv: 1.85 }, // voix enregistrée sans paroles
-    ldGuitare: { smp: 'gtDist', o: [['sawtooth']], flt: ['lowpass', 4500, 3000, 0.3, 0.7], a: 0.005, s: 1, r: 0.12, vib: [5.5, 14, 0.3], gl: 0.03, ec: 0.25, rv: 0.25, lv: 1.13 }, // guitare saturée enregistrée
-    cuivreStab: { smp: 'synBrass', o: [['sawtooth']], flt: ['lowpass', 3200, 900, 0.15, 2], d: 0.25, s: 0.3, r: 0.08, rv: 0.2, pan: -0.15, lv: 8, str: 0.004 }, // accord de cuivres de synthé, court
-    pizzSeq: { smp: 'pizz', o: [['triangle']], d: 0.3, s: 0.6, ec: 0.3, rv: 0.25, pan: 0.2, lv: 3.75 }, // cordes pincées en séquence
-    gtSat: { smp: 'gtOver', o: [['sawtooth']], d: 0.2, s: 0.6, r: 0.06, pan: -0.3, lv: 10, str: 0.008 }, // guitare crunch enregistrée, en rythmique
-    gtClair: { smp: 'gtClean', o: [['triangle']], d: 0.6, s: 0.4, r: 0.1, ch: 0.4, rv: 0.25, pan: 0.3, lv: 14, str: 0.009 }, // guitare claire enregistrée
-    vibraArp: { smp: 'vibra', o: [['sine']], d: 0.5, s: 0.5, r: 0.2, ec: 0.25, rv: 0.25, pan: 0.25, lv: 11.5 }, // vibraphone en arpège
-    choeurLd: { smp: 'choeur', o: [['vox']], a: 0.06, s: 1, r: 0.3, leg: 0.07, gl: 0.06, rv: 0.4, ec: 0.2, lv: 1.67 }, // chœur enregistré, en thème lié
-    voixHachee: { smp: 'oohs', o: [['vox']], a: 0.005, d: 0.15, s: 0.4, r: 0.05, ec: 0.3, rv: 0.25, lv: 1.1 }, // voix enregistrée, hachée court
-    pianoAc: { smp: 'piano', o: [['triangle']], d: 2, s: 0.5, r: 0.25, rv: 0.22, ch: 0.15, lv: 13.8, str: 0.008 }, // piano à queue enregistré
-    cordesTenues: { smp: 'cordes', o: [['sawtooth']], a: 0.15, s: 1, r: 0.4, rv: 0.4, ch: 0.2, lv: 15.9 }, // ensemble de cordes enregistré
-    choeurPad: { smp: 'choeur', o: [['vox']], a: 0.3, s: 1, r: 0.5, rv: 0.5, lv: 15.5 }, // chœur enregistré en nappe
-    cuivresStab: { smp: 'cuivres', o: [['sawtooth']], a: 0.01, d: 0.3, s: 0.6, r: 0.1, rv: 0.2, lv: 14, str: 0.003 }, // section de cuivres enregistrée
-    slapS: { smp: 'slap', o: [['pulse']], d: 0.4, s: 0.6, r: 0.05, lv: 5.7 }, // vraie basse claquée
-    basseDoigtS: { smp: 'basseDoigt', o: [['triangle']], d: 0.5, s: 0.7, r: 0.06, lv: 15.2 }, // vraie basse électrique aux doigts
-    saxAltoLd: { smp: 'altoSax', o: [['reed']], a: 0.02, s: 1, r: 0.15, vib: [5, 12, 0.3], rv: 0.3, ec: 0.15, lv: 0.54 }, // saxophone alto enregistré
-    saxTenorLd: { smp: 'tenorSax', o: [['reed']], a: 0.02, s: 1, r: 0.15, vib: [5, 12, 0.3], rv: 0.28, ec: 0.12, lv: 0.53 }, // saxophone ténor enregistré
-    trompetteLd: { smp: 'trompette', o: [['sawtooth']], a: 0.02, s: 1, r: 0.12, vib: [5.5, 10, 0.3], rv: 0.28, ec: 0.15, lv: 1.15 }, // trompette enregistrée
-    fluteLd: { smp: 'flute', o: [['sine']], a: 0.04, s: 1, r: 0.2, vib: [5, 10, 0.35], rv: 0.35, ec: 0.25, lv: 1.15 }, // flûte enregistrée
-    panFluteLd: { smp: 'panFlute', o: [['sine']], a: 0.03, s: 1, r: 0.2, vib: [5, 8, 0.3], rv: 0.35, ec: 0.25, lv: 1.39 }, // flûte de pan enregistrée
-    steelLd: { smp: 'steel', o: [['sine']], d: 0.8, s: 0.5, r: 0.2, rv: 0.3, ec: 0.3, lv: 4.4 }, // steel drum enregistré
-    bNeuro: { o: [['ak_distorted_0015', 0, -10], ['ak_fmsynth_0022', 0, 10], ['sine', -12, 0, 0.8]], flt: ['lowpass', 350, 1400, 0.12, 5], d: 0.3, s: 0.8, r: 0.06, bus: 'sat', lv: 0.66 }, // basse de neurofunk : deux ondes relevées qui grincent, filtre qui s'ouvre sur chaque note
+    ldStr: { o: [['sawtooth']], unison: 3, sp: 12, a: 0.08, s: 1, r: 0.15, flt: ['highpass', 500, 500, 1, 0.7], ch: 0.5, rv: 0.3, lv: 0.07 },    // sampled instruments (smp: name in instruments.js; o: the oscillators played while the instrument is not decoded; smpLv: sample level)
+    ldEwiSoft: { o: [['reed'], ['sine', 0, 0, 0.4]], a: 0.07, flt: ['lowpass', 1300, 2400, 0.25, 1.5], s: 0.9, r: 0.18, leg: 0.07, vib: [5, 9, 0.3], gl: 0.09, rv: 0.3, ch: 0.3, lv: 0.13 }, // softened wind controller: tied notes that glide, slower attack and filter
+    rhodesSoft: { smp: 'rhodes', o: [['sine']], flt: ['lowpass', 2600, 1800, 0.4, 0.7], d: 2, s: 0.6, r: 0.3, ch: 0.4, rv: 0.28, pan: -0.2, lv: 5, str: 0.012 }, // recorded electric piano, softened
+    gtCocotte: { smp: 'gtMute', o: [['pulse']], flt: ['highpass', 300, 300, 1, 0.7], d: 0.3, s: 0.5, r: 0.06, pan: 0.35, lv: 2.8, str: 0.01 }, // real muted guitar
+    voiceOohs: { smp: 'oohs', o: [['vox']], a: 0.05, s: 1, r: 0.25, leg: 0.06, gl: 0.06, vib: [5.2, 8, 0.35], rv: 0.4, ec: 0.25, lv: 1.85 }, // recorded voice without words
+    ldGuitar: { smp: 'gtDist', o: [['sawtooth']], flt: ['lowpass', 4500, 3000, 0.3, 0.7], a: 0.005, s: 1, r: 0.12, vib: [5.5, 14, 0.3], gl: 0.03, ec: 0.25, rv: 0.25, lv: 1.13 }, // recorded distorted guitar
+    brassShort: { smp: 'synBrass', o: [['sawtooth']], flt: ['lowpass', 3200, 900, 0.15, 2], d: 0.25, s: 0.3, r: 0.08, rv: 0.2, pan: -0.15, lv: 8, str: 0.004 }, // short synth brass chord
+    pizzSeq: { smp: 'pizz', o: [['triangle']], d: 0.3, s: 0.6, ec: 0.3, rv: 0.25, pan: 0.2, lv: 3.75 }, // plucked strings in sequence
+    gtSat: { smp: 'gtOver', o: [['sawtooth']], d: 0.2, s: 0.6, r: 0.06, pan: -0.3, lv: 10, str: 0.008 }, // recorded crunch guitar, rhythm
+    gtCleanLd: { smp: 'gtClean', o: [['triangle']], d: 0.6, s: 0.4, r: 0.1, ch: 0.4, rv: 0.25, pan: 0.3, lv: 14, str: 0.009 }, // recorded clean guitar
+    vibraArp: { smp: 'vibra', o: [['sine']], d: 0.5, s: 0.5, r: 0.2, ec: 0.25, rv: 0.25, pan: 0.25, lv: 11.5 }, // vibraphone arpeggio
+    chorusLd: { smp: 'chorus', o: [['vox']], a: 0.06, s: 1, r: 0.3, leg: 0.07, gl: 0.06, rv: 0.4, ec: 0.2, lv: 1.67 }, // recorded choir, tied theme
+    voiceChopped: { smp: 'oohs', o: [['vox']], a: 0.005, d: 0.15, s: 0.4, r: 0.05, ec: 0.3, rv: 0.25, lv: 1.1 }, // recorded voice, chopped short
+    pianoAc: { smp: 'piano', o: [['triangle']], d: 2, s: 0.5, r: 0.25, rv: 0.22, ch: 0.15, lv: 13.8, str: 0.008 }, // recorded grand piano
+    stringsSustained: { smp: 'ropes', o: [['sawtooth']], a: 0.15, s: 1, r: 0.4, rv: 0.4, ch: 0.2, lv: 15.9 }, // recorded string ensemble
+    chorusPad: { smp: 'chorus', o: [['vox']], a: 0.3, s: 1, r: 0.5, rv: 0.5, lv: 15.5 }, // recorded choir as a pad
+    brassStab: { smp: 'brassSec', o: [['sawtooth']], a: 0.01, d: 0.3, s: 0.6, r: 0.1, rv: 0.2, lv: 14, str: 0.003 }, // recorded brass section
+    slapS: { smp: 'slap', o: [['pulse']], d: 0.4, s: 0.6, r: 0.05, lv: 5.7 }, // real slapped bass
+    bassFingerS: { smp: 'bassFinger', o: [['triangle']], d: 0.5, s: 0.7, r: 0.06, lv: 15.2 }, // real finger-played electric bass
+    saxAltoLd: { smp: 'altoSax', o: [['reed']], a: 0.02, s: 1, r: 0.15, vib: [5, 12, 0.3], rv: 0.3, ec: 0.15, lv: 0.54 }, // recorded alto saxophone
+    saxTenorLd: { smp: 'tenorSax', o: [['reed']], a: 0.02, s: 1, r: 0.15, vib: [5, 12, 0.3], rv: 0.28, ec: 0.12, lv: 0.53 }, // recorded tenor saxophone
+    trompetteLd: { smp: 'trumpet', o: [['sawtooth']], a: 0.02, s: 1, r: 0.12, vib: [5.5, 10, 0.3], rv: 0.28, ec: 0.15, lv: 1.15 }, // recorded trumpet
+    fluteLd: { smp: 'flute', o: [['sine']], a: 0.04, s: 1, r: 0.2, vib: [5, 10, 0.35], rv: 0.35, ec: 0.25, lv: 1.15 }, // recorded flute
+    panFluteLd: { smp: 'panFlute', o: [['sine']], a: 0.03, s: 1, r: 0.2, vib: [5, 8, 0.3], rv: 0.35, ec: 0.25, lv: 1.39 }, // recorded panpipe
+    steelLd: { smp: 'steel', o: [['sine']], d: 0.8, s: 0.5, r: 0.2, rv: 0.3, ec: 0.3, lv: 4.4 }, // recorded steel drum
+    bNeuro: { o: [['ak_distorted_0015', 0, -10], ['ak_fmsynth_0022', 0, 10], ['sine', -12, 0, 0.8]], flt: ['lowpass', 350, 1400, 0.12, 5], d: 0.3, s: 0.8, r: 0.06, bus: 'sat', lv: 0.66 }, // neurofunk bass: two captured waves that grind, filter opening on each note
   };
-  // voix chantée (sing) : une source riche passe par trois formants de voyelle, les syllabes (syl) se suivent d'une note à l'autre ; souffle à l'attaque
+  // sung voice (sing): a rich source goes through three vowel formants, the syllables (syl) follow each other from note to note; breath at the attack
   const FORM = { F: { a: [800, 1150, 2900], e: [400, 2000, 2800], i: [300, 2300, 3000], o: [450, 800, 2830], u: [325, 700, 2700] }, H: { a: [700, 1220, 2600], e: [400, 1700, 2600], i: [300, 2200, 2900], o: [450, 800, 2600], u: [325, 700, 2530] } };
   let syl = 0;
-  // corde pincée (Karplus-Strong) : une corde qui vibre, calculée une fois par hauteur et par timbre puis rejouée (bien plus naturel qu'une onde filtrée) ;
-  // ks : b brillance de l'attaque (0..1), t durée de résonance (s), pos point de pincement (0..0,5 : près du chevalet, plus nasal)
+  // plucked string (Karplus-Strong): a vibrating string, computed once per pitch and per timbre then replayed (much more natural than a filtered wave);
+  // ks: b brightness of the attack (0..1), t resonance duration (s), pos pluck point (0..0.5: near the bridge, more nasal)
   const KSC = new Map();
-  function corde(f, k) {
-    const sr = AC.sampleRate, N = Math.max(2, Math.round(sr / f)), cle = sr + ':' + N + ':' + k.b + ':' + k.t + ':' + k.pos; let e = KSC.get(cle); if (e) return e;
+  function pluckString(f, k) {
+    const sr = AC.sampleRate, N = Math.max(2, Math.round(sr / f)), cacheKey = sr + ':' + N + ':' + k.b + ':' + k.t + ':' + k.pos; let e = KSC.get(cacheKey); if (e) return e;
     const len = Math.ceil(sr * k.t), buf = AC.createBuffer(1, len, sr), out = buf.getChannelData(0), c = new Float32Array(N), rho = Math.pow(0.001, 1 / (k.t * f)), a = 0.15 + 0.8 * k.b, P = Math.round(N * k.pos);
-    let lp = 0; for (let i = 0; i < N; i++) { lp += a * (Math.random() * 2 - 1 - lp); c[i] = lp; } // le pincement : un bruit plus ou moins sourd
-    if (P) { const c0 = c.slice(); for (let i = 0; i < N; i++) c[i] = c0[i] - c0[(i + P) % N]; } // pincée à P échantillons du chevalet : certaines harmoniques s'éteignent
-    let pk = 1e-6; for (let i = 0; i < len; i++) { const j = i % N, y = c[j]; out[i] = y; c[j] = rho * 0.5 * (y + c[(j + 1) % N]); pk = Math.max(pk, Math.abs(y)); } // la corde : chaque tour, un peu plus sourde et un peu plus faible
+    let lp = 0; for (let i = 0; i < N; i++) { lp += a * (Math.random() * 2 - 1 - lp); c[i] = lp; } // the pluck: a noise more or less dull
+    if (P) { const c0 = c.slice(); for (let i = 0; i < N; i++) c[i] = c0[i] - c0[(i + P) % N]; } // plucked P samples from the bridge: some harmonics die out
+    let pk = 1e-6; for (let i = 0; i < len; i++) { const j = i % N, y = c[j]; out[i] = y; c[j] = rho * 0.5 * (y + c[(j + 1) % N]); pk = Math.max(pk, Math.abs(y)); } // the string: each turn, a bit duller and a bit weaker
     for (let i = 0; i < len; i++) out[i] *= 0.5 / pk;
-    if (KSC.size > 400) KSC.clear(); e = { buf, rate: f * (N + 0.5) / sr }; KSC.set(cle, e); return e; // la boucle dure N + ½ échantillons : la vitesse de lecture corrige la hauteur
+    if (KSC.size > 400) KSC.clear(); e = { buf, rate: f * (N + 0.5) / sr }; KSC.set(cacheKey, e); return e; // the loop lasts N + ½ samples: the playback speed corrects the pitch
   }
-  function tone(pn, f, t, dur, vel, dest, from, ex = 1, sc = 0) { // from : fréquence de la note précédente, pour le glissé ; ex : nuance (1 = normale), qui joue aussi sur la brillance ; sc : attaque par en dessous (cents)
+  function tone(pn, f, t, dur, vel, dest, from, ex = 1, sc = 0) { // from: pitch of the previous note, for the glide; ex: velocity (1 = normal), which also acts on brightness; sc: attack from below (cents)
     const P = PATCH[pn]; if (!P || vel < 0.002) return [];
-    // jouée plus fort, la note est aussi plus brillante ; drift : un instrument analogique n'est jamais juste au cent près ; le vibrato vient peu à peu
-    vel *= ex; const a = P.a || 0.004, s = P.s || 0, r = P.r || 0.06, end = t + dur, fin = end + r * 2 + 0.05, g = AC.createGain();
+    // played louder, the note is also brighter; drift: an analogue instrument is never exactly in tune to the cent; the vibrato comes in gradually
+    vel *= ex; const a = P.a || 0.004, s = P.s || 0, r = P.r || 0.06, end = t + dur, ending = end + r * 2 + 0.05, g = AC.createGain();
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + a); g.gain.setTargetAtTime(vel * s, t + a, (P.d || dur) / 3); g.gain.setTargetAtTime(0, end, r / 3);
-    dest = P.bus === 'fuzz' ? dest.fz || fuzz : P.bus === 'sat' ? bsat : dest; g.connect(dest); // fuzz : l'ampli de la partie (une guitare ne sature plus avec les autres)
+    dest = P.bus === 'fuzz' ? dest.fz || fuzz : P.bus === 'sat' ? bsat : dest; g.connect(dest); // fuzz: the part's amp (a guitar no longer saturates with the others)
     let d = g;
     if (P.flt) { const [type, f0, f1, ft, q, kt] = P.flt, k = (kt ? f : 1) * (type === 'highpass' ? 1 : ex ** 1.5); d = filt(type, Math.min(18000, f0 * k), q, g); d.frequency.setValueAtTime(Math.min(18000, f0 * k), t); d.frequency.exponentialRampToValueAtTime(Math.min(18000, f1 * k), t + Math.min(ft, dur)); }
     if (P.sing) { const fm = FORM[P.sing][P.syl[syl++ % P.syl.length]], src = AC.createGain(); src.gain.value = 5;
       fm.forEach((fr, i) => src.connect(gain([1, 0.55, 0.25][i], filt('bandpass', fr, fr / [70, 90, 120][i], d)))); d = src;
-      nz(t, 0.05, vel * 0.5, src, 'highpass', 1500, 0.7); } // souffle : l'attaque d'une syllabe
+      nz(t, 0.05, vel * 0.5, src, 'highpass', 1500, 0.7); } // breath: the attack of a syllable
     if (P.form) { const x = filt('bandpass', 500, 5, g), y = filt('bandpass', 1100, 5, g); d = AC.createGain(); d.gain.value = 3; d.connect(x); d.connect(y);
       x.frequency.setValueAtTime(500, t); x.frequency.linearRampToValueAtTime(800, t + dur * 0.5); y.frequency.setValueAtTime(1100, t); y.frequency.linearRampToValueAtTime(1500, t + dur * 0.5); }
-    let mod, m; const srcs = [], fr = []; // sources à prolonger et oscillateurs à faire glisser quand la note suivante est liée
+    let mod, m; const srcs = [], fr = []; // sources to extend and oscillators to glide when the next note is tied
     if (P.fm) { m = AC.createOscillator(); const dev = P.fm[1] * f * P.fm[0]; mod = AC.createGain(); m.frequency.setValueAtTime(f * P.fm[0], t);
-      mod.gain.setValueAtTime(dev, t); mod.gain.setTargetAtTime(dev * P.fm[3], t, P.fm[2] / 3); m.connect(mod); m.start(t); m.stop(fin); srcs.push(m); }
-    const os = [], U = P.uni || 1, lv = 1 / Math.sqrt(P.o.length * U), drift = (Math.random() - 0.5) * 5;
-    if (P.ks) { const c = corde(f, P.ks), o = AC.createBufferSource(); o.buffer = c.buf; o.playbackRate.value = c.rate; o.detune.value = drift; o.connect(gain(1, d)); o.start(t); o.stop(Math.min(fin, t + P.ks.t)); os.push(o); srcs.push(o); }
+      mod.gain.setValueAtTime(dev, t); mod.gain.setTargetAtTime(dev * P.fm[3], t, P.fm[2] / 3); m.connect(mod); m.start(t); m.stop(ending); srcs.push(m); }
+    const os = [], U = P.unison || 1, lv = 1 / Math.sqrt(P.o.length * U), drift = (Math.random() - 0.5) * 5;
+    if (P.ks) { const c = pluckString(f, P.ks), o = AC.createBufferSource(); o.buffer = c.buf; o.playbackRate.value = c.rate; o.detune.value = drift; o.connect(gain(1, d)); o.start(t); o.stop(Math.min(ending, t + P.ks.t)); os.push(o); srcs.push(o); }
     const B = P.smp && ins[P.smp], ks = Object.keys(B || {}); let smpOk = false;
-    if (ks.length) { const m = 69 + 12 * Math.log2(f / 440), k = ks.reduce((a, b) => Math.abs(b - m) < Math.abs(a - m) ? b : a), o = AC.createBufferSource(), rate = f / (440 * 2 ** ((k - 69) / 12)); // la note enregistrée la plus proche, transposée
+    if (ks.length) { const m = 69 + 12 * Math.log2(f / 440), k = ks.reduce((a, b) => Math.abs(b - m) < Math.abs(a - m) ? b : a), o = AC.createBufferSource(), rate = f / (440 * 2 ** ((k - 69) / 12)); // the nearest recorded note, transposed
       o.buffer = B[k]; o.detune.value = drift; o.playbackRate.setValueAtTime(from && P.gl ? rate * from / f : sc ? rate * 2 ** (-sc / 1200) : rate, t); if ((from && P.gl) || sc) o.playbackRate.exponentialRampToValueAtTime(rate, t + (from && P.gl ? P.gl : sc > 60 ? 0.12 : 0.07));
-      o.connect(gain(P.smpLv || 1, d)); o.start(t); o.stop(fin); os.push(o); srcs.push(o); fr.push([{ frequency: o.playbackRate }, rate / f]); smpOk = true; }
-    if (!(P.ks || smpOk) || P.avec) for (const [w, semi = 0, cents = 0, olv0 = 1] of P.o) for (let u = 0; u < U; u++) { const olv = olv0 * (P.ks || smpOk ? P.avec : 1); // avec : la corde pincée (ou l'échantillon) mêlée aux oscillateurs du timbre, à ce niveau ; sans échantillon décodé, les oscillateurs seuls
+      o.connect(gain(P.smpLv || 1, d)); o.start(t); o.stop(ending); os.push(o); srcs.push(o); fr.push([{ frequency: o.playbackRate }, rate / f]); smpOk = true; }
+    if (!(P.ks || smpOk) || P.using) for (const [w, semi = 0, cents = 0, olv0 = 1] of P.o) for (let u = 0; u < U; u++) { const olv = olv0 * (P.ks || smpOk ? P.using : 1); // with: the plucked string (or the sample) mixed with the timbre's oscillators, at this level; without a decoded sample, the oscillators alone
       const o = AC.createOscillator(), fo = f * 2 ** (semi / 12); if (W[w]) o.setPeriodicWave(W[w]); else o.type = w;
       o.frequency.setValueAtTime(fo, t); o.detune.value = drift + cents + (U > 1 ? (u / (U - 1) - 0.5) * 2 * P.sp : 0);
       if (from && P.gl) { o.frequency.setValueAtTime(fo * from / f, t); o.frequency.exponentialRampToValueAtTime(fo, t + P.gl); }
       else if (sc) { o.frequency.setValueAtTime(fo * 2 ** (-sc / 1200), t); o.frequency.exponentialRampToValueAtTime(fo, t + 0.07); }
       if (mod) mod.connect(o.frequency);
-      o.connect(gain(olv * lv, d)); o.start(t); o.stop(fin); os.push(o); srcs.push(o); fr.push([o, fo / f]);
+      o.connect(gain(olv * lv, d)); o.start(t); o.stop(ending); os.push(o); srcs.push(o); fr.push([o, fo / f]);
     }
-    if (P.vib) { const l = AC.createOscillator(), lg = AC.createGain(); l.frequency.value = P.vib[0]; lg.gain.setValueAtTime(0, t + P.vib[2]); lg.gain.linearRampToValueAtTime(P.vib[1], t + P.vib[2] + 0.45); l.connect(lg); for (const o of os) lg.connect(o.detune); l.start(t); l.stop(fin); srcs.push(l); }
+    if (P.vib) { const l = AC.createOscillator(), lg = AC.createGain(); l.frequency.value = P.vib[0]; lg.gain.setValueAtTime(0, t + P.vib[2]); lg.gain.linearRampToValueAtTime(P.vib[1], t + P.vib[2] + 0.45); l.connect(lg); for (const o of os) lg.connect(o.detune); l.start(t); l.stop(ending); srcs.push(l); }
     if (P.nz) nz(t, P.nz[4], vel * P.nz[3], dest, P.nz[0], P.nz[1], P.nz[2]);
-    // note liée (timbres leg) : la même voix glisse vers la note suivante sans se rattaquer ni changer de syllabe ; renvoie la voix, pour lier encore ; une même note répétée marque un léger creux, comme une nouvelle syllabe
-    os.fin = end; os.f = f; os.pn = pn; os.lier = (f2, t2, d2, v2) => { const gl = P.leg > 0 && P.leg !== 1 ? P.leg : 0.03, e2 = t2 + d2, meme = Math.abs(f2 / os.f - 1) < 0.01; os.f = f2;
+    // tied note (leg timbres): the same voice glides to the next note without re-attacking or changing syllable; returns the voice, to tie again; a repeated same note marks a slight dip, like a new syllable
+    os.ending = end; os.f = f; os.pn = pn; os.tieNext = (f2, t2, d2, v2) => { const gl = P.leg > 0 && P.leg !== 1 ? P.leg : 0.03, e2 = t2 + d2, same = Math.abs(f2 / os.f - 1) < 0.01; os.f = f2;
       const tg = t2 - gl * 0.6; for (const [o, k] of fr) o.frequency.setTargetAtTime(f2 * k, tg, gl); if (m) m.frequency.setTargetAtTime(f2 * P.fm[0], tg, gl);
-      g.gain.cancelScheduledValues(t2); if (meme) g.gain.setTargetAtTime(v2 * 0.72, t2, 0.02); g.gain.setTargetAtTime(v2 * Math.max(s, 0.3), t2 + (meme ? 0.05 : 0), 0.08); g.gain.setTargetAtTime(0, e2, r / 3);
-      for (const x of srcs) x.stop(e2 + r * 2 + 0.05); os.fin = e2; return os; };
+      g.gain.cancelScheduledValues(t2); if (same) g.gain.setTargetAtTime(v2 * 0.72, t2, 0.02); g.gain.setTargetAtTime(v2 * Math.max(s, 0.3), t2 + (same ? 0.05 : 0), 0.08); g.gain.setTargetAtTime(0, e2, r / 3);
+      for (const x of srcs) x.stop(e2 + r * 2 + 0.05); os.ending = e2; return os; };
     return os;
   }
 
   // ---------- batteries ----------
-  // Un kit : smp sons de TR-808 enregistrés · grosse caisse kf→ke en ks s, tenue kd, clic kc (filtré à kcf), kdr saturée · caisse claire : tons sT
-  // (tenue sTd), bruit sN [type, f, Q] (tenue sNd), gate réverbération coupée net · charlestons : hM métalliques ou de bruit, hF passe-haut,
-  // hD / hO tenue fermé / ouvert · rate hauteur · crunch tout passe par la saturation · hum jeu humain (s) · fill relance · tom, tomD · room réverbération
+  // A kit: smp recorded TR-808 sounds · kick kf→ke in ks s, hold kd, click kc (filtered at kcf), kdr saturated · snare: tones sT
+  // (hold sTd), noise sN [type, f, Q] (hold sNd), reverb gate cut dead · hi-hats: hM metallic or noise, hF high-pass,
+  // hD / hO closed / open hold · rate pitch · crunch everything goes through the saturation · hum human feel (s) · fill restart · tom, tomD · room reverb
   const KIT = {
     k808: { smp: 1, fill: 'roll', room: 0.03 },
     k909: { kf: 210, ke: 46, ks: 0.055, kd: 0.34, kc: 0.5, sT: [185, 330], sTd: 0.08, sN: ['highpass', 2000, 0.7], sNd: 0.17, hM: 1, hF: 8500, hD: 0.04, hO: 0.24, fill: 'roll', room: 0.08 },
-    dur: { kf: 190, ke: 44, ks: 0.07, kd: 0.28, kc: 0.3, kdr: 1, sT: [200], sTd: 0.05, sN: ['bandpass', 1800, 0.7], sNd: 0.2, gate: 1, hM: 1, hF: 7000, hD: 0.03, hO: 0.18, fill: 'toms', tom: [150, 110, 80], tomD: 0.3, room: 0.15 }, // boîte à rythmes des années 80, caisse claire coupée net
+    dur: { kf: 190, ke: 44, ks: 0.07, kd: 0.28, kc: 0.3, kdr: 1, sT: [200], sTd: 0.05, sN: ['bandpass', 1800, 0.7], sNd: 0.2, gate: 1, hM: 1, hF: 7000, hD: 0.03, hO: 0.18, fill: 'toms', tom: [150, 110, 80], tomD: 0.3, room: 0.15 }, // 80s drum machine, snare cut dead
     lin: { kf: 160, ke: 52, ks: 0.04, kd: 0.2, kc: 0.45, sT: [210, 300], sTd: 0.06, sN: ['bandpass', 2400, 0.6], sNd: 0.18, gate: 1, hM: 0, hF: 8000, hD: 0.03, hO: 0.2, fill: 'toms', tom: [200, 150, 105], tomD: 0.28, room: 0.2 },
     ind: { kf: 260, ke: 75, ks: 0.05, kd: 0.2, kc: 0.2, kdr: 1, sT: [], sTd: 0.05, sN: ['highpass', 1200, 0.5], sNd: 0.14, crunch: 1, hM: 1, hF: 4000, hD: 0.025, hO: 0.1, room: 0.2 },
-    acou: { kf: 130, ke: 58, ks: 0.025, kd: 0.16, kc: 0.4, kcf: 3000, sT: [200, 285], sTd: 0.07, sN: ['bandpass', 4200, 0.6], sNd: 0.2, hM: 0, hF: 7500, hD: 0.035, hO: 0.3, hum: 0.008, fill: 'toms', tom: [230, 170, 120], tomD: 0.2, room: 0.2 },
+    acous: { kf: 130, ke: 58, ks: 0.025, kd: 0.16, kc: 0.4, kcf: 3000, sT: [200, 285], sTd: 0.07, sN: ['bandpass', 4200, 0.6], sNd: 0.2, hM: 0, hF: 7500, hD: 0.035, hO: 0.3, hum: 0.008, fill: 'toms', tom: [230, 170, 120], tomD: 0.2, room: 0.2 },
     rock: { kf: 110, ke: 48, ks: 0.035, kd: 0.26, kc: 0.5, kcf: 2500, sT: [180, 250], sTd: 0.1, sN: ['bandpass', 3200, 0.5], sNd: 0.28, hM: 0, hF: 6000, hD: 0.06, hO: 0.4, hum: 0.008, fill: 'toms', tom: [190, 140, 95], tomD: 0.3, room: 0.45 },
-    brk: { kf: 150, ke: 60, ks: 0.03, kd: 0.14, kc: 0.5, sT: [220, 320], sTd: 0.06, sN: ['bandpass', 3600, 0.6], sNd: 0.13, crunch: 1, hM: 0, hF: 6500, hD: 0.03, hO: 0.2, fill: 'brk', room: 0.12 }, // breakbeat découpé et sali
+    brk: { kf: 150, ke: 60, ks: 0.03, kd: 0.14, kc: 0.5, sT: [220, 320], sTd: 0.06, sN: ['bandpass', 3600, 0.6], sNd: 0.13, crunch: 1, hM: 0, hF: 6500, hD: 0.03, hO: 0.2, fill: 'brk', room: 0.12 }, // chopped and dirtied breakbeat
     dnb: { kf: 165, ke: 62, ks: 0.025, kd: 0.11, kc: 0.5, sT: [220, 320], sTd: 0.05, sN: ['bandpass', 3600, 0.6], sNd: 0.1, rate: 1.35, crunch: 1, hM: 0, hF: 8000, hD: 0.025, hO: 0.16, fill: 'brk', room: 0.15 },
     disco: { kf: 120, ke: 55, ks: 0.02, kd: 0.12, kc: 0.45, kcf: 3500, sT: [210, 300], sTd: 0.05, sN: ['bandpass', 4800, 0.6], sNd: 0.14, hM: 1, hF: 9000, hD: 0.04, hO: 0.32, hum: 0.005, fill: 'toms', tom: [260, 200, 150], tomD: 0.15, room: 0.15 },
   };
-  // instruments enregistrés bruts, pour l'éditeur de musique : un timbre « e_<nom> » par instrument d'instruments.js. shortcut: niveaux (lv) non mesurés, à régler par timbre si une station du dépôt en adopte un
-  for (const n of window.INS_NOMS || Object.keys(window.INS || {})) PATCH['e_' + n] = { smp: n, o: [['triangle']], a: 0.005, d: 2, s: 0.7, r: 0.15, rv: 0.2, lv: 2.5 };
+  // raw recorded instruments, for the music editor: a "e_<name>" timbre per instrument of instruments.js. shortcut: levels (lv) not measured, to set per timbre if a station in the repo adopts one
+  for (const n of window.INS_LABELS || Object.keys(window.INS || {})) PATCH['e_' + n] = { smp: n, o: [['triangle']], a: 0.005, d: 2, s: 0.7, r: 0.15, rv: 0.2, lv: 2.5 };
   const smp = {};
-  // le kit d'une station : sa boîte à rythmes, complétée par ses propres sons (st.bat : caisse claire, charleston…), refait si l'éditeur change l'un ou l'autre
-  const kitDe = st => { if (!st.bat) return KIT[st.kit] || KIT.k909; const de = st.kit + JSON.stringify(st.bat); return st.Kb && st.Kb.de === de ? st.Kb : (st.Kb = { ...(KIT[st.kit] || KIT.k909), ...st.bat, de }); };
-  // instruments échantillonnés (timbre smp, voir instruments.js) : décodés seulement pour les stations en jeu (décodé, un instrument pèse ~6 Mo)
+  // a station's kit: its drum machine, completed by its own sounds (st.drumset: snare, hi-hat…), redone if the editor changes either
+  const kitOf = st => { if (!st.drumset) return KIT[st.kit] || KIT.k909; const de = st.kit + JSON.stringify(st.drumset); return st.Kb && st.Kb.de === de ? st.Kb : (st.Kb = { ...(KIT[st.kit] || KIT.k909), ...st.drumset, de }); };
+  // sampled instruments (smp timbre, see instruments.js): decoded only for the stations in play (decoded, an instrument weighs ~6 MB)
   const ins = {}, insP = {};
-  // les notes (instruments-notes.js, 3,7 Mo compressés) arrivent à la première station, pas au démarrage : en attendant, les timbres jouent leurs oscillateurs (o)
-  let notesP = null, derniers = [];
+  // the notes (instruments-notes.js, 3.7 MB compressed) arrive at the first station, not at start-up: in the meantime the timbres play their oscillators (o)
+  let notesP = null, recent = [];
   const notes = () => notesP || (notesP = new Promise(ok => { if (typeof document === 'undefined') return ok(); const s = document.createElement('script'); s.src = 'src/audio/instruments-notes.js'; s.onload = s.onerror = ok; document.head.appendChild(s); }));
-  function charger(...radios) {
-    derniers = radios;
-    if (AC && !window.INS) return notes().then(() => window.INS && charger(...derniers)); // les stations ont pu changer pendant le téléchargement
-    if (!AC) return Promise.resolve(); const j = JSON.stringify(radios), noms = new Set(Object.keys(PATCH).filter(k => PATCH[k].smp && j.includes('"' + k + '"')).map(k => PATCH[k].smp));
-    if (radios.length === 1) for (const n of Object.keys(ins)) if (!noms.has(n)) { delete ins[n]; delete insP[n]; }
-    return Promise.all([...noms].filter(n => INS[n]).map(n => insP[n] || (insP[n] = Promise.all(Object.entries(INS[n]).map(([m, b64]) => new Promise(ok => // un décodage déjà lancé est attendu, pas relancé
+  function loadRadios(...radios) {
+    recent = radios;
+    if (AC && !window.INS) return notes().then(() => window.INS && loadRadios(...recent)); // the stations may have changed during the download
+    if (!AC) return Promise.resolve(); const j = JSON.stringify(radios), labels = new Set(Object.keys(PATCH).filter(k => PATCH[k].smp && j.includes('"' + k + '"')).map(k => PATCH[k].smp));
+    if (radios.length === 1) for (const n of Object.keys(ins)) if (!labels.has(n)) { delete ins[n]; delete insP[n]; }
+    return Promise.all([...labels].filter(n => INS[n]).map(n => insP[n] || (insP[n] = Promise.all(Object.entries(INS[n]).map(([m, b64]) => new Promise(ok => // a decoding already started is awaited, not restarted
       AC.decodeAudioData(Uint8Array.from(atob(b64), ch => ch.charCodeAt(0)).buffer, b => { (ins[n] = ins[n] || {})[m] = b; ok(); }, ok)))))));
   }
-  function hitS(name, t, vol, dur = 0, rate = 1, dest = drumG) { // dur : coupe le son en fondu (la grosse caisse de 808 résonne 1,5 s) ; rate : hauteur de lecture
+  function hitS(name, t, vol, dur = 0, rate = 1, dest = drumG) { // dur: cuts the sound with a fade (the 808 kick rings 1.5 s); rate: playback pitch
     const b = smp[name]; if (!b || vol < 0.002) return !!b;
-    vol *= 0.6 * (/^(cp|clp)/.test(name) ? 0.6 : 1); // les enregistrements sont plus forts que les sons synthétisés ; les claps, encore plus présents
+    vol *= 0.6 * (/^(cp|clp)/.test(name) ? 0.6 : 1); // the recordings are louder than the synthesised sounds; the claps, even more present
     const s = AC.createBufferSource(), gn = gain(vol, dest); s.buffer = b; s.playbackRate.value = rate; s.connect(gn); s.start(t);
     if (dur) { gn.gain.setValueAtTime(vol, t + dur * 0.6); gn.gain.linearRampToValueAtTime(0, t + dur); s.stop(t + dur + 0.02); }
     return true;
@@ -302,12 +302,12 @@
     nz(t, 0.012, v * K.kc, drumG, 'lowpass', K.kcf || 5000);
   }
   function dClap(t, v) { for (let i = 0; i < 3; i++) nz(t + i * 0.011, 0.02, v * 0.6, drumG, 'bandpass', 1300, 1.5); nz(t + 0.033, 0.16, v * 0.7, drumG, 'bandpass', 1300, 1.2); }
-  // caisse claire et charleston enregistrés, choisis par station (st.bat, qui complète le kit) : sS caisse claire, sG sa note fantôme, cS clap, rS coup sur le cercle, sR hauteur de lecture ;
-  // hS charleston fermé, hA accentué, hOo ouvert, hR hauteur. Noms : ceux de PERC (instruments.js) ou de la 808 (sd, cp, ch, oh)
-  function dSnare(t, v, K, c = 'x') { // x caisse claire · g note fantôme · c clap · r coup sur le cercle
+  // recorded snare and hi-hat, chosen per station (st.drumset, which completes the kit): sS snare, sG its ghost note, cS clap, rS rim shot, sR playback pitch;
+  // hS closed hi-hat, hA accent, hOo open, hR pitch. Names: those of PERC (instruments.js) or of the 808 (sd, cp, ch, oh)
+  function dSnare(t, v, K, c = 'x') { // x snare · g ghost note · c clap · r rim shot
     if (c === 'g') v *= 0.3;
     const sn = c === 'c' ? K.cS : c === 'r' ? K.rS : c === 'g' ? K.sG || K.sS : K.sS;
-    if (sn && hitS(sn, t, v * (c === 'r' ? 0.5 : 0.9) * (K.sV || 1), 0, (K.sR || 1) * (1 + (Math.random() - 0.5) * 0.02))) return; // chaque coup un rien différent
+    if (sn && hitS(sn, t, v * (c === 'r' ? 0.5 : 0.9) * (K.sV || 1), 0, (K.sR || 1) * (1 + (Math.random() - 0.5) * 0.02))) return; // each hit slightly different
     if (c === 'r') { osc('triangle', 1750, t, 0.03, v * 0.5, drumG); nz(t, 0.015, v * 0.4, drumG, 'bandpass', 3500, 2); return; }
     if (K.smp && hitS(c === 'c' ? 'cp' : 'sd', t, v * 0.9)) return;
     if (c === 'c') return dClap(t, v);
@@ -318,7 +318,7 @@
     if (K.gate) { const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = nbuf; s.loop = true; s.connect(filt('bandpass', 1500, 0.6, g)); g.connect(drumG);
       g.gain.setValueAtTime(v * 0.4, t); g.gain.setValueAtTime(v * 0.4, t + 0.17); g.gain.linearRampToValueAtTime(0, t + 0.2); s.start(t, Math.random()); s.stop(t + 0.22); }
   }
-  function dHat(t, v, K, c) { // x fermé · X accentué · o ouvert · r cymbale ride · b cloche de la ride
+  function dHat(t, v, K, c) { // x closed · X accent · o open · r ride cymbal · b ride bell
     const ride = c === 'r' || c === 'b', lv = v * (c === 'X' ? 0.36 : c === 'o' ? 0.4 : c === 'x' ? 0.21 : 0.2);
     const hn = c === 'o' ? K.hOo : c === 'X' ? K.hA || K.hS : K.hS;
     const hd = K.crunch ? kdrv : hatG;
@@ -330,7 +330,7 @@
     if (c === 'b') osc('triangle', 3900, t, 0.25, lv * 0.25, drumG);
   }
   function dTom(t, v, f, d) { const o = osc('sine', f * 1.5, t, d, v, drumG); o && o.frequency.exponentialRampToValueAtTime(f, t + d * 0.4); nz(t, 0.02, v * 0.3, drumG, 'bandpass', 1200, 1); }
-  function dPerc(t, v, K, c) { // c cloche · v clave · h l congas · m shaker · t tambourin · 1 2 3 toms · k métal · y « hé ! » de la foule
+  function dPerc(t, v, K, c) { // c bell · v clave · h l congas · m shaker · t tambourine · 1 2 3 toms · k metal · y crowd "hey!"
     if (c === 'c') { if (K.smp && hitS('cb', t, v * 0.18)) return; const b = filt('bandpass', 900, 1.5, env(drumG, t, 0.16, v * 0.14)); for (const f of [540, 800]) { const o = AC.createOscillator(); o.type = 'square'; o.frequency.value = f; o.connect(b); o.start(t); o.stop(t + 0.2); } }
     else if (c === 'v') osc('sine', 2500, t, 0.03, v * 0.2, drumG);
     else if (c === 'h' || c === 'l') { const f = c === 'h' ? 340 : 230, o = osc('sine', f, t, c === 'h' ? 0.12 : 0.18, v * 0.3, drumG); o && o.frequency.exponentialRampToValueAtTime(f * 0.85, t + 0.08); nz(t, 0.01, v * 0.15, drumG, 'bandpass', 2000, 1); }
@@ -340,345 +340,345 @@
     else if (c === 'y') hey(t, v);
     else if (+c) dTom(t, v * 0.4, (K.tom || [200, 150, 105])[+c - 1], K.tomD || 0.25);
   }
-  function hey(t, v) { // « hé ! » de la foule : cinq voix d'hommes un peu désaccordées et décalées, voyelle « é » qui glisse vers « i »
+  function hey(t, v) { // crowd "hey!": five slightly detuned and staggered men's voices, vowel "é" gliding towards "i"
     for (let i = 0; i < 5; i++) { const t0 = t + Math.random() * 0.03, f = 140 + Math.random() * 90, src = AC.createGain(), e = env(drumG, t0, 0.22, v * 0.09, 0.012), fs = FORM.H.e;
       fs.forEach((fr, j) => { const b = filt('bandpass', fr, fr / 60, gain([1, 0.6, 0.3][j], e)); src.connect(b); if (j === 1) b.frequency.linearRampToValueAtTime(2100, t0 + 0.18); });
       const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(f * 1.15, t0); o.frequency.exponentialRampToValueAtTime(f, t0 + 0.2); o.connect(src); src.gain.value = 4; o.start(t0); o.stop(t0 + 0.3);
       nz(t0, 0.04, v * 0.05, src, 'highpass', 1200); }
   }
-  function dFill(t, i, n, K) { // relance de fin de section : i = pas dans la relance (0..n-1)
+  function dFill(t, i, n, K) { // end-of-section restart: i = step in the restart (0..n-1)
     const k = (i + 1) / n;
     if (K.fill === 'toms') { if (n === 4 || i % 2 === 0 || i >= n - 3) dTom(t, 0.3 + 0.25 * k, K.tom[Math.min(2, Math.floor(i * 3 / n))], K.tomD); if (i === 0) dSnare(t, 0.4, K); }
     else if (K.fill === 'brk') { if ('x.xx.x.x'[i % 8] === 'x') dSnare(t, 0.3 + 0.25 * k, K); if (i % 4 === 2) dKick(t, 0.7, K); }
     else dSnare(t, 0.2 + 0.35 * k, K);
   }
-  function riser(t, dur, v = 0.22) { // montée de bruit : avant le secteur chaud, et pendant les sections de montée
+  function riser(t, dur, v = 0.22) { // noise rise: before the hot sector, and during the rise sections
     const s = AC.createBufferSource(), g = AC.createGain(), f = filt('bandpass', 400, 2, g);
     s.buffer = nbuf; s.loop = true; s.connect(f); g.connect(drumG);
     f.frequency.setValueAtTime(400, t); f.frequency.exponentialRampToValueAtTime(7000, t + dur);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + dur); g.gain.linearRampToValueAtTime(0, t + dur + 0.05);
     s.start(t); s.stop(t + dur + 0.1);
   }
-  function crash(t = AC.currentTime, v = 1) { // impact : départ, entrée et sortie du secteur chaud, début de refrain
+  function crash(t = AC.currentTime, v = 1) { // impact: start, entry and exit of the hot sector, start of the chorus
     nz(t, 1.4, 0.28 * v, drumG, 'highpass', 4500);
     const o = osc('sine', 70, t, 0.7, 0.8 * v, drumG); o && o.frequency.exponentialRampToValueAtTime(30, t + 0.5);
   }
-  // arrivée de course : un coup de cymbale, un accord tenu, puis une phrase selon la place (fanfare qui monte pour le premier, montée courte pour le podium, chute pour le dernier)
-  const arrivee = pos => { if (!AC) return; const t = AC.currentTime; crash(t, 0.7); for (const n of [57, 64, 69, 73]) osc('triangle', hz(n), t, 1.8, 0.1, uiF);
+  // race finish: a cymbal hit, a held chord, then a phrase according to position (rising fanfare for the first, short rise for the podium, fall for the last)
+  const arrival = pos => { if (!AC) return; const t = AC.currentTime; crash(t, 0.7); for (const n of [57, 64, 69, 73]) osc('triangle', hz(n), t, 1.8, 0.1, uiF);
     (pos === 1 ? [69, 73, 76, 81, 85, 88, 93] : pos < 4 ? [69, 73, 76, 81] : [69, 64, 60, 57]).forEach((n, i, a) => osc('square', hz(n), t + 0.15 + i * 0.1, i === a.length - 1 ? 0.9 : 0.4, 0.12, uiF)); };
   const stinger = up => AC && (up ? [69, 73, 76, 81, 85] : [69, 64, 60, 57]).forEach((n, i) => osc('square', hz(n), AC.currentTime + i * 0.09, 0.5, 0.12, uiF));
 
-  // ---------- séquenceur ----------
+  // ---------- sequencer ----------
   function schedMenu(s, t) {
     const mn = MENU[M.id] || MENU.ville, bar = s >> 4, q = s % 16, ch = MENU.CH[bar % MENU.CH.length], a = MENU.mel[q];
-    if (q === 0 || reprise) { const n = 16.5 - q; reprise = false; for (const x of ch) tone(mn.pad, hz(x), t, S16 * n, 0.05 * (PATCH[mn.pad].lv || 1), strip.d.in); osc('sine', hz(ch[0] - 24), t, S16 * Math.max(1, n - 2.5), 0.2, duckG); }
+    if (q === 0 || resumed) { const n = 16.5 - q; resumed = false; for (const x of ch) tone(mn.pad, hz(x), t, S16 * n, 0.05 * (PATCH[mn.pad].lv || 1), strip.d.in); osc('sine', hz(ch[0] - 24), t, S16 * Math.max(1, n - 2.5), 0.2, duckG); }
     if (a !== '.') tone(mn.arp, hz(ch[+a] + 12 + mn.oct + (bar & 1 ? 12 : 0)), t, 0.9, 0.05 * (PATCH[mn.arp].lv || 1), strip.a.in);
   }
-  // Un pas de double-croche. La station donne une forme (suite de sections de 4 mesures : introduction, couplets, refrain, break, montée…) ; chaque
-  // section dit quelles parties jouent et avec quelle variante de motif (format : voir RADIO dans cartes.js). La course s'y ajoute : rien que le
-  // tic-tac au décompte ; dans le secteur chaud et sur le dernier secteur (big), les parties marquées « ! » entrent et toutes les sections deviennent
-  // le refrain (hot), sauf la variation (e) ; relance de batterie à chaque fin de section.
-  // Rien de brusque hors événement de course : les parties entrent en fondu, la batterie se retire avant un break et revient en fondu, le refrain
-  // n'arrive qu'en début de mesure et ne repart qu'en fin de section, les filtres s'ouvrent lentement.
-  // jeu humain : DR[p] l'écart de la partie p, qui dérive lentement (un musicien est en avance ou en retard plusieurs notes de suite, jamais au hasard pur)
+  // A sixteenth-note step. The station gives a form (a sequence of 4-bar sections: intro, verses, chorus, break, rise…); each
+  // section says which parts play and with which pattern variant (format: see RADIO in mapDefs.js). The race adds to it: nothing but the
+  // countdown tick; in the hot sector and on the last sector (big), parts marked "!" come in and all sections become
+  // the chorus (hot), except the variation (e); drum restart at each end of section.
+  // Nothing abrupt outside a race event: parts fade in, drums withdraw before a break and fade back in, the chorus
+  // only starts at the beginning of a bar and only restarts at the end of a section; filters open slowly.
+  // human feel: DR[p] the offset of part p, which drifts slowly (a musician is ahead or behind several notes in a row, never pure chance)
   const DR = {};
   function sched(s, t) {
     if (menu) return schedMenu(s, t);
-    const st = ST[station], K = kitDe(st); t += (s & 1) * (st.sw || 0) * S16; // swing : les doubles-croches impaires traînent
-    const bar = s >> 4, q = s % 16, d = drums, fi = (bar >> 2) % st.form.length, nxt = st.form[(fi + 1) % st.form.length];
-    if ((q === 0 && ((bar & 3) === 0 || mix > 0.5 || fin || boostL)) || (boostL && !bigS && q % 4 === 0)) { const b = !entree && (mix > 0.5 || fin || boostL); if (bigS && !b) sortie = bar >> 2; bigS = b; } // la nitro est une action : elle ouvre le refrain dès le temps suivant // le refrain du secteur chaud entre à la mesure suivante et ne repart qu'en fin de section : jamais au milieu d'une mesure
+    const st = ST[station], K = kitOf(st); t += (s & 1) * (st.sw || 0) * S16; // swing: the odd sixteenth notes drag
+    const bar = s >> 4, q = s % 16, d = drums, fmi = (bar >> 2) % st.form.length, nxt = st.form[(fmi + 1) % st.form.length];
+    if ((q === 0 && ((bar & 3) === 0 || mix > 0.5 || ending || boostL)) || (boostL && !bigS && q % 4 === 0)) { const b = !entering && (mix > 0.5 || ending || boostL); if (bigS && !b) exitAt = bar >> 2; bigS = b; } // the nitro is an action: it opens the chorus from the next beat // the hot-sector chorus comes in at the next bar and only restarts at the end of a section: never in the middle of a bar
     const big = bigS;
-    let key = st.form[fi]; if (big && key !== 'e') key = st.hot;
-    else if (sortie === bar >> 2 && !st.sec[key].k) key = st.form[1]; // en sortant du secteur chaud on retombe sur un couplet, jamais sur un break : pas de trou // secteur chaud : le refrain, et sa variation quand la forme y arrive
-    if (EC.boucle && st.sec[EC.boucle]) key = EC.boucle; EC.sec = key;
+    let key = st.form[fmi]; if (big && key !== 'e') key = st.hot;
+    else if (exitAt === bar >> 2 && !st.sec[key].k) key = st.form[1]; // leaving the hot sector we fall back on a verse, never on a break: no hole // hot sector: the chorus, and its variation when the form reaches it
+    if (EC.loopSec && st.sec[EC.loopSec]) key = EC.loopSec; EC.sec = key;
     const mxv = p => pv(st, p);
-    const sec = st.sec[key], pr = st.prog[sec.P || 0], ch = pr.CH[bar % pr.CH.length], root = pr.ROOT[bar % pr.ROOT.length], pos = ((bar & 3) * 16 + q) / 64; // pos : avancement dans la section
+    const sec = st.sec[key], pr = st.prog[sec.P || 0], ch = pr.CH[bar % pr.CH.length], root = pr.ROOT[bar % pr.ROOT.length], pos = ((bar & 3) * 16 + q) / 64; // pos: progress through the section
     curRoot = root;
-    // premier tour du mode course : ni thème ni percussions hors du secteur chaud
+    // first lap of race mode: neither theme nor percussion outside the hot sector
     const on = p => { const x = st[p] && sec[p]; return x && (!x.big || big) && !(lap === 0 && !big && (p === 'l' || p === 'p')) ? x : null; }, pat = (v, x) => { const b = v[x.v % v.length]; return b[bar % b.length]; };
-    // jeu humain (st.jeu, 1 par défaut, 0 : machine) : hj(p, place, j) l'instant d'une note de la partie p, à sa place autour du temps (s, la caisse claire et le thème un peu en arrière),
-    // plus sa dérive lente et un petit hasard (±j/2) ; arc : la section respire (elle monte peu à peu, sa première mesure appuyée)
-    const J = st.jeu == null ? 1 : st.jeu, hj = (p, place, j) => { DR[p] = (DR[p] || 0) * 0.85 + (Math.random() - 0.5) * j * 0.6; return Math.max(t - 0.004, t + J * (place + DR[p] + (Math.random() - 0.5) * j)); };
+    // human feel (st.game, 1 by default, 0: machine): hj(p, place, j) the instant of a note of part p, at its place around the beat (s, the snare and the theme a little behind),
+    // plus its slow drift and a little chance (±j/2); arc: the section breathes (it rises gradually, its first bar accented)
+    const J = st.game == null ? 1 : st.game, hj = (p, place, j) => { DR[p] = (DR[p] || 0) * 0.85 + (Math.random() - 0.5) * j * 0.6; return Math.max(t - 0.004, t + J * (place + DR[p] + (Math.random() - 0.5) * j)); };
     const arc = 1 + J * (0.1 * pos - 0.05 + ((bar & 3) === 0 && q === 0 ? 0.05 : 0));
-    const hum = (p, place, j) => K.hum ? hj(p, place, j) + Math.random() * K.hum : t + J * (Math.random() - 0.5) * 0.002; // une batterie acoustique se joue autour du temps ; une boîte à rythmes tombe pile
-    // jeu humain des instruments : nuance qui suit la mesure (temps fort, contretemps), un peu de hasard sur la force (±), un peu de décalage (s, doublé avec une batterie acoustique)
+    const hum = (p, place, j) => K.hum ? hj(p, place, j) + Math.random() * K.hum : t + J * (Math.random() - 0.5) * 0.002; // an acoustic drum kit plays around the beat; a drum machine falls exactly on it
+    // human feel of the instruments: velocity that follows the bar (strong beat, off-beat), a bit of chance on the strength (±), a bit of offset (s, doubled with an acoustic drum kit)
     const acc = q % 4 === 0 ? 1.08 : q % 2 === 0 ? 0.97 : 0.88, jit = a => 1 + (Math.random() - 0.5) * 2 * a, lt = j => t + (Math.random() - 0.5) * 2 * (K.hum ? 2 * j : j);
-    const vch = pr.V ? pr.V[bar % pr.V.length] : ch; // l'accord dans le renversement le plus proche du précédent (voir voix() dans cartes.js)
-    const suite = st.sec[big && nxt !== 'e' ? st.hot : nxt], dur = S16 * 16; // la section qui vient ; durée d'une mesure
-    const fillN = (bar & 3) === 3 && K.fill && sec.k && suite.k ? (nxt !== st.form[fi] ? 8 : 4) : 0, fill = d && fillN && q >= 16 - fillN;
-    if (q === 0) { // début de mesure : rien n'entre ni ne sort d'un coup
-      for (const p in strip) { const now = !!(st[p] && sec[p] && (!sec[p].big || big)), g = strip[p].in.gain; // une partie qui entre monte en fondu sur la mesure
+    const vch = pr.V ? pr.V[bar % pr.V.length] : ch; // the chord in the inversion closest to the previous one (see voice() in mapDefs.js)
+    const runSuite = st.sec[big && nxt !== 'e' ? st.hot : nxt], dur = S16 * 16; // the coming section; duration of a bar
+    const fillN = (bar & 3) === 3 && K.fill && sec.k && runSuite.k ? (nxt !== st.form[fmi] ? 8 : 4) : 0, fill = d && fillN && q >= 16 - fillN;
+    if (q === 0) { // start of a bar: nothing comes in or goes out at once
+      for (const p in strip) { const now = !!(st[p] && sec[p] && (!sec[p].big || big)), g = strip[p].in.gain; // a part coming in fades up over the bar
         if (now && !was[p]) { g.cancelScheduledValues(t); g.setValueAtTime(MX[p] * 0.15, t); g.linearRampToValueAtTime(MX[p], t + dur * (p === 'b' ? 0.3 : 0.8)); } was[p] = now; }
       const kNow = !!(d && st.k && sec.k), g = drumF.gain;
-      if (kNow && !was.k) { g.cancelScheduledValues(t); g.setValueAtTime(0.3, t); g.linearRampToValueAtTime(1, t + dur * 0.8); } // la batterie revient en fondu
-      else if (kNow && (bar & 3) === 3 && !suite.k) { g.cancelScheduledValues(t); g.setValueAtTime(1, t); g.linearRampToValueAtTime(0.25, t + dur); } // elle se retire sur la dernière mesure avant un break
+      if (kNow && !was.k) { g.cancelScheduledValues(t); g.setValueAtTime(0.3, t); g.linearRampToValueAtTime(1, t + dur * 0.8); } // the drums come back with a fade
+      else if (kNow && (bar & 3) === 3 && !runSuite.k) { g.cancelScheduledValues(t); g.setValueAtTime(1, t); g.linearRampToValueAtTime(0.25, t + dur); } // they withdraw on the last bar before a break
       else if (!kNow && was.k) { g.cancelScheduledValues(t); g.setValueAtTime(0.25, t); g.linearRampToValueAtTime(1, t + dur * 2); }
       was.k = kNow;
-      secG.gain.setTargetAtTime(key === st.hot || key === 'e' ? 1 : (st.cv || 1) * (sec.k ? 1 : 1.6), t, dur / 3); // les couplets sont remontés vers le niveau du refrain (cv, réglé par mesure) ; les sections sans batterie (introduction, break) un peu plus, pour que le creux reste doux
+      secG.gain.setTargetAtTime(key === st.hot || key === 'e' ? 1 : (st.cv || 1) * (sec.k ? 1 : 1.6), t, dur / 3); // verses are raised towards the chorus level (cv, set per bar); sections without drums (intro, break) a bit more, so the dip stays soft
     }
     let x, c;
     if (d && (x = on('k')) && !fill && (c = pat(st.k, x)[q]) !== '.') {
-      jo('k', t); dKick(t, mxv('k') * lerp(0.5, 0.8, mix) * (c === 'g' ? 0.5 : 1), K);
-      const p = st.pump == null ? 0.35 : st.pump; // pompe : tout plonge sous la grosse caisse, plus ou moins selon le style
+      playNote('k', t); dKick(t, mxv('k') * lerp(0.5, 0.8, mix) * (c === 'g' ? 0.5 : 1), K);
+      const p = st.pump == null ? 0.35 : st.pump; // pump: everything dips under the kick, more or less depending on the style
       if (p < 1) { duckG.gain.cancelScheduledValues(t); duckG.gain.setValueAtTime(p, t); duckG.gain.linearRampToValueAtTime(1, t + Math.min(st.pumpT || 0.24, S16 * 1.9)); }
     }
-    if (d && (x = on('s')) && !fill && (c = pat(st.s, x)[q]) !== '.') jo('s', t), dSnare(hum('s', 0.005, 0.004), mxv('s') * (big ? 0.5 : st.sMin || 0.34) * jit(0.06 * (1 + J)), K, c);
+    if (d && (x = on('s')) && !fill && (c = pat(st.s, x)[q]) !== '.') playNote('s', t), dSnare(hum('s', 0.005, 0.004), mxv('s') * (big ? 0.5 : st.sMin || 0.34) * jit(0.06 * (1 + J)), K, c);
     if (fill && mxv('s') > 0) dFill(t, q - 16 + fillN, fillN, K);
-    if (d && sec.roll && !((bar & 3) === 3 && q >= 14) && q % ((bar & 3) < 2 ? 4 : (bar & 3) < 3 ? 2 : 1) === 0) dSnare(t, mxv('s') * (0.12 + 0.4 * pos), K); // montée : roulement qui se resserre
+    if (d && sec.roll && !((bar & 3) === 3 && q >= 14) && q % ((bar & 3) < 2 ? 4 : (bar & 3) < 3 ? 2 : 1) === 0) dSnare(t, mxv('s') * (0.12 + 0.4 * pos), K); // rise: roll that tightens
     if (d && sec.roll && (bar & 3) === 0 && q === 0) riser(t, S16 * 64, 0.18);
     if (d && sec.roll) lastRoll = bar;
-    else if (d && (bar & 3) === 0 && q === 0 && lastRoll === bar - 1) crash(t, 0.7); // le drop : au bout d'une montée, la cymbale (la chute de sub qui l'accompagnait rebondissait dans l'écho : retirée)
-    if (d && (bar & 3) === 0 && q === 0 && key === st.hot && lastFill === bar - 1) crash(t, 0.35); // cymbale d'entrée de refrain, seulement au bout d'une relance de batterie
+    else if (d && (bar & 3) === 0 && q === 0 && lastRoll === bar - 1) crash(t, 0.7); // the drop: at the end of a rise, the cymbal (the sub drop that accompanied it bounced in the echo: removed)
+    if (d && (bar & 3) === 0 && q === 0 && key === st.hot && lastFill === bar - 1) crash(t, 0.35); // chorus-entry cymbal, only after a drum restart
     if (fill) lastFill = bar;
-    if (!d) { if (q % 4 === 2) dHat(t, 0.5, K, 'x'); } // seul tic-tac pendant le décompte
-    else if ((x = on('h')) && (c = pat(st.h, x)[q]) !== '.') jo('h', t), dHat(hum('h', q % 2 ? -0.002 : 0, 0.005), mxv('h') * (big || lap === 2 ? 1 : 0.8) * 0.63 * (st.hn ? lerp(1, st.hn[q % 4], J) : 1 - J * [0, 0.3, 0.12, 0.22][q % 4]) * jit(0.12 * (1 + J)), K, c); // charlestons à −4 dB sur toutes les stations (ils dominaient) ; accent du batteur : le temps plein, la double-croche entre deux plus légère (st.hn : les nuances relevées sur la référence, par double-croche du temps)
-    if (d && (x = on('p')) && (c = pat(st.p, x)[q]) !== '.') jo('p', t), dPerc(hum('p', 0.003, 0.008), mxv('p') * jit(0.15), K, c);
+    if (!d) { if (q % 4 === 2) dHat(t, 0.5, K, 'x'); } // only the tick during the countdown
+    else if ((x = on('h')) && (c = pat(st.h, x)[q]) !== '.') playNote('h', t), dHat(hum('h', q % 2 ? -0.002 : 0, 0.005), mxv('h') * (big || lap === 2 ? 1 : 0.8) * 0.63 * (st.hn ? lerp(1, st.hn[q % 4], J) : 1 - J * [0, 0.3, 0.12, 0.22][q % 4]) * jit(0.12 * (1 + J)), K, c); // hi-hats at −4 dB on all stations (they dominated); drummer's accent: the full beat, the sixteenth between two lighter (st.hn: the velocities taken from the reference, per sixteenth of the beat)
+    if (d && (x = on('p')) && (c = pat(st.p, x)[q]) !== '.') playNote('p', t), dPerc(hum('p', 0.003, 0.008), mxv('p') * jit(0.15), K, c);
     if (d && (x = on('b'))) { const rif = pat(st.b.v, x), rf = rif[q];
-      if (rf != null && rf !== R) { let n = 1; while (q + n < 16 && rif[q + n] == null) n++; // tenue jusqu'à la note suivante
-        const P = PATCH[st.b.p], f = hz((st.bO || 0) + (st.bPar ? root + rf : juste(root + rf, pr.OK[bar % pr.OK.length]))); jo('b', t, S16 * n); tone(st.b.p, f, hj('b', 0.003, 0.004), S16 * n * (P.len || 0.9) * jit(0.1 * J), mxv('b') * lerp(0.27, 0.38, mix) * (P.lv || 1), strip.b.in, lastB, acc * arc * (q % 2 ? 1 - 0.12 * J : 1) * jit(0.06 * (1 + J))); lastB = f; } }
+      if (rf != null && rf !== R) { let n = 1; while (q + n < 16 && rif[q + n] == null) n++; // held until the next note
+        const P = PATCH[st.b.p], f = hz((st.bO || 0) + (st.bBy ? root + rf : justTune(root + rf, pr.OK[bar % pr.OK.length]))); playNote('b', t, S16 * n); tone(st.b.p, f, hj('b', 0.003, 0.004), S16 * n * (P.len || 0.9) * jit(0.1 * J), mxv('b') * lerp(0.27, 0.38, mix) * (P.lv || 1), strip.b.in, lastB, acc * arc * (q % 2 ? 1 - 0.12 * J : 1) * jit(0.06 * (1 + J))); lastB = f; } }
     else if (!d && q % 8 === 0) tone(st.b.p, hz(root + 12), t, S16 * 6, 0.25, strip.b.in);
     if (st.d && (!d || on('d'))) { const P = PATCH[st.d[0]];
-      if (q === 0) { jo('d', t, S16 * 16); for (const [i, n] of vch.entries()) tone(st.d[0], hz(n + (st.d[1] || 0)), hj('d', i * 0.01 * J, 0.008), S16 * 16.5, mxv('d') * 0.05 * (P.lv || 1), strip.d.in, 0, jit(0.05)); }
-      strip.d.gate.gain.setValueAtTime(d && sec.gate && st.gate[q] === '.' ? 0.06 : 1, t); } // nappe hachée (gate de trance)
+      if (q === 0) { playNote('d', t, S16 * 16); for (const [i, n] of vch.entries()) tone(st.d[0], hz(n + (st.d[1] || 0)), hj('d', i * 0.01 * J, 0.008), S16 * 16.5, mxv('d') * 0.05 * (P.lv || 1), strip.d.in, 0, jit(0.05)); }
+      strip.d.gate.gain.setValueAtTime(d && sec.gate && st.gate[q] === '.' ? 0.06 : 1, t); } // chopped pad (trance gate)
     for (const p of ['c', 'g']) if (d && (x = on(p)) && (c = pat(st[p].v, x)[q]) !== '.') { const P = PATCH[st[p].p];
-      const roule = q === 0 && !(P.str > 0.008) && Math.random() < 0.35 * J, sp = roule ? 0.028 / (P.str || 0.004) : 0.7 + 0.6 * Math.random(); // égrené : l'accord en arpège rapide, de la basse vers l'aigu
-      const up = q % 2 === 1 && !roule, ts = hj(p, 0, 0.006), ex = acc * arc * jit(0.08 * (1 + J)), ns = up ? [...vch].reverse() : vch; jo(p, t); // gratté : vers l'aigu sur les temps, vers le grave en contretemps, chaque corde un peu après l'autre (P.str)
-      ns.forEach((n, i) => tone(st[p].p, hz(n + 12 + (st[p + 'O'] || 0)), ts + i * (P.str || 0.004) * sp * jit(0.3), S16 * (P.tenue || (P.s ? 1.6 : 3)), mxv(p) * (c === 'X' ? 0.065 : 0.045) * (P.lv || 1) * (1 - 0.06 * i), strip[p].in, 0, ex)); }
-    if ((x = on('a')) && (c = pat(st.a.v, x)[q]) !== '.' && (d || q % 2 === 0)) jo('a', t), tone(st.a.p, hz(ch[c % 4 % ch.length] + 12 + (c >= 4 ? 12 : 0) + (st.aO || 0)), hj('a', 0.002, 0.004), 0.2 * jit(0.15 * J), mxv('a') * (q % 4 === 0 ? 0.05 : 0.038) * (PATCH[st.a.p].lv || 1), strip.a.in, 0, arc * jit(0.1 * (1 + J))); // 0-3 : notes de l'accord ; 4-7 : à l'octave
+      const rolling = q === 0 && !(P.str > 0.008) && Math.random() < 0.35 * J, sp = rolling ? 0.028 / (P.str || 0.004) : 0.7 + 0.6 * Math.random(); // broken chord: the chord as a fast arpeggio, from bass to treble
+      const up = q % 2 === 1 && !rolling, ts = hj(p, 0, 0.006), ex = acc * arc * jit(0.08 * (1 + J)), ns = up ? [...vch].reverse() : vch; playNote(p, t); // strummed: upward on the beats, downward off-beat, each string a little after the other (P.str)
+      ns.forEach((n, i) => tone(st[p].p, hz(n + 12 + (st[p + 'O'] || 0)), ts + i * (P.str || 0.004) * sp * jit(0.3), S16 * (P.holdTime || (P.s ? 1.6 : 3)), mxv(p) * (c === 'X' ? 0.065 : 0.045) * (P.lv || 1) * (1 - 0.06 * i), strip[p].in, 0, ex)); }
+    if ((x = on('a')) && (c = pat(st.a.v, x)[q]) !== '.' && (d || q % 2 === 0)) playNote('a', t), tone(st.a.p, hz(ch[c % 4 % ch.length] + 12 + (c >= 4 ? 12 : 0) + (st.aO || 0)), hj('a', 0.002, 0.004), 0.2 * jit(0.15 * J), mxv('a') * (q % 4 === 0 ? 0.05 : 0.038) * (PATCH[st.a.p].lv || 1), strip.a.in, 0, arc * jit(0.1 * (1 + J))); // 0-3: chord notes; 4-7: at the octave
     if (d && (x = on('l'))) { const L = pat(st.l.v, x), N = L[q];
       if (N != null && N !== R) { let n = 1; while (q + n < 16 && L[q + n] == null) n++;
-        // chanté plutôt que tapé : un peu en arrière du temps, la première note d'une phrase appuyée, les notes longues plus pleines, attaquées par en dessous une fois sur deux
-        // et joué : la nuance suit la hauteur (l'aigu un peu plus fort) et la section ; une note suivie d'un silence est lâchée un peu avant, sinon elle se lie à la suivante
+        // sung rather than tapped: a bit behind the beat, the first note of a phrase accented, long notes fuller, attacked from below every other time
+        // and played: the velocity follows the pitch (higher a bit louder) and the section; a note followed by a silence is let go a little early, otherwise it ties into the next
         const No = N + (st.lO || 0), tl = hj('l', 0.008, 0.01), lv = mxv('l') * (PATCH[st.l.p].lv || 0.15) * (st.lV == null ? 1 : st.lV), ex = (q === 0 || L[q - 1] === R ? 1.1 : 1) * (0.9 + 0.1 * Math.min(1, n / 4)) * clamp(1 + J * 0.012 * (No - 74), 0.88, 1.12) * arc * jit(0.06 * (1 + J));
         const ld = S16 * n * (q + n < 16 && L[q + n] === R ? 1 - J * (0.1 + 0.12 * Math.random()) : 1.05);
-        const PL = PATCH[st.l.p], lie = PL.leg && voixL && voixL.pn === st.l.p && voixL.fin > tl - 0.03 && voixL.fin < tl + 1; jo('l', t, S16 * n); // sans silence entre deux notes, une voix liée ne se rattaque pas
-        // ornements : sur une note longue, parfois une note d'appui juste avant (la voisine du dessus, ou du dessous, prise dans la gamme et l'accord), ou une note attaquée par en dessous (une guitare tire sa corde d'un demi-ton)
-        const gt = PL.smp === 'gtDist' || PL.bus === 'sat' || PL.bus === 'fuzz', orn = !lie && !PL.sing && n >= 3 && Math.random() < 0.2 * J;
-        if (orn && Math.random() < 0.5) { const ok = pr.OK[bar % pr.OK.length], dir = Math.random() < 0.65 ? 1 : -1; let g = No + dir; while (!ok.has(((g % 12) + 12) % 12)) g += dir; tone(st.l.p, hz(g), tl - 0.06, 0.055, lv * 0.7, strip.l.in, 0, ex * 0.85); } // la voisine prise dans la gamme et l'accord
-        const sc = PL.sing || lie ? 0 : orn ? (gt ? 100 : 60) : n >= 3 && Math.random() < 0.5 ? 20 + 30 * Math.random() : 0;
-        voixL = lie ? voixL.lier(hz(No), tl, ld, lv * ex) : tone(st.l.p, hz(No), tl, ld, lv, strip.l.in, PL.leg ? 0 : lastN && hz(lastN), ex, sc); lastN = No; // une voix chantée attaque juste : par en dessous, elle sonnait faux
+        const PL = PATCH[st.l.p], tied = PL.leg && voiceL && voiceL.pn === st.l.p && voiceL.ending > tl - 0.03 && voiceL.ending < tl + 1; playNote('l', t, S16 * n); // with no silence between two notes, a tied voice does not re-attack
+        // ornaments: on a long note, sometimes a leaning note just before (the neighbour above, or below, taken from the scale and chord), or a note attacked from below (a guitar pulls its string a half-tone)
+        const gt = PL.smp === 'gtDist' || PL.bus === 'sat' || PL.bus === 'fuzz', orn = !tied && !PL.sing && n >= 3 && Math.random() < 0.2 * J;
+        if (orn && Math.random() < 0.5) { const ok = pr.OK[bar % pr.OK.length], dir = Math.random() < 0.65 ? 1 : -1; let g = No + dir; while (!ok.has(((g % 12) + 12) % 12)) g += dir; tone(st.l.p, hz(g), tl - 0.06, 0.055, lv * 0.7, strip.l.in, 0, ex * 0.85); } // the neighbour taken from the scale and chord
+        const sc = PL.sing || tied ? 0 : orn ? (gt ? 100 : 60) : n >= 3 && Math.random() < 0.5 ? 20 + 30 * Math.random() : 0;
+        voiceL = tied ? voiceL.tieNext(hz(No), tl, ld, lv * ex) : tone(st.l.p, hz(No), tl, ld, lv, strip.l.in, PL.leg ? 0 : lastN && hz(lastN), ex, sc); lastN = No; // a sung voice attacks in tune: from below, it sounded out of tune
       } }
     if (driftL > 0.3) osc('sawtooth', hz(ch[(q * 2) % 3] + 24), t, 0.1, 0.07 * driftL, acid); // ligne acide tant qu'on glisse
-    if (d && glisse) { // la glisse tend la musique avec sa durée : roulement qui se resserre et souffle qui monte, calés sur le tempo (le grave s'amincit dans audioFrame)
-      if (q % (acquis ? 1 : 2) === 0) dSnare(t, 0.06 + 0.22 * tens, K);
+    if (d && glisse) { // the glide stretches the music with its duration: roll that tightens and breath that rises, timed to the tempo (the bass thins out in audioFrame)
+      if (q % (acquired ? 1 : 2) === 0) dSnare(t, 0.06 + 0.22 * tens, K);
       nz(t, S16 * 0.9, 0.025 + 0.05 * tens, drumG, 'bandpass', 800 * 8 ** tens, 2);
-      if (acquis && !acqDit) { acqDit = true; dHat(t, 1, K, 'o'); tone('bell', hz(ch[0] + 24), t, 0.3, 0.09, strip.a.in); tone('bell', hz(ch[0] + 31), t + S16, 0.4, 0.09, strip.a.in); } // palier : la glisse remplit la jauge de nitro à plein débit
+      if (acquired && !acqSaid) { acqSaid = true; dHat(t, 1, K, 'o'); tone('bell', hz(ch[0] + 24), t, 0.3, 0.09, strip.a.in); tone('bell', hz(ch[0] + 31), t + S16, 0.4, 0.09, strip.a.in); } // plateau: the glide fills the nitro gauge at full speed
     }
-    if (boostPend && q % 4 === 0) { boostPend = false; if (d) crash(t, 0.8); } // la cymbale tombe sur le temps qui suit le départ de la nitro
-    if (st.sweep) swF.frequency.setTargetAtTime(big ? 16000 : 350 * 2 ** (3.6 * (0.5 - 0.5 * Math.cos(Math.PI * (s % 128) / 64))), t, big ? 0.6 : 0.15); // filtre balayé sur 8 mesures, grand ouvert dans le secteur chaud
-    else swF.frequency.setTargetAtTime(sec.lo && !big ? 400 * 30 ** pos : 20000, t, 0.25); // section filtrée : le passe-bas s'ouvre au fil de la section
+    if (boostPend && q % 4 === 0) { boostPend = false; if (d) crash(t, 0.8); } // the cymbal falls on the beat after the nitro starts
+    if (st.sweep) swF.frequency.setTargetAtTime(big ? 16000 : 350 * 2 ** (3.6 * (0.5 - 0.5 * Math.cos(Math.PI * (s % 128) / 64))), t, big ? 0.6 : 0.15); // filter swept over 8 bars, wide open in the hot sector
+    else swF.frequency.setTargetAtTime(sec.lo && !big ? 400 * 30 ** pos : 20000, t, 0.25); // filtered section: the low-pass opens over the course of the section
   }
-  const juste = (n, ok) => ok.has(((n % 12) + 12) % 12) ? n : ok.has(((n - 1) % 12 + 12) % 12) ? n - 1 : n + 1; // note recalée sur la gamme et l'accord de la mesure : jamais de fausse note de basse
-  const lvl = () => menu ? (MENU[M.id] || MENU.ville).v : ST[station].vol == null ? 1 : ST[station].vol; // niveau de la station : réglé par mesure pour que toutes sortent au même volume
-  // ampli de guitare de chaque partie (timbres bus: 'fuzz') : st.fz son attaque (1 = la saturation d'origine), st.mx son niveau de sortie
-  function retune(t, garde) { // garde : l'éditeur change un réglage en cours d'écoute, le séquenceur ne repart pas du début // (re)cale le séquenceur, le bus et les tranches de mixage sur la station ou sur la boucle de menu
-    const st = ST[station], mn = MENU[M.id] || MENU.ville; S16 = 60 / (menu ? MENU.bpm : st.bpm) / 4; if (!garde) { t0 = nextT = t; stp = !menu && drums ? 64 : 0; lastN = lastB = 0; voixL = null; } // en course, une station prise en route commence au premier couplet, pas à l'introduction
+  const justTune = (n, ok) => ok.has(((n % 12) + 12) % 12) ? n : ok.has(((n - 1) % 12 + 12) % 12) ? n - 1 : n + 1; // note set to the scale and chord of the bar: never a wrong bass note
+  const lvl = () => menu ? (MENU[M.id] || MENU.ville).v : ST[station].vol == null ? 1 : ST[station].vol; // station level: set per bar so that all come out at the same volume
+  // guitar amp of each part (timbres bus: 'fuzz'): st.fz its attack (1 = the original saturation), st.mx its output level
+  function retune(t, retain) { // guard: the editor changes a setting while listening, the sequencer does not restart from the beginning // (re)sets the sequencer, the bus and the mix slices to the station or to the menu loop
+    const st = ST[station], mn = MENU[M.id] || MENU.ville; S16 = 60 / (menu ? MENU.bpm : st.bpm) / 4; if (!retain) { t0 = nextT = t; stp = !menu && drums ? 64 : 0; lastN = lastB = 0; voiceL = null; } // in a race, a station picked up on the fly starts at the first verse, not at the intro
     if (!AC) return;
     const e = menu ? [3, 0.5] : st.echo || [3, 0.4], q = menu ? [0, 1000, 0, 0] : st.eq || [0, 1000, 0, 0];
     dly.delayTime.value = Math.min(0.95, S16 * e[0]); dlyFb.gain.value = e[1];
-    const dv = menu ? 0 : st.drive || 0; busDry.gain.value = 1 - 0.7 * dv; busDrv.gain.value = 0.45 * dv; // saturation de tout le bus (électro saturée, techno industrielle)
-    if (!garde) { swF.frequency.cancelScheduledValues(t); swF.frequency.setValueAtTime(menu ? mn.lp : st.sweep ? 500 : 20000, t); } swF.Q.value = !menu && st.sweep ? 5 : 0.7;
-    eqL.gain.value = q[0]; eqM.frequency.value = q[1]; eqM.gain.value = q[2]; eqH.gain.value = q[3]; // couleur de la station : grave, médium, aigu
+    const dv = menu ? 0 : st.drive || 0; busDry.gain.value = 1 - 0.7 * dv; busDrv.gain.value = 0.45 * dv; // saturation of the whole bus (saturated electro, industrial techno)
+    if (!retain) { swF.frequency.cancelScheduledValues(t); swF.frequency.setValueAtTime(menu ? mn.lp : st.sweep ? 500 : 20000, t); } swF.Q.value = !menu && st.sweep ? 5 : 0.7;
+    eqL.gain.value = q[0]; eqM.frequency.value = q[1]; eqM.gain.value = q[2]; eqH.gain.value = q[3]; // station colour: low, mid, high
     mrevG.gain.value = menu ? 0.6 : st.rev == null ? 0.2 : st.rev; drumRv.gain.value = menu ? 0 : (KIT[st.kit] || KIT.k909).room;
     const parts = menu ? { d: mn.pad, a: mn.arp } : { b: st.b && st.b.p, d: st.d && st.d[0], c: st.c && st.c.p, g: st.g && st.g.p, a: st.a && st.a.p, l: st.l && st.l.p };
-    for (const k in strip) { const P = PATCH[parts[k]] || {}, s = strip[k]; const E = menu ? {} : st, fx = (E.fx && E.fx[k]) || {}, tn = (E.ton && E.ton[k]) || 0; s.pan.pan.value = E.pan && E.pan[k] != null ? E.pan[k] : P.pan || 0; s.lp.frequency.value = tn < 0 ? 20000 * 0.015 ** -tn : 20000; s.hp.frequency.value = tn > 0 ? 20 * 100 ** tn : 20; /* ton : −1 sombre (passe-bas à 300 Hz) … +1 mince (passe-haut à 2 kHz) */ s.fzIn.gain.value = 6 * (menu || st.fz == null ? 1 : st.fz); s.fzOut.gain.value = 0.3 * (!menu && st.mx && st.mx[k] != null ? st.mx[k] : 1); s.rv.gain.value = fx.rv != null ? fx.rv : P.rv || 0; s.ec.gain.value = fx.ec != null ? fx.ec : P.ec || 0; s.ch.gain.value = P.ch || 0; if (!garde) { s.gate.gain.cancelScheduledValues(t); s.gate.gain.setValueAtTime(1, t); } }
+    for (const k in strip) { const P = PATCH[parts[k]] || {}, s = strip[k]; const E = menu ? {} : st, fx = (E.fx && E.fx[k]) || {}, tn = (E.toneFlt && E.toneFlt[k]) || 0; s.pan.pan.value = E.pan && E.pan[k] != null ? E.pan[k] : P.pan || 0; s.lp.frequency.value = tn < 0 ? 20000 * 0.015 ** -tn : 20000; s.hp.frequency.value = tn > 0 ? 20 * 100 ** tn : 20; /* tone: -1 dark (low-pass at 300 Hz) … +1 thin (high-pass at 2 kHz) */ s.fzIn.gain.value = 6 * (menu || st.fz == null ? 1 : st.fz); s.fzOut.gain.value = 0.3 * (!menu && st.mx && st.mx[k] != null ? st.mx[k] : 1); s.rv.gain.value = fx.rv != null ? fx.rv : P.rv || 0; s.ec.gain.value = fx.ec != null ? fx.ec : P.ec || 0; s.ch.gain.value = P.ch || 0; if (!retain) { s.gate.gain.cancelScheduledValues(t); s.gate.gain.setValueAtTime(1, t); } }
   }
-  function quitter() { // on change de carte au menu : la musique s'efface vite ; renvoie où en est le morceau, pour reprendre()
+  function quitGame() { // map changed from the menu: the music fades quickly; returns where the track is, for reprendre()
     if (!AC || !menu) return null; const t = AC.currentTime; tuneG.gain.cancelScheduledValues(t); tuneG.gain.setTargetAtTime(0, t, 0.03);
-    return { pas: stp - (nextT - t) / S16, t: Date.now() };
+    return { stepSec: stp - (nextT - t) / S16, t: Date.now() };
   }
-  function reprendre(m) { // après le rechargement : même endroit du morceau, compte tenu du temps passé ; la couleur de la nouvelle carte s'ouvre en 2 s
+  function reprendre(m) { // after the reload: same spot in the track, allowing for the time elapsed; the new map's colour opens in 2 s
     if (!AC || !menu || !m || !(Date.now() - m.t < 8000)) return; const t = AC.currentTime + 0.05, lp = (MENU[M.id] || MENU.ville).lp;
-    stp = Math.max(0, Math.ceil(m.pas + (Date.now() - m.t) / 1000 / S16)); nextT = t; t0 = t - stp * S16; reprise = true;
+    stp = Math.max(0, Math.ceil(m.stepSec + (Date.now() - m.t) / 1000 / S16)); nextT = t; t0 = t - stp * S16; resumed = true;
     tuneG.gain.cancelScheduledValues(t); tuneG.gain.setValueAtTime(0, t); tuneG.gain.linearRampToValueAtTime(lvl(), t + 0.5);
     swF.frequency.cancelScheduledValues(t); swF.frequency.setValueAtTime(Math.min(lp, 300), t); swF.frequency.exponentialRampToValueAtTime(lp, t + 2);
   }
   function setStation(i) {
-    if (dk) finMix(); mixFait = null;
+    if (dk) endMix(); mixDone = null;
     station = (((i | 0) % ST.length) + ST.length) % ST.length;
     if (!AC) { S16 = 60 / ST[station].bpm / 4; return; }
-    const t = AC.currentTime; // touche mécanique d'autoradio (enfoncement puis relâchement : clic sec, résonance de boîtier), bref grésillement, puis la station
-    touche(t); // le claquement en deux temps, d'abord essayé pour la boîte, que l'utilisateur a gardé pour ce bouton
-    tuneG.gain.cancelScheduledValues(t); tuneG.gain.setValueAtTime(0, t); tuneG.gain.setValueAtTime(0, t + 0.36); tuneG.gain.linearRampToValueAtTime(lvl(), t + 0.46); // shortcut: les nappes de l'ancienne station finissent de sonner après la friture (1 s au plus), à couper par un bus par station si ça s'entend
+    const t = AC.currentTime; // mechanical car-radio key (press then release: dry click, case resonance), brief crackle, then the station
+    keyPress(t); // the two-stage clack, first tried for the box, which the user kept for this button
+    tuneG.gain.cancelScheduledValues(t); tuneG.gain.setValueAtTime(0, t); tuneG.gain.setValueAtTime(0, t + 0.36); tuneG.gain.linearRampToValueAtTime(lvl(), t + 0.46); // shortcut: the pads of the old station finish ringing after the static (1 s at most), to be cut by one bus per station if audible
     const f = nz(t + 0.14, 0.22, 0.2, V.ui, 'bandpass', 900, 2); if (f) { f.frequency.setValueAtTime(900, t + 0.14); f.frequency.exponentialRampToValueAtTime(3200, t + 0.24); f.frequency.exponentialRampToValueAtTime(1300, t + 0.36); }
     for (let k = 0; k < 3; k++) nz(t + 0.14 + Math.random() * 0.2, 0.012, 0.25, V.ui, 'highpass', 2000);
     if (!menu) retune(t + 0.38);
   }
-  function carte(m, i) { // change de carte (banc d'écoute) : stations, ambiance et couleur du menu ; i : la station (sinon une au hasard)
-    if (dk ? m === dk.M2 : m === mixFait && i == null) return; // un passage DJ y mène, ou vient d'y mener : rien à refaire
-    if (dk) finMix(); mixFait = null;
-    M = m; ST = M.radio; TH = M.th; station = auHasard(); charger(ST);
+  function mapDef(m, i) { // map change (listening bench): stations, ambience and menu colour; i: the station (otherwise a random one)
+    if (dk ? m === dk.M2 : m === mixDone && i == null) return; // a DJ transition leads there, or has just led there: nothing to redo
+    if (dk) endMix(); mixDone = null;
+    M = m; ST = M.radio; TH = M.th; station = randIndex(); loadRadios(ST);
     if (i != null) station = clamp(i, 0, ST.length - 1);
     S16 = 60 / ST[station].bpm / 4;
-    if (AC) { retune(AC.currentTime + 0.05, menu); if (menu) swF.frequency.setTargetAtTime((MENU[M.id] || MENU.ville).lp, AC.currentTime, 0.5); buildAmb(); } // au menu, le morceau commun continue : seule sa couleur change
+    if (AC) { retune(AC.currentTime + 0.05, menu); if (menu) swF.frequency.setTargetAtTime((MENU[M.id] || MENU.ville).lp, AC.currentTime, 0.5); buildAmb(); } // in the menu, the shared track keeps playing: only its colour changes
   }
-  carte(M);
-  // ---------- les sources du décor (SON.lieux, SON.bref) : des sons posés dans le lieu par une carte (chute, turbine, transformateur, train…), entendus selon la distance et le côté de la voiture écoutée ----------
-  // lieux(id, [{ p: { x, y, z } (peut bouger), son: un nom de SONS, r: portée en m, vol, int: 1 = à l'intérieur (le tunnel ne l'étouffe pas), occ: 0 à 1 = étouffé (le décor le règle) }, …]) ; id = la carte qui les pose : une autre carte les fait taire.
-  // bref(nom, p, vol, portée) : un son bref au point p (trompe d'un train, corne de brume, joint de pont…). Tout passe par la famille « amb ».
-  // shortcut: les sources d'une carte quittée restent branchées sur un gain coupé jusqu'au rechargement ; à débrancher pour de bon si une carte en pose des dizaines
-  let LIEUX = [], lieuxId = '';
-  const OREILLE = { x: 0, y: 0, z: 0, th: 0 };
-  const bruitV = (type, f, q, lv, d, rate, depth) => { const s = AC.createBufferSource(), g = gain(lv, d); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, g)); s.start(0, Math.random() * 2); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, g.gain)); l.start(); } };
+  mapDef(M);
+  // ---------- scenery sound sources (SOUND.spots, SOUND.brief): sounds placed in the place by a map (waterfall, turbine, transformer, train…), heard according to the distance and the side of the listened car ----------
+  // spots(id, [{ p: { x, y, z } (can move), son: a SOUNDS name, r: range in m, vol, int: 1 = indoors (the tunnel does not muffle it), occ: 0 to 1 = muffled (the scenery sets it) }, …]) ; id = the map that places them: another map silences them.
+  // brief(label, p, vol, range): a brief sound at point p (train horn, foghorn, bridge expansion joint…). Everything goes through the 'amb' family.
+  // shortcut: the sources of a map that was left stay plugged in at zero gain until the reload; to unplug for good if a map places dozens
+  let SPOTS = [], spotsId = '';
+  const EAR = { x: 0, y: 0, z: 0, th: 0 };
+  const noiseV = (type, f, q, lv, d, rate, depth) => { const s = AC.createBufferSource(), g = gain(lv, d); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, g)); s.start(0, Math.random() * 2); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, g.gain)); l.start(); } };
   const oscV = (type, f, lv, d, rate, depth) => { const o = AC.createOscillator(); o.type = type; o.frequency.value = f; o.connect(gain(lv, d)); o.start(); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(depth, o.frequency)); l.start(); } };
-  const SONS = {
-    chute: d => { bruitV('lowpass', 420, 0.5, 0.9, d); bruitV('bandpass', 1400, 0.4, 0.35, d, 0.3, 0.3); }, // grondement grave et chuintement de l'eau qui tombe
-    turbine: d => { const lp = filt('lowpass', 520, 0.7, d); for (const [f, v] of [[50, 0.5], [100, 0.3], [150, 0.14], [300, 0.05]]) oscV('sawtooth', f, v, lp); bruitV('bandpass', 950, 6, 0.12, d); }, // 50 Hz et ses harmoniques, sifflement de l'alternateur
-    transfo: d => { for (const [f, v] of [[100, 0.5], [200, 0.2], [400, 0.06]]) oscV('sine', f, v, d); }, // le bourdon d'un transformateur
-    train: d => { bruitV('lowpass', 220, 0.7, 0.8, d, 3.2, 0.5); bruitV('bandpass', 2400, 2, 0.1, d, 6.4, 0.9); }, // roulement, battement des rails
-    concasseur: d => { bruitV('lowpass', 300, 0.8, 0.9, d, 1.7, 0.6); bruitV('bandpass', 2000, 1, 0.08, d, 9, 0.9); },
-    tronconneuse: d => { oscV('sawtooth', 96, 0.4, filt('bandpass', 900, 1.2, d), 7, 6); },
-    helico: d => { bruitV('lowpass', 180, 0.8, 0.9, d, 11, 0.9); },
-    foret: d => { bruitV('bandpass', 620, 0.5, 0.5, d, 0.11, 0.6); bruitV('highpass', 5000, 0.5, 0.05, d, 0.07, 0.8); }, // vent dans les mélèzes
-    souffle: d => { bruitV('lowpass', 260, 0.6, 0.8, d); }, // ventilation d'un tunnel
-    hautParleur: d => { const bp = filt('bandpass', 1300, 2.5, d); for (const f of [392, 494, 587]) oscV('square', f, 0.12, bp, 5.5, 3); bruitV('highpass', 3000, 0.5, 0.03, d); }, // un haut-parleur de rue : un accord nasillard qui tremble
+  const SOUNDS = {
+    waterfall: d => { noiseV('lowpass', 420, 0.5, 0.9, d); noiseV('bandpass', 1400, 0.4, 0.35, d, 0.3, 0.3); }, // low rumble and hiss of falling water
+    turbine: d => { const lp = filt('lowpass', 520, 0.7, d); for (const [f, v] of [[50, 0.5], [100, 0.3], [150, 0.14], [300, 0.05]]) oscV('sawtooth', f, v, lp); noiseV('bandpass', 950, 6, 0.12, d); }, // 50 Hz and its harmonics, alternator whine
+    transformer: d => { for (const [f, v] of [[100, 0.5], [200, 0.2], [400, 0.06]]) oscV('sine', f, v, d); }, // the hum of a transformer
+    train: d => { noiseV('lowpass', 220, 0.7, 0.8, d, 3.2, 0.5); noiseV('bandpass', 2400, 2, 0.1, d, 6.4, 0.9); }, // rolling, rail clatter
+    crusher: d => { noiseV('lowpass', 300, 0.8, 0.9, d, 1.7, 0.6); noiseV('bandpass', 2000, 1, 0.08, d, 9, 0.9); },
+    chainsaw: d => { oscV('sawtooth', 96, 0.4, filt('bandpass', 900, 1.2, d), 7, 6); },
+    chopper: d => { noiseV('lowpass', 180, 0.8, 0.9, d, 11, 0.9); },
+    forest: d => { noiseV('bandpass', 620, 0.5, 0.5, d, 0.11, 0.6); noiseV('highpass', 5000, 0.5, 0.05, d, 0.07, 0.8); }, // wind in the larches
+    whoosh: d => { noiseV('lowpass', 260, 0.6, 0.8, d); }, // tunnel ventilation
+    loudspeaker: d => { const bp = filt('bandpass', 1300, 2.5, d); for (const f of [392, 494, 587]) oscV('square', f, 0.12, bp, 5.5, 3); noiseV('highpass', 3000, 0.5, 0.03, d); }, // a street loudspeaker: a nasal chord that wobbles
   };
-  function lieux(id, L) { for (const l of LIEUX) if (l.g) { l.g.disconnect(); l.g = null; } lieuxId = id; LIEUX = L || []; }
-  const coteO = (dx, dz, d) => clamp((dz * Math.cos(OREILLE.th) - dx * Math.sin(OREILLE.th)) / Math.max(d, 10), -1, 1) * 0.85; // de -1 (à gauche) à 1 (à droite) de la voiture écoutée
-  function lieuxFrame(t, car, state, tun) {
-    if (!LIEUX.length) return; const actif = lieuxId === M.id && state !== 'title';
-    OREILLE.x = car.x || 0; OREILLE.y = car.y || 0; OREILLE.z = car.z || 0; OREILLE.th = car.th || 0; // (le banc d'écoute n'a pas de voiture posée : elle est à l'origine)
-    for (const l of LIEUX) {
-      if (!l.g || l.ac !== AC) { if (!actif) continue; l.ac = AC; l.pan = AC.createStereoPanner(); l.pan.connect(V.amb); l.lp = filt('lowpass', 800, 0.7, l.pan); l.g = gain(0, l.lp); SONS[l.son](l.g); }
-      const dx = l.p.x - OREILLE.x, dz = l.p.z - OREILLE.z, d = Math.hypot(dx, dz, (l.p.y || 0) - OREILLE.y), a = clamp(1 - d / l.r, 0, 1), o = l.occ || 0;
-      regle(l.g.gain, actif ? l.vol * a * a * (l.int ? 1 : 1 - 0.85 * tun) * (1 - o) : 0, t, 0.12); regle(l.pan.pan, coteO(dx, dz, d), t, 0.1); regle(l.lp.frequency, 500 + 9000 * a * a * (1 - 0.7 * o), t, 0.15);
+  function spots(id, L) { for (const l of SPOTS) if (l.g) { l.g.disconnect(); l.g = null; } spotsId = id; SPOTS = L || []; }
+  const earSideO = (dx, dz, d) => clamp((dz * Math.cos(EAR.th) - dx * Math.sin(EAR.th)) / Math.max(d, 10), -1, 1) * 0.85; // from -1 (left) to 1 (right) of the listened car
+  function spotsFrame(t, car, state, tun) {
+    if (!SPOTS.length) return; const active = spotsId === M.id && state !== 'title';
+    EAR.x = car.x || 0; EAR.y = car.y || 0; EAR.z = car.z || 0; EAR.th = car.th || 0; // (the listening bench has no car placed: it is at the origin)
+    for (const l of SPOTS) {
+      if (!l.g || l.ac !== AC) { if (!active) continue; l.ac = AC; l.pan = AC.createStereoPanner(); l.pan.connect(V.amb); l.lp = filt('lowpass', 800, 0.7, l.pan); l.g = gain(0, l.lp); SOUNDS[l.sound](l.g); }
+      const dx = l.p.x - EAR.x, dz = l.p.z - EAR.z, d = Math.hypot(dx, dz, (l.p.y || 0) - EAR.y), a = clamp(1 - d / l.r, 0, 1), o = l.occ || 0;
+      setParam(l.g.gain, active ? l.vol * a * a * (l.int ? 1 : 1 - 0.85 * tun) * (1 - o) : 0, t, 0.12); setParam(l.pan.pan, earSideO(dx, dz, d), t, 0.1); setParam(l.lp.frequency, 500 + 9000 * a * a * (1 - 0.7 * o), t, 0.15);
     }
   }
-  const rafaleB = (t, dur, v, d, type, f, q = 0.7) => { const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = nbuf; s.connect(filt(type, f, q, g)); g.connect(d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + dur * 0.3); g.gain.linearRampToValueAtTime(0, t + dur); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02); };
+  const gustB = (t, dur, v, d, type, f, q = 0.7) => { const s = AC.createBufferSource(), g = AC.createGain(); s.buffer = nbuf; s.connect(filt(type, f, q, g)); g.connect(d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + dur * 0.3); g.gain.linearRampToValueAtTime(0, t + dur); s.start(t, Math.random() * 1.5); s.stop(t + dur + 0.02); };
   const noteL = (t, dur, v, d, type, f, f1) => { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.setValueAtTime(f, t); if (f1) o.frequency.linearRampToValueAtTime(f1, t + dur); o.connect(g); g.connect(d); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(v, t + Math.min(0.04, dur * 0.3)); g.gain.setValueAtTime(v, t + dur * 0.8); g.gain.linearRampToValueAtTime(0, t + dur); o.start(t); o.stop(t + dur + 0.02); };
-  const COUPS = {
-    trompe: (t, d) => { const lp = filt('lowpass', 1700, 1, d); for (const f of [277, 370]) noteL(t, 1.4, 0.22, lp, 'sawtooth', f * 1.05, f * 0.95); }, // la trompe d'une locomotive ; sa hauteur tombe pendant qu'on la croise (effet Doppler)
-    corne: (t, d) => { const lp = filt('lowpass', 520, 1, d); for (const f of [82, 123]) noteL(t, 2.8, 0.4, lp, 'sawtooth', f); }, // corne de brume
-    joint: (t, d) => { rafaleB(t, 0.06, 0.9, d, 'bandpass', 1100, 0.8); noteL(t, 0.08, 0.5, d, 'sine', 150, 95); }, // les pneus sur un joint de tablier : sec et médium, pour passer au-dessus du grondement de la chute
-    souffle: (t, d) => { rafaleB(t, 0.16, 0.3, d, 'bandpass', 1700, 0.8); }, // un poteau qui passe tout près
-    craque: (t, d) => { for (let k = 0; k < 6; k++) rafaleB(t + k * 0.11 + Math.random() * 0.05, 0.05, 0.45, d, 'highpass', 1500); rafaleB(t + 1.1, 0.5, 0.9, d, 'lowpass', 130); }, // un arbre craque, puis touche le sol
-    clairon: (t, d) => { const lp = filt('lowpass', 2200, 1, d); [392, 523, 659, 523, 659].forEach((f, k) => noteL(t + k * 0.24, 0.22, 0.2, lp, 'square', f)); },
-    gresille: (t, d) => { const g = AC.createGain(), l = AC.createOscillator(); g.connect(d); l.frequency.value = 100; l.connect(gain(0.5, g.gain)); l.start(t); l.stop(t + 0.9); rafaleB(t, 0.8, 0.25, g, 'highpass', 5200); }, // une ligne à haute tension
-    marteau: (t, d) => { for (let k = 0; k < 3; k++) noteL(t + k * 0.34, 0.12, 0.2, d, 'sine', 1900, 1750); },
-    oiseau: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.4, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
+  const HITS = {
+    honk: (t, d) => { const lp = filt('lowpass', 1700, 1, d); for (const f of [277, 370]) noteL(t, 1.4, 0.22, lp, 'sawtooth', f * 1.05, f * 0.95); }, // a locomotive horn; its pitch drops as it passes (Doppler effect)
+    horn: (t, d) => { const lp = filt('lowpass', 520, 1, d); for (const f of [82, 123]) noteL(t, 2.8, 0.4, lp, 'sawtooth', f); }, // corne de brume
+    joint: (t, d) => { gustB(t, 0.06, 0.9, d, 'bandpass', 1100, 0.8); noteL(t, 0.08, 0.5, d, 'sine', 150, 95); }, // tyres on a deck expansion joint: dry and mid, to sit above the waterfall's rumble
+    whoosh: (t, d) => { gustB(t, 0.16, 0.3, d, 'bandpass', 1700, 0.8); }, // a pole passing very close
+    crackle: (t, d) => { for (let k = 0; k < 6; k++) gustB(t + k * 0.11 + Math.random() * 0.05, 0.05, 0.45, d, 'highpass', 1500); gustB(t + 1.1, 0.5, 0.9, d, 'lowpass', 130); }, // a tree cracks, then hits the ground
+    clarion: (t, d) => { const lp = filt('lowpass', 2200, 1, d); [392, 523, 659, 523, 659].forEach((f, k) => noteL(t + k * 0.24, 0.22, 0.2, lp, 'square', f)); },
+    sizzle: (t, d) => { const g = AC.createGain(), l = AC.createOscillator(); g.connect(d); l.frequency.value = 100; l.connect(gain(0.5, g.gain)); l.start(t); l.stop(t + 0.9); gustB(t, 0.8, 0.25, g, 'highpass', 5200); }, // a high-voltage line
+    hammer: (t, d) => { for (let k = 0; k < 3; k++) noteL(t + k * 0.34, 0.12, 0.2, d, 'sine', 1900, 1750); },
+    bird: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.4, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
   };
-  function coupLieu(nom, p, vol = 1, r = 200) {
-    if (!AC || !nbuf || lieuxId !== M.id || !COUPS[nom]) return; const t = AC.currentTime + 0.02, dx = p.x - OREILLE.x, dz = p.z - OREILLE.z, d = Math.hypot(dx, dz, (p.y || 0) - OREILLE.y), a = clamp(1 - d / r, 0, 1); if (a <= 0) return;
-    const pan = AC.createStereoPanner(); pan.pan.value = coteO(dx, dz, d); pan.connect(V.amb); COUPS[nom](t, gain(0.2 * vol * a * a, pan)); // 0,2 : crêtes ramenées vers -25 dB, sous la musique (banc d'écoute, mesure hors ligne) setTimeout(() => pan.disconnect(), 6000);
+  function spotHit(label, p, vol = 1, r = 200) {
+    if (!AC || !nbuf || spotsId !== M.id || !HITS[label]) return; const t = AC.currentTime + 0.02, dx = p.x - EAR.x, dz = p.z - EAR.z, d = Math.hypot(dx, dz, (p.y || 0) - EAR.y), a = clamp(1 - d / r, 0, 1); if (a <= 0) return;
+    const pan = AC.createStereoPanner(); pan.pan.value = earSideO(dx, dz, d); pan.connect(V.amb); HITS[label](t, gain(0.2 * vol * a * a, pan)); // 0.2: peaks brought down to -25 dB, under the music (listening bench, offline measurement) setTimeout(() => pan.disconnect(), 6000);
   }
   function buildAmb() {
-    if (M.id === 'canal') rafaleBuf(HELICO); if (M.id === 'givre' && !(GREL && GREL.ac === AC)) GREL = Object.assign(grelots(), { ac: AC }); // l'hélicoptère, écrit maintenant plutôt qu'en course
-    if (esp) { const P = ESP[M.id] || ESP.essai, n = Math.round(AC.sampleRate * P.dur), ir = AC.createBuffer(2, n, AC.sampleRate); // la salle du lieu
-      for (let c = 0; c < 2; c++) { const x = ir.getChannelData(c); for (let i = 0; i < n; i++) x[i] = (Math.random() * 2 - 1) * Math.exp(-i / AC.sampleRate / (P.dur / 6.9)); } // -60 dB au bout de dur
-      esp.conv.buffer = ir; esp.lp.frequency.value = P.lp; }
+    if (M.id === 'canal') gustBuf(CHOPPER); if (M.id === 'givre' && !(BELLS && BELLS.ac === AC)) BELLS = Object.assign(bells(), { ac: AC }); // the helicopter, now written here rather than during the race
+    if (acoustic) { const P = ACOUSTICS[M.id] || ACOUSTICS.attempt, n = Math.round(AC.sampleRate * P.dur), ir = AC.createBuffer(2, n, AC.sampleRate); // the room of the place
+      for (let c = 0; c < 2; c++) { const x = ir.getChannelData(c); for (let i = 0; i < n; i++) x[i] = (Math.random() * 2 - 1) * Math.exp(-i / AC.sampleRate / (P.dur / 6.9)); } // -60 dB at the end of dur
+      acoustic.conv.buffer = ir; acoustic.lp.frequency.value = P.lp; }
     if (ambBed) ambBed.disconnect();
     ambBed = gain(1, V.amb);
-    for (const z of ambZG) z.g.disconnect(); if (ambEvG) ambEvG.disconnect(); ambEvG = gain(0.6, V.amb); // les événements d'une carte à zones passent par ambEvG : ils sonnent aussi sous la voûte, où le lit de la carte se tait
+    for (const z of ambZG) z.g.disconnect(); if (ambEvG) ambEvG.disconnect(); ambEvG = gain(0.6, V.amb); // the events of a zoned map go through ambEvG: they also sound under the vault, where the map's bed falls silent
     ambZG = (AMBZ[M.id] || []).map(z => { const g = gain(0, V.amb); for (const [type, f, q, lv, rate, depth] of z.c) { const s = AC.createBufferSource(), gg = gain(lv, g); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, gg)); s.start(0, Math.random() * 2); if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, gg.gain)); l.start(); } } return { z, g }; });
     for (const [type, f, q, lv, rate, depth] of AMB[M.id] || []) {
       const s = AC.createBufferSource(), g = gain(lv, ambBed); s.buffer = nbuf; s.loop = true; s.connect(filt(type, f, q, g)); s.start(0, Math.random() * 2);
       if (rate) { const l = AC.createOscillator(); l.frequency.value = rate; l.connect(gain(lv * depth, g.gain)); l.start(); }
     }
-    if (CH) { CH.rac.disconnect(); for (const s of CH.src) try { s.stop(); } catch (e) { } CH = null; }
-    if (M.id === 'chapada') sonChapada();
+    if (CH) { CH.rootPt.disconnect(); for (const s of CH.src) try { s.stop(); } catch (e) { } CH = null; }
+    if (M.id === 'chapada') soundChapada();
   }
-  // ---------- chapada : l'eau et les lieux, par-dessus le lit d'ambiance (docs/propositions/VIE-chapada.md). Tout est du bruit filtré ; la famille est « amb » ----------
-  // La grande chute est une source placée : son niveau et son timbre suivent la distance (le grave porte loin, l'aigu n'arrive que de près), un panoramique la met du bon côté, la grotte l'étouffe.
-  // Les rapides, le gué et les planches du pont sont des lits de zone. Les indices de piste viennent des points de contrôle de la carte (C.P), calculés à la première image.
-  function sonChapada() {
-    const rac = gain(0, V.amb), src = AC.createBufferSource(); src.buffer = nbuf; src.loop = true; src.start(0, Math.random() * 2);
-    const pan = AC.createStereoPanner(); pan.connect(rac); const gC = gain(0, pan), lp = filt('lowpass', 600, 0.5, gC); src.connect(lp); src.connect(filt('lowpass', 130, 0.7, gain(1.6, gC))); // la chute : un souffle large dont le passe-bas s'ouvre en approchant, sur un grondement
-    const gR = gain(0, rac); src.connect(filt('bandpass', 2200, 0.7, gR)); src.connect(filt('lowpass', 300, 0.7, gain(0.7, gR))); // les rapides : plus clairs que la chute
-    const gG = gain(0, rac), fG = filt('bandpass', 1200, 2.5, gG); src.connect(fG); // le gué : un clapotis (la bande saute)
-    const gP = gain(0, rac), pm = gain(0.5, gP), po = AC.createOscillator(); po.type = 'square'; po.frequency.value = 12; po.connect(gain(0.5, pm.gain)); po.start(); src.connect(filt('bandpass', 300, 1.5, pm)); src.connect(filt('bandpass', 760, 3, gain(0.5, pm))); // les planches du pont : un martèlement de bois
-    CH = { rac, src: [src, po], pan, gC, lp, gR, gG, fG, gP, po, eau: false, tEau: -9, tG: 0, touc: 0, fait: {}, idx: 0, tr: 0, sp: 0, N: 1, z: null };
+  // ---------- chapada: the water and the places, on top of the ambience bed. Everything is filtered noise; the family is 'amb' ----------
+  // The great waterfall is a placed source: its level and timbre follow the distance (the low end carries far, the high end only arrives from close), a pan puts it on the right side, the cave muffles it.
+  // The rapids, the ford and the bridge boards are zone beds. The track cues come from the map's checkpoints (C.P), computed on the first frame.
+  function soundChapada() {
+    const rootPt = gain(0, V.amb), src = AC.createBufferSource(); src.buffer = nbuf; src.loop = true; src.start(0, Math.random() * 2);
+    const pan = AC.createStereoPanner(); pan.connect(rootPt); const gC = gain(0, pan), lp = filt('lowpass', 600, 0.5, gC); src.connect(lp); src.connect(filt('lowpass', 130, 0.7, gain(1.6, gC))); // the waterfall: a wide whoosh whose low-pass opens as you approach, over a rumble
+    const gR = gain(0, rootPt); src.connect(filt('bandpass', 2200, 0.7, gR)); src.connect(filt('lowpass', 300, 0.7, gain(0.7, gR))); // the rapids: brighter than the waterfall
+    const gG = gain(0, rootPt), fG = filt('bandpass', 1200, 2.5, gG); src.connect(fG); // the ford: a splashing (the band jumps)
+    const gP = gain(0, rootPt), pm = gain(0.5, gP), po = AC.createOscillator(); po.type = 'square'; po.frequency.value = 12; po.connect(gain(0.5, pm.gain)); po.start(); src.connect(filt('bandpass', 300, 1.5, pm)); src.connect(filt('bandpass', 760, 3, gain(0.5, pm))); // the bridge boards: a hammering of wood
+    CH = { rootPt, src: [src, po], pan, gC, lp, gR, gG, fG, gP, po, water: false, tWater: -9, tG: 0, cooldown: 0, doneFlag: {}, idx: 0, tr: 0, sp: 0, N: 1, z: null };
   }
   function chapadaFrame(dt, e, t, k, tun, r) {
     const C = CH, c = e.car, N = e.T.n;
     if (!C.z) { const S = e.T.S, P = n => { const x = M.pts[n][0] * (M.sc || 1), z = M.pts[n][1] * (M.sc || 1); let b = 0, bd = 1e18; for (let i = 0; i < N; i++) { const d = (S[i].x - x) ** 2 + (S[i].z - z) ** 2; if (d < bd) { bd = d; b = i; } } return b; };
-      C.N = N; C.z = { camp: [P(68), P(1)], marais: [P(1), P(4)], aras: [P(8) + 4, P(10) + 40], lacets: [P(13), P(28)], pont: [P(32) - 4, P(33) + 4], chauves: [P(33) + 6, P(34)], hurleurs: [P(41) + 10, P(43) + 20],
-        rapides: [P(49) - 10, P(52) + 6], onca: [P(52) - 34, P(52)], cite: [P(52), P(62)], gue: [P(63) - 8, P(64) + 8], seriema: [P(65), P(67)] }; }
-    const dans = ([a, b], f = 30) => { const i = (c.idx - a + N) % N, L = (b - a + N) % N; return i < L ? Math.min(1, i / f, (L - i) / f) : 0; };
-    if (c.idx < C.idx - N / 2) C.tr++; C.idx = c.idx; C.sp = e.sp; // un tour de plus quand l'indice repasse par zéro (car.dist ne sert pas : le contre-la-montre le ramène à zéro à chaque tour)
-    for (const n of ['aras', 'chauves', 'hurleurs', 'onca', 'seriema']) if (dans(C.z[n], 1) > 0 && C.fait[n] !== C.tr && e.state !== 'title' && (n !== 'onca' || C.tr % 2 === 0)) { C.fait[n] = C.tr; unCri(n, t + 0.05, C.rac); } // les cris d'une fois par tour partent à l'entrée de leur zone (au hasard de la minuterie, on manquait les zones courtes)
-    k(C.rac.gain, e.state === 'title' ? 0 : 1, 0.3);
-    // la grande chute, au fond du cirque (x 1036, z 243) : on l'entend dès le haut des lacets, elle est à gauche sur le pont, la grotte l'étouffe
+      C.N = N; C.z = { camp: [P(68), P(1)], marsh: [P(1), P(4)], macaws: [P(8) + 4, P(10) + 40], hairpins: [P(13), P(28)], bridge: [P(32) - 4, P(33) + 4], bats: [P(33) + 6, P(34)], howlers: [P(41) + 10, P(43) + 20],
+        rapids: [P(49) - 10, P(52) + 6], onca: [P(52) - 34, P(52)], cite: [P(52), P(62)], ford: [P(63) - 8, P(64) + 8], seriema: [P(65), P(67)] }; }
+    const within = ([a, b], f = 30) => { const i = (c.idx - a + N) % N, L = (b - a + N) % N; return i < L ? Math.min(1, i / f, (L - i) / f) : 0; };
+    if (c.idx < C.idx - N / 2) C.tr++; C.idx = c.idx; C.sp = e.sp; // one more lap when the index crosses zero again (car.dist is not used: time trial resets it to zero every lap)
+    for (const n of ['macaws', 'bats', 'howlers', 'onca', 'seriema']) if (within(C.z[n], 1) > 0 && C.doneFlag[n] !== C.tr && e.state !== 'title' && (n !== 'onca' || C.tr % 2 === 0)) { C.doneFlag[n] = C.tr; oneCry(n, t + 0.05, C.rootPt); } // the once-per-lap cries start at the entry to their zone (with the timer's randomness, short zones were being missed)
+    k(C.rootPt.gain, e.state === 'title' ? 0 : 1, 0.3);
+    // the great waterfall, at the back of the cirque (x 1036, z 243): you hear it from the top of the hairpins, it is on the left at the bridge, the cave muffles it
     const dx = 1036 - c.x, dz = 243 - c.z, d = Math.hypot(dx, dz), p = clamp(1 - d / 420, 0, 1), lat = (dz * Math.cos(c.th) - dx * Math.sin(c.th)) / Math.max(d, 1);
     k(C.gC.gain, 0.11 * p * p * (1 - 0.8 * tun), 0.3); k(C.lp.frequency, (300 + 5200 * p ** 3) * (1 - 0.85 * tun), 0.3); k(C.pan.pan, clamp(lat, -1, 1) * 0.8, 0.2);
-    k(C.gR.gain, 0.05 * dans(C.z.rapides), 0.3);
-    const gu = dans(C.z.gue, 10); k(C.gG.gain, 0.05 * gu, 0.2); if (gu > 0 && (C.tG -= dt) < 0) { C.tG = 0.08; C.fG.frequency.setTargetAtTime(800 + Math.random() * 1400, t, 0.02); }
-    k(C.gP.gain, (c.air ? 0 : 0.09) * dans(C.z.pont, 4) * Math.min(1, r * 2), 0.06); k(C.po.frequency, 5 + e.sp * 0.7, 0.1);
-    // l'entrée dans l'eau (marais, rivière, gué, réception du saut) : un plouf sourd, puis l'eau qui retombe
-    const eau = !!(c.sol && c.sol.aq > 0.09) && !c.air; if (eau && !C.eau && e.sp > 8 && e.state !== 'title' && t - C.tEau > 1.5) { C.tEau = t; const v = Math.min(1, e.sp / 45); nz(t, 0.28, 0.3 * v, C.rac, 'lowpass', 320, 0.8); nz(t + 0.03, 0.7, 0.1 * v, C.rac, 'highpass', 2600, 0.7, nbuf, 0.02); } C.eau = eau;
-    // le feu du camp, à gauche de la grille de départ : il crépite (on l'entend à l'arrêt, plus dès qu'on roule)
-    const pf = clamp(1 - Math.hypot(c.x - 50, c.z + 11) / 120, 0, 1); /* la grille est à 70-90 m du feu */ if (pf > 0 && e.state !== 'title' && Math.random() < dt * 14 * pf) nz(t + Math.random() * 0.03, 0.005 + Math.random() * 0.012, 0.12 * pf * pf, C.rac, 'highpass', 1800 + Math.random() * 2500);
+    k(C.gR.gain, 0.05 * within(C.z.rapids), 0.3);
+    const gu = within(C.z.ford, 10); k(C.gG.gain, 0.05 * gu, 0.2); if (gu > 0 && (C.tG -= dt) < 0) { C.tG = 0.08; C.fG.frequency.setTargetAtTime(800 + Math.random() * 1400, t, 0.02); }
+    k(C.gP.gain, (c.air ? 0 : 0.09) * within(C.z.bridge, 4) * Math.min(1, r * 2), 0.06); k(C.po.frequency, 5 + e.sp * 0.7, 0.1);
+    // entering the water (marsh, river, ford, jump landing): a dull plop, then the water falling back
+    const water = !!(c.ground && c.ground.aq > 0.09) && !c.air; if (water && !C.water && e.sp > 8 && e.state !== 'title' && t - C.tWater > 1.5) { C.tWater = t; const v = Math.min(1, e.sp / 45); nz(t, 0.28, 0.3 * v, C.rootPt, 'lowpass', 320, 0.8); nz(t + 0.03, 0.7, 0.1 * v, C.rootPt, 'highpass', 2600, 0.7, nbuf, 0.02); } C.water = water;
+    // the campfire, left of the start grid: it crackles (heard when stopped, no longer once rolling)
+    const pf = clamp(1 - Math.hypot(c.x - 50, c.z + 11) / 120, 0, 1); /* the grid is 70-90 m from the fire */ if (pf > 0 && e.state !== 'title' && Math.random() < dt * 14 * pf) nz(t + Math.random() * 0.03, 0.005 + Math.random() * 0.012, 0.12 * pf * pf, C.rootPt, 'highpass', 1800 + Math.random() * 2500);
   }
-  // les cris d'une fois par tour (lancés par chapadaFrame à l'entrée de leur zone), dans d
-  function unCri(n, t, d) {
+  // the once-per-lap cries (launched by chapadaFrame at the entry to their zone), in d
+  function oneCry(n, t, d) {
     const rnd = (a, b) => a + Math.random() * (b - a);
-    if (n === 'aras') for (let k = 0; k < 3; k++) { const o = AC.createOscillator(), g = AC.createGain(), t0 = t + k * 0.42; o.type = 'sawtooth'; o.frequency.setValueAtTime(940, t0); o.frequency.linearRampToValueAtTime(760, t0 + 0.26);
-      o.connect(filt('bandpass', 2100, 3, g)); g.connect(d); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.055, t0 + 0.03); g.gain.linearRampToValueAtTime(0, t0 + 0.28); o.start(t0); o.stop(t0 + 0.3); } // le cri rauque des aras qui passent
-    if (n === 'chauves') { for (let k = 0; k < 16; k++) osc('sine', rnd(7000, 9000), t + k * 0.04 + rnd(0, 0.02), 0.012, 0.02, d); nz(t, 0.7, 0.025, d, 'bandpass', 3000, 1.5, nbuf, 0.1); } // la nuée sort de la grotte
-    if (n === 'hurleurs') for (let w = 0; w < 3; w++) { const t0 = t + w * 1.05, a = nz(t0, 1.3, 0.13, d, 'bandpass', 430, 6, nbuf, 0.35), b = nz(t0, 1.3, 0.06, d, 'bandpass', 820, 6, nbuf, 0.35); // les singes hurleurs : trois vagues graves et rauques, au freinage de l'idole
+    if (n === 'macaws') for (let k = 0; k < 3; k++) { const o = AC.createOscillator(), g = AC.createGain(), t0 = t + k * 0.42; o.type = 'sawtooth'; o.frequency.setValueAtTime(940, t0); o.frequency.linearRampToValueAtTime(760, t0 + 0.26);
+      o.connect(filt('bandpass', 2100, 3, g)); g.connect(d); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(0.055, t0 + 0.03); g.gain.linearRampToValueAtTime(0, t0 + 0.28); o.start(t0); o.stop(t0 + 0.3); } // the harsh cry of macaws flying past
+    if (n === 'bats') { for (let k = 0; k < 16; k++) osc('sine', rnd(7000, 9000), t + k * 0.04 + rnd(0, 0.02), 0.012, 0.02, d); nz(t, 0.7, 0.025, d, 'bandpass', 3000, 1.5, nbuf, 0.1); } // the flock leaves the cave
+    if (n === 'howlers') for (let w = 0; w < 3; w++) { const t0 = t + w * 1.05, a = nz(t0, 1.3, 0.13, d, 'bandpass', 430, 6, nbuf, 0.35), b = nz(t0, 1.3, 0.06, d, 'bandpass', 820, 6, nbuf, 0.35); // howler monkeys: three low, harsh waves, when braking at the idol
       if (a) { a.frequency.setValueAtTime(430, t0); a.frequency.linearRampToValueAtTime(300, t0 + 1.2); } if (b) { b.frequency.setValueAtTime(820, t0); b.frequency.linearRampToValueAtTime(600, t0 + 1.2); } }
-    if (n === 'onca') for (let k = 0; k < 14; k++) nz(t + k / 12, 0.06, 0.13, d, 'bandpass', rnd(160, 200), 3); // l'onça : un râle scié, un tour sur deux
-    if (n === 'seriema') { let tt = t; for (let k = 0; k < 12; k++) { const o = osc('sine', 1600, tt, 0.09, 0.03, d); if (o) { o.frequency.setValueAtTime(1600, tt); o.frequency.exponentialRampToValueAtTime(1100, tt + 0.08); } tt += 0.12 + 0.13 * Math.abs(k - 6) / 6; } } // la seriema : une cascade de jappements, avant le camp
+    if (n === 'onca') for (let k = 0; k < 14; k++) nz(t + k / 12, 0.06, 0.13, d, 'bandpass', rnd(160, 200), 3); // the onça: a sawn-off growl, every other lap
+    if (n === 'seriema') { let tt = t; for (let k = 0; k < 12; k++) { const o = osc('sine', 1600, tt, 0.09, 0.03, d); if (o) { o.frequency.setValueAtTime(1600, tt); o.frequency.exponentialRampToValueAtTime(1100, tt + 0.08); } tt += 0.12 + 0.13 * Math.abs(k - 6) / 6; } } // the seriema: a cascade of yelps, before the camp
   }
-  // les bêtes de chapada qui reviennent, par secteur (appelé comme ambEvent : renvoie le délai avant l'événement suivant)
+  // the chapada beasts that come back, by sector (called like ambEvent: returns the delay before the next event)
   function evChapada(t) {
     const C = CH; if (!C || !C.z) return 1; const i = C.idx, Z = C.z, d = ambBed, rnd = (a, b) => a + Math.random() * (b - a), en = ([a, b]) => (i - a + C.N) % C.N < (b - a + C.N) % C.N;
-    if (en(Z.camp) && C.sp < 6 && t > C.touc) { C.touc = t + 25; for (let k = 0; k < 3; k++) { nz(t + k * 0.22, 0.09, 0.1, d, 'bandpass', 900, 5); osc('square', 380, t + k * 0.22, 0.07, 0.015, d); } return 3; } // à l'arrêt sur la grille : le toucan croasse
-    if (en(Z.marais)) { if (Math.random() < 0.6) { osc('sine', 1100, t, 0.045, 0.05, d); osc('sine', 2200, t, 0.03, 0.02, d); } else for (let k = 0; k < 5; k++) osc('sine', 2400, t + k * 0.05, 0.016, 0.03, d); return rnd(0.4, 1.2); } // la grenouille forgeron (un marteau sur l'enclume) et le chœur
-    if (en(Z.lacets)) { osc('sine', 2100, t, 0.17, 0.045, d); osc('sine', 3430, t, 0.1, 0.03, d); return rnd(3, 7); } // l'araponga : un coup de cloche fêlée, au loin
-    if (en(Z.cite)) { for (let k = 0, n = 4 + Math.random() * 4 | 0; k < n; k++) { const f = rnd(3000, 4200), o = osc('sine', f, t + k * 0.08, 0.06, 0.035, d); o && o.frequency.exponentialRampToValueAtTime(f * 1.3, t + k * 0.08 + 0.05); } return rnd(2, 5); } // un jacassement de perruches au-dessus de la place
-    return rnd(1.5, 4); // ailleurs : le lit seul (feuillage, cigales)
+    if (en(Z.camp) && C.sp < 6 && t > C.cooldown) { C.cooldown = t + 25; for (let k = 0; k < 3; k++) { nz(t + k * 0.22, 0.09, 0.1, d, 'bandpass', 900, 5); osc('square', 380, t + k * 0.22, 0.07, 0.015, d); } return 3; } // stopped on the grid: the toucan croaks
+    if (en(Z.marsh)) { if (Math.random() < 0.6) { osc('sine', 1100, t, 0.045, 0.05, d); osc('sine', 2200, t, 0.03, 0.02, d); } else for (let k = 0; k < 5; k++) osc('sine', 2400, t + k * 0.05, 0.016, 0.03, d); return rnd(0.4, 1.2); } // the blacksmith frog (a hammer on the anvil) and the chorus
+    if (en(Z.hairpins)) { osc('sine', 2100, t, 0.17, 0.045, d); osc('sine', 3430, t, 0.1, 0.03, d); return rnd(3, 7); } // the araponga: a cracked bell strike, in the distance
+    if (en(Z.cite)) { for (let k = 0, n = 4 + Math.random() * 4 | 0; k < n; k++) { const f = rnd(3000, 4200), o = osc('sine', f, t + k * 0.08, 0.06, 0.035, d); o && o.frequency.exponentialRampToValueAtTime(f * 1.3, t + k * 0.08 + 0.05); } return rnd(2, 5); } // a chattering of parakeets above the square
+    return rnd(1.5, 4); // elsewhere: the bed alone (foliage, cicadas)
   }
-  function clameur(t, v) { // la foule : une clameur qui monte et retombe, et quelques sifflets ; v = force (1 : celle des tribunes du stade)
+  function roar(t, v) { // the crowd: a roar that rises and falls back, and a few whistles; v = strength (1: that of the stadium stands)
     const rnd = (a, b) => a + Math.random() * (b - a), c = nz(t, 2.6, 0.22 * v, ambBed, 'bandpass', 900, 0.6, nbuf, 0.5); c && c.frequency.linearRampToValueAtTime(1300, t + 0.8);
     for (let i = 0; i < 3; i++) { const f = rnd(1800, 2600), o = osc('sine', f, t + rnd(0.3, 1.5), 0.35, 0.025 * v, ambBed); o && o.frequency.linearRampToValueAtTime(f * 1.25, t + 2); } }
-  function ambEvent(t) { // événements du lieu, espacés au hasard ; renvoie le délai avant le suivant
+  function ambEvent(t) { // events of the place, spaced at random; returns the delay before the next
     const id = M.id, rnd = (a, b) => a + Math.random() * (b - a);
     if (id === 'chapada') return evChapada(t);
     if (id === 'touge') { const f = Math.random() < 0.7 ? 4300 : 5100; for (let i = 0; i < 6; i++) osc('sine', f, t + i * 0.03, 0.014, 0.05, ambBed); return rnd(0.6, 1.4); } // grillons
     if (id === 'paris') { for (let i = 0, n = 2 + Math.random() * 4 | 0, f = rnd(2600, 3800); i < n; i++) { const o = osc('sine', f, t + i * 0.11, 0.08, 0.04, ambBed); o && o.frequency.exponentialRampToValueAtTime(f * rnd(0.8, 1.4), t + i * 0.11 + 0.07); } return rnd(1.5, 5); } // oiseaux
     if (id === 'wangan') { for (const [type, f] of [['sawtooth', 98], ['square', 147]]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = type; o.frequency.value = f; o.connect(filt('lowpass', 420, 0.7, g)); g.connect(ambBed);
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.4); g.gain.setValueAtTime(0.05, t + 2.2); g.gain.linearRampToValueAtTime(0, t + 3); o.start(t); o.stop(t + 3.1); } return rnd(25, 45); } // corne de navire
-    if (id === 'canal') { rafale(HELICO, t, ambBed, 'lowpass', 260); return rnd(30, 50); } // hélicoptère qui passe au loin
+    if (id === 'canal') { burstN(CHOPPER, t, ambBed, 'lowpass', 260); return rnd(30, 50); } // helicopter passing in the distance
     if (id === 'ville') { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(620, t); for (let i = 0; i < 4; i++) { o.frequency.linearRampToValueAtTime(840, t + i + 0.5); o.frequency.linearRampToValueAtTime(620, t + i + 1); }
-      o.connect(filt('lowpass', 1200, 0.7, g)); g.connect(ambBed); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 1.5); g.gain.linearRampToValueAtTime(0, t + 4); o.start(t); o.stop(t + 4.1); return rnd(25, 50); } // sirène lointaine
-    if (id === 'stade') { clameur(t, 1); return rnd(6, 12); }
-    if (id === 'givre') { joue((GREL && GREL.ac === AC ? GREL : GREL = Object.assign(grelots(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // grelots d'un traîneau, au loin
-    if (id === 'perse') { const p = ambPos, D = ambEvG; // l'endroit décide de l'événement : fractions du tour, ou la voûte (ambSous)
-      if (ambSous > 0.5) { if (Math.random() < 0.6) { const f = rnd(1900, 2700), n = 3 + Math.random() * 4 | 0; for (let i = 0; i < n; i++) osc('triangle', f * (i % 2 ? 1.5 : 1), t + i * 0.19, 0.09, 0.035, D); } // le marteau d'un dinandier
-        else { const o = osc('sawtooth', rnd(170, 230), t, 0.9, 0.03, filt('bandpass', 950, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(240, 300), t + 0.5); } return rnd(0.8, 2.2); } // ou l'appel d'un marchand
-      if (p > 0.3 && p < 0.365) { joue((GREL && GREL.ac === AC ? GREL : GREL = Object.assign(grelots(), { ac: AC }))[Math.random() * 4 | 0], t, D); return rnd(1.2, 2.5); } // les grelots de la caravane, quand on la longe
-      if (p > 0.632 && p < 0.72) { for (let i = 0, n = 2 + Math.random() * 4 | 0, f = rnd(2800, 4200); i < n; i++) { const o = osc('sine', f, t + i * 0.1, 0.07, 0.035, D); o && o.frequency.exponentialRampToValueAtTime(f * rnd(0.8, 1.4), t + i * 0.1 + 0.06); } return rnd(0.8, 2.5); } // les oiseaux du jardin
-      if (p > 0.872 && p < 0.994) { if (p > 0.94 && !ambAppel) { ambAppel = 1; [0, 2, 3, 2, 0, -2, 0].forEach((d, i) => { const f = 392 * 2 ** (d / 12), o = osc('sine', f, t + i * 0.8, 0.9, 0.022, D); o && o.frequency.linearRampToValueAtTime(f * 1.02, t + i * 0.8 + 0.7); }); return 6; } // l'appel lointain (une flûte), une fois par tour, au retour vers la ligne
-        const o = osc('sawtooth', rnd(180, 260), t, 0.6, 0.028, filt('bandpass', 1100, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(220, 320), t + 0.35); for (let i = 0; i < 4; i++) nz(t + 0.9 + i * 0.16, 0.05, 0.05, D, 'lowpass', 700, 0.7); return rnd(1.2, 3); } // un cri de marchand, des sabots
-      if (p < 0.28 || p >= 0.994) { ambAppel = 0; if (Math.random() < 0.5) for (let i = 0, n = 2 + (Math.random() * 2 | 0); i < n; i++) nz(t + i * 0.28, 0.12, 0.05, D, 'bandpass', rnd(420, 560), 3); // la plaine : un chien, loin
-        else { const o = osc('sawtooth', 420, t, 0.7, 0.012, filt('bandpass', 800, 3, D)); if (o) for (let i = 0; i < 8; i++) o.frequency.setValueAtTime(i % 2 ? 400 : 440, t + i * 0.09); } return rnd(4, 9); } // ou un bêlement
-      if (p > 0.369 && p < 0.52) { const c = nz(t, 2.4, 0.06, D, 'bandpass', 500, 0.8, nbuf, 1); c && c.frequency.linearRampToValueAtTime(900, t + 1.2); return rnd(3, 6); } // l'escalier et la terrasse : une rafale sur la hauteur
+      o.connect(filt('lowpass', 1200, 0.7, g)); g.connect(ambBed); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 1.5); g.gain.linearRampToValueAtTime(0, t + 4); o.start(t); o.stop(t + 4.1); return rnd(25, 50); } // distant siren
+    if (id === 'stade') { roar(t, 1); return rnd(6, 12); }
+    if (id === 'givre') { nowPlaying((BELLS && BELLS.ac === AC ? BELLS : BELLS = Object.assign(bells(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // sleigh bells, in the distance
+    if (id === 'perse') { const p = ambPos, D = ambEvG; // the place decides the event: fractions of the lap, or the vault (ambUnder)
+      if (ambUnder > 0.5) { if (Math.random() < 0.6) { const f = rnd(1900, 2700), n = 3 + Math.random() * 4 | 0; for (let i = 0; i < n; i++) osc('triangle', f * (i % 2 ? 1.5 : 1), t + i * 0.19, 0.09, 0.035, D); } // a coppersmith's hammer
+        else { const o = osc('sawtooth', rnd(170, 230), t, 0.9, 0.03, filt('bandpass', 950, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(240, 300), t + 0.5); } return rnd(0.8, 2.2); } // or a merchant's call
+      if (p > 0.3 && p < 0.365) { nowPlaying((BELLS && BELLS.ac === AC ? BELLS : BELLS = Object.assign(bells(), { ac: AC }))[Math.random() * 4 | 0], t, D); return rnd(1.2, 2.5); } // the caravan's bells, as you run alongside it
+      if (p > 0.632 && p < 0.72) { for (let i = 0, n = 2 + Math.random() * 4 | 0, f = rnd(2800, 4200); i < n; i++) { const o = osc('sine', f, t + i * 0.1, 0.07, 0.035, D); o && o.frequency.exponentialRampToValueAtTime(f * rnd(0.8, 1.4), t + i * 0.1 + 0.06); } return rnd(0.8, 2.5); } // the garden birds
+      if (p > 0.872 && p < 0.994) { if (p > 0.94 && !ambCall) { ambCall = 1; [0, 2, 3, 2, 0, -2, 0].forEach((d, i) => { const f = 392 * 2 ** (d / 12), o = osc('sine', f, t + i * 0.8, 0.9, 0.022, D); o && o.frequency.linearRampToValueAtTime(f * 1.02, t + i * 0.8 + 0.7); }); return 6; } // the distant call (a flute), once per lap, on the way back to the line
+        const o = osc('sawtooth', rnd(180, 260), t, 0.6, 0.028, filt('bandpass', 1100, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(220, 320), t + 0.35); for (let i = 0; i < 4; i++) nz(t + 0.9 + i * 0.16, 0.05, 0.05, D, 'lowpass', 700, 0.7); return rnd(1.2, 3); } // a merchant's cry, hooves
+      if (p < 0.28 || p >= 0.994) { ambCall = 0; if (Math.random() < 0.5) for (let i = 0, n = 2 + (Math.random() * 2 | 0); i < n; i++) nz(t + i * 0.28, 0.12, 0.05, D, 'bandpass', rnd(420, 560), 3); // the plain: a dog, far off
+        else { const o = osc('sawtooth', 420, t, 0.7, 0.012, filt('bandpass', 800, 3, D)); if (o) for (let i = 0; i < 8; i++) o.frequency.setValueAtTime(i % 2 ? 400 : 440, t + i * 0.09); } return rnd(4, 9); } // or a bleat
+      if (p > 0.369 && p < 0.52) { const c = nz(t, 2.4, 0.06, D, 'bandpass', 500, 0.8, nbuf, 1); c && c.frequency.linearRampToValueAtTime(900, t + 1.2); return rnd(3, 6); } // the staircase and the terrace: a gust over the height
       return 3; }
     return 10;
   }
-  // ---------- passage DJ (piste MULTI-PISTE) : deux platines, comme un DJ qui enchaîne deux disques ----------
-  // Une platine = la chaîne de chaine() et l'état du séquenceur. La platine « maison » vit dans les variables du module ; pendant un passage,
-  // la seconde est rangée dans dk.B et prend leur place le temps d'écrire ses pas (sauve / pose).
-  const sauve = () => ({ ST, station, S16, t0, nextT, stp, strip, was, drumF, drumG, kdrv, swF, busDry, busDrv, duckG, bsat, fuzz, acid, dly, dlyFb, echoIn, choIn, revIn, mrevG, drumRv,
-    eqL, eqM, eqH, hpF, djF, djL, fad, secG, gritDry, gritWet, tuneG, bigS, lastFill, lastRoll, sortie, curRoot, lastN, lastB, voixL, entree });
+  // ---------- DJ transition (MULTI-PISTE track): two turntables, like a DJ mixing two records ----------
+  // A turntable = the chain from chain() and the sequencer state. The 'home' turntable lives in the module's variables; during a transition,
+  // the second one is stored in dk.B and takes their place while its steps are written (stash / pose).
+  const stash = () => ({ ST, station, S16, t0, nextT, stp, strip, was, drumF, drumG, kdrv, swF, busDry, busDrv, duckG, bsat, fuzz, acid, dly, dlyFb, echoIn, choIn, revIn, mrevG, drumRv,
+    eqL, eqM, eqH, hpF, djF, djL, fad, secG, gritDry, gritWet, tuneG, bigS, lastFill, lastRoll, exitAt, curRoot, lastN, lastB, voiceL, entering });
   const pose = d => ({ ST, station, S16, t0, nextT, stp, strip, was, drumF, drumG, kdrv, swF, busDry, busDrv, duckG, bsat, fuzz, acid, dly, dlyFb, echoIn, choIn, revIn, mrevG, drumRv,
-    eqL, eqM, eqH, hpF, djF, djL, fad, secG, gritDry, gritWet, tuneG, bigS, lastFill, lastRoll, sortie, curRoot, lastN, lastB, voixL, entree } = d);
-  // la station de chaque carte en MULTI-PISTE : des morceaux de club à grosse caisse régulière, faciles à caler entre eux
+    eqL, eqM, eqH, hpF, djF, djL, fad, secG, gritDry, gritWet, tuneG, bigS, lastFill, lastRoll, exitAt, curRoot, lastN, lastB, voiceL, entering } = d);
+  // each map's station in MULTI-PISTE: club tracks with a steady kick drum, easy to line up with one another
   const DJS = { ville: 1, touge: 0, wangan: 0, paris: 0, canal: 1, stade: 2, givre: 1, terre: 2 }, djSt = m => Math.min(DJS[m.id] || 0, m.radio.length - 1);
-  // mixer(M2, dur), SON.mix : le passage vers la station de la carte M2, fini au bout de dur secondes. Sur la grille de l'ancien morceau (A) :
-  //   la platine B part à la mesure suivante, calée sur le tempo et les temps de A, sans son grave (coupe-bas), et monte en fondu ;
-  //   à mi-parcours, échange des basses (le grave de A part, celui de B arrive) ; A se ferme (coupe-haut qui descend), puis A s'arrête
-  //   en laissant traîner son écho (sortie en écho) pendant que son fondu se termine ; la compression du bus colle les deux morceaux le temps qu'ils jouent ensemble.
-  //   Le tempo commun glisse de celui de A à celui de B (les deux platines le suivent, donc restent calées) ; à la fin B est seule, à son propre tempo.
-  // À la fin, l'état est celui de carte(M2), avec la station de la carte en MULTI-PISTE (djSt).
+  // mixer(M2, dur), SOUND.mix: the transition to map M2's station, finished after dur seconds. On the grid of the old track (A):
+  //   turntable B starts at the next bar, locked to A's tempo and beats, without its bass (low cut), and fades in;
+  //   halfway, the bass is swapped (A's low end leaves, B's arrives); A closes (a falling high cut), then A stops
+  //   letting its echo trail (echo out) while its fade finishes; the bus compression glues the two tracks together while they play together.
+  //   The shared tempo glides from A's to B's (both turntables follow it, so they stay locked); at the end B is alone, at its own tempo.
+  // At the end, the state is that of mapDef(M2), with the map's MULTI-PISTE station (djSt).
   function mixer(M2, dur) {
-    if (!AC || menu) return carte(M2, djSt(M2));
-    if (dk) finMix();
-    const now = AC.currentTime, A = sauve(), tS = nextT + ((16 - stp % 16) % 16) * S16, tE = Math.max(now + dur, tS + 8 * S16), L = tE - tS, bA = 60 / S16 / 4;
-    charger(ST, M2.radio); chaine(); ST = M2.radio; station = djSt(M2); entree = true; retune(tS); tuneG.gain.value = lvl(); S16 = A.S16; // la platine B, construite dans les variables du module
-    const bB = ST[station].bpm, B = sauve(); pose(A);
+    if (!AC || menu) return mapDef(M2, djSt(M2));
+    if (dk) endMix();
+    const now = AC.currentTime, A = stash(), tS = nextT + ((16 - stp % 16) % 16) * S16, tE = Math.max(now + dur, tS + 8 * S16), L = tE - tS, bA = 60 / S16 / 4;
+    loadRadios(ST, M2.radio); chain(); ST = M2.radio; station = djSt(M2); entering = true; retune(tS); tuneG.gain.value = lvl(); S16 = A.S16; // turntable B, built in the module's variables
+    const bB = ST[station].bpm, B = stash(); pose(A);
     const lin = (p, pts) => { p.cancelScheduledValues(now); p.setValueAtTime(p.value, now); for (const [u, v, ex] of pts) p[ex ? 'exponentialRampToValueAtTime' : 'linearRampToValueAtTime'](v, tS + u * L); };
-    const tX = 0.5; // échange des basses
+    const tX = 0.5; // bass swap
     B.fad.gain.value = 0; lin(B.fad.gain, [[0, 0], [0.35, 0.65], [0.65, 1]]);
     lin(B.djF.frequency, [[0, 380, 1], [tX, 380, 1], [tX + 0.06, 10, 1]]);
     lin(A.djF.frequency, [[0, 10, 1], [tX, 10, 1], [tX + 0.06, 380, 1]]);
@@ -688,32 +688,32 @@
     lin(mixDry.gain, [[0, 1], [0.15, 0], [0.85, 0], [1, 1]]); lin(mixW.gain, [[0, 0], [0.15, 1.1], [0.85, 1.1], [1, 0]]);
     dk = { M2, A, B, tS, tE, L, bA, bB, stopA: tS + 0.8 * L };
   }
-  const bpmA = t => { const u = clamp((t - dk.tS) / dk.L, 0, 1), v = clamp((u - 0.1) / 0.8, 0, 1); return lerp(dk.bA, dk.bB, v * v * (3 - 2 * v)); }; // tempo commun du passage
-  function finMix() { // la platine B devient la platine maison (forcé : on coupe court, et l'ancienne se tait tout de suite)
-    const now = AC.currentTime, A = sauve(), d = dk; dk = null; pose(d.B); entree = false; S16 = 60 / ST[station].bpm / 4;
+  const bpmA = t => { const u = clamp((t - dk.tS) / dk.L, 0, 1), v = clamp((u - 0.1) / 0.8, 0, 1); return lerp(dk.bA, dk.bB, v * v * (3 - 2 * v)); }; // shared tempo of the transition
+  function endMix() { // turntable B becomes the home turntable (forced: cut short, and the old one falls silent at once)
+    const now = AC.currentTime, A = stash(), d = dk; dk = null; pose(d.B); entering = false; S16 = 60 / ST[station].bpm / 4;
     for (const [p, v] of [[A.fad.gain, 0], [fad.gain, 1], [djF.frequency, 10], [djL.frequency, 20000], [mixDry.gain, 1], [mixW.gain, 0]]) { p.cancelScheduledValues(now); p.setTargetAtTime(v, now, 0.05); }
-    if (live) setTimeout(() => A.fad.disconnect(), 6000); // les échos de l'ancienne platine se sont éteints
-    M = d.M2; TH = M.th; mixFait = M; buildAmb();
+    if (live) setTimeout(() => A.fad.disconnect(), 6000); // the old turntable's echoes have died out
+    M = d.M2; TH = M.th; mixDone = M; buildAmb();
   }
-  function avance(ah) { // écrit les pas de la platine maison jusqu'à ah secondes devant l'horloge (pendant un passage : au tempo commun)
-    while (nextT < AC.currentTime - 0.2) { nextT += S16; stp++; } // onglet en veille : on saute au lieu de rattraper
-    while (nextT < AC.currentTime + ah) { if (dk) S16 = 60 / bpmA(nextT) / 4; sched(stp++, nextT); nextT += S16 / (1 - 0.1 * platine); }
+  function advance(ah) { // writes the home turntable's steps up to ah seconds ahead of the clock (during a transition: at the shared tempo)
+    while (nextT < AC.currentTime - 0.2) { nextT += S16; stp++; } // tab in the background: skip ahead instead of catching up
+    while (nextT < AC.currentTime + ah) { if (dk) S16 = 60 / bpmA(nextT) / 4; sched(stp++, nextT); nextT += S16 / (1 - 0.1 * turntable); }
   }
-  function pump() { // avance le séquenceur jusqu'à 0,25 s devant l'horloge audio (0,5 s pendant un passage DJ : la carte suivante se construit) : une image qui cale (pluie du port de WAN-9, ramasse-miettes, shader compilé) ne fait plus de trou ; la musique réagit aux événements de course jusqu'à 0,25 s plus tard
-    if (EC.pause) { nextT = Math.max(nextT, AC.currentTime + 0.05); return; } // éditeur de musique à l'arrêt : le séquenceur attend, le contexte reste ouvert pour essayer une note
-    if (!dk) return avance(0.25);
-    if (AC.currentTime >= dk.tE) { finMix(); return avance(0.25); }
-    const A = sauve(); pose(dk.B); avance(0.5); dk.B = sauve(); pose(A); // la platine B
-    if (nextT < dk.stopA) avance(0.5); else nextT = Math.max(nextT, AC.currentTime); // la platine A s'arrête à 80 % : seul son écho continue
+  function pump() { // advances the sequencer up to 0.25 s ahead of the audio clock (0.5 s during a DJ transition: the next map is being built): a frame that stalls (rain at the WAN-9 port, garbage collection, compiled shader) no longer leaves a gap; the music reacts to race events up to 0.25 s later
+    if (EC.pause) { nextT = Math.max(nextT, AC.currentTime + 0.05); return; } // music editor stopped: the sequencer waits, the context stays open to try a note
+    if (!dk) return advance(0.25);
+    if (AC.currentTime >= dk.tE) { endMix(); return advance(0.25); }
+    const A = stash(); pose(dk.B); advance(0.5); dk.B = stash(); pose(A); // turntable B
+    if (nextT < dk.stopA) advance(0.5); else nextT = Math.max(nextT, AC.currentTime); // turntable A stops at 80%: only its echo continues
   }
-  // Moteurs : n = explosions par cycle de deux tours ; irr = poids des harmoniques entre deux explosions (le galop d'un V8 à vilebrequin croisé, la chanson d'un 5 cylindres) ;
-  // rasp = la râpe (bruit haché au rythme des explosions) ; pipe = résonance de la ligne d'échappement (Hz). Le rotatif : deux rotors, lisse et très râpeux.
-  // Moteur physique, d'après Baldan, Lachambre, Delle Monache, Boussard, « Physically informed car engine sound synthesis for virtual and augmented environments » (2015),
-  // et sa transcription Web Audio par Antonio-R1 (engine-sound-generator, MIT) : chaque cylindre pousse une impulsion (piston + allumage) dans des guides d'onde
-  // (admission, cylindre, échappement, collecteur) dont les soupapes ouvrent et ferment les extrémités ; les collecteurs se rejoignent dans un tube droit, un silencieux
-  // (guides d'onde en parallèle) et une sortie. Ce qu'on entend : la sortie d'échappement, plus l'admission et les vibrations du bloc. Longueurs en échantillons à 44,1 kHz.
-  // n : cylindres (explosions par cycle de deux tours) ; irr : écart de force entre cylindres et d'un cycle à l'autre (le grain) ; off : calage de chacun (V8 à vilebrequin croisé : légèrement irrégulier, d'où le galop) ; ign : durée de l'allumage (fraction de cycle)
-  const MOT = {
+  // Engines: n = firings per two-revolution cycle; irr = weight of the harmonics between two firings (the gallop of a cross-plane V8, the song of a 5-cylinder);
+  // rasp = the rasp (noise chopped at the firing rate); pipe = resonance of the exhaust line (Hz). The rotary: two rotors, smooth and very rasping.
+  // Physical engine model, after Baldan, Lachambre, Delle Monache, Boussard, "Physically informed car engine sound synthesis for virtual and augmented environments" (2015),
+  // and its Web Audio transcription by Antonio-R1 (engine-sound-generator, MIT): each cylinder pushes an impulse (piston + ignition) into waveguides
+  // (intake, cylinder, exhaust, manifold) whose valves open and close the ends; the manifolds join in a straight tube, a silencer
+  // (waveguides in parallel) and an exitAt. What you hear: the exhaust outlet, plus the intake and the vibrations of the blk. Lengths in samples at 44.1 kHz.
+  // n: cylinders (firings per two-revolution cycle); irr: force difference between cylinders and from one cycle to the next (the grain); off: timing offset of each (cross-plane V8: slightly uneven, hence the gallop); ign: ignition duration (fraction of a cycle)
+  const MOTOR = {
     l4: { n: 4, ign: 0.016, irr: 0.2, int: 100, exh: 100, ext: 100, str: 128, muf: [10, 15, 20, 25], out: 5 },
     l5: { n: 5, ign: 0.016, irr: 0.25, int: 90, exh: 110, ext: 90, str: 140, muf: [12, 17, 23, 29], out: 6 },
     l6: { n: 6, ign: 0.014, irr: 0.15, int: 80, exh: 90, ext: 80, str: 120, muf: [9, 13, 18, 24], out: 5 },
@@ -721,59 +721,59 @@
     v10: { n: 10, ign: 0.01, irr: 0.18, int: 90, exh: 100, ext: 90, str: 150, muf: [11, 16, 22, 28], out: 6 },
     rot: { n: 4, ign: 0.03, irr: 0.1, int: 60, exh: 50, ext: 60, str: 100, muf: [8, 12, 16, 20], out: 4 },
   };
-  const CAMION = { n: 6, ign: 0.02, irr: 0.2, int: 160, exh: 200, ext: 160, str: 260, muf: [20, 28, 36, 46], out: 10 }; // gros diesel du trafic, qui tourne vers 1 500 tr/min
-  // Acoustique du lieu : ce que renvoient les murs, les façades et le relief (moteur, pneus, chocs). slap = retard du premier écho (s), sl = son niveau,
-  // mur = ce que le bord de la route ajoute quand on le serre (façades, glissières, parois ; 0 en terrain ouvert), rv = réverbération, dur = sa durée (s), lp = sa clarté (Hz).
-  // En tunnel, l'écho devient court et fort, et la réverbération du tunnel (rev) prend le relais.
-  const ESP = {
-    ville: { slap: 0.034, sl: 0.3, mur: 1, rv: 0.12, dur: 1.2, lp: 4000 }, // rues encaissées entre les tours
-    touge: { slap: 0.16, sl: 0.12, mur: 0.4, rv: 0.06, dur: 2.2, lp: 2500 }, // la montagne renvoie l'écho de loin ; forêt qui l'étouffe
-    chapada: { slap: 0.11, sl: 0.1, mur: 0.5, rv: 0.07, dur: 1.9, lp: 2600 }, // une vallée de forêt : l'écho revient des troncs et des murs de la cité, vite étouffé
-    wangan: { slap: 0.022, sl: 0.2, mur: 0.8, rv: 0.06, dur: 1, lp: 4500 }, // autoroute surélevée entre deux glissières de béton
-    paris: { slap: 0.028, sl: 0.3, mur: 1, rv: 0.14, dur: 1.4, lp: 3800 }, // façades de pierre
-    canal: { slap: 0.05, sl: 0.25, mur: 0.7, rv: 0.1, dur: 1.6, lp: 3500 }, // le lit de béton du canal
-    stade: { slap: 0.09, sl: 0.25, mur: 0.5, rv: 0.45, dur: 3, lp: 3000 }, // arène couverte : grande salle
-    barrage: { slap: 0.14, sl: 0.12, mur: 0.5, rv: 0.1, dur: 2, lp: 3000 }, // vallée encaissée : l'écho revient de loin
-    givre: { slap: 0.06, sl: 0.04, mur: 0.2, rv: 0.03, dur: 0.8, lp: 2000 }, // la neige boit le son
-    terre: { slap: 0.12, sl: 0.06, mur: 0, rv: 0.03, dur: 1, lp: 2500 }, // garrigue à découvert
-    perse: { slap: 0.045, sl: 0.22, mur: 0.7, rv: 0.09, dur: 2.6, lp: 3400, lieux: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // façades de terre ; lieux = [de, à, facteur] sur la salle du lieu, en fractions du tour : le passage sous la Porte des Nations, la salle aux cent colonnes
-    essai: { slap: 0.04, sl: 0.1, mur: 0.5, rv: 0.05, dur: 1, lp: 3000 },
+  const TRUCK = { n: 6, ign: 0.02, irr: 0.2, int: 160, exh: 200, ext: 160, str: 260, muf: [20, 28, 36, 46], out: 10 }; // heavy traffic diesel, running around 1,500 rpm
+  // Acoustics of the place: what the walls, facades and terrain send back (engine, tyres, impacts). slap = delay of the first echo (s), sl = its level,
+  // wall = what the road edge adds when you hug it (facades, guardrails, walls; 0 on open ground), rv = reverb, dur = its duration (s), lp = its clarity (Hz).
+  // In a tunnel, the echo becomes short and strong, and the tunnel reverb (rev) takes over.
+  const ACOUSTICS = {
+    ville: { slap: 0.034, sl: 0.3, intoWall: 1, rv: 0.12, dur: 1.2, lp: 4000 }, // narrow streets between the towers
+    touge: { slap: 0.16, sl: 0.12, intoWall: 0.4, rv: 0.06, dur: 2.2, lp: 2500 }, // the mountain returns the echo from afar; forest that muffles it
+    chapada: { slap: 0.11, sl: 0.1, intoWall: 0.5, rv: 0.07, dur: 1.9, lp: 2600 }, // a forest valley: the echo comes back from the trunks and the walls of the city, quickly muffled
+    wangan: { slap: 0.022, sl: 0.2, intoWall: 0.8, rv: 0.06, dur: 1, lp: 4500 }, // elevated motorway between two concrete barriers
+    paris: { slap: 0.028, sl: 0.3, intoWall: 1, rv: 0.14, dur: 1.4, lp: 3800 }, // stone facades
+    canal: { slap: 0.05, sl: 0.25, intoWall: 0.7, rv: 0.1, dur: 1.6, lp: 3500 }, // the concrete bed of the canal
+    stade: { slap: 0.09, sl: 0.25, intoWall: 0.5, rv: 0.45, dur: 3, lp: 3000 }, // covered arena: large hall
+    barrage: { slap: 0.14, sl: 0.12, intoWall: 0.5, rv: 0.1, dur: 2, lp: 3000 }, // steep valley: the echo returns from afar
+    givre: { slap: 0.06, sl: 0.04, intoWall: 0.2, rv: 0.03, dur: 0.8, lp: 2000 }, // snow absorbs the sound
+    terre: { slap: 0.12, sl: 0.06, intoWall: 0, rv: 0.03, dur: 1, lp: 2500 }, // open scrubland
+    perse: { slap: 0.045, sl: 0.22, intoWall: 0.7, rv: 0.09, dur: 2.6, lp: 3400, spots: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // earth facades; spots = [from, to, factor] on the place's room, in fractions of the lap: the passage under the Porte des Nations, the hall of a hundred columns
+    attempt: { slap: 0.04, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 1, lp: 3000 },
   };
-  const MOTEUR_JS = `
-class WG { // guide d'onde : deux lignes à retard (aller, retour) ; a, b : réflexion aux extrémités gauche et droite
+  const MOTOR_JS = `
+class WG { // wave guide: two delay lines (forward, back); a, b: reflection at the left and right ends
   constructor(L, a, b) { this.L = L; this.r = new Float32Array(L); this.l = new Float32Array(L); this.p = 0; this.a = a; this.b = b; this.oL = 0; this.oR = 0; }
   step(iL, iR) { const p = this.p, xr = this.r[p], xl = this.l[p]; this.oR = xr * (1 - this.b); this.oL = xl * (1 - this.a); this.r[p] = iL + xl * this.a; this.l[p] = iR + xr * this.b; this.p = p + 1 === this.L ? 0 : p + 1; }
 }
-const mix = (v, o, c) => c + (o - c) * v, TAU = 2 * Math.PI, PB = 1.5; // PB : poids des bouffées d'échappement directes
+const mix = (v, o, c) => c + (o - c) * v, TAU = 2 * Math.PI, PB = 1.5; // PB: weight of the direct exhaust puffs
 class Moteur extends AudioWorkletProcessor {
-  static get parameterDescriptors() { return [{ name: 'rpm', defaultValue: 900, minValue: 0, maxValue: 15000 }, { name: 'load', defaultValue: 0, minValue: 0, maxValue: 1 }, { name: 'dg', defaultValue: 0, minValue: 0, maxValue: 1 }]; } // dg : dégâts de la voiture (game.js), qui dérèglent l'allumage
-  constructor() { super(); this.rev = 0; this.jit = 0; this.bl = 0; this.pf = 0; this.dx = 0; this.dy = 0; this.vit = true; this.port.onmessage = e => { if (e.data && e.data.dort !== undefined) this.dort = e.data.dort; else if (e.data) this.cfg(e.data); else this.vit = false; }; } // dort : véhicule inaudible, rien n'est calculé (la sortie reste à zéro)
+  static get parameterDescriptors() { return [{ name: 'rpm', defaultValue: 900, minValue: 0, maxValue: 15000 }, { name: 'load', defaultValue: 0, minValue: 0, maxValue: 1 }, { name: 'dg', defaultValue: 0, minValue: 0, maxValue: 1 }]; } // dmgP: car damage (game.js), which detunes the ignition
+  constructor() { super(); this.rev = 0; this.jit = 0; this.bl = 0; this.pf = 0; this.dx = 0; this.dy = 0; this.vit = true; this.port.onmessage = e => { if (e.data && e.data.dort !== undefined) this.dort = e.data.dort; else if (e.data) this.cfg(e.data); else this.vit = false; }; } // asleep: vehicle inaudible, nothing is computed (the output stays at zero)
   cfg(P) { const k = sampleRate / 44100, L = x => Math.max(2, Math.round(x * k));
     this.ign = P.ign; this.irr = P.irr; this.off = P.off || Array.from({ length: P.n }, (_, i) => i / P.n);
     this.C = this.off.map(() => ({ k: 1 + P.irr * (Math.random() * 2 - 1), f: 1, x0: 1, cy: new WG(L(10), 0.75, 0.75), in: new WG(L(P.int), 0.01, 0.95), ex: new WG(L(P.exh), 0.95, 0.01), xt: new WG(L(P.ext), 0.01, 0.01) }));
     this.st = new WG(L(P.str), 0.01, 0.01); this.mu = P.muf.map(x => new WG(L(x), 0.01, 0.01)); this.ou = new WG(L(P.out), 0.01, 0.01); }
   process(_, outs, par) {
-    if (!this.C || this.dort) return this.vit; // pas encore de configuration, ou endormi
+    if (!this.C || this.dort) return this.vit; // no configuration yet, or asleep
     const o = outs[0][0], R = par.rpm, LD = par.load, dg = par.dg[0], C = this.C, n = C.length, m = this.mu.length, kb = 1 - Math.exp(-TAU * 125 / sampleRate), kp = 1 - Math.exp(-TAU * 4000 / sampleRate);
     for (let s = 0; s < o.length; s++) {
       const rpm = R.length > 1 ? R[s] : R[0], ld = LD.length > 1 ? LD[s] : LD[0], ig = 5 * (0.2 + 0.8 * ld);
-      this.rev = (this.rev + rpm / 120 / sampleRate) % 1; this.jit += (Math.random() * 0.006 - this.jit) * 0.003; // vilebrequin, et le petit flottement d'un vrai moteur
+      this.rev = (this.rev + rpm / 120 / sampleRate) % 1; this.jit += (Math.random() * 0.006 - this.jit) * 0.003; // crankshaft, and the slight wobble of a real engine
       const stL = this.st.oL / n; let sx = 0, si = 0, sb = 0, sp = 0;
       for (let i = 0; i < n; i++) { const c = C[i], x = (this.rev + this.off[i] + this.jit) % 1;
         const iv = x < 0.25 ? Math.sin(2 * TAU * x) : 0, ev = x > 0.75 ? -Math.sin(2 * TAU * x) : 0;
-        if (x < c.x0) c.f = Math.random() < dg * dg * 0.3 ? 0 : c.k * (1 + (this.irr + dg * 0.8) * 1.5 * (Math.random() * 2 - 1)); c.x0 = x; // abîmé : cylindres plus inégaux, et des ratés // nouvelle explosion : chaque cylindre a sa force, et elle varie d'un cycle à l'autre
-        const ia = this.ign * 0.2, e = x < ia ? x / ia : x < this.ign * 4 ? Math.exp((ia - x) / (this.ign * 0.6)) : 0; // front raide, puis la détente
-        const dr = 1.5 * Math.cos(2 * TAU * x) + ig * c.f * e * (1 + 0.5 * (Math.random() * 2 - 1)); // piston + explosion (avec son bruit)
+        if (x < c.x0) c.f = Math.random() < dg * dg * 0.3 ? 0 : c.k * (1 + (this.irr + dg * 0.8) * 1.5 * (Math.random() * 2 - 1)); c.x0 = x; // worn: more uneven cylinders, and misfires // new explosion: each cylinder has its own strength, and it varies from one cycle to the next
+        const ia = this.ign * 0.2, e = x < ia ? x / ia : x < this.ign * 4 ? Math.exp((ia - x) / (this.ign * 0.6)) : 0; // steep front, then the expansion
+        const dr = 1.5 * Math.cos(2 * TAU * x) + ig * c.f * e * (1 + 0.5 * (Math.random() * 2 - 1)); // piston + explosion (with its noise)
         c.in.b = mix(iv, 0.01, 0.95); c.cy.a = mix(iv, 0.01, 0.95); c.cy.b = mix(ev, 0.01, 0.95); c.ex.a = mix(ev, 0.01, 0.95);
         c.in.step((Math.random() * 2 - 1) * iv * 0.2 * (0.3 + 0.7 * ld), c.cy.oL * 0.5);
         c.cy.step(dr + c.in.oR * 0.5, c.ex.oL * 0.5);
         c.ex.step(c.cy.oR, c.xt.oL); c.xt.step(c.ex.oR, stL);
-        const xb = x - 0.75; if (xb >= 0) sp += c.f * (0.35 + 0.65 * ld) * Math.exp(-xb / (this.ign * 1.5)) * (xb < this.ign * 0.15 ? xb / (this.ign * 0.15) : 1) * (1 + 0.6 * (Math.random() * 2 - 1)); // bouffée d'échappement à l'ouverture de la soupape : front raide, détente, souffle
+        const xb = x - 0.75; if (xb >= 0) sp += c.f * (0.35 + 0.65 * ld) * Math.exp(-xb / (this.ign * 1.5)) * (xb < this.ign * 0.15 ? xb / (this.ign * 0.15) : 1) * (1 + 0.6 * (Math.random() * 2 - 1)); // exhaust puff at valve opening: steep front, expansion, breath
         sx += c.xt.oR; si += c.in.oL; sb += c.cy.oL; }
       let mL = 0, mR = 0; const sR = this.st.oR / m, oL = this.ou.oL / m;
       for (const w of this.mu) { w.step(sR, oL); mL += w.oL; mR += w.oR; }
       this.st.step(sx, mL); this.ou.step(mR, 0);
-      this.bl += (sb - this.bl) * kb; // vibrations du bloc, sous 125 Hz
+      this.bl += (sb - this.bl) * kb; // block vibrations, below 125 Hz
       this.pf += (sp - this.pf) * kp; const y = this.ou.oR + 0.35 * si + 0.5 * this.bl + PB * this.pf, d = y - this.dx + 0.995 * this.dy; this.dx = y; this.dy = d; o[s] = d; // + coupe-continu
     }
     return this.vit;
@@ -781,335 +781,335 @@ class Moteur extends AudioWorkletProcessor {
 }
 registerProcessor('moteur', Moteur);`;
   let modOk = false, modP = Promise.resolve();
-  function brancher(v) { // le moteur physique arrive une fois le module chargé (un instant après init)
-    try { const n = new AudioWorkletNode(AC, 'moteur', { numberOfInputs: 0, outputChannelCount: [1] }); n.connect(v.eng); v.node = n; v.typ = null;
+  function plug(v) { // the physical engine arrives once the module is loaded (a moment after init)
+    try { const n = new AudioWorkletNode(AC, 'engine', { numberOfInputs: 0, outputChannelCount: [1] }); n.connect(v.eng); v.node = n; v.typ = null;
       v.src.push({ stop: () => setTimeout(() => { n.disconnect(); n.port.postMessage(0); }, 400) }); } catch (e) { }
   }
-  const SEC = { colle: 0, roul: 0, vir: 0, aq: 0 }, RL = 0.06, ML = 0.07, GL = 0.25; // sol par défaut (banc d'écoute) : bitume sec ; niveaux du roulement, du gravier, de la glisse
-  // Une voix = ce qu'un joueur entend de sa voiture ; vm, vp : ses deux sorties (moteur et boîte ; pneus et roulement), que tait() ferme.
-  // Moteur : le modèle physique (MOTEUR_JS) → légère saturation en charge → caisse → rupteur ; + le sifflement du turbo.
-  // Pneus (bruit de roulement d'un pneu de tourisme : pic vers 800-1 200 Hz, qui monte avec la vitesse) : bitume, gravier sur la terre, étouffé sur la neige, martèlement des pavés, eau sur le mouillé ; glisse ; ripage.
-  // ns : la source de bruit ; mot, pneu : où sortent le moteur et les pneus ; src : ce qu'il faudra arrêter pour retirer la voix
-  function voix(ns, mot, pneu, src = []) {
-    const vm = gain(0, mot), vp = gain(0, pneu), go = o => { o.start(0, Math.random() * 2); src.push(o); return o; }, os = (type, f) => { const o = AC.createOscillator(); o.type = type; o.frequency.value = f; o.start(); src.push(o); return o; };
-    const lent = r => { const s = AC.createBufferSource(); s.buffer = nbuf; s.loop = true; s.playbackRate.value = r; return go(s); }; // bruit lu très lentement : une variation au hasard, sous les 50 Hz
+  const SEC = { gripCoef: 0, rollAmt: 0, corner: 0, aq: 0 }, RL = 0.06, ML = 0.07, GL = 0.25; // default ground (listening bench): dry asphalt; levels of rolling, gravel, sliding
+  // A voice = what a player hears of their car; vm, vp: its two outputs (engine and gearbox; tyres and rolling), that hush() closes.
+  // Engine: the physical model (MOTOR_JS) → slight saturation under load → body → contact breaker; + the turbo whistle.
+  // Tyres (rolling noise of a road tyre: peak around 800-1,200 Hz, rising with speed): asphalt, gravel on dirt, muffled on snow, cobble hammering, water on wet ground; skid; scrub.
+  // ns: the noise source; mot, pneu: where the engine and the tyres come out; src: what has to be stopped to remove the voice
+  function voice(ns, motorFam, tire, src = []) {
+    const vm = gain(0, motorFam), vp = gain(0, tire), go = o => { o.start(0, Math.random() * 2); src.push(o); return o; }, os = (type, f) => { const o = AC.createOscillator(); o.type = type; o.frequency.value = f; o.start(); src.push(o); return o; };
+    const slowSrc = r => { const s = AC.createBufferSource(); s.buffer = nbuf; s.loop = true; s.playbackRate.value = r; return go(s); }; // noise read very slowly: a random variation, below 50 Hz
     const out = gain(0, vm), lim = gain(1, out), body = filt('peaking', 120, 1, lim), hp = filt('highpass', 35, 0.7, body), eng = gain(0.6, shaper(1.5, hp));
     body.gain.value = 3;
-    const limD = gain(0, lim.gain); os('square', 19).connect(limD); // rupteur : l'allumage coupé, rétabli, coupé
-    const twG = gain(0, vm), tw = os('sine', 1500); tw.connect(twG); ns.connect(filt('bandpass', 1800, 2, gain(0.1, twG))); // turbo : sifflement et souffle
-    const roul = gain(0, vp), rm = gain(0.7, roul), rl = filt('bandpass', 900, 0.8, filt('lowpass', 2500, 0.7, rm)); ns.connect(rl); ns.connect(filt('lowpass', 120, 0.7, gain(0.8, rm))); // bitume : bande du roulement + grondement des bosses
-    lent(0.004).connect(gain(0.3, rm.gain)); // le grain de la route varie
+    const limD = gain(0, lim.gain); os('square', 19).connect(limD); // contact breaker: ignition cut, restored, cut
+    const twG = gain(0, vm), tw = os('sine', 1500); tw.connect(twG); ns.connect(filt('bandpass', 1800, 2, gain(0.1, twG))); // turbo: whistle and whoosh
+    const rollAmt = gain(0, vp), rm = gain(0.7, rollAmt), rl = filt('bandpass', 900, 0.8, filt('lowpass', 2500, 0.7, rm)); ns.connect(rl); ns.connect(filt('lowpass', 120, 0.7, gain(0.8, rm))); // asphalt: rolling band + rumble of bumps
+    slowSrc(0.004).connect(gain(0.3, rm.gain)); // the road's grain varies
     const gr = AC.createBufferSource(); gr.buffer = gbuf; gr.loop = true; go(gr);
-    const meub = gain(0, vp), mf = filt('bandpass', 1600, 0.6, filt('lowpass', 2500, 0.7, meub)); gr.connect(mf); gr.connect(filt('bandpass', 250, 1, gain(0.5, meub))); // gravier : les cailloux qui crépitent ; neige : plus sourde
-    const pav = gain(0, vp), pavM = gain(0.5, pav), po = os('square', 20); po.connect(gain(0.5, pavM.gain)); ns.connect(filt('bandpass', 400, 0.7, pavM)); // pavés : martèlement
-    const mou = gain(0, vp); ns.connect(filt('bandpass', 2200, 0.6, mou)); // mouillé : le chuintement de l'eau chassée
-    const g = gain(0, vp), b1 = filt('bandpass', 500, 1, g); ns.connect(b1); // le caoutchouc qui frotte, large
-    const cri = gain(0, vp), ac = gain(0.5, cri), b2 = filt('bandpass', 1000, 12, ac), b3 = filt('bandpass', 2000, 12, gain(0.35, ac)); ns.connect(b2); ns.connect(b3); // crissement : une note vers 1 kHz et son harmonique
-    const sl = lent(0.03); sl.connect(gain(0.6, ac.gain)); sl.connect(gain(60, b2.detune)); sl.connect(gain(60, b3.detune)); // par à-coups (adhérence, glissement), hauteur qui erre
+    const looseG = gain(0, vp), mf = filt('bandpass', 1600, 0.6, filt('lowpass', 2500, 0.7, looseG)); gr.connect(mf); gr.connect(filt('bandpass', 250, 1, gain(0.5, looseG))); // gravel: the pebbles crackling; snow: duller
+    const cobble = gain(0, vp), cobbleM = gain(0.5, cobble), po = os('square', 20); po.connect(gain(0.5, cobbleM.gain)); ns.connect(filt('bandpass', 400, 0.7, cobbleM)); // cobbles: hammering
+    const limp = gain(0, vp); ns.connect(filt('bandpass', 2200, 0.6, limp)); // wet: the hiss of water being pushed aside
+    const g = gain(0, vp), b1 = filt('bandpass', 500, 1, g); ns.connect(b1); // the rubber rubbing, broad
+    const squeal = gain(0, vp), ac = gain(0.5, squeal), b2 = filt('bandpass', 1000, 12, ac), b3 = filt('bandpass', 2000, 12, gain(0.35, ac)); ns.connect(b2); ns.connect(b3); // squeal: a note around 1 kHz and its harmonic
+    const sl = slowSrc(0.03); sl.connect(gain(0.6, ac.gain)); sl.connect(gain(60, b2.detune)); sl.connect(gain(60, b3.detune)); // in jerks (grip, slip), pitch wandering
     const scrub = gain(0, vp); ns.connect(filt('lowpass', 200, 0.7, scrub));
-    const spray = gain(0, vp); gr.connect(filt('bandpass', 1400, 0.6, filt('lowpass', 2500, 0.7, spray))); // gerbe de cailloux ou de neige en glisse
-    const v = { vm, vp, eng, out, lim, limD, tw, twG, roul, rl, gr, meub, mf, pav, po, mou, g, cri, b1, b2, b3, scrub, spray, mot: vm, src, gas: 0, crk: 0, typ: null, node: null }; // gas : l'accélérateur à l'image précédente ; crk : les pétarades qui suivent un lever de pied
-    if (modOk) brancher(v);
+    const spray = gain(0, vp); gr.connect(filt('bandpass', 1400, 0.6, filt('lowpass', 2500, 0.7, spray))); // spray of pebbles or snow when sliding
+    const v = { vm, vp, eng, out, lim, limD, tw, twG, rollAmt, rl, gr, looseG, mf, cobble, po, limp, g, squeal, b1, b2, b3, scrub, spray, motorFam: vm, src, gas: 0, crk: 0, typ: null, node: null }; // gas: the throttle at the previous frame; crk: the backfires that follow a lift off the throttle
+    if (modOk) plug(v);
     return v;
   }
-  // voix d'un joueur de l'écran partagé : la même, derrière un panoramique, avec son propre bruit (arrêter ses sources suffit alors à tout libérer).
-  // Le panoramique à puissance constante ôte 3 dB à chaque voix : deux moteurs ensemble pèsent ce que pèse celui du solo, la marge du compresseur ne bouge pas.
-  function voixPan(p) {
-    const pm = AC.createStereoPanner(), pp = AC.createStereoPanner(), ns = AC.createBufferSource(); pm.pan.value = pp.pan.value = p; pm.connect(V.mot); pp.connect(V.pneu);
-    ns.buffer = nbuf; ns.loop = true; ns.start(0, Math.random() * 2); return voix(ns, pm, pp, [ns]);
+  // voice of a split-screen player: the same, behind a pan, with its own noise (stopping its sources is then enough to free everything).
+  // The constant-power pan takes 3 dB off each voice: two engines together weigh what the solo one does, the compressor headroom does not move stepSec.
+  function voicePan(p) {
+    const pm = AC.createStereoPanner(), pp = AC.createStereoPanner(), ns = AC.createBufferSource(); pm.pan.value = pp.pan.value = p; pm.connect(V.motorFam); pp.connect(V.tire);
+    ns.buffer = nbuf; ns.loop = true; ns.start(0, Math.random() * 2); return voice(ns, pm, pp, [ns]);
   }
-  // voix d'un autre véhicule (rival, camion) : son moteur physique, atténué par la distance (niveau et aigus, comme l'air), placé dans l'espace par un PannerNode HRTF (devant, derrière, côtés, au casque) ;
-  // la distance reste réglée à la main (g, lp : rolloff nul) ; l'effet Doppler passe par le régime (la hauteur suit le régime) ; wh : le souffle de l'air quand il passe tout près
-  function voixLoin(ns) {
-    const pan = AC.createPanner(); pan.panningModel = 'HRTF'; pan.distanceModel = 'linear'; pan.rolloffFactor = 0; pan.connect(V.mot); const g = gain(0, pan), lp = filt('lowpass', 8000, 0.7, g), eng = gain(1, lp), wh = gain(0, pan); ns.connect(filt('bandpass', 700, 0.8, wh));
-    const v = { eng, g, lp, pan, wh, src: [], node: null, typ: null }; if (modOk) brancher(v); return v;
+  // voice of another vehicle (rival, truck): its physical engine, attenuated by distance (level and highs, as air does), placed in space by an HRTF PannerNode (front, behind, sides, headphones);
+  // the distance stays set by hand (g, lp: zero rolloff); the Doppler effect goes through the engine speed (the pitch follows the rpm); wh: the air whoosh when it passes very close
+  function voiceFar(ns) {
+    const pan = AC.createPanner(); pan.panningModel = 'HRTF'; pan.distanceModel = 'linear'; pan.rolloffFactor = 0; pan.connect(V.motorFam); const g = gain(0, pan), lp = filt('lowpass', 8000, 0.7, g), eng = gain(1, lp), wh = gain(0, pan); ns.connect(filt('bandpass', 700, 0.8, wh));
+    const v = { eng, g, lp, pan, wh, src: [], node: null, typ: null }; if (modOk) plug(v); return v;
   }
-  function klaxon(t = AC.currentTime, d = V.mot) { // trompe à air d'un camion : deux notes en accord, cuivrées, un coup long
+  function klaxon(t = AC.currentTime, d = V.motorFam) { // a truck's air horn: two notes in chord, brassy, one long blast
     for (const f of [155, 196]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(filt('lowpass', 1800, 1, g)); g.connect(d);
       g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05, t + 0.04); g.gain.setValueAtTime(0.05, t + 0.9); g.gain.linearRampToValueAtTime(0, t + 1.1); o.start(t); o.stop(t + 1.15); }
   }
-  function reception(l, t = AC.currentTime, d = V.choc) { // réception d'un saut : les pneus et la suspension encaissent ; au-delà, la caisse talonne
+  function landing(l, t = AC.currentTime, d = V.impact) { // landing a jump: the tyres and suspension absorb it; beyond that, the body bottoms out
     const v = Math.min(0.45, (l - 3) * 0.06), o = osc('sine', 95, t, 0.28, v, d); o && o.frequency.exponentialRampToValueAtTime(38, t + 0.22);
     nz(t, 0.09, v * 0.6, d, 'lowpass', 450); if (l > 8) { nz(t + 0.015, 0.14, v * 0.35, d, 'bandpass', 1100, 3, mbuf); nz(t + 0.03, 0.05, v * 0.3, d, 'bandpass', 2400, 2); }
   }
-  // regle : la cible d'un réglage, envoyée seulement si elle a bougé (0,1 %) : 87 % des envois par image répétaient la précédente, et chaque envoi peut attendre le fil audio (jusqu'à 2 ms)
-  // tout setTargetAtTime d'un réglage visé à chaque image passe par ici, sinon la valeur retenue ne serait plus la bonne
-  const regle = (p, v, t, tc) => { if (p.vv !== undefined && p.vtc === tc && Math.abs(v - p.vv) <= Math.abs(v) * 1e-3 + 1e-6) return; p.vv = v; p.vtc = tc; p.setTargetAtTime(v, t, tc); };
-  // un moteur physique coûte 2 à 4 % du fil audio, même muet : celui d'un véhicule qu'on n'entend pas dort
-  const dors = (v, x) => { x = !!x; if (v.node && v.dort !== x) { v.dort = x; v.node.port.postMessage({ dort: x }); } };
-  const tait = (v, t) => { regle(v.vm.gain, 0, t, 0.05); regle(v.vp.gain, 0, t, 0.05); };
-  // la chaîne d'une platine (couleur de la station, filtres, batterie, bus pompé, saturations, réverbération, écho, chorus, tranches) : une au départ, une seconde pendant un passage DJ
-  function chaine() {
-    fad = gain(1, musIn); eqH = filt('highshelf', 5000, 0.7, fad); eqM = filt('peaking', 1000, 0.9, eqH); eqL = filt('lowshelf', 130, 0.7, eqM); hpF = filt('highpass', 20, 0.9, eqL); djF = filt('highpass', 10, 0.7, hpF); djL = filt('lowpass', 20000, 0.7, djF); secG = gain(1, djL); gritDry = gain(1, secG); tuneG = gain(1, gritDry); gritWet = gain(0, secG); tuneG.connect(gain(2.5, shaper(6, gritWet))); // couleur de la station ; niveau de la section ; voie saturée, dosée par la proximité du mur
-    drumF = gain(1, tuneG); drumG = gain(1, drumF); kdrv = shaper(3, gain(0.8, drumG)); // drumF : fondus de la batterie aux entrées et sorties
-    { const pn = AC.createStereoPanner(); pn.pan.value = 0.2; pn.connect(drumG); const pk = filt('peaking', 3800, 1, pn); pk.gain.value = -3; const hs = filt('highshelf', 8000, 0.7, pk); hs.gain.value = -6; hatG = gain(0.7, hs); } // charlestons : leur tranche, plus bas, aigus adoucis, un peu à droite (au centre et brillants, ils couvraient tout)
+  // setParam: the target of a setting, sent only if it moved (0.1%): 87% of the sends per frame repeated the previous one, and each send can wait for the audio thread (up to 2 ms)
+  // every setTargetAtTime of a setting aimed at each frame goes through here, otherwise the value kept would no longer be the right one
+  const setParam = (p, v, t, tc) => { if (p.vv !== undefined && p.vtc === tc && Math.abs(v - p.vv) <= Math.abs(v) * 1e-3 + 1e-6) return; p.vv = v; p.vtc = tc; p.setTargetAtTime(v, t, tc); };
+  // a physical engine costs 2 to 4% of the audio thread, even muted: that of a vehicle you cannot hear sleeps
+  const sleep = (v, x) => { x = !!x; if (v.node && v.asleep !== x) { v.asleep = x; v.node.port.postMessage({ asleep: x }); } };
+  const hush = (v, t) => { setParam(v.vm.gain, 0, t, 0.05); setParam(v.vp.gain, 0, t, 0.05); };
+  // a turntable's chain (station colour, filters, drums, pumped bus, saturations, reverb, echo, chorus, slices): one at the start, a second during a DJ transition
+  function chain() {
+    fad = gain(1, musIn); eqH = filt('highshelf', 5000, 0.7, fad); eqM = filt('peaking', 1000, 0.9, eqH); eqL = filt('lowshelf', 130, 0.7, eqM); hpF = filt('highpass', 20, 0.9, eqL); djF = filt('highpass', 10, 0.7, hpF); djL = filt('lowpass', 20000, 0.7, djF); secG = gain(1, djL); gritDry = gain(1, secG); tuneG = gain(1, gritDry); gritWet = gain(0, secG); tuneG.connect(gain(2.5, shaper(6, gritWet))); // station colour; section level; saturated lane, dosed by proximity to the wall
+    drumF = gain(1, tuneG); drumG = gain(1, drumF); kdrv = shaper(3, gain(0.8, drumG)); // drumF: drum fades at entries and exits
+    { const pn = AC.createStereoPanner(); pn.pan.value = 0.2; pn.connect(drumG); const pk = filt('peaking', 3800, 1, pn); pk.gain.value = -3; const hs = filt('highshelf', 8000, 0.7, pk); hs.gain.value = -6; hatG = gain(0.7, hs); } // hi-hats: their slice, lower, highs softened, a bit to the right (centred and bright, they covered everything)
     swF = filt('lowpass', 20000, 0.7, tuneG); busDry = gain(1, swF); busDrv = gain(0, swF);
-    duckG = gain(1, busDry); duckG.connect(gain(2.5, shaper(4, busDrv))); // tout sauf la batterie passe par ce bus pompé
+    duckG = gain(1, busDry); duckG.connect(gain(2.5, shaper(4, busDrv))); // everything except the drums goes through this pumped bus
     bsat = shaper(5, gain(0.5, duckG));
-    const fz = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, gain(0.3, duckG))); fz.gain.value = 5; fuzz = gain(6, shaper(8, fz)); // guitare : écrêtage, puis baffle
+    const fz = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, gain(0.3, duckG))); fz.gain.value = 5; fuzz = gain(6, shaper(8, fz)); // guitar: clipping, then cabinet
     acid = filt('lowpass', 1900, 12, duckG);
-    // réverbération de la musique (pièce de 1,3 s), écho rythmique filtré, chorus (deux retards modulés, un par côté, ± 8 cents : assez pour élargir, pas pour désaccorder)
+    // music reverb (1.3 s room), filtered rhythmic echo, chorus (two modulated delays, one per side, ± 8 cents: enough to widen, not to detune)
     const mr = AC.createConvolver(), mi = AC.createBuffer(2, AC.sampleRate * 1.3, AC.sampleRate);
     for (let c = 0; c < 2; c++) { const x = mi.getChannelData(c); for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.exp(-i / AC.sampleRate / 0.28); }
     mr.buffer = mi; mrevG = gain(0.2, tuneG); mr.connect(mrevG); revIn = gain(1, mr); drumRv = gain(0.05, revIn); drumG.connect(drumRv);
     dly = AC.createDelay(1); dlyFb = gain(0.42, dly); dly.connect(filt('lowpass', 3500, 0.5, dlyFb)); dly.connect(duckG); echoIn = gain(1, dly);
     choIn = AC.createGain();
     for (const sg of [-1, 1]) { const dl = AC.createDelay(0.1), p = AC.createStereoPanner(), l = AC.createOscillator(); dl.delayTime.value = 0.022 + 0.004 * sg; p.pan.value = 0.8 * sg; l.frequency.value = 0.6 + 0.15 * sg; l.connect(gain(0.0012, dl.delayTime)); l.start(); choIn.connect(dl); dl.connect(p); p.connect(duckG); }
-    // une tranche par partie : hachage, panoramique, envois vers réverbération, écho et chorus (réglés par le timbre de la station)
+    // one slice per part: chopping, pan, sends to reverb, echo and chorus (set by the station's timbre)
     strip = {}; was = {};
     for (const k of ['b', 'd', 'c', 'g', 'a', 'l']) { const pan = AC.createStereoPanner(), rv = gain(0, revIn), ec = gain(0, echoIn), ch = gain(0, choIn), lp = filt('lowpass', 20000, 0.7, pan), hp = filt('highpass', 20, 0.7, lp), gate = gain(1, hp); pan.connect(duckG); pan.connect(rv); pan.connect(ec); pan.connect(ch);
-      const fzOut = gain(0.3, gate), fe = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, fzOut)); fe.gain.value = 5; const fzIn = gain(6, shaper(8, fe)); // un ampli de guitare par partie, comme fuzz
+      const fzOut = gain(0.3, gate), fe = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, fzOut)); fe.gain.value = 5; const fzIn = gain(6, shaper(8, fe)); // one guitar amp per part, like fuzz
       strip[k] = { in: Object.assign(gain(MX[k], gate), { fz: fzIn }), fzIn, fzOut, gate, pan, rv, ec, ch, lp, hp }; }
   }
-  function initAudio(ctx) { // ctx : contexte hors ligne pour la mesure des niveaux (banc d'écoute) ; sans argument, le contexte audio du navigateur
+  function initAudio(ctx) { // ctx: offline context for measuring levels (listening bench); with no argument, the browser's audio context
     if (AC && live && !ctx) return AC.resume();
     if (AC && live) AC.close();
     AC = ctx || new (window.AudioContext || window.webkitAudioContext)(); live = !ctx;
-    const comp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); comp.connect(outG); // marge après le compresseur : mesuré, aucune crête au-dessus de -3 dB
-    vu = AC.createAnalyser(); vu.fftSize = 2048; outG.connect(vu); // ce qui sort vraiment, pour le vumètre du banc d'écoute
-    lastHit = 0; lastMus = -9; ambT = 2; rubT = satT = platine = 0; bigS = false; lastFill = lastRoll = -9; sortie = -1; grit = tens = 0; glisse = acquis = acqDit = boostPend = boostL = false; for (const p in was) was[p] = false; drums = 0; mix = inten = driftL = 0; fin = inZone = false; // un contexte neuf repart de l'arrêt
+    const comp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); comp.connect(outG); // headroom after the compressor: measured, no peak above -3 dB
+    vu = AC.createAnalyser(); vu.fftSize = 2048; outG.connect(vu); // what actually comes out, for the listening bench's VU meter
+    lastHit = 0; lastMus = -9; ambT = 2; rubT = satT = turntable = 0; bigS = false; lastFill = lastRoll = -9; exitAt = -1; grit = tens = 0; glisse = acquired = acqSaid = boostPend = boostL = false; for (const p in was) was[p] = false; drums = 0; mix = inten = driftL = 0; ending = inZone = false; // a new context restarts from stopped
     master = gain(0.9, comp); ana = AC.createAnalyser(); ana.fftSize = 64; master.connect(ana);
     for (const k in vol) V[k] = gain(vol[k], master);
     nbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
     const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-    // réverbération de tunnel : bruit qui s'éteint en 1,6 s ; la musique et le moteur y sont envoyés selon e.tun
+    // tunnel reverb: noise that dies out in 1.6 s; the music and the engine are sent to it according to e.tun
     rev = AC.createConvolver(); const ir = AC.createBuffer(2, AC.sampleRate * 1.6, AC.sampleRate);
     for (let c = 0; c < 2; c++) { const x = ir.getChannelData(c); for (let i = 0; i < x.length; i++) x[i] = (Math.random() * 2 - 1) * Math.exp(-i / AC.sampleRate / 0.35); }
-    rev.buffer = ir; rev.connect(gain(0.5, master)); musSend = gain(0, rev); motSend = gain(0, rev); V.mus.connect(musSend); V.mot.connect(motSend);
-    // espace (ESP) : moteur, pneus et chocs → un écho par côté (retard, filtre, un peu de retour, panoramique) + la réverbération du lieu
-    { const eIn = AC.createGain(); V.mot.connect(eIn); V.pneu.connect(gain(0.6, eIn)); V.choc.connect(gain(0.8, eIn));
-      const cote = p => { const g = gain(0, eIn), d = AC.createDelay(0.5), lp = filt('lowpass', 3500, 0.7, gain(0.25, d)), pn = AC.createStereoPanner(); pn.pan.value = p; g.connect(d); d.connect(pn); pn.connect(master); d.connect(lp); return { g, d }; };
-      const L = cote(-0.85), R = cote(0.85), conv = AC.createConvolver(), lp = filt('lowpass', 3000, 0.7, master), rvG = gain(0, conv); eIn.connect(rvG); conv.connect(lp);
-      esp = { L, R, conv, lp, rvG }; }
+    rev.buffer = ir; rev.connect(gain(0.5, master)); musSend = gain(0, rev); motorSend = gain(0, rev); V.mus.connect(musSend); V.motorFam.connect(motorSend);
+    // acoustic space (ACOUSTICS): engine, tyres and impacts → one echo per side (delay, filter, a little feedback, pan) + the place's reverb
+    { const eIn = AC.createGain(); V.motorFam.connect(eIn); V.tire.connect(gain(0.6, eIn)); V.impact.connect(gain(0.8, eIn));
+      const sideOf = p => { const g = gain(0, eIn), d = AC.createDelay(0.5), lp = filt('lowpass', 3500, 0.7, gain(0.25, d)), pn = AC.createStereoPanner(); pn.pan.value = p; g.connect(d); d.connect(pn); pn.connect(master); d.connect(lp); return { g, d }; };
+      const L = sideOf(-0.85), R = sideOf(0.85), conv = AC.createConvolver(), lp = filt('lowpass', 3000, 0.7, master), rvG = gain(0, conv); eIn.connect(rvG); conv.connect(lp);
+      acoustic = { L, R, conv, lp, rvG }; }
     musF = filt('lowpass', 18000, 0.7, V.mus); musicG = gain(musicOn ? 1 : 0, musF);
-    // bus de mixage : les platines y entrent ; pendant un passage DJ, il passe par une compression qui colle les deux morceaux (sans elle, ils s'additionnent)
+    // mix bus: the turntables feed into it; during a DJ transition, it goes through a compression that glues the two tracks together (without it, they add up)
     musIn = AC.createGain(); mixDry = gain(1, musicG); musIn.connect(mixDry); const mc = AC.createDynamicsCompressor(); musIn.connect(mc);
     mc.threshold.value = -28; mc.ratio.value = 4; mc.knee.value = 12; mc.attack.value = 0.012; mc.release.value = 0.25; mixW = gain(0, musicG); mc.connect(mixW);
-    chaine();
+    chain();
     waves();
-    mbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // métal des cymbales : six carrés inharmoniques
+    mbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // cymbal metal: six inharmonic squares
     { const x = mbuf.getChannelData(0); for (let i = 0; i < x.length; i++) { let v = 0; for (const f of [410.6, 608.8, 739.2, 1045.4, 1080, 1600]) v += Math.sin(2 * Math.PI * f * i / AC.sampleRate) > 0 ? 1 : -1; x[i] = v / 6; } }
-    const SP = { ...window.SMP, ...window.PERC }; // PERC : batterie acoustique enregistrée (instruments.js)
-    pret = Promise.all(Object.keys(SP).map(k => new Promise(ok => { // décodage des sons de TR-808 ; en cas d'échec la batterie reste synthétisée
+    const SP = { ...window.SMP, ...window.PERC }; // PERC: recorded acoustic drums (instruments.js)
+    readyMs = Promise.all(Object.keys(SP).map(k => new Promise(ok => { // decoding of the TR-808 sounds; if it fails the drums stay synthesized
       const bin = atob(SP[k]), u8 = Uint8Array.from(bin, ch => ch.charCodeAt(0));
       AC.decodeAudioData(u8.buffer, b => { smp[k] = b; ok(); }, ok);
     })));
-    modOk = false; const ac0 = AC, url = URL.createObjectURL(new Blob([MOTEUR_JS], { type: 'application/javascript' }));
-    modP = AC.audioWorklet ? AC.audioWorklet.addModule(url).then(() => { if (AC !== ac0) return; modOk = true; for (const v of [...VX, ...AU]) brancher(v); }, () => { }) : Promise.resolve(); // sans AudioWorklet : pas de moteur, le reste joue
-    pret = Promise.all([pret, modP, charger(ST)]);
+    modOk = false; const ac0 = AC, url = URL.createObjectURL(new Blob([MOTOR_JS], { type: 'application/javascript' }));
+    modP = AC.audioWorklet ? AC.audioWorklet.addModule(url).then(() => { if (AC !== ac0) return; modOk = true; for (const v of [...VX, ...AU]) plug(v); }, () => { }) : Promise.resolve(); // without AudioWorklet: no engine, the rest plays
+    readyMs = Promise.all([readyMs, modP, loadRadios(ST)]);
     const ns = AC.createBufferSource(); ns.buffer = nbuf; ns.loop = true; ns.start();
-    gbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // gravier : des impacts serrés de 7 ms, lus plus vite avec la vitesse
+    gbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // gravel: tight 7 ms impacts, played faster with speed
     { const x = gbuf.getChannelData(0); let a = 0; for (let i = 0; i < x.length; i++) { if (Math.random() < 0.012) a = 0.3 + 0.7 * Math.random(); x[i] = (Math.random() * 2 - 1) * a; a *= 0.997; } }
-    AU = [voixLoin(ns), voixLoin(ns)]; // les deux autres véhicules les plus proches (rivaux ou camions)
-    VX.length = 0; VX[0] = voix(ns, V.mot, V.pneu); // un contexte neuf repart avec la seule voix du solo
-    // frottement : tôle (bande médium et grondement) mêlée à une meule (bande aiguë étroite hachée à 72 Hz, étincelles)
-    scrapeG = gain(0, V.choc); ns.connect(filt('bandpass', 1700, 1.2, scrapeG)); ns.connect(filt('lowpass', 260, 0.7, gain(1.5, scrapeG)));
+    AU = [voiceFar(ns), voiceFar(ns)]; // the two other nearest vehicles (rivals or trucks)
+    VX.length = 0; VX[0] = voice(ns, V.motorFam, V.tire); // a new context restarts with only the solo voice
+    // scraping: sheet metal (mid band and rumble) mixed with a grinding wheel (narrow high band chopped at 72 Hz, sparks)
+    scrapeG = gain(0, V.impact); ns.connect(filt('bandpass', 1700, 1.2, scrapeG)); ns.connect(filt('lowpass', 260, 0.7, gain(1.5, scrapeG)));
     { const g = gain(0.55, scrapeG), l = AC.createOscillator(); l.type = 'square'; l.frequency.value = 72; l.connect(gain(0.45, g.gain)); l.start(); ns.connect(filt('bandpass', 2800, 6, gain(2.2, g))); ns.connect(filt('highpass', 7000, 0.7, gain(0.1, scrapeG))); }
     uiF = filt('lowpass', 3000, 0.5, V.ui);
-    // vent : grondement d'air dans le grave + souffle médium qui monte avec la vitesse, en rafales lentes ; nitro : le grondement de la flamme tant qu'elle pousse
-    windL = gain(0, V.vent); ns.connect(filt('lowpass', 180, 0.6, windL));
-    { const gust = gain(1, V.vent), l = AC.createOscillator(); l.frequency.value = 0.21; l.connect(gain(0.35, gust.gain)); l.start(); windG = gain(0, gust); windF = filt('bandpass', 900, 1.1, windG); ns.connect(windF); }
-    nitroG = gain(0, V.choc); ns.connect(filt('lowpass', 600, 0.8, nitroG)); ns.connect(filt('bandpass', 1500, 1.5, gain(0.4, nitroG)));
-    // pluie, entendue de l'habitacle (famille « pluie ») : rideau étouffé par la carrosserie (passe-bas + grondement, houle lente) ; gerbe d'aquaplaning sous la caisse
-    const rid = gain(0, V.pluie), houle = gain(1, rid), rl = filt('lowpass', 600, 0.7, houle); ns.connect(rl); ns.connect(filt('bandpass', 220, 0.8, gain(0.6, houle)));
-    const hl = AC.createOscillator(); hl.frequency.value = 0.13; hl.connect(gain(0.3, houle.gain)); hl.start();
-    const aq = gain(0, V.pluie); ns.connect(filt('lowpass', 450, 0.6, aq));
-    pluie = { rid, rl, aq };
+    // wind: air rumble in the low end + mid whoosh that rises with speed, in slow gusts; nitro: the roar of the flame as long as it pushes
+    windL = gain(0, V.wind); ns.connect(filt('lowpass', 180, 0.6, windL));
+    { const gust = gain(1, V.wind), l = AC.createOscillator(); l.frequency.value = 0.21; l.connect(gain(0.35, gust.gain)); l.start(); windG = gain(0, gust); windF = filt('bandpass', 900, 1.1, windG); ns.connect(windF); }
+    nitroG = gain(0, V.impact); ns.connect(filt('lowpass', 600, 0.8, nitroG)); ns.connect(filt('bandpass', 1500, 1.5, gain(0.4, nitroG)));
+    // rain, heard from the cabin (the 'pluie' family): a curtain muffled by the body (low-pass + rumble, slow swell); aquaplaning spray under the body
+    const rid = gain(0, V.rainFx), swell = gain(1, rid), rl = filt('lowpass', 600, 0.7, swell); ns.connect(rl); ns.connect(filt('bandpass', 220, 0.8, gain(0.6, swell)));
+    const hl = AC.createOscillator(); hl.frequency.value = 0.13; hl.connect(gain(0.3, swell.gain)); hl.start();
+    const aq = gain(0, V.rainFx); ns.connect(filt('lowpass', 450, 0.6, aq));
+    rainFx = { rid, rl, aq };
     buildAmb(); retune(AC.currentTime + 0.1); tuneG.gain.value = lvl();
     if (live) { AC.resume(); timer = timer || setInterval(() => live && pump(), 30); }
   }
   const beep = f => AC && osc('square', f, AC.currentTime, 0.25, 0.2, V.ui);
-  const VOY = [[730, 1090], [270, 2290], [300, 870], [530, 1840], [570, 840]]; // formants des voyelles a, i, ou, è, o
-  function radio(n, f0, vit) { // réplique d'un rival à la radio : grésillement d'ouverture, n syllabes de babil (dents de scie dans deux formants de voyelle, filtré talkie-walkie), clic de fin ; f0 : hauteur, vit : syllabes par seconde
-    if (!AC) return; let t = AC.currentTime + 0.05; const d = 1 / vit, t0 = t, out = shaper(3, filt('highpass', 450, 0.7, filt('lowpass', 2800, 0.7, gain(0.5, V.ui))));
+  const VOY = [[730, 1090], [270, 2290], [300, 870], [530, 1840], [570, 840]]; // formants of the vowels a, i, ou, è, o
+  function radio(n, f0, spd) { // a rival's radio line: opening crackle, n syllables of babble (sawtooth waves in two vowel formants, filtered walkie-talkie style), closing click; f0: pitch, vit: syllables per second
+    if (!AC) return; let t = AC.currentTime + 0.05; const d = 1 / spd, t0 = t, out = shaper(3, filt('highpass', 450, 0.7, filt('lowpass', 2800, 0.7, gain(0.5, V.ui))));
     nz(t, 0.12, 0.3, V.ui, 'bandpass', 2500, 0.8); t += 0.1;
     for (let i = 0; i < n; i++, t += d * (0.8 + Math.random() * 0.5)) {
       const [F1, F2] = VOY[Math.random() * 5 | 0], g = env(out, t, d * 0.9, 0.5, 0.02), o = AC.createOscillator(), f = f0 * (0.85 + Math.random() * 0.3) * (i === n - 1 ? 0.8 : 1);
       o.type = 'sawtooth'; o.frequency.setValueAtTime(f, t); o.frequency.linearRampToValueAtTime(f * 0.9, t + d); o.connect(filt('bandpass', F1, 6, g)); o.connect(filt('bandpass', F2, 8, g)); o.start(t); o.stop(t + d + 0.05);
     }
-    nz(t0, t - t0, 0.03, V.ui, 'highpass', 3000); nz(t, 0.08, 0.25, V.ui, 'bandpass', 2500, 0.8); osc('square', 1800, t + 0.06, 0.03, 0.08, V.ui); // souffle de la liaison, puis on relâche le bouton
+    nz(t0, t - t0, 0.03, V.ui, 'highpass', 3000); nz(t, 0.08, 0.25, V.ui, 'bandpass', 2500, 0.8); osc('square', 1800, t + 0.06, 0.03, 0.08, V.ui); // the link's hiss, then the button is released
   }
-  // bruitages ponctuels : appelés par audioFrame, et un par un par le banc d'écoute
-  function touche(t) { // bouton de radio : deux claquements secs dans le médium
-    nz(t, 0.018, CLAC, V.ui, 'bandpass', 1900, 2.5); osc('triangle', 150, t, 0.05, CLAC * 0.25, V.ui);
-    nz(t + 0.07, 0.03, CLAC * 1.4, V.ui, 'bandpass', 2850, 2); nz(t + 0.07, 0.012, CLAC * 0.6, V.ui, 'highpass', 4000); osc('square', 320, t + 0.07, 0.03, CLAC * 0.15, V.ui);
+  // one-off sound effects: called by audioFrame, and one by one by the listening bench
+  function keyPress(t) { // radio button: two dry clicks in the mids
+    nz(t, 0.018, CLACK, V.ui, 'bandpass', 1900, 2.5); osc('triangle', 150, t, 0.05, CLACK * 0.25, V.ui);
+    nz(t + 0.07, 0.03, CLACK * 1.4, V.ui, 'bandpass', 2850, 2); nz(t + 0.07, 0.012, CLACK * 0.6, V.ui, 'highpass', 4000); osc('square', 320, t + 0.07, 0.03, CLACK * 0.15, V.ui);
   }
-  function clac(down, t = AC.currentTime, d = V.mot) { // d : la sortie de la voix du joueur · // passage de rapport : coup sourd de transmission, puis soupape de décharge en montée, coup de gaz en rétrogradant ; la coupure de poussée vient de la physique
+  function clack(down, t = AC.currentTime, d = V.motorFam) { // d: the player voice's output · // gear change: dull thud of the transmission, then a blow-off valve on the way up, a throttle blip when downshifting; the thrust cut comes from the physics
     const o = osc('sine', 110, t, 0.1, 0.45, d); o && o.frequency.exponentialRampToValueAtTime(55, t + 0.08);
     nz(t, 0.03, 0.25, d, 'lowpass', 700);
     if (down) { const b = osc('sawtooth', 130, t + 0.03, 0.14, 0.22, filt('lowpass', 1100, 0.7, d)); b && b.frequency.exponentialRampToValueAtTime(230, t + 0.12); }
     else { const h = nz(t + 0.03, 0.22, 0.2, d, 'bandpass', 1400, 1.2); h && h.frequency.exponentialRampToValueAtTime(600, t + 0.24); }
   }
-  function levier(down, t = AC.currentTime, d = V.mot) { // boîte manuelle : le cran qui lâche, la course du levier, puis le verrouillage — sourd et mécanique, sans tintement aigu
+  function lever(down, t = AC.currentTime, d = V.motorFam) { // manual gearbox: the detent releasing, the lever travel, then the lock-in — dull and mechanical, without a high ring
     nz(t, 0.015, LEV * 0.4, d, 'bandpass', 1200, 2); nz(t + 0.045, 0.03, LEV * 0.35, d, 'lowpass', 500);
     const tt = t + 0.085, f = down ? 260 : 330;
     nz(tt, 0.025, LEV * 0.6, d, 'bandpass', 900, 1.5); osc('sine', 110, tt, 0.09, LEV * 0.35, d);
-    for (const [k, v] of [[1, 0.12], [2.76, 0.04]]) osc('sine', f * k, tt, 0.07, LEV * v, d); // le métal qui se verrouille, plus grave au rétrogradage
+    for (const [k, v] of [[1, 0.12], [2.76, 0.04]]) osc('sine', f * k, tt, 0.07, LEV * v, d); // the metal locking in, lower when downshifting
   }
-  function coupMusique(v, t = AC.currentTime) { // un choc s'entend aussi dans la musique : grosse caisse et coup de basse sur la fondamentale de la mesure, et tout plonge un instant
+  function musicHit(v, t = AC.currentTime) { // an impact is also heard in the music: kick and bass hit on the bar's root, and everything dips for a moment
     if (menu) return; const st = ST[station], P = PATCH[st.b.p];
     const k = 0.5 * clamp(0.5 + v * 0.04, 0.6, 1), o = osc('sine', hz(curRoot + 12), t, 0.55, 0.7 * k, drumG); o && o.frequency.exponentialRampToValueAtTime(hz(curRoot - 12), t + 0.4); // chute de sub de deux octaves
     dKick(t, k, KIT[st.kit] || KIT.k909); tone(st.b.p, hz(curRoot), t, 0.4, 0.25 * (P.lv || 1), strip.b.in);
-    duckG.gain.cancelScheduledValues(t); duckG.gain.setValueAtTime(0.85, t); // effet de choc adouci : demi-gain, plongée légère duckG.gain.linearRampToValueAtTime(1, t + 0.3);
+    duckG.gain.cancelScheduledValues(t); duckG.gain.setValueAtTime(0.85, t); // softened impact effect: half gain, light dip duckG.gain.linearRampToValueAtTime(1, t + 0.3);
   }
-  function choc(hit, t = AC.currentTime) { // choc : coup sourd de la caisse, tôle qui se froisse (saturée), panneau qui résonne, puis débris et éclats de verre
-    const v = Math.min(0.6, hit * 0.04), sat = shaper(6, gain(0.6, V.choc));
-    const o = osc('sine', 140, t, 0.3, v * 0.55, V.choc); o && o.frequency.exponentialRampToValueAtTime(42, t + 0.25);
+  function impact(hit, t = AC.currentTime) { // impact: dull thud of the body, sheet metal crumpling (saturated), a panel ringing, then debris and glass shards
+    const v = Math.min(0.6, hit * 0.04), sat = shaper(6, gain(0.6, V.impact));
+    const o = osc('sine', 140, t, 0.3, v * 0.55, V.impact); o && o.frequency.exponentialRampToValueAtTime(42, t + 0.25);
     const f = nz(t, 0.22, v, sat, 'bandpass', 1400, 0.8); f && f.frequency.exponentialRampToValueAtTime(300, t + 0.2);
-    nz(t, 0.5 + v, v * 0.5, V.choc, 'bandpass', 2400 + Math.random() * 1200, 4, mbuf, 0.002);
-    const b = 280 + Math.random() * 200; for (const [m, a] of [[1, 0.25], [2.32, 0.15], [4.1, 0.08]]) osc('sine', b * m, t, 0.45, v * a * 0.6, V.choc); // partiels inharmoniques d'une tôle
-    joue(tampon(0.8, x => { for (let i = 0; i < 9; i++) { const d = 0.12 + Math.random() * 0.6; coup(x, d, 0.015, v * (0.1 + Math.random() * 0.2), 0.005, 0); if (i % 3 === 0) coup(x, d, 0.06, v * 0.06, 0.005, 3500 + Math.random() * 3000); } }), t, filt('highpass', 3000, 1, V.choc)); // débris et éclats : un tampon, une source (12 avant)
+    nz(t, 0.5 + v, v * 0.5, V.impact, 'bandpass', 2400 + Math.random() * 1200, 4, mbuf, 0.002);
+    const b = 280 + Math.random() * 200; for (const [m, a] of [[1, 0.25], [2.32, 0.15], [4.1, 0.08]]) osc('sine', b * m, t, 0.45, v * a * 0.6, V.impact); // inharmonic partials of a sheet of metal
+    nowPlaying(rawBuf(0.8, x => { for (let i = 0; i < 9; i++) { const d = 0.12 + Math.random() * 0.6; strike(x, d, 0.015, v * (0.1 + Math.random() * 0.2), 0.005, 0); if (i % 3 === 0) strike(x, d, 0.06, v * 0.06, 0.005, 3500 + Math.random() * 3000); } }), t, filt('highpass', 3000, 1, V.impact)); // debris and shards: a buffer, a source (12 before)
   }
-  function contact(bump, t = AC.currentTime) { // voiture contre voiture : deux caisses creuses qui s'entrechoquent, plus graves et plus rondes qu'un mur ; une touchette n'est qu'un « tok » de bouclier
+  function contact(bump, t = AC.currentTime) { // car against car: two hollow bodies knocking together, lower and rounder than a wall; a light tap is just a 'tok' of the bumper
     const k = Math.min(1, bump / 10), g = 0.22 + 0.5 * k, f0 = 85 + Math.random() * 35;
-    nz(t, 0.05, g * 0.9, V.choc, 'bandpass', 700 + Math.random() * 600, 1.4); // l'attaque : plastique des boucliers et tôle
-    const th = osc('sine', 75, t, 0.25, g * 0.7, V.choc); th && th.frequency.exponentialRampToValueAtTime(38, t + 0.22); // le poids de l'autre voiture : un coup grave
-    nz(t, 0.25 + 0.4 * k, g * 0.45, V.choc, 'bandpass', 1300 + Math.random() * 900, 9, mbuf, 0.002); // le « clang » : deux tôles qui sonnent l'une contre l'autre
-    const o = osc('sine', f0 * 1.7, t, 0.2 + 0.25 * k, g * 0.6, V.choc); o && o.frequency.exponentialRampToValueAtTime(f0, t + 0.18); // le coup sourd de la caisse
-    for (const [m, a] of [[2.13, 0.22], [3.47, 0.12], [5.31, 0.06]]) osc('sine', f0 * 2 * m * (0.97 + Math.random() * 0.06), t, 0.12 + 0.3 * k, g * a, V.choc); // la portière qui résonne (partiels inharmoniques)
-    if (k > 0.35) { const f = nz(t, 0.16, g * 0.6, shaper(5, gain(0.5, V.choc)), 'bandpass', 1900, 0.9); f && f.frequency.exponentialRampToValueAtTime(450, t + 0.15); } // fort : la tôle se froisse
-    if (k > 0.7) joue(tampon(0.5, x => { for (let i = 0; i < 6; i++) coup(x, 0.05 + Math.random() * 0.35, 0.012, g * (0.1 + Math.random() * 0.15), 0.004, 3000 + Math.random() * 3500); }), t, filt('highpass', 2500, 1, V.choc)); // très fort : des éclats
+    nz(t, 0.05, g * 0.9, V.impact, 'bandpass', 700 + Math.random() * 600, 1.4); // the attack: bumper plastic and sheet metal
+    const th = osc('sine', 75, t, 0.25, g * 0.7, V.impact); th && th.frequency.exponentialRampToValueAtTime(38, t + 0.22); // the other car's weight: a low thud
+    nz(t, 0.25 + 0.4 * k, g * 0.45, V.impact, 'bandpass', 1300 + Math.random() * 900, 9, mbuf, 0.002); // the 'clang': two sheets of metal ringing against each other
+    const o = osc('sine', f0 * 1.7, t, 0.2 + 0.25 * k, g * 0.6, V.impact); o && o.frequency.exponentialRampToValueAtTime(f0, t + 0.18); // the dull thud of the body
+    for (const [m, a] of [[2.13, 0.22], [3.47, 0.12], [5.31, 0.06]]) osc('sine', f0 * 2 * m * (0.97 + Math.random() * 0.06), t, 0.12 + 0.3 * k, g * a, V.impact); // the door ringing (inharmonic partials)
+    if (k > 0.35) { const f = nz(t, 0.16, g * 0.6, shaper(5, gain(0.5, V.impact)), 'bandpass', 1900, 0.9); f && f.frequency.exponentialRampToValueAtTime(450, t + 0.15); } // hard: the sheet metal crumples
+    if (k > 0.7) nowPlaying(rawBuf(0.5, x => { for (let i = 0; i < 6; i++) strike(x, 0.05 + Math.random() * 0.35, 0.012, g * (0.1 + Math.random() * 0.15), 0.004, 3000 + Math.random() * 3500); }), t, filt('highpass', 2500, 1, V.impact)); // very hard: shards
   }
-  function boostFx(t = AC.currentTime) { // départ de la nitro : purge sifflante, puis la flamme qui s'ouvre et un coup dans le grave
-    nz(t, 0.35, 0.05, V.choc, 'highpass', 2500, 0.7, nbuf, 0.003);
-    const w = nz(t + 0.05, 0.9, 0.07, V.choc, 'lowpass', 250, 1, nbuf, 0.08); w && w.frequency.exponentialRampToValueAtTime(1600, t + 0.5);
-    const o = osc('sine', 70, t + 0.05, 0.5, 0.12, V.choc); o && o.frequency.exponentialRampToValueAtTime(45, t + 0.45);
+  function boostFx(t = AC.currentTime) { // nitro start: hissing purge, then the flame opening up and a low thump
+    nz(t, 0.35, 0.05, V.impact, 'highpass', 2500, 0.7, nbuf, 0.003);
+    const w = nz(t + 0.05, 0.9, 0.07, V.impact, 'lowpass', 250, 1, nbuf, 0.08); w && w.frequency.exponentialRampToValueAtTime(1600, t + 0.5);
+    const o = osc('sine', 70, t + 0.05, 0.5, 0.12, V.impact); o && o.frequency.exponentialRampToValueAtTime(45, t + 0.45);
   }
-  const pop = (t, d, v) => { nz(t, 0.03, v, d, 'lowpass', 700 + Math.random() * 900); osc('sine', 60 + Math.random() * 30, t, 0.05, v * 0.3, d); }; // une détonation dans l'échappement
-  function petarade(spool = 1, t = AC.currentTime, d = V.mot) { nz(t, 0.25, 0.04 * spool, d, 'bandpass', 1400, 1.5); for (let i = 0; i < 3; i++) pop(t + 0.08 + Math.random() * 0.4, d, 0.12); } // lever de pied à haut régime
-  function pschitt(s = 1, t = AC.currentTime, d = V.mot) { const h = nz(t, 0.4, 0.14 * s, d, 'bandpass', 1800, 1.5, nbuf, 0.01); h && h.frequency.exponentialRampToValueAtTime(700, t + 0.35); } // soupape de décharge du turbo
-  // e : état de la course pour cette image — { state, car, T, hot (0..1 dans le secteur chaud), tour / tours (tour en cours à partir de 0, nombre de tours ; 0 hors mode course), tun (0..1 dans le tunnel), amb (0..1 dans une zone d'ambiance), r (vitesse 0..1), sp, gas, hit, bump (choc entre voitures, m/s), up / down (rapport monté / descendu), rpm, load, spool, stun }
-  // Écran partagé : e.cars = les voitures humaines, une par joueur — [{ car, r, sp, gas, hit, bump, up, down, rpm, load, spool }] ; le reste de e (state, car, T, hot, tour, tun, amb, r, sp, hit, bump, fini) est alors celui de l'humain le mieux placé encore en course, qui pilote la musique, le tunnel, la pluie et l'ambiance. Sans e.cars, e est le seul joueur (banc d'écoute).
-  // Pluie : rideau étouffé à travers la carrosserie, plus fort et plus clair avec la vitesse. pl = force 0..3 (T.pluie), déjà coupée en tunnel ; r = vitesse 0..1 ; aq = aquaplaning (sim.js)
-  function pluieFrame(pl, r, aq, k) {
-    k(pluie.rid.gain, 0.045 * Math.min(pl, 3) / 3 * (0.6 + 0.4 * r), 0.4); k(pluie.rl.frequency, 400 + 700 * r, 0.3);
-    k(pluie.aq.gain, 0.25 * aq, 0.1);
+  const pop = (t, d, v) => { nz(t, 0.03, v, d, 'lowpass', 700 + Math.random() * 900); osc('sine', 60 + Math.random() * 30, t, 0.05, v * 0.3, d); }; // a bang in the exhaust
+  function backfire(spool = 1, t = AC.currentTime, d = V.motorFam) { nz(t, 0.25, 0.04 * spool, d, 'bandpass', 1400, 1.5); for (let i = 0; i < 3; i++) pop(t + 0.08 + Math.random() * 0.4, d, 0.12); } // lift off the throttle at high rpm
+  function hiss(s = 1, t = AC.currentTime, d = V.motorFam) { const h = nz(t, 0.4, 0.14 * s, d, 'bandpass', 1800, 1.5, nbuf, 0.01); h && h.frequency.exponentialRampToValueAtTime(700, t + 0.35); } // turbo blow-off valve
+  // e: race state for this frame — { state, car, T, hot (0..1 in the hot sector), tour / tours (current lap from 0, number of laps; 0 outside race mode), tun (0..1 in the tunnel), amb (0..1 in an ambience zone), r (speed 0..1), sp, gas, hit, bump (impact between cars, m/s), up / down (gear up / gear down), rpm, load, spool, stun }
+  // Split screen: e.cars = the human cars, one per player — [{ car, r, sp, gas, hit, bump, up, down, rpm, load, spool }]; the rest of e (state, car, T, hot, tour, tun, amb, r, sp, hit, bump, fini) is then that of the best-placed human still racing, who drives the music, the tunnel, the rain and the ambience. Without e.cars, e is the only player (listening bench).
+  // Rain: a curtain muffled through the body, louder and brighter with speed. pl = strength 0..3 (T.rainFx), already cut in a tunnel; r = speed 0..1; aq = aquaplaning (sim.js)
+  function rainFrame(pl, r, aq, k) {
+    k(rainFx.rid.gain, 0.045 * Math.min(pl, 3) / 3 * (0.6 + 0.4 * r), 0.4); k(rainFx.rl.frequency, 400 + 700 * r, 0.3);
+    k(rainFx.aq.gain, 0.25 * aq, 0.1);
   }
   function audioFrame(dt, e) {
     if (!AC) return;
-    const { state, car, T, r, sp } = e, N = T.n, tun = e.tun || 0, CARD = M.car, t = AC.currentTime, racing = state === 'race', k = (p, v, tc = 0.04) => regle(p, v, t, tc);
-    if (state === 'pause') { for (const v of VX) tait(v, t); for (const v of AU) { k(v.g.gain, 0, 0.05); k(v.wh.gain, 0, 0.05); } k(scrapeG.gain, 0, 0.05); k(windG.gain, 0, 0.05); k(windL.gain, 0, 0.05); k(nitroG.gain, 0, 0.05); k(pluie.rid.gain, 0, 0.05); k(pluie.aq.gain, 0, 0.05); if (CH) k(CH.rac.gain, 0, 0.05); return; } // en pause : la radio continue, les voitures se taisent
-    if ((state === 'title') !== menu) { if (dk) finMix(); menu = !menu; retune(t + 0.05); tuneG.gain.cancelScheduledValues(t); tuneG.gain.setValueAtTime(0, t); tuneG.gain.linearRampToValueAtTime(lvl(), t + 0.3); } // menu ↔ course : la boucle de menu laisse la place à la station
-    // une voix par joueur : seul, celle du centre, inchangée ; à deux, une de chaque côté, créées à l'arrivée du deuxième joueur et retirées à son départ (fondu, puis arrêt des sources)
-    const L = e.cars || (UN[0] = e, UN), duo = L.length > 1; let hit = 0, bump = 0, rub = false; // chocs et frottement : ceux de n'importe quel joueur s'entendent (la musique, elle, n'encaisse que ceux du mieux placé)
-    if (duo !== VX.length > 1) { if (duo) { VX[1] = voixPan(-PANJ); VX[2] = voixPan(PANJ); } else { for (let i = 1; i < 3; i++) { tait(VX[i], t); for (const s of VX[i].src) s.stop(t + 0.3); } VX.length = 1; } }
-    if (duo) tait(VX[0], t);
+    const { state, car, T, r, sp } = e, N = T.n, tun = e.tun || 0, CARD = M.car, t = AC.currentTime, racing = state === 'race', k = (p, v, tc = 0.04) => setParam(p, v, t, tc);
+    if (state === 'pause') { for (const v of VX) hush(v, t); for (const v of AU) { k(v.g.gain, 0, 0.05); k(v.wh.gain, 0, 0.05); } k(scrapeG.gain, 0, 0.05); k(windG.gain, 0, 0.05); k(windL.gain, 0, 0.05); k(nitroG.gain, 0, 0.05); k(rainFx.rid.gain, 0, 0.05); k(rainFx.aq.gain, 0, 0.05); if (CH) k(CH.rootPt.gain, 0, 0.05); return; } // paused: the radio carries on, the cars fall silent
+    if ((state === 'title') !== menu) { if (dk) endMix(); menu = !menu; retune(t + 0.05); tuneG.gain.cancelScheduledValues(t); tuneG.gain.setValueAtTime(0, t); tuneG.gain.linearRampToValueAtTime(lvl(), t + 0.3); } // menu ↔ race: the menu loop gives way to the station
+    // one voice per player: alone, the centre one, unchanged; with two, one on each side, created when the second player arrives and removed when they leave (fade, then the sources stop)
+    const L = e.cars || (UN[0] = e, UN), duo = L.length > 1; let hit = 0, bump = 0, rub = false; // impacts and scraping: those of any player are heard (the music, however, only takes those of the best-placed one)
+    if (duo !== VX.length > 1) { if (duo) { VX[1] = voicePan(-PANJ); VX[2] = voicePan(PANJ); } else { for (let i = 1; i < 3; i++) { hush(VX[i], t); for (const s of VX[i].src) s.stop(t + 0.3); } VX.length = 1; } }
+    if (duo) hush(VX[0], t);
     for (let i = 0, n = duo ? 2 : 1; i < n; i++) { const j = L[i], v = VX[duo ? i + 1 : 0], c = j.car, { rpm, load } = j;
-      if (j.muet) { tait(v, t); continue; } // pas la voiture de ce joueur, ou déjà entendue de l'autre côté : sa voix se tait mais reste en place (ni coupure ni recréation)
+      if (j.muted) { hush(v, t); continue; } // not this player's car, or already heard on the other side: its voice falls silent but stays in place (no cut, no recreation)
       k(v.vm.gain, 1, 0.05); k(v.vp.gain, 1, 0.05);
-      // moteur (sous la musique) : timbre de son architecture, plus clair et plus râpeux en charge, sombre au lever de pied ; rupteur, turbo, pignons, pétarades
-      if (j.up || j.down) (c.manual ? levier : clac)(j.down, t, v.mot); // boîte manuelle : le levier ; automatique : la transmission
-      const P = MOT[CARD.moteur] || MOT.l6;
-      if (v.node) { if (v.typ !== P) { v.node.port.postMessage(P); v.typ = P; } k(v.node.parameters.get('rpm'), rpm * CARD.red, 0.02); k(v.node.parameters.get('load'), load, 0.03); k(v.node.parameters.get('dg'), j.dg || 0, 0.2); } // le vrai régime : la hauteur vient de la physique
+      // engine (under the music): timbre of its architecture, brighter and rougher under load, dark when lifting off; contact breaker, turbo, gears, backfires
+      if (j.up || j.down) (c.manual ? lever : clack)(j.down, t, v.motorFam); // manual gearbox: the lever; automatic: the transmission
+      const P = MOTOR[CARD.engine] || MOTOR.l6;
+      if (v.node) { if (v.typ !== P) { v.node.port.postMessage(P); v.typ = P; } k(v.node.parameters.get('rpm'), rpm * CARD.red, 0.02); k(v.node.parameters.get('load'), load, 0.03); k(v.node.parameters.get('dmg'), j.dmgP || 0, 0.2); } // the real rpm: the pitch comes from the physics
       k(v.eng.gain, 0.5 + 0.5 * load, 0.05);
-      k(v.out.gain, state === 'title' ? 0.004 : 0.025 + 0.022 * load + 0.0125 * rpm); // sous la musique, mais présent
+      k(v.out.gain, state === 'title' ? 0.004 : 0.025 + 0.022 * load + 0.0125 * rpm); // under the music, but present
       const li = state !== 'title' && j.gas && rpm > 0.985 ? 0.5 : 0; k(v.lim.gain, 1 - li, 0.01); k(v.limD.gain, li, 0.01);
       const tb = CARD.turbo ? j.spool : 0; k(v.tw.frequency, 900 + 2600 * tb, 0.1); k(v.twG.gain, 0.005 * tb * tb * (0.25 + 0.75 * load), 0.1);
-      if (v.gas && !j.gas && racing) { if (rpm > 0.55 && j.spool > 0.5) petarade(j.spool, t, v.mot); if (tb > 0.4) pschitt(tb, t, v.mot); v.crk = rpm > 0.5 ? 1 : 0; }
-      if (j.gas || !racing) v.crk = 0; else if (v.crk > 0) { v.crk -= dt; if (rpm > 0.4 && Math.random() < dt * 9 * v.crk) pop(t + Math.random() * 0.03, v.mot, 0.06 * v.crk); } // le moteur qui retient crépite une seconde
+      if (v.gas && !j.gas && racing) { if (rpm > 0.55 && j.spool > 0.5) backfire(j.spool, t, v.motorFam); if (tb > 0.4) hiss(tb, t, v.motorFam); v.crk = rpm > 0.5 ? 1 : 0; }
+      if (j.gas || !racing) v.crk = 0; else if (v.crk > 0) { v.crk -= dt; if (rpm > 0.4 && Math.random() < dt * 9 * v.crk) pop(t + Math.random() * 0.03, v.motorFam, 0.06 * v.crk); } // the engine holding back crackles for a second
       v.gas = j.gas;
-      if (racing && j.dg > 0.3 && j.sp > 3 && Math.random() < dt * (3 + 12 * j.r) * (j.dg - 0.3)) nz(t + Math.random() * 0.02, 0.012, 0.03 * j.dg, v.mot, 'bandpass', 2500 + Math.random() * 2500, 6, mbuf, 0.001); // cliquetis : une pièce desserrée qui tape
-      // roulement : selon le sol sous la voiture (c.sol, voir SURF dans sim.js), coupé en l'air
-      const Q = c.sol || SEC, air = c.air ? 0 : 1, meu = clamp((Q.colle - 0.35) / 0.25, 0, 1) * clamp(Q.roul / 0.2, 0, 1), neig = clamp(Q.vir / 0.3, 0, 1) * meu, ice = clamp((Q.vir - 0.3) / 0.3, 0, 1), pv = clamp(Q.roul / 0.15, 0, 1) * (1 - meu), we = clamp(Q.aq / 0.1, 0, 1), sv = Math.min(1, j.sp / 25);
-      k(v.roul.gain, air * RL * j.r ** 1.3 * (1 - 0.7 * meu) * (1 - 0.5 * ice), 0.1); k(v.rl.frequency, 600 + 500 * j.r, 0.1); // le pic du roulement monte avec la vitesse, vers 1,1 kHz
-      k(v.meub.gain, air * ML * meu * sv, 0.1); k(v.mf.frequency, lerp(1600, 700, neig), 0.2); k(v.gr.playbackRate, 0.8 + 0.4 * j.r, 0.1);
-      k(v.pav.gain, air * 0.08 * pv * sv, 0.1); k(v.po.frequency, 6 + j.sp * 0.8, 0.1); k(v.mou.gain, air * 0.03 * we * j.r, 0.2);
-      // glisse : le caoutchouc qui feule (grave, large) et, au-dessus, un crissement par à-coups (adhérence et glissement alternés) ; sur sol meuble, la gerbe ; sur la glace, presque rien
-      const slip = Math.abs(c.vl), a = air * (j.sp > 8 ? clamp((slip - 4) / 14, 0, 1) : 0), dur = (1 - meu) * (1 - 0.6 * ice);
+      if (racing && j.dmgP > 0.3 && j.sp > 3 && Math.random() < dt * (3 + 12 * j.r) * (j.dmgP - 0.3)) nz(t + Math.random() * 0.02, 0.012, 0.03 * j.dmgP, v.motorFam, 'bandpass', 2500 + Math.random() * 2500, 6, mbuf, 0.001); // rattle: a loose part knocking
+      // rolling: depending on the ground under the car (c.ground, see SURF in sim.js), cut in the air
+      const Q = c.ground || SEC, air = c.air ? 0 : 1, loose = clamp((Q.gripCoef - 0.35) / 0.25, 0, 1) * clamp(Q.rollAmt / 0.2, 0, 1), snowAmt = clamp(Q.corner / 0.3, 0, 1) * loose, ice = clamp((Q.corner - 0.3) / 0.3, 0, 1), pv = clamp(Q.rollAmt / 0.15, 0, 1) * (1 - loose), we = clamp(Q.aq / 0.1, 0, 1), sv = Math.min(1, j.sp / 25);
+      k(v.rollAmt.gain, air * RL * j.r ** 1.3 * (1 - 0.7 * loose) * (1 - 0.5 * ice), 0.1); k(v.rl.frequency, 600 + 500 * j.r, 0.1); // the rolling peak rises with speed, toward 1.1 kHz
+      k(v.looseG.gain, air * ML * loose * sv, 0.1); k(v.mf.frequency, lerp(1600, 700, snowAmt), 0.2); k(v.gr.playbackRate, 0.8 + 0.4 * j.r, 0.1);
+      k(v.cobble.gain, air * 0.08 * pv * sv, 0.1); k(v.po.frequency, 6 + j.sp * 0.8, 0.1); k(v.limp.gain, air * 0.03 * we * j.r, 0.2);
+      // skid: the rubber growling (low, broad) and, above it, a squeal in jerks (alternating grip and slip); on loose ground, the spray; on ice, almost nothing
+      const slip = Math.abs(c.vl), a = air * (j.sp > 8 ? clamp((slip - 4) / 14, 0, 1) : 0), dur = (1 - loose) * (1 - 0.6 * ice);
       k(v.b1.frequency, 450 + 150 * a, 0.1); k(v.b2.frequency, 950 + 250 * a, 0.1); k(v.b3.frequency, (950 + 250 * a) * 2, 0.1);
-      k(v.g.gain, GL * a * dur, 0.15); k(v.cri.gain, GL * 0.6 * a * a * dur, 0.15);
-      k(v.spray.gain, meu * (0.15 * a + 0.08 * clamp(slip / 12, 0, 1) * j.r), 0.1);
+      k(v.g.gain, GL * a * dur, 0.15); k(v.squeal.gain, GL * 0.6 * a * a * dur, 0.15);
+      k(v.spray.gain, loose * (0.15 * a + 0.08 * clamp(slip / 12, 0, 1) * j.r), 0.1);
       k(v.scrub.gain, air * 0.5 * clamp(slip / 12, 0, 1) * j.r, 0.08);
-      if ((j.land || 0) > 3.5 && t - (v.landT || 0) > 0.3 && racing) { v.landT = t; reception(j.land, t); } // réception de saut (à part des chocs)
+      if ((j.land || 0) > 3.5 && t - (v.landT || 0) > 0.3 && racing) { v.landT = t; landing(j.land, t); } // jump landing (separate from impacts)
       hit = Math.max(hit, j.hit || 0); bump = Math.max(bump, j.bump || 0); rub = rub || !!c.rub;
     }
-    const w = clamp((r - 0.2) / 0.8, 0, 1) * (1 - tun); k(windL.gain, 0.05 * w * w, 0.2); k(windG.gain, 0.035 * w ** 3, 0.2); k(windF.frequency, 500 + 1300 * r, 0.3); // vent : monte avec la vitesse, coupé en tunnel
+    const w = clamp((r - 0.2) / 0.8, 0, 1) * (1 - tun); k(windL.gain, 0.05 * w * w, 0.2); k(windG.gain, 0.035 * w ** 3, 0.2); k(windF.frequency, 500 + 1300 * r, 0.3); // wind: rises with speed, cut in a tunnel
     k(nitroG.gain, racing && car.boost > 0 ? 0.08 : 0, 0.08);
-    pluieFrame(state === 'title' ? 0 : (e.pluie != null ? e.pluie : T.pluie ? T.pluie[car.idx] : 0) * (1 - tun), r, car.aq || 0, k);
-    rubT -= dt; if (bump > 0.3) rubT = 0.35; // deux voitures qui se touchent : un petit choc, puis elles frottent un instant
+    rainFrame(state === 'title' ? 0 : (e.rainFx != null ? e.rainFx : T.rainFx ? T.rainFx[car.idx] : 0) * (1 - tun), r, car.aq || 0, k);
+    rubT -= dt; if (bump > 0.3) rubT = 0.35; // two cars touching: a small impact, then they scrape for a moment
     k(scrapeG.gain, rub || rubT > 0 ? 0.1 + 0.2 * r : 0, 0.05);
-    if ((hit > 3 || bump > 0.3) && t - lastHit > 0.15) { lastHit = t; if (hit > 3) choc(hit, t); else contact(bump, t); // un mur : le choc ; une autre voiture : son contact à elle
-      if (racing && t - lastMus > 4 && e.hit > 6) { lastMus = t; coupMusique(e.hit, t); satT = 0.2; if (e.hit > 14) platine = 1; } } // adouci : seul un vrai choc de mur touche la musique (le contact entre voitures plus du tout), au plus toutes les 4 s, ralenti de platine réservé aux gros chocs // au plus une fois toutes les 2 s : en rebondissant de mur en mur (pluie), la musique restait plongée, ralentie et saturée en continu // la musique encaisse : coup de basse, demi-seconde de saturation, et sur un gros choc elle ralentit comme une platine qu'on freine
-    // glisse (car.dd, car.driftT) : la tension monte en 1,5 s, palier à 0,6 s (la jauge de nitro se remplit alors à plein débit) ; nitro déclenchée (car.boost) : tout s'ouvre d'un coup et le refrain joue tant qu'elle pousse
-    const gl = racing && car.dd ? car.driftT || 0 : 0, vise = car.boost > 0 ? 0 : clamp(gl / 1.5, 0, 1);
-    glisse = gl > 0.15; acquis = gl > 0.6; if (!glisse) acqDit = false; boostL = racing && car.boost > 0;
+    if ((hit > 3 || bump > 0.3) && t - lastHit > 0.15) { lastHit = t; if (hit > 3) impact(hit, t); else contact(bump, t); // a wall: the impact; another car: its own contact
+      if (racing && t - lastMus > 4 && e.hit > 6) { lastMus = t; musicHit(e.hit, t); satT = 0.2; if (e.hit > 14) turntable = 1; } } // softened: only a real wall impact touches the music (car-to-car contact not at all), at most every 4 s, turntable slowdown reserved for big impacts // at most once every 2 s: bouncing from wall to wall (rain), the music stayed sunk, slowed and saturated non-stop // the music takes it: bass hit, half a second of saturation, and on a big impact it slows like a turntable being braked
+    // drift (car.dd, car.driftT): the tension builds over 1.5 s, plateau at 0.6 s (the nitro gauge then fills at full rate); nitro triggered (car.boost): everything opens up at once and the chorus plays as long as it pushes
+    const gl = racing && car.dd ? car.driftT || 0 : 0, aim = car.boost > 0 ? 0 : clamp(gl / 1.5, 0, 1);
+    glisse = gl > 0.15; acquired = gl > 0.6; if (!glisse) acqSaid = false; boostL = racing && car.boost > 0;
     if (car.boost > 0 && !wasBoost) { boostFx(t); boostPend = true; tens = 0; }
-    tens += (vise - tens) * Math.min(1, dt * (vise > tens ? 8 : 3)); k(hpF.frequency, 20 * 20 ** tens, 0.08); // passe-haut : de 20 à 400 Hz, le grave s'amincit sans disparaître
+    tens += (aim - tens) * Math.min(1, dt * (aim > tens ? 8 : 3)); k(hpF.frequency, 20 * 20 ** tens, 0.08); // high-pass: from 20 to 400 Hz, the low end thins without disappearing
     wasBoost = car.boost > 0;
-    // ambiance du lieu : seulement dans ses zones (e.amb, fondu fait par le jeu), jamais au menu ni en tunnel ; événements espacés au hasard, dans la zone
+    // ambience of the place: only within its zones (e.amb, fade done by the game), never in the menu or in a tunnel; events spaced at random, within the zone
     const amb = state === 'title' ? 0 : (e.amb || 0) * (1 - tun);
-    const ambE = AMBZ[M.id] && state !== 'title' ? e.amb || 0 : amb; ambPos = car ? car.idx / N : 0; ambSous = tun; // carte à zones : les événements continuent sous la voûte
+    const ambE = AMBZ[M.id] && state !== 'title' ? e.amb || 0 : amb; ambPos = car ? car.idx / N : 0; ambUnder = tun; // zoned map: the events continue under the vault
     for (const { z, g } of ambZG) k(g.gain, state === 'title' ? 0 : (z.tun ? tun : ambPos >= z.de && ambPos < z.a ? 1 - tun : 0) * (e.amb || 0), 0.5);
-    if (e.objet === 'metal' && ambEvG) for (const f of [1320, 1985, 2710]) osc('triangle', f * (0.97 + Math.random() * 0.06), t, 0.6, 0.05, ambEvG); // un cuivre percuté (th.objets, son 'metal')
+    if (e.item === 'metal' && ambEvG) for (const f of [1320, 1985, 2710]) osc('triangle', f * (0.97 + Math.random() * 0.06), t, 0.6, 0.05, ambEvG); // a struck copper item (th.objects, sound 'metal')
     k(ambBed.gain, 0.6 * amb, 0.4); if (ambE > 0.5) { if (!inZone) ambT = Math.min(ambT, 1.2); if ((ambT -= dt) < 0) ambT = ambEvent(t + 0.05); } inZone = ambE > 0.5;
-    lieuxFrame(t, car, state, tun); // les sources posées par le décor
-    if (CH && T.S && car.x != null) chapadaFrame(dt, e, t, k, tun, r); // le banc d'écoute et l'éditeur n'ont ni piste ni position : rien à placer
-    // musique : sections et filtres suivent la course
+    spotsFrame(t, car, state, tun); // the sources placed by the scenery
+    if (CH && T.S && car.x != null) chapadaFrame(dt, e, t, k, tun, r); // the listening bench and the editor have neither track nor position: nothing to place
+    // music: sections and filters follow the race
     const a0 = (car.idx - T.h0 + N) % N, inside = a0 < T.h1 - T.h0, near = racing && !inside && N - a0 < 60;
     if (near && !wasNear) riser(t, clamp((N - a0) * 2 / Math.max(sp, 20), 0.5, 3));
-    if (TH.alarme && inside && !wasIn && racing) for (let i = 0; i < 6; i++) osc('square', i % 2 ? 660 : 880, t + 0.25 + i * 0.18, 0.16, 0.07, strip.a.in); // sirène d'alarme à l'entrée
+    if (TH.alarm && inside && !wasIn && racing) for (let i = 0; i < 6; i++) osc('square', i % 2 ? 660 : 880, t + 0.25 + i * 0.18, 0.16, 0.07, strip.a.in); // alarm siren at the entry
     wasNear = near; wasIn = inside;
-    if (racing && !drums && !menu) { stp = 64; nextT = Math.max(nextT, t); for (const p of 'kbdcgal') was[p] = true; bigS = false; } // le départ est un événement de course : tout entre franchement // départ : on saute l'introduction, la course s'ouvre sur le premier couplet (l'introduction revient quand la forme boucle)
-    // au fil des tours du mode course (e.tour, e.tours) : premier tour sobre, puis l'arrangement complet, et le dernier tour un demi-ton plus haut ; le passage de ligne est un événement de course, la cymbale le marque
-    const nl = !e.tours ? 1 : e.tour <= 0 ? 0 : e.tour >= e.tours - 1 ? 2 : 1;
-    if (racing && e.tours && e.tour !== lapN) { if (lapN >= 0 && e.tour > lapN) crash(t, 0.5); lapN = e.tour; } if (!racing) lapN = -1;
-    lap = racing ? nl : 1; platine = Math.max(0, platine - dt); TR = (lap === 2 ? 1 : 0) - platine; // ralenti de platine : un demi-ton et 10 % de tempo en moins, rattrapés en 1 s
-    drums = racing ? 1 : 0; fin = racing && !inside && car.idx >= T.h1 && car.dist > 0;
+    if (racing && !drums && !menu) { stp = 64; nextT = Math.max(nextT, t); for (const p of 'kbdcgal') was[p] = true; bigS = false; } // the start is a race event: everything comes in boldly // start: the intro is skipped, the race opens on the first verse (the intro returns when the form loops)
+    // over the laps of race mode (e.lapRun, e.lapCount): first lap sober, then the full arrangement, and the last lap a semitone higher; crossing the line is a race event, marked by the cymbal
+    const nl = !e.lapCount ? 1 : e.lapRun <= 0 ? 0 : e.lapRun >= e.lapCount - 1 ? 2 : 1;
+    if (racing && e.lapCount && e.lapRun !== lapN) { if (lapN >= 0 && e.lapRun > lapN) crash(t, 0.5); lapN = e.lapRun; } if (!racing) lapN = -1;
+    lap = racing ? nl : 1; turntable = Math.max(0, turntable - dt); TR = (lap === 2 ? 1 : 0) - turntable; // turntable slowdown: a semitone and 10% less tempo, caught up in 1 s
+    drums = racing ? 1 : 0; ending = racing && !inside && car.idx >= T.h1 && car.dist > 0;
     mix += ((racing ? e.hot : 0) - mix) * Math.min(1, dt * 3);
     inten += (r - inten) * Math.min(1, dt * 2); driftL += ((car.drift ? 1 : 0) - driftL) * Math.min(1, dt * 6);
-    // seul un vrai choc de mur salit un peu la musique, un cinquième de seconde (la saturation près des murs et en frottant a été retirée : sur une route étroite elle ne s'arrêtait jamais)
+    // only a real wall impact dirties the music a little, for a fifth of a second (the saturation near walls and while scraping was removed: on a narrow road it never stopped)
     satT -= dt; if (satT > 0) grit = 1;
-    grit -= grit * Math.min(1, dt * 3); k(gritWet.gain, 0.05 * grit, 0.03); k(gritDry.gain, 1 - 0.25 * grit, 0.03); // dosé par mesure : le timbre change, le niveau presque pas
-    // la musique s'ouvre avec la vitesse ; un gros choc l'étouffe ; dans un tunnel elle est étouffée et réverbérée, et le moteur résonne
-    // (la musique n'est plus étouffée par un choc, et à peine quand on ralentit : passe-bas de 5 à 18 kHz selon la vitesse ; elle s'efface derrière le tableau d'arrivée)
-    k(musF.frequency, e.fini ? 900 : Math.min(state === 'title' ? 7000 : 5000 * 3.6 ** Math.min(1, inten * 1.4 + mix), lerp(18000, 2500, tun)), 0.08);
-    k(musSend.gain, 0.7 * tun, 0.2); k(motSend.gain, 2.5 * tun, 0.2);
-    // espace : les deux échos (le côté du mur qu'on serre répond plus fort et plus tôt), la salle du lieu ; en tunnel, écho court et fort des deux côtés
-    { const P = ESP[M.id] || ESP.essai, mu = state === 'title' ? 0 : e.mur || 0, on = state === 'title' ? 0.3 : 1;
-      for (const [s, cote] of [[-1, esp.L], [1, esp.R]]) { const pr = P.mur * Math.max(0, mu * s); k(cote.g.gain, on * (P.sl * (1 - tun) * (1 + 1.5 * pr) + 0.45 * tun), 0.1); k(cote.d.delayTime, lerp(lerp(P.slap, 0.008, pr), 0.014, tun) * (s > 0 ? 1.13 : 1), 0.1); }
-      k(esp.rvG.gain, on * P.rv * (1 - tun) * (P.lieux || []).reduce((m, [a, b, kk]) => car && car.idx / N >= a && car.idx / N < b ? kk : m, 1), 0.3); }
-    // les autres véhicules (e.autres, du plus proche au plus lointain : lat (+ à droite), fwd en m, dist, vr = vitesse de rapprochement, vrel = vitesse relative, rpm, camion, occ = 0..1 hors de vue directe),
-    // relatifs à la voiture qu'on entend : l'auditeur reste à l'origine, regard vers -z, et chaque voix est placée en (lat, 0, -fwd)
-    for (let i = 0; i < AU.length; i++) { const o = e.autres && e.autres[i], v = AU[i];
-      if (!o || state === 'title') { k(v.g.gain, 0, 0.15); k(v.wh.gain, 0, 0.15); dors(v, 1); continue; }
-      const P = o.camion ? CAMION : MOT[CARD.moteur] || MOT.l6, d = Math.max(3, o.dist), dop = clamp(343 / (343 - clamp(o.vr, -150, 150)), 0.7, 1.5), a = 1 - Math.exp(-dt / 0.12);
-      v.dop = v.dop ? v.dop + (dop - v.dop) * a : dop; v.oc = (v.oc || 0) + ((o.occ || 0) * (0.4 + 0.6 * (ESP[M.id] || ESP.essai).mur) - (v.oc || 0)) * (1 - Math.exp(-dt / 0.25)); // Doppler et occlusion lissés (la vitesse de rapprochement saute d'une image à l'autre) ; en terrain ouvert, rien ne masque vraiment
-      dors(v, (o.camion ? 0.12 : 0.09) / d < 6e-4); // au-delà de 150 à 200 m, -64 dB sous la musique : le moteur physique s'arrête de calculer
-      if (v.node) { if (v.typ !== P) { v.node.port.postMessage(P); v.typ = P; } k(v.node.parameters.get('rpm'), o.rpm * v.dop, 0.04); k(v.node.parameters.get('load'), o.camion ? 0.6 : 0.85, 0.1); }
-      k(v.g.gain, (o.camion ? 0.12 : 0.09) / d * (1 - 0.55 * v.oc), 0.05); k(v.lp.frequency, 9000 / (1 + d / 25) * (1 - 0.88 * v.oc), 0.1);
+    grit -= grit * Math.min(1, dt * 3); k(gritWet.gain, 0.05 * grit, 0.03); k(gritDry.gain, 1 - 0.25 * grit, 0.03); // dosed per bar: the timbre changes, the level barely does
+    // the music opens up with speed; a big impact muffles it; in a tunnel it is muffled and reverberated, and the engine resonates
+    // (the music is no longer muffled by an impact, and barely when slowing: low-pass from 5 to 18 kHz depending on speed; it fades behind the finish board)
+    k(musF.frequency, e.finished ? 900 : Math.min(state === 'title' ? 7000 : 5000 * 3.6 ** Math.min(1, inten * 1.4 + mix), lerp(18000, 2500, tun)), 0.08);
+    k(musSend.gain, 0.7 * tun, 0.2); k(motorSend.gain, 2.5 * tun, 0.2);
+    // space: the two echoes (the side of the wall you hug answers louder and sooner), the place's room; in a tunnel, short strong echo on both sides
+    { const P = ACOUSTICS[M.id] || ACOUSTICS.attempt, mu = state === 'title' ? 0 : e.intoWall || 0, on = state === 'title' ? 0.3 : 1;
+      for (const [s, sideOf] of [[-1, acoustic.L], [1, acoustic.R]]) { const pr = P.intoWall * Math.max(0, mu * s); k(sideOf.g.gain, on * (P.sl * (1 - tun) * (1 + 1.5 * pr) + 0.45 * tun), 0.1); k(sideOf.d.delayTime, lerp(lerp(P.slap, 0.008, pr), 0.014, tun) * (s > 0 ? 1.13 : 1), 0.1); }
+      k(acoustic.rvG.gain, on * P.rv * (1 - tun) * (P.spots || []).reduce((m, [a, b, kk]) => car && car.idx / N >= a && car.idx / N < b ? kk : m, 1), 0.3); }
+    // the other vehicles (e.otherCars, from nearest to farthest: lat (+ right), fwd in m, dist, vr = closing speed, vrel = relative speed, rpm, camion, occ = 0..1 out of direct view),
+    // relative to the car being heard: the listener stays at the origin, looking toward -z, and each voice is placed at (lat, 0, -fwd)
+    for (let i = 0; i < AU.length; i++) { const o = e.otherCars && e.otherCars[i], v = AU[i];
+      if (!o || state === 'title') { k(v.g.gain, 0, 0.15); k(v.wh.gain, 0, 0.15); sleep(v, 1); continue; }
+      const P = o.lorry ? TRUCK : MOTOR[CARD.engine] || MOTOR.l6, d = Math.max(3, o.dist), dop = clamp(343 / (343 - clamp(o.vr, -150, 150)), 0.7, 1.5), a = 1 - Math.exp(-dt / 0.12);
+      v.dop = v.dop ? v.dop + (dop - v.dop) * a : dop; v.oc = (v.oc || 0) + ((o.occ || 0) * (0.4 + 0.6 * (ACOUSTICS[M.id] || ACOUSTICS.attempt).intoWall) - (v.oc || 0)) * (1 - Math.exp(-dt / 0.25)); // Doppler and occlusion smoothed (the closing speed jumps from one frame to the next); on open ground, nothing really masks
+      sleep(v, (o.lorry ? 0.12 : 0.09) / d < 6e-4); // beyond 150 to 200 m, -64 dB under the music: the physical engine stops computing
+      if (v.node) { if (v.typ !== P) { v.node.port.postMessage(P); v.typ = P; } k(v.node.parameters.get('rpm'), o.rpm * v.dop, 0.04); k(v.node.parameters.get('load'), o.lorry ? 0.6 : 0.85, 0.1); }
+      k(v.g.gain, (o.lorry ? 0.12 : 0.09) / d * (1 - 0.55 * v.oc), 0.05); k(v.lp.frequency, 9000 / (1 + d / 25) * (1 - 0.88 * v.oc), 0.1);
       if (v.pan.positionX) { k(v.pan.positionX, o.lat, 0.05); k(v.pan.positionZ, -o.fwd, 0.05); } else v.pan.setPosition(o.lat, 0, -o.fwd);
       k(v.wh.gain, 0.12 * clamp(o.vrel / 30, 0, 1) * clamp(1 - d / 14, 0, 1) ** 2 * (1 - v.oc), 0.04);
-      if (o.camion && racing) { if (v.pf > 0 && o.fwd <= 0 && Math.abs(o.lat) < 8 && t - (AU.kt || 0) > 4) { AU.kt = t; klaxon(t + 0.12, gain(clamp(10 / d, 0.4, 1), v.pan)); } v.pf = o.fwd; } else v.pf = 0; } // on vient de doubler un camion : il klaxonne
+      if (o.lorry && racing) { if (v.pf > 0 && o.fwd <= 0 && Math.abs(o.lat) < 8 && t - (AU.kt || 0) > 4) { AU.kt = t; klaxon(t + 0.12, gain(clamp(10 / d, 0.4, 1), v.pan)); } v.pf = o.fwd; } else v.pf = 0; } // we just overtook a truck: it honks
   }
 
-  // Les sons ponctuels (choc, rapport, pétarade, réception…) créent chacun 20 à 100 nœuds ; en course, ils sont créés juste après l'image, dans la tâche suivante, au lieu de dans l'image :
-  // chaque création peut attendre le fil audio, et un choc au départ ajoutait jusqu'à 10 ms à l'image. Le son part quelques millisecondes plus tard (son temps de départ, déjà passé, joue tout de suite).
-  // Hors ligne (banc d'écoute), ils restent immédiats : le rendu n'attend pas la tâche suivante
+  // One-off sounds (impact, gear change, backfire, landing…) each create 20 to 100 nodes; in a race, they are created just after the frame, in the next task, instead of inside the frame:
+  // each creation can wait for the audio thread, and an impact at the start added up to 10 ms to the frame. The sound starts a few milliseconds later (its start time, already past, plays at once).
+  // Offline (listening bench), they stay immediate: rendering does not wait for the next task
   const FILE = [], MC = new MessageChannel(); MC.port1.onmessage = () => { for (const f of FILE.splice(0)) f(); };
-  const differe = f => function () { const a = arguments; if (!live) return f.apply(null, a); FILE.push(() => f.apply(null, a)); if (FILE.length === 1) MC.port2.postMessage(0); };
-  choc = differe(choc); clac = differe(clac); levier = differe(levier); petarade = differe(petarade); pschitt = differe(pschitt); boostFx = differe(boostFx); reception = differe(reception); klaxon = differe(klaxon); coupMusique = differe(coupMusique);
-  document.addEventListener('visibilitychange', () => { if (AC && live) document.hidden ? AC.suspend() : AC.resume(); }); // pas de musique hachée ni de moteur figé en arrière-plan
-  window.SON = {
-    lieux, bref: coupLieu, lieuxEtat: () => LIEUX.map(l => [l.son, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // sources du décor ; lieuxEtat : prise de test (niveau visé de chaque source)
-    init: initAudio, frame: audioFrame, setStation, carte, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrivee, quitter, reprendre,
+  const defer = f => function () { const a = arguments; if (!live) return f.apply(null, a); FILE.push(() => f.apply(null, a)); if (FILE.length === 1) MC.port2.postMessage(0); };
+  impact = defer(impact); clack = defer(clack); lever = defer(lever); backfire = defer(backfire); hiss = defer(hiss); boostFx = defer(boostFx); landing = defer(landing); klaxon = defer(klaxon); musicHit = defer(musicHit);
+  document.addEventListener('visibilitychange', () => { if (AC && live) document.hidden ? AC.suspend() : AC.resume(); }); // no choppy music or frozen engine in the background
+  window.SOUND = {
+    spots, brief: spotHit, spotsState: () => SPOTS.map(l => [l.sound, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // scenery sources; spotsState: test tap (target level of each source)
+    init: initAudio, frame: audioFrame, setStation, mapDef, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrival, quitGame, reprendre,
     crash: () => AC && crash(),
-    tonnerre: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // grondement + craquement dans le médium
+    thunder: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // rumble + crackle in the mids
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },
-    volume(fam, v) { vol[fam] = v; if (V[fam]) V[fam].gain.value = v; },
-    evenement: () => { ambT = 0; }, clameur: (v = 1.5) => AC && ambBed && clameur(AC.currentTime, v), // la foule réagit à la course (src/rendu/foule.js) get live() { return live; },
-    clac: down => AC && clac(down), levier: down => AC && levier(down), choc: v => AC && choc(v), contact: v => AC && contact(v), boost: () => AC && boostFx(), petarade: () => AC && petarade(), pschitt: () => AC && pschitt(), reception: l => AC && reception(l), klaxon: () => AC && klaxon(),
-    moniteur(v) { if (outG) outG.gain.value = OUT * v; }, get vu() { return vu; }, // gain d'écoute du banc : sans effet sur le jeu
-    get vol() { return vol; }, get pret() { return pret; }, get stations() { return ST; },
-    get station() { return station; }, get nom() { return ST[station].name; }, get fq() { return ST[station].fq; }, get genre() { return ST[station].genre; }, get musicOn() { return musicOn; },
-    get beat() { return AC ? Math.max(0, (AC.currentTime - t0) / (4 * S16)) : 0; }, // temps écoulés depuis le début de la station, calés sur le kick
+    volume(fmly, v) { vol[fmly] = v; if (V[fmly]) V[fmly].gain.value = v; },
+    raceEvent: () => { ambT = 0; }, roar: (v = 1.5) => AC && ambBed && roar(AC.currentTime, v), // the crowd reacts to the race (src/render/crowd.js) get live() { return live; },
+    clack: down => AC && clack(down), lever: down => AC && lever(down), impact: v => AC && impact(v), contact: v => AC && contact(v), boost: () => AC && boostFx(), backfire: () => AC && backfire(), hiss: () => AC && hiss(), landing: l => AC && landing(l), klaxon: () => AC && klaxon(),
+    monitor(v) { if (outG) outG.gain.value = OUT * v; }, get vu() { return vu; }, // listening bench gain: no effect on the game
+    get vol() { return vol; }, get readyMs() { return readyMs; }, get stations() { return ST; },
+    get station() { return station; }, get label() { return ST[station].name; }, get fq() { return ST[station].fq; }, get genre() { return ST[station].genre; }, get musicOn() { return musicOn; },
+    get beat() { return AC ? Math.max(0, (AC.currentTime - t0) / (4 * S16)) : 0; }, // time elapsed since the start of the station, locked to the kick
     get pulse() { return AC ? Math.exp(-(this.beat % 1) * 5) : 0; },
-    get ana() { return ana; }, // analyseur de spectre, pour l'égaliseur du HUD
-    ecoute: EC, recale() { if (!AC) return Promise.resolve(); const p = charger(ST); retune(AC.currentTime, 1); tuneG.gain.setTargetAtTime(lvl(), AC.currentTime, 0.05); return p; }, // renvoie la promesse des instruments enregistrés décodés // éditeur de musique : applique un réglage de station sans relancer le morceau
-    note(p, n, pn) { const st = ST[station]; if (!AC || menu) return; pn = pn || (st[p] && (p === 'd' ? st.d[0] : st[p].p)); const P = PATCH[pn]; if (!P || !strip[p]) return; // fait entendre une note sur la tranche d'une partie (piano-roll, clavier et choix d'instrument de l'éditeur) ; pn : un autre timbre que celui de la partie
+    get ana() { return ana; }, // spectrum analyser, for the HUD equaliser
+    audition: EC, resync() { if (!AC) return Promise.resolve(); const p = loadRadios(ST); retune(AC.currentTime, 1); tuneG.gain.setTargetAtTime(lvl(), AC.currentTime, 0.05); return p; }, // returns the promise of the decoded recorded instruments // music editor: applies a station setting without restarting the track
+    note(p, n, pn) { const st = ST[station]; if (!AC || menu) return; pn = pn || (st[p] && (p === 'd' ? st.d[0] : st[p].p)); const P = PATCH[pn]; if (!P || !strip[p]) return; // plays a note on a part's slice (piano roll, keyboard and the editor's instrument choice); pn: a timbre other than the part's own
       tone(pn, hz(n), AC.currentTime, P.s ? 0.4 : 0.25, pv(st, p) * (p === 'l' ? (P.lv || 0.15) * (st.lV == null ? 1 : st.lV) : p === 'b' ? 0.3 * (P.lv || 1) : 0.09 * (P.lv || 1)), strip[p].in); },
-    coup(p, c) { if (!AC || menu) return; const st = ST[station], K = kitDe(st), t = AC.currentTime, v = pv(st, p); if (p === 'k') dKick(t, v * 0.7 * (c === 'g' ? 0.5 : 1), K); else if (p === 's') dSnare(t, v * 0.4, K, c); else if (p === 'h') dHat(t, v * 0.63, K, c); else dPerc(t, v, K, c); }, // fait entendre un coup de batterie (éditeur)
-    get fond() { return curRoot; }, // fondamentale de la mesure en cours
-    get pas() { return stp; }, get timbres() { return Object.keys(PATCH); }, get kits() { return Object.keys(KIT); },
+    strike(p, c) { if (!AC || menu) return; const st = ST[station], K = kitOf(st), t = AC.currentTime, v = pv(st, p); if (p === 'k') dKick(t, v * 0.7 * (c === 'g' ? 0.5 : 1), K); else if (p === 's') dSnare(t, v * 0.4, K, c); else if (p === 'h') dHat(t, v * 0.63, K, c); else dPerc(t, v, K, c); }, // plays a drum hit (editor)
+    get backdrop() { return curRoot; }, // root of the current bar
+    get stepSec() { return stp; }, get timbres() { return Object.keys(PATCH); }, get kits() { return Object.keys(KIT); },
     get ac() { return AC; }, get out() { return master; }, get patch() { return PATCH; }, get smp() { return Object.keys(smp); }, get tone() { return tone; }, get ins() { return Object.fromEntries(Object.entries(ins).map(([k, v]) => [k, Object.keys(v).length])); }, // prises de test
   };
 })();

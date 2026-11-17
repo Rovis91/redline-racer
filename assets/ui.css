@@ -1,9 +1,9 @@
-/* Style commun des outils (editeur.html, ecoute.html) : un rack de studio aux couleurs du jeu.
-   Parti pris : la police pixel du jeu pour les étiquettes, une police à chasse fixe pour les valeurs, des angles droits, des touches à rebord (pas de halo ni d'arrondi),
-   le jaune du jeu pour ce qui est actif, le cyan seulement pour la sélection. */
+/* Common tool style (editor.html, listen.html): a studio rack in the game's colors.
+   Design choice: the game's pixel font for labels, a fixed-width font for values, square corners, bevelled buttons (no glow or rounding),
+   the game's yellow for what is active, cyan only for selection. */
 @font-face { font-family: "Press Start 2P"; src: url(fonts/press-start-2p-latin-400-normal.woff2) format("woff2"); font-display: swap; }
 :root {
-  color-scheme: dark; /* listes déroulantes, barres de défilement et dialogues du navigateur en sombre */
+  color-scheme: dark; /* dropdowns, scrollbars and browser dialogs in dark */
   --fond: #0b0b10; --carte: #14141c; --champ: #1c1c28; --bord: #2a2a38; --bord2: #3f3f52; --ombre: #050508;
   --texte: #ecece6; --doux: #a8a8b4; --jaune: #fcee0a; --cyan: #00f0ff; --vert: #40ff80; --rouge: #ff2a4f;
   --pixel: "Press Start 2P", ui-monospace, monospace; --mono: ui-monospace, "Cascadia Mono", Consolas, "DejaVu Sans Mono", monospace;
@@ -12,16 +12,16 @@
 html, body { height: 100%; }
 body { margin: 0; background: var(--fond); color: var(--texte); font: 13px/1.45 var(--mono); }
 :focus-visible { outline: 2px solid var(--cyan); outline-offset: 1px; }
-a { color: var(--cyan); } small, .doux { color: var(--doux); font-weight: normal; } p { margin: 6px 0; color: var(--doux); }
+a { color: var(--cyan); } small, .soft { color: var(--doux); font-weight: normal; } p { margin: 6px 0; color: var(--doux); }
 
-/* étiquettes en police pixel : titres de panneau, onglets, touches principales */
+/* pixel-font labels: panel titles, tabs, main buttons */
 h2, .pix { font: 9px/1.6 var(--pixel); text-transform: uppercase; letter-spacing: .04em; }
 h2 { margin: 18px 0 9px; color: var(--jaune); } h2:first-child { margin-top: 0; }
 h2::before { content: ''; display: inline-block; width: 7px; height: 7px; background: var(--jaune); margin-right: 8px; }
 h2 small { font: 12px var(--mono); text-transform: none; letter-spacing: 0; }
 h3 { font: 600 12px var(--mono); margin: 12px 0 6px; color: var(--texte); }
 
-/* touches : face plate, rebord sombre en bas ; enfoncée, la touche descend d'un pixel et passe au jaune */
+/* buttons: flat face, dark edge at the bottom; pressed, the button drops one pixel and turns yellow */
 button, select, input[type=text], input[type=number], textarea { font: inherit; color: inherit; background: var(--champ); border: 1px solid var(--bord2); border-radius: 2px; padding: 4px 9px; min-height: 28px; }
 button { cursor: pointer; box-shadow: 0 2px 0 var(--ombre); text-align: left; transition: background .08s, border-color .08s; }
 select { cursor: pointer; } option, optgroup { background: var(--champ); color: var(--texte); }
@@ -32,7 +32,7 @@ button[aria-pressed=true] small, button.on small { color: #3a3608; }
 button:disabled { opacity: .4; cursor: default; }
 .danger { border-color: #70283a; color: #ff8fa3; } .danger:hover:not(:disabled) { border-color: var(--rouge); }
 
-/* curseurs : une glissière fine et un bouton carré, comme un fader */
+/* sliders: a thin track and a square thumb, like a fader */
 input[type=range] { -webkit-appearance: none; appearance: none; background: none; height: 20px; margin: 0; cursor: pointer; }
 input[type=range]::-webkit-slider-runnable-track { height: 4px; background: var(--ombre); border: 1px solid var(--bord2); }
 input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 18px; margin-top: -8px; background: var(--texte); border: 1px solid var(--ombre); box-shadow: inset 0 -4px 0 #9a9a94; }
@@ -44,12 +44,12 @@ input[type=checkbox] { -webkit-appearance: none; appearance: none; width: 14px; 
 input[type=checkbox]:checked { background: var(--jaune); box-shadow: inset 0 0 0 2px var(--ombre); border-color: var(--jaune); }
 output { font-variant-numeric: tabular-nums; }
 
-/* témoin et vumètre à segments */
+/* indicator light and segmented VU meter */
 .led { display: inline-block; width: 7px; height: 7px; background: var(--bord2); } .led.on { background: var(--vert); }
 .segments { background-image: repeating-linear-gradient(90deg, transparent 0 5px, var(--ombre) 5px 7px); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 
-/* dialogue : un panneau par-dessus l'écran, pour ce qui ne sert pas en permanence */
+/* dialog: a panel over the screen, for what is not needed all the time */
 dialog { background: var(--carte); color: var(--texte); border: 1px solid var(--texte); box-shadow: 8px 8px 0 var(--ombre); padding: 0; width: min(1080px, 94vw); max-height: 88vh; }
 dialog[open] { display: flex; flex-direction: column; } dialog::backdrop { background: rgba(5, 5, 8, .7); }
 dialog > header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 8px 8px 14px; background: var(--jaune); color: #0b0b10; }

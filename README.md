@@ -1,8 +1,8 @@
-<p align="center"><a href="https://rovis91.github.io/redline-racer/"><img src="docs/images/promo.jpg" alt="Redline Racer: night time attack, an arcade racer for the browser"></a></p>
+<p align="center"><a href="https://rovis91.github.io/redline-racer/"><img src=".github/images/promo.jpg" alt="Redline Racer: night time attack, an arcade racer for the browser"></a></p>
 
 <p align="center"><b><a href="https://rovis91.github.io/redline-racer/">▶ Play now in your browser</a></b> · no install, no download</p>
 
-<p align="center"><img src="docs/images/circuits.jpg" alt="The 12 tracks"></p>
+<p align="center"><img src=".github/images/circuits.jpg" alt="The 12 tracks"></p>
 
 ## How to play
 

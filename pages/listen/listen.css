@@ -1,0 +1,32 @@
+/* Listening bench: a single screen. Top bar · sound families on the left · sounds of the family in the centre · race situation on the right. */
+body { display: grid; grid-template: auto minmax(0, 1fr) / 220px minmax(0, 1fr) 290px; }
+button small { display: block; color: var(--doux); font-size: 11px; }
+output { min-width: 40px; color: var(--jaune); font-weight: 600; }
+
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 12px; background: var(--carte); border-bottom: 2px solid var(--jaune); }
+.heading { font: 11px var(--pixel); text-transform: uppercase; color: var(--jaune); } #stop { font: 9px var(--pixel); text-transform: uppercase; background: var(--rouge); border-color: var(--rouge); color: #0b0b10; min-height: 32px; }
+#vu { display: flex; align-items: center; gap: 10px; } #barLine { position: relative; width: 240px; height: 16px; background: var(--ombre); border: 1px solid var(--bord2); overflow: hidden; } #barLine::after { content: ''; position: absolute; inset: 0; background-image: repeating-linear-gradient(90deg, transparent 0 5px, var(--ombre) 5px 7px); }
+#niv { position: absolute; inset: 0 auto 0 0; width: 0; background: linear-gradient(90deg, #00a8b8, var(--jaune) 80%, var(--rouge)); } #holdTime { position: absolute; top: 0; bottom: 0; width: 2px; background: #fff; left: 0; }
+#db { width: 150px; font-variant-numeric: tabular-nums; } #voyant { width: 10px; height: 10px; background: var(--bord2); } #voyant.on { background: var(--vert); }
+#whatLine { flex: 1 1 300px; color: var(--doux); } #whatLine b { color: var(--texte); }
+#mapDefs { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px; } #mapDefs button { padding: 3px 9px; font-size: 13px; }
+
+nav { display: flex; flex-direction: column; gap: 3px; padding: 10px 8px; border-right: 1px solid var(--bord); overflow: auto; }
+nav button { font: 9px/1.5 var(--pixel); text-transform: uppercase; border-color: transparent; background: none; box-shadow: none; padding: 10px; } nav button[aria-pressed=true] { transform: none; }
+main { overflow: auto; padding: 14px 18px 30px; }
+aside { overflow: auto; padding: 14px; border-left: 1px solid var(--bord); background: var(--carte); display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+aside h2, aside p { margin: 0; } aside label { display: flex; align-items: center; gap: 8px; width: 100%; } aside label:has(select) { flex-wrap: wrap; } aside label input[type=range] { flex: 1 1 120px; }
+
+.sons { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px; } .sons button { min-height: 52px; border-left: 4px solid var(--bord2); }
+.actions { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.sett { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 12px; padding: 8px 10px; background: var(--carte); border: 1px solid var(--bord); border-left: 4px solid var(--cyan); }
+.sett label { display: flex; align-items: center; gap: 8px; } .sett input[type=range] { width: 220px; }
+.fmly { margin-top: 14px; max-width: 640px; } .fmly label { display: grid; grid-template-columns: 230px 1fr 50px; gap: 10px; align-items: center; min-height: 30px; }
+
+table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; } td, th { padding: 3px 10px; border-bottom: 1px solid var(--bord); text-align: right; } td:first-child, th:first-child { text-align: left; } td.ok { color: var(--vert); } td.reject { color: var(--rouge); font-weight: 600; }
+#opinions table { width: 100%; } #opinions td { text-align: left; vertical-align: middle; } #opinions td.c { color: var(--jaune); font-weight: 600; padding-top: 12px; border: 0; }
+#opinions button { margin: 0 4px 0 0; padding: 4px 9px; } #opinions button.ok.on { background: var(--vert); border-color: var(--vert); } #opinions button.reject.on { background: var(--rouge); border-color: var(--rouge); }
+#opinions input[type=text], #bilanTxt { font: inherit; color: inherit; background: var(--fond); padding: 5px 8px; width: 100%; }
+#opinions tr.nowPlaying td { background: #10262a; }
+#veil { position: fixed; inset: 0; background: rgba(8, 8, 12, .94); display: grid; place-items: center; z-index: 3; } #veil button { font: 14px var(--pixel); text-transform: uppercase; padding: 20px 30px; background: var(--jaune); border-color: var(--jaune); color: #0b0b10; box-shadow: 6px 6px 0 #000; }
+@media (max-width: 900px) { body { grid-template: auto auto auto auto / 1fr; height: auto; } nav { flex-direction: row; flex-wrap: wrap; border: 0; } aside { border: 0; } }

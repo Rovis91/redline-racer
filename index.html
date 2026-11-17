@@ -7,66 +7,66 @@
 <style>
   /* polices pixel embarquées (SIL Open Font License) ; tout le HUD est dessiné dans le canvas du jeu */
   @font-face { font-family: "Press Start 2P"; src: url(assets/fonts/press-start-2p-latin-400-normal.woff2) format("woff2"); }
-  @font-face { font-family: DotGothic16; src: url(assets/fonts/dotgothic16-jeu.woff2) format("woff2"); }
+  @font-face { font-family: DotGothic16; src: url(assets/fonts/dotgothic16-game.woff2) format("woff2"); }
   html, body { margin: 0; height: 100%; background: #08080c; overflow: hidden; }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 </style>
 </head>
 <body>
-<!-- three.js r187 en script classique (généré par outils/three-classique.js : un module ES ne se charge pas en file://) posé dans window.THREE ; les scripts suivants sont « defer » : ils s'exécutent après lui, dans cet ordre -->
-<script src="vendor/three/three.classique.js"></script>
-<script defer src="src/donnees/cartes.js"></script>
-<script defer src="src/donnees/traces-or.js"></script>
-<script defer src="src/donnees/repliques.js"></script>
-<script defer src="src/moteur/sim.js"></script>
-<script defer src="src/moteur/session.js"></script>
+<!-- three.js r187 en script classique (généré par tools/three-classic.js : un module ES ne se charge pas en file://) posé dans window.THREE ; les scripts suivants sont « defer » : ils s'exécutent après lui, dans cet ordre -->
+<script src="vendor/three/three.classic.js"></script>
+<script defer src="src/data/maps.js"></script>
+<script defer src="src/data/gold-laps.js"></script>
+<script defer src="src/data/taunts.js"></script>
+<script defer src="src/engine/sim.js"></script>
+<script defer src="src/engine/session.js"></script>
 <script defer src="src/audio/samples.js"></script>
 <script defer src="src/audio/instruments.js"></script>
 <script defer src="src/audio/audio.js"></script>
-<script defer src="src/rendu/textures.js"></script>
-<script defer src="src/rendu/formes.js"></script>
-<script defer src="src/cartes/paris/textures-paris.js"></script>
-<script defer src="src/cartes/paris/formes-paris.js"></script>
-<script defer src="src/cartes/canal/textures-canal.js"></script>
-<script defer src="src/cartes/canal/formes-canal.js"></script>
-<script defer src="src/cartes/stade/textures-stade.js"></script>
-<script defer src="src/cartes/stade/formes-stade.js"></script>
-<script defer src="src/cartes/givre/textures-givre.js"></script>
-<script defer src="src/cartes/givre/formes-givre.js"></script>
-<script defer src="src/cartes/terre/textures-terre.js"></script>
-<script defer src="src/cartes/terre/formes-terre.js"></script>
-<script defer src="src/cartes/touge/textures-touge.js"></script>
-<script defer src="src/cartes/touge/formes-touge.js"></script>
-<script defer src="src/cartes/wangan/textures-wangan.js"></script>
-<script defer src="src/cartes/barrage/textures-barrage.js"></script>
-<script defer src="src/cartes/barrage/formes-barrage.js"></script>
-<script defer src="src/cartes/wangan/formes-wangan.js"></script>
-<script defer src="src/cartes/perse/textures-perse.js"></script>
-<script defer src="src/cartes/perse/formes-perse.js"></script>
-<script defer src="src/cartes/chapada/textures-chapada.js"></script>
-<script defer src="src/cartes/chapada/formes-chapada.js"></script>
-<script defer src="src/cartes/plage/textures-plage.js"></script>
-<script defer src="src/cartes/plage/formes-plage.js"></script>
-<script defer src="src/rendu/textures-voitures.js"></script>
-<script defer src="src/rendu/formes-voitures.js"></script>
-<script defer src="src/cartes/ville/formes-ville.js"></script>
-<script defer src="src/rendu/decors.js"></script>
-<script defer src="src/rendu/foule.js"></script>
-<script defer src="src/cartes/ville/decors-ville.js"></script>
-<script defer src="src/cartes/touge/decors-touge.js"></script>
-<script defer src="src/cartes/wangan/decors-wangan.js"></script>
-<script defer src="src/cartes/paris/decors-paris.js"></script>
-<script defer src="src/cartes/canal/decors-canal.js"></script>
-<script defer src="src/cartes/stade/decors-stade.js"></script>
-<script defer src="src/cartes/givre/decors-givre.js"></script>
-<script defer src="src/cartes/terre/decors-terre.js"></script>
-<script defer src="src/cartes/perse/decors-perse.js"></script>
-<script defer src="src/cartes/barrage/decors-barrage.js"></script>
-<script defer src="src/cartes/chapada/decors-chapada.js"></script>
-<script defer src="src/cartes/plage/decors-plage.js"></script>
-<script defer src="src/moteur/langue.js"></script>
-<script defer src="src/moteur/peripheriques.js"></script>
-<script defer src="src/moteur/reseau.js"></script>
-<script defer src="src/moteur/game.js"></script>
+<script defer src="src/render/textures.js"></script>
+<script defer src="src/render/shapes.js"></script>
+<script defer src="src/maps/paris/textures-paris.js"></script>
+<script defer src="src/maps/paris/shapes-paris.js"></script>
+<script defer src="src/maps/canal/textures-canal.js"></script>
+<script defer src="src/maps/canal/shapes-canal.js"></script>
+<script defer src="src/maps/stade/textures-stade.js"></script>
+<script defer src="src/maps/stade/shapes-stade.js"></script>
+<script defer src="src/maps/givre/textures-givre.js"></script>
+<script defer src="src/maps/givre/shapes-givre.js"></script>
+<script defer src="src/maps/terre/textures-terre.js"></script>
+<script defer src="src/maps/terre/shapes-terre.js"></script>
+<script defer src="src/maps/touge/textures-touge.js"></script>
+<script defer src="src/maps/touge/shapes-touge.js"></script>
+<script defer src="src/maps/wangan/textures-wangan.js"></script>
+<script defer src="src/maps/barrage/textures-barrage.js"></script>
+<script defer src="src/maps/barrage/shapes-barrage.js"></script>
+<script defer src="src/maps/wangan/shapes-wangan.js"></script>
+<script defer src="src/maps/perse/textures-perse.js"></script>
+<script defer src="src/maps/perse/shapes-perse.js"></script>
+<script defer src="src/maps/chapada/textures-chapada.js"></script>
+<script defer src="src/maps/chapada/shapes-chapada.js"></script>
+<script defer src="src/maps/plage/textures-plage.js"></script>
+<script defer src="src/maps/plage/shapes-plage.js"></script>
+<script defer src="src/render/textures-cars.js"></script>
+<script defer src="src/render/shapes-cars.js"></script>
+<script defer src="src/maps/ville/shapes-ville.js"></script>
+<script defer src="src/render/scenery.js"></script>
+<script defer src="src/render/crowd.js"></script>
+<script defer src="src/maps/ville/scenery-ville.js"></script>
+<script defer src="src/maps/touge/scenery-touge.js"></script>
+<script defer src="src/maps/wangan/scenery-wangan.js"></script>
+<script defer src="src/maps/paris/scenery-paris.js"></script>
+<script defer src="src/maps/canal/scenery-canal.js"></script>
+<script defer src="src/maps/stade/scenery-stade.js"></script>
+<script defer src="src/maps/givre/scenery-givre.js"></script>
+<script defer src="src/maps/terre/scenery-terre.js"></script>
+<script defer src="src/maps/perse/scenery-perse.js"></script>
+<script defer src="src/maps/barrage/scenery-barrage.js"></script>
+<script defer src="src/maps/chapada/scenery-chapada.js"></script>
+<script defer src="src/maps/plage/scenery-plage.js"></script>
+<script defer src="src/engine/lang.js"></script>
+<script defer src="src/engine/devices.js"></script>
+<script defer src="src/engine/network.js"></script>
+<script defer src="src/engine/game.js"></script>
 </body>
 </html>

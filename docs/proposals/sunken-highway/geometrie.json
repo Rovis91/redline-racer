@@ -1,0 +1,179 @@
+{
+  "version": "concept-1",
+  "coordinate_system": "x east, y north, z relative to constant water plane 0 m",
+  "plan_length_m": 4800,
+  "length_3d_m": 4801.000030797508,
+  "width_m": 18,
+  "deck_width_m": 21,
+  "water_m": 0,
+  "deck_thickness_m": 2,
+  "low_deck_thickness_m": 1,
+  "scale": 1.0781082574913834,
+  "spline_type": "periodic cubic, chord parameter, C2",
+  "knots": [
+    0.0,
+    0.08074267816667985,
+    0.18708706544647938,
+    0.2934314527262789,
+    0.3650579350864753,
+    0.43461112419144615,
+    0.5167586964203719,
+    0.6130990745244242,
+    0.7289292005815371,
+    0.8142857460720273,
+    0.8928570753703153,
+    0.948415395123976,
+    1.0
+  ],
+  "control_points_m": [
+    [
+      -646.86495449483,
+      -323.432477247415
+    ],
+    [
+      -269.52706437284587,
+      -323.432477247415
+    ],
+    [
+      107.81082574913835,
+      0.0
+    ],
+    [
+      485.14871587112253,
+      323.432477247415
+    ],
+    [
+      808.5811931185375,
+      237.18381664810434
+    ],
+    [
+      840.9244408432791,
+      -86.24866059931067
+    ],
+    [
+      539.0541287456917,
+      -323.432477247415
+    ],
+    [
+      107.81082574913835,
+      -194.059486348449
+    ],
+    [
+      -269.52706437284587,
+      194.059486348449
+    ],
+    [
+      -646.86495449483,
+      323.432477247415
+    ],
+    [
+      -884.0487711429344,
+      43.124330299655334
+    ],
+    [
+      -862.4866059931068,
+      -215.6216514982767
+    ],
+    [
+      -646.86495449483,
+      -323.432477247415
+    ]
+  ],
+  "sectors": [
+    {
+      "id": 1,
+      "name": "Périphérique surélevé",
+      "start_m": 0,
+      "end_m": 700
+    },
+    {
+      "id": 2,
+      "name": "Quartier des échangeurs",
+      "start_m": 700,
+      "end_m": 1400
+    },
+    {
+      "id": 3,
+      "name": "Grand viaduc",
+      "start_m": 1400,
+      "end_m": 2200
+    },
+    {
+      "id": 4,
+      "name": "Quartier submergé",
+      "start_m": 2200,
+      "end_m": 3650
+    },
+    {
+      "id": 5,
+      "name": "Autoroute végétalisée",
+      "start_m": 3650,
+      "end_m": 4800
+    }
+  ],
+  "vertical_controls": [
+    [
+      0,
+      24
+    ],
+    [
+      700,
+      24
+    ],
+    [
+      1400,
+      32
+    ],
+    [
+      2200,
+      32
+    ],
+    [
+      3100,
+      4
+    ],
+    [
+      3650,
+      4
+    ],
+    [
+      4550,
+      24
+    ],
+    [
+      4800,
+      24
+    ]
+  ],
+  "vertical_interpolation": "quintic smoothstep 6q^5-15q^4+10q^3 between unequal heights; constant elsewhere",
+  "crossings": [
+    {
+      "id": "X1",
+      "xy_m": [
+        16.156397681087014,
+        -110.60016347776923
+      ],
+      "s_m": [
+        742.3886754053738,
+        3071.8292512459034
+      ],
+      "z_m": [
+        24.01620515555962,
+        4.008197948443034
+      ],
+      "angle_deg": 85.573242968801,
+      "deck_thickness_m": 2.0,
+      "clearance_m": 18.008007207116588
+    }
+  ],
+  "min_radius_m": 160.5354575337151,
+  "max_grade_percent": 5.8332565162302785,
+  "closure_gap_m": 8.508493372491328e-12,
+  "closure_tangent_error": 0.0,
+  "notes": [
+    "Road running surface width 18m; 1.5m structural margins on each side.",
+    "Only one active route; no branching racing junctions.",
+    "X1 columns excluded within 25m of lower-road centreline; 70m upper span reserved.",
+    "Deck low point +4m; underside +3m; no ford."
+  ]
+}

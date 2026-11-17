@@ -1,0 +1,15 @@
+Mode: built-in imagegen (not CLI)
+Use case: stylized-concept
+Style references: the 12-track overview image ; course-1.png
+Output copied into this folder as moodboard.png
+
+Create a polished environment art reference contact sheet for LUNAR OUTPOST, a fictional new Redline Racer arcade race course. 2 columns by 4 rows, exactly 8 equally sized landscape panels, tight thin dark gutters, NO TEXT, no typography, no numbers, no map. This is an ORIGINAL conceptual moodboard, not game screenshots. Style closely matching the supplied local reference images: visibly low resolution pixelated 3D flat shaded low polygon retro arcade racer, chunky sparse geometry, nearest-neighbor pixel textures, 1990s game graphics. NOT photorealism, NOT modern glossy science fiction, no cinematic fog, no neon cyberpunk.
+Panel 1: third-person racing view behind a small angular cream sports car on broad dark graphite engineered road following a gigantic moon crater rim, pale curbs and spaced orange marker posts, vast emptiness, small blue Earth fixed in black sky. Road smooth broad sweeping curve, low retaining wall at drop.
+Panel 2: dramatic high view of sparse grey angular crater terrain with two neighboring differently sized impact basins and a wide saddle ridge between, primitive low-poly mesh, no buildings.
+Panel 3: a 1970s lunar colony with one ivory low-poly geodesic dome and short cylindrical pressure modules, modest dark windows, orange markings, matte materials, a broad road passing outside the base.
+Panel 4: low third-person racing road over a gently rolling grey ridge, broad open curves, clear pale edges and orange chevrons before the crest, long shadows but readable road.
+Panel 5: ribbed octagonal pressure gallery interior with wide clear roadway, open airlock bulkhead doors, cream painted ribs and a few dim technical blue lights, orange portal, road exit clearly visible, NO blue force field.
+Panel 6: chunky angular six-wheeled lunar utility rover parked off course by two modular cylindrical habitat units and simple enclosed linkage tubes, car for scale.
+Panel 7: small solar array field and simple dish antenna on a bare grey plateau, black sky, huge surrounding empty space, one buried service conduit.
+Panel 8: close view of dark graphite coarse pixel tile road on grey regolith, ivory curb with occasional orange block, low solid protective wall at crater side, square marker beacon, all chunky simple in-game geometry.
+Consistent palette: deep charcoal black, cool grey regolith, ivory cream, small muted signal orange and tiny desaturated blue. Hard sunlight, fill enough to see route, no atmosphere, no dust clouds, no stars competing with road. These are asset and mood design references for a preproduction art board, all 8 panels stylistically unified.

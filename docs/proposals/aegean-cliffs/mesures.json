@@ -1,0 +1,55 @@
+{
+  "length_horizontal_m": 4300.000103786593,
+  "length_3d_m": 4317.730471444777,
+  "alt_min_m": 8.0,
+  "alt_max_m": 172.0,
+  "ascent_m": 164.0,
+  "grade_min_pct": -14.717192538121004,
+  "grade_max_pct": 12.606661673002186,
+  "radius_min_m": 47.93975687973232,
+  "closure_m": 0.0,
+  "simple_centerline": true,
+  "road_buffer_valid": true,
+  "sectors": [
+    {
+      "name": "Port",
+      "start_m": 0,
+      "end_m": 650,
+      "min_radius_m": 302.55210357738065,
+      "alt_start_m": 8.0,
+      "alt_end_m": 20.0
+    },
+    {
+      "name": "Ascension",
+      "start_m": 650,
+      "end_m": 2000,
+      "min_radius_m": 47.93975687973232,
+      "alt_start_m": 20.0,
+      "alt_end_m": 160.5645601568259
+    },
+    {
+      "name": "Village",
+      "start_m": 2000,
+      "end_m": 2500,
+      "min_radius_m": 166.38282715052142,
+      "alt_start_m": 160.5645601568259,
+      "alt_end_m": 172.0
+    },
+    {
+      "name": "Balcon",
+      "start_m": 2500,
+      "end_m": 3100,
+      "min_radius_m": 124.28150994586201,
+      "alt_start_m": 172.0,
+      "alt_end_m": 135.0
+    },
+    {
+      "name": "Descente",
+      "start_m": 3100,
+      "end_m": 4300.000103786593,
+      "min_radius_m": 280.6515896416254,
+      "alt_start_m": 135.0,
+      "alt_end_m": 8.0
+    }
+  ]
+}
