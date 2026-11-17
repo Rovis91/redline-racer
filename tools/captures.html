@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="fr">
+<head><meta charset="utf-8"><title>Captures d'un tour</title></head>
+<body style="margin:0;background:#111;color:#ccc;font:13px monospace">
+<pre id="log" style="margin:8px"></pre>
+<script>
+// Runs a lap on autopilot and records a 960 × 540 capture at regular intervals, with no one watching the screen.
+// To be served by tools/capture.py. Parameters:
+//   carte=ville|touge|wangan|paris|canal|stade|givre|terre   pas=10 (race seconds between two captures)   tours=1   style=net (empty = default rendering)
+//   idx=700,1351   instead of pas: one capture as the car passes these track samples (to review a specific spot)
+//   mode=course   the game mode (remembered as in the menu, otherwise the browser's one); tour=3: the idx captures only from this lap on (with tours=3)
+//   vue=angle,distance,hauteur   inspection camera around the car (window.__g.view), otherwise the race camera
+//   degats=0.7   each zone of each car damaged to this level (0 to 1) from the start, instead of relying on the autopilot's impacts
+//   force=mur|wallL|droit|nitro|glisse   with idx: over the 40 samples before each capture, the car is pushed against the right wall (wallL: left), or goes straight, heading locked for 150 frames (droit: into the wall of a bend; in race the game calls the sim.js driver without going through this relay), or nitro held, or nitro held while skidding (sim.js skid driver) (the autopilot does neither)
+//   taille=1920x1080   size of the game page (960x540 by default): with the net style, the scene is rendered at this resolution (finer than the game, for detail review)
+//   jeu=1   each capture puts side by side, at the same height, the game's real rendering (270 lines, enlarged pixels, HUD) on the left and the style rendering (net by default) on the right
+//   opt={"th":{…}}   map options tried without touching mapDefs.js (merged into the map by game.js; docs/methods/MAP-ENGINE-OPTIONS.md)
+// Result: captures/<carte>-NN.jpg and captures/<carte>.json = { vues: [{ n, t, idx, kmh, tunnel }], erreurs, msPerFrame, tour }.
+// When the page title changes to "FINI", everything is written.
+(async () => {
+  const q = new URLSearchParams(location.search), deg = +(q.get('damage') || 0), mapDef = q.get('map') || 'ville', stepSec = +(q.get('step') || 10), lapCount = +(q.get('laps') || 1), style = q.get('style') ?? 'net';
+  const targets = (q.get('idx') || '').split(',').filter(Boolean).map(Number), log = t => { document.getElementById('log').textContent += t + '\n'; };
+  if (q.get('mode')) localStorage.setItem('vpr7.mode', JSON.stringify(q.get('mode')));
+  const lapRun = +(q.get('lap') || 1), [LW, LH] = (q.get('size') || '960x540').split('x').map(Number), errors = [], opt = q.get('opt') ? '&opt=' + encodeURIComponent(q.get('opt')) : '';
+  const opens = async (st, lw, lh) => { // a game page, driven frame by frame
+    const f = document.createElement('iframe'); f.style.cssText = 'width:' + lw + 'px;height:' + lh + 'px;border:0;display:block';
+    f.src = '../index.html?auto&map=' + mapDef + (st ? '&style=' + st : '') + opt + '&v=' + Date.now(); document.body.append(f);
+    await new Promise(r => { f.onload = r; });
+    const w = f.contentWindow;
+    w.console.error = (...a) => errors.push(a.join(' ').slice(0, 300)); w.addEventListener('error', e => errors.push(e.message + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
+    w.requestAnimationFrame = () => 0; Object.defineProperty(w, 'devicePixelRatio', { get: () => 1 }); w.dispatchEvent(new Event('resize'));
+    return w;
+  };
+  const w = await opens(style, LW, LH), wj = q.get('game') ? await opens('', 960, 540) : null;
+  await new Promise(r => setTimeout(r, 1000));
+  const g = w.__g, gj = wj && wj.__g; if (!g || wj && !gj) { log('ERROR: the game does not start — ' + errors.join(' | ')); document.title = 'FINI (erreur)'; return; }
+  if (gj && q.get('view')) gj.view = q.get('view').split(',').map(Number);
+  // jeu=1: the real-rendering page follows the car of the main page (copy of its state at each frame), then the two images are pasted together
+  const follows = t => { if (!gj) return; for (const k in g.car) if (typeof g.car[k] === 'number' || typeof g.car[k] === 'boolean') gj.car[k] = g.car[k]; gj.frame(t); };
+  const image = async () => { const a = g.renderer.domElement; if (!gj) return a.toDataURL('image/jpeg', 0.8);
+    const b = gj.renderer.domElement, kb = a.height / b.height, c = document.createElement('canvas'); c.width = Math.round(b.width * kb) + a.width; c.height = a.height;
+    const x = c.getContext('2d'); x.imageSmoothingEnabled = false; x.drawImage(b, 0, 0, c.width - a.width, a.height); x.drawImage(a, c.width - a.width, 0); return c.toDataURL('image/jpeg', 0.85); };
+  if (q.get('view')) g.view = q.get('view').split(',').map(Number);
+  const gl = g.renderer.getContext(), T = g.T, views = [], post = (label, payload) => fetch('/captures/' + label, { method: 'POST', body: payload });
+  const grab = async () => {
+    const n = String(views.length).padStart(2, '0'), c = g.car;
+    await post(mapDef + '-' + n + '.jpg', await (await fetch(await image())).blob());
+    views.push({ n, t: +g.t.toFixed(1), idx: c.idx, kmh: Math.round(Math.hypot(c.vx, c.vz) * 3.6), tunnel: T.tun && ((c.idx - T.t0 + T.n) % T.n) < T.t1 - T.t0 });
+    log(mapDef + '-' + n + '  t=' + g.t.toFixed(1) + ' s  sample ' + c.idx + '/' + T.n);
+  };
+  let forceMode = ''; const ap = w.autopilot; w.autopilot = (...a) => { const r = ap(...a); if (forceMode === 'nitro') r.nitro = r.gas = 1; if (forceMode === 'glisse') Object.assign(r, w.driveSkid(a[1], 1, 1.2, 0.6, 0.2)(a[0]), { nitro: 1, gas: 1 }); if (forceMode === 'intoWall') r.steer = 0.4; if (forceMode === 'wallL') r.steer = -0.4; if (forceMode === 'straight') Object.assign(r, { steer: 0, gas: 1, brake: 0 }); forceMode = ''; return r; }; // through the command: sim.js resets c.boost at each step, and the driver brings the car back to the middle
+  g.start(); if (gj) gj.start();
+  let k = 0, lastIdx = -1;
+  for (; k < 9000 && g.car.dist < T.n * lapCount - 3; k++) {
+    const force = q.get('force'), c = g.car; if (force && targets.some(i => ((i - c.idx + T.n + 8) % T.n) < 48)) { if (force === 'intoWall' || force === 'wallL') { const s = T.S[c.idx], e = (force === 'intoWall' ? s.w : -s.w) - (c.d || 0); c.x -= s.tz * e; c.z += s.tx * e; } else if (force === 'straight') { c.thStraight ??= c.th; if ((c.nStraight = (c.nStraight || 0) + 1) < 150) { c.th = c.thStraight; c.yaw = 0; } } else c.nitro = 1; forceMode = force; } else if (c.thStraight != null) c.thStraight = c.nStraight = null;
+    g.frame(1e7 + k * 100); follows(1e7 + k * 100); if (k === 1 && deg) { g.damage(deg); if (gj) gj.damage(deg); } // after one frame: the cars are placed on the grid, the parts drop from there
+    if (targets.length) { if (g.car.dist >= (lapRun - 1) * T.n) { const i = targets.findIndex(c => ((g.car.idx - c + T.n) % T.n) < 8); if (i >= 0) { targets.splice(i, 1); await grab(); if (!targets.length) break; } } }
+    else if (Math.floor(g.t / stepSec) > lastIdx && g.t > 0.5) { lastIdx = Math.floor(g.t / stepSec); await grab(); }
+    if (k % 30 === 0) await new Promise(r => setTimeout(r, 0));
+  }
+  gl.finish(); const t0 = performance.now(); for (let i = 0; i < 200; i++, k++) { g.frame(1e7 + k * 100); gl.finish(); }
+  const summary = { mapDef, views, errors, msPerFrame: +((performance.now() - t0) / 200).toFixed(2), lapRun: +g.t.toFixed(1), glError: gl.getError() };
+  await post(mapDef + '.json', JSON.stringify(summary, null, 1)); log(JSON.stringify(summary.errors) + '  ' + summary.msPerFrame + ' ms par image'); document.title = 'FINI';
+})();
+</script>
+</body>
+</html>

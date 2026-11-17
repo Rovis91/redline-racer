@@ -1,0 +1,4 @@
+#!/bin/sh
+# No code commit with a failing test. Commits without .js files pass straight through.
+git diff --cached --name-only | grep -q '\.js$' || exit 0
+exec sh "$(git rev-parse --show-toplevel)/tools/check.sh"

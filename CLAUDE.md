@@ -1,13 +1,15 @@
 # Redline Racer
 
-Jeu de course three.js, site statique sans étape de build. Carte du dépôt et documentation : `docs/INDEX.md`. Guide développeur : `docs/DEVELOPPEUR.md` (« Où régler quoi » pour trouver un réglage). `README.md` est en anglais, pour le public.
+three.js racing game, static site with no build step. Main doc: `docs/ARCHITECTURE.md` (repo map, technical choices, "where to tune what"). All documentation is in English. `README.md` is the public page.
 
-- **Voir un endroit d'une carte** : `node outils/plan.js <carte> <plan>`, deux secondes, avant/après avec `--avant`. Mode d'emploi en tête du fichier.
-- **Décor d'une carte** : `docs/methodes/METHODE-DECOR.md` ; carte nouvelle ou à refaire : `docs/methodes/METHODE-NOUVELLE-CARTE.md`. Les critiques d'images lisent des planches, un critique par zone.
-- **Tests** : `sh outils/verifie.sh`. Le crochet de pré-commit le lance ; par clone : `git config core.hooksPath outils/hooks`.
-- **Performances** : `node outils/banc-rapide.js [carte]`, `docs/DEVELOPPEUR.md` « Performances ».
-- **Lancer le jeu pour l'auteur** : configuration `jeu` de `.claude/launch.json`. Elle sert la copie où tourne la session ; annoncer la branche et le commit servis, et la carte ouverte.
+- **Docs**: `docs/ART-STYLE.md` (graphic style), `docs/ASSET-GENERATION.md` (textures, shapes, cars, sound), `docs/CODE-QUALITY.md` (conventions), `docs/PHYSICS.md` (simulation, damage), `docs/methods/` (new map, track design, scenery, life, per-map engine options), `docs/proposals/` (new maps in preproduction).
+- **See a spot on a map**: `node tools/plan.js <map> <shot>`, two seconds, before/after with `--before`. Usage at the top of the file.
+- **Map scenery**: `docs/methods/SCENERY.md`; new map or rework: `docs/methods/NEW-MAP.md`. Image critics read contact sheets, one critic per zone.
+- **Tests**: `sh tools/check.sh`. The pre-commit hook runs it; once per clone: `git config core.hooksPath tools/hooks`.
+- **Performance**: `node tools/bench-quick.js [map]`, `docs/ARCHITECTURE.md` "Performance".
+- **Run the game for the author**: the `game` configuration in `.claude/launch.json`. It serves the copy the session runs in; state the branch and commit served, and the map opened.
+- **Feedback stays in the conversation**: no feedback logs, specs or dated reports in `docs/`. When a proposal map is built, its folder leaves `docs/proposals/`.
 
-## Carte du dépôt (aucun JS à la racine)
+## Repo map (no JS at the root)
 
-`index.html` (jeu) · `src/{moteur,donnees,audio,rendu,cartes/<carte>}` · `pages/` (outils web) · `assets/` · `vendor/` · `tests/` · `outils/` · `docs/` (`docs/INDEX.md`). Noms de fichiers uniques dans tout le dépôt : un `glob **/decors-perse.js` suffit. `local/` et `captures/` sont ignorés par git. Un nouveau fichier de carte doit être déclaré dans `index.html` (test-cartes.js le vérifie).
+`index.html` (game) · `src/{engine,data,audio,render,maps/<map>}` · `pages/` (web tools) · `assets/` · `vendor/` · `tests/` · `tools/` · `docs/`. File names are unique across the repo: `glob **/scenery-perse.js` is enough. `local/` and `captures/` are git-ignored. A new map file must be declared in `index.html` (test-maps.js checks it).

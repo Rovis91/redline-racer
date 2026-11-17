@@ -1,4 +1,0 @@
-#!/bin/sh
-# Pas de commit de code avec un test rouge. Les commits sans fichier .js passent sans attendre.
-git diff --cached --name-only | grep -q '\.js$' || exit 0
-exec sh "$(git rev-parse --show-toplevel)/outils/verifie.sh"

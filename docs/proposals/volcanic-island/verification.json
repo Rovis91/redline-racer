@@ -1,0 +1,24 @@
+{
+  "horizontal_length_m": 4800,
+  "spatial_length_m": 4819.122548954156,
+  "altitude_min_m": 12.0,
+  "altitude_max_m": 194.0,
+  "ascent_m": 182.0,
+  "descent_m": 182.0,
+  "max_grade_percent": 10.692673672623672,
+  "min_grade_percent": -15.291936220805018,
+  "min_radius_m": 142.1787898453549,
+  "min_radius_at_m": 3374.0,
+  "closure_gap_m": 0.0,
+  "simple_closed_ring": true,
+  "clockwise": true,
+  "road_buffer_valid": true,
+  "road_buffer_holes": 1,
+  "footprint_m": [
+    1568.440366576126,
+    1386.646476236468
+  ],
+  "altitude_interpolation": "PCHIP monotone, altitude et pente continues; plat au raccord",
+  "plan_interpolation": "CubicSpline périodique, paramètre corde; remise à longueur 4800 m",
+  "sample_step_m": 2
+}

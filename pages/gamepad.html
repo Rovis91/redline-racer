@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Gamepad diagnostic</title>
+<style>
+  body { background: #111; color: #ddd; font: 14px/1.5 Consolas, monospace; margin: 20px; }
+  h1 { font-size: 18px; } button { font: inherit; padding: 8px 16px; cursor: pointer; }
+  pre { background: #1c1c1c; padding: 12px; white-space: pre-wrap; }
+  .ok { color: #7d7; } .reject { color: #f77; }
+</style>
+</head>
+<body>
+<h1>Gamepad diagnostic</h1>
+<p>Click in this page, then press <b>each</b> button on the gamepad and move the stick. Then: <button id="gameCopy">Copy the report</button> <span id="doneFlag"></span></p>
+<p>If no gamepad appears: <button id="hid">Direct test (WebHID)</button> choose the Joy-Con in the Chrome window, then press its buttons.</p>
+<pre id="view" aria-live="off"></pre>
+<script>
+// Standalone page: shows what the browser sees of the gamepads, without assuming anything about their layout.
+const logs = [], viewed = {}; // vus[index] = { b: buttons already pressed, a: { axis: [min, max] } }
+const h = () => new Date().toLocaleTimeString('fr-FR');
+for (const ev of ['gamepadconnected', 'gamepaddisconnected'])
+  addEventListener(ev, e => logs.push(h() + ' ' + ev + ' : #' + e.gamepad.index + ' « ' + e.gamepad.id + ' »'));
+function report() {
+  const L = ['Navigateur : ' + navigator.userAgent,
+    'Secure context: ' + (isSecureContext ? 'oui' : 'NON') + ' · API Gamepad : ' + (navigator.getGamepads ? 'présente' : 'ABSENTE') + ' · page active : ' + (document.hasFocus() ? 'oui' : 'non (clique dedans)'), ''];
+  const pads = navigator.getGamepads ? [...navigator.getGamepads()] : [];
+  if (!pads.some(p => p)) L.push('NO gamepad seen by the browser (press a button, the page must be active).');
+  pads.forEach((p, i) => {
+    if (!p) return;
+    const v = viewed[i] = viewed[i] || { b: {}, a: {} };
+    L.push('Manette #' + p.index + ' « ' + p.id + ' »', '  mapping : "' + p.mapping + '" · connected : ' + p.connected + ' · ' + p.buttons.length + ' boutons · ' + p.axes.length + ' axes');
+    const pushed = []; p.buttons.forEach((b, n) => { if (b.pressed || b.value > 0.1) { pushed.push(n + (b.value < 1 ? '=' + b.value.toFixed(2) : '')); v.b[n] = 1; } });
+    L.push('  buttons pressed now: ' + (pushed.join(', ') || '-'), '  buttons seen since the start  : ' + (Object.keys(v.b).join(', ') || '-'));
+    p.axes.forEach((x, n) => { const m = v.a[n] = v.a[n] || [x, x]; m[0] = Math.min(m[0], x); m[1] = Math.max(m[1], x);
+      L.push('  axe ' + n + ' : ' + x.toFixed(2).padStart(5) + '   (vu de ' + m[0].toFixed(2) + ' to ' + m[1].toFixed(2) + ')' + (m[1] - m[0] > 0.3 ? '  ← bouge' : '')); });
+    L.push('');
+  });
+  L.push('Test direct WebHID : ' + (!navigator.hid ? 'API absente' : hid.label ? '« ' + hid.label + ' » · ' + hid.n + ' reports received · last: ' + hid.lst : hid.curState), '');
+  L.push('Journal :', ...(logs.length ? logs : ['  (no event)']));
+  return L.join('\n');
+}
+// Raw read of the device, without going through the Gamepad API: tells whether Chrome receives anything from the Joy-Con.
+const hid = { curState: 'not started', label: '', n: 0, lst: '-' };
+document.getElementById('hid').onclick = async () => {
+  try {
+    const [d] = await navigator.hid.requestDevice({ filters: [{ vendorId: 0x057e }] }); // 0x057e = Nintendo
+    if (!d) { hid.curState = 'no Nintendo device offered or chosen'; return; }
+    if (!d.opened) await d.open();
+    hid.label = d.productName + ' (pid 0x' + d.productId.toString(16) + ')';
+    d.oninputreport = e => { hid.n++; hid.lst = 'id 0x' + e.reportId.toString(16) + ' : ' + [...new Uint8Array(e.data.buffer)].slice(0, 12).map(x => x.toString(16).padStart(2, '0')).join(' '); };
+  } catch (e) { hid.curState = 'error: ' + e.message; }
+};
+const view = document.getElementById('view');
+(function loopSec() { view.textContent = report(); requestAnimationFrame(loopSec); })();
+document.getElementById('gameCopy').onclick = async () => {
+  const t = report(), doneFlag = document.getElementById('doneFlag');
+  try { await navigator.clipboard.writeText(t); doneFlag.textContent = 'copié'; doneFlag.className = 'ok'; }
+  catch (e) { // clipboard refused: we select the text for a manual Ctrl+C
+    getSelection().selectAllChildren(view); doneFlag.textContent = 'copy refused: text selected, press Ctrl+C'; doneFlag.className = 'reject'; }
+};
+</script>
+</body>
+</html>

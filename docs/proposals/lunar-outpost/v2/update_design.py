@@ -1,0 +1,21 @@
+from pathlib import Path
+p=Path(__file__).with_name('build_board.py')
+s=p.read_text(encoding='utf-8')
+line=next(x for x in Path(__file__).with_name('explore.py').read_text().splitlines() if x.startswith('P=np.array'))
+s=s[:s.index('P = np.array')]+line+'\n'+s[s.index('t = np.r_'):]
+s=s.replace('4400','4950').replace('2201','2476').replace('4 400','4 950').replace('4,40','4,95')
+s=s.replace("zk = np.array([[0,18],[360,20],[820,43],[1200,49],[1500,49],[1810,66],[2100,62],[2500,48],[2900,28],[3300,14],[3550,20],[3810,13],[4100,16],[4950,18]],float)","zk = np.array([[0,18],[400,22],[900,45],[1250,49],[1550,37],[1900,60],[2200,72],[2500,62],[2900,43],[3300,26],[3550,24],[3800,35],[4100,18],[4400,14],[4700,17],[4950,18]],float)")
+s=s.replace('[0,500,1450,2050,3300,4950]','[0,550,1400,2300,3500,4950]')
+s=s.replace("'03  CRÊTE DE LIAISON'","'03  S DES CRÊTES'").replace("'05  PLAINE & SAS'","'05  BASSIN SUD & SAS'")
+a=s.index('craters = ');b=s.index('\n# Corridor',a)
+s=s[:a]+"craters = [dict(name='OCCIDENTAL',x=-550*scale,y=100*scale,r=270*scale,floor=-32,rim=50),dict(name='ORIENTAL',x=410*scale,y=160*scale,r=340*scale,floor=-75,rim=72),dict(name='SUD',x=280*scale,y=-380*scale,r=220*scale,floor=-28,rim=35),dict(name='IMPACT NORD',x=-100*scale,y=360*scale,r=140*scale,floor=-12,rim=30),dict(name='SATELLITE',x=-230*scale,y=-230*scale,r=145*scale,floor=-10,rim=22)]"+s[b:]
+s=s.replace('3930','4480').replace('4110','4660').replace('4030','4570').replace('4020','4570').replace('4070','4590').replace('4220','4770').replace('4300','4850')
+s=s.replace('[-260*scale,-435*scale]','[-300*scale,-425*scale]').replace("(-260,-435,'GARAGE / ROVER'","(-300,-425,'GARAGE / BUGGY'")
+s=s.replace('[-300*scale,-195*scale]','[-380*scale,-80*scale]').replace('(-310*scale+j*20,-195*scale)','(-420*scale+j*20,-80*scale)').replace("(-270*scale,-245*scale,'SOLAIRE'","(-380*scale,-120*scale,'SOLAIRE'")
+s=s.replace('[1020*scale,140*scale]','[850*scale,180*scale]').replace("(1020,140,'SCIENCE',(1020,300))","(850,180,'SCIENCE',(1000,310))")
+s=s.replace("xy=at(1810)","xy=at(2200)").replace("(1810,'CRÊTE')","(2200,'CRÊTE')")
+s=s.replace("Deux bassins. Une crête. La colonie disparaît derrière vous.","Trois lobes, des S de liaison et un buggy lunaire à cabine fermée.")
+s=s.replace("TRACK DESIGN STUDY 06","TRACK DESIGN STUDY 06 / V2").replace("PRÉPRODUCTION  /  17 NOV. 2026","V2 / TRACÉ REMANIÉ / 17 NOV. 2026")
+s=s.replace("Garder : arc ouvert, Terre fixe.","Garder : buggy fermé, S ouverts.").replace("Garder : deux bassins inégaux.","Garder : impacts de tailles variées.").replace("06  ÉCHELLE HUMAINE","06  BUGGY LUNAIRE").replace("Garder : rover hors chaussée.","Garder : toit et vitres opaques.").replace("Écarter : véhicule géant ou trafic.","Écarter : cockpit ouvert, joueurs visibles.")
+s=s.replace("((40+25*np.sin(angle)) if c['name']=='ORIENTAL' else 22)","((46+26*np.sin(angle)) if c['name']=='ORIENTAL' else c['rim'])")
+p.write_text(s,encoding='utf-8')
