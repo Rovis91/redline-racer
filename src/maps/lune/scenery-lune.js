@@ -12,12 +12,12 @@
     lune(h) {
       const { THREE, S, N, T, M } = h, ss = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }, PL = M.place, DS = { side: THREE.DoubleSide };
       const iLip = near(h, ...M.pts[M.jumps[0][0]].slice(0, 2)), nArena = (T.t0 - iLip + N) % N, nTun = (T.t1 - T.t0 + N) % N, nOut = (iLip - T.t1 + N) % N; // the lap in three: road (tunnel exit to lip), arena (lip to tunnel), tunnel
-      // an entered crater has its own profile (floor, wall, rim, outer slope), whatever the road does; where two overlap, the lower one wins: the rampart between the arena and the south basin
+      // an entered crater has its own profile (floor, wall, rim, outer slope), whatever the road does; where the outer slope of the arena meets the south basin, the lower one wins: the rampart ends in a cliff over the basin, and the tunnel goes under it
       const bowl = ([cx, cz, rf, rr, ro, yf, yr, yo, cl], x, z, y) => { const r = Math.hypot(x - cx, z - cz), f = ss((r - rr) / (ro - rr)); return r > ro ? null : r < rf ? yf : r < rr ? yf + cl * ss((r - rf) / 14) + (yr - yf - cl) * ss((r - rf - 14) / (rr - rf - 14)) : y + (yr - (yr - yo) * f - y) * (1 - f); };
       const shape = (x, z, y) => {
         if (Math.hypot(x - PL.c[0], z - PL.c[1]) < PL.r + 2) return y - (EAST[5] + 0.08 + T.dent(x, z)); // the arena floor: flat, with its small craters (M.dents: the same bowls as the physics); it covers the engine's roadway, no road is shown down there
         const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), k = (i - iLip + N) % N;
-        const tE = bowl(EAST, x, z, y), tS = bowl(SOUTH, x, z, y); let t = tE == null ? tS ?? y : tS == null ? tE : Math.min(tE, tS); // outside a crater its profile says nothing (null)
+        const tE = bowl(EAST, x, z, y), tS = bowl(SOUTH, x, z, y); let t = tE == null ? tS ?? y : tS == null || Math.hypot(x - EAST[0], z - EAST[1]) < EAST[3] ? tE : Math.min(tE, tS); // outside a crater its profile says nothing (null); inside the rim of the great crater its wall wins: no gap toward the basin
         if (k < nArena) { if (d < s.w + 3) t = s.y < EAST[5] + 0.5 ? s.y + 0.08 : Math.max(t, s.y + 0.15); } // lip to tunnel: under the flight the road runs down the crater wall, hidden under the ground; at floor level it cuts the trench that leads to the tunnel mouth
         else if (k >= nArena + nTun) t += (y - t) * (1 - ss((d - s.w - 6) / 40));                      // elsewhere the road stays laid: its own level up to 6 m from the wall, the crater profile 40 m further; over the tunnel, the rampart
         let c = 0; for (const [cx, cz, r, f] of BESIDE) c = Math.max(c, (t - f) * (1 - ss((Math.hypot(x - cx, z - cz) / r - 0.4) / 0.7)));
