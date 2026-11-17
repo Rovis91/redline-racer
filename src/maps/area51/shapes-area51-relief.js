@@ -17,8 +17,8 @@
     mesaArea51: (w, ht, d, seed = 0) => SHAPES.ringsArea51(10, [[-4, w * 0.66, d * 0.66], [ht * 0.34, w * 0.5, d * 0.5], [ht * 0.9, w * 0.44, d * 0.44], [ht, w * 0.41, d * 0.41]], true, 0.14, seed),
     // rock outcrop at a bend, w × h × d: one broken block, 7 sides, strongly irregular
     rocherArea51: (w, ht, d, seed = 0) => SHAPES.ringsArea51(7, [[-2, w * 0.6, d * 0.6], [ht * 0.55, w * 0.5, d * 0.5], [ht, w * 0.3, d * 0.34]], true, 0.22, seed),
-    // far range, L m long along X, crests up to H, D deep: a jagged ridge line with a front and a back slope, one peak every 60 to 120 m. A silhouette for the horizon: no detail
-    criteArea51: (L, H, D, seed = 0) => { const n = Math.max(6, Math.round(L / 90)), X = k => -L / 2 + L * k / n, Y = k => k === 0 || k === n ? H * 0.25 : H * (0.5 + 0.5 * noise(k, seed)), Z = k => D * 0.3 * (noise(k, seed + 9) - 0.5), Q = [];
+    // far range, L m long along X, crests up to H, D deep: a jagged ridge line with a front and a back slope, one peak every 60 to 120 m, falling to the ground at both ends. A silhouette for the horizon: no detail
+    criteArea51: (L, H, D, seed = 0) => { const n = Math.max(6, Math.round(L / 90)), X = k => -L / 2 + L * k / n, Y = k => k === 0 || k === n ? -6 : (k === 1 || k === n - 1 ? 0.45 : 1) * H * (0.5 + 0.5 * noise(k, seed)), Z = k => D * 0.3 * (noise(k, seed + 9) - 0.5), Q = [];
       for (let k = 0; k < n; k++) for (const sd of [1, -1]) { const a = [X(k), -6, sd * D / 2, X(k) / 16, 0], b = [X(k + 1), -6, sd * D / 2, X(k + 1) / 16, 0], c = [X(k + 1), Y(k + 1), Z(k + 1), X(k + 1) / 16, Y(k + 1) / 16], e = [X(k), Y(k), Z(k), X(k) / 16, Y(k) / 16];
         Q.push(sd > 0 ? [b, a, e, c] : [a, b, c, e]); }
       return quads(Q); },

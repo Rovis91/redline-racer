@@ -7,7 +7,8 @@
 (window.AREA51 = window.AREA51 || {}).pistes = ({ put, at, apex, mute, pk, set, surf }) => {
   const RUNWAY = 0x363e48, WHITE = 0xe8e2d7, AMBER = 0xf5aa75, CONCRETE = 0xa39c84, GLASS = 0x333f52, PLAYA = 0xe8d9b7, RED = 0xb5483c, STEEL = 0x52616e, YELLOW = 0xf2c84a;
   const slab = (label, x, z, wx, dz) => surf(label === 'TARMAC' ? 'tarmac' : 'piste', x, z, wx, dz); // paved surface, its top 0.2 m under the roadway: the road lies flush on it. Runways and taxiways take the tone of the roadway, the apron is lighter
-  // the playa north of runway B is a ground layer of the terrain (scenery-area51.js)
+  // the playa north of runway A is a ground layer of the terrain (scenery-area51.js); beyond the terrain it goes on to the far range as one flat slab
+  surf('playa', 1500, -900, 4400, 1500, -0.7, 1);
   slab('PISTE A', 1700, 380, 1200, 60, true); at('PISTE A', YELLOW, 1700, 425, 6, 2, 2);     // runway A in the colour of the roadway; its name on a marker beside it, not on the road
   slab('PISTE B', 1700, 120, 1200, 60);                                                      // the twin runway, on the lake side
   [1130, 1700, 2270].forEach((x, i) => slab('BRETELLE', x, 250, 23, 200, i));                 // connectors between the two runways
