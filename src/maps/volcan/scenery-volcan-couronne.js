@@ -4,5 +4,7 @@
   abs('AIGUILLE NOIRE', COAL, 276, -1428, 34, 100, 34);                                // hero landmark: the basalt needle inside the horseshoe, off the roadway
   put("POSTE D'OBSERVATION", CONCRETE, 3206, 1, 14, 12, 7, 16); put('BELVEDERE', CONCRETE, 3116, 1, 6, 14, 1.5, 40); // at the pass (232 m), sea side: the reason for the detour
   [[390, -1300], [-490, -1210], [450, -890]].forEach(([x, z]) => abs('SCORIES', SCORIA, x, z, 40, 10, 40)); // red-brown slag fields, as on the plan
+  abs('COULEE FIGEE', 0x1c1c1e, 270, -560, 40, 4, 120); abs('CONE ADVENTIF', SCORIA, -690, -930, 40, 6, 40); // an old flow at the foot of the south-east flank, seen from Les Cendres; the cap of the parasitic cone of the west flank
+  for (const [x, z] of [[-1060, -700], [-1010, -1180], [-760, -1500]]) abs('ILOT', COAL, x, z, 30, 45, 30); // sea stacks off the roadless west and north coast
   for (const pk of [2506, 2756]) put('SCORIES', SCORIA, pk, -1, 12, 30, 8, 50);
 };
