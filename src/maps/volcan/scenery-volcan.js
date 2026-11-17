@@ -7,7 +7,7 @@
   // outer cone 1.23 m per metre down from a rim 230 m in radius at 360 m; inside, a cliff from the rim to a bench (the level of an older lava lake) 60 m over the floor, then the floor, 170 m in radius.
   const CONE = { x: -113, z: -906, rim: 230, top: 360, slope: 1.23, floor: 170 };
   const inner = r => r < CONE.floor ? 0 : r < 185 ? (r - CONE.floor) * 4 : r < 205 ? 60 : 60 + (r - 205) * 6;
-  const LAKE = { x: -25, z: -960, r: 70, y: 150 };                                        // lava lake: a level pit in the north-east of the floor, 3 to 14 m below the road that runs down along it (PK 4235 to 4375)
+  const LAKE = { x: -25, z: -960, r: 70, y: 152 };                                        // lava lake: a level pit in the north-east of the floor, 3 to 14 m below the road that runs down along it (PK 4235 to 4375)
   const LEDGE = 16, DECK = [3080, 3240, 46];                                              // sea side: the ground is level LEDGE m from the axis (9 m behind the wall), then falls; DECK [PK a, PK b, m] widens it for the belvedere of the pass
   const SIDE = { x: -690, z: -930, top: 95, slope: 0.8, pit: 28 };                        // parasitic cone on the west flank, with its own small crater
   const VOLCANO = [4000, 4780], SOUTH = 4520;                                             // PK of the road under the cone and in the crater; from SOUTH on the gallery is built by scenery-volcan-cratere.js instead of the engine tunnel
@@ -33,11 +33,12 @@
         if (pk > VOLCANO[0] && pk < VOLCANO[1]) return (pk > SOUTH ? d < 26 : d < 14 && c < 12) ? 0 : -Math.max(0, c);
         const e = d - 22, apron = r < 345 ? (e < 10 ? e * 0.15 : 1.5 + (e - 10) * 3) : e < 118 ? e * 0.15 : 17.7 + (e - 118) * 2.5;
         return -Math.max(0, Math.min(c, apron)); };
-      // ground: old ash; basalt where it is steep (cliffs, crater walls, cuttings); red-brown scoria on the volcano, its crater floor and the parasitic cone; dry olive grass on the low gentle slopes of the south and east
+      // ground, in layers over old ash: dry olive grass on the low gentle slopes; red-brown scoria on the volcano, its crater floor and the parasitic cone; basalt where it is steep (cliffs, crater walls, cuttings); paving on the harbour flat
       const g = terrain(h, { stepSec: 10, margin: 440, hollow: relief, mat: h.mat('solVolcan'), layerSet: [
-        { tex: ['solVolcan', '#7b7556'], weight: (x, z, y, p) => (1 - ss(0.12, 0.3, p)) * (1 - ss(90, 170, y)) * ss(8, 14, y) },
+        { tex: ['solVolcan', '#6c6a54'], weight: (x, z, y, p) => 0.8 * (1 - ss(0.12, 0.3, p)) * (1 - ss(90, 170, y)) * ss(8, 14, y) },
         { tex: ['scorieVolcan'], weight: (x, z) => Math.max(ss(380, 250, Math.hypot(x - CONE.x, z - CONE.z)) * 0.85, ss(130, 70, Math.hypot(x - SIDE.x, z - SIDE.z))), noise: 0.15 },
-        { tex: ['basalteVolcan', '#45474d'], slope: [0.3, 0.5] }] });
+        { tex: ['basalteVolcan', '#45474d'], slope: [0.3, 0.5] },
+        { tex: ['betonVolcan', '#7e7c74'], weight: (x, z, y, p) => ss(-70, -40, z) * ss(15.5, 13.5, y) * ss(8, 10.5, y) * (1 - ss(0.1, 0.25, p)) }] }); // the harbour: quay and village ground paved in grey concrete and basalt setts
       const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), h.mat('merVolcan', { rep: [250, 250] })); sea.rotation.x = -Math.PI / 2; sea.position.set(-100, 0, -800); h.scene.add(sea);
       // MAT: the shared materials of the map, one draw pass each for the whole map: every piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the volcan assemblies.
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), plaster = c => h.mat('crepiVolcan', {}, c), MAT = {

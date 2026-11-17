@@ -17,11 +17,11 @@
     scorieVolcan: (c = '#8a4a40') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.22, () => { for (let i = 0; i < 14; i++) R(g, i & 1 ? '#2a1410' : '#d08a60', rand() * 54 | 0, rand() * 54 | 0, 4 + rand() * 9 | 0, 3 + rand() * 6 | 0); });
       veil(g, 0.5, () => { for (let i = 0; i < 70; i++) R(g, '#2a1410', rand() * 63 | 0, rand() * 63 | 0, 1 + (rand() * 2 | 0), 1); }); grain(g, o, 300, 0.16); }, 8],
-    // surface of the lava lake (emissive): dark plates of crust 3 to 8 m across, split by bright cracks, a few hotter openings; 16 m per tile
+    // surface of the lava lake (emissive): plates of crust 3 to 8 m across on about half of the molten surface, a few hotter openings; 16 m per tile
     laveVolcan: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#ff8a1e', 0, 0, 64, 64);
       veil(g, 0.6, () => { for (let i = 0; i < 10; i++) R(g, '#ffd060', rand() * 56 | 0, rand() * 56 | 0, 3 + rand() * 6 | 0, 2 + rand() * 4 | 0); });
-      for (let y = 0; y < 64;) { const ht = 9 + (rand() * 12 | 0); for (let x = (rand() * 6 | 0) - 6; x < 64;) { const w = 10 + (rand() * 18 | 0); R(g, rand() < 0.2 ? '#5a2010' : '#2a1410', x + 1, y + 1, w - 1, ht - 1); x += w; } y += ht; }
-      veil(g, 0.5, () => { for (let i = 0; i < 40; i++) R(g, '#140a08', rand() * 62 | 0, rand() * 62 | 0, 2 + (rand() * 3 | 0), 1 + (rand() * 2 | 0)); }); }, 16],
+      for (let y = 0; y < 64;) { const ht = 9 + (rand() * 12 | 0); for (let x = (rand() * 6 | 0) - 6; x < 64;) { const w = 10 + (rand() * 18 | 0); if (rand() < 0.55) R(g, rand() < 0.3 ? '#5a2010' : '#2a1410', x + 1, y + 1, w - 2, ht - 2); x += w; } y += ht; }
+      veil(g, 0.4, () => { for (let i = 0; i < 24; i++) R(g, '#140a08', rand() * 62 | 0, rand() * 62 | 0, 2 + (rand() * 3 | 0), 1 + (rand() * 2 | 0)); }); }, 16],
     // lime plaster of the houses, c = its colour: slightly uneven coats, grey runs under the eaves, a darker foot; 8 m per tile
     crepiVolcan: (c = '#e8d9ac') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.07, () => { for (let i = 0; i < 12; i++) R(g, i & 1 ? '#fff' : '#000', rand() * 48 | 0, rand() * 56 | 0, 8 + rand() * 16 | 0, 4 + rand() * 8 | 0); });

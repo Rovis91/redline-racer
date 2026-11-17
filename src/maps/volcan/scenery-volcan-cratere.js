@@ -8,8 +8,8 @@
   for (let pk = 4526; pk < 4780; pk += 20) { const s = at(pk), top = Math.max(...[-1, 1].map(sd => g.hAt(s.x - s.tz * sd * 32, s.z + s.tx * sd * 32)));
     slab('gallery', pk, s.w * 2 + 23, 6, 21, 8.6); for (const sd of [-1, 1]) slab('gallery', pk, 10, 9, 21, 0, sd * (s.w + 6.5)); slab('cliff', pk, 66, Math.max(1, top - s.y - 14.6), 22, 14.6); slab('lamp', pk, 1.6, 0.25, 0.5, 8.3); }
   set('cylVolcan', LAKE.x, LAKE.z, { y: LAKE.y - 1, m: 'lava', a: [LAKE.r - 2, LAKE.r - 2, 2.2, 20] }); // the lava lake lies level in its pit, east of the road, which runs down along its shore
-  [[-12, 42], [36, -32], [-44, 2], [26, 36], [-6, -14]].forEach(([dx, dz], i) => set('dalleVolcan', LAKE.x + dx, LAKE.z + dz, { y: LAKE.y + 1.25, m: 'crust', a: [8 + i * 2, 0.5, i, 8] })); // rafts of crust on the lake
-  by('rocherVolcan', [4240, 4270, 4300, 4330, 4360], -1, 5, { m: 'rock', a: [5, 2, 8], seed: 1 }); // the rock shore between the road and the lake
+  [[10, 44], [38, -30], [22, 6]].forEach(([dx, dz], i) => set('dalleVolcan', LAKE.x + dx, LAKE.z + dz, { y: LAKE.y + 1.25, m: 'crust', a: [7 + i * 2, 0.5, i, 8] })); // rafts of crust on the lake
+  by('rocherVolcan', [4240, 4285, 4330, 4375], -1, 4, { m: 'rock', a: [4, 1.2, 6], seed: 1 }); // the rock shore between the road and the lake
   set('coneVolcan', -20, -850, { m: 'scoria', a: [17, 26, 2] });                                 // spatter cone south of the lake
   set('dalleVolcan', -222, -960, { m: 'crust', a: [40, 2, 6, 11] }); set('dalleVolcan', -212, -840, { m: 'crust', a: [28, 2, 7, 10] }); // cooled black crust on the west half
   [[-190, -900], [-240, -870], [-205, -1000], [-250, -930], [-185, -820]].forEach(([x, z], i) => set('rocherVolcan', x, z, { m: 'rock', a: [9, 7, 9, i + 3] })); // bombs thrown out by the vent
