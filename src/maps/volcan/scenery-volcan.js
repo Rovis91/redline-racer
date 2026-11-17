@@ -6,6 +6,7 @@
   // outer cone 1.23 m per metre down from a rim 230 m in radius at 360 m; inside, a cliff from the rim to a bench (the level of an older lava lake) 60 m over the floor, then the floor, 170 m in radius.
   const CONE = { x: -113, z: -906, rim: 230, top: 360, slope: 1.23, floor: 170 };
   const inner = r => r < CONE.floor ? 0 : r < 185 ? (r - CONE.floor) * 4 : r < 205 ? 60 : 60 + (r - 205) * 6;
+  const LAKE = { x: -25, z: -960, r: 70, y: 150 };                                        // lava lake: a level pit in the north-east of the floor, 3 to 14 m below the road that runs down along it (PK 4235 to 4375)
   const SIDE = { x: -690, z: -930, top: 95, slope: 0.8, pit: 28 };                        // parasitic cone on the west flank, with its own small crater
   const VOLCANO = [4000, 4780], SOUTH = 4520;                                             // PK of the road under the cone and in the crater; from SOUTH on the gallery is made of blocks (scenery-volcan-cratere.js)
   // shoreline: the coast road of the bible (x, z every 80 m), which this layout only follows on the south and east sides
@@ -25,12 +26,17 @@
         if (!inPoly(x, z, P.length, k => P[k][0], k => P[k][1]) && !inPoly(x, z, NC, cx, cz)) return Math.min(y + 8, Math.max(0, pk > 6100 || pk < 700 ? d - 70 : Math.min(d - 16, toCoast(x, z))) * 2);
         const r = Math.hypot(x - CONE.x, z - CONE.z), q = Math.hypot(x - SIDE.x, z - SIDE.z);
         const c = Math.max(Math.min(CONE.top - Math.max(0, r - CONE.rim) * CONE.slope - y, inner(r)), SIDE.top - Math.max(q, SIDE.pit * 2 - q) * SIDE.slope);
+        if (Math.hypot(x - LAKE.x, z - LAKE.z) < LAKE.r) return y - LAKE.y;
         if (pk > VOLCANO[0] && pk < VOLCANO[1]) return (pk > SOUTH ? d < 26 : d < 14 && c < 12) ? 0 : -Math.max(0, c);
         const e = d - 22, apron = r < 345 ? (e < 10 ? e * 0.15 : 1.5 + (e - 10) * 3) : e < 118 ? e * 0.15 : 17.7 + (e - 118) * 2.5;
         return -Math.max(0, Math.min(c, apron)); };
       const g = terrain(h, { stepSec: 10, margin: 320, hollow: relief, mat: h.mat('paint', { c: 0x6a5d52 }) });
       const sea = new THREE.Mesh(new THREE.PlaneGeometry(14000, 14000), h.mat('paint', { c: 0x194b72 })); sea.rotation.x = -Math.PI / 2; sea.position.set(-100, 0, -800); h.scene.add(sea);
-      const at = pk => S[Math.round(pk / LAP * N) % N], B = (label, ...a) => { const b = block(h, label, ...a); if (!label) b.remove(b.children[b.children.length - 1]); return b; }; // '' = no label plate
+      const at = pk => S[Math.round(pk / LAP * N) % N], row = (label, c, pks, ...a) => pks.forEach((pk, i) => put(i ? '' : label, c, pk, ...a)), lot = (label, c, spots, ...a) => spots.forEach(([x, z], i) => abs(i ? '' : label, c, x, z, ...a));
+      // B: the named block of PLACERS.block. '' = no label plate (the second and later pieces of a named group); a colour given as [colour, 'cyl' | 'cone'] turns the box into a cylinder or a cone of the same width and height
+      const B = (label, c, w, ht, ...a) => { const [col, kind] = [].concat(c), b = block(h, label, col, w, ht, ...a);
+        if (kind) b.children[0].geometry = kind === 'cone' ? new THREE.ConeGeometry(w / 2, ht, 6) : new THREE.CylinderGeometry(w / 2, w / 2, ht, 12);
+        if (!label) b.remove(b.children[b.children.length - 1]); return b; };
       // put(label, colour, pk, side, off, w, ht, d, y): a block at chainage pk (m), side -1 = left (island) / 1 = right (sea), its near face `off` metres from the wall;
       // w across the road, d along it. Set on the lowest ground under it (ht is kept above its centre), or at altitude y when given (water level: 0)
       const put = (label, c, pk, sd, off, w, ht, d, y) => { const s = at(pk), [x, z] = edgePt(s, sd, s.w + off + w / 2), y1 = g.hAt(x, z);
@@ -40,7 +46,8 @@
       const abs = (label, c, x, z, w, ht, d) => { const y1 = g.hAt(x, z), y0 = Math.min(y1, ...[[w, d], [-w, d], [w, -d], [-w, -d]].map(([a, b]) => g.hAt(x + a / 2, z + b / 2))); return B(label, c, w, ht + y1 - y0, d, x, y0, z); };
       // over(label, colour, pk, w, ht, d, y, off): a block set from the roadway, not from the ground: its underside y metres above the road, its centre `off` metres to the right of the axis (0: a slab across the road)
       const over = (label, c, pk, w, ht, d, y, off = 0) => { const s = at(pk), [x, z] = edgePt(s, 1, off); return B(label, c, w, ht, d, x, s.y + y, z, h.across(s)); };
-      for (const z of ZONES) VOLCAN[z]({ h, g, put, abs, over, at });
+      // row(label, colour, [pk, ...], side, off, w, ht, d, y): put() at each chainage; lot(label, colour, [[x, z], ...], w, ht, d): abs() at each spot. Only the first piece carries the name.
+      for (const z of ZONES) VOLCAN[z]({ h, g, put, abs, over, at, row, lot, LAKE });
     },
   });
 })();
