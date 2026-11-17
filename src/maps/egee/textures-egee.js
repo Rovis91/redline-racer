@@ -4,10 +4,10 @@
   const grain = (g, { R, rand, veil }, n, a = 0.18, S = 64) => veil(g, a, () => { for (let i = 0; i < n; i++) R(g, i % 3 ? '#000' : '#fff', rand() * S | 0, rand() * S | 0, 1 + (rand() * 2 | 0), 1); });
   Object.assign(TEXTURES, {
     // dry island ground: ochre earth, pale limestone pebbles, grey-green tufts of thyme, no direction; 8 m per tile
-    solEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#b9966c', 0, 0, 64, 64); grain(g, o, 380, 0.16);
+    solEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#b9966c', 0, 0, 64, 64); grain(g, o, 520, 0.26);
       veil(g, 0.12, () => { for (let i = 0; i < 9; i++) R(g, i & 1 ? '#fff' : '#7a4a20', rand() * 52 | 0, rand() * 52 | 0, 6 + rand() * 12 | 0, 4 + rand() * 8 | 0); });
-      for (let i = 0; i < 22; i++) R(g, '#f0e2c4', rand() * 63 | 0, rand() * 63 | 0, 2, 1);
-      veil(g, 0.7, () => { for (let i = 0; i < 16; i++) { const x = rand() * 61 | 0, y = rand() * 61 | 0; R(g, '#76815a', x, y, 3, 2); R(g, '#5c6a48', x + 1, y + 1, 2, 1); } }); }, 8],
+      for (let i = 0; i < 30; i++) R(g, '#f0e2c4', rand() * 63 | 0, rand() * 63 | 0, 2, 1);
+      veil(g, 0.8, () => { for (let i = 0; i < 26; i++) { const x = rand() * 61 | 0, y = rand() * 61 | 0; R(g, '#76815a', x, y, 3, 2); R(g, '#5c6a48', x + 1, y + 1, 2, 1); } }); }, 8],
     // rock of the island, c = its tint (warm ochre near, blue-grey for the far islands), a = strength of the strata (1 near, 0.3 far): uneven horizontal strata, vertical cracks; 8 m per tile
     rocheEgee: (c, a = 1) => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.2 * a, () => { for (let y = 0; y < 64;) { const ht = 2 + (rand() * 7 | 0); R(g, rand() < 0.5 ? '#5a2a10' : '#fff', 0, y, 64, ht); y += ht + (rand() * 5 | 0); } });

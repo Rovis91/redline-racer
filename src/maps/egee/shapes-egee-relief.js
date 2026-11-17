@@ -15,8 +15,8 @@
       return quads(Q); },
     // rock outcrop, w × h × d: one broken block, 7 sides, strongly irregular, its foot 3 m in the ground
     rocherEgee: (w, ht, d, seed = 0) => SHAPES.ringsEgee(7, [[-3, w * 0.6, d * 0.6], [ht * 0.4, w * 0.52, d * 0.52], [ht * 0.82, w * 0.34, d * 0.38], [ht, w * 0.1, d * 0.13]], true, 0.24, seed),
-    // cliff over the road, w across × h × d along: a steep face with one ledge, flat top, 10 sides; its foot 6 m in the ground (it stands on a slope)
-    falaiseEgee: (w, ht, d, seed = 0) => SHAPES.ringsEgee(10, [[-6, w * 0.56, d * 0.56], [ht * 0.45, w * 0.5, d * 0.52], [ht * 0.5, w * 0.42, d * 0.47], [ht * 0.94, w * 0.36, d * 0.42], [ht, w * 0.28, d * 0.36]], true, 0.16, seed),
+    // cliff over the road, w across × h × d along: a steep face with one ledge, flat top, 10 sides; its foot wide and 16 m in the ground (it stands on a slope: no daylight under it)
+    falaiseEgee: (w, ht, d, seed = 0) => SHAPES.ringsEgee(10, [[-16, w * 0.7, d * 0.6], [ht * 0.45, w * 0.5, d * 0.52], [ht * 0.5, w * 0.42, d * 0.47], [ht * 0.94, w * 0.36, d * 0.42], [ht, w * 0.28, d * 0.36]], true, 0.16, seed),
     // far island, w × h × d: a long low back with one summit off-centre, 9 sides. A silhouette for the horizon: no detail
     ileEgee: (w, ht, d, seed = 0) => { const g = SHAPES.ringsEgee(9, [[-4, w * 0.5, d * 0.5], [ht * 0.3, w * 0.36, d * 0.36], [ht * 0.7, w * 0.16, d * 0.18], [ht, w * 0.05, d * 0.06]], true, 0.2, seed), p = g.attributes.position;
       for (let i = 0; i < p.count; i++) p.setX(i, p.getX(i) + w * 0.18 * Math.max(0, p.getY(i)) / ht); g.computeVertexNormals(); return g; },
