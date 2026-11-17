@@ -8,7 +8,7 @@
   const banana = (x, z, ht, k) => [['trunk', 0.5, ht + 1, 0.5, x, ht / 2 - 0.5, z], ...Array.from({ length: 6 }, (_, i) => { const a = i / 6 * 6.2832 + k; return ['leaf', 2.8, 0.1, 1.1, x + Math.cos(a) * 1.2, ht - 0.2 - (i & 1) * 0.3, z - Math.sin(a) * 1.2, [0, a, -0.45]]; })];
   Object.assign(SHAPES, {
     // terraces up a slope, L along the road, n steps: each a black dry-stone wall ht high, the next one `step` m further from the road and `rise` m higher, with a planted strip on top (crop = vine, leaf, olive; '' = bare)
-    terrasseVolcan: (L = 40, n = 3, crop = 'vine', ht = 3, step = 11, rise = 2.2) => Array.from({ length: n }, (_, k) => [['stone', L, ht + 4, 1.2, 0, k * rise + (ht - 4) / 2, k * step], ['soil', L, 0.6, step - 1.2, 0, k * rise + ht - 0.5, k * step + step / 2],
+    terrasseVolcan: (L = 40, n = 3, crop = 'vine', ht = 3, step = 11, rise = 2.2) => Array.from({ length: n }, (_, k) => [['stone', L, ht + 10, 1.2, 0, k * rise + (ht - 10) / 2, k * step], ['soil', L, 5, step - 1.2, 0, k * rise + ht - 2.7, k * step + step / 2], // wall and fill go well into the ground: the slope under them is not the one they assume
       ...(crop ? Array.from({ length: 3 }, (_, r) => [crop, L - 2, 1.1, 0.9, 0, k * rise + ht + 0.35, k * step + 2.4 + r * 2.8]) : [])]).flat(),
     // cultivated plot, w along the road × d deep: a bed of soil with rows of low crops across it
     jardinVolcan: (w = 14, d = 30, crop = 'leaf') => [['soil', w, 1.4, d, 0, -0.5, 0], ...Array.from({ length: Math.round(d / 2.4) }, (_, i) => [crop, w - 1.2, 0.7, 0.9, 0, 0.5, -d / 2 + 1.4 + i * (d - 2.8) / Math.max(1, Math.round(d / 2.4) - 1)])],

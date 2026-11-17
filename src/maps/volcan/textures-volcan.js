@@ -25,7 +25,7 @@
     // lime plaster of the houses, c = its colour: slightly uneven coats, grey runs under the eaves, a darker foot; 8 m per tile
     crepiVolcan: (c = '#e8d9ac') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.07, () => { for (let i = 0; i < 12; i++) R(g, i & 1 ? '#fff' : '#000', rand() * 48 | 0, rand() * 56 | 0, 8 + rand() * 16 | 0, 4 + rand() * 8 | 0); });
-      veil(g, 0.16, () => { for (let i = 0; i < 12; i++) R(g, '#4a4038', rand() * 64 | 0, 0, 1, 4 + rand() * 14 | 0); R(g, '#4a4038', 0, 60, 64, 4); }); grain(g, o, 160, 0.08); }, 8],
+      veil(g, 0.1, () => { for (let i = 0; i < 8; i++) R(g, '#4a4038', rand() * 64 | 0, 0, 1, 3 + rand() * 6 | 0); R(g, '#4a4038', 0, 60, 64, 4); }); grain(g, o, 160, 0.08); }, 8],
     // roof of half-round clay tiles, c = its colour: courses every 50 cm, tiles 25 cm wide offset from one course to the next, a few darker and paler tiles; 8 m per tile
     tuileVolcan: (c = '#b75d43') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.2, () => { for (let i = 0; i < 60; i++) R(g, rand() < 0.5 ? '#000' : '#ffd0a0', (rand() * 32 | 0) * 2, (rand() * 16 | 0) * 4, 2, 4); });

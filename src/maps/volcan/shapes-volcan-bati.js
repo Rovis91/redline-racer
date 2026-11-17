@@ -1,6 +1,6 @@
 // Shapes specific to "volcan", family "buildings": completes the shapes.js catalogue. Metres, origin on the ground at the centre of the building, Y up.
 // Assemblies (boxes [zone, w, h, d, x, y, z, rotation]); X along the road, front toward -Z (the road), +Z away from it. Bodies go 3 m into the ground so that they sit on a slope.
-// Zones are keys of the map's shared materials (MAT in scenery-volcan.js): cream, ochre, coral, white (plaster tints), tile, dark, stone, concrete, steel, wood, red, lamp.
+// Zones are keys of the map's shared materials (MAT in scenery-volcan.js): cream, ochre, coral, white (plaster tints), tile, dark, stone, concrete, paving, steel, wood, red, lamp.
 // See docs/proposals/volcanic-island/AMBIANCE-V2.html, zones 1, 2, 5, 6: small plain cubes, tiled roofs, three to five colours. Not villas, not a town.
 (function () {
   const pair = f => [-1, 1].map(f);
@@ -30,7 +30,7 @@
     posteVolcan: (w = 12, ht = 5, d = 9, mast = 14) => [['concrete', w, ht + 3, d, 0, (ht - 3) / 2, 0], ['concrete', w + 1.6, 0.5, d + 1.6, 0, ht + 0.25, 0], ['dark', w * 0.7, 1.2, 0.2, 0, ht * 0.62, -d / 2 - 0.05], ['dark', 1.2, 2.2, 0.2, w * 0.36, 1.1, d / 2 + 0.05],
       ['steel', 0.3, mast, 0.3, w * 0.3, ht + mast / 2, d * 0.2], ['steel', 2.4, 0.15, 0.15, w * 0.3, ht + mast - 1, d * 0.2], ['steel', 1.6, 0.15, 0.15, w * 0.3, ht + mast - 2.6, d * 0.2], ['red', 0.5, 0.5, 0.5, w * 0.3, ht + mast + 0.2, d * 0.2]],
     // belvedere of the pass, L along the road × w deep: a concrete deck flush with the roadside, a steel railing on its three outer sides, three benches facing the sea (+Z)
-    belvedereVolcan: (L = 44, w = 24) => [['concrete', L, 3, w, 0, -1.2, 0], ['steel', L, 0.12, 0.12, 0, 1.4, w / 2 - 0.3], ['steel', L, 0.1, 0.1, 0, 0.9, w / 2 - 0.3], ...pair(sx => ['steel', 0.12, 0.12, w, sx * (L / 2 - 0.3), 1.4, 0]),
+    belvedereVolcan: (L = 44, w = 24) => [['paving', L, 3, w, 0, -1.2, 0], ['steel', L, 0.12, 0.12, 0, 1.4, w / 2 - 0.3], ['steel', L, 0.1, 0.1, 0, 0.9, w / 2 - 0.3], ...pair(sx => ['steel', 0.12, 0.12, w, sx * (L / 2 - 0.3), 1.4, 0]),
       ...Array.from({ length: Math.round(L / 3) + 1 }, (_, i) => ['steel', 0.14, 1.1, 0.14, -L / 2 + 0.3 + i * (L - 0.6) / Math.round(L / 3), 0.85, w / 2 - 0.3]), ...Array.from({ length: 9 }, (_, i) => pair(sx => ['steel', 0.14, 1.1, 0.14, sx * (L / 2 - 0.3), 0.85, -w / 2 + 0.3 + i * (w - 0.6) / 8])).flat(),
       ...[-1, 0, 1].flatMap(k => [['wood', 3, 0.15, 0.7, k * L * 0.3, 0.75, w / 2 - 3], ['concrete', 0.3, 0.5, 0.6, k * L * 0.3 - 1.2, 0.5, w / 2 - 3], ['concrete', 0.3, 0.5, 0.6, k * L * 0.3 + 1.2, 0.5, w / 2 - 3]])],
     // low wall beside the road, L long: lime-washed masonry on a basalt foot

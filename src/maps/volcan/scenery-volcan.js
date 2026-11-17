@@ -44,7 +44,7 @@
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), plaster = c => h.mat('crepiVolcan', {}, c), MAT = {
         rock: h.mat('basalteVolcan', {}, '#34373d'), cliff: h.mat('basalteVolcan', {}, '#565a60'), crust: h.mat('basalteVolcan', {}, '#1c1c1e', 0.5), scoria: h.mat('scorieVolcan'), stone: h.mat('pierreVolcan'), gallery: h.mat('galerieVolcan', DS),
         far: h.mat('basalteVolcan', {}, '#5d6f80', 0.4), cream: plaster('#e8d9ac'), ochre: plaster('#d8a85a'), coral: plaster('#d88d72'), white: plaster('#f4efe2'), tile: h.mat('tuileVolcan', DS), dark: h.mat('betonVolcan', {}, '#23292d'),
-        concrete: h.mat('betonVolcan'), steel: tint(0x6a7078), red: tint(0xb5483c), blue: tint(0x2f6f9a), wood: h.mat('boisVolcan'), trunk: h.mat('boisVolcan', {}, '#6a5a40'), net: plaster('#c9b58a'), soil: h.mat('solVolcan', {}, '#4a4038'),
+        concrete: h.mat('betonVolcan'), paving: h.mat('betonVolcan', {}, '#8d8a80'), steel: tint(0x6a7078), red: tint(0xb5483c), blue: tint(0x2f6f9a), wood: h.mat('boisVolcan'), trunk: h.mat('boisVolcan', {}, '#6a5a40'), net: plaster('#c9b58a'), soil: h.mat('solVolcan', {}, '#4a4038'),
         leaf: h.mat('feuilleVolcan', DS), vine: h.mat('feuilleVolcan', DS, '#677658'), olive: h.mat('feuilleVolcan', DS, '#5a6a48'), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
         steam: h.mat('paint', { c: 0xe6ecec, transparent: true, opacity: 0.38, depthWrite: false, ...DS }) };
       const kit = new THREE.Group(); h.scene.add(kit);
