@@ -6,7 +6,7 @@
   // the checkpoint: the lane passes north of the truck, then south of the guard post
   spot('CAMION MILITAIRE', OLIVE, -214, 8, 9, 3.4, 3); spot('GUERITE', OLIVE, -160, -8, 4, 3, 4); spot('MIRADOR', OLIVE, -188, -15.5, 3, 9, 3); spot('TENTE MILITAIRE', OLIVE, -160, -15.5, 8, 3, 4);
   spot('EBOULEMENT', RUBBLE, 0, -9.5, 34, 5, 7);                                                          // the facade fallen from the north side
-  PLACERS.block(h, 'BUS RENVERSE', BUS, 11, 3.2, 3, 150, Y, 7, 0.4);                                      // the pile-up: the bus lies askew in the south lanes
+  spot('BUS RENVERSE', BUS, 150, 7, 11, 3.2, 3, Y, 1, 0.4);                                      // the pile-up: the bus lies askew in the south lanes
   bar(-3, 0, 'N', 'BARRAGE MILITAIRE', OLIVE, 4); bar(-3, 0, 'W', 'IMMEUBLE EFFONDRE', RUBBLE, 9);
   bar(-2, 0, 'N', 'BARRAGE MILITAIRE', OLIVE, 4); bar(-2, 0, 'S', 'BARRAGE MILITAIRE', OLIVE, 4);       // the checkpoint closes its two side streets
   bar(-1, 0, 'N', 'ARBRE TOMBE', TREE, 4); bar(-1, 0, 'S', 'BARRICADE', OLIVE, 3);
