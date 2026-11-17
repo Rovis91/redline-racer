@@ -4,8 +4,8 @@
 // Only what this zone adds, by the names of the blockout (real() in scenery-autoroute.js turns each into its scenery); helpers are described in scenery-autoroute.js. Labels are short: a board must fit under the 9 m ceiling.
 (window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ put, spot, bar, slab, set }) => {
   const TRAIN = 0x9aa4a0, RUBBLE = 0x7a756c, CONC = 0x8f8c82, RUST = 0x9a5a3a, OLIVE = 0x5a6240, Y = -8.5;
-  put('RAME', TRAIN, 1974, 1, 1, 3, 3.6, 62, Y); put('RAME', TRAIN, 2053, -1, 1, 3, 3.6, 62, Y); put('RAME', TRAIN, 2132, 1, 1, 3, 3.6, 44, Y); put('EBOULIS', RUBBLE, 2166, 1, 0.5, 5, 3.5, 18, Y);
-  put('GRAVATS', RUBBLE, 2197, -1, 0.5, 6, 2.5, 12, Y);                                            // the heap the lane climbs to the platform
+  put('RAME', TRAIN, 1974, 1, 0.2, 3, 3.6, 62, Y); put('RAME', TRAIN, 2053, -1, 0.2, 3, 3.6, 62, Y); put('RAME', TRAIN, 2132, 1, 0.2, 3, 3.6, 44, Y); put('EBOULIS', RUBBLE, 2166, 1, 0.2, 5, 3.5, 18, Y);
+  put('GRAVATS', RUBBLE, 2197, -1, 0.2, 6, 2.5, 12, Y);                                            // the heap the lane climbs to the platform
   spot('QUAI', CONC, -373, 206.5, 254, 1.1, 15, Y, 1);                                             // the north platform: the lane runs on it, and it goes on west
   spot('RAME', TRAIN, -292, 221, 64, 3.6, 3, Y);                                                   // the train stopped at the platform
   // the tunnel beyond the corridor, 170 m more: track bed, walls, ceiling; a train derailed across the platform closes it, another stands further on

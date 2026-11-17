@@ -5,9 +5,9 @@
 // See docs/methods/NEW-MAP.md, phase 3, and docs/proposals/sunken-highway/AMBIANCE-V2.html.
 (function () {
   const { near, block, edgePt, terrain, inst, weld } = PLACERS;
-  const ZONES = ['ville', 'boulevard', 'quartier', 'pont', 'trou', 'metro'], LAP = 2554, G = 110; // LAP: plan length, the unit of the chainages (PK); G: grid pitch, node (i, j) is at (i * G, j * G), j grows to the south
+  const ZONES = ['ville', 'boulevard', 'quartier', 'pont', 'trou', 'metro'], LAP = 2553, G = 110; // LAP: plan length, the unit of the chainages (PK); G: grid pitch, node (i, j) is at (i * G, j * G), j grows to the south
   // PK of the layout's joints: end of the boulevard, foot of the slip road, merge onto the motorway, foot of the collapsed span, ledge of the hole, heap of rubble up to the platform, mouth of the corridor, top of the stairs
-  const PK = { bd: 601, rampe: 1221, fusion: 1330, sol: 1750, bord: 1818, gravats: 2178, couloir: 2315, rue: 2390 };
+  const PK = { bd: 601, rampe: 1221, fusion: 1329, sol: 1750, bord: 1818, gravats: 2178, couloir: 2314, rue: 2389 };
   // the city slopes down to the river in the east: dry at 2.5 m west of the motorway, 0.7 m beyond column 3, where the water (0) stands in the streets
   const cityY = x => { const t = Math.min(1, Math.max(0, (x - 180) / 140)); return 2.5 - 1.8 * t * t * (3 - 2 * t); };
   // half-widths from a street's axis to its facades: the boulevard is row 0, the motorway runs above column 2 (its slip road on the east side)
@@ -123,10 +123,11 @@
         onRoad(label, x, z, -s.tz, s.tx, w, d, y0, top); return blk(label, c, w, top - y0, d, x, y0, z, h.across(s)); };
       // spot(label, colour, x, z, wx, ht, dz, y, under, ry): at map coordinates, wx along x and dz along z, on the ground or base at altitude y; under = 1: the road runs on top of it (no self-check); ry turns it
       const spot = (label, c, x, z, wx, ht, dz, y, under, ry = 0) => { const y0 = y ?? g.hAt(x, z) - 0.5; if (!under) onRoad(label, x, z, 1, 0, wx, dz, y0, y0 + ht); return blk(label, c, wx, ht, dz, x, y0, z, ry); };
+      // (it starts half a metre behind the kerb line of the street driven: where the collision wall is, so that nothing open lies behind an invisible wall)
       // bar(i, j, arm, label, colour, ht): what blocks the arm ('N', 'S', 'E', 'W') of the crossroads (i, j) that the route does not take: across the whole street, at its mouth
       // (its local Z points away from the crossroads, down the closed street: a fallen building keeps its standing walls at the back)
       const bar = (i, j, arm, label, c, ht, dp = 8) => { const ns = arm === 'N' || arm === 'S', sg = arm === 'N' || arm === 'W' ? -1 : 1, wide = ns ? colL(i) + colR(i) : 2 * row(j);
-        const x = ns ? i * G + (colR(i) - colL(i)) / 2 : i * G + sg * ((sg > 0 ? colR(i) : colL(i)) + 3 + dp / 2), z = ns ? j * G + sg * (row(j) + 3 + dp / 2) : j * G, y0 = g.hAt(x, z) - 0.5;
+        const x = ns ? i * G + (colR(i) - colL(i)) / 2 : i * G + sg * ((sg > 0 ? colR(i) : colL(i)) - 3.5 + dp / 2), z = ns ? j * G + sg * (row(j) - 3.5 + dp / 2) : j * G, y0 = g.hAt(x, z) - 0.5;
         onRoad(label, x, z, 1, 0, ns ? wide : dp, ns ? dp : wide, y0, y0 + ht); return blk(label, c, wide, ht, dp, x, y0, z, ns ? (sg < 0 ? Math.PI : 0) : sg * Math.PI / 2); };
       // gantry(pk, label): a sign gantry across the road, 7 m clear
       const gantry = (pk, label) => { const s = at(pk); return real(label, 2 * s.w + 4, 9, 1, s.x, s.y, s.z, h.across(s)); };
