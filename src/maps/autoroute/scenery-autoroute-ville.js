@@ -21,6 +21,9 @@
   let n = 0; for (let x = -520; x <= 540; x += 28) if (Math.abs(x - Math.round(x / G) * G) > 16 && Math.abs(x - 229) > 30) for (const z of [-15.5, 15.5]) { n++;
     tree(x, z, cityY(x) + 0.2, 13 + 6 * HH(n, 1), 4.5 + 2 * HH(n, 2), n);
     if (n % 4 === 1) set('lampadaireAutoroute', x + 14, z * 0.9, { y: cityY(x) + 0.2, ry: z > 0 ? Math.PI / 2 : -Math.PI / 2, a: [HH(n, 3) < 0.3 ? 0.25 : 0] }); }
+  // the motorway's lamp posts, every 48 m along both parapets, one in three leaning; cranes of the river port over the warehouse roofs, far to the east
+  for (let z = -250, k = 0; z <= 80; z += 48, k++) for (const sd of [-1, 1]) set('lampadaireAutoroute', 220 + sd * 15.6, z, { y: 12 + 8 * Math.max(0, Math.min(1, (z + 201) / 170)), ry: sd > 0 ? Math.PI : 0, a: [HH(k * 2 + sd, 1) < 0.33 ? 0.3 : 0] });
+  for (const [x, z] of [[640, -260], [660, 40], [630, 330]]) { slab('steel', x, -1, z, 6, 46, 6); slab('steel', x - 18, 40, z, 60, 3, 4); slab('rust', x - 44, 30, z, 3, 10, 3); }
   // reeds in the flooded streets that the route does not take (east of column 3)
   for (let i = 3; i <= 5; i++) for (let j = -5; j <= 4; j++) for (const [x, z, wx, dz] of [[i * G, (j + 0.5) * G, 12, 70], [(i - 0.5) * G, j * G, 70, 12]]) if (x > 300 && far(x, z) > 25) real('ROSELIERE', wx, 2.2, dz, x, -0.5, z);
 
@@ -43,12 +46,12 @@
       let s = L[0], bd = 1e9; for (const t of L) { const d = (t.x - x) ** 2 + (t.z - z) ** 2; if (d < bd) { bd = d; s = t; } }
       if (Math.abs((x - s.x) * -s.tz + (z - s.z) * s.tx) < s.w + 1.3 || bd > 900 || across.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 7.5)) continue;
       const van = rnd() < 0.12, ry = (rnd() - 0.5) * 0.1 + (ax === 'x' ? Math.PI / 2 : 0), k = van ? 3 : nb++ % 3;
-      cars[k].push([x, s.y, z, ry, 1, 1, 1, TINT[(nb * 7 + k) % TINT.length]]); }
+      cars[k].push([x, s.y, z, ry, 1, 1, 1, TINT[(nb * 7 + k) % TINT.length]]); if (nb % 6 === 0) set('broussailleAutoroute', x, z, { y: s.y, ry, a: [2.6, 1.9, 3.4, nb] }); } // one wreck in six is overgrown
     return L; };
   jam('x', 13, 0, 108, 200, () => true);                                                                           // the pile-up before the motorway bridge: the lanes on the south side, packed
   // the motorway: the west carriageway is jammed up to the gap in the central reservation, the east one from the gap on; the lane takes the other each time,
-  // 11 m wide against the reservation: on its own carriageway a few cars are left in the lane along the parapet (one place in three)
-  const mw = jam('z', 16, 220, -262, 196, (x, z) => Math.abs(x - 220) > 2.5 && ((x < 220 ? z < -104 : z > -66) || rnd() < 0.35), 1), yAt = z => mw.reduce((b, s) => Math.abs(s.z - z) < Math.abs(b.z - z) ? s : b).y;
+  // 11 m wide against the reservation: on its own carriageway a queue of cars stands in the lane along the parapet (the wall of the lane is that queue)
+  const mw = jam('z', 16, 220, -262, 196, (x, z) => Math.abs(x - 220) > 2.5 && ((x < 220 ? z < -104 : z > -66) || rnd() < 0.9), 1), yAt = z => mw.reduce((b, s) => Math.abs(s.z - z) < Math.abs(b.z - z) ? s : b).y;
   cars.forEach((l, k) => insts(h, 'voitureAutoroute', MAT, l, { a: [k], tintMat: 'body' }));
   // the central reservation: a concrete wall 2 m wide down the middle of the deck, broken between z = -110 and z = -55, weeds on it
   for (let z = -257; z <= 196; z += 10) if (z < -110 || z > -55) { real('TERRE-PLEIN', 2, 1.1, 10, 220, yAt(z), z); if (HH(z, 1) < 0.4) set('broussailleAutoroute', 220, z, { y: yAt(z) + 1, a: [1.6, 1.2, 4, z] }); }

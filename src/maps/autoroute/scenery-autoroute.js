@@ -21,7 +21,7 @@
       const DS = { side: THREE.DoubleSide }, body = c => h.mat('carrosserieAutoroute', { c }), MAT = {
         asphalt: h.mat('asphalteAutoroute', DS), deck: h.mat('asphalteAutoroute', DS, '#55585c'), pave: h.mat('trottoirAutoroute', DS), grass: h.mat('herbeAutoroute'), water: h.mat('eauAutoroute', { rep: [112, 250] }),
         brick: h.mat('briqueAutoroute'), stone: h.mat('bureauAutoroute'), glass: h.mat('verreAutoroute'), tin: h.mat('toleAutoroute'), shop: h.mat('vitrineAutoroute'), far: h.mat('bureauAutoroute', { c: 0xd0b0a0 }, '#8a8078'),
-        concrete: h.mat('concretePart', DS), dark: h.mat('concreteDark', DS), steel: h.mat('matGray'), rubble: h.mat('gravatsAutoroute', { c: 0xa8a298 }), tile: h.mat('carrelageAutoroute', DS),
+        concrete: h.mat('concretePart', DS), dark: h.mat('concreteDark', DS), steel: h.mat('matGray'), rubble: h.mat('gravatsAutoroute', { c: 0xa8a298 }), tile: h.mat('carrelageAutoroute', { ...DS, c: 0xa0a69c }),
         ivy: h.mat('lierreAutoroute'), reed: h.mat('lierreAutoroute', {}, '#7a9a50'), leaf: h.mat('feuillageAutoroute'), gold: h.mat('feuillageAutoroute', {}, '#b89a40'), bark: h.mat('trunk'),
         body: h.mat('carrosserieAutoroute'), rust: body(0x8a4a2a), olive: body(0x5a6240), canvas: body(0x7a7450), pane: h.mat('paneDark'), lamp: h.mat('lampObj', { emis: 1 }), sign: h.mat('panneauAutoroute', {}, 'CENTRE VILLE') };
       MAT.tyre = MAT.dark; const BODIES = [MAT.rust, body(0xb8b4a8), body(0x5a7a78), body(0x7a3a34), body(0xb8a050)], kit = new THREE.Group(); h.scene.add(kit);
