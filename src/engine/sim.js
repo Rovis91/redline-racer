@@ -116,6 +116,7 @@
       for (let k = 1; k <= nl; k++) S[(i0 - nl + k + n) % n].y += h * (k / nl) ** 2;
       for (let k = 1; k <= nf; k++) S[(i0 + k) % n].y -= P * Math.min(1, (nf - k) / 8); }
     const vert = !!(M.jumps || M.trough);
+    // M.evenJump = [speed (m/s), power, floor]: a car that takes off at v falls at grav × clamp(v / speed, floor, 1.3) ^ power. At power 2 the jump length no longer depends on v; at 0 nothing changes
     // M.grav: the free-fall gravity of the map (the Moon: 1.62); M.dents = [[x, z, radius, depth], …]: bowls dug in the ground wherever the car drives (small craters), in map metres like pts
     const dent = M.dents && ((x, z) => { let h = 0; for (const [cx, cz, r, p] of M.dents) { const q = ((x - cx * SC) ** 2 + (z - cz * SC) ** 2) / (r * r * SC * SC); if (q < 1) h = Math.min(h, -p * (1 - q)); } return h; });
     if (vert) S.forEach((s, i) => { const b = S[(i + 1) % n]; s.sl = (b.y - s.y) / Math.hypot(b.x - s.x, b.z - s.z); });
@@ -150,7 +151,7 @@
     let tau = null; if (M.jam) { const [a, b, f] = M.jam, z = span(at(a), at(b), 10); tau = new Float64Array(n + 1); for (let j = 0; j < n; j++) tau[j + 1] = tau[j] + 1 / (1 - (1 - f) * z(j)); }
     // truck in double file: M.lorry = [point, offset in m]; parked against the kerb, on one side on odd laps, the other on even laps (see lorry())
     const cam = M.lorry && { i: (at(M.lorry[0]) + Math.round(M.lorry[1] / 2) + n) % n, d: W - 1.6 };
-    return { S, n, W, len, tun: !!M.tun, t0, t1, tau, cam, h0: at(M.hotList[0]), h1: at(M.hotList[1]), sp: M.sect.map(at), rainFx, surf, surfDry, surfL: SURF[sf.wide], vert, grav: M.grav || GRAV, dent, racingLine: M.racingLine && M.racingLine.map(at), mapDef: M, car: CARD, kt: KT,
+    return { S, n, W, len, tun: !!M.tun, t0, t1, tau, cam, h0: at(M.hotList[0]), h1: at(M.hotList[1]), sp: M.sect.map(at), rainFx, surf, surfDry, surfL: SURF[sf.wide], vert, grav: M.grav || GRAV, even: M.evenJump, dent, racingLine: M.racingLine && M.racingLine.map(at), mapDef: M, car: CARD, kt: KT,
       trucks: Array.from({ length: M.traffic || 0 }, (_, i) => ({ lane: [-4.6, 0, 4.6][(i * 2) % 3], v: 25 + (i * 7 % 5) * 1.5, x: 0, y: 0, z: 0, th: 0, idx: 0, d: 0, vx: 0, vz: 0 })) }; // camions : voir traffic()
   }
 
@@ -303,9 +304,11 @@
     // relief: free fall, unless the ground is there
     const g = ground(T, c);
     if (!T.vert) { c.y = g; return; }
-    const vy = c.vy - T.grav * dt, y = c.y + vy * dt, sg = (c.x - s.x) * s.tx + (c.z - s.z) * s.tz < 0 ? S[(b - 1 + n) % n] : s, vg = sg.sl * (c.vx * sg.tx + c.vz * sg.tz); c.land = 0; // sg: the ribbon section under the car; vg: the vertical speed its slope gives the car (the wall does not count here: climbing it does not launch into the air)
+    const vy = c.vy - T.grav * (c.air && c.gk || 1) * dt, y = c.y + vy * dt, sg = (c.x - s.x) * s.tx + (c.z - s.z) * s.tz < 0 ? S[(b - 1 + n) % n] : s, vg = sg.sl * (c.vx * sg.tx + c.vz * sg.tz); c.land = 0; // sg: the ribbon section under the car; vg: the vertical speed its slope gives the car (the wall does not count here: climbing it does not launch into the air)
     const p = slope(s, c.d);
-    if (y > g && (c.airT || !p)) { c.y = y; c.vy = vy; c.air = y - g > DROOP; return; } // (on a wall you do not take off: the speed pins the car to it, it follows the surface)
+    if (y > g && (c.airT || !p)) { const was = c.air; c.y = y; c.vy = vy; c.air = y - g > DROOP;
+      if (c.air && !was) c.gk = T.even ? clamp(Math.hypot(c.vx, c.vz) / T.even[0], T.even[2], 1.3) ** T.even[1] : 1; // M.evenJump: gravity of this flight, lighter for a slow car (c.gk): everyone lands in the same area
+      return; } // (on a wall you do not take off: the speed pins the car to it, it follows the surface)
     if (c.airT) { c.land = vg - vy; const k = 1 - clamp((c.land - LAND0) * LANDK, 0, LANDX); c.vx *= k; c.vz *= k; c.airT = 0; }
     c.y = g; c.vy = vg; c.air = false;
     { const hp = wallFace(s, c.d), dh = hp - (c.hp ?? hp); c.hp = hp; // c.hp: height on the wall at the previous step
