@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aegean Cliffs: mood and reference sheet, V2</title>
+<style>
+  :root { --bg: #0b3550; --panel: #124a6c; --ink: #f7efe0; --dim: #b9d3dc; --line: #2a6485; --accent: #f2c08a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: .02em; }
+  h2 { font-size: 22px; margin: 40px 0 6px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 small { color: var(--accent); font-weight: 600; font-size: 14px; margin-right: 8px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); }
+  .lead { font-size: 18px; max-width: 70ch; }
+  dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 10px 0; }
+  dt { color: var(--accent); font-weight: 600; } dd { margin: 0; }
+  .sw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .sw span { width: 86px; height: 46px; border-radius: 6px; font: 11px/46px ui-monospace, monospace; text-align: center; color: #000; border: 1px solid #0006; }
+  .sw span.d { color: #fff; }
+  .pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+  figure { margin: 0; background: var(--panel); border-radius: 8px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: 220px; object-fit: cover; background: #072536; }
+  figcaption { padding: 8px 10px; font-size: 13px; } figcaption b { display: block; } figcaption i { display: block; color: var(--dim); } figcaption a { color: var(--dim); }
+  ul { margin: 6px 0; padding-left: 20px; }
+  @media (max-width: 600px) { dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Aegean Cliffs</h1>
+<p class="dim">Mood and reference sheet, V2. Written after the blockout; it follows the five zones of the built map (<code>src/maps/egee/</code>, <code>?map=egee</code>) and the named blocks already standing there, and keeps the art direction of the V2 bible. Distances are those of the layout at scale 1 (4700 m, 8 to 172 m).</p>
+
+<p class="lead">A fictional Cycladic island on a summer afternoon. One closed road: the quay of a working harbour, the old quarry road up a dry flank, a whitewashed village on the crest, a cornice above the open sea, then down through farm terraces to the quay. <b>You start at water level, earn the height, thread the village, breathe on the balcony and fall back to the port: the relief sets the rhythm, and the sea is in the frame almost all lap.</b></p>
+
+<dl>
+  <dt>Place</dt><dd>A small steep island: harbour basin on the south side with a mole and a lighthouse, cliffs on the east flank, a plateau with the village at 170 m, capes to the north-west, gentler terraced slopes to the west. Other islands as flat blue silhouettes on the horizon.</dd>
+  <dt>Time and light</dt><dd>Early afternoon in July, sun high and slightly behind the left shoulder at the start: hard white light, short crisp shadows, no haze near the car, a pale band of sea haze at the horizon. The meltemi blows: flags, awnings and mill sails all lean the same way.</dd>
+  <dt>Style</dt><dd>Retro low-poly: few volumes, clearly ranked, flat faces. Three values carry the picture: dark asphalt, warm stone, white lime. The sea is the saturated surface, lighter and greener where it touches rock. Read at 150 km/h before being read up close.</dd>
+  <dt>Life</dt><dd>An island that is lived in and hosts a one-day race: temporary barriers, bunting and a few stands, always off the roadway. Buildings are braking markers, never an excuse for a side road.</dd>
+  <dt>Anti-references</dt><dd>Santorini postcard overload (a blue dome on every roof); a resort with pools, hotels and yachts; big-city or futuristic buildings; lush or tropical green; grey northern rock; sunset orange; ruins of temples and columns; any house, stair or junction on the drivable band.</dd>
+</dl>
+<div class="sw">
+  <span class="d" style="background:#0b4970">#0b4970 deep sea</span><span style="background:#45abb4">#45abb4 shallows</span><span style="background:#f7efe0">#f7efe0 lime</span>
+  <span style="background:#d7ac74">#d7ac74 stone</span><span class="d" style="background:#b96e4b">#b96e4b rock</span><span class="d" style="background:#d74e92">#d74e92 flower</span>
+  <span class="d" style="background:#76815a">#76815a olive</span><span class="d" style="background:#3a3d42">#3a3d42 asphalt</span>
+</div>
+
+<h2><small>ZONE 1 · 0 to 650 m · 8 to 20 m</small>Port: the quay</h2>
+<p>Start on the 16 m quay road, a long left-hand sweep round the basin with the town front on the inside and the water on the outside, then the first rise as the buildings stop and the cliff takes over.</p>
+<dl>
+  <dt>Mood</dt><dd>A fishing harbour on race day: boats still tied up, nets drying, the whole island stacked above the start line.</dd>
+  <dt>Landmark</dt><dd>The white lighthouse at the end of the mole, across the basin (blocks PHARE and DIGUE); behind the grid, the village as a white line on the crest, which is where the lap is going.</dd>
+  <dt>Read at speed</dt><dd><ul>
+    <li>a continuous white town front two to three storeys high, blue and green shutters, striped awnings at ground level (FRONT DE MER)</li>
+    <li>sand-coloured warehouses with wide doors, crates and nets stacked against them (ENTREPOT)</li>
+    <li>three wooden pontoons and small painted boats, coral, blue and white hulls (PONTON, BATEAU)</li>
+    <li>a pale stone quay edge with bollards, turquoise water right below it</li>
+    <li>the rock wall closing the end of the quay (FALAISE): the signal that the climb starts</li></ul></dd>
+  <dt>Light</dt><dd>Full sun on the facades, the brightest and most colourful zone. Awning shadows fall on the pavement, not on the road. Water glitter on the outside of the bend.</dd>
+  <dt>Transition</dt><dd>The built front stops on one clean edge; walls turn from lime to rock, colour drops out, the road tilts up.</dd>
+  <dt>Not this</dt><dd>A marina of white yachts; a container port with cranes; a ferry blocking the view of the basin; cafe tables on the roadway.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#0b5278">#0b5278</span><span style="background:#1eb3bd">#1eb3bd</span><span style="background:#fff6e6">#fff6e6</span><span style="background:#d6ad73">#d6ad73</span><span style="background:#ed7956">#ed7956</span><span class="d" style="background:#ef4b94">#ef4b94</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Fishing_port_of_Naoussa,_Paros,_119156.jpg?width=640" alt="Fishing boats in the port of Naoussa, Paros"><figcaption><b>Fishing port of Naoussa, Paros</b>Keep: boat size and colours, moorings, how close the houses stand to the water. <i>Do not borrow: the tight inner basin; ours is a wide open bay.</i>Zde, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Fishing_port_of_Naoussa,_Paros,_119156.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Center_of_Naoussa_from_the_fishing_port,_Paros,_119129.jpg?width=640" alt="Town front of Naoussa seen from the fishing port"><figcaption><b>Town front of Naoussa</b>Keep: compact white volumes of unequal height, flat roofs, few openings. <i>Do not borrow: restaurant terraces down to the water's edge.</i>Zde, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Center_of_Naoussa_from_the_fishing_port,_Paros,_119129.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/20230509_NaxosParosDelosMykonos125.jpg?width=640" alt="Harbour on Paros"><figcaption><b>Harbour of Paros</b>Keep: scale of the quay against boats and sheds. <i>Do not borrow: modern cars and street furniture.</i>Jean Housen, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:20230509_NaxosParosDelosMykonos125.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 2 · 650 to 2000 m · 20 to 161 m</small>Ascension: the quarry road</h2>
+<p>1350 m of climb at up to 12.6 %, linked medium bends on a dry flank (tightest radius about 59 m), cliff on the inside, a drop and the bay on the outside, the first two houses of the village at the top.</p>
+<dl>
+  <dt>Mood</dt><dd>Conquering the height: rock, heat and wind, the harbour shrinking in the mirrors at every bend.</dd>
+  <dt>Landmark</dt><dd>The cut cliff face standing over the road (FALAISE), and above it the white rim of the village, seen again and again from below and closer each time.</dd>
+  <dt>Read at speed</dt><dd><ul>
+    <li>warm fractured rock in big faceted planes, ochre in the sun and red-brown in shadow, horizontal strata</li>
+    <li>pale dressed-stone retaining walls on the inside of the bends (MUR SOUTENEMENT), their top line drawing the curve ahead</li>
+    <li>a low white-capped parapet on the sea side wherever there is a real drop</li>
+    <li>olive terraces below the road: grey-green tufts in rows on red earth (OLIVERAIE)</li>
+    <li>the bay as a flat cyan plane filling the outside of every left-hander</li></ul></dd>
+  <dt>Light</dt><dd>Raw sun on ochre; the rock faces alternate lit and shaded planes, which is what makes the bends readable. No tree shade. The sea is at its most saturated seen from above.</dd>
+  <dt>Transition</dt><dd>The slope eases, rock gives way to a first low white wall, then two houses either side (MAISON at 1940 and 1975 m): the field of view narrows into the village.</dd>
+  <dt>Not this</dt><dd>Alpine hairpins with steel guardrails; pine forest; a tunnel; scree or boulders on the roadway; black volcanic rock.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#b97049">#b97049</span><span style="background:#d49f66">#d49f66</span><span style="background:#e7c49a">#e7c49a</span><span class="d" style="background:#76815a">#76815a</span><span style="background:#4aa9c8">#4aa9c8</span><span style="background:#fbf3e5">#fbf3e5</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/The_Santorini_Caldera.jpg?width=640" alt="Rim of the Santorini caldera above the sea"><figcaption><b>Caldera rim, Santorini</b>Keep: the height ratio between cliff and sea, strata, a white line of houses on the crest. <i>Do not borrow: the dark volcanic layers; our rock stays warm ochre.</i>Steve Jurvetson, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:The_Santorini_Caldera.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Des_vestiges_d%27anciennes_cultures_en_terrasses.JPG?width=640" alt="Remains of old terraced fields"><figcaption><b>Old dry-stone terraces</b>Keep: wall thickness, step height, earth colour between the walls. <i>Do not borrow: the abandoned, overgrown state.</i>Isasza, CC0. <a href="https://commons.wikimedia.org/wiki/File:Des_vestiges_d%27anciennes_cultures_en_terrasses.JPG">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Dry_stone_wall_with_Ormos_Agios_Ioannis,_Agios_Sostis,_Mykonos,_and_Syros_in_the_background,_Tinos,_Greece_julesvernex2.jpg?width=640" alt="Dry stone wall on Tinos with sea and islands behind"><figcaption><b>Dry-stone wall above the sea, Tinos</b>Keep: a stone wall in the foreground against sea and far islands, the dry scrub. <i>Do not borrow: the footpath scale; our walls are road-sized.</i>Jules Verne Times Two, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Dry_stone_wall_with_Ormos_Agios_Ioannis,_Agios_Sostis,_Mykonos,_and_Syros_in_the_background,_Tinos,_Greece_julesvernex2.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 3 · 2000 to 2800 m · 161 to 171 m</small>Village: the perched chora</h2>
+<p>The signature passage, almost flat on the plateau: the road narrows to 12 m between houses, a counter-curve of 38 m radius near 2150 m, the square and the chapel at 2400 m, then the houses thin out toward the edge.</p>
+<dl>
+  <dt>Mood</dt><dd>Precision in a corridor of white walls: dazzle, then a slice of cool shade, then dazzle again.</dd>
+  <dt>Landmark</dt><dd>The blue dome of the chapel above the roofs (CHAPELLE, COUPOLE), set back from the road beside the square (PLACE). It is the only blue dome of the island.</dd>
+  <dt>Read at speed</dt><dd><ul>
+    <li>white cubic houses with flat roofs and rounded corners, staggered in height, standing straight on the road edge (MAISON)</li>
+    <li>blue doors and shutters, one colour per house, on otherwise blank walls</li>
+    <li>magenta bougainvillea as a few big masses on walls and pergolas, placed at corner exits</li>
+    <li>outside stairs, porches and low parapets, all on the house side of the kerb</li>
+    <li>the open paved square: the one wide gap, pale sand floor, where the sky comes back</li></ul></dd>
+  <dt>Light</dt><dd>The highest contrast of the lap: lime walls close to white-out, dark asphalt, hard shadow bands across the road where houses stand close. Shade is blue-grey, never black. Apexes and exits stay in the sun.</dd>
+  <dt>Transition</dt><dd>The last pair of houses opens like a gate: the sea is suddenly back on the right and the road takes the edge of the plateau.</dd>
+  <dt>Not this</dt><dd>Lanes too narrow to race; pastel Italian facades or tiled pitched roofs; a wall hiding an apex or an exit; crowds, tables or flower pots in the run-off; neon and shop signs.</dd>
+</dl>
+<div class="sw"><span style="background:#fff5e8">#fff5e8</span><span style="background:#d0e2e7">#d0e2e7</span><span class="d" style="background:#1c6eb0">#1c6eb0</span><span class="d" style="background:#bd67ad">#bd67ad</span><span style="background:#d9b889">#d9b889</span><span class="d" style="background:#313b42">#313b42</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Traditional_house_and_street_in_Mykonos_Town.jpg?width=640" alt="Traditional house and street in Mykonos Town"><figcaption><b>House and street, Mykonos Town</b>Keep: lime finish, door and window scale, the outside stair, painted joinery. <i>Do not borrow: the street width (a footpath) and the painted paving joints.</i>Andreas Kakaris, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Traditional_house_and_street_in_Mykonos_Town.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Mykonos_houses.jpg?width=640" alt="Stacked cubic houses in Mykonos"><figcaption><b>Cycladic houses</b>Keep: stacked cubes, simple parapets, flat roofs, very few openings. <i>Do not borrow: balconies crowded with detail.</i>Pabernosmatao, CC0. <a href="https://commons.wikimedia.org/wiki/File:Mykonos_houses.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Bougainvillea_Tree,_Mykonos,_Greece_(53503231933).jpg?width=640" alt="Bougainvillea against a white wall in Mykonos"><figcaption><b>Bougainvillea, Mykonos</b>Keep: one big magenta mass against white, as a single faceted volume. <i>Do not borrow: scattered small flowers everywhere.</i>Warren LeMay, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Bougainvillea_Tree,_Mykonos,_Greece_(53503231933).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Blue_Domed_Church_-_Oia,_Santorini,_Greece_-_20_July_2008.jpg?width=640" alt="Blue-domed church in Oia, Santorini"><figcaption><b>Blue-domed church, Oia</b>Keep: dome on a white drum, small bell wall, the blue against the sea. <i>Do not borrow: the cliff-edge setting and the repetition; one dome, on the plateau.</i>George M. Groutas, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Blue_Domed_Church_-_Oia,_Santorini,_Greece_-_20_July_2008.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Chora,_Folegandros,_Greece.jpg?width=640" alt="Chora of Folegandros"><figcaption><b>Chora of Folegandros</b>Keep: a compact village on a high plateau, read as one white mass from afar. <i>Do not borrow: tourist-season street clutter.</i>Etienne O. Dallaire, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:Chora,_Folegandros,_Greece.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 4 · 2800 to 3500 m · 171 to 123 m</small>Balcon: the cornice</h2>
+<p>Wide balcony curves on the rim of the plateau (12 to 14 m wide, radius 64 m at the tightest), high rocks on the inside, the void and the capes on the outside, then the road tips into the western descent.</p>
+<dl>
+  <dt>Mood</dt><dd>The breath of the lap: wind, emptiness, the horizon at eye level and the sea very far below.</dd>
+  <dt>Landmark</dt><dd>The windmill on the high point at 2900 m, 40 m back from the road (MOULIN): white round tower, thatched cap, bare sail spars against the sky.</dd>
+  <dt>Read at speed</dt><dd><ul>
+    <li>a continuous low stone parapet with a white cap on the sea side, the only line between road and void</li>
+    <li>tall warm rock on the inside (HAUTES ROCHES), broken into a few big blocks</li>
+    <li>capes stepping out into the sea one behind the other, each paler than the last (CAP)</li>
+    <li>isolated cypresses as dark vertical strokes on the sky (CYPRES)</li>
+    <li>two bands of sea: deep blue offshore, cyan against the foot of the cliffs</li></ul></dd>
+  <dt>Light</dt><dd>The most open sky. Light comes from the sea side; the parapet cap and the mill are the white accents, everything else is rock and blue. The village stays visible behind as a white silhouette.</dd>
+  <dt>Transition</dt><dd>Past the last cape the parapet gives way to field walls, the rock softens into steps, and the road drops into the terraces.</dd>
+  <dt>Not this</dt><dd>A row of five mills (one is enough); a viewing platform with railings and coaches; a rock on the racing line; fog hiding the drop.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#12537d">#12537d</span><span style="background:#3cb6cc">#3cb6cc</span><span style="background:#c19a6e">#c19a6e</span><span class="d" style="background:#7d6e60">#7d6e60</span><span style="background:#f6eedb">#f6eedb</span><span style="background:#75938b">#75938b</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/AmorgosEastCoast.jpg?width=640" alt="East coast of Amorgos, cliffs falling into the sea"><figcaption><b>East coast of Amorgos</b>Keep: verticality, successive capes, the land-then-sea sequence. <i>Do not borrow: the total absence of a built edge; we need the parapet.</i>Martin Kraft, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:AmorgosEastCoast.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Northern_coast_Crete_detail.jpg?width=640" alt="Rocky northern coast of Crete"><figcaption><b>Rocky coast, Crete</b>Keep: rock colour and contrast, the cut of the shoreline, clear water at the foot. <i>Do not borrow: the low height; our cornice is 150 m up.</i>Jebulon, CC0. <a href="https://commons.wikimedia.org/wiki/File:Northern_coast_Crete_detail.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/MykonosWindmills.jpg?width=640" alt="Windmills of Mykonos"><figcaption><b>Windmills of Mykonos</b>Keep: the silhouette (round white tower, conical thatch, radial spars). <i>Do not borrow: the row and the town setting; ours is alone on a crest.</i>Helentr, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:MykonosWindmills.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/The_prospect_of_a_cliff,_Chora_of_Folegandros,_Ano_Meria,_153339.jpg?width=640" alt="Cliff edge seen from the Chora of Folegandros"><figcaption><b>Cliff below the Chora of Folegandros</b>Keep: the plateau edge and the sheer fall to the water, seen from the top. <i>Do not borrow: houses built on the very edge.</i>Zde, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:The_prospect_of_a_cliff,_Chora_of_Folegandros,_Ano_Meria,_153339.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 5 · 3500 to 4700 m · 123 to 8 m</small>Descente: the terraces</h2>
+<p>1200 m down the western slope at up to 14 %, successive counter-curves (radius 79 m at the tightest) between stepped fields, olive groves on the inside, a ruin far off the road, then the first harbour houses and the line.</p>
+<dl>
+  <dt>Mood</dt><dd>Falling in rhythm through farmland, left, right, left, with the harbour basin growing in the windscreen.</dd>
+  <dt>Landmark</dt><dd>The basin, the mole and the lighthouse of zone 1, seen from above and reappearing at each right-hander: the target of the whole descent.</dd>
+  <dt>Read at speed</dt><dd><ul>
+    <li>long dry-stone walls stepping down the slope like contour lines, pale stone over red-brown earth (TERRASSES)</li>
+    <li>olive groves as rows of round grey-green crowns with dappled shade under them (OLIVERAIE)</li>
+    <li>pairs of cypresses marking the changes of direction (CYPRES)</li>
+    <li>a roofless stone farm on a far terrace (RUINE), same stone as the walls</li>
+    <li>the first lime walls, lamps and painted signs of the port on the last 300 m (MAISON DU PORT)</li></ul></dd>
+  <dt>Light</dt><dd>Sun on the driver's side slope: warm stone, the only soft shade of the lap under the olives, on the verge and not on the road. Harbour colours come back gradually: first white, then coral and blue.</dd>
+  <dt>Transition</dt><dd>The slope flattens, the walls close into a street, the quay edge and the water return on the outside: the lap ends where it started.</dd>
+  <dt>Not this</dt><dd>Green irrigated fields or lawns; Tuscan avenues of cypress; vineyards on wires up to the kerb; a farm track joining the road.</dd>
+</dl>
+<div class="sw"><span style="background:#318c8d">#318c8d</span><span style="background:#c5ad80">#c5ad80</span><span class="d" style="background:#857653">#857653</span><span style="background:#d69a67">#d69a67</span><span style="background:#4b97bc">#4b97bc</span><span style="background:#e8dfcf">#e8dfcf</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Stone_terraces_on_Skarkos_hill,_Ios,_Greece,_21_July_2012.jpg?width=640" alt="Stone terraces on Skarkos hill, Ios"><figcaption><b>Terraces on Skarkos hill, Ios</b>Keep: the walls as contour lines, summer-dry colours, sparse trees. <i>Do not borrow: the archaeological site reading.</i>NorbertNagel, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Stone_terraces_on_Skarkos_hill,_Ios,_Greece,_21_July_2012.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ruined_stone_building_and_terraces_at_Skarkos,_Ios,_Greece,_21_July_2012.jpg?width=640" alt="Ruined stone building among terraces on Ios"><figcaption><b>Ruined stone building and terraces, Ios</b>Keep: a low roofless rectangle in the same stone as the field walls. <i>Do not borrow: anything that reads as an ancient monument.</i>NorbertNagel, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Ruined_stone_building_and_terraces_at_Skarkos,_Ios,_Greece,_21_July_2012.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Way_Ormos_Aigiali_to_Chora_of_Amorgos,_085118.jpg?width=640" alt="Road between Aigiali and the Chora of Amorgos"><figcaption><b>Road from Aigiali to Chora, Amorgos</b>Keep: how a road sits on a steep island slope, the cut on one side and the fill on the other. <i>Do not borrow: the narrow single lane.</i>Zde, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Way_Ormos_Aigiali_to_Chora_of_Amorgos,_085118.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/View_from_the_top_of_Minoa_Hill_to_Katapola_bay,_213238.jpg?width=640" alt="Katapola bay seen from Minoa hill, Amorgos"><figcaption><b>Katapola bay from Minoa hill, Amorgos</b>Keep: depth of planes down to a harbour bay, the village small below, vegetation in patches. <i>Do not borrow: the enclosing far shore; our bay opens on the sea.</i>Zde, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:View_from_the_top_of_Minoa_Hill_to_Katapola_bay,_213238.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>MISSING</small>References not found</h2>
+<ul>
+  <li><b>Port:</b> a lighthouse at the end of a harbour mole (PHARE, DIGUE), and a close view of a single wooden fishing boat (kaiki).</li>
+  <li><b>Ascension:</b> a paved island road climbing in bends with masonry retaining walls and a parapet. The bible only points to the Commons category <a href="https://commons.wikimedia.org/wiki/Category:Roads_in_Santorini" style="color:var(--dim)">Roads in Santorini</a>, not to a photo.</li>
+  <li><b>Balcon and Descente:</b> isolated cypresses on a dry slope; a stone parapet along a cornice road.</li>
+  <li><b>Whole lap:</b> olive groves in rows seen from a road, and the race-day dressing (barriers, bunting).</li>
+</ul>
+
+<p class="dim" style="margin-top:36px">Images are linked from Wikimedia Commons, not copied into the repository, and are references for shapes and colours only, never textures. Authors and licences were read from the Commons file pages on 17 November 2026. The zone palettes are those of the V2 bible.</p>
+</main>
+</body>
+</html>
