@@ -1,5 +1,5 @@
-// "autoroute" blockout, zone 2: Le quartier des entrepots (PK 635 to 1225): the low district by the river, water in every street not driven. Six crossroads, each with one arm open:
-// column 3 north, row -1 east, column 4 north, row -2 west, column 3 north, row -3 west to the foot of the slip road. Only this zone's named blocks; bar() and spot() are described in scenery-autoroute.js.
+// "autoroute", zone 2: Le quartier des entrepots (PK 635 to 1225): the low district by the river, water in every street not driven. Six crossroads, each with one arm open:
+// column 3 north, row -1 east, column 4 north, row -2 west, column 3 north, row -3 west to the foot of the slip road. Only what this zone adds, by the names of the blockout (real() in scenery-autoroute.js turns each into its scenery); bar() and spot() are described in scenery-autoroute.js.
 (window.AUTOROUTE = window.AUTOROUTE || {}).quartier = ({ bar, spot }) => {
   const RUST = 0x9a5a3a, BUS = 0xb8a050, RUBBLE = 0x7a756c, OLIVE = 0x5a6240, TREE = 0x5a8a40;
   bar(3, -1, 'N', 'BUS RENVERSE', BUS, 3.2); bar(3, -1, 'W', 'EPAVES EMPILEES', RUST, 3);

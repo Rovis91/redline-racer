@@ -1,4 +1,4 @@
-// "autoroute" blockout, zone 1: Le boulevard (PK 0 to 601, row 0, heading east): 26 m between the kerbs, open from kerb to kerb except at three places, each of another kind:
+// "autoroute", zone 1: Le boulevard (PK 0 to 601, row 0, heading east): 26 m between the kerbs, open from kerb to kerb except at three places, each of another kind:
 // the military checkpoint (x = -250 to -120: a double bend between lines of concrete barriers), the collapsed facade on the north side (x = 0), the pile-up on the south side before the motorway bridge (x = 150).
 // The barriers, the rubble and the cars are generated in scenery-autoroute-ville.js; here the named blocks: what gives each place its name, and what closes each side street.
 (window.AUTOROUTE = window.AUTOROUTE || {}).boulevard = ({ h, spot, bar, cityY }) => {

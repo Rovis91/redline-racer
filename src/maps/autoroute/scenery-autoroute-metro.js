@@ -1,7 +1,7 @@
-// "autoroute" blockout, zone 5: Le metro (PK 1877 to 2553): a straight double-track tunnel under row 2 (18 m between walls, floor at -8.5 m), the lane passes from one track to the other around the trains.
+// "autoroute", zone 5: Le metro (PK 1877 to 2553): a straight double-track tunnel under row 2 (18 m between walls, floor at -8.5 m), the lane passes from one track to the other around the trains.
 // At the station (PK 2177) a train stands at the platform: the lane climbs a heap of rubble onto the north platform (-7.3 m), runs along it, turns into the passenger corridor (PK 2314)
 // and goes up the stairs to column -3 (PK 2389), then north to the boulevard. The tunnel itself goes on west past the corridor, tracks and platform, closed by a derailed train.
-// Only this zone's named blocks; helpers are described in scenery-autoroute.js. Labels are short: a board must fit under the 9 m ceiling.
+// Only what this zone adds, by the names of the blockout (real() in scenery-autoroute.js turns each into its scenery); helpers are described in scenery-autoroute.js. Labels are short: a board must fit under the 9 m ceiling.
 (window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ put, spot, bar, slab, set }) => {
   const TRAIN = 0x9aa4a0, RUBBLE = 0x7a756c, CONC = 0x8f8c82, RUST = 0x9a5a3a, OLIVE = 0x5a6240, Y = -8.5;
   put('RAME', TRAIN, 1974, 1, 1, 3, 3.6, 62, Y); put('RAME', TRAIN, 2053, -1, 1, 3, 3.6, 62, Y); put('RAME', TRAIN, 2132, 1, 1, 3, 3.6, 44, Y); put('EBOULIS', RUBBLE, 2166, 1, 0.5, 5, 3.5, 18, Y);
