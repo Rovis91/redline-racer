@@ -55,7 +55,7 @@
     escalier: (n = 12) => [...Array.from({ length: n }, (_, k) => ['bois', 0.45, 0.08, 1.4, k * 0.5, -k * 0.4, 0]), ['bois', n * 0.5, 0.25, 0.08, n * 0.25 - 0.25, -n * 0.2 + 0.1, 0.72, [0, 0, -0.67]],
       ['bois', n * 0.5, 0.06, 0.06, n * 0.25 - 0.25, -n * 0.2 + 1.1, 0.72, [0, 0, -0.67]]],
 
-    // ---------- V2 : chaque forme dit la fiche de docs/REFS-plage.md qu'elle suit ----------
+    // ---------- V2 : chaque forme dit la fiche de docs/refs/REFS-plage.md qu'elle suit ----------
     // tour de maître-nageur (fiche 1, torre de salvavidas) : quatre pieds, plateforme à 3 m, cabine fermée sur trois côtés, toit plat débordant, rampe vers la plage (+Z), mât à drapeau ; origine au sol
     torreSalvavidas: () => [...paire(a => paire(b => ['bois', 0.18, 3.1, 0.18, a * 1.1, 1.55, b * 1.1])).flat(), ['bois', 2.8, 0.15, 2.8, 0, 3.1, 0, null, 1],
       ['cabine', 2.3, 1.9, 0.12, 0, 4.1, -1.1], ...paire(sd => ['cabine', 0.12, 1.9, 2.3, sd * 1.1, 4.1, 0]), ['cabine', 2.3, 0.9, 0.12, 0, 3.6, 1.1], ['toit', 3.2, 0.18, 3.2, 0, 5.15, 0, null, 1],

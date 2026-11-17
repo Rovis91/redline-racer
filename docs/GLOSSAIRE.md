@@ -1,6 +1,6 @@
 # Redline Racer
 
-Jeu de course arcade en 3D pixelisée, sur huit cartes. Ce glossaire fixe le vocabulaire du jeu : ce qu'on lance depuis le menu, comment une course se découpe, ce qu'elle rapporte.
+Jeu de course arcade en 3D pixelisée, sur douze cartes. Ce glossaire fixe le vocabulaire du jeu : ce qu'on lance depuis le menu, comment une course se découpe, ce qu'elle rapporte.
 
 ## Courses
 
@@ -47,6 +47,18 @@ _Avoid_: circuit, niveau, piste
 **Tracé**:
 Le parcours de la route d'une carte.
 _Avoid_: circuit, piste
+
+**Zone**:
+Une partie d'une carte qui a son décor et son repère (le bazar, la salle des turbines) ; on la construit dans son propre fichier de décor.
+_Avoid_: secteur, quartier
+
+**Maquette**:
+La version jouable d'une carte avec son tracé, son terrain et tout son décor en blocs, sans détail ; l'auteur la valide avant qu'on construise les zones.
+_Avoid_: prototype, brouillon
+
+**Bloc**:
+Une forme basique de couleur unie, à la taille réelle et nommée (« maison », « bosquet »), qui réserve dans la maquette la place d'un élément de décor ; une zone le remplace par le vrai décor, dans son emprise.
+_Avoid_: gabarit (le portique de hauteur de wangan), placeholder
 
 ## Joueurs et rivaux
 

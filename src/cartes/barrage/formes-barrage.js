@@ -1,5 +1,5 @@
 // Formes propres à « barrage » : complète le catalogue de formes.js (mêmes conventions : forme simple = géométrie, assemblage = liste de boîtes à zones). Voir METHODE-DECOR.md.
-// Chaque forme dit la fiche de docs/REFS-barrage.md qu'elle suit (REFS n°).
+// Chaque forme dit la fiche de docs/refs/REFS-barrage.md qu'elle suit (REFS n°).
 (function () {
   const B = (w, h, d) => { const g = new THREE.BoxGeometry(w, h, d); g.userData.dim = [w, h, d]; return g; }, paire = f => [-1, 1].map(f);
   const fond = (g, y) => { g.translate(0, y, 0); return g; };

@@ -1,4 +1,4 @@
-# Fabrique src/audio/instruments.js : instruments échantillonnés (FluidR3_GM, CC BY 3.0) et formes d'onde de synthés (AKWF, CC0).
+# Fabrique src/audio/instruments.js et src/audio/instruments-notes.js : instruments échantillonnés (FluidR3_GM, CC BY 3.0) et formes d'onde de synthés (AKWF, CC0).
 # Usage : python -I outils/instruments.py <dossier FluidR3 *-mp3.js> <dossier AKWF *.wav> <ffmpeg> <dossier VCSL *.wav> > src/audio/instruments.js
 # Batterie (VCSL, CC0) : caisses claires, cercle, cross-stick, claps, charleston acoustique, shaker, tambourin, nommés comme dans PERC ci-dessous.
 # Une note sur quatre demi-tons est gardée, en mono, en Opus 32 kb/s, coupée à 3 s avec un fondu : le moteur transpose les autres.
@@ -38,9 +38,16 @@ for f in sorted(os.listdir(AK)):
   H = [sum(x[k] * cmath.exp(-2j * cmath.pi * h * k / n) for k in range(n)) / n for h in range(1, 49)]
   pk = max(abs(c) for c in H) or 1
   ondes['ak_' + f[:-4]] = [[round(c.real / pk, 4) for c in H], [round(-c.imag / pk, 4) for c in H]]
-print("// Instruments échantillonnés : FluidR3_GM de Frank Wen (CC BY 3.0, via gleitz/midi-js-soundfonts), une note sur quatre demi-tons, Opus mono.")
+# les notes (3,7 Mo compressés) vont dans instruments-notes.js, chargé à la demande par audio.js ; le reste (petit) sur la sortie, chargé au démarrage
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'src', 'audio', 'instruments-notes.js'), 'w', encoding='utf-8') as f:
+  f.write("// Notes des instruments échantillonnés (window.INS) : FluidR3_GM de Frank Wen (CC BY 3.0, via gleitz/midi-js-soundfonts), une note sur quatre demi-tons, Opus mono.
+")
+  f.write("// Fichier généré par outils/instruments.py. Chargé par src/audio/audio.js à la première station (3,7 Mo compressés : pas au démarrage du jeu).
+")
+  f.write('window.INS = ' + json.dumps(out, separators=(',', ':')) + ';
+')
+print("// Batterie et formes d'onde (les notes des instruments échantillonnés sont dans instruments-notes.js, chargé à la demande).")
 print("// Formes d'onde : Adventure Kid Waveforms (AKWF) de Kristoffer Ekstrand, domaine public (CC0). Fichier généré par outils/instruments.py.")
-print('window.INS = ' + json.dumps(out, separators=(',', ':')) + ';')
 perc = {}
 for nom, dur in PERC.items():
   a, b = os.path.join(VC, nom + '.wav'), os.path.join(tmp, 'p.ogg')
@@ -49,3 +56,4 @@ for nom, dur in PERC.items():
 print("// Batterie : Versilian Community Sample Library (VCSL), domaine public (CC0).")
 print('window.PERC = ' + json.dumps(perc, separators=(',', ':')) + ';')
 print('window.ONDES = ' + json.dumps(ondes, separators=(',', ':')) + ';')
+print('window.INS_NOMS = ' + json.dumps(list(out), separators=(',', ':')) + ';')  # les timbres e_<nom> d'audio.js existent avant l'arrivée des notes

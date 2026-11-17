@@ -490,7 +490,7 @@
   }
 
 
-  // ---------- Mode CASSE : les dégâts jouent sur la conduite (docs/SPEC-CASSE.md, prototype 4) ----------
+  // ---------- Mode CASSE : les dégâts jouent sur la conduite (docs/specs/SPEC-CASSE.md, prototype 4) ----------
   // c.ca = { z : usure des zones (usure, sans plafond), z0, lap, t : dernier choc compté, tire : train faussé (rad de volant), creve : roue crevée [arrière g, arrière d, avant g, avant d],
   //          mort : hors d'usage (heure), der / derT : la dernière voiture qui l'a touchée et quand, td : takedowns infligés ; p, vf, grip, dir : ce que roule() en tire }
   // Calculé dans stepRace à chaque pas, comme le reste de la course : déterministe, l'hôte et les invités voient la même chose.
@@ -596,7 +596,7 @@
     return ok && tr.length >= 8 && t > 0 && Math.abs((tr.length / 4 - 1) / 5 - t) < 1.5 ? { carte: m[2], t, trace: etire(tr, 4) } : { err: DEFI_ERR[2] };
   }
 
-  // ---------- Usure des voitures (docs/SPEC-CASSE.md, « Mécanique des chocs ») ----------
+  // ---------- Usure des voitures (docs/specs/SPEC-CASSE.md, « Mécanique des chocs ») ----------
   // usure(Z, Z0, lx, lz, vn, type, casse) : un choc venu de (lx, lz) (repère de la voiture, x vers l'avant, unitaire), à la vitesse normale vn (m/s), contre un « mur », un « camion » ou une « voiture ».
   //   Z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] de 0 à 1, modifiée sur place ; Z0 = les zones au début du tour ; renvoie l'usure ajoutée (toutes zones).
   //   Seule la vitesse normale casse (frotter un mur ne fait rien) ; usure quadratique (proche de l'énergie), un coin prend 1,3 fois plus, rendement décroissant ;

@@ -33,7 +33,12 @@
       const lisse = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); }, mix = (a, b, t) => a + (b - a) * t;
       const pl = (T, v) => { if (v <= T[0][0]) return T[0][1]; for (let k = 1; k < T.length; k++) if (v <= T[k][0]) return mix(T[k - 1][1], T[k][1], (v - T[k - 1][0]) / (T[k][0] - T[k - 1][0])); return T[T.length - 1][1]; }; // table [[abscisse, valeur], …] lue en ligne brisée
       const SUB = []; for (let i = 0; i < N; i += 3) SUB.push(i);
-      const proche = (x, z) => { let b = 0, bd = 1e18; for (const i of SUB) { const s = S[i], d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd) { bd = d; b = i; } } return { i: b, s: S[b], d: Math.sqrt(bd) }; };
+      // échantillon le plus proche, par cases de 50 m : chaque case garde, à sa première question, les seuls échantillons qui peuvent être le plus proche d'un de ses points
+      // (à moins de la distance minimale au centre + deux demi-diagonales), dans l'ordre de SUB : même résultat que le parcours de tout SUB, égalités comprises
+      const CEL = 50, DG = CEL * Math.SQRT1_2, CAND = new Map();
+      const proche = (x, z) => { const cx = Math.floor(x / CEL), cz = Math.floor(z / CEL), k = cx * 65536 + cz; let L = CAND.get(k);
+        if (!L) { const mx = (cx + 0.5) * CEL, mz = (cz + 0.5) * CEL, D = SUB.map(i => Math.hypot(S[i].x - mx, S[i].z - mz)), m = Math.min(...D); L = SUB.filter((_, j) => D[j] <= m + 2 * DG + 1e-6); CAND.set(k, L); }
+        let b = 0, bd = 1e18; for (const i of L) { const s = S[i], d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd) { bd = d; b = i; } } return { i: b, s: S[b], d: Math.sqrt(bd) }; };
       const tranche = (a, b, f) => { const l = (b - a + N) % N; f((a + N) % N, l); }; // ruban de l'échantillon a à b
       const bloc = (m, x0, x1, z0, z1, y0, y1) => boite(h, m, x1 - x0, y1 - y0, z1 - z0, (x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
       const maille = (P3, UV, I, m) => { const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P3, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.setIndex(I); g.computeVertexNormals(); const o = new THREE.Mesh(g, m); o.receiveShadow = true; h.scene.add(o); return o; };
@@ -237,12 +242,14 @@
       const YV = 16, peints = [], bl = (x, y, z, r, a, b, c, col) => peints.push([x, y, z, r, a, b, c, col]); // petits volumes peints, posés ensemble à la fin (une seule passe de dessin)
       const cite = (x, z) => x > 100 && x < 492 && z > 690 && z < 1150, poste = (x, z) => x > 188 && x < 310 && z > 412 && z < 620, usine = (x, z) => x > -165 && x < 205 && z > 0 && z < 250;
       // l'emprise de chaque construction : [x, z, rotation, demi-longueur, demi-profondeur] ; rien ne se pose sur une emprise prise, ni trop près de la chaussée
-      const batis = [], dansBati = (px, pz, m = 4) => batis.some(([x, z, r, hl, hp]) => { const dx = px - x, dz = pz - z, c = Math.cos(r), s = Math.sin(r), u = dx * c - dz * s, v = dx * s + dz * c; return Math.abs(u) < hl + m && Math.abs(v) < hp + m; });
+      // GB : chaque emprise rangée dans les cases de 32 m qu'elle touche, marge de dansBati comprise (m ≤ 7 : une emprise couvre au plus hl + hp + 14 m autour de son centre) ; dansBati ne lit que la case du point
+      const GB = new Map(), bati = (...L) => { for (const e of L) { batis.push(e); const [x, z, , hl, hp] = e, R = hl + hp + 14; for (let a = Math.floor((x - R) / 32); a <= Math.floor((x + R) / 32); a++) for (let c = Math.floor((z - R) / 32); c <= Math.floor((z + R) / 32); c++) { const k = a * 65536 + c; (GB.get(k) || GB.set(k, []).get(k)).push(e); } } };
+      const batis = [], dansBati = (px, pz, m = 4) => (GB.get(Math.floor(px / 32) * 65536 + Math.floor(pz / 32)) || []).some(([x, z, r, hl, hp]) => { const dx = px - x, dz = pz - z, c = Math.cos(r), s = Math.sin(r), u = dx * c - dz * s, v = dx * s + dz * c; return Math.abs(u) < hl + m && Math.abs(v) < hp + m; });
       const place = (x, z, r, hl, hp, marge = 5.5) => { const c = Math.cos(r), s = Math.sin(r); for (const u of [-1, -0.5, 0, 0.5, 1]) for (const v of [-1, 0, 1]) { const px = x + c * u * hl + s * v * hp, pz = z - s * u * hl + c * v * hp, p = proche(px, pz);
-        if (p.d < p.s.w + marge || dansBati(px, pz) || riv(px, pz) < 10 || px < pl(XW, pz) + 8 || px > pl(XE, pz) - 8) return false; } batis.push([x, z, r, hl, hp]); return true; };
+        if (p.d < p.s.w + marge || dansBati(px, pz) || riv(px, pz) < 10 || px < pl(XW, pz) + 8 || px > pl(XE, pz) - 8) return false; } bati([x, z, r, hl, hp]); return true; };
       // ce qui est fixe d'abord : la chaufferie et sa cheminée, le château d'eau, les garages, les jardins ouvriers
       let fontaine, kiosque, parterre, avion, ecole, jardin, boxes; const bosq = []; // les objets de la cité, repris pour combler les vides ; bouleaux des bosquets (posés avec la forêt)
-      { batis.push([392, 1052, 0, 14, 12], [118, 1066, 0, 6, 6], [240, 1128, 0, 32, 5]);
+      { bati([392, 1052, 0, 14, 12], [118, 1066, 0, 6, 6], [240, 1128, 0, 32, 5]);
         bloc(mat('brique'), 380, 404, 1042, 1062, YV - 2, YV + 9); bloc(betS, 379, 405, 1041, 1063, YV + 9, YV + 9.6); bloc(mat('brique'), 406, 410, 1050, 1054, YV - 2, YV + 40); bloc(betS, 405.6, 410.4, 1049.6, 1054.4, YV + 40, YV + 41); panache(408, YV + 42, 1052, [0.6, 0.6, 0.63], 0.34, 10, 5, 5, 3.4, 0.7); // V-32 : la fumée de la chaufferie
         h.pose('chateauEau', { fer: gris, cuve: mat('peinture', { c: 0x7a8a86 }) }, h.scene, [118, YV, 1066]);
         { const gar = []; for (let k = 0; k < 14; k++) gar.push([212 + k * 4.2, YV + 1.3, 1128, 0, 4, 2.8, 6]); inst(h, h.geo('bloc'), mat('toleOrange', {}, '#6e7a7a'), gar); }
@@ -456,7 +463,7 @@
             tranche(a, b, (i, l) => { ruban(i, l, s => s.w + 15.5, 1, s => s.w + 20, 1, betC, 4); ruban(i, l, s => s.w + 15.5, 0, s => s.w + 15.5, 1, betC, 4); }); // le quai
             for (let u = -28; u <= 28; u += 8) { G(u, 3, 18.6, 0.3, 4, 0.3, 0x55585a); G(u, 5.1, 17.6, 8.6, 0.3, 4.6, 0x7a3a30); } // la marquise, par travées qui suivent le quai
             for (const u of [-22, 0, 22]) { const q = S[Math.round(iM + u / 2)]; h.lum(IX.get(q), q.x - q.tz * (q.w + 17.6), Y + 4.6, q.z + q.tx * (q.w + 17.6), 0xffe2a8, 22, 0.9); } // trois lampes sous la marquise : de vrais luminaires
-            batis.push([sm.x + nx * (sm.w + 27), sm.z + nz * (sm.w + 27), r, 18, 8]);
+            bati([sm.x + nx * (sm.w + 27), sm.z + nz * (sm.w + 27), r, 18, 8]);
             G(0, 3.5, 26.5, 32, 7, 10, 0xd8b070); G(0, 7.2, 26.5, 33, 0.5, 11, 0x6d726d); G(0, 5.2, 26, 11, 10.4, 12.4, 0xe0bc7c); G(0, 10.7, 26, 12, 0.6, 13.4, 0x6d726d); G(0, 12.2, 26, 3.4, 2.6, 3.4, 0xe0bc7c); G(0, 13.8, 26, 4, 0.5, 4, 0x7a3a30); // corps, toit, pavillon central, lanternon
             for (const e of [-1, 1]) { G(0, 12.2, 26 + e * 1.74, 2, 2, 0.1, 0xf2f0e8); G(0, 12.2, 26 + e * 1.8, 0.14, 0.9, 0.06, 0x1e2020); } // l'horloge, côté voies et côté cour
             for (let u = -14; u <= 14; u += 4) if (Math.abs(u) > 5) for (const e of [-1, 1]) G(u, 3.6, 26.5 + e * 5.05, 1.6, 3, 0.1, 0x2a3a4a); // les fenêtres

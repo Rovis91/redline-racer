@@ -85,3 +85,23 @@ export function mobiles() {
   for (const [o, m, v] of ms) if ((!o.matrixWorld.equals(m) || o.visible !== v) && !dyn(o)) { const k = g.scene.children.indexOf(top(o)); vus.set(k, (vus.get(k) || 0) + 1); }
   return { carte: g.M.id, maillages: ms.length, nonMarques: [...vus].map(([k, n]) => ({ enfant: k, type: g.scene.children[k].type, maillages: n })) };
 }
+
+// Régularité du mouvement à l'écran (saccades), indépendante de la machine : (await import('./outils/perf.js')).regularite({ hz: 144 })
+// Images données à frame() au rythme d'un écran de hz images/s (gigue ±gigue ms, comme les horodatages réels), en course au pilote automatique. Par image, le déplacement de la caméra
+// est comparé à celui attendu (vitesse × durée de l'image) : saccade = écart moyen en %, saccadeMax = 99e centile. Sans lissage, à 144 Hz une image sur cinq n'avance pas (pas de 1/120 s).
+export const REGULARITE = { saccade: 5, saccadeMax: 15 }; // % : écart moyen du déplacement de la caméra à celui attendu, et 99e centile
+export function regularite({ hz = 60, gigue = 0.3, images = 600 } = {}) {
+  const g = window.__g; if (g.mode !== 'course') throw new Error('passer en mode course au menu');
+  g.start(); let now = performance.now() + 1e7; while (g.state !== 'race') g.frame(now += 1000 / 60);
+  for (let i = 0; i < 240; i++) g.frame(now += 1000 / 60); // lancé
+  const cam = g.vues[0].cam, p = new THREE.Vector3(), q = new THREE.Vector3(), ec = []; let x = 0; // xorshift : même gigue d'un passage à l'autre
+  const hasard = () => { x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return (x >>> 0) / 4294967296; }; x = 12345;
+  cam.getWorldPosition(p);
+  for (let i = 0; i < images; i++) {
+    const dt = 1000 / hz + (hasard() * 2 - 1) * gigue; g.frame(now += dt); cam.getWorldPosition(q);
+    const c = g.car, v = Math.hypot(c.vx, c.vz), att = v * dt / 1000;
+    if (v > 15) ec.push(Math.abs(q.distanceTo(p) / att - 1)); p.copy(q);
+  }
+  const t = ec.sort((a, b) => a - b), moy = t.reduce((s, v) => s + v, 0) / t.length;
+  return { carte: g.M.id, hz, images: t.length, saccade: +(100 * moy).toFixed(1), saccadeMax: +(100 * t[Math.floor(t.length * 0.99)]).toFixed(1) };
+}

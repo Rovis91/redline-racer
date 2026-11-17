@@ -3,14 +3,15 @@
 //   node outils/banc-rapide.js paris canal     → ces cartes
 //   node outils/banc-rapide.js --profil touge  → verdict, puis profil (outils/profil.js) : par passe, par vingtième de piste, par objet du décor, pires images, son.
 //                                                 Écrit captures/profil-<carte>.json et compare au profil précédent de la carte (captures/profil-<carte>.prec.json).
+//   --regularite : ajoute la régularité du mouvement (saccades) à 60, 120 et 144 Hz, regularite() de outils/perf.js, contre REGULARITE (ne dépend pas de la machine)
 //   --joueurs=2 : écran partagé (budget(2))      --fenetre : Chrome avec une fenêtre hors de l'écran au lieu de sans fenêtre      --fermer : ferme le Chrome gardé, puis sort
 // Bruit : la machine partagée fausse les temps (pas les passes de dessin ni les sommets). Une carte en échec est remesurée une fois : SUCCÈS, ÉCHEC (deux fois), ou INSTABLE (une sur deux),
 // avec la charge de la machine pendant la mesure. Au-delà de 40 % de charge, les millisecondes ne sont pas fiables.
-// Code de sortie 0 = tout passe. Variables : OPT (options de carte à essayer, JSON fusionné dans la carte : docs/MOTEUR-OPTIONS-CARTES.md), CHROME, PORT (8851, serveur outils/capture.py), DBG (9400, port de débogage du Chrome gardé).
+// Code de sortie 0 = tout passe. Variables : OPT (options de carte à essayer, JSON fusionné dans la carte : docs/specs/MOTEUR-OPTIONS-CARTES.md), CHROME, PORT (8851, serveur outils/capture.py), DBG (9400, port de débogage du Chrome gardé).
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
 const RACINE = path.join(__dirname, '..'), PORT = +process.env.PORT || 8851, DBG = +process.env.DBG || 9400, BASE = 'http://127.0.0.1:' + PORT + '/index.html';
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));
-const args = process.argv.slice(2), opt = k => args.includes('--' + k), PROFIL = opt('profil'), J = opt('joueurs=2') ? 2 : 1;
+const args = process.argv.slice(2), opt = k => args.includes('--' + k), PROFIL = opt('profil'), REG = opt('regularite'), J = opt('joueurs=2') ? 2 : 1;
 const ids = fs.readFileSync(path.join(RACINE, 'src', 'donnees', 'cartes.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)), voulues = args.filter(a => !a.startsWith('--')), cartes = voulues.length ? voulues : ids;
 const req = (u, m = 'GET') => new Promise((r, j) => { const q = http.request(u, { method: m }, res => { let d = ''; res.on('data', c => d += c); res.on('end', () => r(d)); }); q.on('error', j); q.end(); });
 const dort = ms => new Promise(r => setTimeout(r, ms)), repond = async u => { try { await req(u); return true; } catch { return false; } };
@@ -66,6 +67,11 @@ const sortie = n => path.join(RACINE, 'captures', n);
       console.log(c.padEnd(8), v.padEnd(9), ligne(r1) + (r2 ? '  | 2e : ' + ligne(r2) + (r1.cpuMax > r1.B.cpuMax && r2.cpuMax > r2.B.cpuMax ? (meme ? ' à-coup au même endroit (' + lieu(r1) + ')' : ' à-coups à des endroits différents') : '') : ''), '  chargement ' + (chargement / 1000).toFixed(1) + ' s');
       if (v !== 'SUCCÈS') console.log(''.padEnd(18), 'pires images :', r1.piresCpu.slice(0, 3).join(' | '));
       res = { carte: c, verdict: v, chargement, mesures: [r1, r2].filter(Boolean) };
+      if (REG) { // la régularité compte dans le verdict : une carte saccadée échoue même rapide
+        await charge1(c, false); const rg = await evalue('(async () => { const P = await import("./outils/perf.js"); return { B: P.REGULARITE, r: [60, 120, 144].map(hz => P.regularite({ hz })) }; })()');
+        const bonR = rg.r.every(x => x.saccade <= rg.B.saccade && x.saccadeMax <= rg.B.saccadeMax); if (!bonR && v === 'SUCCÈS') { ok--; res.verdict = 'ÉCHEC'; }
+        console.log(''.padEnd(18), 'régularité', (bonR ? 'OK' : 'ÉCHEC').padEnd(6), rg.r.map(x => x.hz + ' Hz ' + x.saccade + ' % (pire ' + x.saccadeMax + ' %)' + (x.saccade > rg.B.saccade || x.saccadeMax > rg.B.saccadeMax ? '✗' : '')).join('  ')); res.regularite = rg.r;
+      }
       if (PROFIL) {
         await charge1(c, true); const a = charge(), p = await evalue('(async () => (await import("./outils/profil.js")).profil())()'); p.charge = pct(a, charge());
         const f = sortie('profil-' + c + '.json'), prec = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null;

@@ -5,18 +5,18 @@ Phase qui suit le décor statique : animations, eau, lumière, son, objets inter
 ## Règles
 
 - **On développe d'abord, on mesure après.** Pas de banc de performance pendant cette phase. On élaguera à la fin si c'est trop lourd.
-- **Une idée compte si elle se perçoit depuis la voiture en roulant.** Un moment fort par secteur vaut mieux que dix détails.
-- **Visible par toi n'est pas visible par le joueur.** On juge toujours depuis la caméra par défaut du jeu, sur la trajectoire de course : le joueur ne déplace pas sa caméra. Une vue libre, aérienne ou de côté ne prouve rien. Un objet masqué par des bâtiments, hors du champ ou visible seulement de très loin ne reçoit ni ajout ni animation : il coûte et personne ne le voit. Exemple (plage) : la grande roue, vue de loin seulement, puis cachée de près entre deux bâtiments à 90°.
+- **Une idée compte si elle se perçoit depuis la voiture en roulant.** Un moment fort par zone vaut mieux que dix détails.
+- **Visible par toi n'est pas visible par le joueur** : la règle « Où poser un décor » de `docs/methodes/METHODE-DECOR.md` vaut aussi pour ce qui bouge. Un objet qu'on ne voit pas en caméra de course ne reçoit ni ajout ni animation.
 - **Rien qui bouge ou clignote au point de freinage ni près des chevrons.**
 - **Un vent par carte** : palmes, guirlandes, fumée, vagues dans le même sens.
 - **Décor pur par défaut** : trains, bateaux, animaux ne se percutent pas. Tout objet percutable doit dépendre du temps de course, sinon fantômes et jeu en ligne se désynchronisent.
 - **Réutiliser avant d'écrire** : l'inventaire ci-dessous d'abord.
-- Périmètre et git : comme `docs/cahier-feedback/PROMPT-FABLE.md` (une branche par sous-session, rien de poussé, `src/moteur/sim.js` et `src/moteur/game.js` partagés : proposer avant de changer).
+- Périmètre et git : une branche par sous-session, rien de poussé ; `src/moteur/sim.js` et `src/moteur/game.js` sont partagés par toutes les cartes : proposer à l'auteur avant de les changer.
 
 ## Étapes
 
 1. **Socle commun** (une session) : les briques de la section « À construire ».
-2. **Analyse par carte** (une sous-session par carte, lecture seule) : rend `docs/propositions/VIE-<carte>.md`. Grille : chaque secteur du cahier × six familles (eau, lumière, mouvement mécanique, vivant, son, interactif). Par idée : ce que le joueur perçoit, l'`idx`, la brique utilisée, la priorité. Les demandes de l'auteur en tête. Les zones vides ou trop chargées sont listées à part : c'est du décor (`docs/methodes/METHODE-DECOR.md`), à traiter avant.
+2. **Analyse par carte** (une sous-session par carte, lecture seule) : rend `docs/propositions/VIE-<carte>.md`. Grille : chaque zone du cahier × six familles (eau, lumière, mouvement mécanique, vivant, son, interactif). Par idée : ce que le joueur perçoit, l'`idx`, la brique utilisée, la priorité. Les demandes de l'auteur en tête. Les zones vides ou trop chargées sont listées à part : c'est du décor (`docs/methodes/METHODE-DECOR.md`), à traiter avant.
 3. **L'auteur coche** les idées retenues.
 4. **Réalisation** par carte, par lots (eau, mouvement, son, interactif), `sh outils/verifie.sh` après chaque lot.
 5. **L'auteur joue**, retour, fusion.

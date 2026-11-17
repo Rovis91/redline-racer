@@ -1,6 +1,6 @@
 # REFS · Carte BARRAGE 74
 
-Fiches de référence (format de `docs/methodes/METHODE-NOUVELLE-CARTE.md`, section 1). Chiffres relevés dans les pages citées ; ce qui vient d'ailleurs (mémoire, non vérifié en ligne) est marqué **[à confirmer]**. Les images Commons n'ont pas pu être regardées : les URL de fichiers ci-dessous viennent de listes de catégories, la légende est déduite du nom.
+Fiches de référence (format de `docs/methodes/METHODE-NOUVELLE-CARTE.md`, phase 1). Chiffres relevés dans les pages citées ; ce qui vient d'ailleurs (mémoire, non vérifié en ligne) est marqué **[à confirmer]**. Les images Commons n'ont pas pu être regardées : les URL de fichiers ci-dessous viennent de listes de catégories, la légende est déduite du nom.
 
 ---
 

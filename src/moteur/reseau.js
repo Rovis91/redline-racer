@@ -17,6 +17,10 @@
   const lettres = () => Array.from({ length: 4 }, () => 'ABCDEFGHJKLMNPQRSTUVWXYZ'[Math.random() * 24 | 0]).join(''); // sans I ni O : on les confond avec 1 et 0
   const dit = m => NET.ev && NET.ev(m);
   const tous = m => NET.cx.forEach(c => c && c.open && c.send(m));
+  // peerjs.min.js : chargé au premier salon, pas au démarrage du jeu (GitHub Pages : 26 ko et son évaluation en moins pour qui joue seul)
+  let pjs = null;
+  const avecPeer = f => { const e = NET.essai; return (pjs || (pjs = new Promise((ok, ko) => { const s = document.createElement('script'); s.src = 'vendor/peerjs.min.js'; s.onload = ok; s.onerror = ko; document.head.appendChild(s); })))
+    .then(() => NET.essai === e && f(), () => { pjs = null; if (NET.essai === e) dit({ t: 'erreur', msg: 'RESEAU INDISPONIBLE' }); }); }; // e : le salon a pu être quitté pendant le téléchargement
   const salon = () => { NET.n = 1 + NET.cx.filter(Boolean).length; tous({ t: 'salon', n: NET.n }); dit({ t: 'salon', n: NET.n }); };
 
   // entrée reçue d'un invité : validée champ par champ (on ne pose jamais sur la course ce qui vient du réseau sans le borner)
@@ -25,7 +29,7 @@
 
   function heberger(ev, essai = 0) {
     fermer(); NET.ev = ev; NET.role = 'hote'; NET.moi = 0; NET.code = lettres();
-    const p = NET.peer = new Peer(PRE + NET.code);
+    avecPeer(() => { const p = NET.peer = new Peer(PRE + NET.code);
     p.on('error', e => e.type === 'unavailable-id' && essai < 5 ? heberger(ev, essai + 1) : dit({ t: 'erreur', msg: String(e.type || e) })); // code déjà pris : un autre
     p.on('connection', c => {
       const i = [1, 2, 3].find(k => !NET.cx[k]);
@@ -35,13 +39,13 @@
       });
       c.on('data', m => { if (i && NET.cx[i] === c && m && m.t === 'in') NET.ins[i] = propre(m.i); });
       c.on('close', () => { if (NET.cx[i] === c) { NET.cx[i] = null; NET.ins[i] = null; salon(); dit({ t: 'parti', i }); } });
-    });
+    }); });
     return NET.code;
   }
 
   function rejoindre(code, ev) {
     fermer(); NET.ev = ev; NET.role = 'invite'; NET.code = String(code).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 4);
-    const p = NET.peer = new Peer();
+    avecPeer(() => { const p = NET.peer = new Peer();
     p.on('error', e => dit({ t: 'erreur', msg: e.type === 'peer-unavailable' ? 'SALON INTROUVABLE' : String(e.type || e) }));
     p.on('open', () => {
       const c = NET.cx[0] = p.connect(PRE + NET.code, { reliable: true }); // fiable : le « go » ne doit pas se perdre (shortcut: les états aussi sont renvoyés, passer à un second canal non fiable si ça saccade)
@@ -52,10 +56,10 @@
         dit(m);
       });
       c.on('close', () => { if (NET.role === 'invite') dit({ t: 'erreur', msg: 'HOTE PARTI' }); });
-    });
+    }); });
   }
 
-  function fermer() { NET.role = null; NET.cx.forEach(c => c && c.close()); NET.cx = []; NET.ins = []; NET.snaps = []; NET.n = 1; NET.enCourse = false; if (NET.peer) NET.peer.destroy(); NET.peer = null; }
+  function fermer() { NET.essai = (NET.essai || 0) + 1; NET.role = null; NET.cx.forEach(c => c && c.close()); NET.cx = []; NET.ins = []; NET.snaps = []; NET.n = 1; NET.enCourse = false; if (NET.peer) NET.peer.destroy(); NET.peer = null; }
   function go(carte) { NET.enCourse = true; NET.ins = []; tous({ t: 'go', carte, n: NET.n }); }
   function stop() { NET.enCourse = false; tous({ t: 'stop' }); } // l'hôte revient au menu : la course s'arrête chez tous, le salon reste (et se rouvre aux arrivants)
   let tIn = 0;

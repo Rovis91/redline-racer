@@ -16,7 +16,7 @@
 
 Prenez le volant d'une bête de 500 chevaux et lâchez-la dans les artères d'une mégalopole cyberpunk qui ne dort jamais. Pluie, gratte-ciel, enseignes en katakana : chaque virage est une carte postale, chaque ligne droite une invitation à passer la sixième.
 
-Et quand la ville ne suffit plus : **HUIT CARTES**, du col de montagne japonais à l'autoroute de la baie, des rues de Paris à l'aube au canal de Los Angeles à l'heure dorée, d'une arène couverte pleine à craquer à un col enneigé, jusqu'à une spéciale de rallye sur la terre ocre. Chacune avec **sa voiture, ses rivaux, ses radios et son tableau de bord**.
+Et quand la ville ne suffit plus : **DOUZE CARTES**, du col de montagne japonais à l'autoroute de la baie, des rues de Paris à l'aube au canal de Los Angeles à l'heure dorée, d'une arène couverte pleine à craquer à un col enneigé, d'une spéciale de rallye sur la terre ocre à la route royale de Persépolis, d'un barrage soviétique à la jungle du Brésil, jusqu'à la plage de la Riviera Maya. Chacune avec **sa voiture, ses rivaux, ses radios et son tableau de bord**.
 
 <p align="center"><img src="images/course-1.png" alt="En course, les adversaires dans les rétros"></p>
 
@@ -26,7 +26,7 @@ Et quand la ville ne suffit plus : **HUIT CARTES**, du col de montagne japonais 
 - **GLISSE** : 2 tours pour le style. Plus ça glisse vite, de travers et longtemps, plus ça paie… et le **multiplicateur** grimpe tant que vous enchaînez sans toucher un mur !
 - **COURSE** : 3 tours, 3 rivaux sans pitié. **KENJI**, **REI** et **JUN** ne vous feront aucun cadeau… et ils ont des choses à vous dire : **la référence** vous toise, **la tête brûlée** joue des portières, **la recrue** tremble sur la grille !
 - **ÉLIMINATION** : 4 voitures, 4 tours. À chaque passage sur la ligne, **le dernier sort**. Jusqu'au duel final !
-- **TOURNÉE** : **une nuit entière**, de 18 h 40 sur la terre ocre au premier métro de 5 h 30 à Paris. Huit manches, des points à chaque manche, grille inversée… et un **trophée** au bout !
+- **TOURNÉE** : **une nuit entière**, de 18 h 40 sur la terre ocre jusqu'au midi de la Riviera Maya. Douze manches, des points à chaque manche, grille inversée… et un **trophée** au bout !
 
 <p align="center"><img src="images/depart.png" alt="La grille de départ"></p>
 

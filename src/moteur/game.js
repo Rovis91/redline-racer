@@ -8,7 +8,7 @@
   const souffle = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = r; c.port2.postMessage(0); }); // pas setTimeout : bridé à 1 par seconde en arrière-plan
   let actif = false; // seule l'instance affichée écoute clavier, souris et fenêtre
   const arret = new AbortController(), addEventListener = (ev, f) => window.addEventListener(ev, e => { if (actif) f(e); }, { signal: arret.signal }); // tous les écouteurs de ce fichier tombent d'un coup à l'arrêt
-  { // essai des options de carte sans toucher à cartes.js : ?opt={"th":{"lisse":["eau"]}} fusionné dans la carte (voir docs/MOTEUR-OPTIONS-CARTES.md) ; outil de revue, rien n'est gardé
+  { // essai des options de carte sans toucher à cartes.js : ?opt={"th":{"lisse":["eau"]}} fusionné dans la carte (voir docs/specs/MOTEUR-OPTIONS-CARTES.md) ; outil de revue, rien n'est gardé
     const o = new URLSearchParams(location.search).get('opt'), fu = (a, b) => { for (const k in b) a[k] = b[k] && b[k].constructor === Object && a[k] && a[k].constructor === Object ? fu({ ...a[k] }, b[k]) : b[k]; return a; };
     if (o) CARTE = fu({ ...CARTE }, JSON.parse(o));
   }
@@ -24,7 +24,7 @@
   const ambZ = (M.amb || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)), ambAt = i => Math.max(0, ...ambZ.map(z => z(i, 60)));
   // th.embruns : [[point a, point b, force], …] : entre ces points du tracé, des gouttes se posent sur l'objectif comme sous la pluie (les embruns d'une chute, d'une rivière) ; absent : rien
   const embZ = (TH.embruns || []).map(([a, b, k]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), k]), embAt = i => Math.max(0, ...embZ.map(([z, k]) => k * z(i, 30)));
-  // brouillard par zone (th.brume : [[point a, point b, début, fin en mètres], …]) : entre ces deux points du tracé, le brouillard de la carte se resserre, fondu de 180 m à l'entrée et à la sortie (docs/MOTEUR-OPTIONS-CARTES.md)
+  // brouillard par zone (th.brume : [[point a, point b, début, fin en mètres], …]) : entre ces deux points du tracé, le brouillard de la carte se resserre, fondu de 180 m à l'entrée et à la sortie (docs/specs/MOTEUR-OPTIONS-CARTES.md)
   const brumeZ = (TH.brume || []).filter(z => z.length > 3).map(([a, b, n0, n1]) => [span(nearS(M.pts[a]), nearS(M.pts[b]), true), n0, n1]);
   const chevSauf = (TH.chevSauf || []).map(([a, b]) => span(nearS(M.pts[a]), nearS(M.pts[b]), true)); // th.chevSauf : [[point a, point b], …], pas de panneaux de virage entre ces points du tracé
   // pluie (thème) : force par échantillon calculée dans sim.js (T.pluie : zones [point a, point b, force], fondu de 120 m) ; coupée en tunnel au dessin
@@ -262,7 +262,7 @@
   };
   addEventListener('resize', resize);
 
-  const lisse = t => { t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; return t; }; // filtrage linéaire et mipmaps : ?lisse=1 partout, th.lisse ou mat(…, { lisse: 1 }) pour une carte (docs/MOTEUR-OPTIONS-CARTES.md)
+  const lisse = t => { t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; return t; }; // filtrage linéaire et mipmaps : ?lisse=1 partout, th.lisse ou mat(…, { lisse: 1 }) pour une carte (docs/specs/MOTEUR-OPTIONS-CARTES.md)
   const tex = (w, h, draw, nom) => {
     const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'));
     const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapLinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); // MipmapLinear : fondu entre deux niveaux de mipmap, plus de lignes de palier qui avancent sur le sol avec la caméra ; anisotropie au maximum de la carte graphique : sans elle, les paliers de mipmap du sol vu en rasant avancent avec la voiture, à 10-100 m (on croit voir les textures se charger) ; jamais de filtrage linéaire, sauf ?lisse=1
@@ -329,7 +329,7 @@
 
   const hemi = new THREE.HemisphereLight(TH.hemi[0], TH.hemi[1], TH.hemi[2] * Math.PI); scene.add(hemi); // bleu d'en haut, rebond magenta de la ville
   const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const OMBD = 2, OMBI = 3; // clair de lune ; OMBD, OMBI : calques des objets mobiles qui portent une ombre, simples et instanciés (voir ombres)
-  // th.ombre = { taille, champ, doux } (docs/MOTEUR-OPTIONS-CARTES.md) : côté de la carte d'ombre en texels (2048), demi-côté couvert en m (390), filtrage bilinéaire des bords (4 lectures au lieu d'une)
+  // th.ombre = { taille, champ, doux } (docs/specs/MOTEUR-OPTIONS-CARTES.md) : côté de la carte d'ombre en texels (2048), demi-côté couvert en m (390), filtrage bilinéaire des bords (4 lectures au lieu d'une)
   const OMBO = TH.ombre || {}, OTX = OMBO.taille || 2048, OCH = OMBO.champ || 300 * LOIN;
   sun.shadow.mapSize.set(OTX, OTX); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.5;
   Object.assign(sun.shadow.camera, { left: -OCH, right: OCH, top: OCH, bottom: -OCH, near: 10, far: 800 * LOIN });
@@ -500,7 +500,7 @@
   const tunMats = [];
   if (T.tun) {
     const u = TH.tun;
-    // forme du tunnel (docs/MOTEUR-OPTIONS-CARTES.md) : th.tun.h (hauteur sous voûte, 8 m), th.tun.voute (flèche de la voûte, 0 = plafond plat), th.tun.ouv (ouvertures du plafond [[f0, f1], …]),
+    // forme du tunnel (docs/specs/MOTEUR-OPTIONS-CARTES.md) : th.tun.h (hauteur sous voûte, 8 m), th.tun.voute (flèche de la voûte, 0 = plafond plat), th.tun.ouv (ouvertures du plafond [[f0, f1], …]),
     // th.tun.rayons (couleur des colonnes de lumière sous les ouvertures). h et voute : un nombre, des clés [[f, valeur], …] ou une fonction (f, s) ; f = 0 à l'entrée, 1 à la sortie.
     // Avec l'une d'elles, parois et sol suivent la demi-largeur roulable s.w (M.large de sim.js : les murs de la physique) au lieu de W. Sans elles, rien ne change.
     let sol; const FT = u.h != null || !!u.voute || !!u.ouv, FI = new Map(); for (let k = 0; k <= cT; k++) FI.set(S[(T.t0 + k) % N], k / cT);
@@ -705,7 +705,7 @@
     return { hist: [], P, C, geo, tr, gR: [[], []], gOn: [0, 0], gP, gC, gGeo, vAcc: 0 };
   };
   // traces au sol : un ruban par roue arrière, un point tous les GD mètres au plus, gardé toute la course (les GN derniers points de chaque roue)
-  // TR : ce que chaque surface garde (docs/SPEC-CASSE.md) : gomme noire sur le bitume sec, sillons sur la terre et ornières dans la neige (même en roulant), rien sur la glace ni le mouillé
+  // TR : ce que chaque surface garde (docs/specs/SPEC-CASSE.md) : gomme noire sur le bitume sec, sillons sur la terre et ornières dans la neige (même en roulant), rien sur la glace ni le mouillé
   const TR = { sec: { c: [0.02, 0.02, 0.025], a: 0.7, roule: 0, w: 1 }, terre: { c: [0.2, 0.12, 0.06], a: 0.8, roule: 0.38, w: 1.25 }, neige: { c: [0.55, 0.6, 0.7], a: 0.8, roule: 0.4, w: 1.35 } };
   const genre = q => q.vir >= 0.2 && q.vir < 0.4 && q.roul > 0.1 ? 'neige' : q.roul >= 0.2 && q.vir < 0.2 ? 'terre' : 'sec'; // neige : glissante et roulante ; terre : roulante, peu glissante (un fondu terre-bitume reste de la terre, pas de la neige)
   const trSol = q => q.vir >= 0.4 || q.aq > 0.05 ? null : TR[genre(q)]; // rien sur la glace ni le mouillé (la bruine de la ville, à 30 % du mouillé, garde la gomme)
@@ -724,10 +724,12 @@
     g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('age', new THREE.BufferAttribute(A, 1));
     const d = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { col: { value: new THREE.Color(...col) }, ech: dEch, op: { value: op }, tl: { value: taille }, pr: { value: pres } },
       vertexShader: 'attribute float age; varying float a, f; uniform float ech, tl, pr; void main() { a = age; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; f = pr > 0.0 ? clamp(-p.z / pr - 1.0, 0.0, 1.0) : 1.0; gl_PointSize = age < 1.0 ? tl * ech * projectionMatrix[1][1] * (1.1 + 6.0 * age) / -p.z : 0.0; }',
-      fragmentShader: 'varying float a, f; uniform vec3 col; uniform float op; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || a >= 1.0) discard; gl_FragColor = vec4(col, (1.0 - r * r) * (1.0 - a) * min(1.0, 0.15 + a * 4.0) * op * f); }' })); d.frustumCulled = false; scene.add(d);
-    return { d, emit(x, y, z, vx, vy, vz) { const k = i++ % N; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); A[k] = 0; },
-      step(dt) { const fr = Math.exp(-frein * dt); for (let k = 0; k < N; k++) if (A[k] < 1) { const j = k * 3; A[k] += dt / vie; V[j] *= fr; V[j + 2] *= fr; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; }
-        g.attributes.position.needsUpdate = g.attributes.age.needsUpdate = true; } };
+      fragmentShader: 'varying float a, f; uniform vec3 col; uniform float op; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || a >= 1.0) discard; gl_FragColor = vec4(col, (1.0 - r * r) * (1.0 - a) * min(1.0, 0.15 + a * 4.0) * op * f); }' })); d.frustumCulled = false; d.visible = false; scene.add(d);
+    // vifs : particules en vie ; un nuage vide n'est ni dessiné (une passe de dessin par vue, reflets compris) ni renvoyé au GPU
+    let vifs = 0;
+    return { d, emit(x, y, z, vx, vy, vz) { const k = i++ % N; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); A[k] = 0; vifs = 1; d.visible = true; },
+      step(dt) { if (!vifs) return; const fr = Math.exp(-frein * dt); vifs = 0; for (let k = 0; k < N; k++) if (A[k] < 1) { const j = k * 3; A[k] += dt / vie; V[j] *= fr; V[j + 2] *= fr; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; vifs++; }
+        g.attributes.position.needsUpdate = g.attributes.age.needsUpdate = true; d.visible = vifs > 0; } };
   };
   const POUS = TH.poussiere && flou(480, TH.poussiere, 0.5), GERBE = TH.poussiere && T.surf.some(q => q.aq) && flou(500, [0.92, 0.93, 0.9], 0.4, 0.35), GERBE1 = GERBE && flou(900, [0.86, 0.85, 0.78], 0.45, 0.35, 0, 0.18, 2.5), ECUME = GERBE && flou(700, [0.9, 0.89, 0.83], 0.9, 0.4, 0, 0.15, 2), FUM = flou(600, [0.68, 0.68, 0.72], 0.55), poussiere = (...a) => POUS.emit(...a), FEU = TH.poussiere && TH.feuilles && (() => { /* th.feuilles : teintes des feuilles mortes que les voitures soulèvent (chapada). De petits carrés nets, opaques (les nuages flous se lisaient en halos) : ils montent, tournoient, retombent */
     const n = 260, P = new Float32Array(n * 3).fill(-1e4), V = new Float32Array(n * 3), L = new Float32Array(n), C = new Float32Array(n * 3), g = new THREE.BufferGeometry(); let i = 0;
@@ -759,7 +761,9 @@
   const VAPS = VAP.map(([x, y, z]) => { const c = new THREE.Color(0.2, 0.2, 0.23); let lb = null, db = 900;
     for (const l of LUMS) { const d = (l.x - x) ** 2 + (l.z - z) ** 2; if (d < db) { db = d; lb = l; } }
     if (lb) c.lerp(lb.c.clone().multiplyScalar(0.6 / Math.max(lb.c.r, lb.c.g, lb.c.b, 1e-3)), 0.7 * (1 - Math.sqrt(db) / 30));
-    return { f: flou(40, [c.r, c.g, c.b], 0.18, 4), x, y, z, t: 0 }; });
+    const f = flou(40, [c.r, c.g, c.b], 0.18, 4); // panache borné (5 m de montée, moins de 3 m de dérive, disques qui grossissent) : hors champ, il n'est pas dessiné (une passe par bouche sinon, Ville en a une trentaine)
+    f.d.geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(x, y + 3, z), 10); f.d.frustumCulled = true;
+    return { f, x, y, z, t: 0 }; });
   // traits additifs, étirés le long de leur vitesse, tête vive et queue éteinte : étincelles du palier de glisse, lignes de vitesse de la nitro
   const VN = 400, VK = 11, vP = new Float32Array(VN * 6), vCo = new Float32Array(VN * 6), vS = new Float32Array(VN * VK), vGeo = new THREE.BufferGeometry(); let vi = 0;
   vGeo.setAttribute('position', new THREE.BufferAttribute(vP, 3)); vGeo.setAttribute('color', new THREE.BufferAttribute(vCo, 3));
@@ -877,7 +881,7 @@
 
   fond && await souffle();
   // ---------- dégâts : purement visuels et sonores (la conduite et les temps n'en savent rien : fantômes, médailles et réseau intacts), remis à zéro à chaque départ ----------
-  // Le modèle des chocs est celui de sim.js (usure, docs/SPEC-CASSE.md) : seule la vitesse normale casse, plafonds 0,4 par tour et 0,7 par zone.
+  // Le modèle des chocs est celui de sim.js (usure, docs/specs/SPEC-CASSE.md) : seule la vitesse normale casse, plafonds 0,4 par tour et 0,7 par zone.
   // Par modèle (g.userData.dg) : z = usure des zones [avant, arrière, flanc z < 0, flanc z > 0] ; z0 = les zones au début du tour ; la caisse s'enfonce autour de chaque impact, d'autant plus que le choc a usé ;
   // les pièces pendent puis tombent à des seuils de leur zone (une seule pend à la fois, dessinée à part sur sa charnière) ; ph / fe = phare / feu tombé de chaque côté [z < 0, z > 0] : sa lumière dynamique s'éteint (vueFrame) ;
   // les débris restent au sol toute la course (au plus DEBMAX, le plus vieux disparaît), poussés par les voitures qui passent ; fumée du capot ; vitre fêlée peinte sur la livrée.
@@ -1014,7 +1018,7 @@
       if (d.dort) continue;
       d.v.y -= 15 * dt; p.addScaledVector(d.v, dt); d.m.rotation.x += d.w.x * dt; d.m.rotation.y += d.w.y * dt; d.m.rotation.z += d.w.z * dt;
       if (p.y < d.y0 + 0.06) { p.y = d.y0 + 0.06; d.v.y *= -0.3; d.v.x *= 0.5; d.v.z *= 0.5; d.w.multiplyScalar(0.5); if (d.v.length() < 0.4) { d.dort = 1; d.m.castShadow = false; } } } // posé : il ne porte plus d'ombre (une passe de moins)
-    // shortcut: un débris dort à la hauteur de la voiture d'où il est tombé ; chassé loin dans une pente, il peut flotter ou s'enfoncer un peu ; dans un second temps, un seul maillage pour les débris posés (docs/SPEC-CASSE.md)
+    // shortcut: un débris dort à la hauteur de la voiture d'où il est tombé ; chassé loin dans une pente, il peut flotter ou s'enfoncer un peu ; dans un second temps, un seul maillage pour les débris posés (docs/specs/SPEC-CASSE.md)
     for (const D of DGM) { const P = D.pend; if (!P || !D.c) continue; const c = D.c, sp = Math.hypot(c.vx, c.vz); P.t += dt; // la pièce qui pend bat avec la vitesse ; un bout qui traîne crache des étincelles
       P.piv.rotation.x = P.a * (1 + Math.min(1, sp / 15) * 0.3 * Math.sin(P.t * (4 + sp * 0.25)));
       if (sp > 6 && P.piv.parent && Math.random() < dt * 20) { const w = P.piv.localToWorld(P.bout.clone()); emit(w.x, Math.max(w.y, modele(c).position.y + 0.05), w.z, c.vx * 0.5 + jit(2), Math.random() * 2, c.vz * 0.5 + jit(2), 0.4, 1, 0.7, 0.3, 22); } }
@@ -1031,7 +1035,7 @@
     g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
     const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ vertexColors: true, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false, side: THREE.DoubleSide })); m.frustumCulled = false; m.renderOrder = 51; m.userData.dyn = 1; m.visible = false; scene.add(m); return m; })() : null; // renderOrder 51 : après le voile du banc (50)
 
-  // ---------- décor qui s'abîme (docs/SPEC-CASSE.md, prototype 2) : purement visuel, comme les dégâts ; remis à zéro à chaque départ (decorRaz) ----------
+  // ---------- décor qui s'abîme (docs/specs/SPEC-CASSE.md, prototype 2) : purement visuel, comme les dégâts ; remis à zéro à chaque départ (decorRaz) ----------
   // Glissières : chaque côté (MURS) garde la forme des chocs, dz[i] = recul de l'échantillon i (m). La collision de sim.js ne bouge pas : un rail embouti laisse un creux derrière la voiture, pas devant.
   // Peinture : un anneau de MN segments sur les parois (bande de la teinte de la voiture + rayure claire), recalé sur la glissière quand elle recule.
   // Cônes et poubelles : posés au bord des virages, ils volent au contact d'une voiture (qui n'en sait rien) et restent où ils tombent.
@@ -1130,7 +1134,7 @@
     // shortcut: un objet dort à la hauteur de sa place de départ et peut traverser le mur ; projeté loin dans une pente, il flotte ou s'enfonce un peu
   }
 
-  // ---------- saleté et huile (docs/SPEC-CASSE.md, prototype 3) : visuel ----------
+  // ---------- saleté et huile (docs/specs/SPEC-CASSE.md, prototype 3) : visuel ----------
   // Saleté : chaque voiture a son niveau (0 à 1) et sa couleur, mêlée au fil des surfaces (terre : boue, neige : neige, bitume sec : poussière lente) ; la pluie, le mouillé et le gué la lavent.
   // Dans la livrée (salePeint, après eclaire) : chaque cellule de la caisse a son seuil, éclaboussures fines puis plaques, plus vite en bas qu'au toit ; mate et sans reflet sous la saleté.
   const SALES = { terre: [0.42, 0.28, 0.15, 0.025], neige: [0.92, 0.94, 0.97, 0.02], sec: [0.45, 0.43, 0.4, 0.002] }, TMP = new THREE.Color();
@@ -1864,6 +1868,14 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const plein = state === 'title' || state === 'pause' || ses.raceEnd && state === 'race'; COM.c.hidden = !plein; if (!plein) return;
     hg = COM.g; hg.clearRect(0, 0, COM.c.width, HH); ecrans(COM.c.width);
   }
+  // affiche : décale les voitures de dec secondes (et l'horloge du trafic) pour l'image ; rends les remet où la physique les a laissées, sauf si quelqu'un les a déplacées entre-temps
+  const AFFV = [];
+  let decT = 0; // le trafic n'avance plus après l'arrivée (tTraf), les voitures si
+  const affiche = (cars, dec, trafic) => { AFFV.length = 0; if (!(dec > 0)) return dec; decT = trafic ? dec : 0; tTraf += decT;
+    for (const c of cars) { const x = c.x + c.vx * dec, z = c.z + c.vz * dec, th = c.th + (c.air ? 0 : (c.yaw || 0) * (Math.sign(c.vf) || 1) * dec); AFFV.push(c, c.x, c.z, c.th, x, z, th); c.x = x; c.z = z; c.th = th; }
+    return dec; };
+  const rends = dec => { if (!(dec > 0)) return; tTraf -= decT;
+    for (let i = 0; i < AFFV.length; i += 7) { const c = AFFV[i]; if (c.x === AFFV[i + 4] && c.z === AFFV[i + 5] && c.th === AFFV[i + 6]) { c.x = AFFV[i + 1]; c.z = AFFV[i + 2]; c.th = AFFV[i + 3]; } } AFFV.length = 0; };
   function frame(now) {
     const dt = state === 'pause' ? 0 : clamp((now - last) / 1000 || 0, 0, 0.1); last = Math.max(last, now); // en pause le temps s'arrête, l'image reste
     if (state === 'count') {
@@ -1897,6 +1909,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       }
     }
     if (race && state === 'race' && enLigne()) { if (invite()) NET.entree(VUES[0].inp); else NET.diffuse(race); }
+    // l'image montre chaque voiture à l'instant de l'image et non au dernier pas de 1/120 s : avancée du reste (acc) à sa vitesse, rendue au pas suivant (affiche / rends, en fin d'image).
+    // Sans ça le mouvement saccade dès que l'écran ne bat pas à un diviseur de 120 Hz (144 Hz : une image sur six n'avance pas ; 60 Hz qui hésite : 1 ou 3 pas) — regularite() de outils/perf.js
+    const AFF = affiche(race ? race.cars : VUES.map(v => v.moi), state === 'race' ? acc : 0, !ses.raceEnd);
     if (COM && race && race.elim && state === 'race') for (const vu of VUES) { const moi = vu.moi; // à deux, joueur éliminé depuis 3 s : sa vue passe sur le meneur, et le suit s'il change
       if (moi.out && race.t - moi.out > 3) { const m = race.cars.find(c => c.pos === 1); if (vu.car !== m) { vu.car = m; vu.cth = m.th; vu.carY = m.y; vu.spec = true; } } }
     const beat = SON.beat, pulse = SON.pulse; // battement calé sur le kick
@@ -1964,6 +1979,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       renderer.setScissor(0, (HH - 1) * KL, VUES[0].w * KL, 2 * KL); renderer.setClearColor(C); renderer.clear(true, false, false); renderer.setClearColor(0);
       couche();
     }
+    rends(AFF);
   }
   // Une vue : la caméra derrière sa voiture (plus basse, plus proche et plus grand-angle avec la vitesse), puis tout ce qui dans la scène dépend de qui regarde
   // (ciel, lune et son ombre, brouillard, lumière dynamique, feux lointains, pluie), son HUD, la scène dans sa cible et la passe finale.
