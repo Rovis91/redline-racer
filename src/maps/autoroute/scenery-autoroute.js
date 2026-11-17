@@ -1,11 +1,11 @@
-// Scenery placement for "autoroute" (Sunken Highway, layout 5, blockout): a city on a street grid of 110 m, of which the route is what is left open.
+// Scenery placement for "autoroute" (Sunken Highway, layout 6, blockout): a city on a street grid of 110 m, of which the route is what is left open.
 // This file: ground, water, the straight edges of the streets (kerbs, motorway parapets, metro walls) inside which the track winds, motorway deck and piers, metro shell, and the placers.
 // The city itself is scenery-autoroute-ville.js; the named blocks of each zone are scenery-autoroute-<zone>.js. See docs/methods/NEW-MAP.md, phase 2.
 (function () {
   const { near, block, edgePt, terrain, inst } = PLACERS;
-  const ZONES = ['ville', 'boulevard', 'quartier', 'pont', 'trou', 'metro'], LAP = 2583, G = 110; // LAP: plan length, the unit of the chainages (PK); G: grid pitch, node (i, j) is at (i * G, j * G), j grows to the south
+  const ZONES = ['ville', 'boulevard', 'quartier', 'pont', 'trou', 'metro'], LAP = 2553, G = 110; // LAP: plan length, the unit of the chainages (PK); G: grid pitch, node (i, j) is at (i * G, j * G), j grows to the south
   // PK of the layout's joints: end of the boulevard, foot of the slip road, merge onto the motorway, foot of the collapsed span, ledge of the hole, heap of rubble up to the platform, mouth of the corridor, top of the stairs
-  const PK = { bd: 613, rampe: 1233, fusion: 1354, sol: 1773, bord: 1848, gravats: 2208, couloir: 2344, rue: 2419 };
+  const PK = { bd: 601, rampe: 1221, fusion: 1328, sol: 1750, bord: 1817, gravats: 2177, couloir: 2314, rue: 2389 };
   // the city slopes down to the river in the east: dry at 2.5 m west of the motorway, 0.7 m beyond column 3, where the water (0) stands in the streets
   const cityY = x => { const t = Math.min(1, Math.max(0, (x - 180) / 140)); return 2.5 - 1.8 * t * t * (3 - 2 * t); };
   // half-widths from a street's axis to its facades: the boulevard is row 0, the motorway runs above column 2 (its slip road on the east side)
@@ -17,12 +17,12 @@
       const DS = { side: THREE.DoubleSide }, conc = h.mat('paint', { c: 0x8f8c82, ...DS }), asphalt = h.mat('paint', { c: 0x3e4146, ...DS }), pavement = h.mat('paint', { c: 0x77746c, ...DS });
       const nT = T.t1 - T.t0, metro = new Set(S.slice(T.t0, T.t1 + 1)), el = s => { const p = pkS(s); return p > PK.rampe && p < PK.sol && s.y > cityY(s.x) + 0.6; };
       // street(s): the straight street the sample is on, as [axis, half-width, centre]: 'x' = the street runs along x (its edges are lines of constant z), 'z' along z; null elsewhere.
-      // Boulevard kerbs at z = ±13; motorway parapets at x = 220 ± 16; metro walls at z = 220 ± 9, and from the heap of rubble z = 214 ± 15 (the tracks and the north platform)
-      const street = s => { const p = pkS(s); return p < PK.bd - 2 || p > LAP - 34 ? ['x', 13, 0] : p > PK.fusion - 60 && p < PK.sol - 12 ? ['z', 16, 220] : p > PK.bord + 2 && p < PK.couloir - 14 ? p < PK.gravats ? ['x', 9, 220] : ['x', 15, 214] : null; };
+      // (on the left of the turn into the corridor the station goes on: the tunnel continues west, the lane does not). Boulevard kerbs at z = ±13; motorway parapets at x = 220 ± 16; metro walls at z = 220 ± 9, and from the heap of rubble z = 214 ± 15 (the tracks and the north platform)
+      const street = (s, sd) => { const p = pkS(s); if (sd < 0 && p >= PK.gravats && p < PK.couloir + 2) return ['x', 15, 214]; return p < PK.bd - 2 || p > LAP - 34 ? ['x', 13, 0] : p > PK.fusion - 60 && p < PK.sol - 12 ? ['z', 16, 220] : p > PK.bord + 2 && p < PK.couloir - 14 ? p < PK.gravats ? ['x', 9, 220] : ['x', 15, 214] : null; };
       // edge(s, side): distance from the axis to the visible edge of the street on that side. The physics walls follow the track at ±s.w; the street keeps straight edges,
       // and what lies between wall and edge is filled by the traffic jam. Elsewhere (street corners, slip road, corridor, stairs) the edge is 1 m outside the wall
-      const edge = (s, sd) => { const st = street(s); if (!st || (st[0] === 'z' && pkS(s) < PK.fusion && sd < 0)) return s.w + 1; // before the merge the slip road has its own east edge
-        const [ax, hw, c] = st, o = ax === 'x' ? (hw - sd * (s.z - c) * Math.sign(s.tx)) / Math.abs(s.tx) : (hw + sd * (s.x - c) * Math.sign(s.tz)) / Math.abs(s.tz); return Math.max(s.w + 0.5, o); };
+      const edge = (s, sd) => { const st = street(s, sd); if (!st || (st[0] === 'z' && pkS(s) < PK.fusion && sd < 0)) return s.w + 1; // before the merge the slip road has its own east edge
+        const [ax, hw, c] = st, o = ax === 'x' ? (hw - sd * (s.z - c) * Math.sign(s.tx)) / Math.abs(s.tx) : (hw + sd * (s.x - c) * Math.sign(s.tz)) / Math.abs(s.tz); return Math.min(40, Math.max(s.w + 0.5, o)); };
       const H = s => pkS(s) < PK.couloir - 14 ? 9 : 4.5; // metro: height under the ceiling, tunnel and station then passenger corridor
       // ground: the road lies on it, except on the motorway (the city stays under it) and in the metro (the city passes over it); the hole and the stairwell are open to the sky
       const ground = s => metro.has(s) || el(s) ? cityY(s.x) : s.y;
@@ -46,7 +46,8 @@
       // metro (th.tun.without 'walls': the engine only lays the floor and the lights): track bed, walls and ceiling from edge to edge
       const dark = h.mat('paint', { c: 0x4a5a52, ...DS }), bed = h.mat('paint', { c: 0x33383a, ...DS }), up = s => cityY(s.x) + 0.4 - s.y;
       h.ribbon(T.t0, nT, s => -edge(s, -1), H, s => edge(s, 1), H, dark, 8);
-      for (const sd of [-1, 1]) { h.ribbon(T.t0, nT, s => sd * s.w, 0, s => sd * edge(s, sd), 0, bed, 8); h.ribbon(T.t0, nT, s => sd * edge(s, sd), 0, s => sd * edge(s, sd), H, dark, 8);
+      const pit = s => -8.5 - s.y; // beside the platform the track bed lies 1.2 m lower than the lane
+      for (const sd of [-1, 1]) { h.ribbon(T.t0, nT, s => sd * s.w, sd < 0 ? pit : 0, s => sd * edge(s, sd), sd < 0 ? pit : 0, bed, 8); if (sd < 0) h.ribbon(T.t0, nT, s => -s.w, 0, s => -s.w, pit, conc, 8); h.ribbon(T.t0, nT, s => sd * edge(s, sd), 0, s => sd * edge(s, sd), H, dark, 8);
         // the two shafts open to the sky, walled up to the street: the hole the car falls into (from the ledge to the tunnel) and the stairwell
         const iB = idx(PK.bord + 4); h.ribbon(iB, T.t0 - iB, s => sd * edge(s, sd), 0, s => sd * edge(s, sd), up, dark, 8); h.ribbon(T.t1, idx(PK.rue) - T.t1, s => sd * (s.w + 1), 0, s => sd * (s.w + 1), up, conc, 8); }
       // self-check: the motorway crosses the boulevard and the streets run close to each other; a block set from one stretch can land on another. (ux, uz): the block's local X
@@ -64,7 +65,7 @@
       // gantry(pk, label): a sign gantry across the road, 7 m clear
       const gantry = (pk, label) => { const s = at(pk); for (const sd of [-1, 1]) { const [x, z] = edgePt(s, sd, s.w + 1); h.pose('boxMesh', conc, h.scene, [x, s.y + 3.5, z], 0.8, 7, 0.8); }
         return block(h, label, 0x2f6a5a, 2 * s.w + 4, 1.6, 1, s.x, s.y + 7, s.z, h.across(s)); };
-      for (const z of ZONES) AUTOROUTE[z]({ h, g, put, spot, bar, gantry, at, street, metro, cityY, G, colL, colR, row });
+      for (const z of ZONES) AUTOROUTE[z]({ h, g, put, spot, bar, gantry, at, street, edge, metro, cityY, G, colL, colR, row });
     },
   });
 })();
