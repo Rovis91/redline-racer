@@ -9,7 +9,7 @@
   spot('QUAI', CONC, -373, 206.5, 254, 1.1, 15, Y, 1);                                             // the north platform: the lane runs on it, and it goes on west
   spot('RAME', TRAIN, -292, 221, 64, 3.6, 3, Y);                                                   // the train stopped at the platform
   // the tunnel beyond the corridor, 170 m more: track bed, walls, ceiling; a train derailed across the platform closes it, another stands further on
-  slab('dark', -420, Y - 0.5, 221.5, 180, 0.5, 15); slab('dark', -420, 0.5, 214, 180, 0.5, 31);
+  slab('dark', -420, Y - 0.5, 221.5, 180, 0.5, 15); slab('vault', -420, 0.5, 214, 180, 0.5, 31);
   for (const z of [198.75, 229.25]) slab('tile', -420, Y, z, 180, 9.5, 0.5); slab('dark', -510, Y, 214, 0.5, 9.5, 31);
   spot('RAME', TRAIN, -364, 211, 40, 3.6, 3, Y + 1.2, 1, 0.35); set('portillonsAutoroute', -330, 199, { y: -7.3, a: [10] }); spot('RAME', TRAIN, -440, 224, 70, 3.6, 3, Y);
   for (const x of [-262, -286, -310]) slab('steel', x, -7.3, 200.2, 4, 0.5, 0.9);                    // benches against the back wall of the platform

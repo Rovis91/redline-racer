@@ -21,7 +21,7 @@
       const DS = { side: THREE.DoubleSide }, body = c => h.mat('carrosserieAutoroute', { c }), MAT = {
         asphalt: h.mat('asphalteAutoroute', DS), deck: h.mat('asphalteAutoroute', DS, '#55585c'), pave: h.mat('trottoirAutoroute', DS), grass: h.mat('herbeAutoroute'), water: h.mat('eauAutoroute', { rep: [112, 250] }),
         brick: h.mat('briqueAutoroute'), stone: h.mat('bureauAutoroute'), glass: h.mat('verreAutoroute'), tin: h.mat('toleAutoroute'), shop: h.mat('vitrineAutoroute'), far: h.mat('bureauAutoroute', { c: 0xd0b0a0 }, '#8a8078'),
-        concrete: h.mat('concretePart', DS), dark: h.mat('concreteDark', DS), steel: h.mat('matGray'), rubble: h.mat('gravatsAutoroute', { c: 0xa8a298 }), tile: h.mat('carrelageAutoroute', { ...DS, c: 0xa0a69c }),
+        concrete: h.mat('concretePart', DS), dark: h.mat('concreteDark', DS), vault: h.mat('concreteGray', { ...DS, emis: 1, c: 0x5a6058 }), yellow: body(0xb8a050), steel: h.mat('matGray'), rubble: h.mat('gravatsAutoroute', { c: 0xa8a298 }), tile: h.mat('carrelageAutoroute', { ...DS, c: 0xa0a69c }),
         ivy: h.mat('lierreAutoroute'), reed: h.mat('lierreAutoroute', {}, '#7a9a50'), leaf: h.mat('feuillageAutoroute'), gold: h.mat('feuillageAutoroute', {}, '#b89a40'), bark: h.mat('trunk'),
         body: h.mat('carrosserieAutoroute'), rust: body(0x8a4a2a), olive: body(0x5a6240), canvas: body(0x7a7450), pane: h.mat('paneDark'), lamp: h.mat('lampObj', { emis: 1 }), sign: h.mat('panneauAutoroute', {}, 'CENTRE VILLE') };
       MAT.tyre = MAT.dark; const BODIES = [MAT.rust, body(0xb8b4a8), body(0x5a7a78), body(0x7a3a34), body(0xb8a050)], kit = new THREE.Group(); h.scene.add(kit);
@@ -62,7 +62,7 @@
       inst(h, h.geo('pierViaduct'), MAT.concrete, piers);
       // metro (th.tun.without 'walls': the engine only lays the floor and the lights): track bed, tiled walls and concrete ceiling from edge to edge
       const up = s => cityY(s.x) + 0.4 - s.y, pit = s => -8.5 - s.y; // pit: beside the platform the track bed lies 1.2 m lower than the lane
-      h.ribbon(T.t0, nT, s => -edge(s, -1), H, s => edge(s, 1), H, MAT.dark, 8);
+      h.ribbon(T.t0, nT, s => -edge(s, -1), H, s => edge(s, 1), H, MAT.vault, 8);
       for (const sd of [-1, 1]) { h.ribbon(T.t0, nT, s => sd * s.w, sd < 0 ? pit : 0, s => sd * edge(s, sd), sd < 0 ? pit : 0, MAT.dark, 8); if (sd < 0) h.ribbon(T.t0, nT, s => -s.w, 0, s => -s.w, pit, MAT.concrete, 8);
         h.ribbon(T.t0, nT, s => sd * edge(s, sd), 0, s => sd * edge(s, sd), H, MAT.tile, 8);
         // the two shafts open to the sky, walled up to the street: the hole the car falls into (from the ledge to the tunnel) and the stairwell
@@ -104,7 +104,7 @@
         else if (is(/AUTOROUTE/)) { slab('concrete', x, y, z, w, 2, d); for (const s of [-1, 1]) slab('concrete', x + s * (w / 2 - 0.25), y + 2, z, 0.5, 1, d); slab('concrete', x, y + 2, z, 2, 1.1, d); // a length of the motorway the route does not take: deck, parapets, reservation, piers, a broken end
           for (let t = -d / 2 + 20; t < d / 2; t += 40) { const y0 = g.hAt(x, z + t) - 1; slab('concrete', x, y0, z + t, w - 4, y - y0, 3); } const e = z > 0 ? -1 : 1; set('dalleAutoroute', x, z + e * (d / 2 + 5), { y: y - 3, ry: e > 0 ? 0 : Math.PI, a: [w * 0.8, 12, 0.5] }); }
         else if (is(/RAME/)) along('rameAutoroute', 0, { a: [Math.max(1, Math.round(L / 18))], skin: { ...MAT, body: BODIES[1] } });
-        else if (is(/QUAI/)) { slab('concrete', x, y, z, w, ht, d); slab('lamp', x, y + ht - 0.04, z + d / 2 - 0.5, w, 0.06, 0.4); for (let t = -w / 2 + 6; t < w / 2; t += 12) slab('tile', x + t, y + ht, z - d / 2 + 1, 0.8, 7.7, 0.8); } // the platform, its edge strip toward the tracks, a row of columns at the back
+        else if (is(/QUAI/)) { slab('concrete', x, y, z, w, ht, d); slab('yellow', x, y + ht - 0.04, z + d / 2 - 0.5, w, 0.06, 0.4); for (let t = -w / 2 + 6; t < w / 2; t += 12) slab('tile', x + t, y + ht, z - d / 2 + 1, 0.8, 7.7, 0.8); } // the platform, its edge strip toward the tracks, a row of columns at the back
         else if (is(/SORTIE METRO/)) set('ediculeAutoroute', x, z, { ry, a: [w, d, 4.6] });
         else if (is(/ENTREE AUTOROUTE|PORTIQUE/)) set('portiqueAutoroute', x, z, { y, ry, a: [(w - 4) / 2], skin: { ...MAT, sign: h.mat('panneauAutoroute', {}, 'AUTOROUTE  SUD') } });
         else if (is(/ANCIEN PARC/)) { for (let i = 0; i < 16; i++) { const tx = x + ((i % 4) - 1.5) * w / 4 + (HH(i, 1) - 0.5) * 12, tz = z + (Math.floor(i / 4) - 1.5) * d / 4 + (HH(i, 2) - 0.5) * 12; tree(tx, tz, g.hAt(tx, tz), 15 + 9 * HH(i, 3), 6 + 3 * HH(i, 4), i); }
