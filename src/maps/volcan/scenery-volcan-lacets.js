@@ -5,5 +5,4 @@
   by('bananeraieVolcan', [5120, 5520, 5800], -1, 30, { a: [44, 30], seed: 1 });                  // banana groves as dense low blocks on the inner side: the only saturated green of the map
   by('chapelleVolcan', 5450, 1, 34);                                                             // white chapel and bell tower outside the second hairpin: the braking mark of the descent
   by('palmierVolcan', [5160, 5175, 5850, 5865], 1, 7, { a: [10], seed: 1 });                     // a pair of palms marks the first and the last hairpin
-  by('muretVolcan', [5147, 5173, 5457, 5483, 5847, 5873], 1, 1.6, { a: [25] });
 };
