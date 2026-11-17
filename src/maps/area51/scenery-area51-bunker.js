@@ -8,7 +8,8 @@
   for (let i = i0, pL = 12, pR = 12; i <= i1; i += 6) { const [, , L, wide, clear, R] = room(i), s = S[i], surf = Math.min(g.hAt(...edgePt(s, -1, L + 30)), g.hAt(...edgePt(s, 1, wide + 30)));
     if (L !== pL) mute(box('B1', CONCRETE, S[i], -(L + pL) / 2 - 3, Math.abs(L - pL) + 6, 34, 4, -2)); if (wide !== pR) mute(box('B1', CONCRETE, S[i], (wide + pR) / 2 + 3, Math.abs(wide - pR) + 6, 34, 4, -2)); pL = L; pR = wide; // where a room opens or closes: the end wall
     const cap = Math.max(4, surf - s.y - clear + 1); mute(box('B1', ROCK, s, (wide - L) / 2, L + wide + 30, cap, 16, clear)); mute(box('B1', 0xd69a72, s, (wide - L) / 2, L + wide + 32, 1, 17, clear + cap)); // the cap ends in a lid of the ground's colour: from outside only the mesa shows mute(box('B1', CONCRETE, S[i], -L - 3, 6, clear + 3, 16, -2)); if (R) mute(box('B1', CONCRETE, S[i], wide + 3, 6, clear + 3, 16, -2));
-    mute(box('RAIL TRAM', AMBER, S[i], -7, 1.2, 0.8, 16, 8.5)); }
+    if (i >= ROOMS[0][0] && i <= ROOMS[2][1]) mute(box('RAIL TRAM', AMBER, S[i], -7, 1.2, 0.8, 16, 8.5)); } // the tram is internal: it runs from the security lock to the labs, never to a portal
+  for (const i of [ROOMS[0][0], ROOMS[2][1]]) box('STATION TRAM', AMBER, S[i], -9, 5, 1, 14, 4.5); // a platform at each end of the line
   box('PORTAIL EST', CONCRETE, S[i0 - 8], 0, 36, 4, 4, 11); box('PORTAIL OUEST', CONCRETE, S[i1 + 8], 0, 36, 4, 4, 11); // a lintel in front of each mouth
   for (const i of [ROOMS[0][0] + 2, i1 - 30]) box('PORTIQUE DECONTAMINATION', AMBER, S[i], 0, 26, 1.2, 3, 8); // a monitoring arch at each lock
   box('SAS SECURITE', AMBER, S[ROOMS[0][0] + 8], 15, 4, 3, 12, 0); mute(box('SAS SECURITE', AMBER, S[ROOMS[0][0] + 8], -15, 4, 3, 12, 0)); // the lock: two booths in the lobby
