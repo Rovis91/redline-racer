@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lunar Outpost: mood and reference sheet, V2</title>
+<style>
+  :root { --bg: #0a0d16; --panel: #171c28; --ink: #e8e2d0; --dim: #a4a7ae; --line: #303c49; --accent: #d78a40; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: .02em; }
+  h2 { font-size: 22px; margin: 40px 0 6px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 small { color: var(--accent); font-weight: 600; font-size: 14px; margin-right: 8px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); }
+  .lead { font-size: 18px; max-width: 70ch; }
+  dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 10px 0; }
+  dt { color: var(--accent); font-weight: 600; } dd { margin: 0; }
+  .sw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .sw span { min-width: 86px; padding: 0 8px; white-space: nowrap; height: 46px; border-radius: 6px; font: 11px/46px ui-monospace, monospace; text-align: center; color: #000; border: 1px solid #fff3; }
+  .sw span.d { color: #fff; }
+  .pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+  figure { margin: 0; background: var(--panel); border-radius: 8px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: 220px; object-fit: cover; background: #05070c; }
+  figcaption { padding: 8px 10px; font-size: 13px; } figcaption b { display: block; } figcaption i { display: block; color: var(--dim); font-style: normal; } figcaption a { color: var(--dim); }
+  ul { margin: 6px 0; padding-left: 20px; }
+  code { color: var(--dim); }
+  @media (max-width: 600px) { dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Lunar Outpost</h1>
+<p class="dim">Mood and reference sheet, V2. Written after the blockout; it follows the zones of the built map (<code>src/maps/lune/</code>, layout V3: about 4 000 m, clockwise), not the five sectors of the bible, and keeps the bible's art direction.</p>
+
+<p class="lead">A small 1970s lunar colony between impact craters, as if the space programmes of that decade had gone on past their brochures. The race leaves the base through its airlock, winds round a first crater, runs up a ridge and throws the car off the rim of an immense one. <b>The void for scenery: a few human objects, very small, in front of very large holes.</b></p>
+
+<dl>
+  <dt>Place</dt><dd>A fictional Moon. Five impacts: the western crater (Ø 545 m), the great eastern crater (Ø 900 m, floor 100 m below its rim), the south basin (Ø 444 m), a satellite impact, two fresh ones. The colony sits on the plain between the western crater and the south basin.</dd>
+  <dt>Time and light</dt><dd>Lunar morning. One hard white sun, low enough to fill the crater walls with shadow; a black sky with stars; no haze, no fog, no gradient at the horizon: far relief is as sharp as near relief. The Earth is small, blue, and stays in the same place in the sky.</dd>
+  <dt>Style</dt><dd>Faceted low-poly with a pixel grain: simple geometric volumes, flat surfaces, hard contrast. Three to five things to read per camera frame at speed, one major landmark per zone.</dd>
+  <dt>Human scale</dt><dd>Domes, short cylinders, lattice masts, orange guidance marks, ivory rails. Analogue technology: dials, hatches, painted numbers. Everything human is a minority in the frame.</dd>
+  <dt>Gravity</dt><dd>The map plays with it once, at the jump. It is not announced anywhere else; the cars drive normally.</dd>
+  <dt>Anti-references</dt><dd>A megalopolis or an industrial city; a giant secret base; permanent neon and violet glow; chrome science fiction; open-cockpit rovers with a visible driver; vegetation of any kind; atmosphere (dust clouds, haze, blue sky); detailed stones on the driving surface; a suspended road without a visible restraint; an endless tunnel.</dd>
+</dl>
+<div class="sw">
+  <span class="d" style="background:#0a0d16">#0a0d16 space</span><span class="d" style="background:#747988">#747988 regolith</span><span class="d" style="background:#3d4452">#3d4452 shadow</span>
+  <span style="background:#e8e2d0">#e8e2d0 ivory</span><span class="d" style="background:#526c80">#526c80 instrument</span><span style="background:#d78a40">#d78a40 guidance</span><span class="d" style="background:#4f8fd0">#4f8fd0 Earth</span>
+</div>
+
+<h2><small>ZONE 1</small>The base and the start airlock</h2>
+<p>PK 3830 to 500, through the line. The start is in the middle of a 300 m straight, inside a 160 m hall with a door frame at each end; out of it, the habitat dome fills the outside of the first bend, with modules, control tower, hangar and solar fields around the road.</p>
+<dl>
+  <dt>Mood</dt><dd>A pressurised garage opening on nothing: bright and close inside, then the door frame, the dome, and black sky.</dd>
+  <dt>Landmark</dt><dd>The ivory habitat dome (70 m), dead ahead when leaving the hall. Second: the exit door of the airlock itself, seen from the grid.</dd>
+  <dt>Read at speed</dt><dd><ul><li>inside the hall: repeated ivory frames, an orange band at wheel-arch height, blue-white ceiling panels, the open door as a black rectangle with the dome in it</li><li>the dome: triangulated ivory panels, darker joints, one row of small lit windows</li><li>short cylinders lying along the road, each with a painted number and a hatch</li><li>a lattice control tower and a tall orange antenna, the only verticals</li><li>matte blue solar fields as flat dark slabs, set back from the road</li></ul></dd>
+  <dt>Light</dt><dd>The only warm and enclosed light of the lap is inside the hall (ivory and amber, cold blue from above). Outside: sun on ivory, almost white; the shadow side of every module is nearly black. Orange beacons on the rails, lit but not blinking.</dd>
+  <dt>Transition</dt><dd>The beacons space out, the last tanks pass on the right, rock takes over and the road starts to wind.</dd>
+  <dt>Not this</dt><dd>A city; a glass greenhouse full of plants; a science-fiction door with animated light strips; crates and vehicles on the roadway.</dd>
+</dl>
+<div class="sw"><span style="background:#e8e2d0">#e8e2d0</span><span style="background:#9aa0ac">#9aa0ac</span><span class="d" style="background:#526c80">#526c80</span><span style="background:#d78a40">#d78a40</span><span style="background:#e5bb72">#e5bb72</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Lunar_base_concept_drawing_s78_23252.jpg?width=640" alt="1978 NASA concept drawing of a lunar base"><figcaption><b>A 1978 lunar base: low modules, a few masts, bare ground</b><i>Keep: the small scale and the spacing. Do not borrow: the mining machinery.</i>NASA, public domain. <a href="https://commons.wikimedia.org/wiki/File:Lunar_base_concept_drawing_s78_23252.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Montreal_Biosphere_Environment_Museum.jpg?width=640" alt="Geodesic dome of the Montreal Biosphere"><figcaption><b>Geodesic dome: the triangulated lattice and its joints</b><i>Keep: the facets, readable from far. Do not borrow: the transparency; ours is an opaque ivory shell.</i>Maela Ohana, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:Montreal_Biosphere_Environment_Museum.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/ARTIST_CONCEPT_-_CUTAWAY_VIEW_SKYLAB_1_ORBITAL_WORKSHOP_(OWS)_(S73-23919).jpg?width=640" alt="1973 cutaway of the Skylab orbital workshop"><figcaption><b>A 1973 pressurised cylinder: proportions, rings, hatches</b><i>Keep: the short fat cylinder and its banding. Do not borrow: the solar wings.</i>NASA Johnson Space Center, public domain. <a href="https://commons.wikimedia.org/wiki/File:ARTIST_CONCEPT_-_CUTAWAY_VIEW_SKYLAB_1_ORBITAL_WORKSHOP_(OWS)_(S73-23919).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/VAB_high_bay_interior_renovations.jpg?width=640" alt="Interior of a high bay of the Vehicle Assembly Building"><figcaption><b>A hall you drive through: repeated frames, a tall door</b><i>Keep: the rhythm of the structure and the door as the only opening. Do not borrow: the height; ours is 16 m.</i>NASA / Glenn Benson, public domain. <a href="https://commons.wikimedia.org/wiki/File:VAB_high_bay_interior_renovations.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 2</small>Western crater: the chicane and the relay hairpin</h2>
+<p>PK 500 to 1340, climbing from 22 to 64 m. The road swerves between two fresh impacts that cut the old track, follows the rim of the western crater, and goes round the telemetry relay in a hairpin.</p>
+<dl>
+  <dt>Mood</dt><dd>First contact with the mineral: the base is behind, the road is alone on the edge of a hole, and something has hit the ground here recently.</dd>
+  <dt>Landmark</dt><dd>The telemetry dish on the outside of the hairpin. Before it, the two fresh impacts, paler than everything around them.</dd>
+  <dt>Read at speed</dt><dd><ul><li>fresh impacts: a dark bowl, a bright ray of ejecta across the grey ground, a few thrown blocks on the outside of each swerve</li><li>the western crater on the right: a grey funnel with two or three terraces and a floor in full shadow</li><li>the ivory rail, continuous on the crater side</li><li>the relay: a small ivory cabin, an orange dish on a short mast</li><li>faceted boulders in bands, well back from the road</li></ul></dd>
+  <dt>Light</dt><dd>Monochrome. The sun rakes the rim: the outer slope is pale, the inside of the crater is a mass of cold shadow. Copper-orange only at the guidance points.</dd>
+  <dt>Transition</dt><dd>After the hairpin the crater leaves the frame, the ground hardens into a ridge and the road straightens.</dd>
+  <dt>Not this</dt><dd>A building on the crater panorama; rubble on the road; smoke or glow in the fresh impacts.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#111925">#111925</span><span class="d" style="background:#303c49">#303c49</span><span class="d" style="background:#69707a">#69707a</span><span style="background:#a4a7ae">#a4a7ae</span><span style="background:#dc8d65">#dc8d65</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Apollo_15_Commander_Dave_Scott_and_the_LRV_at_Hadley_Rille_-_51358485474.jpg?width=640" alt="Apollo 15 rover at the edge of Hadley Rille"><figcaption><b>A vehicle at the edge of a drop: the clean line between plateau and hole</b><i>Keep: the scale of the machine against the relief. Do not borrow: the open rover and its crew.</i>NASA, public domain. <a href="https://commons.wikimedia.org/wiki/File:Apollo_15_Commander_Dave_Scott_and_the_LRV_at_Hadley_Rille_-_51358485474.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Bright_Crater_Rays_and_Boulders_(LROC41).png?width=640" alt="Fresh lunar crater with bright rays and boulders seen from orbit"><figcaption><b>A fresh impact: bright rays, blocks thrown out</b><i>Keep: the pale ejecta on darker ground, as a few flat streaks. Do not borrow: the number of boulders.</i>NASA / GSFC / Arizona State University, public domain. <a href="https://commons.wikimedia.org/wiki/File:Bright_Crater_Rays_and_Boulders_(LROC41).png">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Lunar_Rover_Apollo_17.jpg?width=640" alt="Apollo 17 lunar rover with its dish antenna"><figcaption><b>A dish on a mast: the silhouette of the relay</b><i>Keep: the umbrella dish, the thin supports, the gold and white. Do not borrow: the vehicle.</i>NASA, public domain. <a href="https://commons.wikimedia.org/wiki/File:Lunar_Rover_Apollo_17.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Apollo_17,_station_6.jpg?width=640" alt="Panorama of the boulders at Apollo 17 station 6"><figcaption><b>Boulders on a slope: three sizes, hard shadows</b><i>Keep: the angular shapes and the depth without atmosphere. Do not borrow: the density; ours stay in bands away from the road.</i>NASA / Johnson Space Center, public domain. <a href="https://commons.wikimedia.org/wiki/File:Apollo_17,_station_6.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 3</small>The ridge: run-up to the rim</h2>
+<p>PK 1340 to 1720, 64 to 70 m. An almost straight climb along the ridge, rocky flanks on both sides for the first half, then nothing: the road rises 3 m at its end and stops on the rim of the great crater.</p>
+<dl>
+  <dt>Mood</dt><dd>A runway that ends in the sky. The last 150 m are empty on purpose.</dd>
+  <dt>Landmark</dt><dd>The Earth, small and blue, straight ahead above the end of the road.</dd>
+  <dt>Read at speed</dt><dd><ul><li>two rocky flanks of different heights, alternating sides, 30 m back</li><li>a paler ground on the ridge than on the plain</li><li>the rails stop before the lip; the road edge is the last line</li><li>far dark ridges on the northern horizon</li><li>the crest of the crater appears as a pale line only at the last moment</li></ul></dd>
+  <dt>Light</dt><dd>Sun behind and to the left: the road is fully lit, the flanks throw long shadows across it at the start, none at the end. The Earth is the only colour.</dd>
+  <dt>Transition</dt><dd>The ground drops away under the car and the whole crater opens at once.</dd>
+  <dt>Not this</dt><dd>A ramp with stripes, arrows or a jump sign; a bend before the lip; a huge Earth filling the sky.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#0a0c15">#0a0c15</span><span class="d" style="background:#3a4450">#3a4450</span><span style="background:#bdc6c5">#bdc6c5</span><span style="background:#e6e0d0">#e6e0d0</span><span class="d" style="background:#4f8fd0">#4f8fd0</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/NASA_Earthrise_AS08-14-2383_Apollo_8_1968-12-24.jpg?width=640" alt="Earthrise photographed from Apollo 8"><figcaption><b>The Earth over a lunar horizon: black sky, hard edge</b><i>Keep: the size of the Earth (small) and the absence of any glow around it. Do not borrow: the orbital viewpoint.</i>NASA / Bill Anders, public domain. <a href="https://commons.wikimedia.org/wiki/File:NASA_Earthrise_AS08-14-2383_Apollo_8_1968-12-24.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/An_Astronaut's_Snapshot_of_the_Moon.jpg?width=640" alt="Apollo 17 panorama of the Taurus-Littrow valley"><figcaption><b>A valley floor between rounded massifs: the far relief of the ridge</b><i>Keep: low rounded hills, sharp at any distance. Do not borrow: the footprints and equipment.</i>NASA, public domain. <a href="https://commons.wikimedia.org/wiki/File:An_Astronaut's_Snapshot_of_the_Moon.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 4</small>The great eastern crater: the jump, the arena, the way out</h2>
+<p>PK 1720 to 2600. The car leaves the rim at 73 m and lands on the floor at -30 m, about 6 s later, near the middle. The floor is a round arena 524 m across, driven anywhere, pitted with some thirty small craters. The only way out is a tunnel at the end of a trench in the south-south-west wall, and nothing points to it.</p>
+<dl>
+  <dt>Mood</dt><dd>Six seconds of silence above a bowl the size of a town, then a playground with no exit in sight.</dd>
+  <dt>Landmark</dt><dd>The crater itself, seen whole from the air: its wall in rings, the opposite rim 900 m away with the small science station on it. It is the landmark of the whole lap.</dd>
+  <dt>Read at speed</dt><dd><ul><li>from the air: four dark strata on the wall, a pale crest all round, the floor as a lighter disc</li><li>small craters of very different sizes, each with a dark bottom and a pale raised rim</li><li>no road, no rail, no beacon on the floor: bare regolith, the car's own tracks</li><li>the station on the far rim, tiny: an ivory box and a dome, for scale</li><li>the way out: a notch in the wall, in shadow, with a dark mouth; found by looking, not by following lights</li></ul></dd>
+  <dt>Light</dt><dd>The strongest contrast of the lap. The western half of the wall, under the lip, is in shadow; the eastern half and the floor are in full sun. Slate and blue in the shadows. The tunnel mouth is on the shadow side.</dd>
+  <dt>Transition</dt><dd>Into the trench, the walls close in, then black, then the cold light of the tunnel.</dd>
+  <dt>Not this</dt><dd>Arrows, blinking lights or a lit portal at the exit; a road painted across the floor; a stadium (stands, barriers, banners); a central peak or anything that blocks the landing.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#111a25">#111a25</span><span class="d" style="background:#273443">#273443</span><span class="d" style="background:#3d4452">#3d4452</span><span class="d" style="background:#747988">#747988</span><span style="background:#c4c8d2">#c4c8d2</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Oblique_view_of_Copernicus_crater_(as17-145-22287).jpg?width=640" alt="Oblique view of Copernicus crater from Apollo 17"><figcaption><b>A great crater seen obliquely: terraced wall, flat floor, far rim</b><i>Keep: the concentric terraces and the rim as a clean line. Do not borrow: the central peaks; our floor is clear.</i>NASA Johnson Space Center, public domain. <a href="https://commons.wikimedia.org/wiki/File:Oblique_view_of_Copernicus_crater_(as17-145-22287).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Barringer_Crater_panoramic.jpg?width=640" alt="Panorama of Meteor Crater from its rim"><figcaption><b>A crater from its rim, at human height: what the jump shows</b><i>Keep: the far wall read as bands, the floor far below. Do not borrow: the colours and the sky; ours is grey under black.</i>Cburnett, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Barringer_Crater_panoramic.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Concentric_Crater_With_Blocky_Ejecta_(LROC1157_-_highsun_ano).png?width=640" alt="Small concentric lunar crater with blocky ejecta"><figcaption><b>A small crater: dark bowl, raised pale rim</b><i>Keep: the two-tone reading, bottom and rim. Do not borrow: the blocks; nothing solid on the floor.</i>NASA / GSFC / Arizona State University, public domain. <a href="https://commons.wikimedia.org/wiki/File:Concentric_Crater_With_Blocky_Ejecta_(LROC1157_-_highsun_ano).png">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Peeking_Into_Lunar_Pits_(14699003553).png?width=640" alt="Lunar pits seen from orbit"><figcaption><b>A hole in shadow: how the way out should read</b><i>Keep: an opening known only by its darkness. Do not borrow: the vertical pit; ours is a mouth at floor level.</i>NASA Goddard Space Flight Center, public domain. <a href="https://commons.wikimedia.org/wiki/File:Peeking_Into_Lunar_Pits_(14699003553).png">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 5</small>South basin: the tunnel, the ramp, the way back</h2>
+<p>PK 2600 to 3830. A 120 m tunnel under the rampart that the two craters share, out on the floor of the south basin (-28 m), a ramp that climbs its wall at about 8 % to the rim (20 m), then the maintenance area, three open airlock frames, and the colony again.</p>
+<dl>
+  <dt>Mood</dt><dd>Infrastructure after the void: the lap becomes a service road again, and climbs back to where people are.</dd>
+  <dt>Landmark</dt><dd>The buggy garage on the rim, then the three orange frames in a row, with the start hall behind them.</dd>
+  <dt>Read at speed</dt><dd><ul><li>in the tunnel: ivory segmented frames, an orange band, blue ceiling panels; short, the exit visible from the entrance</li><li>the ramp cut into the basin wall: rock steps above it on the left, the basin floor falling away on the right behind the ivory rail</li><li>the garage: a plain ivory box with one large door; a parked closed buggy, a blue tank</li><li>three thin orange frames across the road, evenly spaced</li><li>modules and a warehouse closing in on both sides before the hall</li></ul></dd>
+  <dt>Light</dt><dd>Cold and even in the tunnel, with amber at wheel height. The ramp climbs out of the basin's shadow into the sun about half-way. Beacons return with the garage.</dd>
+  <dt>Transition</dt><dd>The last frame gives the door of the start hall: the first image of the lap comes back.</dd>
+  <dt>Not this</dt><dd>A long or branching tunnel; pipes and racks on the roadway; a spiral motorway; an industrial zone round the garage.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#101521">#101521</span><span class="d" style="background:#3b3e4b">#3b3e4b</span><span style="background:#efe6d4">#efe6d4</span><span style="background:#df8c40">#df8c40</span><span style="background:#6fabc6">#6fabc6</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Inflatable_habitat_s89_20084.jpg?width=640" alt="1989 NASA concept of an inflatable lunar habitat"><figcaption><b>A pressurised volume and its links: the garage and its frames</b><i>Keep: the technical interior, the short connections between modules. Do not borrow: the sphere; our garage is a box.</i>NASA, Kitmacher and Ciccora, public domain. <a href="https://commons.wikimedia.org/wiki/File:Inflatable_habitat_s89_20084.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Bingham_Canyon_Mine_(1)_-_Salt_Lake_County,_Utah_-_May_11,_2012.jpg?width=640" alt="Benches and haul roads of the Bingham Canyon open-pit mine"><figcaption><b>A road climbing the wall of a pit: benches above, drop below</b><i>Keep: the ramp as a ledge cut in a stepped wall. Do not borrow: the colours, the trucks, the number of benches.</i>David Ratledge, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:Bingham_Canyon_Mine_(1)_-_Salt_Lake_County,_Utah_-_May_11,_2012.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>MISSING</small>References not found</h2>
+<ul>
+  <li>A drive-through vehicle airlock of the 1970s (the start hall): the hall above is an assembly building, right for the structure and wrong for the scale and the pressurised look.</li>
+  <li>The inside of a short technical gallery with segmented frames (the tunnel): only the bible's own concept image shows it.</li>
+  <li>A field of small craters seen from ground height, for the arena floor once landed: the references above are orbital or terrestrial.</li>
+  <li>A closed-cabin 1970s rover for the parked buggy: every period photograph shows the open Apollo rover, which the art direction rules out.</li>
+  <li>The colony seen from the road at night-black sky with lit windows: the 1978 drawing is an aerial view in daylight tones.</li>
+</ul>
+
+<p class="dim" style="margin-top:36px">Images are linked from Wikimedia Commons, not copied into the repository, and are references for shapes and values only, never textures. File names, authors and licences were read from the Commons API when this sheet was written; recheck the source page before any other use. Chainages (PK) are those of the built layout and will move if the layout does.</p>
+</main>
+</body>
+</html>
