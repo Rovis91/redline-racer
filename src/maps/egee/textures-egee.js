@@ -4,7 +4,7 @@
   const grain = (g, { R, rand, veil }, n, a = 0.18, S = 64) => veil(g, a, () => { for (let i = 0; i < n; i++) R(g, i % 3 ? '#000' : '#fff', rand() * S | 0, rand() * S | 0, 1 + (rand() * 2 | 0), 1); });
   Object.assign(TEXTURES, {
     // dry island ground: ochre earth, pale limestone pebbles, grey-green tufts of thyme, no direction; 8 m per tile
-    solEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#d2aa74', 0, 0, 64, 64); grain(g, o, 380, 0.14);
+    solEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#b9966c', 0, 0, 64, 64); grain(g, o, 380, 0.16);
       veil(g, 0.12, () => { for (let i = 0; i < 9; i++) R(g, i & 1 ? '#fff' : '#7a4a20', rand() * 52 | 0, rand() * 52 | 0, 6 + rand() * 12 | 0, 4 + rand() * 8 | 0); });
       for (let i = 0; i < 22; i++) R(g, '#f0e2c4', rand() * 63 | 0, rand() * 63 | 0, 2, 1);
       veil(g, 0.7, () => { for (let i = 0; i < 16; i++) { const x = rand() * 61 | 0, y = rand() * 61 | 0; R(g, '#76815a', x, y, 3, 2); R(g, '#5c6a48', x + 1, y + 1, 2, 1); } }); }, 8],
@@ -18,8 +18,8 @@
       veil(g, 0.14, () => { for (let i = 0; i < 14; i++) R(g, i & 1 ? '#e8c9a0' : '#5a2a10', rand() * 56 | 0, rand() * 56 | 0, 4 + rand() * 8 | 0, 3 + rand() * 5 | 0); });
       for (let i = 0; i < 14; i++) R(g, '#e7c49a', rand() * 63 | 0, rand() * 63 | 0, 2, 1); }, 8],
     // quay and village paving: large pale limestone slabs of uneven size, lime-washed joints (the joints are lighter than the stone, as in the Cyclades), a few worn slabs; 8 m per tile
-    pavageEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#d9c8a8', 0, 0, 64, 64);
-      for (let y = 0; y < 64;) { const ht = 6 + (rand() * 5 | 0); for (let x = 0; x < 64;) { const w = 7 + (rand() * 9 | 0); R(g, ['#d2c09e', '#dccdb0', '#c8b694', '#e0d2b8'][rand() * 4 | 0], x, y, w, ht); R(g, '#f4ecdc', x, y, 1, ht); x += w; } R(g, '#f4ecdc', 0, y, 64, 1); y += ht; }
+    pavageEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#c4ae88', 0, 0, 64, 64);
+      for (let y = 0; y < 64;) { const ht = 6 + (rand() * 5 | 0); for (let x = 0; x < 64;) { const w = 7 + (rand() * 9 | 0); R(g, ['#bfa882', '#c9b48e', '#b59e78', '#d0bc98'][rand() * 4 | 0], x, y, w, ht); R(g, '#f4ecdc', x, y, 1, ht); x += w; } R(g, '#f4ecdc', 0, y, 64, 1); y += ht; }
       grain(g, o, 200, 0.1); }, 8],
     // lime wash, c = its tint: chalky white, faint trowel patches, a grey splash band at the foot is left to the pieces that touch the ground; 8 m per tile
     chauxEgee: (c = '#fbf6ea') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);

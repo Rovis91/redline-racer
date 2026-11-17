@@ -16,23 +16,25 @@
     egee(h) {
       const { THREE, S, N, T } = h, P = h.M.pts, DS = { side: THREE.DoubleSide };
       const inside = (x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > z) !== (P[j][1] > z) && x < (P[j][0] - P[i][0]) * (z - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0]) c = !c; return c; };
-      // relief the road does not make. Sea side: the ground falls from 20 m off the axis (1.5 m per metre); capes hold it out 75 m further; along the Descente it goes down in 5 m terraces; in the harbour it is a quay, level for 10 m then a wall.
+      // relief the road does not make. Sea side: the ground falls from 20 m off the axis (1.5 m per metre); capes hold it out 75 m further, the village plateau 34 m; along the Descente it goes down in 5 m terraces; in the harbour it is a quay, level for 10 m then a wall.
       // Under water the slope flattens into a 40 m shelf (the pale seabed shows through the water: cyan at the foot of the rock, deep blue offshore). Island side: cliffs rise over the Ascension and the Balcon, olive terraces where the groves are
       const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], pk = i / N * LAP, d = Math.hypot(s.x - x, s.z - z), grove = Math.max(...GROVES.map(p => win(pk, p - 70, p + 70, 40)));
         if (inside(x, z)) { const R = 26 * win(pk, 570, 1900, 80) * (1 - 0.55 * grove) + 20 * win(pk, 2990, 3480, 60) + 14 * win(pk, 3500, 4380, 80) * (0.5 + 0.5 * grove);
-          const up = R * ss((d - s.w - 4) / 30) * (0.72 + 0.28 * Math.sin(x * 0.045) * Math.cos(z * 0.039)); return -(grove > 0.5 || pk > 3500 ? steps(up, 4) : up); }
+          const up = R * ss((d - s.w - 4) / 30) * (0.72 + 0.28 * Math.sin(x * 0.045) * Math.cos(z * 0.039)), inland = 34 * ss((d - 70) / 130) * (0.55 + 0.45 * Math.sin(x * 0.011 + 1) * Math.cos(z * 0.013)) * (1 - 0.8 * win(pk, 1950, 2850, 80));
+          return -(grove > 0.5 || pk > 3500 ? steps(up, 4) : up) - inland; } // inland: the hills of the island's heart, a backdrop behind the first slope (kept low behind the village: it stays the crest)
         const cape = Math.max(...CAPES.map(([a, b]) => win(pk, a, b, 50))), terr = win(pk, 3520, 4420, 80), quay = pk < 520 ? ss((520 - pk) / 40) : ss((pk - 4520) / 40);
-        let f = Math.max(0, d - 20 - 75 * cape) * (1.5 - 1.1 * terr); if (terr > 0.5) f = steps(f, 5);
+        let f = Math.max(0, d - 20 + 8 * terr - 75 * cape - 34 * win(pk, 1950, 2830, 60)) * (1.5 - 1.1 * terr); if (terr > 0.5) f = steps(f, 5);
         f += quay * (ss((d - s.w - 9) / 3) * (y - SEA + 4) + Math.max(0, d - 40) * 0.3 - f);
         const gy = y - f; return gy < SEA ? y - (SEA - Math.min(8, (SEA - gy) * 0.12)) : f; };
       // ground: dry ochre earth; bare rock where it is steep; pale sand under water; lime-jointed paving round the quay and through the village; red tilled earth on the terraces
       const pkOf = (x, z) => near(h, x, z) / N * LAP, paved = p => Math.max(win(p, -1, 560, 50), win(p, 4440, 4701, 50), win(p, 1900, 2840, 60));
-      const g = terrain(h, { stepSec: 6, margin: 320, hollow: relief, mat: h.mat('solEgee'), layerSet: [{ tex: ['terreEgee'], weight: (x, z, y, p, d) => { const k = pkOf(x, z); return Math.max(win(k, 3500, 4440, 60), ...GROVES.map(q => win(k, q - 80, q + 80, 40))) * ss((d - 12) / 6); } },
-        { tex: ['pavageEgee'], weight: (x, z, y, p, d) => paved(pkOf(x, z)) * (1 - ss((d - 24) / 10)) }, { tex: ['rocheEgee', '#b97049'], slope: [0.1, 0.24] }, { tex: ['pavageEgee'], low: [SEA - 0.6, SEA + 0.5] }] });
+      const g = terrain(h, { stepSec: 6, margin: 320, hollow: relief, mat: h.mat('solEgee'), layerSet: [{ tex: ['terreEgee'], weight: (x, z, y, p, d) => { const k = pkOf(x, z); return Math.max(win(k, 3500, 4440, 60) * (inside(x, z) ? 0 : 1), ...GROVES.map(q => win(k, q - 80, q + 80, 40) * (1 - ss((d - 75) / 15)))) * ss((d - 12) / 6); } },
+        { tex: ['pavageEgee'], weight: (x, z, y, p, d) => paved(pkOf(x, z)) * (1 - ss((d - 14) / 6)) }, { tex: ['rocheEgee', '#b97049'], slope: [0.1, 0.24] }, { tex: ['pavageEgee'], low: [SEA - 0.6, SEA + 0.5] }] });
       // sea: a deep-blue bed under everything and the water over it, half transparent
       const plane = (m, y) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), m); p.rotation.x = -Math.PI / 2; p.position.set(0, y, -550); h.scene.add(p); return p; };
-      plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); plane(h.mat('seaTurquoise', { rep: [1200, 1200], transparent: true, opacity: 0.62, depthWrite: false }), SEA);
-      // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
+      plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); plane(h.mat('seaTurquoise', { rep: [1200, 1200], transparent: true, opacity: 0.48, depthWrite: false }), SEA);
+      // the game draws the roadway and its guardrail at a constant ±W; the physics walls are at ±s.w (M.wide). As on givre: th.wallH = 0 buries the engine's guardrail, the roadway and the parapet are laid again at the real width
+      { const rail = h.mat('guardrail', DS, h.TH.intoWall); for (const sd of [-1, 1]) h.guardM(sd, T.t1, N, s => sd * s.w, 1.1, s => sd * s.w, -2, rail); } // a stone parapet with a lime cap; h.guardM: wears down on impacts
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
 
       // MAT: the shared materials of the map, one draw pass each: every real piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the egee shapes
