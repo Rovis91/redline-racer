@@ -8,7 +8,7 @@
   for (const pk of [LAP - 52, 112]) add(by(pk, 0), 'portiqueLune', [24, 14, 'amber']);          // the frames of its two doors
   dome(200, 1, 26, 35, 30);                                                                     // hero, dead ahead when leaving the hall: on the outside of the first bend, where the technical plan draws it
   dome(330, 1, 60, 23, 20);                                                                     // the greenhouse dome behind it, smaller
-  for (const [pk, sd, off] of [[150, 1, 10], [270, 1, 14], [310, 1, 16], [160, -1, 12], [215, -1, 12], [345, -1, 14], [LAP - 130, 1, 12], [LAP - 85, 1, 12]]) module(pk, sd, off); // short cylinders along the road, on both sides and on the way in
+  for (const [pk, sd, off] of [[150, 1, 10], [160, -1, 12], [215, -1, 12], [345, -1, 14], [LAP - 130, 1, 12], [LAP - 85, 1, 12]]) module(pk, sd, off); // short cylinders along the road, on both sides and on the way in (none on the crater side past the dome: the ground falls away there)
   add(by(135, -1, 34, [10, 10]), 'tourLune'); add(by(265, -1, 40, [50, 70]), 'hangarLune'); add(by(230, 1, 120, [4, 4]), 'antenneLune'); add(by(LAP - 110, -1, 14, [30, 50]), 'entrepotLune');
   for (const pk of [400, 455]) add(by(pk, -1, 30, [50, 50]), 'champSolaireLune');               // solar fields, set back from the trajectory
   for (const pk of [385, 405, 425]) add(by(pk, 1, 16, [8, 8]), 'citerneLune', [4, 7], [0, 0, 0], MAT.shell);
