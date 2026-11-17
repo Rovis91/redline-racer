@@ -41,7 +41,7 @@ const exitAt = n => path.join(REPO_ROOT, 'captures', n);
     if (r.timedOut) throw new Error('timeout'); const x = r.result; if (x.exceptionDetails) throw new Error((x.exceptionDetails.exception || {}).description || x.exceptionDetails.text); return x.result.value; };
   await cmd('Runtime.enable'); await cmd('Page.enable');
   // race mode for the measurement, as in tools/perf.js (continued); the number of views is in the address
-  await cmd('Page.addScriptToEvaluateOnNewDocument', { source: `try { localStorage.setItem('vpr7.mode${J > 1 ? 2 : ''}', '"course"'); } catch (e) {}` });
+  await cmd('Page.addScriptToEvaluateOnNewDocument', { source: `try { localStorage.setItem('vpr7.mode${J > 1 ? 2 : ''}', '"raceCase"'); } catch (e) {}` });
   const origins = fs.readFileSync(path.join(__dirname, 'origins.js'), 'utf8'); let hook = null;
   // loads the map, reloading once if a script was lost (the small local server sometimes drops one)
   const load1 = async (c, withOrigins) => {
