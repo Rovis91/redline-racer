@@ -1,9 +1,9 @@
-// "lune" blockout, zone 3: S des crêtes (PK 1400 to 2300, 44 to 68 m, dip 42 m near PK 1550, summit 69 m at PK 2200, 18 m wide). The northern impact (Ø 283 m) is terrain, on the left. Only this zone's named blocks; put() is described in scenery-lune.js.
-(window.LUNE = window.LUNE || {}).cretes = ({ put, far, at }) => {
+// "lune" blockout, zone 3: Montée de la crête (PK 1350 to 1720, 63 to 66 m, 18 m wide): the straight run-up along the ridge to the lip, on the rim of the great eastern crater. Only this zone's named blocks; put() is described in scenery-lune.js.
+(window.LUNE = window.LUNE || {}).cretes = ({ put, far }) => {
   const ROCK = 0x3a4450, PALE = 0xbdc6c5, ORANGE = 0xda8a41, EARTH = 0x4f8fd0;
-  // two rocky flanks of different scales, the tall one always on the outside of the bend and 30 m back: no rock hides the next change of direction
-  for (let pk = 1440; pk < 2280; pk += 120) { const out = at(pk).k > 0 ? -1 : 1; put('FLANC ROCHEUX', ROCK, pk, out, 30, 30, 14 + pk % 3 * 6, 60); put('CRÊTE', PALE, pk + 60, -out, 45, 20, 6, 40); }
-  put('ANTENNE LIAISON', ORANGE, 1900, -1, 60, 3, 18, 3);
-  for (const x of [-500, 150, 800]) far('DORSALE', ROCK, x, -900, 500, 70, 120);                                // far relief silhouettes on the northern horizon, beyond the loop
-  far('TERRE', EARTH, 2750, -950, 200, 200, 200, 550);                                                            // the Earth, revealed above the ridge line at the exit of the S: one box in the sky, 2.5 km east-north-east of the summit
+  for (const [pk, sd] of [[1380, -1], [1470, 1], [1560, -1], [1640, 1]]) { put('FLANC ROCHEUX', ROCK, pk, sd, 30, 30, 14 + pk % 3 * 5, 60); put('CRÊTE', PALE, pk + 40, -sd, 40, 20, 6, 40); } // two flanks of different scales, 30 m back
+  put('ANTENNE LIAISON', ORANGE, 1430, -1, 60, 3, 18, 3);
+  for (const sd of [-1, 1]) put('PLONGEOIR', ORANGE, 1712, sd, 2, 6, 14, 6);                // the lip: an orange post on each side, the last thing before the void
+  for (const x of [-450, 20]) far('DORSALE', ROCK, x, -720, 400, 60, 100);                  // far relief silhouettes on the northern horizon, beyond the loop
+  far('TERRE', EARTH, 2990, 245, 220, 220, 220, 480);                                       // the Earth, dead ahead of the jump: one box in the sky, 3 km beyond the lip
 };
