@@ -30,6 +30,9 @@
     jauneArea51: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#e2b838', 0, 0, 16, 16); veil(g, 0.4, () => { for (let i = 0; i < 14; i++) R(g, '#4c525a', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],
     // hazard band, yellow and black at 45°, 4 m per tile
     dangerArea51: () => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, '#e8c040', 0, 0, 32, 32); for (let k = -32; k < 32; k += 16) for (let i = 0; i < 32; i++) R(g, '#16181c', k + i, i, 8, 1); veil(g, 0.25, () => { for (let i = 0; i < 20; i++) R(g, '#000', rand() * 32 | 0, rand() * 32 | 0, 2, 1); }); }, 4],
+    cherenkovArea51: 0x4fb8ff, // the blue light of the reactor pool (emits)
+    // worn white runway paint, 2 m per tile
+    blancArea51: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#dcd8cc', 0, 0, 16, 16); veil(g, 0.45, () => { for (let i = 0; i < 16; i++) R(g, '#3a4048', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],
     // lit glazing band (emissive): warm panes between dark mullions, one in six unlit; stretched over the band it is put on
     verriereArea51: () => [64, 8, (g, o) => { const { R, rand } = o; R(g, '#0c0e12', 0, 0, 64, 8); for (let x = 1; x < 64; x += 4) if (rand() > 0.17) R(g, rand() < 0.3 ? '#ffe2a8' : '#fff2d0', x, 1, 3, 6); }],
   });

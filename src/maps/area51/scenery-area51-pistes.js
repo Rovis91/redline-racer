@@ -1,31 +1,34 @@
-// "area51" blockout, zone 5: Pistes d'essai (from the main gate: controlled crossing of the west runway end, parallel taxiway, west connector, runway A sprint, angled exit, tight right onto the apron).
-// Only this zone's named blocks; the helpers are described in scenery-area51.js.
-// Bands from north to south, as on a real base: dry lake, runway B, runway A (two runways of the same size, 1200 × 60 m, 260 m apart), parallel taxiway (305 m from A's axis), apron, then the hangar row.
-// Runways, taxiway and apron are tied by connectors, as on any airfield: three between the runways, five between runway A and the taxiway; the apron touches the taxiway along its whole length.
+// "area51", zone 5: Pistes d'essai (from the main gate: controlled crossing of the west runway end, parallel taxiway, west connector, runway A sprint, angled exit, tight right onto the apron). Real scenery (V2).
+// The placers are described in scenery-area51.js; the shapes are in shapes-area51-airfield.js, -radio.js, -perimetre.js, -avion.js and -hall.js.
+// Bands from north to south, as on a real base: dry lake, runway B, runway A (two runways of the same size, 1200 × 60 m, 260 m apart), parallel taxiway (305 m from the axis of A), apron, then the hangar row.
+// Runways, taxiway and apron are tied by connectors: three between the runways, five between runway A and the taxiway; the apron touches the taxiway along its whole length.
 // On runway A the race road is the runway itself, full width, without guardrail: nothing marks an edge. The race uses the airfield the way a landing aircraft does:
 // taxiway, 90° connector, runway, angled exit back to the taxiway, apron. Nothing tall stands inside the runway strips: radars and aerials are beyond them.
-(window.AREA51 = window.AREA51 || {}).pistes = ({ put, at, apex, mute, pk, set, surf }) => {
-  const RUNWAY = 0x363e48, WHITE = 0xe8e2d7, AMBER = 0xf5aa75, CONCRETE = 0xa39c84, GLASS = 0x333f52, PLAYA = 0xe8d9b7, RED = 0xb5483c, STEEL = 0x52616e, YELLOW = 0xf2c84a;
-  const slab = (label, x, z, wx, dz) => surf(label === 'TARMAC' ? 'tarmac' : 'piste', x, z, wx, dz); // paved surface, its top 0.2 m under the roadway: the road lies flush on it. Runways and taxiways take the tone of the roadway, the apron is lighter
-  // the playa north of runway A is a ground layer of the terrain (scenery-area51.js); beyond the terrain it goes on to the far range as one flat slab
+(window.AREA51 = window.AREA51 || {}).pistes = ({ h, MAT, set, side, surf, inside, pk }) => {
+  const line = (m, x, z, wx, dz) => surf(m, x, z, wx, dz, -0.12, 0.08); // paint: 8 cm above its slab, still under the roadway
+  // paved surfaces, their top 0.2 m under the roadway (the road lies flush on them): runways and taxiways in the tone of the roadway, the apron lighter. Beyond the terrain the playa goes on to the far range as one slab
   surf('playa', 1500, -900, 4400, 1500, -0.7, 1);
-  slab('PISTE A', 1700, 380, 1200, 60, true); at('PISTE A', YELLOW, 1700, 425, 6, 2, 2);     // runway A in the colour of the roadway; its name on a marker beside it, not on the road
-  slab('PISTE B', 1700, 120, 1200, 60);                                                      // the twin runway, on the lake side
-  [1130, 1700, 2270].forEach((x, i) => slab('BRETELLE', x, 250, 23, 200, i));                 // connectors between the two runways
-  slab('TAXIWAY', 1700, 685, 1200, 23); [1130, 1310, 1610, 1850, 2270].forEach((x, i) => slab('BRETELLE', x, 541.5, 23, 263, true)); // the parallel taxiway and its connectors to runway A (the race takes the one at x 1310)
-  slab('TARMAC', 1850, 759.5, 900, 125);                                                     // the apron, from the taxiway to the hangar doors: it carries the start line
-  surf('yellow', 1850, 699, 900, 0.6, -0.12, 0.08); for (const x of [2040, 2180]) surf('yellow', x, 762, 0.6, 126, -0.12, 0.08); // apron edge line, lead-in lines to the doors of H2 and H3
-  [1140, 1200, 1260].forEach((x, i) => { const c = at('SEUIL DECALE', YELLOW, x, 380, 20, 0.2, 50, -0.3); if (i) mute(c); }); // displaced threshold: the west end, where the road crosses, is not landed on
-  [980, 920, 860, 800].forEach((x, i) => { const c = at("RAMPE D'APPROCHE", YELLOW, x, 380, 2, 1.5, 30); if (i) mute(c); }); // approach light bars in the runway axis, west of the crossing
-  for (const [x, z] of [[1040, 300], [1040, 465]]) put('BARRIERE', RED, pk(x, z), 1, 2, 2, 3, 2); // the crossing is controlled: a barrier arm before and after the runway axis
-  at('AVION', WHITE, 2040, 120, 60, 7, 8, 2); at('AILES', WHITE, 2045, 120, 10, 2, 54, 4); at('DERIVE', WHITE, 2014, 120, 10, 11, 2, 9); // the plane lined up on runway B, never on the race's
-  at('TOUR DE CONTROLE', CONCRETE, 1480, 800, 14, 34, 14); at('VIGIE', GLASS, 1480, 800, 22, 7, 22, 35);   // mid-field, on the hangar line: it sees both thresholds and the apron
-  at('CASERNE POMPIERS', RED, 1400, 775, 44, 9, 26);                                         // on the apron edge, a straight run to the taxiway
+  surf('piste', 1700, 380, 1200, 60); surf('piste', 1700, 120, 1200, 60); for (const x of [1130, 1700, 2270]) surf('piste', x, 250, 23, 200);
+  surf('piste', 1700, 685, 1200, 23); for (const x of [1130, 1310, 1610, 1850, 2270]) surf('piste', x, 541.5, 23, 263);
+  surf('tarmac', 1850, 759.5, 900, 125);                                                       // the apron, from the taxiway to the hangar doors: it carries the start line
+  // markings. Runway B: threshold bars at both ends, centreline dashes. Runway A: east threshold, and in the west a displaced threshold (yellow bars) where the road crosses. Yellow centrelines on taxiway, connectors and apron
+  for (const [x, z] of [[1125, 120], [2275, 120], [2275, 380]]) for (let j = -5; j <= 5; j++) line('paintW', x, z + j * 4.8, 30, 1.8);
+  for (let x = 1230; x < 2200; x += 60) line('paintW', x, 120, 30, 0.9);
+  for (const x of [1140, 1200, 1260]) line('yellow', x, 380, 3, 44);
+  line('yellow', 1700, 685, 1200, 0.5); for (const x of [1130, 1310, 1610, 1850, 2270]) line('yellow', x, 541.5, 0.5, 263); for (const x of [1130, 1700, 2270]) line('yellow', x, 250, 0.5, 200);
+  line('yellow', 1850, 699, 900, 0.6); for (const x of [2040, 2180]) line('yellow', x, 762, 0.6, 126);
+  for (const x of [980, 920, 860, 800]) set('rampeArea51', x, 380);                             // approach light bars in the runway axis, west of the crossing
+  for (const [x, z] of [[1040, 300], [1040, 465]]) for (const sd of [-1, 1]) side('barriereArea51', pk(x, z), sd, 0.6, 0.5); // the crossing is controlled: raised barrier arms before and after the runway axis
+  set('avionArea51', 2040, 120, { y: -0.2, s: 1.3, ry: Math.PI / 2 });                          // the plane lined up on runway B, never on the race's
+  set('tourArea51', 1480, 800);                                                                // mid-field, on the hangar line: it sees both thresholds and the apron
+  set('shedArea51', 1400, 775, { a: [44, 9, 26], skin: { ...MAT, tin: MAT.red } });            // fire station, on the apron edge, a straight run to the taxiway
   for (let x = 1500; x < 2290; x += 152) set('mastLighting', x, 703, { s: 0.75 });             // apron light masts (26 m), between apron and taxiway
-  [[2440, 820], [2490, 820], [2440, 875], [2490, 875]].forEach(([x, z], i) => { const c = at('CUVE CARBURANT', WHITE, x, z, 26, 10, 26); if (i) mute(c); }); // fuel farm: at the end of the apron, off the hangar line
-  at('MERLON', CONCRETE, 2465, 780, 120, 4, 6); at('PORTE DE SERVICE EST', CONCRETE, 2570, 760, 20, 5, 6); // tankers come in by their own gate: they never cross the flight line
-  at('RADAR APPROCHE', WHITE, 2050, 590, 8, 10, 8); mute(at('RADAR APPROCHE', WHITE, 1450, 580, 8, 10, 8)); at('GLIDE', AMBER, 1390, 545, 4, 12, 4); // 200 m off the axis, one per landing direction
+  // fuel farm at the end of the apron, off the hangar line, behind a low wall; the tankers come in by their own gate and never cross the flight line
+  for (const [x, z] of [[2440, 820], [2490, 820], [2440, 875], [2490, 875]]) set('cylArea51', x, z, { a: [12, 10, 14], skin: MAT.white });
+  surf('concrete', 2465, 780, 120, 2, null, 4); set('gueriteArea51', 2570, 752); set('barriereArea51', 2578, 762, { a: [8, 0.1], ry: Math.PI / 2 });
+  set('radarArea51', 2050, 590); set('radarArea51', 1450, 580); set('glideArea51', 1390, 545);  // 200 m off the axis, one radar per landing direction
   // what the road goes round on the airfield: the localizer aerial at the taxiway end, the windsock at the angled exit, the blast fence of the fuel-truck stand at the last right
-  apex('ANTENNE LOCALIZER', AMBER, pk(1065, 625), 20, 4, 3, 8); apex('MANCHE A AIR', AMBER, pk(2030, 440), 2, 8, 2, 8); apex('PARE-SOUFFLE', CONCRETE, pk(2285, 715), 3, 4, 30, 6);
-  ['F1 300', 'F1 200', 'F1 100'].forEach((l, i) => { for (const sd of [-1, 1]) put(l, AMBER, pk(2250, 660) - 300 + i * 100, sd, 3, 4, 5, 0.5); }); // braking zone F1, down the exit: announcing panels, off the roadway
+  const round = (shape, x, z, off, half) => side(shape, pk(x, z), inside(pk(x, z)), off, half); round('localizerArea51', 1065, 625, 8, 1); round('mancheArea51', 2030, 440, 8, 0.5); round('pareSouffleArea51', 2285, 715, 6, 2);
+  // braking zone F1, down the exit: announcing boards on both sides, off the roadway
+  ['300', '200', '100'].forEach((txt, i) => { const sign = h.mat('written', {}, 64, 32, '#f5aa75', '#16181c', txt, 26); for (const sd of [-1, 1]) side('panneauArea51', pk(2250, 660) - 300 + i * 100, sd, 3, 2, { keep: 1, skin: { ...MAT, sign } }); });
 };
