@@ -1,9 +1,10 @@
-// Scenery placement for "area51" (Area 51 / Signal Unknown, blockout): terrain, roadway, guardrails, then the named blocks of each zone (scenery-area51-<zone>.js). See docs/methods/NEW-MAP.md, phase 2.
+// Scenery placement for "area51" (Area 51 / Signal Unknown): terrain, roadway, guardrails, the shared materials, then each zone (scenery-area51-<zone>.js). See docs/methods/NEW-MAP.md, phases 2 and 3.
+// State: the hangar zone, the dish D1 and the far relief are real scenery (shapes-area51-*.js, textures-area51.js); the other zones are still the named blocks of the blockout.
 // Coordinates are plan metres (x = east, z = south), the frame of the proposal's technical plan, so a block can be read off a plan directly.
 // Site logic, as on a real flight-test base: dry lake to the north, the two runways on its edge, then going south taxiway, apron, hangar row, service road, and the alluvial fan rising to the range;
 // what must be shielded sits in the relief (B1 under the mesa, the big dish in a bowl), what must see far sits on it (telemetry on the ridge).
 (function () {
-  const { near, block, edgePt, terrain } = PLACERS;
+  const { near, block, edgePt, terrain, weld } = PLACERS;
   const ZONES = ['hangar', 'bunker', 'antennes', 'collines', 'pistes'], LAP = 6784; // LAP: plan length of the layout, the unit of the chainages (PK)
   // relief the road does not make, [x, z, radius x, radius z, height]: B1's mesa, the radar ridge, the two shoulders of the road cut, hills south and east of the base
   const HILLS = [[1160, 1262, 430, 230, 55], [210, 540, 170, 300, 40], [330, 250, 120, 90, 30], [470, 395, 80, 60, 22], [1900, 1250, 250, 170, 35], [2390, 1340, 180, 160, 40], [2700, 900, 200, 400, 40]];
@@ -30,11 +31,23 @@
           return lat > -L - 12 && lat < R + 12 ? y - (s.y - 2) + PIT[3] * ss((PIT[2] + 4 - Math.hypot(X - PIT[0], Z - PIT[1])) / 8) : -hills(X, Z); }
         let f = 0, a = 0; for (const [x0, x1, z0, z1, alt] of FLATS) { const w = ss((X - x0) / 30) * ss((x1 - X) / 30) * ss((Z - z0) / 30) * ss((z1 - Z) / 30); if (w > f) { f = w; a = alt - 0.6; } }
         return f * (y - a) - (1 - f) * hills(X, Z) * ss((Math.hypot(s.x - x, s.z - z) - 22) / 45); }; // in the open, hills rise from 22 m off the axis (full height 45 m further)
-      const g = terrain(h, { stepSec: 10, margin: 400, ground: s => over.get(s) ?? s.y, hollow, mat: h.mat('paint', { c: 0xd69a72 }) });
+      const g = terrain(h, { stepSec: 10, margin: 400, ground: s => over.get(s) ?? s.y, hollow, mat: h.mat('solArea51'),
+        layerSet: [{ tex: ['playaArea51'], weight: (x, z) => ss((60 - z / k) / 60) * ss((x / k - 880) / 60) }, { tex: ['rocheArea51', '#a5604a'], slope: [0.3, 0.55] }] }); // ground: gravel fan, the pale clay of the dry lake north of runway B, bare rock where it is steep
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
       // guardrails (th.wallH 0: the engine draws none): everywhere but on the runway, where the road has no edge
       const [r0, r1] = RUNWAY.map(p => idx(...p)), rail = h.mat('guardrail', { side: THREE.DoubleSide }, h.TH.intoWall); for (const sd of [-1, 1]) h.guardM(sd, r1, N - (r1 - r0), s => sd * s.w, 1.1, s => sd * s.w, -2, rail);
+      // V2 scenery (docs/methods/NEW-MAP.md phase 3). MAT: the shared materials of the map, one draw pass each for the whole map: every real piece of scenery goes into the group `kit`, merged per material at the end.
+      // Keys are also the zone names of the area51 shapes; the Object.assign line maps the zone names of the shapes borrowed from shapes.js (mastLighting, waterTower, tractor, trailerTank)
+      const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), MAT = { tin: h.mat('toleArea51', {}, '#757a68'), roof: h.mat('toleArea51', DS, '#3e4238'), concrete: h.mat('concretePart'), dark: h.mat('concreteDark'), steel: h.mat('steelMat'), gray: h.mat('matGray'),
+        lattice: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#9aa0a8'), white: h.mat('metalPale', { c: 0xe9ece7, ...DS }), red: tint(0xb5483c), amber: tint(0xf2a23a), glass: h.mat('paneDark'), neon: h.mat('lampObj', { emis: 1 }), fire: h.mat('lightRed', { emis: 1 }),
+        verriere: h.mat('verriereArea51', { emis: 1 }), danger: h.mat('dangerArea51'), tarmac: h.mat('tarmacArea51'), piste: h.mat('tarmacArea51', { c: 0xb4b8c4 }), yellow: h.mat('jauneArea51'), rock: h.mat('rocheArea51', {}, '#a5604a'), far: h.mat('rocheArea51', {}, '#6a5a96') };
+      Object.assign(MAT, { door: MAT.gray, steelMat: MAT.steel, lampObj: MAT.neon, iron: MAT.gray, vat: MAT.white, chassis: MAT.gray, cabin: MAT.red, pane: MAT.glass, radiator: MAT.gray, headlight: MAT.neon, lightOrange: MAT.neon, wheelPart: MAT.steel, tire: MAT.dark });
+      const kit = new THREE.Group(); h.scene.add(kit);
+      // set(shape, x, z, { ry, y, s, a, skin }): a catalogue shape at a plan position, on the ground unless y is given, turned by ry, scaled by s, with the shape settings a; skin = MAT, or one material for a simple shape. Returns its group
+      const set = (shape, x, z, { ry = 0, y, s = 1, a = [], skin = MAT } = {}) => { const grp = new THREE.Group(); grp.position.set(x * k, y ?? g.hAt(x * k, z * k), z * k); grp.rotation.y = ry; grp.scale.setScalar(s); kit.add(grp); h.pose(shape, skin, grp, [0, 0, 0], ...a); return grp; };
+      // surf(material, x, z, wx, dz, top, th): a paved surface, wx east-west by dz north-south, its top at altitude `top` (default 0.2 m under an airfield road at 0; null: just above the ground there)
+      const surf = (m, x, z, wx, dz, top = -0.2, th = 1.3) => h.pose('boxMesh', MAT[m], kit, [x * k, (top ?? g.hAt(x * k, z * k) + 0.15) - th / 2, z * k], wx, th, dz);
       const smp = pk => S[Math.round(pk / LAP * N) % N], pk = (x, z) => idx(x, z) / N * LAP; // pk(x, z): chainage of the road point nearest to a plan position
       const low = (x, z, w, d) => Math.min(g.hAt(x, z), ...[[w, 0], [-w, 0], [0, d], [0, -d]].map(([a, b]) => g.hAt(x + a / 2, z + b / 2)));
       // put(label, colour, pk, side, off, w, ht, d, y): a block at chainage pk (m), side -1 = left / 1 = right, its near face `off` metres from the wall; w across the road, d along it.
@@ -49,7 +62,8 @@
       // apex(label, colour, pk, w, ht, d, off = 6): a block on the inside of the bend at chainage pk: the thing the road goes round
       const apex = (label, c, p, w, ht, d, off = 6) => put(label, c, p, smp(p).k > 0 ? 1 : -1, off, w, ht, d);
       const mute = b => { b.remove(b.children[b.children.length - 1]); return b; }; // a repeated piece of a larger thing: no board of its own
-      for (const z of ZONES) AREA51[z]({ h, g, S, put, at, box, apex, mute, smp, pk, idx, t0, t1, rooms, room });
+      for (const z of ZONES) AREA51[z]({ h, g, S, put, at, box, apex, mute, smp, pk, idx, t0, t1, rooms, room, MAT, kit, set, surf, THREE, k });
+      weld(h, kit); // one mesh per material
     },
   });
 })();
