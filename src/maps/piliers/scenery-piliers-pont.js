@@ -1,4 +1,4 @@
-// "piliers" blockout, zone 3: Grand pont panoramique (PK 1710 to 2181, +215 m, 14 m wide; deck PK 1813 to 2063, straight, east 800 to 1050 at north 920). Only this zone's named blocks; put() and mass() are described in scenery-piliers.js.
+// "piliers" blockout, zone 3: Grand pont panoramique (PK 1710 to 2181, +215 m, 14 m wide; deck PK 1813 to 2063, straight, east 800 to 1050 at north 920). Only this zone's named blocks; put(), mass() and summit() are described in scenery-piliers.js.
 (window.PILIERS = window.PILIERS || {}).pont = ({ put, mass }) => {
   const ROCK = 0x9b9a7e, STONE = 0xc9c3b2, STEEL = 0x162e39;
   for (const sd of [-1, 1]) {

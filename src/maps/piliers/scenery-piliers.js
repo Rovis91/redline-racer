@@ -1,4 +1,5 @@
-// Scenery placement for "piliers" (Sky Pillars, blockout): rock shoulders above the ravine, sea of clouds, roadway and bridge deck, then the named blocks of each zone (scenery-piliers-<zone>.js). See docs/methods/NEW-MAP.md, phase 2.
+// Scenery placement for "piliers" (Sky Pillars, blockout V2): the relief is sculpted in the terrain (rock shoulders over the ravine, pillars, corniche walls, the mountain the tunnel goes through),
+// then the sea of clouds, the roadway and the bridge deck, then the named blocks of each zone (scenery-piliers-<zone>.js): only what will be replaced by an object. See docs/methods/NEW-MAP.md, phase 2.
 (function () {
   const { near, block, edgePt, terrain } = PLACERS;
   const ZONES = ['foret', 'corniches', 'pont', 'plateaux', 'descente'], LAP = 4041.88, BRIDGE = [1813, 2063]; // LAP: plan length of the proposal, the unit of its chainages (PK); BRIDGE: the deck of the bible
@@ -6,18 +7,33 @@
   const SHOULDERS = [[[40, 100], [380, 100], [640, 30], [790, 180], [910, 170], [1110, 50], [1300, 120], [1350, 340], [1210, 460], [1100, 380], [930, 310], [780, 320], [650, 400], [500, 430], [290, 330], [160, 430], [180, 580], [240, 640], [290, 790], [150, 840], [60, 720], [40, 440]],
     [[145, 610], [230, 850], [350, 890], [460, 820], [470, 640], [510, 570], [580, 590], [580, 780], [650, 940], [825, 960], [825, 880], [730, 840], [700, 650], [660, 480], [470, 460], [380, 540], [350, 710], [280, 700], [240, 590]],
     [[1025, 965], [1170, 970], [1290, 880], [1300, 670], [1280, 540], [1190, 490], [1170, 440], [1290, 390], [1290, 310], [1200, 310], [1080, 420], [1060, 550], [1170, 650], [1170, 800], [1110, 860], [1025, 875]]];
-  // metres from (x, north) to the nearest shoulder edge, 0 inside a shoulder
-  const outside = (x, n) => { let d = 1e9; for (const P of SHOULDERS) { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [ax, ay] = P[j], [bx, by] = P[i], dx = bx - ax, dy = by - ay;
+  // rock towers [summit altitude, footprint of the summit]: the plan's cores P1 to P5 and HERO, then the mountain over the tunnel (the plan's rock nose, widened into a spur of P4 so that the tunnel has a reason to exist).
+  // Their walls fall 8 m per metre: a pillar 35 m from the axis makes the corniche wall by itself
+  const TOWERS = [[310, [[200, 410], [260, 390], [310, 440], [290, 540], [220, 570], [195, 510]]], [345, [[225, 680], [250, 620], [310, 600], [355, 650], [350, 715], [290, 745]]],
+    [370, [[520, 660], [500, 740], [520, 820], [565, 845], [590, 780], [575, 690]]], [305, [[1090, 690], [1120, 625], [1160, 690], [1150, 790], [1100, 820], [1070, 760]]],
+    [280, [[1000, 210], [1040, 180], [1090, 230], [1100, 300], [1050, 330], [1010, 290]]], [410, [[790, 490], [840, 440], [880, 490], [870, 590], [830, 660], [780, 600]]],
+    [300, [[1150, 686], [1320, 686], [1320, 612], [1150, 612]]]];
+  const BANKS = [[150, 640, 1, 8], [960, 1190, -1, 10], [2860, 3680, 1, 26]]; // [pk from, pk to, side, height]: a bank or rock wall along the road (forest inner bank, corniche cut, buttress wall of the descent)
+  const EDGES = [[640, 735, -1, 14], [760, 900, -1, 12], [2560, 2826, -1, 12], [2880, 3650, -1, 12]]; // [pk from, pk to, side, metres beyond the wall]: where the cliff edge comes close, so the void is seen from the car
+  const clamp = v => Math.max(0, Math.min(1, v));
+  // metres from (x, north) to polygon P, 0 inside
+  const dist = (P, x, n) => { let d = 1e9, c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [ax, ay] = P[j], [bx, by] = P[i], dx = bx - ax, dy = by - ay;
     if ((by > n) !== (ay > n) && x < (ax - bx) * (n - by) / (ay - by) + bx) c = !c;
-    const t = Math.max(0, Math.min(1, ((x - ax) * dx + (n - ay) * dy) / (dx * dx + dy * dy))); d = Math.min(d, Math.hypot(x - ax - t * dx, n - ay - t * dy)); } if (c) return 0; } return d; };
+    const t = clamp(((x - ax) * dx + (n - ay) * dy) / (dx * dx + dy * dy)); d = Math.min(d, Math.hypot(x - ax - t * dx, n - ay - t * dy)); } return c ? 0 : d; };
 
   Object.assign(SCENERY, {
     piliers(h) {
       const { THREE, S, N, T } = h, pk = i => i / N * LAP, at = p => S[Math.round(p / LAP * N) % N];
-      // inside a shoulder the ground follows the road (terrain); outside it falls to the ravine floor, 5 m per metre. The road keeps 16 m of rock beyond its walls where it leaves the plan's polygons, except on the bridge
-      const fall = (x, z, y) => { const i = near(h, x, z), s = S[i], p = pk(i), keep = p > BRIDGE[0] && p < BRIDGE[1] ? 1e9 : Math.max(0, Math.hypot(s.x - x, s.z - z) - s.w - 16);
-        return Math.min(Math.max(0, y), Math.min(outside(x, -z), keep) * 5); };
-      const g = terrain(h, { stepSec: 10, margin: 320, hollow: fall, mat: h.mat('paint', { c: 0x9b9a7e }) });
+      // inside a shoulder the ground follows the road (terrain); outside it falls to the ravine floor, 5 m per metre. The road keeps 16 m of rock beyond its walls where it leaves the plan's polygons, except on the bridge.
+      // Nothing is raised within 12 m of the walls (4 m plus one grid step: a rising face starts at the last low vertex, which must be off the road): the tunnel corridor stays open under its mountain (the blocks of zone 4 close it)
+      const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], p = pk(i), d = Math.hypot(s.x - x, s.z - z), side = (s.x - x) * s.tz + (z - s.z) * s.tx > 0 ? 1 : -1, ramp = (a, b) => clamp(Math.min(p - a, b - p) / 60);
+        let drop = Math.min(...SHOULDERS.map(P => dist(P, x, -z)), p > BRIDGE[0] && p < BRIDGE[1] ? 1e9 : Math.max(0, d - s.w - 16)) * 5;
+        for (const [a, b, sd, e] of EDGES) if (sd === side && p > a && p < b) drop = Math.max(drop, Math.max(0, d - s.w - e) * 6 * ramp(a, b));
+        let top = y - Math.min(Math.max(0, y), drop);
+        if (d > s.w + 12) { for (const [a, b, sd, H] of BANKS) if (sd === side && p > a && p < b) top += H * ramp(a, b) * clamp((d - s.w - 12) / (H / 2.5)) * clamp((110 - d) / 40);
+          for (const [t, P] of TOWERS) top = Math.max(top, t - dist(P, x, -z) * 8); }
+        return y - top; };
+      const g = terrain(h, { stepSec: 8, margin: 320, hollow: relief, mat: h.mat('paint', { c: 0x9b9a7e }) });
       const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('paint', { c: 0xe6eef0 })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
@@ -32,8 +48,9 @@
       const mass = (label, c, x, n, w, d, top, base = 0, ry = 0) => { const gr = block(h, label, c, w, top - base, d, x, base, -n, ry), b = gr.children[gr.children.length - 1], lw = b.geometry.parameters.width * 4;
         b.material = b.material.clone(); b.material.side = THREE.FrontSide; b.scale.setScalar(4); b.position.y = top - base + 4 + lw / 8;
         for (let k = 1; k < 4; k++) { const b2 = b.clone(); b2.rotation.y = k * Math.PI / 2; gr.add(b2); } for (const q of gr.children.slice(-4)) q.translateZ(lw / 2);
-        const r = Math.hypot(w, d) / 2; if (S.some(s => Math.hypot(s.x - x, s.z + n) < r + s.w + 2)) console.warn('piliers: ' + label + ' may stand on the road'); return gr; }; // coarse check (bounding circle): a warning means look at it, not that it overlaps
-      for (const z of ZONES) PILIERS[z]({ h, g, put, mass, S, N, at });
+        return gr; };
+      const summit = (label, x, n, top) => mass(label, 0x9b9a7e, x, n, 10, 10, top + 1, top - 3); // the name of a tower of the terrain, on a cap at its summit
+      for (const z of ZONES) PILIERS[z]({ h, g, put, mass, summit, S, N, at });
     },
   });
 })();
