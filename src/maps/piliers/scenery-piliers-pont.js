@@ -7,8 +7,8 @@
   for (const p of TOWER) { const s = at(p); on('pylonePiliers', s, { a: [2 * lat(s), H, s.y - Math.min(...[-1, 1].map(sd => g.hAt(...edgePt(s, sd, lat(s))))) + 3] }); }
   // main cables: from each anchor block up to the tower, then sagging to 4 m above the deck at mid-span; a hanger every 10.6 m
   for (const sd of [-1, 1]) { const P = (p, y) => { const s = at(p), [x, z] = edgePt(s, sd, lat(s)); return [x, s.y + y, z]; }, n = 20, sag = k => 4 + (H - 4) * (2 * k / n - 1) ** 2, p = k => TOWER[0] + (TOWER[1] - TOWER[0]) * k / n;
-    beam(P(ANCHOR[0], 7), P(TOWER[0], H + 2.5), 0.7); beam(P(TOWER[1], H + 2.5), P(ANCHOR[1], 7), 0.7);
-    for (let k = 0; k < n; k++) { beam(P(p(k), sag(k)), P(p(k + 1), sag(k + 1)), 0.7); if (k) beam(P(p(k), sag(k)), P(p(k), 0), 0.28); } }
+    beam(P(ANCHOR[0], 7), P(TOWER[0], H + 2.5), 1); beam(P(TOWER[1], H + 2.5), P(ANCHOR[1], 7), 1);
+    for (let k = 0; k < n; k++) { beam(P(p(k), sag(k)), P(p(k + 1), sag(k + 1)), 1); if (k) beam(P(p(k), sag(k)), P(p(k), 0), 0.36); } }
   // needles standing in the void under and around the bridge: the depth scale below the road
   needle(880, 1010, 40, 40, 190, 1); needle(960, 840, 35, 45, 175, 2); needle(900, 760, 45, 40, 240, 3); needle(990, 1090, 50, 40, 260, 4);
 };

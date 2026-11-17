@@ -40,14 +40,14 @@
       // ground: moss and low plants; pale stone and moss on the high plateau; bare rock rubble along the ledges of zones 2 and 5; bedded sandstone wherever it is steep, salmon on the buttress of the descent
       const zone = (a, b) => (x, z) => { const p = PKV.get(Math.round(x) + ',' + Math.round(z)); return clamp(Math.min(p - a, b - p) / 80); }, ledge = [zone(700, 1760), zone(2800, 3690)];
       const g = terrain(h, { stepSec: 8, margin: 320, hollow: relief, mat: h.mat('solPiliers'),
-        layerSet: [{ tex: ['solPiliers', '#7f8a66'], weight: zone(2181, 2826) }, { tex: ['gresPiliers', '#7e7d68', 0.3, 0.6], weight: (x, z) => Math.max(ledge[0](x, z), ledge[1](x, z)), edgePt: [30, 70] },
+        layerSet: [{ tex: ['solPiliers', '#7f8a66'], weight: zone(2181, 2826) }, { tex: ['gresPiliers', '#6f6e5c', 0.5, 0.6], weight: (x, z) => Math.max(ledge[0](x, z), ledge[1](x, z)), edgePt: [30, 70] },
           { tex: ['gresPiliers'], slope: [0.3, 0.55] }, { tex: ['gresPiliers', '#c9ad94'], slope: [0.3, 0.55], weight: zone(2826, 3700) }] });
       // on a steep face the texture follows the altitude instead of the plan: the beds stay horizontal and are not stretched down the cliffs
       { const G = g.mesh.geometry, P = G.attributes.position, Nn = G.attributes.normal, U = G.attributes.uv; for (let k = 0; k < P.count; k++) if (Nn.getY(k) < 0.72) U.setXY(k, (P.getX(k) + P.getZ(k)) * 0.07, P.getY(k) / 10); }
       const DS = { side: THREE.DoubleSide };
       // MAT: the shared materials of the map, one draw pass each for the whole map: every real piece of scenery goes into the group `kit`, merged per material at the end. Keys are also the zone names of the piliers assemblies
-      const MAT = { rock: h.mat('gresPiliers', DS), warm: h.mat('gresPiliers', DS, '#c9ad94'), far: h.mat('gresPiliers', DS, '#7d9296', 0.6, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c9ad94', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#7e7d68', 0.3, 0.6),
-        stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#5f8474'), bark: h.mat('ecorcePiliers'),
+      const MAT = { rock: h.mat('gresPiliers', DS), warm: h.mat('gresPiliers', DS, '#d2b8a2', 0.7), far: h.mat('gresPiliers', DS, '#8c9184', 0.7, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c2a48c', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#6f6e5c', 0.5, 0.6),
+        stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), bark: h.mat('ecorcePiliers'),
         steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }) };
       const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('nuagePiliers', { rep: [47, 47] })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
@@ -62,9 +62,9 @@
       const span = (a, b) => [idx(a), idx(b) - idx(a)], here = s => pk(I.get(s));
       for (const [a, b, sd, e] of EDGES) { const o = s => sd * (s.w + e + 3), r = s => clamp(Math.min(here(s) - a, b - here(s)) / 60) - 1; // r: sinks the wall into the ground where the edge fades out
         h.ribbon(...span(a, b), s => sd * (s.w + 0.6), 0.25, o, s => 0.25 + r(s) * 9, MAT.rubble, 8); h.ribbon(...span(a, b), o, s => 0.25 + r(s) * 9, o, s => -7.75 + r(s) * 9, MAT.wall); }
-      // cut faces along the banks (BANKS): beds 5 m high, each set back from the one below, their line broken every 16 m; the terrain bank is behind them
+      // cut faces along the banks (BANKS): beds 5 m high, each set back from the one below, their line broken every 10 to 22 m; the terrain bank is behind them
       BANKS.forEach(([a, b, sd, H], q) => { const m = q === 2 ? MAT.cutWarm : MAT.cut, nb = Math.ceil(H / 5), up = s => H * clamp(Math.min(here(s) - a, b - here(s)) / 60);
-        const off = k => s => sd * (s.w + 10.5 + k * 1.4 + 2 * nz(I.get(s) >> 3, k + a)), y = k => s => k ? up(s) * k / nb : -1;
+        const off = k => s => sd * (s.w + 9.5 + k * 1.4 + 3.6 * nz((I.get(s) + k * 3) / (5 + 6 * nz(k, a)) | 0, k + a)), y = k => s => k ? up(s) * k / nb : -1;
         for (let k = 0; k < nb; k++) { h.ribbon(...span(a, b), off(k), y(k + 1), off(k), y(k), m); h.ribbon(...span(a, b), off(k), y(k + 1), k < nb - 1 ? off(k + 1) : s => off(k)(s) + sd * 16, y(k + 1), m); } });
 
       const kit = new THREE.Group(); h.scene.add(kit);
@@ -99,7 +99,7 @@
       // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown; far = 1: in the pale tints of the distance
       const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.far : MAT.rock }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf }); };
       // the horizon: the terrain stops 320 m from the road; beyond it a ring of far needles and massifs stands in the sea of clouds, 950 to 1 600 m from the centre of the lap
-      for (let k = 0; k < 18; k++) { const a = k / 18 * 6.2832 + nz(k, 1) * 0.25, R = 950 + 650 * nz(k, 2), w = 70 + 110 * nz(k, 3); const x = 650 + Math.cos(a) * R, n = 500 + Math.sin(a) * R, top = 230 + 200 * nz(k, 5);
+      for (let k = 0; k < 18; k++) { const a = k / 18 * 6.2832 + nz(k, 1) * 0.25, R = 950 + 650 * nz(k, 2), w = 50 + 60 * nz(k, 3); const x = 650 + Math.cos(a) * R, n = 500 + Math.sin(a) * R, top = 280 + 190 * nz(k, 5);
         needle(x, n, w, w * (0.7 + 0.6 * nz(k, 4)), top, 20 + k, 1); needle(x + w * 0.75, n + w * (nz(k, 6) - 0.5), w * 0.5, w * 0.6, top * (0.55 + 0.3 * nz(k, 7)), 40 + k, 1); } // each massif: a main needle and a lower one against it
       for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, bush, wood, needle, THREE });
       weld(h, kit); // one mesh per material

@@ -14,11 +14,11 @@
   // an irregular oval footprint w × d round the origin, n corners
   const oval = (w, d, n, seed) => Array.from({ length: n }, (_, k) => { const a = k / n * 6.2832, j = 0.8 + 0.4 * noise(k, seed); return [Math.cos(a) * w / 2 * j, Math.sin(a) * d / 2 * j]; });
   // the stack: beds of uneven thickness from y0 to y1 over the footprint; each bed is a vertical band set back from the one below (taper = metres of widening per metre below the top) with a ledge between them, the whole standing a little outside the footprint except the top bed,
-  // and its corners move in and out by `jit` metres, the same way over four beds: that is what draws the columns. cap: 1 = closed by a flat rock top; bottom: 1 = closed underneath (a mass over a void)
+  // and its corners move in and out by `jit` metres, the same way over four beds: that is what draws the columns (neighbouring corners share their offset: flat column faces with a step between them). cap: 1 = closed by a flat rock top; bottom: 1 = closed underneath (a mass over a void)
   const stack = (poly, y0, y1, seed = 0, taper = 0.125, bed = 6, cap = 0, jit = 2.2, bottom = 0, fine = 10) => { const V = outline(poly, fine), n = V.length, Y = [y0], Tr = [], U = Math.max(1, Math.round(V.per / 16)), ku = U / V.per, T = 16; // rock is read from far: 16 m per tile, beds 1 to 3 m
     for (let b = 0; Y[b] < y1 - bed * 0.5; b++) Y.push(Math.min(y1, Y[b] + bed * (0.55 + 0.9 * noise(b, seed + 3)))); Y[Y.length - 1] = y1;
     const nb = Y.length - 1, ring = b => { const top = b === nb - 1, off = (y1 - (Y[b] + Y[b + 1]) / 2) * taper + (top ? 0 : jit * 1.1 + 0.9 * noise(b, seed + 7));
-      return V.map(([x, z, nx, nz, l], j) => { const o = off + (top ? 0 : jit * (noise(j, seed + (b >> 2) * 5) - 0.5) * 2); return [x + nx * o, z + nz * o, l * ku, o]; }); };
+      return V.map(([x, z, nx, nz, l], j) => { const o = off + (top ? 0 : jit * (noise((j + (b >> 2)) >> 1, seed + (b >> 2) * 5) - 0.5) * 2); return [x + nx * o, z + nz * o, l * ku, o]; }); };
     const quad = (a, b, c, d) => Tr.push(a, b, c, a, c, d); let low = null, last;
     for (let b = 0; b < nb; b++) { const R = ring(b); last = R;
       for (let j = 0; j < n; j++) { const p = R[j], q = R[(j + 1) % n], uq = j === n - 1 ? U : q[2];
@@ -40,7 +40,7 @@
     // a needle standing alone, w × d at the summit, ht high, origin at the centre of its base: thinner taper than a tower, beds 9 m thick, closed by a rock top
     aiguillePiliers: (w = 40, d = 40, ht = 250, seed = 0, taper = 0.07) => stack(oval(w, d, 8, seed), 0, ht, seed, taper, 9, 1, 2.5, 0, 16),
     // the footprint of a needle's summit, for its crown: same outline as aiguillePiliers
-    aiguilleCouronnePiliers: (w = 40, d = 40, ht = 250, seed = 0) => SHAPES.couronnePiliers(oval(w, d, 8, seed), ht, seed, Math.min(w, d) / 6),
+    aiguilleCouronnePiliers: (w = 40, d = 40, ht = 250, seed = 0) => SHAPES.couronnePiliers(oval(w, d, 8, seed), ht, seed, Math.min(w, d) / 10),
     // a boulder w × ht × d, origin at its foot (1.5 m buried): two thick beds, strongly broken corners
     rocherPiliers: (w = 6, ht = 4, d = 6, seed = 0) => stack(oval(w * 0.7, d * 0.7, 7, seed), -1.5, ht, seed, 0.3 * Math.min(w, d) / (ht + 1.5), ht / 2, 1, 0.5, 0, 99),
   });
