@@ -3,9 +3,9 @@
 // The city itself is scenery-autoroute-ville.js; the named blocks of each zone are scenery-autoroute-<zone>.js. See docs/methods/NEW-MAP.md, phase 2.
 (function () {
   const { near, block, edgePt, terrain, inst } = PLACERS;
-  const ZONES = ['ville', 'boulevard', 'quartier', 'pont', 'trou', 'metro'], LAP = 2553, G = 110; // LAP: plan length, the unit of the chainages (PK); G: grid pitch, node (i, j) is at (i * G, j * G), j grows to the south
+  const ZONES = ['ville', 'boulevard', 'quartier', 'pont', 'trou', 'metro'], LAP = 2554, G = 110; // LAP: plan length, the unit of the chainages (PK); G: grid pitch, node (i, j) is at (i * G, j * G), j grows to the south
   // PK of the layout's joints: end of the boulevard, foot of the slip road, merge onto the motorway, foot of the collapsed span, ledge of the hole, heap of rubble up to the platform, mouth of the corridor, top of the stairs
-  const PK = { bd: 601, rampe: 1221, fusion: 1328, sol: 1750, bord: 1817, gravats: 2177, couloir: 2314, rue: 2389 };
+  const PK = { bd: 601, rampe: 1221, fusion: 1330, sol: 1750, bord: 1818, gravats: 2178, couloir: 2315, rue: 2390 };
   // the city slopes down to the river in the east: dry at 2.5 m west of the motorway, 0.7 m beyond column 3, where the water (0) stands in the streets
   const cityY = x => { const t = Math.min(1, Math.max(0, (x - 180) / 140)); return 2.5 - 1.8 * t * t * (3 - 2 * t); };
   // half-widths from a street's axis to its facades: the boulevard is row 0, the motorway runs above column 2 (its slip road on the east side)

@@ -50,8 +50,9 @@
       cars[van ? 2 : (nb++ & 1)].push([x, s.y + ht / 2, z, ry, (ax === 'x' ? ln : 2) / 5, ht, (ax === 'x' ? 2 : ln) / 5]); }
     return L; };
   jam('x', 13, 0, 108, 200, () => true);                                                                           // the pile-up before the motorway bridge: the lanes on the south side, packed
-  // the motorway: the west carriageway is jammed up to the gap in the central reservation, the east one from the gap on; the lane takes the other each time
-  const mw = jam('z', 16, 220, -262, 196, (x, z) => Math.abs(x - 220) > 2.5 && (x < 220 ? z < -104 : z > -66), 1), yAt = z => mw.reduce((b, s) => Math.abs(s.z - z) < Math.abs(b.z - z) ? s : b).y;
+  // the motorway: the west carriageway is jammed up to the gap in the central reservation, the east one from the gap on; the lane takes the other each time,
+  // 11 m wide against the reservation: on its own carriageway a few cars are left in the lane along the parapet (one place in three)
+  const mw = jam('z', 16, 220, -262, 196, (x, z) => Math.abs(x - 220) > 2.5 && ((x < 220 ? z < -104 : z > -66) || rnd() < 0.35), 1), yAt = z => mw.reduce((b, s) => Math.abs(s.z - z) < Math.abs(b.z - z) ? s : b).y;
   [0x9a5a3a, 0x8a8f8c, 0xc8c2b0].forEach((c, k) => inst(h, box, paint(c), cars[k]));
   // the central reservation: a concrete wall 2 m wide down the middle of the deck, broken between z = -110 and z = -55
   const median = []; for (let z = -257; z <= 196; z += 10) if (z < -110 || z > -55) median.push([220, yAt(z) + 0.55, z, 0, 0.4, 1.1, 2]);
