@@ -18,7 +18,7 @@ export async function profil({ ech = 4, images = 0 } = {}) {
   const cv = R.domElement, hors = new THREE.WebGLRenderTarget(cv.width, cv.height), srt = R.setRenderTarget.bind(R); let rt = null;
   R.setRenderTarget = (t, f) => { rt = t; srt(t || hors, f); };
   // passe en cours, d'après ce que game.js dessine (voir ombres() et refFace())
-  const passe = (s, c) => s !== g.scene ? 'post' : rt && rt.isWebGLCubeRenderTarget ? 'reflets' : s.overrideMaterial ? 'ombre-dyn' : rt && rt.width === 1 ? 'ombre-fixe' : 'scene';
+  const passe = (s, c) => s !== g.scene ? 'post' : rt && (rt.isWebGLCubeRenderTarget || rt.texture.name === 'reflets') ? 'reflets' : s.overrideMaterial ? 'ombre-dyn' : rt && rt.width === 1 ? 'ombre-fixe' : 'scene';
   let cur = 'post', fr = null; const att = []; // fr : l'image en cours de relevé ; att : minuteries GPU en attente de résultat
   const rr = R.render.bind(R);
   R.render = (s, c) => {
