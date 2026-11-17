@@ -1,8 +1,11 @@
-// "egee" blockout, zone 4: Balcon (PK 2800 to 3500, 171 to 123 m, 12-14 m wide). Only this zone's named blocks; put() is described in scenery-egee.js.
-(window.EGEE = window.EGEE || {}).balcon = ({ put }) => {
-  const WHITE = 0xf6eedb, ROCK = 0x7d6e60, CAPE = 0xc19a6e, GREEN = 0x4f6a50;
-  put('MOULIN', WHITE, 2900, -1, 40, 9, 16, 9);                                   // hero landmark on the high point, off the road
-  for (const pk of [3100, 3360]) put('HAUTES ROCHES', ROCK, pk, -1, 6, 25, 20, 70); // island side: high rocks; the sea side stays empty
-  for (const pk of [3000, 3280]) put('CAP', CAPE, pk, 1, 25, 50, 40, 60);           // capes below the road: silhouettes over the water, under the horizon line
-  for (const pk of [3200, 3440]) put('CYPRES', GREEN, pk, -1, 8, 4, 12, 4);
+// "egee", zone 4: Balcon (PK 2800 to 3500, 171 to 123 m, 12-14 m wide). Tools (set, plant) are described in scenery-egee.js.
+// Sea side: nothing above the parapet; the capes are terrain, below the road and under the horizon line. Island side: the windmill on the high point, high rocks, isolated cypresses.
+(window.EGEE = window.EGEE || {}).balcon = ({ MAT, set, plant, hsh }) => {
+  // the windmill, 40 m back, 1.5 times its block so that it reads from the lane; its wheel is turned to the car that arrives
+  const mill = (shape, o) => set(shape, 2900, -1, 44, { s: 1.5, ...o });
+  mill('tourEgee', { a: [4, 3.3, 10, 10, 5], skin: MAT.blanc }); mill('coneEgee', { a: [3.9, 3.6], skin: MAT.chaume, dy: 15 }); mill('ailesEgee', { a: [7], dy: 13.6, ry: -0.8, at: [4.6, 0, 0] });
+  [3100, 3360].forEach((pk, i) => set('falaiseEgee', pk, -1, 18.5, { a: [25, 20, 70, i + 7], skin: MAT.roche }));               // island side: high rocks
+  [3000, 3280].forEach((pk, i) => set('rocherEgee', pk, 1, 62, { a: [26, 5, 34, i + 11], skin: MAT.cap }));                     // the capes: a low broken crest on each headland
+  for (const pk of [3200, 3440]) { plant('cypres', pk, -1, 8, 1.3); plant('cypres', pk + 5, -1, 11, 1.05); }
+  for (let pk = 2810; pk < 3500; pk += 13) { plant('buisson', pk, -1, 1.5 + hsh(pk) * 3, 1 + hsh(pk, 3)); plant('buisson', pk + 6, 1, 2 + hsh(pk, 5) * 9, 0.9 + hsh(pk, 7) * 0.6); }
 };
