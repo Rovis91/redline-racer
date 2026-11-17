@@ -162,7 +162,7 @@ In `src/data/maps.js`, per map:
 | `th.rainFx` | rain: `1` everywhere, or zones `[a, b, force]` |
 | `surf` | road surface: `{ backdrop, zones: [[a, b, surface, force]] }`; coefficients per surface in `SURF` at the top of `sim.js` |
 | `jumps`, `trough` | relief: jumps and rideable banked walls; gives the car height and gravity (`GRAV`, `DROOP`, `LAND*` in `sim.js`) |
-| `grav`, `evenJump`, `dents` | with relief on: free-fall gravity of the map (9.81 by default; `lune`: 7), `[speed, power, floor]` that lightens it for a car taking off slower than `speed` (jump lengths close to each other) and `[[x, z, radius, depth], ...]` bowls dug in the ground under the car (`T.dent`, which the scenery reuses for its terrain) |
+| `grav`, `evenJump`, `dents`, `bowls` | with relief on: free-fall gravity of the map (9.81 by default; `lune`: 7); `[speed, power, floor]` that lightens it for a car taking off slower than `speed` (jump lengths close to each other); `[[x, z, radius, depth], ...]` small bowls dug in the ground under the car; `[[x, z, floor radius, rim radius, height, power, ...]]` a crater whose wall the car drives up, with a tunnel allowed under it (`T.dent` gives both to the scenery for its terrain; see `buildTrack` in `sim.js`) |
 | `traffic`, `rivals`, `med` | trucks on the road, rival names, medal ratios |
 | `th.objects`, `th.isFar` | knock-over objects, minimum camera far distance |
 
