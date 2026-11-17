@@ -432,7 +432,7 @@
       if (SHDO.soft) sh.fragmentShader = sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', SHD_SOFT); // th.shadows.soft: filtered shadow edges (4 reads) instead of stair-stepped texels
       const co = m.userData.layerSet; if (co) { // multi-material terrain (scenery.js, terrain: o.layerSet or th.layerSet): up to 4 textures blended per vertex, weights in the layer attribute
         sh.uniforms.uCr = { value: new THREE.Vector4(...[0, 1, 2, 3].map(i => co[i] ? co[i].rep : 1)) }; co.forEach((c, i) => sh.uniforms['uC' + i] = { value: c.map });
-        sh.vertexShader = 'attribute vec4 couche; varying vec4 vCo;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vCo = couche;\n#include <fog_vertex>');
+        sh.vertexShader = 'attribute vec4 layer; varying vec4 vCo;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vCo = layer;\n#include <fog_vertex>');
         sh.fragmentShader = 'varying vec4 vCo; uniform vec4 uCr;\n' + co.map((c, i) => 'uniform sampler2D uC' + i + ';\n').join('') + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment)
           .replace('diffuseColor *= sampledDiffuseColor;', co.map((c, i) => `sampledDiffuseColor = mix(sampledDiffuseColor, texture2D(uC${i}, vMapUv * uCr[${i}]), vCo[${i}]);\n`).join('') + 'diffuseColor *= sampledDiffuseColor;');
       }
