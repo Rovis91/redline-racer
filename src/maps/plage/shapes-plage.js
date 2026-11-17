@@ -15,13 +15,13 @@
     // round wooden post 1 m high (to be stretched); origin at the foot
     poleWood: () => { const g = new THREE.CylinderGeometry(0.1, 0.12, 1, 6); g.translate(0, 0.5, 0); return g; },
     // marker buoy: small sphere 1 m in diameter to be scaled; origin at the centre
-    buoy: () => new THREE.IcosahedronGeometry(0.5, 1),
+    buoyPlage: () => new THREE.IcosahedronGeometry(0.5, 1),
     // rope stretched along X between two posts: thin tube 1 m long (to be stretched in X)
     racingLine: () => { const g = new THREE.CylinderGeometry(0.03, 0.03, 1, 4); g.rotateZ(Math.PI / 2); return g; },
     // beach deckchair facing +X: frame, canvas, raised backrest
     deckchair: () => [['wood', 1.8, 0.08, 0.7, 0, 0.35, 0], ['cloth', 1.2, 0.05, 0.6, -0.25, 0.42, 0], ['cloth', 0.8, 0.05, 0.6, 0.6, 0.65, 0, [0, 0, 0.6]], ...pair(sz => ['wood', 0.06, 0.35, 0.06, -0.8, 0.17, sz * 0.3]), ...pair(sz => ['wood', 0.06, 0.35, 0.06, 0.8, 0.17, sz * 0.3])],
     // fishing boat, bow towards +X: white hull, painted band (tinted zone), benches, outboard motor; origin at the bottom of the hull
-    boat: () => [['hull', 5, 0.7, 1.7, 0, 0.35, 0, null, 1], ['hull', 1.2, 0.7, 1.1, 2.9, 0.4, 0, [0, 0, 0.2]], ['bandStrip', 5.1, 0.18, 1.74, 0, 0.62, 0], ['bandStrip', 1.25, 0.18, 1.14, 2.95, 0.66, 0, [0, 0, 0.2]],
+    boatPlage: () => [['hull', 5, 0.7, 1.7, 0, 0.35, 0, null, 1], ['hull', 1.2, 0.7, 1.1, 2.9, 0.4, 0, [0, 0, 0.2]], ['bandStrip', 5.1, 0.18, 1.74, 0, 0.62, 0], ['bandStrip', 1.25, 0.18, 1.14, 2.95, 0.66, 0, [0, 0, 0.2]],
       ['wood', 0.35, 0.08, 1.5, 0.8, 0.55, 0], ['wood', 0.35, 0.08, 1.5, -1, 0.55, 0], ['engine', 0.4, 0.8, 0.35, -2.7, 0.6, 0]],
     // street façade facing -Z (the road): two-storey rendered block, crenellated parapet, balcony, canvas awning at ground floor; L = width, H = height. Origin at ground level, middle of the façade
     facadePlaya: (L = 10, H = 8) => [['intoWall', L, H, 9, 0, H / 2, 4.5, null, 1], ...Array.from({ length: Math.round(L / 1.6) }, (_, k) => ['intoWall', 0.8, 0.6, 0.4, -L / 2 + 0.4 + k * (L - 0.8) / Math.max(1, Math.round(L / 1.6) - 1), H + 0.3, 0.2]),
@@ -37,7 +37,7 @@
     // stalactite: cone pointing down, 1 m long and 0.5 m radius at the root (to be scaled); origin at the root (at the ceiling)
     stalactite: () => { const g = new THREE.ConeGeometry(0.5, 1, 6); g.rotateX(Math.PI); g.translate(0, -0.5, 0); return g; },
     // limestone rock: rounded block of 1 m radius, to be scaled; origin at the centre
-    boulder: () => { const g = new THREE.DodecahedronGeometry(1, 0); g.scale(1, 0.75, 1); return g; },
+    boulderPlage: () => { const g = new THREE.DodecahedronGeometry(1, 0); g.scale(1, 0.75, 1); return g; },
     // scrub bush: low ball, 1 m radius; origin at ground level
     bush: () => { const g = new THREE.IcosahedronGeometry(1, 0); g.scale(1, 0.6, 1); g.translate(0, 0.35, 0); return g; },
     // dry-stone low wall, L m along X
@@ -90,7 +90,7 @@
     // open cone of light ray (sheet 6): 1 m high, radius 1 at the bottom and 0.7 at the top; origin at the top (at the ceiling hole), it descends
     coneRay: () => { const g = new THREE.CylinderGeometry(0.7, 1, 1, 14, 1, true); g.translate(0, -0.5, 0); return g; },
     // disc laid flat, 1 m radius: ceiling light hole, sunspot on the ground; origin at center
-    disc: () => { const g = new THREE.CircleGeometry(1, 16); g.rotateX(-Math.PI / 2); return g; },
+    discPlage: () => { const g = new THREE.CircleGeometry(1, 16); g.rotateX(-Math.PI / 2); return g; },
     // Cozumel ferry, bow toward +X: white hull, stripe, two decks; origin at the waterline
     ferry: () => [['hull', 40, 4, 9, 0, 1, 0], ['bandStrip', 40.2, 0.8, 9.2, 0, 2.2, 0], ['hull', 26, 3, 8, -3, 4.5, 0], ['pane', 26.2, 1, 8.2, -3, 4.8, 0], ['hull', 12, 2.5, 6, -6, 7.2, 0]],
   });
@@ -133,12 +133,12 @@
     chapel: () => [['whiteN', 9, 6.5, 15, 0, 3.25, 1, null, 1], ['whiteN', 9.4, 2, 0.7, 0, 7.4, -6.2], ['whiteN', 5.4, 1.6, 0.7, 0, 9.1, -6.2], ['whiteN', 2.2, 1.2, 0.7, 0, 10.4, -6.2], ['shadows', 2.4, 3.6, 0.2, 0, 1.8, -6.62], ['shadows', 1.2, 1.2, 0.2, 0, 5.6, -6.62],
       ['whiteN', 3.2, 14, 3.2, 6.6, 7, -4.8, null, 1], ['shadows', 1.4, 2, 3.3, 6.6, 11.6, -4.8], ['shadows', 3.3, 2, 1.4, 6.6, 11.6, -4.8], ['roofR', 3.8, 0.5, 3.8, 6.6, 14.2, -4.8], ['roofR', 2.4, 0.7, 2.4, 6.6, 14.8, -4.8], ['crossSign', 0.18, 1.8, 0.18, 6.6, 16, -4.8], ['crossSign', 1, 0.18, 0.18, 6.6, 16.3, -4.8], ['crossSign', 0.18, 1.6, 0.18, 0, 11.8, -6.2], ['crossSign', 0.9, 0.18, 0.18, 0, 12.1, -6.2]],
     // village water tower (D-1): tank on four braced legs, 18 m; text zone = the painted name
-    waterTower: () => [['vat', 7, 5, 7, 0, 15.5, 0, null, 1], ['vat', 7.6, 0.4, 7.6, 0, 18.2, 0], ['plainText', 6.2, 1.8, 0.1, 0, 15.6, -3.56], ...pair(a => pair(b => ['foot', 0.6, 13, 0.6, a * 2.8, 6.5, b * 2.8, null, 1])).flat(),
+    waterTowerPlage: () => [['vat', 7, 5, 7, 0, 15.5, 0, null, 1], ['vat', 7.6, 0.4, 7.6, 0, 18.2, 0], ['plainText', 6.2, 1.8, 0.1, 0, 15.6, -3.56], ...pair(a => pair(b => ['foot', 0.6, 13, 0.6, a * 2.8, 6.5, b * 2.8, null, 1])).flat(),
       ...pair(b => ['foot', 6, 0.25, 0.25, 0, 5, b * 2.8, [0, 0, 0.6]]), ...pair(b => ['foot', 6, 0.25, 0.25, 0, 9.5, b * 2.8, [0, 0, -0.6]])],
     // red and white antenna, 30 m
     antenna: () => runSuite(6, k => [k % 2 ? 'whiteN' : 'redTone', 0.7, 5, 0.7, 0, 2.5 + k * 5, 0]),
     // square's bandstand: approximated octagonal base, eight posts, railing; the roof (cone) is placed separately
-    kiosk: () => [['slab', 8, 1.1, 8, 0, 0.55, 0, null, 1], ['slab', 9.6, 0.5, 2.4, 0, 0.25, -4.6], ...runSuite(8, k => { const a = (k + 0.5) / 8 * 6.2832; return ['iron', 0.2, 3.6, 0.2, Math.cos(a) * 3.7, 2.9, Math.sin(a) * 3.7]; }), ['iron', 7.8, 0.12, 7.8, 0, 4.7, 0]],
+    kioskPlage: () => [['slab', 8, 1.1, 8, 0, 0.55, 0, null, 1], ['slab', 9.6, 0.5, 2.4, 0, 0.25, -4.6], ...runSuite(8, k => { const a = (k + 0.5) / 8 * 6.2832; return ['iron', 0.2, 3.6, 0.2, Math.cos(a) * 3.7, 2.9, Math.sin(a) * 3.7]; }), ['iron', 7.8, 0.12, 7.8, 0, 4.7, 0]],
     // feria stage: platform, tube gantry, roof, two speaker walls, backdrop (text zone)
     scene: () => [['blackM', 14, 1.3, 8, 0, 0.65, 0, null, 1], ...pair(a => pair(b => ['iron', 0.3, 7, 0.3, a * 6.8, 4.8, b * 3.8])).flat(), ['iron', 14.4, 0.5, 8.4, 0, 8.4, 0, null, 1], ['plainText', 12.4, 4.4, 0.2, 0, 5, 3.6], ...pair(a => ['blackM', 1.8, 4.2, 1.6, a * 8.4, 2.1, -2.6, null, 1])],
     // carousel (merry-go-round) at rest: base, mast, upper platform; the striped roof (cone) is placed separately
@@ -163,7 +163,7 @@
     // concrete electric pole on the 307, 9 m, crossarm
     poleElec: () => [['concretePart', 0.3, 9, 0.3, 0, 4.5, 0], ['concretePart', 2.2, 0.14, 0.14, 0, 8.4, 0]],
     // banc de bois
-    bench: () => [['wood', 1.8, 0.1, 0.5, 0, 0.45, 0], ['wood', 1.8, 0.5, 0.08, 0, 0.75, 0.24], ...pair(a => ['iron', 0.08, 0.45, 0.5, a * 0.8, 0.22, 0])],
+    benchPlage: () => [['wood', 1.8, 0.1, 0.5, 0, 0.45, 0], ['wood', 1.8, 0.5, 0.08, 0, 0.75, 0.24], ...pair(a => ['iron', 0.08, 0.45, 0.5, a * 0.8, 0.22, 0])],
     // ceiba (REFS §5, Quintana Roo jungle): straight trunk with buttresses, horizontal branches, flat parasol crown made of stepped foliage plates; 14 m, to be scaled. Tinted leaf zone
     ceiba: () => [['trunk', 0.9, 9.4, 0.9, 0, 4.7, 0, null, 1], ['trunk', 1.7, 1.5, 1.7, 0, 0.75, 0], ...pair(a => ['trunk', 5.2, 0.34, 0.34, a * 2.3, 9.7, 0, [0, 0, a * 0.32]]), ...pair(a => ['trunk', 0.34, 0.34, 5.2, 0, 9.9, a * 2.3, [-a * 0.32, 0, 0]]),
       ['leafKey', 11, 1.3, 9, 0, 11.3, 0, [0, 0.3, 0], 1], ['leafKey', 8, 1.1, 10, 1, 12.3, -0.5, [0, 1.1, 0], 1], ['leafKey', 6, 1, 5, -1.5, 13.2, 1, [0, 0.6, 0]], ['leafKey', 4, 1.5, 4, 5, 10.5, 2, [0, 0.4, 0.1]], ['leafKey', 4, 1.4, 4.4, -5, 10.6, -2.5, [0, 0.9, -0.1]]],
@@ -172,6 +172,6 @@
     // four-faced cone of palm leaves (kiosk, bar, carousel roof): radius 1, height 1, base at y = 0
     roof4: () => { const g = new THREE.ConeGeometry(1, 1, 4, 1, true); g.rotateY(Math.PI / 4); g.translate(0, 0.5, 0); return g; },
     // jungle tree: flattened ball crown with facets, wider than the bush
-    canopy: () => { const g = new THREE.IcosahedronGeometry(1, 1); g.scale(1, 0.55, 1); g.translate(0, 0.3, 0); return g; },
+    canopyPlage: () => { const g = new THREE.IcosahedronGeometry(1, 1); g.scale(1, 0.55, 1); g.translate(0, 0.3, 0); return g; },
   });
 })();

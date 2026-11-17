@@ -7,7 +7,7 @@
     // trench and submerged tunnel under the channel, back into the city. Water exists only where the road passes over it (bridge) or under it (tunnel). ----------
     wangan(h) {
       const { THREE, S, N, W, rnd, T } = h; const puts = (label, skin, list, o = {}) => Object.entries(h.zones(label, skin, ...(o.a || []))).forEach(([zn, g]) => { const G = indexed(h, g), t = zn === o.tintMat, mt = t && Object.assign(skin[zn].clone(), { vertexColors: true }); for (const p of list) { const Gp = t ? G.clone() : G; if (t) { const c = new THREE.Color(p[7]), n = Gp.attributes.position.count, A = new Float32Array(n * 3); for (let i = 0; i < n; i++) A.set([c.r, c.g, c.b], i * 3); Gp.setAttribute('color', new THREE.BufferAttribute(A, 3)); } const m = new THREE.Mesh(Gp, t ? mt : skin[zn]); m.position.set(p[0], p[1], p[2]); m.rotation.y = p[3] || 0; m.scale.set(p[4] || 1, p[5] || p[4] || 1, p[6] || p[4] || 1); m.castShadow = m.receiveShadow = h.TH.sun[1] > 0.6; h.scene.add(m); } }); // like insts, but one mesh per instance: the merge cuts them into 500 m blocks, and those out of view are no longer drawn (a merged instance stays whole)
-      const mm = new Map(), M = (n, o = {}, ...a) => { const m = h.mat(n, o, ...a), k = JSON.stringify([n, o, a]); if (n === 'metalPale') m.userData.mc = 1; return o.emis ? m : mm.get(k) || mm.set(k, m).get(k); }; // non-luminous materials shared with equal settings: same image, fewer merged batches (the luminous ones stay apart: rhythm.js modulates them). h.mat is still called: its textures draw on rnd, the scenery must not move
+      const mm = new Map(), M = (n, o = {}, ...a) => { const m = h.mat(n, o, ...a), k = JSON.stringify([n, o, a]); if (n === 'metalPale') m.userData.mc = 1, m.userData.family = 'metalPale'; return o.emis ? m : mm.get(k) || mm.set(k, m).get(k); }; // non-luminous materials shared with equal settings: same image, fewer merged batches (the luminous ones stay apart: rhythm.js modulates them). h.mat is still called: its textures draw on rnd, the scenery must not move
       const CH0 = 62, CH1 = 520, ISLAND = [-880, 1650, 1045], PH = [1568, 958]; // channel between z = CH0 and CH1; the island runs from x = ISLAND[0] to ISLAND[1], up to z = ISLAND[2]; PH: the lighthouse, at the tip of the island, in the hairpin (points 11 to 16)
       const sea = (x, z) => (z > CH0 && z < CH1) || (z >= CH1 && (x < ISLAND[0] || x > ISLAND[1] || z > ISLAND[2]));
       const tun = i => h.zone(i, 0) === 1;
@@ -270,7 +270,7 @@
       { const X0 = 1040, X1 = 1720, ZQ = CH0 - 2; let hz = 31; const al = () => (hz = hz * 16807 % 2147483647) / 2147483647;
         const insideTower = (x, z, m) => tl.some(l => l.some(t => Math.abs(x - t[0]) < t[4] / 2 + m && Math.abs(z - t[2]) < t[6] / 2 + m));
         const terre = (x, z, m = 6) => g.dAt(x, z) > W + m && g.hAt(x, z) > -1.5 && z < ZQ - 1 && !insideTower(x, z, 2);
-        boxMesh(h, M('sidewalk'), X1 - X0, 0.3, ZQ + 230, (X0 + X1) / 2, -0.4, (ZQ - 230) / 2); // light slabs across the whole district (above the streets, under the rising road)
+        boxMesh(h, M('slabsQuay'), X1 - X0, 0.3, ZQ + 230, (X0 + X1) / 2, -0.4, (ZQ - 230) / 2); // light slabs across the whole district (above the streets, under the rising road)
         boxMesh(h, concretePart, X1 - X0, 4, 3, (X0 + X1) / 2, -2, ZQ + 1.5); // the quay
         const palmT = [], palmP = [], benches = [], rev = [], bollards = [], lights = [], autoList = [], awnings = [], terr = [], people = [], brightF = [], brightC = [];
         for (let x = X0 + 8; x < X1; x += 16) { if (!terre(x, ZQ - 4, 3)) continue; bollards.push([x, -0.25, ZQ - 2]); lights.push(x, 0.8, ZQ - 2); // quay bollards, as at the marina
@@ -333,7 +333,7 @@
       const wheel2 = new THREE.Points(rg, new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, vertexColors: true, fog: false })); wheel2.frustumCulled = false; rotor.add(wheel2);
       // the foot of the wheel: paved esplanade, ticket booths, a turning carousel, a queue, garlands; the wheel rises from the ground kept between the two basins of the marina
       const carousel = new THREE.Group(); carousel.userData.dyn = 1; carousel.position.set(672, 0.05, 46); h.scene.add(carousel);
-      { boxMesh(h, M('sidewalk'), 150, 0.3, 46, 620, -0.1, 37);
+      { boxMesh(h, M('slabsQuay'), 150, 0.3, 46, 620, -0.1, 37);
         h.pose('carouselRide', { plinth: M('boards', { c: 0xd8b07a }), mat: M('metalPale', { c: 0xe8c040 }), roofM: M('metalPale', { c: 0xc8304a }), barLine: M('metalPale', { c: 0xe8c040 }), horse: M('metalPale', { c: 0xf4f0ea }) }, carousel);
         const lm = [], lc = []; for (let k = 0; k < 40; k++) { const a = k / 40 * 6.283; lm.push(Math.cos(a) * 8, 6.4, Math.sin(a) * 8); lc.push(...[[1, 0.85, 0.3], [1, 0.3, 0.6], [0.3, 0.9, 1]][k % 3]); }
         const mg2 = new THREE.BufferGeometry(); mg2.setAttribute('position', new THREE.Float32BufferAttribute(lm, 3)); mg2.setAttribute('color', new THREE.Float32BufferAttribute(lc, 3));
@@ -362,7 +362,7 @@
       const party = []; // yacht garland groups, which tick makes blink in turn
       { const edges = [[30, 540], [700, 1040]], whiteB = M('metalPale', { c: 0xf2f0ea }), windowMat = M('towerWindows', GLOW, ['#ffd27a', '#f4f1e0']), boards = M('boards', { c: 0xb89a70 });
         for (const [x0, x1] of edges) { boxMesh(h, water, x1 - x0, 1, CH0 - MQ, (x0 + x1) / 2, -3.5, (MQ + CH0) / 2); boxMesh(h, concretePart, x1 - x0, 4, 3, (x0 + x1) / 2, -2, MQ); // the basin water and its quay
-          boxMesh(h, M('sidewalk'), x1 - x0, 0.3, MQ - W - 6.5, (x0 + x1) / 2, -0.1, (MQ - 1.5 + W + 5) / 2); } // the promenade, from the road to the quay
+          boxMesh(h, M('slabsQuay'), x1 - x0, 0.3, MQ - W - 6.5, (x0 + x1) / 2, -0.1, (MQ - 1.5 + W + 5) / 2); } // the promenade, from the road to the quay
         const bollards = [], lights = [], pontoons = [], sailboats = [], motorboats = [];
         for (const [x0, x1] of edges) {
           for (let x = x0 + 6; x < x1; x += 15) { bollards.push([x, 0, MQ - 2]); lights.push(x, 1.05, MQ - 2); if ((x - x0) % 30 < 15) h.emis(near(h, x, 0), x, 3, MQ + 4, 0xffe0a8, 36, 2.2); } // quay bollards; one in three lit (up to the road)
@@ -411,11 +411,11 @@
       { const s = S[iPm], [x, z] = edgePt(s, 1, 18); h.emis(iPm, x, s.y + 22, z, 0xffc040, 40, 1.4); } // beacon and gantry lighting
 
       // ---------- the abandoned toll (points 30 to 31): platform on a slab on each side of the viaduct, booths switched off but with sodium-lit glass, canopy across the full width ----------
-      { const s = S[near(h, -450, -245)], r = marker(h, s), slab = M('asphalt'), L = 2 * W + 44;
+      { const s = S[near(h, -450, -245)], r = marker(h, s), slab = M('asphalt'), L = 2 * W + 44, sentryBox = { concretePart, nose: M('striping', GLOW), cabin: whiteP, pane: M('sodium', GLOW) }; // the six sentry boxes share their materials: one draw pass per material, not per sentry box
         h.pose('awningToll', { roofM: M('concreteGray'), lampObj: M('sodium', GLOW), steelMat: gray, signboard: M('written', GLOW, 128, 16, '#3a2a10', '#ffb040', '料金所  TOLL  閉鎖 CLOSED', 11) }, r, [0, 0, 0], L);
         for (const sd of [-1, 1]) { h.pose('boxMesh', slab, r, [sd * (W + 11.5), -0.6, 0], 21, 1, 36); // the slab of the closed lanes, at carriageway level
           for (const sz of [-12, 12]) h.pose('boxMesh', concretePart, r, [sd * (W + 11.5), -s.y / 2 - 1, sz], 3, s.y, 3); // ses piles
-          for (const e of [5, 11, 17]) h.pose('sentryBox', { concretePart, nose: M('striping', GLOW), cabin: whiteP, pane: M('sodium', GLOW) }, r, [sd * (W + e), 0, 0]); }
+          for (const e of [5, 11, 17]) h.pose('sentryBox', sentryBox, r, [sd * (W + e), 0, 0]); }
         h.emis(near(h, -450, -245), s.x, s.y + 7, s.z, 0xffa040, 36, 2.6); }
 
       // ---------- the love hotel sign (point 32): the city's first pink light, on a mast at the viaduct edge, in front of the hotel ----------

@@ -57,7 +57,7 @@ Each session works in its own worktree and writes only within its perimeter:
 | cars | `src/render/shapes-cars.js`, `src/render/textures-cars.js` | "car" section of `src/engine/game.js` | none |
 | start | `startLine` shape of `src/render/shapes.js` | "start line and gantry" block of `src/engine/game.js` | none |
 
-`src/render/shapes.js` and `src/render/textures.js` (shared catalogues) are read, not modified, except by the "start" session for its shape. The per-map files complete the catalogues with `Object.assign(SHAPES, { … })` and `Object.assign(TEXTURES, { … })`, and the placement with `Object.assign(SCENERY, { … })`; the placers that maps share (`inst`, `insts`, `boxMesh`, `terrain`...) are in `src/render/scenery.js`. Nobody touches `src/audio/audio.js`.
+`src/render/shapes.js` and `src/render/textures.js` (shared catalogues) are read, not modified, except by the "start" session for its shape. The per-map files complete the catalogues with `Object.assign(SHAPES, { … })` and `Object.assign(TEXTURES, { … })` (a name exists only once in the whole repo, otherwise the last file loaded silently overwrites the other: suffix it with the map, `kioskPlage`, `chapelTerre`; `tests/test-catalogs.js` checks it), and the placement with `Object.assign(SCENERY, { … })`; the placers that maps share (`inst`, `insts`, `boxMesh`, `terrain`...) are in `src/render/scenery.js`. Nobody touches `src/audio/audio.js`.
 
 ## Done when
 

@@ -202,11 +202,11 @@
       const MONKEYS = [], blackDS = mat('paint', { c: 0x1a1816, ...DS });
       // a bird in flight: one body and two wings on a pivot (they flap, or glide in a V)
       const bird = (skin, k = 1, l = 1) => { const p = mobile('birdFlight', skin, 0, 0, 0, 0, k, 0, l), wings = [-1, 1].map(sd => { const a = new THREE.Group(); a.position.set(0.05, 0.08, sd * 0.12); a.scale.z = sd; p.add(a); h.pose('wingBird', skin, a); return a; }); p.rotation.order = 'YXZ'; return { p, wings }; };
-      { const worth = { feather: blackDS, beak: mat('paint', { c: 0xb0a890, ...DS }), queue: blackDS }; // vultures (urubus) circle over the gorge, right of the bridge (downstream); two more are perched on top of the stepped temple
+      { const worth = { feather: blackDS, beak: mat('paint', { c: 0xb0a890, ...DS }), tailEnd: blackDS }; // vultures (urubus) circle over the gorge, right of the bridge (downstream); two more are perched on top of the stepped temple
         const flights = [[962, 78, 172, 26, 0], [968, 85, 150, 34, 2.1], [950, 72, 198, 20, 4.2]].map(([x, y, z, r, ph]) => ({ o: bird(worth, 2.8, 0.7), x, y, z, r, ph }));
         LIFE.push((dt, car, t) => { for (const v of flights) { const a = t * 6.5 / v.r + v.ph; v.o.p.position.set(v.x + v.r * Math.cos(a), v.y + 1.5 * Math.sin(a * 0.6), v.z + v.r * Math.sin(a)); v.o.p.rotation.set(0.3, -a - Math.PI / 2, 0); v.o.wings.forEach((w, k) => { w.rotation.x = (k ? -1 : 1) * (0.22 + 0.05 * Math.sin(t * 0.9 + v.ph)); }); } });
       }
-      { const ara = { feather: mat('paint', { c: 0xe0241a, ...DS }), beak: mat('paint', { c: 0xf0e8d0, ...DS }), queue: mat('paint', { c: 0x2a5ad0, ...DS }) }, two = [bird(ara, 2.3, 1.5), bird(ara, 2.3, 1.5)]; // two red macaws come up the road at the chicane's exit, low under the canopy, and pass over the car
+      { const ara = { feather: mat('paint', { c: 0xe0241a, ...DS }), beak: mat('paint', { c: 0xf0e8d0, ...DS }), tailEnd: mat('paint', { c: 0x2a5ad0, ...DS }) }, two = [bird(ara, 2.3, 1.5), bird(ara, 2.3, 1.5)]; // two red macaws come up the road at the chicane's exit, low under the canopy, and pass over the car
         const i0 = P(8) + 2, iA = P(10) + 40, iB = P(8) + 6, T = 7.5; let en = 0, tt = 99;
         LIFE.push((dt, car) => { if (!car) return; const e = (i0 - car.idx + N) % N; if (!en && e < 12 && e > 0) { en = 1; tt = 0; } else if (en && e > 300 && e < N - 300) en = 0; tt += dt;
           two.forEach(({ p, wings }, k) => { const u = (tt - k * 0.3) / T; p.visible = u > 0 && u < 1; if (!p.visible) return; const q = S[Math.round(iA + (iB - iA) * u)], [x, z] = edgePt(q, 1, 4 - 9 * u + k * 2.5); p.position.set(x, q.y + 7.5 - k * 1.3, z); p.rotation.set(0, Math.atan2(q.tz, -q.tx), 0);

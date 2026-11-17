@@ -3,7 +3,7 @@
 const assert = require('assert'), THREE = require('../vendor/three/three.module.js');
 require('../src/data/maps.js'); require('../src/data/gold-laps.js'); require('../src/engine/sim.js');
 // inventory: a map is assembled from its entry in mapDefs.js, its scenery (scenery-<map>.js, loaded by index.html after scenery.js), its gold trace (traces-gold.js) and its English title (HEADING_EN of language.js, otherwise the HUD title)
-globalThis.window = globalThis; require('../src/render/scenery.js'); for (const M of MAPS) require('../src/maps/' + M.th.scenery + '/scenery-' + M.th.scenery + '.js'); require('../src/engine/lang.js');
+globalThis.window = globalThis; require('../src/render/scenery.js'); require('../src/render/crowd.js'); for (const M of MAPS) require('../src/maps/' + M.th.scenery + '/scenery-' + M.th.scenery + '.js'); require('../src/engine/lang.js');
 { const EN = HEADING_EN, PAGE = require('fs').readFileSync(__dirname + '/../index.html', 'utf8');
   for (const M of MAPS) {
     assert(typeof SCENERY[M.th.scenery] === 'function', M.id + ' : no scenery ' + M.th.scenery + ' in scenery-' + M.th.scenery + '.js');
@@ -15,6 +15,8 @@ globalThis.window = globalThis; require('../src/render/scenery.js'); for (const 
   assert.deepStrictEqual(EVENING.map(M => M.id).sort(), MAPS.map(M => M.id).sort(), 'NIGHT : each map once in the Tour');
   assert(EVENING.every((M, i) => /^\d\d:\d\d$/.test(M.hour) && (!i || (M.hour < '12' ? '24' + M.hour : M.hour) > (EVENING[i - 1].hour < '12' ? '24' + EVENING[i - 1].hour : EVENING[i - 1].hour))), 'NIGHT : the hours advance, from evening to morning');
   console.log('OK  inventory : scenery, gold trace and title of ' + MAPS.length + ' maps'); }
+// the Ocres ford quickly washes the car (game.js, dirtyFrame: aq threshold > 0.08): the wettest road on the map must cross it
+{ const q = buildTrack(THREE, MAPS.find(M => M.id === 'terre')).surf; assert(Math.max(...q.map(s => s.aq)) > 0.08, 'terre: the ford does not reach the wash threshold (0.08)'); }
 const H = 1 / 120, deg = r => r * 180 / Math.PI; let surfTxt = '', surfMap = '', linkMax = [0], goldTxt = [];
 for (const M of MAPS) {
   surfMap = '';

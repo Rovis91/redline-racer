@@ -104,7 +104,7 @@
         const a = rnd() * 6; if (nbr++ === 0) coping.push([x, ground(x, z, -0.8), z, a]); else farm.push([x, ground(x, z, -1), z, a]); for (const da of [0.6, 1.1, 3.6]) cyp(x + Math.cos(a + da) * 9, z + Math.sin(a + da) * 9); }
       occ.push([vx, vz, 46]); coping.push([vx, ground(vx, vz, -0.3), vz, 0.4, 1.4]);
       for (let k = 0; k < 22; k++) { const a = k * 2.4, r = 13 + k * 1.15, x = vx + Math.cos(a) * r, z = vz + Math.sin(a) * r; farm.push([x, ground(x, z, -1.2), z, a + (k & 1) * 1.57, 0.9 + rnd() * 0.3]); if (k % 4 === 0) cyp(x + 6, z + 5); }
-      insts(h, 'farm', skinM, farm); insts(h, 'chapel', skinM, coping);
+      insts(h, 'farm', skinM, farm); insts(h, 'chapelTerre', skinM, coping);
       // vines and lavender: plots in rows on the slopes
       const fields = [[], []];
       for (let k = 0, nbr = 0; k < 1500 && nbr < 22; k++) { const [x, z] = chance(), d = g.dAt(x, z); if (d < 36 || d > 170 || !takes(x, z, 24)) continue;
@@ -128,9 +128,12 @@
       // the ochres: fallen boulders at the roadside, nearby buttes, and a crown of cliffs on the horizon, in the dust haze
       const knolls = [], cx = (g.box[0] + g.box[2]) / 2, cz = (g.box[1] + g.box[3]) / 2;
       for (let k = 0; k < 2000 && knolls.length < 110; k++) { const [x, z] = chance(), d = g.dAt(x, z), l = 1.2 + rnd() * 2.6; if (d > m(nearby(x, z)[1]).w + 4 && d < 60 && empty(x, z, l)) knolls.push([x, ground(x, z, -0.4), z, rnd() * 6, l, l * (0.6 + rnd() * 0.5), l * (0.7 + rnd() * 0.6)]); } // boulders, not slabs
+      const nBlocks = knolls.length;
       for (let k = 0, nbr = 0; k < 600 && nbr < 20; k++) { const [x, z] = chance(), d = g.dAt(x, z), l = 30 + rnd() * 40; if (d > l + 40 && d < 280 && takes(x, z, l + 40)) { nbr++; knolls.push([x, ground(x, z, -6), z, rnd() * 6, l, 22 + rnd() * 26, l * (0.7 + rnd() * 0.6)]); } }
+      const nMounds = knolls.length;
       for (let k = 0; k < 18; k++) { const a = k / 18 * 6.283 + rnd() * 0.2, r = 1000 + rnd() * 450, l = 170 + rnd() * 190; knolls.push([cx + Math.cos(a) * r, 0, cz + Math.sin(a) * r, rnd() * 6, l, 110 + rnd() * 110, l * (0.7 + rnd() * 0.6)]); }
-      inst(h, h.geo('knoll'), h.mat('cliffOchre'), knolls);
+      // one texture, three sizes: the knolls (30-70 m) and the crown (170-360 m) repeat it around them instead of stretching it (2 and 0.7 px/m instead of 0.3 and 0.1)
+      const geoB = h.geo('knoll'); inst(h, geoB, h.mat('cliffOchre'), knolls.slice(0, nBlocks)); inst(h, geoB, h.mat('cliffOchre', { rep: [5, 1] }), knolls.slice(nBlocks, nMounds)); inst(h, geoB, h.mat('cliffOchre', { rep: [8, 1] }), knolls.slice(nMounds));
       // the stream runs, the crowd raises its arms at times, the helicopter sways under its rotor, the shepherd waves his arm
       return (dt, now) => { rotor.rotation.y = now * 0.025; heli.position.y = hy + Math.sin(now * 0.0011) * 0.6; heli.rotation.z = Math.sin(now * 0.0007) * 0.05; armPart.rotation.x = -2.6 + Math.sin(now * 0.008) * 0.45; water.map.offset.y -= dt * 0.25; waterR.map.offset.x += dt * 0.08; crowd.map.offset.y = Math.sin(now * 0.0023) + Math.sin(now * 0.0061) > 0.6 ? 0.5 : 0; };
     },

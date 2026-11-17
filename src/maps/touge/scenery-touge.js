@@ -192,7 +192,7 @@
       h.pose('traverse', { asphalt }, gr, [X(70), 0, -22]); // the cross road plunges into the forest, beside the temple
       const striping = h.mat('striping', GLOW), blinkerMat = h.mat('blinker', GLOW), cone = h.mat('cone', GLOW); // closed off: striped barriers, cones, blinking orange lights
       for (const dz of [-25, -22, -19]) h.pose('barrierRail', { striping, blinker: blinkerMat }, gr, [X(43), 0, dz]);
-      for (const dz of [-26.5, -23.5, -20.5, -17.5]) h.pose('cone', cone, gr, [X(41.5), 0.5, dz]);
+      for (const dz of [-26.5, -23.5, -20.5, -17.5]) h.pose('coneRoad', cone, gr, [X(41.5), 0.5, dz]);
       gT.updateMatrixWorld(); // lanterns of the torii and the path, pavilion facade: warm light
       for (const [lx, ly, lz, d, f] of [[4, 5, 0, 18, 1.4], [14, 2, 0, 16, 1.6], [33, 7.5, -5.4, 16, 1.8], [33, 7.5, 5.4, 16, 1.8], [36, 5, 0, 20, 1.6]]) { const p = gT.localToWorld(new THREE.Vector3(lx, ly, lz)); h.emis(ic, p.x, p.y, p.z, 0xffb060, d, f); } // the lanterns light the eaves
       // --- the convenience store, the gas station and their forecourt: in the last bend, facing whoever arrives (road frame, X outward) ---

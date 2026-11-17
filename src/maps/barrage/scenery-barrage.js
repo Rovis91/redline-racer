@@ -165,7 +165,7 @@
         blk(mat('groundHangar'), HX0, HX1, HZ0, HZ1, YH - 2, YH - 0.2); // a solid slab underneath: no gap between the slabs that follow the road
         // the floor: two slabs on either side of the roadway, following it (nothing is placed on the road)
         mixSlice(iH0 - 2, iH1 + 2, (i, l) => { ribbonFn(i, l, s => -(s.w + 0.1), 0.03, s => -Math.max(s.w + 0.2, s.z - HZ0 - 1), 0.03, mat('groundHangar'), 6); ribbonFn(i, l, s => s.w + 0.1, 0.03, s => Math.max(s.w + 0.2, HZ1 - 1 - s.z), 0.03, mat('groundHangar'), 6); });
-        { const gc = mat('guardrail', DS, ['#e8761e', '#1e1e1c', '#e8761e', '#c86a1a']); for (const sd of [-1, 1]) mixSlice(iH0 - 2, iH1 + 2, (i, l) => ribbonFn(i, l, s => sd * (s.w + 0.4), 1, s => sd * (s.w + 0.4), 0, gc, 4)); } // the walkway, lined with orange railings
+        { const gc = mat('guardrail', DS, ['#e8761e', '#1e1e1c', '#e8761e', '#c86a1a']); for (const sd of [-1, 1]) mixSlice(iH0 - 2, iH1 + 2, (i, l) => h.guardM(sd, i, l, s => sd * (s.w + 0.4), 1, s => sd * (s.w + 0.4), 0, gc, 4)); } // the walkway, lined with orange railings
         // the three units on the wall side: sea-green vat, striped collar, hood, red exciter, plate
         const G3 = [[105, YH, 65], [60, YH, 84], [15, YH, 65]]; // the road passes south of the first, north of the second, south of the third, 4 m from the vats
         inst(h, h.geo('alternator'), vert, G3); inst(h, h.geo('hood'), greenS, G3.map(([x, y, z]) => [x, y + 5, z]));
@@ -190,7 +190,7 @@
       // ---------- the road: continuous guardrail away from structures (like touge) and its reflectors; concrete parapet on the bridge and on the lake side of the crest; openwork railing on the drop side; pavements in the housing estate ----------
       const parapetM = mat('parapet', DS), guardM = mat('guardrail', DS, h.TH.intoWall);
       const parapet = (a, b, sd) => mixSlice(a, b, (i, l) => { const o = s => sd * (s.w + 0.3), o2 = s => sd * (s.w + 0.9); ribbonFn(i, l, o, 1.15, o, -2, parapetM, 3); ribbonFn(i, l, o2, 1.15, o2, -2, parapetM, 3); ribbonFn(i, l, o, 1.15, o2, 1.15, parapetM, 3); });
-      const guardrail = (a, b, sd) => mixSlice(a, b, (i, l) => ribbonFn(i, l, s => sd * (s.w + 0.4), 1.05, s => sd * (s.w + 0.4), 0.25, guardM, 4));
+      const guardrail = (a, b, sd) => mixSlice(a, b, (i, l) => h.guardM(sd, i, l, s => sd * (s.w + 0.4), 1.05, s => sd * (s.w + 0.4), 0.25, guardM, 4)); // h.guardM: the game's guardrail, which wears down on impacts (neither grouped nor fixed)
       const iP0 = Math.min(...bridgeI) - 12, iP1 = Math.max(...bridgeI) + 12, iM0 = T1 - 2, iM1 = Math.max(...wallI) + 10, iV0 = P(K.entryVille) - 6, iV1 = P(K.exitVille) + 6; // bridge, wall, estate (from iV0 to iV1 along the line)
       const inVille = i => ((i - iV0 + N) % N) <= ((iV1 - iV0 + N) % N), overBridge = i => i >= iP0 && i <= iP1, overWall = i => i >= iM0 && i <= iM1, inTunnel = i => i >= T0 - 2 && i <= T1 + 2;
       for (const sd of [-1, 1]) { parapet(iP0, iP1, sd); guardrail(iP1, T0 + 2, sd); guardrail(iM1, iV0, sd); guardrail(iV1, iH0 - 3, sd); guardrail(iH1 + 3, iP0, sd); }
@@ -318,7 +318,7 @@
         tier1.forEach((b, q) => { if (q % 2) return; const [x, y, z, r] = b, m = new THREE.Mesh(h.geo('boxMesh', 18, 1.5, 0.2), mat('letters', {}, WORDS[(q >> 1) % WORDS.length], BGS[(q >> 1) % WORDS.length % 3], '#f0e8d0')); m.position.set(x + Math.sin(r) * 6.15, y + 3.9, z + Math.cos(r) * 6.15); m.rotation.y = r; h.scene.add(m); });
         // the only mural: the gable of the building nearest the start line, on the right, turned toward the arriving cars
         { const s0 = S[30], outTarget = edgePt(s0, 1, s0.w + 12); let b = null, bd = 1e9; for (const q of tier1) { const d = Math.hypot(q[0] - outTarget[0], q[2] - outTarget[1]); if (q[5] > 0 && d < bd) { bd = d; b = q; } }
-          if (b) { const [x, y, z, r, hl] = b, ax = Math.cos(r), az = -Math.sin(r), e = az > 0 ? 1 : -1, m = new THREE.Mesh(h.geo('boxMesh', 11.4, 14.2, 0.2), mat('mural')); m.position.set(x + ax * e * (hl + 0.15), y + 7.7, z + az * e * (hl + 0.15)); m.rotation.y = r + Math.PI / 2 + (e > 0 ? 0 : Math.PI); h.scene.add(m); } }
+          if (b) { const [x, y, z, r, hl] = b, ax = Math.cos(r), az = -Math.sin(r), e = az > 0 ? 1 : -1, m = new THREE.Mesh(h.geo('boxMesh', 11.4, 14.2, 0.2), mat('muralBarrage')); m.position.set(x + ax * e * (hl + 0.15), y + 7.7, z + az * e * (hl + 0.15)); m.rotation.y = r + Math.PI / 2 + (e > 0 ? 0 : Math.PI); h.scene.add(m); } }
         // cars parked on the forecourt, along the pavement; blue newspaper kiosks at the corners
         const vo = []; let nm = 0; for (let i = iV0 + 6, n = 0; n < ((iV1 - iV0 + N) % N) - 12; i = (i + 7) % N, n += 7) { const u = rnd(), s = S[i], sd = (rnd(), -1), [x, z] = edgePt(s, sd, s.w + 4.8), y = s.y + 0.07, r = h.across(s); if (u < 0.3 || insideShell(x, z, 0.4) || Math.abs(hAt(x, z) - s.y + 0.6) > 0.7) continue;
           if (u >= 0.6) { vo.push([x, y, z, r + Math.PI / 2, 1.2, 1.2, 1.2, [0xb5483c, 0x3d6e8a, 0xe8e4d8, 0x8a9488, 0xc8b47a, 0x4a4d50][vo.length % 6]]); continue; }
@@ -460,7 +460,7 @@
           // the station, at the south end: a 64 m platform along track 2, its canopy, the ochre and white building with a central pavilion and clock, the footbridge over the tracks
           { const a = iG0 + 3, b = iG0 + 35, sm = S[(a + b) >> 1], r = h.across(sm) + Math.PI / 2, ux = sm.tx, uz = sm.tz, nx = -sm.tz, nz = sm.tx, Y = sm.y; // (ux, uz) along the track, (nx, nz) toward the right of the road
             const iM = (a + b) >> 1, G = (u, y, v, lu, ly, lv, col) => { const q = S[Math.round(iM + u / 2)]; bl(q.x - q.tz * (q.w + v), Y + y, q.z + q.tx * (q.w + v), h.across(q) + Math.PI / 2, lu, ly, lv, col); }; // u along the track (2 m per sample), v from the edge of the roadway: each piece follows the curve
-            mixSlice(a, b, (i, l) => { ribbonFn(i, l, s => s.w + 15.5, 1, s => s.w + 20, 1, concC, 4); ribbonFn(i, l, s => s.w + 15.5, 0, s => s.w + 15.5, 1, concC, 4); }); // the platform
+            mixSlice(a, b, (i, l) => { ribbonFn(i, l, s => s.w + 15.5, 1, s => s.w + 20, 1, concC, 4); ribbonFn(i, l, s => s.w + 15.5, 0, s => s.w + 15.5, 1, concC, 4); }); // the quay
             for (let u = -28; u <= 28; u += 8) { G(u, 3, 18.6, 0.3, 4, 0.3, 0x55585a); G(u, 5.1, 17.6, 8.6, 0.3, 4.6, 0x7a3a30); } // the canopy, in bays following the platform
             for (const u of [-22, 0, 22]) { const q = S[Math.round(iM + u / 2)]; h.emis(IX.get(q), q.x - q.tz * (q.w + 17.6), Y + 4.6, q.z + q.tx * (q.w + 17.6), 0xffe2a8, 22, 0.9); } // three lamps under the canopy: real light fittings
             shell([sm.x + nx * (sm.w + 27), sm.z + nz * (sm.w + 27), r, 18, 8]);

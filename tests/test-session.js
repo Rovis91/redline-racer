@@ -56,7 +56,7 @@ const session = (store = memStore(), prefs = settings(), auto = false) => freshS
 
 // ---------- Tournée: a round closed, the next one on the points grid, the trophy at the last one ----------
 {
-  const prefs = settings(), S = session(memStore(), prefs);
+  const prefs = settings(), S = session(memStore(), prefs), advance = session(memStore(), prefs); // advance: a map built in the background before the race (the game prepares it in advance)
   assert(S.tn(1) === null && S.tnOu(1).handle === 0 && S.trophy(1) === 0, 'no Tournée in progress');
   const R = S.start({ mode: 'tourAll', diff: 1, ia: true }); assert(R.cars.length === 4 && R.cars[0].pos === 4, 'first round: the player at the back of the grid');
   R.cars[0].ending = 1; S.stepSec(R.cars[0], H); assert(S.raceEnd && !S.tnEnd);
@@ -65,11 +65,13 @@ const session = (store = memStore(), prefs = settings(), auto = false) => freshS
   assert.deepStrictEqual(JSON.parse(prefs.o['vpr8.tournee'])[1], { handle: 1, pts: f.pts }, 'Tournée saved per difficulty');
   S.enclosed(); assert(S.tnEnd === f, 'a round only counts once');
   const S2 = session(memStore(), prefs); assert(S2.tn(1).handle === 1 && S2.tn(0) === null, 'the next map reloads the Tournée');
+  assert(advance.tn(1).handle === 1, 'a map built before the race also re-reads the Tour (otherwise it points to the previous map, which points back to it: the page freezes)');
   assert.deepStrictEqual(S2.start({ mode: 'tourAll', diff: 1, ia: true }).cars.map(c => c.pos), tourAll(f.pts).grid.map(k => k + 1), 'next round: points grid reversed (the leader last)');
   prefs.o['vpr8.tournee'] = JSON.stringify([null, { handle: MAPS.length - 1, pts: [20, 0, 0, 0] }]);
   const S3 = session(memStore(), prefs), R3 = S3.start({ mode: 'tourAll', diff: 1, ia: true }); R3.cars[0].ending = 1; S3.stepSec(R3.cars[0], H); S3.toMenu();
   assert(S3.tnEnd === null && S3.race === null && !S3.raceEnd, 'back to menu: round closed, then everything reset to zero');
   assert(S3.trophy(1) === 1 && JSON.parse(prefs.o['vpr7.trophee'])[1] === 1 && JSON.parse(prefs.o['vpr8.tournee'])[1] === null, 'last round: gold trophy, Tournée finished');
+  assert(S3.start({ mode: 'tourAll', diff: 1, ia: true, lapCount: 5 }).laps === 5 && S3.start({ mode: 'raceCase', diff: 1, ia: true, lapCount: 5 }).laps === 3, 'laps per race: the Tour only');
   const SA = session(memStore(), settings(), true), RA = SA.start({ mode: 'tourAll', diff: 1, ia: true }); RA.cars[0].ending = 1; SA.stepSec(RA.cars[0], H); SA.enclosed();
   assert(SA.tnEnd && SA.trophy(1) === 0, 'autopilot: its own Tournée, no trophy');
 }

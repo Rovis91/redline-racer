@@ -44,7 +44,10 @@ The phase that follows static scenery: water, light, motion, wildlife, sound and
 | Triggered on approach | metal shutter, pigeons taking off | paris |
 | Reaction to the race | the wave, sparks on a jump, confetti, hall lights off on the last lap | stade, `src/maps/stade/scenery-stade.js` |
 | Blinking | alternating `visible`, `color.setHex` | givre, touge |
-| Crowd in two poses | `map.offset.y` 0 or 0.5 | stade, canal |
+| Crowd in two poses, wave | `PLACERS.crowd(h, { tiers, ola })` | `src/render/crowd.js` (stade, canal) |
+| Crowd reacting to the race | `PLACERS.crowd(…, placards)`, `tick.lifts(car, kind)`, `SOUND.roar()`: giant banner (tifo) and placards at least 80 m ahead of the car | `src/render/crowd.js` (stade, canal) |
+| Scenery object that can be knocked over | `h.breakable(parts, x, y, z, r, h, shards)` | stade barrels, perse jars |
+| Screen showing the race live | `tick.liveFeed(renderer)` (320 × 136 target, one frame in four) | stade: video cube hung above the arena, faces turned to the crowd, low enough for the race camera |
 | Instanced flames | scale by `setMatrixAt` | stade |
 | Undulating vertex strip | auroras | givre |
 | Rising points | steam `STM` | chapada |

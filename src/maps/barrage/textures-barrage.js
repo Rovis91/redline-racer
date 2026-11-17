@@ -139,7 +139,7 @@
     // steel barred railing (drop side of the crest): top rail, bottom rail, one bar every 25 cm, a post every 2 m; the rest is already up to date
     railing: (c = '#e8761e') => [32, 16, (g, o) => { const { R } = o; g.clearRect(0, 0, 32, 16); for (let x = 0; x < 32; x += 4) R(g, c, x, 0, 1, 16); R(g, c, 0, 0, 32, 2); R(g, c, 0, 13, 32, 1); R(g, '#8a4a14', 0, 0, 2, 16); }, 2],
     // the mural of the first building (gable mosaic, 1970s): sun and rays, the dam wall, a high-voltage line, a worker man and a worker woman in profile, the May 1st slogan
-    mural: () => [96, 120, (g, o) => {
+    muralBarrage: () => [96, 120, (g, o) => {
       const { R, rand } = o, poly = (c, ...p) => { g.fillStyle = c; g.beginPath(); g.moveTo(p[0], p[1]); for (let k = 2; k < p.length; k += 2) g.lineTo(p[k], p[k + 1]); g.fill(); };
       R(g, '#d8c9a0', 0, 0, 96, 120);
       for (let k = 0; k < 9; k++) { const a = -0.15 + k * 0.2; poly(k & 1 ? '#e0b060' : '#c9603c', 24, 26, 24 + Math.cos(a) * 130, 26 + Math.sin(a) * 130, 24 + Math.cos(a + 0.2) * 130, 26 + Math.sin(a + 0.2) * 130); } // rayons

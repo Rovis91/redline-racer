@@ -26,27 +26,33 @@
       const iron = h.mat('iron'), steelMat = h.mat('steelMat'), concretePart = h.mat('concretePart'), lampObj = h.mat('lampObj', GLOW);
       apex.forEach(([i, sd], k) => h.pose('signAd', { mat: iron, poster: ads[k % ads.length] }, marker(h, S[i]), [sd * (S[i].w + 9), 0, 0], sd * 0.5));
       // protective fence above the low walls, on both sides, all the way round; posts every 6 samples
-      const cO = N - (T.t1 - T.t0), grid = net(h.mat('grating', { alphaTest: 0.5, side: THREE.DoubleSide }));
+      const cO = N - (T.t1 - T.t0), grid = net(h.mat('grating', { transparent: true, depthWrite: false, alphaTest: 0.02, side: THREE.DoubleSide })); // blended, not cut: from afar, the mipmaps turn it into a steady veil instead of a flickering moire
       for (const sd of [-1, 1]) h.ribbon(T.t1, cO, s => sd * (s.w + 0.1), h.TH.wallH + 4.2, s => sd * (s.w + 0.1), h.TH.wallH - 0.1, grid, 4);
       const pot = []; for (let i = 0; i < N; i += 6) for (const sd of [-1, 1]) { const [x, z] = edgePt(S[i], sd, S[i].w + 0.2); pot.push([x, S[i].y + h.TH.wallH + 2.1, z, 0, 1, 0.86, 1]); }
       inst(h, h.geo('poleGrate'), steelMat, pot);
 
       // --- the grandstands follow the track on the outside, with no gap: a 14 m module every 7 samples. It widens on the outside of the bends
       // to close the fan, and loses depth (75%, 50%) where another stretch of track passes behind; one in four carries a mast ---
-      const stands = [[], []], STEP = 7, DEPTH = 53;
+      const stands = [[], []], STEP = 7, DEPTH = 53, olaI = []; // olaI: each module with, last, its track sample (for the ola)
       const foot = i => { const s = S[i % N]; return [...edgePt(s, -1, s.w + 12), s.tz, -s.tx]; }; // facade and back direction (left side = outside of the oval)
       for (let i = 0, k = 0; i < N; i += STEP, k++) {
         const [x, z, ox, oz] = foot(i), sc = [1, 0.75, 0.5].find(c => [0, 0.35, 0.7, 1].every(f => g.dAt(x + f * DEPTH * c * ox, z + f * DEPTH * c * oz) > W + 9));
         if (!sc || ![-7, 7].every(u => g.dAt(x + u * oz, z - u * ox) > W + 9)) continue;
         const [x2, z2, ox2, oz2] = foot(i + STEP), wide = Math.max(1, Math.hypot(x2 + 40 * sc * ox2 - x - 40 * sc * ox, z2 + 40 * sc * oz2 - z - 40 * sc * oz) / 14 + 0.05);
         const y = Math.min(g.hAt(x, z), g.hAt(x + 20 * sc * ox, z + 20 * sc * oz)) - 0.6, mat = k % 4 === 0 ? 1 : 0;
-        stands[mat].push([x, y, z, Math.atan2(ox, oz), wide, sc, sc]);
+        stands[mat].push([x, y, z, Math.atan2(ox, oz), wide, sc, sc]); olaI.push([...stands[mat][stands[mat].length - 1], i]);
         if (mat) { const s = S[i], [lx, lz] = edgePt(s, -1, W + 2); h.emis(i, lx, s.y + 20, lz, 0xfff0d8, 50, 0.5); } // the mast lights the track; to the west, a supplement
       }
       const crowd = net(h.mat('crowd', {}, '#4a4250', '#e83f8c')), crowd2 = net(h.mat('crowd', {}, '#3e3848', '#2aa39a'));
       const skinT = { concretePart, streamer: h.mat('streamer', {}, 0), banner2: h.mat('streamer', {}, 2), crowd, crowd2, stairs: h.mat('steps'), vipBox: h.mat('vipBoxes', GLOW), steelMat, roofM: h.mat('tinRoof'), lampObj, flagCube: h.mat('checker', { emis: 1, net: 1, side: THREE.DoubleSide }, '#f4f0e0') };
       stands.forEach((l, m) => insts(h, 'stand', skinT, l, { a: [m] }));
       const screens = [[240, 70], [1250, 110], [1600, 140]];
+
+      // the crowd (arms raised, ola): src/render/crowd.js, shared with the stadium
+      // shortcut: the ola follows the car the scenery receives (the player's), not the race leader's
+      const crowdRig = PLACERS.crowd(h, { ola: { mods: olaI, wd: 14, profData: 27.8, slope: Math.atan2(14, 24), y: 10, z: 14, gap: (k, car) => Math.max(0, 1 - Math.abs((olaI[k][7] - car.idx + N * 1.5) % N - N / 2 - 14) / 28) }, // wave centered on 14 samples (28 m) in front of the car
+        tiers: [{ mat: crowd, f1: 0.0021, f2: 0.0057, ph: 0, cutoff: 0.7 }, { mat: crowd2, f1: 0.0017, f2: 0.0049, ph: 2, cutoff: 0.5 }],
+        placards: { double: [['ALLEZ !', '#f4f0e0', '#e83f8c'], ['VAS-Y !', '#ffc04a', '#1a1420'], ['BRAVO !', '#2aa39a', '#f4f0e0']], headEl: [['N°1', '#ffc04a', '#1a1420'], ['EN TÊTE !', '#e83f8c', '#f4f0e0']], impact: [['AÏE !', '#f4f0e0', '#1a1420'], ['OUCH', '#1a1420', '#ffc04a']] } });
 
       // --- the car park behind the grandstands: thousands of cars, motorhomes at the end of the bends ---
       const autoList = [], cc = [], TINT = [0xf4f0e0, 0x1a1a1e, 0xc8102e, 0x9aa0a8, 0x1848c8, 0x5a5e66, 0xd8d0c0, 0x2a5a3a, 0xffc04a];
@@ -144,9 +150,8 @@
       const lapCount = h.mat('towerFar', { emis: 1, fog: false }, '#2a1c3a', ['#ffc04a'], 40);
       for (let i = 0; i < 34; i++) { const hh = 120 + rnd() * rnd() * 380, w = 50 + rnd() * 70; boxMesh(h, lapCount, w, hh, w, -2300 + rnd() * 900, hh / 2, -500 + rnd() * 1300); }
       // the crowd moves: each tier of the stands occasionally switches to its arms-raised variant; the airship makes a circuit in about twenty minutes
-      return (dt, now) => {
-        crowd.map.offset.y = Math.sin(now * 0.0021) + Math.sin(now * 0.0057) > 0.7 ? 0.5 : 0;
-        crowd2.map.offset.y = Math.sin(now * 0.0017 + 2) + Math.sin(now * 0.0049) > 0.5 ? 0.5 : 0;
+      return (dt, now, car) => {
+        crowdRig(dt, now, car);
         const t = now * 0.00006; dmgP.position.set(760 + Math.cos(t) * 520, 125, 110 + Math.sin(t) * 260); dmgP.rotation.y = -t - Math.PI / 2;
       };
     },

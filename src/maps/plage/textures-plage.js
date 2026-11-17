@@ -2,6 +2,14 @@
 (() => {
   const grain = (g, o, n, cols, w = 64, h = 64) => { for (let i = 0; i < n; i++) o.R(g, cols[o.rand() * cols.length | 0], o.rand() * w | 0, o.rand() * h | 0, 1, 1); };
   Object.assign(TEXTURES, {
+    // fine noise of the large beach areas (sand, ground, rock, water; the grain() of scenery-plage.js): 128 px for the noise tile (64), 8 to 11 px/m.
+    // Draws in rnd exactly like noise (the scenery doesn't move) and keeps its drawing, doubled and veiled, for the broad patches; the fine grain is drawn with rand.
+    // k: strength of the fine grain (the track is calmer than its surroundings)
+    noiseFine: (backdrop, grains, k = 1) => [128, 128, (g, { R, rnd, rand, veil }) => {
+      R(g, backdrop, 0, 0, 128, 128);
+      veil(g, 0.22 * k, () => { for (const c of grains) for (let i = 0; i < 160; i++) R(g, c, (rnd() * 64 | 0) * 2, (rnd() * 64 | 0) * 2, (1 + (rnd() * 2 | 0)) * 2, 2); });
+      veil(g, k, () => { for (const c of grains) for (let i = 0; i < 700; i++) R(g, c, rand() * 128 | 0, rand() * 128 | 0, 1 + (rand() * 2 | 0), 1); });
+    }],
     // dry beach sand: almost white, grains, small wind ripples, footprints
     sandDry: () => [64, 64, (g, o) => {
       const { R, rand, veil } = o; R(g, '#cab890', 0, 0, 64, 64); grain(g, o, 700, ['#baa680', '#dccca6', '#ae9a74']);
@@ -146,18 +154,6 @@
       for (let x = 0; x < 64; x++) { R(g, '#3fd8c0', x, 112 + (Math.sin(x * 0.4) * 2 | 0), 1, 2); if (rand() < 0.4) R(g, '#9ff4e4', x, 110 + (rand() * 6 | 0), 1, 1); } // reflets de l'eau
       grain(g, o, 500, ['#5a4e3a', '#b0a080'], 64, 128);
     }],
-    // cave vault: dark rock, cracks, stalactite tips as light spots
-    vaultCave: () => [64, 64, (g, o) => {
-      const { R, rand, veil } = o; R(g, '#4a4232', 0, 0, 64, 64); grain(g, o, 700, ['#3a3426', '#5e5440', '#2c2820']);
-      for (let i = 0; i < 8; i++) { let x = rand() * 64, y = rand() * 64; for (let k = 0; k < 30; k++) { R(g, '#1c1a14', x | 0, y | 0, 1, 1); x += rand() * 2 - 1; y += 1; } }
-      veil(g, 0.6, () => { for (let i = 0; i < 30; i++) R(g, '#b0a07a', rand() * 64 | 0, rand() * 64 | 0, 2, 2); });
-    }, 6],
-    // cave floor: wet, smoothed limestone, light puddles reflecting the light, fine sand in the hollows
-    groundCave: () => [64, 128, (g, o) => {
-      const { R, rand, veil } = o; R(g, '#5e5442', 0, 0, 64, 128); grain(g, o, 1200, ['#4e4636', '#6e6450', '#7a6e56'], 64, 128);
-      veil(g, 0.5, () => { for (let i = 0; i < 14; i++) R(g, '#9a8c70', rand() * 56 | 0, rand() * 120 | 0, 6 + (rand() * 14 | 0), 4 + (rand() * 10 | 0)); });
-      for (let i = 0; i < 10; i++) { const x = rand() * 50 | 0, y = rand() * 116 | 0, w = 6 + (rand() * 10 | 0); R(g, '#2a5a58', x, y, w, 4); R(g, '#7ad8c8', x + 1, y + 1, w - 3, 1); } // flaques
-    }],
     // underground cenote water: bright turquoise over a sand bottom, darker toward the depths (the top of the texture is the wall's edge), wavering light network
     waterCave: () => [64, 64, (g, o) => {
       const { R, rand, veil } = o; for (let y = 0; y < 64; y++) R(g, 'rgb(' + (10 + y * 0.2 | 0) + ',' + (50 + y * 1.6 | 0) + ',' + (80 + y * 1.0 | 0) + ')', 0, y, 64, 1);
@@ -196,7 +192,7 @@
 (() => {
   Object.assign(TEXTURES, {
     // festival bunting string (T-2): triangles pointing down in three accents (pink, turquoise, yellow), transparent background; repeats along the string
-    streamer: () => [96, 16, (g, { R }) => { g.clearRect(0, 0, 96, 16); ['#e8468c', '#1fb5a8', '#f2c230', '#e8468c', '#f2c230', '#1fb5a8'].forEach((c, k) => { g.fillStyle = c; g.beginPath(); g.moveTo(k * 16 + 1, 1); g.lineTo(k * 16 + 15, 1); g.lineTo(k * 16 + 8, 15); g.fill(); }); R(g, '#4a3a2c', 0, 0, 96, 1); }],
+    streamerPlage: () => [96, 16, (g, { R }) => { g.clearRect(0, 0, 96, 16); ['#e8468c', '#1fb5a8', '#f2c230', '#e8468c', '#f2c230', '#1fb5a8'].forEach((c, k) => { g.fillStyle = c; g.beginPath(); g.moveTo(k * 16 + 1, 1); g.lineTo(k * 16 + 15, 1); g.lineTo(k * 16 + 8, 15); g.fill(); }); R(g, '#4a3a2c', 0, 0, 96, 1); }],
     // string of colored bulbs (cave, muelle): a wire and bulbs in the three accents, transparent background
     bulbs: () => [96, 8, (g, { R }) => { g.clearRect(0, 0, 96, 8); R(g, '#2a2420', 0, 1, 96, 1); ['#ffd070', '#e8468c', '#1fb5a8', '#ffd070', '#f2c230', '#e8468c'].forEach((c, k) => { R(g, c, k * 16 + 6, 2, 3, 4); }); }],
     // Quinta paving (REFS §3): brick-pink paving stones of uneven sizes, light stone bands across every 8 m; neighboring tints, no fine periodic pattern

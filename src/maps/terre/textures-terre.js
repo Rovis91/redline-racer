@@ -11,11 +11,13 @@
       for (let i = 0; i < 46; i++) { const x = rand() * 62 | 0, y = rand() * 62 | 0; R(g, rand() < 0.6 ? '#8a8440' : '#5e7038', x, y, 2, 2); R(g, '#a89a50', x + 1, y - 1, 1, 1); }
     }],
     // ochre cliff: horizontal strata from blood red to yellow, vertical gullies, scree at the foot; the top of the texture is the top of the butte, crowned with garrigue
-    cliffOchre: () => [64, 64, (g, o) => {
-      const { R, rand, veil } = o, B = [['#6a7038', 4], ['#e8c070', 6], ['#e09848', 9], ['#d8702c', 8], ['#c84a20', 10], ['#e08a3c', 7], ['#b83c1c', 9], ['#c8683a', 11]]; let y = 0;
-      for (const [c, hh] of B) { R(g, c, 0, y, 64, hh); for (let x = 0; x < 64; x += 2) if (rand() < 0.5) R(g, c, x, y - 1 - (rand() * 2 | 0), 2, 3); y += hh; }
-      veil(g, 0.22, () => { for (let i = 0; i < 26; i++) R(g, rand() < 0.7 ? '#000' : '#fff', rand() * 64 | 0, 4 + (rand() * 30 | 0), 1 + (rand() * 2 | 0), 10 + (rand() * 30 | 0)); });
-      for (let i = 0; i < 150; i++) R(g, rand() < 0.5 ? '#a04a24' : '#e0a060', rand() * 64 | 0, 4 + rand() * 60 | 0, 2, 1);
+    cliffOchre: () => [128, 128, (g, o) => {
+      const { R, rand, veil } = o, B = [['#6a7038', 8], ['#e8c070', 12], ['#e09848', 18], ['#d8702c', 16], ['#c84a20', 20], ['#e08a3c', 14], ['#b83c1c', 18], ['#c8683a', 22]]; let y = 0;
+      for (const [c, hh] of B) { R(g, c, 0, y, 128, hh); for (let x = 0; x < 128; x += 2) if (rand() < 0.5) R(g, c, x, y - 1 - (rand() * 4 | 0), 2, 5); y += hh; }
+      veil(g, 0.12, () => { for (let k = 8; k < 128; k += 3) R(g, rand() < 0.5 ? '#000' : '#fff', 0, k, 128, 1); }); // fine bedding in each stratum
+      veil(g, 0.22, () => { for (let i = 0; i < 90; i++) R(g, rand() < 0.7 ? '#000' : '#fff', rand() * 128 | 0, 8 + (rand() * 60 | 0), 1 + (rand() * 3 | 0), 20 + (rand() * 60 | 0)); }); // ravines
+      for (let i = 0; i < 600; i++) R(g, rand() < 0.5 ? '#a04a24' : '#e0a060', rand() * 128 | 0, 8 + rand() * 120 | 0, 2, 1);
+      veil(g, 0.3, () => { for (let i = 0; i < 160; i++) R(g, rand() < 0.5 ? '#8a3a1c' : '#d8a060', rand() * 128 | 0, 112 + rand() * 16 | 0, 2 + (rand() * 3 | 0), 2); }); // scree at the foot
     }],
     // straw bale: golden stalks, two twines
     straw: () => [32, 32, (g, o) => {
@@ -74,11 +76,10 @@
       for (let j = 0; j < 2; j++) { const [t, f, c] = l[(k + j) % l.length], x = j * 96; o.R(g, f, x, 0, 96, 20); o.R(g, '#08080c', x, 0, 1, 20); plainText(g, t, x + 48, 10.5, 10, c, 88); } // 4 px margin on each side: a long name (RADIO CAILLOU 88.8) no longer overflows onto the neighboring advertiser
     }],
   });
-  // the dirt track: th.road[7] = 'terre' repaints the common road as packed earth (no patches, no joints, no checkered edges).
+  // the dirt track (th.roadTex = 'roadwayTerre', same settings as roadway): the common roadway repainted as packed earth (no patches, no joints, no checkered curbs).
   // The common drawing runs first: it draws rnd as many times as before, the scenery does not move; the earth is painted with rand, on top
-  const roadway = TEXTURES.roadway;
-  TEXTURES.roadway = (...a) => {
-    const t = roadway(...a); if (a[7] !== 'terre') return t;
+  TEXTURES.roadwayTerre = (...a) => {
+    const t = TEXTURES.roadway(...a);
     const [asph, spk, edge, dash, k1, k2] = a, d = t[2];
     t[2] = (g, o) => {
       d(g, o); const { R, rand, veil } = o, px = n => rand() * n | 0;

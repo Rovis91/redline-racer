@@ -25,16 +25,16 @@
     chevron: () => new THREE.PlaneGeometry(5, 2.5), pierViaduct: () => B(5, 1, 5, 24), tubeNeon: () => B(0.35, 7, 0.35), reflectionTube: () => new THREE.PlaneGeometry(7, 1.6),
     beam: () => { const g = new THREE.PlaneGeometry(26, 900); g.translate(0, 450, 0); return g; }, hologram: () => new THREE.PlaneGeometry(90, 45),
     // mobilier de route
-    mastLamppost: () => B(0.3, 10, 0.3), headLamppost: (l = 3.2) => B(l, 0.25, 0.7), streetlamp: () => B(0.25, 7, 0.25), lantern: () => B(0.7, 0.8, 0.7),
-    reflector: () => B(0.18, 0.3, 0.18), cone: () => B(0.4, 0.7, 0.4), beacon: () => B(0.5, 6.2, 0.5), wallMural: () => new THREE.PlaneGeometry(15.8, 5),
+    mastLamppost: () => B(0.3, 10, 0.3), headLamppost: (l = 3.2) => B(l, 0.25, 0.7), streetlamp: () => B(0.25, 7, 0.25), lanternStreet: () => B(0.7, 0.8, 0.7),
+    reflector: () => B(0.18, 0.3, 0.18), coneRoad: () => B(0.4, 0.7, 0.4), beacon: () => B(0.5, 6.2, 0.5), wallMural: () => new THREE.PlaneGeometry(15.8, 5),
     // vegetation
     cedar: () => new THREE.ConeGeometry(3.6, 15, 5), trunk: () => B(0.5, 5.2, 0.5), canopy: () => new THREE.IcosahedronGeometry(3.4, 0),
     trunkPalmtree: () => B(0.55, 1, 0.55, 14), frond: () => new THREE.IcosahedronGeometry(4, 0),
     // vehicles and freight
     auto: () => B(4.1, 1.3, 1.75), container: () => B(12, 2.6, 2.5), wagon: () => B(17, 4.2, 3.2), chimney: () => B(0.8, 2, 2.2), clim: () => B(3, 2, 3.4), reservoir: () => new THREE.CylinderGeometry(2.2, 2.2, 4.4, 8),
-    trailer: () => B(8, 3.1, 2.5), cabin: () => B(2.2, 2.6, 2.4), lightsTruck: () => B(0.15, 0.5, 2.3),
+    trailer: () => B(8, 3.1, 2.5), lightsTruck: () => B(0.15, 0.5, 2.3),
     // large landmarks
-    pylonHT: () => B(1.6, 48, 1.6), armHT: () => B(1, 1, 16), dome: (r, seg, ann) => new THREE.SphereGeometry(r, seg, ann, 0, 6.283, 0, 1.6),
+    armHT: () => B(1, 1, 16), dome: (r, seg, ann) => new THREE.SphereGeometry(r, seg, ann, 0, 6.283, 0, 1.6),
 
     // ---------- assemblages ----------
     // track (W = half-width of the carriageway)

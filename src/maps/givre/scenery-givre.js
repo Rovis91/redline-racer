@@ -14,7 +14,7 @@
       // lake, hamlet, snowfield, pass). th.wallH = 0 buries its guardrail; this scenery rests the roadway and guardrail at ±s.w, same materials and same texture coordinates
       // (a single ribbon from T.t1, like the game's own: the dashes do not jump), the roadway a little above the game's, the ice still above
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, gloss: 0.08, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
-      const guardM = h.mat('guardrail', { side: THREE.DoubleSide }, h.TH.intoWall); for (const sd of [-1, 1]) h.ribbon(T.t1, N, s => sd * s.w, 1.4, s => sd * s.w, -2, guardM);
+      const guardM = h.mat('guardrail', { side: THREE.DoubleSide }, h.TH.intoWall); for (const sd of [-1, 1]) h.guardM(sd, T.t1, N, s => sd * s.w, 1.4, s => sd * s.w, -2, guardM); // h.guardM: wears down on impacts
       const iG = S.findIndex(s => gorge(s.x, s.z) > 1), nG = S.filter(s => gorge(s.x, s.z) > 1).length;
       h.ribbon(iG, nG, s => -s.w, -2, s => s.w, -2, concretePart, 8); // the deck (its sides are the road's low walls), on two piers
       inst(h, h.geo('pierViaduct'), concretePart, [1, 2].map(k => { const s = S[iG + Math.round(nG * k / 3)], y0 = g.hAt(s.x, s.z) - 2; return [s.x, (s.y - 2 + y0) / 2, s.z, h.across(s), 1, s.y - 2 - y0, 0.5]; }));
@@ -94,7 +94,7 @@
       h.pose('signCol', { pole: h.mat('steelMat'), plate: h.mat('written', { retroRefl: 1.5 }, 128, 42, '#1c3fa8', '#f4f8ff', 'COL DE L\'ECHINE · 1922 m', 10) }, gR, [-(WR + 4), 0, -16]);
       // the peaks, in a crown more than a kilometre away, blue in the early light
       const peaks = []; for (let k = 0; k < 16; k++) { const a = k / 16 * 6.283 + rnd() * 0.2, r = 1150 + rnd() * 500, l = 520 + rnd() * 420; peaks.push([250 + Math.cos(a) * r, 40, 250 + Math.sin(a) * r, rnd() * 1.5, l, 420 + rnd() * 330, l]); }
-      inst(h, h.geo('peakAt'), h.mat('rockSnow', { fog: false, c: 0xa8b8e8 }), peaks);
+      inst(h, h.geo('peakAt'), h.mat('rockSnowFar', { fog: false, c: 0xa8b8e8, rep: [3, 1] }), peaks);
       // ---------- Lapland, in secret: reindeer, deer, kotas, Christmas tree, northern lights, and Father Christmas ----------
       const pc = new Map(), P = c => { const m = h.mat('paint', { c }); return pc.get(c) || pc.set(c, m).get(c); }, beast = c => ({ fur: P(c), paw: P(0x3a2a20), nose: P(0x1a1410), belly: P(0xe8e0d0), wood: P(0xd8c8a8) });
       const readySets = (n, p, sd, o0, o1) => Array.from({ length: n }, () => { const s = S[(pt(h, p) + (rnd() * 30 | 0)) % N], [x, z] = edgePt(s, sd, s.w + o0 + rnd() * (o1 - o0)); return [x, g.hAt(x, z), z, rnd() * 6.3, 0.9 + rnd() * 0.25]; });

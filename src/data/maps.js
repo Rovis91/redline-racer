@@ -13,7 +13,7 @@
 (function (G) {
   const _ = null;
   // car: up / down = shift points of the automatic gearbox; trac = maximum acceleration the tyres put down on the ground (m/s²);
-  // rwd = rear-wheel drive: hard acceleration takes from the rear wheels' lateral grip; son = engine pitch; moteur = architecture (l4 l5 l6 v8 v10 rot, timbre: MOTOR in audio.js), turbo = whistle and blow-off valve; look = silhouette (type: the model of shapes-cars.js, gtr fd a80 r5 gts);
+  // rwd = propulsion: accelerating hard takes from the lateral grip of the rear wheels; sound = engine pitch; engine = architecture (l4 l5 l6 v8 v10 rot, timbre: MOTOR in audio.js), turbo = whistle and valve; look = silhouette (type: the model of shapes-cars.js, gtr by default);
   // grip = the car's grip (default 1, see KT0 in sim.js): multiplies what it can take in corners and the speed at which it gets back on line
   const car = (o) => Object.assign({ up: o.red * 0.94, down: o.red * 0.775, eff: 0.88, trac: 8.5, rwd: 1, sound: 1 }, o);
 
@@ -380,7 +380,7 @@
         orb: { dir: [0.8, 0.14, 0.3], col: '#fff0c0', shadows: '#fff0c0', imgSize: 260 }, hemi: [0xa8b8e8, 0xd9c9a8, 0.95], sun: [0xffc890, 0.75], headlights: 0.5, bloom: 0.03, scan: 0.05, exhaust: 0, // exhaust : no hot exhaust air on screen (at the rev limiter the image rippled nonstop)
         streets: [[0, 'boulevard'], [3, 'place'], [8, 'avenue'], [11, 'street'], [13, 'alley'], [19, 'street'], [24, 'avenue'], [26, 'riverbank'], [32, 'quay'], [33, 'boulevard']],
         wallH: 0, road: ['#4a4a52', '#56565e', '#e8e4d8', '#e8e4d8', '#8a8478', '#8a8478', false], intoWall: ['#8a8478', '#b0a898', '#8a8478', '#6a665e'], startLine: [0x1d2f6f, 0x2a7a4a, '#f4f0e0'],
-        tun: { ground: ['#3a3a40', '#46464c', '#e8e4d8', '#e8e4d8', '#3a3a40', '#3a3a40'], wallMeshes: ['#dfeeff', '#dfeeff'], wallFace: ['#b8b4a8', '#d8d4c8', '#8a867a', '#5a564e'], ceiling: ['#3a3830', '#ffe9a0', '#ffe9a0', '#5a564e'], tiles: 1,
+        tun: { tex: ['wallFaceParis', 'ceilingParis'], ground: ['#3a3a40', '#46464c', '#e8e4d8', '#e8e4d8', '#3a3a40', '#3a3a40'], wallMeshes: ['#dfeeff', '#dfeeff'], wallFace: ['#b8b4a8', '#d8d4c8', '#8a867a', '#5a564e'], ceiling: ['#3a3830', '#ffe9a0', '#ffe9a0', '#5a564e'], tiles: 1,
           fog: 0x40382a, portal: 0x5d6b82, neons: [0xdfeeff, 0xdfeeff], hull: 14 }, // cold white neon, tiled walls
         hud: { y: '#ffffff', c: '#ffd05a', r: '#ff6a5a', backdrop: 'rgba(24,44,110,.92)', style: 'plate', gauge: 'needle', split: 0, jp: null, over: [null, 'PARIS · 5 H 30'], heading: ['PREMIER', 'METRO'] } } },
 
@@ -396,7 +396,7 @@
       radio: RADIO.canal,
       th: { scenery: 'canal', fog: 0xe89060, fogD: [160, 1700], isFar: 3000, sky: [[0, '#3d2a5c'], [0.24, '#3d2a5c'], [0.25, '#7a4078'], [0.36, '#7a4078'], [0.37, '#d85a50'], [0.44, '#d85a50'], [0.45, '#ff9a4a'], [0.49, '#ff9a4a'], [0.5, '#e89060'], [1, '#e89060']], stars: 0,
         orb: { dir: [-0.85, 0.11, 0.35], col: '#fff4c0', shadows: '#fff4c0', imgSize: 340 }, hemi: [0xb898c8, 0xb8ad9a, 0.85], sun: [0xffa860, 0.9], headlights: 0.4, bloom: 0.03, scan: 0.05,
-        wallH: 1.3, road: ['#4c4a50', '#58565c', '#f4f0e0', '#2aa39a', '#e83f8c', '#f4f0e0', false], intoWall: ['#f4f0e0', '#e83f8c', '#1848c8', '#e4ddd0'], startLine: [0xff7a3d, 0x3d2a5c, '#f4f0e0'],
+        wallH: 1.3, roadTex: 'roadwayFine', road: ['#4c4a50', '#58565c', '#f4f0e0', '#2aa39a', '#e83f8c', '#f4f0e0', false], intoWall: ['#f4f0e0', '#e83f8c', '#1848c8', '#e4ddd0'], startLine: [0xff7a3d, 0x3d2a5c, '#f4f0e0'],
         hud: { y: '#ffc04a', c: '#ff7a3d', r: '#e83f8c', backdrop: 'rgba(40,24,56,.9)', style: 'blk', gauge: 'led', mph: 1, split: 0, jp: null, over: [null, 'SPEEDWAY · HEURE DOREE'], heading: ['CANAL', 'SIX'] } } },
 
     // Grand Vacarme: a covered arena, packed to the rafters. Three staggered straights under the frame: the start-line table jump, the hairpin exit mound,
@@ -413,7 +413,7 @@
       // invented car: a stadium pick-up with a tube chassis, 6 L naturally aspirated V8, 600 hp, 1300 kg, rear-wheel drive, long-travel suspension;
       // 5th a bit short (top speed 245 km/h at the rev limiter, reached only on the start line and in the big west corner): this ceiling lets the rivals' level play out on the straights (test-maps: a rival at 0.95 loses 2.5%)
       car: car({ label: 'MASTIFF V8 ARENA', ratios: [2.9, 1.95, 1.47, 1.18, 1.08], final: 3.7, wheel: 0.36, mass: 1375, idle: 900, red: 7200, cd: 0.45, area: 2.3,
-        tq: [0, 380, 500, 580, 640, 660, 640, 590, 480], sound: 0.85, engine: 'v8', look: { col: 0xffc21a, l: 0.9, w: 1.04, h: 1.2, nose: 0.45, cab: [-0.1, 1.9, 0.62], tailFin: 2, stripes: 0x16161c } }),
+        tq: [0, 380, 500, 580, 640, 660, 640, 590, 480], sound: 0.85, engine: 'v8', look: { type: 'pickup', col: 0xffc21a, l: 0.9, w: 1.04, h: 1.2, nose: 0.45, cab: [-0.1, 1.9, 0.62], tailFin: 2, stripes: 0x16161c } }),
       radio: RADIO.stade,
       th: { scenery: 'stade', fog: 0x0e0c18, fogD: [120, 900], sky: [[0, '#05050a'], [1, '#05050a']], stars: 0,
         orb: { dir: [0.2, 0.95, 0.25], col: '#05050a', shadows: '#05050a', imgSize: 1 }, hemi: [0xe6ecff, 0x3c3c48, 0.85], sun: [0xffffff, 0.5], headlights: 0.3, bloom: 0.1, scan: 0.08, skyDef: 'SOUS LE TOIT', // guardM : 0 = the scenery places the guardrails (game.js does not double one, which showed through at ground level on the area); exhaust : 0 = no hot exhaust air on screen (at the rev limiter the image rippled)
@@ -430,7 +430,7 @@
       pts: [[0, 0, 0], [180, 0, 1], [340, -30, 6], [480, 10, 14], [600, -30, 24], [720, 20, 36], [790, 120, 50], [770, 230, 62], [680, 270, 72], [590, 260, 80], [558, 273, 83], [545, 305, 86], [558, 337, 89], [590, 350, 92], [700, 350, 102], [735, 365, 106], [750, 400, 110], [735, 435, 114], [700, 450, 117], [560, 470, 122], [420, 440, 118], [285, 508, 104], [150, 470, 90], [0, 470, 72], [-140, 470, 54], [-250, 400, 40], [-290, 290, 28], [-250, 180, 18], [-300, 90, 5], [-230, 10, 3], [-120, 0, 2]],
       // Audi Sport quattro S1 E2 (1985, Group B): 2.1 L 5-cylinder turbo, about 480 hp, 590 N·m, 1090 kg, all-wheel drive (gear ratios and torque curve estimated)
       car: car({ label: 'BOREALE S1 E2', ratios: [3.5, 2.27, 1.63, 1.27, 1.04, 0.85], final: 4.3, wheel: 0.31, mass: 1165, idle: 1000, red: 8000, cd: 0.45, area: 2.0,
-        tq: [0, 180, 300, 430, 540, 590, 580, 520, 400], trac: 11, rwd: 0, sound: 1.1, engine: 'l5', turbo: 1, look: { type: 'gtr', col: 0xf4f0e0, l: 0.9, w: 1.03, h: 1.06, nose: 0.5, cab: [-0.2, 2.1, 0.58], tailFin: 2, stripes: 0xf4c020 } }),
+        tq: [0, 180, 300, 430, 540, 590, 580, 520, 400], trac: 11, rwd: 0, sound: 1.1, engine: 'l5', turbo: 1, look: { type: 'groupeb', col: 0xf4f0e0, l: 0.9, w: 1.03, h: 1.06, nose: 0.5, cab: [-0.2, 2.1, 0.58], tailFin: 2, stripes: 0xf4c020 } }),
       radio: RADIO.givre,
       th: { scenery: 'givre', snowSurf: 1.6, fog: 0x8a9cc0, fogD: [70, 1100], isFar: 3000, sky: [[0, '#070c24'], [0.3, '#16224a'], [0.4, '#3a4a80'], [0.46, '#b07a98'], [0.49, '#f0b890'], [0.5, '#8a9cc0'], [1, '#8a9cc0']], stars: 90,
         orb: { dir: [-0.55, 0.3, 0.5], col: '#f4f8ff', shadows: '#aab8d8', imgSize: 150 }, hemi: [0x8aa4e0, 0xc8d4f0, 0.8], sun: [0xc0d0ff, 0.45], headlights: 0.35, bloom: 0.08, scan: 0.06, // dimmed headlights (like the other dawn maps) and grey packed snow: on a white road, a full beam drowns the track and the ice patches
@@ -443,11 +443,11 @@
       pts: [[0, 0, 29.5], [43, 0, 29.7], [85, 0, 29.8], [128, 0, 30.1], [170, 0, 32.2], [220, 0, 33.1], [255, 0, 31.2], [298, 0, 30.1], [340, 0, 30.9], [361, 5, 31.1], [378, 18, 30.8], [407, 52, 29.6], [429, 67, 29.7], [455, 67, 30.4], [476, 52, 31.2], [505, 18, 30.8], [528, 3, 30.1], [555, 4, 30], [576, 21, 30.8], [585, 47, 31.7], [585, 94, 31.8], [585, 141, 31.1], [593, 167, 31.8], [614, 183, 33], [652, 197, 33.9], [666, 207, 33.8], [673, 224, 33.6], [670, 241, 33.4], [658, 254, 33.6], [641, 259, 34.2], [591, 259, 36.1], [536, 259, 35], [513, 259, 34.5], [481, 259, 35.7], [471, 259, 36.4], [448, 265, 38.2], [432, 281, 39.5], [426, 304, 39.9], [426, 344, 39.5], [426, 384, 40.1], [420, 406, 41.1], [403, 423, 41.9], [369, 443, 41.9], [350, 461, 41.3], [344, 486, 41.1], [344, 526, 42], [338, 547, 42.6], [323, 563, 42.7], [302, 568, 42.2], [258, 568, 41.2], [214, 568, 42.4], [152, 568, 43.1], [126, 568, 41.3], [82, 568, 38.6], [57, 568, 38.3], [30, 559, 38.3], [14, 535, 37.8], [3, 496, 35.8], [-8, 476, 34.8], [-28, 464, 34.5], [-67, 454, 34.7], [-90, 439, 34.4], [-98, 413, 33.3], [-98, 367, 31.4], [-82, 313, 31.6], [-72, 271, 31.4], [-86, 227, 29.6], [-98, 193, 29.1], [-98, 133, 30.2], [-109, 105, 29.7], [-134, 74, 28.6], [-145, 51, 28.5], [-141, 26, 29], [-124, 7, 29.5], [-100, 0, 29.6], [-50, 0, 29.2]],
       // invented car: a rally coupé with a rear-mid engine, 2 L naturally aspirated 4-cylinder, 260 hp, 780 kg, rear-wheel drive (the weight over the driven wheels: it puts its power down even on dirt)
       car: car({ label: 'GARRIGUE 2000 GR.4', ratios: [3, 2.05, 1.5, 1.18, 0.98], final: 4.6, wheel: 0.3, mass: 855, idle: 1000, red: 7800, cd: 0.36, area: 1.7,
-        tq: [0, 140, 200, 240, 262, 270, 268, 250, 215], trac: 10.5, sound: 1.3, engine: 'l4', look: { col: 0x2a62c8, l: 0.84, w: 0.98, h: 0.98, nose: 0.5, cab: [-0.3, 2, 0.55], tailFin: 0, stripes: 0xf4c020 } }),
+        tq: [0, 140, 200, 240, 262, 270, 268, 250, 215], trac: 10.5, sound: 1.3, engine: 'l4', look: { type: 'berlinette', col: 0x2a62c8, l: 0.84, w: 0.98, h: 0.98, nose: 0.5, cab: [-0.3, 2, 0.55], tailFin: 0, stripes: 0xf4c020 } }),
       radio: RADIO.terre,
       th: { scenery: 'terre', fog: 0xe8c898, fogD: [150, 1500], sky: [[0, '#3f6fb0'], [0.3, '#3f6fb0'], [0.31, '#7fa8cc'], [0.42, '#7fa8cc'], [0.43, '#e8d0a0'], [0.49, '#e8d0a0'], [0.5, '#e8c898'], [1, '#e8c898']], stars: 0,
         orb: { dir: [-0.6, 0.35, 0.5], col: '#fff2c0', shadows: '#fff2c0', imgSize: 220 }, hemi: [0xc8d8f0, 0xb07848, 0.9], sun: [0xffd8a0, 0.9], headlights: 0.15, bloom: 0.03, scan: 0.05,
-        wallH: 0.9, dust: [0.82, 0.62, 0.42], road: ['#a86a3a', '#8a5228', '#96602f', '#b87a48', '#7a6a3a', '#8a7444', false, 'terre'], intoWall: ['#8a5a30', '#6a7a3a', '#7a4c28', '#6e4424'], startLine: [0xe8482a, 0x3a2a1c, '#f4f0e0'],
+        wallH: 0.9, dust: [0.82, 0.62, 0.42], roadTex: 'roadwayTerre', road: ['#a86a3a', '#8a5228', '#96602f', '#b87a48', '#7a6a3a', '#8a7444', false], intoWall: ['#8a5a30', '#6a7a3a', '#7a4c28', '#6e4424'], startLine: [0xe8482a, 0x3a2a1c, '#f4f0e0'],
         hud: { y: '#ffffff', c: '#ffb03a', r: '#e8482a', backdrop: 'rgba(70,36,16,.9)', style: 'rally', gauge: 'needle', split: 0, jp: null, over: [null, 'SPECIALE 7 · FIN DE JOURNEE'], heading: ['SPECIALE', 'DES OCRES'] } } },
     // Royal Road: Persepolis to the west. The S-shaped plain (the only straight), the big terrace staircase (paving, +14 m), the Gate of Nations and its hairpin,
     // the hall of a hundred columns (an area where you can drive anywhere among 15 columns), the garden with the turquoise canal dropping back down, then the 90° bends of the covered bazaar (paving, brick vault).
@@ -494,7 +494,7 @@
         [262,230,43.6], [260,260,41.5], [278,292,39], [318,360,35.4], [356,410,32.6], [352,465,30.1], [378,520,27.3], [412,570,24.5], [402,630,21.8], [424,690,18.9],
         [446,740,16.4], [452,800,16.4], [452,850,16.3], [446,882,16.3], [420,900,16.3], [370,902,16.3], [338,906,16.2], [314,926,16.2], [310,960,16.2], [310,1040,16.1],
         [304,1072,16.1], [282,1094,16.1], [230,1100,16.1], [200,1098,16], [180,1088,16], [171,1070,16], [170,1054,16]],
-      // ZiL-111 (1958-1967), the Soviet state limousine: 6 L V8, three boxes over 6 m long, chrome grille, four headlights, tail fins. The body and the V8 are its own;
+      // ZiL-111 (1958-1967), the Soviet state limousine: 6 L V8, three volumes over 6 m long, chrome grille, four headlights, tail fins. The body and the V8 are its own;
       // the driving figures are those of a prepared car, invented for the game (the real one weighs 2.6 t, makes 200 hp and has two gears)
       car: car({ label: 'ZARIA 111 V8', ratios: [2.64, 1.6, 1.25, 1.0, 0.8], final: 3.55, wheel: 0.33, mass: 1480, idle: 750, red: 6200, cd: 0.42, area: 2.1,
         tq: [0, 380, 470, 530, 560, 550, 520, 460, 360], sound: 0.85, engine: 'v8', look: { type: 'zil', col: 0x14161a, l: 1.12, w: 1.04, h: 1.02, nose: 0.55, cab: [-0.3, 2.2, 0.6], tailFin: 0 } }),
@@ -528,7 +528,7 @@
       car: car({ label: 'ONCA 2000 TURBO', ratios: [3.2, 1.9, 1.3, 0.97, 0.74], final: 4.1, wheel: 0.31, mass: 1125, idle: 900, red: 7200, cd: 0.36, area: 1.85,
         tq: [0, 150, 250, 320, 340, 335, 320, 290, 240], sound: 1.2, engine: 'l4', turbo: 1, look: { type: 'onca', col: 0xe9b44c, l: 0.9, w: 0.98, h: 0.98, nose: 0.55, cab: [-0.3, 2, 0.55], tailFin: 1 } }), // type: the model from shapes-cars.js (Brazilian coupé in expedition outfit, jaguar coat)
       radio: RADIO.chapada,
-      th: { scenery: 'chapada', smooth: ['waterJade', 'dropWire', 'vaultCave'], roadTex: 'slabsJungle', shadows: { soft: 1, field: 250 }, graze: 1, fog: 0xa9bb7e, fogD: [18, 190], // green-gold haze in the background's colour: at 190 m only it remains (the touge technique, by day)
+      th: { scenery: 'chapada', smooth: ['waterJade', 'dropWire', 'vaultCave'], roadTex: 'slabsJungle', shadows: { soft: 1, field: 250 }, graze: 1, fog: 0xa9bb7e, fogD: [40, 500], // green-gold haze in the colour of the background (charter: starts at 40 m, ends at 500 m at the earliest; 18-190 was blocking the scenery; cost: about 35 more draw calls)
         sky: [[0, '#5f9aa0'], [0.36, '#9cc0a0'], [0.47, '#b6c68c'], [0.5, '#a9bb7e'], [1, '#a9bb7e']], stars: 0,
         orb: { dir: [0.42, 0.82, 0.39], col: '#fff0c0', shadows: '#ffe6b0', imgSize: 150 }, hemi: [0xdcefb0, 0x2a4a2a, 0.8], sun: [0xffe6b0, 0.95], headlights: 0.3, bloom: 0.05, scan: 0.05, gloss: 0.02, cones: 0, /* cones: 0 = nothing at corner entries; the objects below are placed by objectsEn: excavation pottery (terracotta shards) on the outer edge of the square, at re-acceleration; expedition crates and drums along the camp */
         objects: [[0xa8623c, 0.2, 0.3, 0.8, null, [0.66, 0.4, 0.25]], [0x6a7a4a, 0.36, 0.36, 0.5], [0xb03a2a, 0.26, 0.26, 0.6]],
@@ -552,7 +552,7 @@
         [214, 440, -6], [186, 432, -6], [110, 426, -5.2], [38, 418, -3], [8, 392, 0], [-6, 345, 0], [-20, 292, 0], [-10, 238, 0], [10, 186, 0], [8, 135, 0], [0, 90, 0], [0, 26, 0], [14, 4, 0], [80, 0, 0]], // pier: lanes that flare towards the head (a single deck, 2.5 m above the water); crest of the 307 (pts 23-25), ramp and right-hand gallery (26), then the S of the footbridge in the cenote cave (27-33, −6 m) and the exit gallery (34); S of the dyke
       // invented car: a rear-engined beach buggy, 2.3 L turbo flat-4, 300 hp, 760 kg, rear-wheel drive
       car: car({ label: 'COCOTERO 2.3 TURBO', ratios: [3.0, 2.0, 1.45, 1.13, 0.92], final: 3.7, wheel: 0.31, mass: 840, idle: 950, red: 7400, cd: 0.38, area: 1.75,
-        tq: [0, 160, 230, 275, 300, 310, 305, 285, 250], trac: 10.5, sound: 1.15, engine: 'l4', turbo: 1, look: { type: 'r5', col: 0x19c7c9, l: 0.82, w: 1, h: 0.95, nose: 0.35, cab: [-0.3, 2.1, 0.55], tailFin: 0, stripes: 0xff3d7f } }),
+        tq: [0, 160, 230, 275, 300, 310, 305, 285, 250], trac: 10.5, sound: 1.15, engine: 'l4', turbo: 1, look: { type: 'buggy', col: 0x19c7c9, l: 0.82, w: 1, h: 0.95, nose: 0.35, cab: [-0.3, 2.1, 0.55], tailFin: 0, stripes: 0xff3d7f } }),
       radio: [ // original compositions, declared here and not in RADIO (the music editor does not see them): coastal cumbia, the Quinta's reggaeton, surf rock of the pontoon. 8-bar themes, locked to the chord progression
         // cumbia: güiro or guacharaca in eighth notes, drums (congas), simple bass on 1 and 3, accordion or organ on the theme; no hi-hat, no clap, no pad
         st({ name: 'CUMBIA 307', cO: -12, drumset: { sS: 'rim', sR: 0.9, hS: 'shk', hA: 'shk' }, fq: '90.7', vol: 1.2, genre: 'CUMBIA', bpm: 96, sw: 0.04, scl: 'majeur', key: 55, kit: 'acous', eq: [1, 2200, 2, 2], rev: 0.14, echo: [3, 0.16], pump: 1, // güiro (shaker) and congas, bass jumping from root to fifth, organ on the theme
@@ -576,14 +576,14 @@
             '17 - - - 20 - 24 - 20 - - - . - - - | 19 - - - 15 - 12 - 15 - - - . - - - | 23 - - - 19 - 14 - 11 - - - . - - - | 19 - - - - - - - . - - - . - - -'],
           sec: { i: 'b0 c0', a: 'k0 s0 b0 c0', b: 'k0 s0 h0 b0 c0', c: 'k0 s0 h0 b0 l0', x: 'h0 b0 l1 P1', e: 'k0 s0 h0 b0 l1 P1' }, form: 'iabcxecc' }),
       ],
-      th: { scenery: 'plage', fog: 0xcfe6f0, fogD: [220, 1900], isFar: 3000, sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, skySeg: 48,
+      th: { scenery: 'plage', fog: 0xcfe6f0, fogD: [220, 1900], isFar: 3000, sky: [[0, '#0c4a9c'], [0.3, '#2f86d4'], [0.42, '#8cc6ea'], [0.5, '#d8ecf2'], [1, '#d8ecf2']], stars: 0, 
         orb: { dir: [-0.25, 0.85, 0.45], col: '#fffbe8', shadows: '#fffbe8', imgSize: 200, spokes: 0.3 }, hemi: [0xa8d0ee, 0x7a6a4e, 0.6], sun: [0xfff0d0, 0.72], headlights: 0, bloom: 0.015, scan: 0, withoutCones: 1,
         objects: [[0xd98a2c, 0.36, 0.36, 0.4, null, [0.95, 0.55, 0.1]], [0xc8a060, 0.34, 0.28, 0.5], [0xe8d08a, 0.12, 0.42, 0.5], [0xff3d7f, 0.55, 0.55, 0.28], [0x1fb5a8, 0.36, 0.36, 0.55], [0xe0cf9c, 0.12, 0.55, 0.6, null, [0.88, 0.8, 0.6]]], // fruit crate (orange shards), basket, stack of sombreros; buoy, cool box, sandcastle (sand burst); no cones at corners (withoutCones): everything is placed by objectsEn
         objectsEn: [[540, 9.6, 0], [541, 9.5, 1], [544, -9.6, 2], [545, -9.5, 0], [548, 9.6, 1], [549, 9.5, 2], [552, -9.6, 0], [553, -9.5, 1], [560, 9.6, 2], [561, 9.5, 0], [564, -9.6, 1], [565, -9.5, 2], [568, 9.6, 0], [569, 9.5, 1], [572, -9.6, 2], // HA-2: the hall, flush with the roadway in front of the poles (nothing under the piñata, 556)
           [405, -7.8, 0], [407, -7.5, 1], [409, -7.2, 0], [411, -7.1, 1], [413, -7.1, 0], // RU-6: the outside of the street's entry bend
           [44, -18.5, 3], [46, -19.5, 5], [48, -18.5, 4], [74, -18.5, 5], [76, -19.5, 3], [78, -18.5, 4], [104, -18.5, 3], [106, -19.5, 5], [108, -18.5, 4], [130, -18.5, 5], [132, -19.5, 3], [134, -18.5, 4], // PL-12: the soft sand of the square, just beyond the hard sand
           [30, -14, 5], [31, -16, 3], [32, -14, 4], [60, -55, 3], [61, -57, 5], [62, -55, 4], [90, -66, 5], [91, -64, 3], [120, -50, 4], [121, -52, 5], [122, -50, 3], [140, -14, 3], [141, -16, 5], [142, -14, 4]], // PL-12: on the square's line, for those who cut straight roadTex: 'roadwayFine', shadows: { soft: 1 }, eye: { tun: 0.6, noir: 0.5, clair: 0.12 }, graze: 1,
-        wallH: 0, road: ['#6e7378', '#7a7f84', '#e8b84a', '#e8e0c8', '#6e7378', '#6e7378', false], intoWall: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], startLine: [0xe8468c, 0x1fb5a8, '#fff4e0'], // 307 and dyke tarmac, yellow edge line; the scenery lays the hard sand, planks, paving and sascab on top
+        wallH: 0, roadTex: 'roadwayFine', road: ['#6e7378', '#7a7f84', '#e8b84a', '#e8e0c8', '#6e7378', '#6e7378', false], intoWall: ['#d9c9a3', '#fff4e0', '#bfae85', '#8a7e62'], startLine: [0xe8468c, 0x1fb5a8, '#fff4e0'], // 307 and dyke tarmac, yellow edge line; the scenery lays the hard sand, planks, paving and sascab on top
         tun: { ground: ['#a69c84', '#9a9078', '#a69c84', '#a69c84', '#a69c84', '#a69c84'], wallMeshes: ['#1fd6b0', '#1fd6b0'], wallFace: ['#6a604a', '#9a8e70', '#80745a', '#2a2418'], ceiling: ['#4a4232', '#4a4232', '#4a4232', '#4a4232'],
           fog: 0x4a5a58, portal: 0x3a3428, neons: [0x4a8a80, 0x9a7a50], hull: 20, ambient: 0.6, skyDay: 1, day: 1, without: ['portals', 'fixtures', 'lightSet', 'faces'],
           // cenote cave: the scenery makes the walls, the vault, its light shafts and the mound (without: 'faces'); the engine only lays the floor

@@ -20,7 +20,7 @@
     van: () => [['carBody', 5.4, 2.1, 2.1, 0, 1.55, 0, null, 1], ['pane', 0.1, 0.8, 1.9, 2.72, 2, 0], ['pane', 1.1, 0.7, 2.14, 1.9, 2.05, 0], ['chassis', 5.3, 0.3, 2, 0, 0.45, 0], ['chassis', 3, 0.1, 1.6, -0.8, 2.7, 0],
       ...[-1.7, 1.7].flatMap(x => [-1, 1].map(sd => ['tire', 0.75, 0.75, 0.3, x, 0.38, sd * 0.95]))],
     // chapel: nave along Z, two-pitch tile roof, square bell tower at the apse (-Z) topped with tiles, door in the gable (+Z); origin at ground
-    chapel: () => [['intoWall', 6, 5, 11, 0, 2.5, 0, null, 1], ['intoWall', 2.6, 1.2, 11, 0, 5.4, 0], ...[-1, 1].map(sd => ['roofM', 4.2, 0.35, 11.6, sd * 1.6, 5.7, 0, [0, 0, -sd * 0.5], 1]),
+    chapelTerre: () => [['intoWall', 6, 5, 11, 0, 2.5, 0, null, 1], ['intoWall', 2.6, 1.2, 11, 0, 5.4, 0], ...[-1, 1].map(sd => ['roofM', 4.2, 0.35, 11.6, sd * 1.6, 5.7, 0, [0, 0, -sd * 0.5], 1]),
       ['intoWall', 3.2, 12, 3.2, 0, 6, -6.5, null, 1], ['roofM', 3.8, 0.5, 3.8, 0, 12.2, -6.5], ['roofM', 2.2, 1.2, 2.2, 0, 13, -6.5], ['shutter', 1.2, 2.4, 0.15, 0, 1.2, 5.5], ...[-1, 1].map(sd => ['shutter', 0.15, 1.4, 0.8, sd * 1.6, 10, -6.5])],
     // TV helicopter, nose toward +X: glazed cabin, fuselage, tail boom, fin and tail rotor, skids, camera ball under the nose; the main rotor is separate (rotorHeli) so it can turn. Origin at the center of the cabin
     chopper: () => [['carBody', 3.6, 1.8, 1.9, 0, 0, 0, null, 1], ['pane', 1.4, 1.3, 1.7, 1.9, 0.2, 0, [0, 0, -0.35]], ['pane', 1.6, 0.8, 1.95, 0.4, 0.35, 0], ['carBody', 2, 0.7, 1.2, -0.4, 1.1, 0],

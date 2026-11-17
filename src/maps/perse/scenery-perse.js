@@ -411,7 +411,7 @@
       // --- fires: the ember becomes flame (the scale trembles, each fire at its own rate, leaning with the wind). The stairs' fires catch 40 m ahead of the car and stay lit until the next lap; on the last lap they burn allRes. At the braking points, the ember stays fixed
       { const L = LIFE.flameL, m = dyn(LIFE.flameInst), fire = L.map(p => ({ i: p[7], esc: p[7] >= i9 + 2 && p[7] < i12 - 16, fixed: isBraking(p[7]), a: 0, on: 0 })), LU = LIFE.flameBright, c0 = new THREE.Color(0xff8a30); let t = 0;
         LU.forEach((l, k) => { if (fire[k].fixed) l.c.copy(c0).multiplyScalar(0.5); }); // at the braking points: an ember, a fixed light
-        TICKS.push((dt, car) => { t += dt; const lastIdx = car && car.lap === 3; // shortcut: last lap = car.lap === 3, like at the stadium (any race against the BOTS is 3 laps); to revisit if the number of laps becomes adjustable
+        TICKS.push((dt, car) => { t += dt; const lastIdx = car && car.lap === h.lapCount(); // h.lapCount() : 0 hors course
           L.forEach((p, k) => { const f = fire[k]; if (f.fixed) return; let a = 1;
             if (f.esc) { const e = car ? (f.i - car.idx + N) % N : N; if (lastIdx || e < 20 || e > N - 4) f.on = 1; else if (e > 300 && e < N - 300) f.on = 0; f.a += (f.on - f.a) * Math.min(1, dt * 6); a = f.a; }
             const tr = 0.8 + 0.2 * Math.sin(t * 13 + k * 1.7) * Math.sin(t * 8.3 + k), ht = 1 + a * (0.9 + 0.5 * tr), la = 1 + a * 0.25 * tr; LU[k].c.copy(c0).multiplyScalar(f.esc ? 0.12 + a * (0.6 + 0.4 * tr) : 0.6 + 0.4 * tr); // the light follows the flame: weak ember, then full brightness that flickers

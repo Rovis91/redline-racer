@@ -1,6 +1,13 @@
 // Textures specific to "wangan": completes the textures.js catalogue, same conventions. See docs/methods/SCENERY.md.
 (() => {
   Object.assign(TEXTURES, {
+    // light slabs of the district and the promenade (8 m tile, 8 px/m; sidewalk, 16 px stretched over hundreds of metres, made it 0.1):
+    // 1 m slabs with joints, uneven tints, a few stains; low contrast, it is a floor
+    slabsQuay: () => [64, 64, (g, { R, rand, veil }) => {
+      R(g, '#a09888', 0, 0, 64, 64);
+      for (let y = 0; y < 64; y += 8) for (let x = (y & 8) ? 4 : 0; x < 64 + 4; x += 8) { const v = rand() * 14 - 7 | 0; R(g, `rgb(${184 + v},${176 + v},${162 + v})`, x % 64, y + 1, 7, 7); if (x % 64 > 57) R(g, `rgb(${184 + v},${176 + v},${162 + v})`, 0, y + 1, x % 64 - 57, 7); }
+      veil(g, 0.12, () => { for (let i = 0; i < 300; i++) R(g, rand() < 0.5 ? '#000' : '#fff', rand() * 64 | 0, rand() * 64 | 0, 1, 1); for (let i = 0; i < 6; i++) R(g, '#000', rand() * 56 | 0, rand() * 56 | 0, 4 + (rand() * 6 | 0), 3 + (rand() * 5 | 0)); });
+    }, 8],
     // port floor, one 32 m tile: 4 m concrete slabs in uneven tints with dark joints, oil stains, dark smooth puddles,
     // a pair of sunken rails (gantries on rails), a yellow traffic lane line and white storage bays
     groundPort: () => [128, 128, (g, { R, rand }) => {

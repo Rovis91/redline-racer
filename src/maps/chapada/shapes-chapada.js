@@ -99,8 +99,8 @@
         ['relief', 2.6, 4.2, 0.5, 0, 12.6, 2.2], ['relief', 1.5, 1.5, 0.5, 0, 15.5, 2.2], ['gold', 1.9, 0.3, 0.55, 0, 16.25, 2.2], ['relief', 5.4, 0.7, 0.5, 0, 13.8, 2.2], ...pair(sd => ['relief', 0.7, 2, 0.5, sd * 2.6, 12.9, 2.2])]; },
     // ---------- the fauna: silhouettes that read while driving, head toward +X, origin at ground or feet ----------
     // a bird in flight (macaw, vulture): body, head, beak, long tail; the wings are separate (wingBird, on a shoulder pivot, to flap). l = tail length
-    birdFlight: (l = 1) => [['feather', 0.9, 0.3, 0.32, 0, 0, 0], ['feather', 0.3, 0.28, 0.28, 0.55, 0.06, 0], ['beak', 0.2, 0.14, 0.12, 0.76, 0.02, 0], ['queue', l, 0.08, 0.24, -0.4 - l / 2, 0, 0]],
-    wingBird: (e = 1.5) => [['feather', 0.55, 0.06, e, 0, 0, e / 2], ['queue', 0.4, 0.05, e * 0.5, -0.1, 0, e * 1.2]], // origin at the shoulder, the wing extends toward +Z
+    birdFlight: (l = 1) => [['feather', 0.9, 0.3, 0.32, 0, 0, 0], ['feather', 0.3, 0.28, 0.28, 0.55, 0.06, 0], ['beak', 0.2, 0.14, 0.12, 0.76, 0.02, 0], ['tailEnd', l, 0.08, 0.24, -0.4 - l / 2, 0, 0]],
+    wingBird: (e = 1.5) => [['feather', 0.55, 0.06, e, 0, 0, e / 2], ['tailEnd', 0.4, 0.05, e * 0.5, -0.1, 0, e * 1.2]], // origin at the shoulder, the wing extends toward +Z
     // two wings in a V, span along Z, nose toward +X: a single piece, squashed in height (Y scale from -0.7 to 1) to make it flap; bats, egrets in flight
     wingsV: (e = 1, co = 1, ha = 0.42) => { const g = new THREE.BufferGeometry(), P = []; for (const sd of [-1, 1]) { const a = [0.22 * co, 0, sd * 0.06], b = [-0.2 * co, 0, sd * 0.06], c = [0.05 * co, ha * e, sd * e], d = [-0.34 * co, ha * 0.4 * e, sd * e * 0.55]; /* co: the chord (wing width); ha: how much the wing tip rises (a clear V also shows in profile) */ P.push(...a, ...b, ...c, ...b, ...d, ...c); }
       g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array(24), 2)); g.computeVertexNormals(); return g; },

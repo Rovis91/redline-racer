@@ -18,7 +18,7 @@ export async function profReport({ sampN = 4, images = 0 } = {}) {
   const cv = R.domElement, outOf = new THREE.WebGLRenderTarget(cv.width, cv.height), srt = R.setRenderTarget.bind(R); let rt = null;
   R.setRenderTarget = (t, f) => { rt = t; srt(t || outOf, f); };
   // pass in progress, according to what game.js draws (see shades() and refFace())
-  const pass = (s, c) => s !== g.scene ? 'post' : rt && rt.isWebGLCubeRenderTarget ? 'reflections' : s.overrideMaterial ? 'ombre-dyn' : rt && rt.width === 1 ? 'ombre-fixe' : 'scene';
+  const pass = (s, c) => s !== g.scene ? 'post' : rt && (rt.isWebGLCubeRenderTarget || rt.texture.name === 'reflections') ? 'reflections' : s.overrideMaterial ? 'ombre-dyn' : rt && rt.width === 1 ? 'ombre-fixe' : 'scene';
   let cur = 'post', fr = null; const att = []; // fr: the frame being recorded; att: GPU timers waiting for a result
   const rr = R.render.bind(R);
   R.render = (s, c) => {

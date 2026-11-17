@@ -147,23 +147,23 @@
       ray: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, rayC: { value: [0, 1, 2, 3].map(() => new THREE.Color(0)) } }, // rays: screen position (xy), source depth (z), 1 / halo radius² (w); colour × strength
     vertexShader: 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
     fragmentShader: `uniform sampler2D t, h, hb; uniform float amt, ab, vig, res, scan, ex; uniform vec2 px; varying vec2 v; ${AIR}
-      float b2(vec2 a){ a = floor(a); return fract(a.x / 2. + a.y * a.y * .75); } // 4×4 Bayer matrix, by recurrence
+      float b2(vec2 a){ a = floor(a); return fract(a.x / 2. + a.y * a.y * .75); } // 4×4 Bayer matrix, built recursively
       void main(){
         float e = ex; // exposure: the eye (see TUN and renderView)
         vec3 ai = air(v, px); vec2 w = v + ai.xy, c0 = vec2(.5, .42), d = w - c0; float l = length(d); vec3 c = vec3(0.);
-        // radial blur: none at the centre, strong at the edges, proportional to speed; as many samples as texels crossed (8 at most): a blur of less than one pixel
-        // (at the centre, under 130 km/h) re-read the same texel 8 times, a third of the pass's cost
+        // radial blur: zero at the centre, strong at the edges, proportional to speed; as many samples as texels crossed (8 at most): a blur of less than one pixel
+        // (at the centre, below 130 km/h) read the same texel 8 times, a third of the cost of the pass
         float nf = clamp(ceil(length(d * amt * l * .182 / px)) + 1., 1., 8.), pas = nf > 1. ? amt * l * .182 / (nf - 1.) : 0.;
         for (int i = 0; i < 8; i++) { if (float(i) >= nf) break;
           vec2 u = c0 + d * (1. - pas * float(i));
           c += min(vec3(texture2D(t, u + d * ab).r, texture2D(t, u).g, texture2D(t, u - d * ab).b) * e, 1.); // + chromatic aberration; exposed and clipped to white, sample by sample like the old 8-bit target
         }
         c /= nf;
-        c += texture2D(hb, v).rgb; // halo and rays, computed once per grid cell (see halo)
+        c += texture2D(hb, v).rgb; // halo and rays, computed once per cell of the grid (see halo)
         c *= ai.z; // darkened under the drops
         ${QUANT ? `vec2 q = v / px; c = floor(c * ${QUANT}. + (b2(.5 * q) * .25 + b2(q) - .5) * ${WEFT.toFixed(2)} + .5) / ${QUANT}.; // colours reduced and dithered, on the game's pixel grid` : ''}
         vec4 hd = texture2D(h, v); c = mix(c, hd.rgb, hd.a);
-        c *= 1. - scan * mod(floor(v.y * res), 2.); // scanlines aligned to the grid
+        c *= 1. - scan * mod(floor(v.y * res), 2.); // scanlines aligned on the grid
         c *= max(0., 1. - (.9 + .7 * vig) * l * l);  // vignette, tightened by speed and nitro
         gl_FragColor = vec4(c, 1.);
       }`,
@@ -175,9 +175,9 @@
     fragmentShader: `uniform sampler2D t, dz; uniform float bloom, ex; uniform vec2 px; uniform vec4 ray[4]; uniform vec3 rayC[4]; varying vec2 v; ${AIR}
       void main(){
         float e = ex; vec3 ai = air(v, px); vec2 w = v + ai.xy;
-        vec3 bl = vec3(0.); // halo: we add what exceeds a brightness threshold, sampled in a ring
+        vec3 bl = vec3(0.); // halo: adds what exceeds a brightness threshold, sampled in a ring
         for (int i = 0; i < 12; i++) { float a = float(i) * .5236, rr = 2. + 2.5 * mod(float(i), 3.); bl += max(min(texture2D(t, w + vec2(cos(a), sin(a)) * rr * px).rgb * e, 1.) - .5, 0.); }
-        vec3 ry = vec3(0.); float j = fract(52.98 * fract(dot(v / px, vec2(.0671, .0058)))); // light rays: a halo around each source, masked by what is in front of it, stretched toward the pixel; per-pixel offset, grain rather than steps
+        vec3 ry = vec3(0.); float j = fract(52.98 * fract(dot(v / px, vec2(.0671, .0058)))); // light rays: a halo around each source, masked by what is in front of it, stretched towards the pixel; per-pixel offset, grain rather than steps
         for (int k = 0; k < 4; k++) if (rayC[k] != vec3(0.)) {
           vec2 s = ray[k].xy, dd = (s - v) / 12., q; float f = 0.;
           for (int i = 0; i < 12; i++) { vec2 u = v + dd * (float(i) + j); q = (u - s) * vec2(px.y / px.x, 1.); f += step(ray[k].z, texture2D(dz, u).x) * exp(-dot(q, q) * ray[k].w); }
@@ -193,19 +193,19 @@
     uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 } },
     vertexShader: post.vertexShader,
     fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe; varying vec2 v;
-      vec3 vpos(vec2 u){ vec4 p = Pi * vec4(u * 2. - 1., texture2D(dz, u).x * 2. - 1., 1.); return p.xyz / p.w; } // position in the camera frame
+      vec3 vpos(vec2 u){ vec4 p = Pi * vec4(u * 2. - 1., texture2D(dz, u).x * 2. - 1., 1.); return p.xyz / p.w; } // position in the camera's frame
       vec2 ecran(vec3 q){ vec4 c = P * vec4(q, 1.); return c.xy / c.w * .5 + .5; }
       void main(){
         vec4 c = texture2D(t, v); float w = c.a > ${(0.95 - WATER).toFixed(2)} && c.a < .99 ? (1. - c.a) / ${WATER.toFixed(2)} : 0., trouve = 0.;
         if (w > 0.) {
-          vec3 p = vpos(v), e = normalize(p), nn = up; // th.reflectionSlope: the mirror is the road itself (normal taken from depth) and not the horizontal plane; in the distance, where depth lacks precision, we fall back to vertical
+          vec3 p = vpos(v), e = normalize(p), nn = up; // th.reflectionSlope: the mirror is the road surface itself (normal taken from depth) and not the horizontal plane; far away, where depth lacks precision, it falls back to vertical
           if (pe > 0.) { vec3 g = normalize(cross(dFdx(p), dFdy(p))); if (dot(g, up) < 0.) g = -g; if (dot(g, up) > .93) nn = normalize(mix(g, up, smoothstep(30., 90., -p.z))); }
           vec3 r = reflect(e, nn), q = p; float s = .4, a = 0., b = 0.; vec2 h = vec2(-1.);
-          for (int i = 0; i < 22; i++) { // steps that lengthen: 0.4 m at the start, more than 300 m at the end
+          for (int i = 0; i < 22; i++) { // steps that grow longer: 0.4 m at the start, over 300 m at the end
             b = a; a += s; s *= 1.28; q = p + r * a; vec2 u = ecran(q);
             if (q.z > -.5 || u.x < 0. || u.x > 1. || u.y < 0. || u.y > 1.) break;
             float z = vpos(u).z;
-            if (q.z < z && q.z > z - max(1.2, s * 2.)) { // the ray has just gone behind a surface, within one thickness: we tighten between the last two steps
+            if (q.z < z && q.z > z - max(1.2, s * 2.)) { // the ray has just passed behind a surface, within one thickness: tighten between the last two steps
               for (int j = 0; j < 5; j++) { float m = (a + b) * .5; vec2 um = ecran(p + r * m); if (p.z + r.z * m < vpos(um).z) a = m; else b = m; }
               h = ecran(p + r * a); break;
             }
@@ -275,7 +275,7 @@
   const speckle = (g, n, c, h = 1, H = 64) => { for (let i = 0; i < n; i++) R(g, c, rnd() * 64 | 0, rnd() * H | 0, 1, h); };
   const veil = (g, a, f) => { g.globalAlpha = a; f(); g.globalAlpha = 1; }; // draws in transparency: grime and wear on top of any tint
   // texture name → its name before the English rename: the noise seed stays the same, so every texture looks exactly as it did
-  const SEED_NAME = { paint: 'peinture', neonYellow: 'neonJaune', lampObj: 'lampe', lightRed: 'feuRouge', reflector: 'catadioptre', blinker: 'clignotant', lantern: 'lanterne', lampCanal: 'lampeCanal', concreteDark: 'betonSombre', concretePart: 'beton', concreteGray: 'betonGris', whiteBridge: 'blancPont', chalk: 'craie', stone: 'pierre', steelMat: 'acier', matGray: 'matGris', gantryGray: 'portiqueGris', castiron: 'fonte', iron: 'fer', pylonMat: 'pylone', asphalt: 'bitume', plain: 'plaine', trunk: 'tronc', trunkPalmtree: 'troncPalmier', cedar: 'cedre', foliage: 'feuillage', frond: 'palme', paneDark: 'vitreSombre', tin: 'tole', bodywork: 'carrosserie', lacquer: 'laque', warehouse: 'entrepot', metalPale: 'metalClair', wheelPart: 'roue', tire: 'pneu', radiator: 'calandre', stainless: 'inox', boards: 'planches', coil: 'bobine', strap: 'sangle', cargo: 'cargaison', lattice: 'treillis', shutters: 'persiennes', gondola: 'nacelle', lightsLane: 'feuxVoie', park: 'parc', stucco: 'crepi', brick: 'brique', tinRoof: 'toleToit', skyDef: 'ciel', orb: 'astre', roadway: 'chaussee', roadwayFine: 'chausseeFine', wallFace: 'paroi', ceiling: 'plafond', guardrail: 'glissiere', checker: 'damier', gradient: 'degrade', screenAd: 'ecranPub', streets: 'rues', casements: 'fenetres', casementsLit: 'fenetresAllumees', signboard: 'enseigne', towerFar: 'tourLoin', noise: 'bruit', written: 'ecrit', showcase: 'vitrine', dispenser: 'distributeur', pumpPetrol: 'pompeEssence', striping: 'rayures', signRoad: 'panneauRoute', towerWindows: 'tourFenetres', sidewalk: 'trottoir', slabConcrete: 'dalleBeton', mural: 'fresque', latticeGantry: 'treillisPortique', checkerStripe: 'damierBande', bannerLabel: 'bandeauNom', waterVivid: 'eauVive', rockSnow: 'rocNeige', bannerJump: 'banderoleSaut', cobbles: 'paves', slabs: 'dalles', granite: 'granit', posters: 'affiches', shopfront: 'devanture', clothStriped: 'toileRayee', kiosk: 'kiosque', pink: 'rose', lead: 'plomb', wallGothic: 'murGothique', crowd: 'foule', vipBoxes: 'loges', steps: 'marches', streamer: 'banderole', grating: 'grillage', lawn: 'gazon', garageOpen: 'garageOuvert', ranking: 'classement', pylonTimer: 'pyloneChrono', terreBeaten: 'terreBattue', faceArena: 'paroiArene', bannerStade: 'banderoleStade', roofArena: 'toitArene', bannerSupporter: 'banderoleSupporter', mud: 'boue', boardStade: 'tableauStade', flame: 'flamme', beam: 'faisceau', screenGiant: 'ecranGeant', snowVirgin: 'neigeVierge', iceVivid: 'glaceVive', firSnow: 'sapinNeige', rockGivre: 'rocGivre', terreOchre: 'terreOcre', cliffOchre: 'falaiseOcre', straw: 'paille', tilesCanal: 'tuilesCanal', waterGue: 'eauGue', foam: 'ecume', mudGue: 'boueGue', terreCircuit: 'terrePiste', embankCircuit: 'talusPiste', lavender: 'lavande', bannerRallye: 'banderoleRallye', haze: 'brume', diamond: 'losange', vermilion: 'vermillon', stoneMoss: 'pierreMousse', furCoat: 'pelage', tileTemple: 'tuileTemple', woodTemple: 'boisTemple', gravel: 'gravier', groundPort: 'solPort', streetVille: 'rueVille', rockGES: 'rocheGES', groundGES: 'solGES', signK: 'panneauK', signKbright: 'panneauKlum', vatGroup: 'cuveGroupe', barkB: 'ecorceB', leavesB: 'feuillesB', needles: 'aiguilles', concretePO2: 'betonPO2', foamGES: 'ecumeGES', netting: 'filet', stripeOrange: 'bandeOrange', signSpd: 'panneauVit', bollardGES: 'borneGES', groundHangar: 'solHalle', concreteGES: 'betonGES', baysHangar: 'baiesHalle', mosaic: 'mosaique', letters: 'lettres', waterGES: 'eauGES', burst: 'gerbe', laneGES: 'voieGES', hazeGES: 'brumeGES', tinOrange: 'toleOrange', conifer: 'conifere', railing: 'gardeCorps', doorStar: 'porteEtoile', roadwayGES: 'chausseeGES', rugEdge: 'tapisBord', rugAlley: 'tapisAllee', paving: 'dallage', slabsPerse: 'dallesPerse', nichesGarden: 'nichesJardin', wallTerre: 'murTerre', frieze: 'frise', ceramic: 'faience', fluting: 'cannelure', sculpts: 'sculpte', wings: 'ailes', awning: 'auvent', stepsPerse: 'marchesPerse', palace: 'palais', cliff: 'falaise', equipment: 'appareil', facadeRaw: 'facadeCrue', strata: 'strates', lionBull: 'lionTaureau', brickRaw: 'briqueCrue', wallHall: 'murSalle', doorStone: 'portePierre', ceilingCedar: 'plafondCedre', vault: 'voute', rug: 'tapis', field: 'champ', flowerbed: 'parterre', tent: 'tente', leafShade: 'feuilleOmbre', leafCanopy: 'feuilleCanopee', leafSun: 'feuilleSoleil', leafFar: 'feuilleLoin', palmJungle: 'palmeJungle', barkJungle: 'ecorceJungle', litterMoss: 'litiereMousse', rockMoss: 'rocheMousse', siltPebbles: 'vaseGalets', waterJade: 'eauJade', waterMarsh: 'eauMarais', dropWire: 'chuteFil', rockCave: 'rocheGrotte', vaultCave: 'vouteGrotte', waterDrop: 'eauChute', foamBasin: 'ecumeBassin', sparkles: 'paillettes', slabsJungle: 'dallesJungle', slabsEdge: 'dallesBord', curbMoss: 'bordureMousse', stoneCity: 'pierreCite', stonePale: 'pierreClaire', stoneShade: 'pierreOmbre', plinthBlack: 'socleNoir', clothTent: 'toileTente', boardsBridge: 'planchesPont', bamboo: 'bambou', sandDry: 'sableSec', sandHard: 'sableDur', seaTurquoise: 'merTurquoise', seaWide: 'merLarge', foamSea: 'ecumeMer', slabsStreet: 'dallesRue', tiling: 'carrelage', thatch: 'chaume', limestone: 'calcaire', waterCenote: 'eauCenote', vines: 'lianes', groundGarrigue: 'solGarrigue', arcRadius: 'rayon', sandDamp: 'sableMouille', seaEdge: 'merBord', sandTraces: 'tracesSable', waterLagoon: 'eauLagune', riprap: 'enrochement', faceCave: 'paroiGrotte', groundCave: 'solGrotte', waterCave: 'eauGrotte', roots: 'racines', rayCone: 'rayonCone', stain: 'tache', leavesMangrove: 'feuillesMangle', nettingVolley: 'filetVoley', rayStrong: 'rayonFort', raySoft: 'rayonDoux', bulbs: 'ampoules', pavingQuinta: 'dallageQuinta', boardsQuay: 'planchesMuelle', stuccoPale: 'crepiClair', foamWide: 'ecumeLarge', caustic: 'caustique', livery: 'livree', wheelCar: 'roueVoiture', carTrim: 'garniture', bakery: 'boulangerie', bookshop: 'librairie', pharmacy: 'pharmacie', florist: 'fleuriste', cheeseShop: 'fromagerie', butcher: 'boucherie' };
+  const SEED_NAME = { paint: 'peinture', neonYellow: 'neonJaune', lampObj: 'lampe', lightRed: 'feuRouge', reflector: 'catadioptre', blinker: 'clignotant', lantern: 'lanterne', lampCanal: 'lampeCanal', concreteDark: 'betonSombre', concretePart: 'beton', concreteGray: 'betonGris', whiteBridge: 'blancPont', chalk: 'craie', stone: 'pierre', steelMat: 'acier', matGray: 'matGris', gantryGray: 'portiqueGris', castiron: 'fonte', iron: 'fer', pylonMat: 'pylone', asphalt: 'bitume', plain: 'plaine', trunk: 'tronc', trunkPalmtree: 'troncPalmier', cedar: 'cedre', foliage: 'feuillage', frond: 'palme', paneDark: 'vitreSombre', tin: 'tole', bodywork: 'carrosserie', lacquer: 'laque', warehouse: 'entrepot', metalPale: 'metalClair', wheelPart: 'roue', tire: 'pneu', radiator: 'calandre', stainless: 'inox', boards: 'planches', coil: 'bobine', strap: 'sangle', cargo: 'cargaison', lattice: 'treillis', shutters: 'persiennes', gondola: 'nacelle', lightsLane: 'feuxVoie', park: 'parc', stucco: 'crepi', brick: 'brique', tinRoof: 'toleToit', skyDef: 'ciel', orb: 'astre', roadway: 'chaussee', roadwayFine: 'chausseeFine', wallFace: 'paroi', ceiling: 'plafond', guardrail: 'glissiere', checker: 'damier', gradient: 'degrade', screenAd: 'ecranPub', streets: 'rues', casements: 'fenetres', casementsLit: 'fenetresAllumees', signboard: 'enseigne', towerFar: 'tourLoin', noise: 'bruit', written: 'ecrit', showcase: 'vitrine', dispenser: 'distributeur', pumpPetrol: 'pompeEssence', striping: 'rayures', signRoad: 'panneauRoute', towerWindows: 'tourFenetres', sidewalk: 'trottoir', slabConcrete: 'dalleBeton', mural: 'fresque', latticeGantry: 'treillisPortique', checkerStripe: 'damierBande', bannerLabel: 'bandeauNom', waterVivid: 'eauVive', rockSnow: 'rocNeige', bannerJump: 'banderoleSaut', cobbles: 'paves', slabs: 'dalles', granite: 'granit', posters: 'affiches', shopfront: 'devanture', clothStriped: 'toileRayee', kiosk: 'kiosque', pink: 'rose', lead: 'plomb', wallGothic: 'murGothique', wallFaceParis: 'paroiParis', ceilingParis: 'plafondParis', crowd: 'foule', vipBoxes: 'loges', steps: 'marches', streamer: 'banderole', grating: 'grillage', lawn: 'gazon', garageOpen: 'garageOuvert', ranking: 'classement', pylonTimer: 'pyloneChrono', terreBeaten: 'terreBattue', faceArena: 'paroiArene', bannerStade: 'banderoleStade', roofArena: 'toitArene', bannerSupporter: 'banderoleSupporter', mud: 'boue', boardStade: 'tableauStade', flame: 'flamme', beam: 'faisceau', screenGiant: 'ecranGeant', snowVirgin: 'neigeVierge', iceVivid: 'glaceVive', rockSnowFar: 'rocNeigeLoin', firSnow: 'sapinNeige', rockGivre: 'rocGivre', terreOchre: 'terreOcre', cliffOchre: 'falaiseOcre', straw: 'paille', tilesCanal: 'tuilesCanal', waterGue: 'eauGue', foam: 'ecume', mudGue: 'boueGue', terreCircuit: 'terrePiste', embankCircuit: 'talusPiste', lavender: 'lavande', bannerRallye: 'banderoleRallye', roadwayTerre: 'chausseeTerre', haze: 'brume', diamond: 'losange', vermilion: 'vermillon', stoneMoss: 'pierreMousse', furCoat: 'pelage', tileTemple: 'tuileTemple', woodTemple: 'boisTemple', gravel: 'gravier', slabsQuay: 'dallesQuai', groundPort: 'solPort', streetVille: 'rueVille', rockGES: 'rocheGES', groundGES: 'solGES', signK: 'panneauK', signKbright: 'panneauKlum', vatGroup: 'cuveGroupe', barkB: 'ecorceB', leavesB: 'feuillesB', needles: 'aiguilles', concretePO2: 'betonPO2', foamGES: 'ecumeGES', netting: 'filet', stripeOrange: 'bandeOrange', signSpd: 'panneauVit', bollardGES: 'borneGES', groundHangar: 'solHalle', concreteGES: 'betonGES', baysHangar: 'baiesHalle', mosaic: 'mosaique', letters: 'lettres', waterGES: 'eauGES', burst: 'gerbe', laneGES: 'voieGES', hazeGES: 'brumeGES', tinOrange: 'toleOrange', conifer: 'conifere', railing: 'gardeCorps', muralBarrage: 'fresqueBarrage', doorStar: 'porteEtoile', roadwayGES: 'chausseeGES', rugEdge: 'tapisBord', rugAlley: 'tapisAllee', paving: 'dallage', slabsPerse: 'dallesPerse', nichesGarden: 'nichesJardin', wallTerre: 'murTerre', frieze: 'frise', ceramic: 'faience', fluting: 'cannelure', sculpts: 'sculpte', wings: 'ailes', awning: 'auvent', stepsPerse: 'marchesPerse', palace: 'palais', cliff: 'falaise', equipment: 'appareil', facadeRaw: 'facadeCrue', strata: 'strates', lionBull: 'lionTaureau', brickRaw: 'briqueCrue', wallHall: 'murSalle', doorStone: 'portePierre', ceilingCedar: 'plafondCedre', vault: 'voute', rug: 'tapis', field: 'champ', flowerbed: 'parterre', tent: 'tente', leafShade: 'feuilleOmbre', leafCanopy: 'feuilleCanopee', leafSun: 'feuilleSoleil', leafFar: 'feuilleLoin', palmJungle: 'palmeJungle', barkJungle: 'ecorceJungle', litterMoss: 'litiereMousse', rockMoss: 'rocheMousse', siltPebbles: 'vaseGalets', waterJade: 'eauJade', waterMarsh: 'eauMarais', dropWire: 'chuteFil', rockCave: 'rocheGrotte', vaultCave: 'vouteGrotte', waterDrop: 'eauChute', foamBasin: 'ecumeBassin', sparkles: 'paillettes', slabsJungle: 'dallesJungle', slabsEdge: 'dallesBord', curbMoss: 'bordureMousse', stoneCity: 'pierreCite', stonePale: 'pierreClaire', stoneShade: 'pierreOmbre', plinthBlack: 'socleNoir', clothTent: 'toileTente', boardsBridge: 'planchesPont', bamboo: 'bambou', noiseFine: 'bruitFin', sandDry: 'sableSec', sandHard: 'sableDur', seaTurquoise: 'merTurquoise', seaWide: 'merLarge', foamSea: 'ecumeMer', slabsStreet: 'dallesRue', tiling: 'carrelage', thatch: 'chaume', limestone: 'calcaire', waterCenote: 'eauCenote', vines: 'lianes', groundGarrigue: 'solGarrigue', arcRadius: 'rayon', sandDamp: 'sableMouille', seaEdge: 'merBord', sandTraces: 'tracesSable', waterLagoon: 'eauLagune', riprap: 'enrochement', faceCave: 'paroiGrotte', waterCave: 'eauGrotte', roots: 'racines', rayCone: 'rayonCone', stain: 'tache', leavesMangrove: 'feuillesMangle', nettingVolley: 'filetVoley', rayStrong: 'rayonFort', raySoft: 'rayonDoux', streamerPlage: 'banderolePlage', bulbs: 'ampoules', pavingQuinta: 'dallageQuinta', boardsQuay: 'planchesMuelle', stuccoPale: 'crepiClair', foamWide: 'ecumeLarge', caustic: 'caustique', livery: 'livree', wheelCar: 'roueVoiture', carTrim: 'garniture', bakery: 'boulangerie', bookshop: 'librairie', pharmacy: 'pharmacie', florist: 'fleuriste', cheeseShop: 'fromagerie', butcher: 'boucherie' };
   const tx = (label, ...a) => { // one catalogue drawing, drawn fresh on each call; rand = the texture's own randomness, seeded by its name: it does not shift rnd, so not the scenery
     const [w, h, d, tile] = TEXTURES[label](...a); let s = 7; for (const ch of (SEED_NAME[label] || label) + a.map(x => SEED_NAME[x] || x)) s = Math.imul(s ^ ch.charCodeAt(0), 16777619) >>> 0;
     const t = tex(w, h, g => d(g, { R, rnd, veil, speckle, rand: () => (s = s * 1664525 + 1013904223 >>> 0) / 4294967296 }), label); t.tile = tile; return t;
@@ -321,7 +321,7 @@
 
   // sky in bands (night, dawn or dusk depending on the map), stars, moon or sun
   const skyMat = mat('skyDef', { emis: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars);
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.skySeg || 16, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.skySeg || 48, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
   const SD = new V3(...TH.orb.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('orb', TH.orb.col, TH.orb.shadows) }));
   sunDisc.scale.set(TH.orb.imgSize, TH.orb.imgSize, 1); scene.add(sunDisc);
@@ -330,7 +330,7 @@
   if (veilHaze) { veilHaze.renderOrder = 50; veilHaze.visible = false; veilHaze.frustumCulled = false; veilHaze.userData.dyn = 1; scene.add(veilHaze); }
 
   const hemi = new THREE.HemisphereLight(TH.hemi[0], TH.hemi[1], TH.hemi[2] * Math.PI); scene.add(hemi); // blue from above, magenta bounce of the city
-  const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const SHDD = 2, SHDI = 3; // moonlight; SHDD, SHDI: layers of the moving objects that cast a shadow, simple and instanced (see shadows)
+  const sun = new THREE.DirectionalLight(TH.sun[0], TH.sun[1] * Math.PI); sun.castShadow = true; const SHDD = 2, SHDI = 3, SHDF = 4, shdM = []; // shdM: the objects of the SHDD and SHDI layers (see shadows) // moonlight; SHDD, SHDI: layers of the moving objects that cast a shadow, simple and instanced (see shadows)
   // th.shadows = { imgSize, field, soft } (docs/methods/MAP-ENGINE-OPTIONS.md): side of the shadow map in texels (2048), half-side covered in m (390), bilinear edge filtering (4 reads instead of one)
   const SHDO = TH.shadows || {}, OTX = SHDO.imgSize || 2048, OCH = SHDO.field || 300 * FAR;
   sun.shadow.mapSize.set(OTX, OTX); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.5;
@@ -373,16 +373,16 @@
     }
     `;
   const LU_F = `{
-      vec3 n = normalize(cross(dFdx(vLw), dFdy(vLw))), v = normalize(uCam - vLw); // uCam and not cameraPosition: three does not supply it for Basic and Lambert materials (it stays at the world origin)
+      vec3 n = normalize(cross(dFdx(vLw), dFdy(vLw))), v = normalize(uCam - vLw); // uCam rather than cameraPosition: three does not supply it for Basic and Lambert materials (it stays at the world origin)
       if (dot(n, v) < 0.) n = -n;
       float g = uGloss + (1. - diffuseColor.a) * 2., plat = step(.8, n.y);
       #ifdef MOUILLE
         vec4 mo = texture2D(uMo, vec2(vMo.x, fract(vMo.y))); mo.r = smoothstep(.15, .85, mo.r); // r = race wetness, g = rain (see MOTOR); half dry, it already shows
-        g = mix(g, mix(0., max(g, .25), mo.r), mo.g); // in the rain: the dry line is matte, the rest shines
+        g = mix(g, mix(0., max(g, .25), mo.r), mo.g); // under rain: the dry line is matte, the rest shines
       #endif
       vec3 dif = vec3(0.), spe = vec3(0.); vec2 rh = normalize(reflect(-v, n).xz + 1e-4);
       for (int i = 0; i < NL; i++) {
-        if (i >= uN) break; // only the lamps that are on
+        if (i >= uN) break; // only the lights that are on
         vec3 d = uLP[i].xyz - vLw; float a = 1. - dot(d, d) / (uLP[i].w * uLP[i].w);
         if (a <= 0.) continue;
         if (uLP[i].w > 0.) a *= luOmbre(vLw, d); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
@@ -393,9 +393,9 @@
       vec3 hv = vLw - uHP; float f = dot(hv, uHD);
       if (f > .5) { // phares : faisceau large, coupure horizontale nette (feu de croisement)
         vec3 hr = normalize(vec3(-uHD.z, 0., uHD.x));
-        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f); // softened cutoff: a rising road no longer makes a sharp line
+        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f); // softened cutoff: a road going uphill no longer makes a hard line
         dif += uHC * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)));
-        if (uRetro > 0.) dif += uHC * (m * uRetro); // reflectors and signs: they return the beam, even above the cutoff
+        if (uRetro > 0.) dif += uHC * (m * uRetro); // reflectors and signs: return the beam, even above the cutoff
       }
       if (uRetro > 0.) gl_FragColor.rgb *= .3;
       gl_FragColor.rgb *= .55 + .45 * diffuseColor.a; // water darkens the ground
@@ -486,12 +486,13 @@
     side: THREE.DoubleSide, gloss: TH.gloss ?? (TH.road[6] ? 0.2 : 0.08) }, ...TH.road), 32); /* th.gloss: another gloss of the roadway (reflection of the sun and of the light fixtures) */ road.material.userData.mo = 1;
   if (SSR) { road.material.userData.limp = 1; road.geometry.setAttribute('limp', new THREE.Float32BufferAttribute(Array.from({ length: (cO + 1) * 2 }, (_, j) => mouAt((T.t1 + (j >> 1)) % N)), 1)); } // rain per sample: ssr only reflects where it rains
   const barrier = mat('guardrail', { emis: TH.tubes, side: THREE.DoubleSide }, TH.intoWall); // city: neon edge strip, self-lit; elsewhere the guardrail takes the light
-  const WALL_SIDES = {}; // both guardrails (side -1 and +1), which keep the shape of impacts (see "scenery that gets damaged")
-  if (!T.vert) { WALL_SIDES[-1] = ribbon(T.t1, cO, -W, TH.wallH, -W, -2, barrier); WALL_SIDES[1] = ribbon(T.t1, cO, W, TH.wallH, W, -2, barrier); }
+  const WALL_SIDES = { '-1': [], 1: [] }; // the guardrails on each side (-1 and +1), bands { M, i0, n } that keep the shape of impacts (see "scenery that gets damaged"); h.guardM adds those of the scenery to them
+  const wallStrip = (sg, i0, n, ...r) => { const M = ribbon(i0, n, ...r); WALL_SIDES[sg].push({ M, i0, n }); return M; };
+  if (!T.vert) { wallStrip(-1, T.t1, cO, -W, TH.wallH, -W, -2, barrier); wallStrip(1, T.t1, cO, W, TH.wallH, W, -2, barrier); }
   else { // relief map: the guardrail follows the top of the drivable walls, and each wall is a quarter tube in 16 facets, from the foot of the flat to the wall
     const high = s => wallFace(s, s.w), tube = mat(TH.wallFace || 'concretePart', { side: THREE.DoubleSide });
     for (const sg of [-1, 1]) {
-      if (TH.guardM ?? 1) WALL_SIDES[sg] = ribbon(T.t1, cO, s => sg * s.w, s => high(s) + TH.wallH, s => sg * s.w, s => high(s) - 2, barrier); // th.guardM = 0: the scenery places its own guardrails (stadium: not on the central area), this one would double its own
+      if (TH.guardM ?? 1) wallStrip(sg, T.t1, cO, s => sg * s.w, s => high(s) + TH.wallH, s => sg * s.w, s => high(s) - 2, barrier); // th.guardM = 0: the scenery places its own guardrails (stadium: not on the central area), this one would double its own
       for (let i = 0; i < N; i++) if (S[i].rc && !S[(i - 1 + N) % N].rc) { let c = 0; while (S[(i + c + 1) % N].rc) c++;
         for (let j = 0; j < 16; j++) { const o = k => s => sg * (W + (s.w - W) * k / 16), y = k => s => wallFace(s, W + (s.w - W) * k / 16); ribbon(i, c, o(j), y(j), o(j + 1), y(j + 1), tube, 16); } } // 16 facets: with 6, the chord passed up to 0.7 m above the wall of sim.js, the car sank into it
     }
@@ -514,14 +515,14 @@
     tunMats.push(mat('roadway', { emis: 1, side: THREE.DoubleSide, gloss: u.gloss ?? 0.3 }, ...u.ground), mat((u.tex || [])[0] || 'wallFace', BRIGHT2, u.wallMeshes[0], u.wallFace, u.tiles), mat((u.tex || [])[0] || 'wallFace', BRIGHT2, u.wallMeshes[1], u.wallFace, u.tiles), mat((u.tex || [])[1] || 'ceiling', BRIGHT2, u.ceiling)); /* th.tun.tex: other textures of the walls and vault (chapada: the cave rock) */
     tunMats.forEach((m, i) => m.color.setScalar(m.userData.amb = TH.alarm && (i === 1 || i === 2) ? 0.85 : u.ambient ?? TUN_AMB)); // th.tun.ambient: other ambient under the vault; city: the walls keep their vivid neon bands
     { // light fixtures staggered, one left, one right: the car's light and shadow switch sides at each fixture passed
-      const d = new THREE.Object3D(), fx = u.neons.map(c => new THREE.InstancedMesh(geo('fixtureTunnel'), mat('paint', { emis: 1, c, fog: false }), Math.ceil(cT / BRIGHT_STEP))), nf = [0, 0];
+      const d = new THREE.Object3D(), fx = u.neons.map(c => new THREE.InstancedMesh(geo('fixtureTunnel'), mat('paint', { emis: 1, c, fog: false }), Math.ceil(cT / BRIGHT_STEP))), nf = [0, 0], fallbackMat = mat('paint', { emis: 1, c: u.portal }); // fallback: one material for all the boxes (one per box left them out of the merge, one draw pass each)
       for (let i = T.t0 + 2, k = 0; i < T.t1 - 1; i += BRIGHT_STEP, k++) {
         const s = S[i % N], sd = k & 1 ? 1 : -1, x = s.x - s.tz * sd * (tw(s) - 1.7), z = s.z + s.tx * sd * (tw(s) - 1.7), yl = FT ? ceilingFn(s, tw(s) - 1.7) - 0.15 : 7.85;
         if (FT && isOpen(i - T.t0)) continue;
         if (!WITHOUT.has('lights')) emis(i % N, x, s.y + yl - 0.65, z, u.neons[k & 1], 21, 3, 1);
         if (WITHOUT.has('lamps')) continue;
         d.position.set(x, s.y + yl, z); d.rotation.set(0, across(s), 0); d.updateMatrix(); fx[k & 1].setMatrixAt(nf[k & 1]++, d.matrix);
-        if (k % 6 === 3) pose('casingRescue', mat('paint', { emis: 1, c: u.portal }), scene, [s.x - s.tz * (tw(s) - 0.1), s.y + 2.6, s.z + s.tx * (tw(s) - 0.1)]).rotation.y = across(s); // illuminated emergency housing on the right wall
+        if (k % 6 === 3) pose('casingRescue', fallbackMat, scene, [s.x - s.tz * (tw(s) - 0.1), s.y + 2.6, s.z + s.tx * (tw(s) - 0.1)]).rotation.y = across(s); // illuminated emergency housing on the right wall
       }
       fx.forEach((m, c) => { m.count = nf[c]; scene.add(m); });
     }
@@ -615,7 +616,7 @@
   backdrop && await whoosh();
   // ---------- map scenery: scenery-<map>.js ----------
   const STM = [], steam = (x, y, z) => STM.push([x, y, z]); // steam vents declared by the scenery (plumes: see blur)
-  const beams = [], BREAKABLES = [], sceneryTick = window.SCENERY[TH.scenery]({ breakable: (...a) => BREAKABLES.push(a), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, emis, geo, mat, tx, addMat, box, concrete, beams, pose, zones, clothe, steam, softPuffs: (...a) => softPuffs(...a), time: () => race ? -1 : tTraffic }); // blur: the game's particles, open to the scenery, to call from the tick (they don't exist yet at load); the scenery calls step(dt) itself // no traffic in a race: the opponents can't avoid it
+  const beams = [], BREAKABLES = [], sceneryTick = window.SCENERY[TH.scenery]({ breakable: (...a) => BREAKABLES.push(a), guardM: (sg, ...r) => wallStrip(sg, ...r), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, emis, geo, mat, tx, addMat, box, concrete, beams, pose, zones, clothe, steam, softPuffs: (...a) => softPuffs(...a), time: () => race ? -1 : tTraffic, lapCount: () => race ? race.laps : 0 }); // laps: those of the current race (0 outside a race), for the scenery's last lap // blur: the game's particles open to the scenery, to call from the tick (they don't exist yet at load time); the scenery calls step(dt) itself // no traffic in a race: the opponents don't know how to avoid it
 
   // rain: sharp streaks that lengthen and rush towards the camera with speed, leaning with the wind; bright head, tail fading out (additive blend, no blur)
   // strength 1 = 400 drops; beyond that (downpour, rain zones > 1), more drops, longer; and impacts that splash back onto the roadway in front of the car
@@ -636,7 +637,7 @@
         if (f > 1. && f < 40. && p.y < 3. && abs(p.z * uF.x - p.x * uF.y) < 1.5 + f * .3) c += vec3(1., .95, .82) * (uHph * (1. - f / 40.)); // headlights: cone in front of the car, low
         for (int k = 0; k < 8; k++) { if (k >= uNL) break; vec3 d = p - uRL[k].xyz; float w = 1. - dot(d, d) * uRL[k].w; if (w > 0.) c += uRC[k] * (.3 * w * w); }
         c *= qb.x;
-        if (qb.y > .5) { c *= vec3(.13, .15, .2); p += vec3(uV.x * .035 + uGl * .12, uGl, uV.z * .035 + uGl * .05); } // tail off, leaning in the wind and stretched by speed
+        if (qb.y > .5) { c *= vec3(.13, .15, .2); p += vec3(uV.x * .035 + uGl * .12, uGl, uV.z * .035 + uGl * .05); } // tail light off, tilted by the wind and stretched by speed
         vC = c; gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.);
       }`,
     fragmentShader: 'uniform float uOp; varying vec3 vC; void main() { gl_FragColor = vec4(vC, uOp); }' }));
@@ -665,16 +666,25 @@
   // view up to 300 m only (at 3° per pixel, further away it does almost nothing and costs draw calls): the sky and the orb are scaled to a tenth on this side of it;
   // the body adds it to its colour (envMap), weighted per pixel by a mask taken from the livery: glazing (dark, bluish) strong, paint moderate, seals and frames almost nothing.
   // Rivals and other players share the same cube map: taken at player 1's car, it is not exact for them, but at their size on screen it does not show
+  // Each face is drawn in REFL_K slices, one per frame (the scene shared in REFL_K batches on the first slice, the sky in the first, what is transparent in the last): same pace and same average cost as a whole face every six frames,
+  // but a frame only carries a sixth of it (a whole face, up to 190 draw passes, alone pushed the loaded maps past BUDGET.drawCalls). The slices accumulate in refRT (32 px, depth included), copied into the face once complete (one pass): never a half-drawn face on screen
   const CUBE = new THREE.WebGLCubeRenderTarget(32, { generateMipmaps: false, minFilter: THREE.LinearFilter }), refCam = new THREE.CubeCamera(0.5, 300, CUBE); refCam.coordinateSystem = renderer.coordinateSystem; refCam.updateCoordinateSystem(); refCam.children.forEach(c => { c.layers.enable(SHDD); c.layers.enable(SHDI); }); // r187 only sets the six faces in update(), which the game does not call (one face per frame) // moving objects that cast a shadow
-  let refF = 0;
+  const REFL_K = 6, refFr = new THREE.Frustum(), refM = new THREE.Matrix4(), refRT = new THREE.WebGLRenderTarget(32, 32, { generateMipmaps: false, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter }), refS = new THREE.Scene(); refRT.texture.name = 'reflections'; let refF = 0, refP = []; // refP: [object, slice] for the face being drawn
+  { const q = new THREE.Mesh(quad.geometry, new THREE.MeshBasicMaterial({ map: refRT.texture, depthTest: false, depthWrite: false, fog: false, toneMapped: false })); q.frustumCulled = false; refS.add(q); } // the copy of refRT into the face, pixel for pixel
   const refFace = () => { // player 1's car is not visible in its own cube map; the sun's shadow is not recomputed for so little
-    if (refF++ % 6) return; const f = (refF / 6 | 0) % 6, P = refCam.position, sp = sky.position.clone(), dp = sunDisc.position.clone(), ds = sunDisc.scale.x, ks = sky.scale.x;
+    const k = refF % REFL_K, f = (refF / REFL_K | 0) % 6, P = refCam.position, sp = sky.position.clone(), dp = sunDisc.position.clone(), ds = sunDisc.scale.x, ks = sky.scale.x; refF++;
     P.set(carG.position.x, carG.position.y + 0.9, carG.position.z); refCam.updateMatrixWorld(true);
+    if (!k) { refP = []; let j = 0; const c = refCam.children[f]; refFr.setFromProjectionMatrix(refM.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse)); // equal-share batches of what the face sees
+      const batch = o => o === sky || o === sunDisc ? 0 : o.children.length || [].concat(o.material).some(m => m.transparent || !m.depthTest) ? REFL_K - 1 : !o.visible || o.isSprite || o.frustumCulled && !refFr.intersectsObject(o) ? 0 : j++ % (REFL_K - 1); // the last slice already has what is transparent
+      const va = o => { if (o.isMesh || o.isPoints || o.isLine || o.isSprite) refP.push([o, batch(o)]); else o.children.forEach(va); }; scene.children.forEach(va); } // a mesh keeps its children with it
     sky.position.copy(P); sky.scale.setScalar(0.1); sunDisc.position.copy(P).addScaledVector(SD, 200); sunDisc.scale.setScalar(ds / 10); sky.updateMatrixWorld(); sunDisc.updateMatrixWorld();
-    const vis = carG.visible, rt = renderer.getRenderTarget(); carG.visible = false;
-    renderer.setRenderTarget(CUBE, f); renderer.render(scene, refCam.children[f]);
+    const vis = carG.visible, rt = renderer.getRenderTarget(), caches = []; carG.visible = false;
+    for (const [o, t] of refP) if (t !== k && o.visible) { o.visible = false; caches.push(o); }
+    renderer.setRenderTarget(refRT); renderer.autoClear = !k; renderer.render(scene, refCam.children[f]); renderer.autoClear = true; // the following slices add to the first, depth included
+    for (const o of caches) o.visible = true;
     carG.visible = vis; renderer.setRenderTarget(rt);
     sky.position.copy(sp); sky.scale.setScalar(ks); sunDisc.position.copy(dp); sunDisc.scale.set(ds, ds, 1); sky.updateMatrixWorld(); sunDisc.updateMatrixWorld();
+    if (k === REFL_K - 1) { renderer.setRenderTarget(CUBE, f); renderer.render(refS, postCam); renderer.setRenderTarget(rt); } // complete face: copied into the cube
   };
   const reflects = m => { // the mask: red = share of the reflection (three's specularMap)
     const src = m.map.image.getContext('2d').getImageData(0, 0, 128, 128).data;
@@ -868,7 +878,9 @@
   ];
   let spike = null, spikeT = 0; // spike = { s: text, c: colour, T: time left on screen }; spikeT: delay before the next one
   const VOICE = [[110, 7], [160, 10], [240, 8]]; // radio voice of each rival (SOUND.radio): pitch in Hz and syllables per second — low and calm, nervous, young
-  const peakAt = (c, ev) => { if (c.k < 0 || c.k > 2 || spikeT > 0) return; const L = SPIKES[c.k][ev], l = L[Math.random() * L.length | 0]; spike = { n: OPP[c.k][0], s: l, c: OPP[c.k][1], T: 3 }; spikeT = 7; SOUND.radio(Math.min(10, Math.ceil(l.split(' ').length * 1.6)), ...VOICE[c.k]); };
+  const said = new Set(); // lines already said in this race (data/taunts.js: the extra ones, per character, per event and per map; a line comes back only once its list is exhausted)
+  const peakAt = (c, ev, E) => { if (c.k < 0 || c.k > 2 || spikeT > 0) return; const p = TAUNTS.pickLine(E || [...SPIKES[c.k][ev], ...TAUNTS.rival[c.k][ev]], said), l = typeof p === 'string' ? p : p[0]; spike = { n: OPP[c.k][0], s: l, c: OPP[c.k][1], T: 3 }; spikeT = 7; SOUND.radio(Math.min(10, Math.ceil(l.split(' ').length * 1.6)), ...VOICE[c.k]); };
+  const pickEvt = (E, p = 1) => { const r = race.cars.filter(c => c.k >= 0 && c.k < 3 && !c.out); if (r.length && Math.random() < p) peakAt(r[Math.random() * r.length | 0], '', E); }; // a player event: a random rival comments on it (p: chance)
   const J1 = ['J1', TH.hud.y], pierBuf = c => c.k >= 0 ? OPP[c.k] : J1, model = c => c.k >= 0 ? opps[c.k] : carG;
   // the human cars, one per player seat (vu.hu of the view at rank n: HUM[n]): model, body (roll), wheels, brake light, nitro flames and trails. A copy of carG has the same children in the same order: body, four wheels, two flameSet.
   // Player 2 therefore has all of player 1's animation, whereas the opponents keep their wheels fixed
@@ -968,7 +980,7 @@
     triIdx.forEach((i, k) => { for (let j = 0; j < 9; j++) A[k * 9 + j] = me.P0[i + j] + me.d[i + j]; U.set(uv.subarray(i / 3 * 2, i / 3 * 2 + 6), k * 6); });
     ge.setAttribute('position', new THREE.BufferAttribute(A, 3)); ge.setAttribute('uv', new THREE.BufferAttribute(U, 2)); ge.computeVertexNormals(); ge.computeBoundingBox();
     const m = new THREE.Mesh(ge, me.o.material); m.castShadow = true; m.layers.mask = me.o.layers.mask; return m; });
-  function debris(m, v) { m.userData.dyn = 1; m.layers.set(SHDD); m.castShadow = true; scene.add(m); DEBRIS.push({ m, v, w: new V3(jit(10), jit(10), jit(10)), y0: m.position.y - 1, asleep: 0 });
+  function debris(m, v) { m.userData.dyn = 1; m.layers.set(SHDD); shdM.push(m); m.castShadow = true; scene.add(m); DEBRIS.push({ m, v, w: new V3(jit(10), jit(10), jit(10)), y0: m.position.y - 1, asleep: 0 });
     while (DEBRIS.length > DEBRIS_MAX) { const o = DEBRIS.shift(); scene.remove(o.m); o.m.geometry.dispose(); } }
   function falls(g, p, ms, parent, vx, vz) { // a part that detaches, thrown outward; an optic also leaves shards
     g.updateMatrixWorld(true); const q = parent.getWorldQuaternion(new THREE.Quaternion()), c = new V3(), y0 = g.position.y;
@@ -1038,13 +1050,14 @@
   // Guardrails: each side (WALL_SIDES) keeps the shape of the impacts, dz[i] = setback of sample i (m). sim.js's collision does not move: a dented rail leaves a hollow behind the car, not aheadSec.
   // Paint: a ring of MN segments on the walls (band in the car's tint + light stripe), re-aligned to the guardrail when it steps back.
   // Cones and bins: placed at the edge of bends, they fly off on contact with a car (which knows nothing of it) and stay where they fall.
-  const DS = T.len / N, OFF = s => T.vert ? s.w : W, MDZ = { '-1': new Float32Array(N), 1: new Float32Array(N) }, MP0 = {}; // OFF: where the wall is; MP0: the intact guardrails
-  for (const sg in WALL_SIDES) { WALL_SIDES[sg].userData.dyn = 1; MP0[sg] = WALL_SIDES[sg].geometry.attributes.position.array.slice(); }
+  const DS = T.len / N, OFF = s => T.vert ? s.w : W, MDZ = { '-1': new Float32Array(N), 1: new Float32Array(N) }; // OFF: where the wall is
+  for (const sg in WALL_SIDES) for (const B of WALL_SIDES[sg]) { B.M.userData.dyn = 1; B.P0 = B.M.geometry.attributes.position.array.slice(); }
   const murK = i => (i - T.t1 + N) % N; // the rank of sample i in a ribbon starting at T.t1 (beyond cO: in the tunnel, no guardrail)
-  function wallWritten(sg, a, b) { const M = WALL_SIDES[sg]; if (!M) return; const P = M.geometry.attributes.position.array, d = MDZ[sg];
-    for (let j = a; j <= b; j++) { const i = (j + N) % N, k = murK(i); if (k > cO) continue; const s = S[i], nx = -s.tz * sg, nz = s.tx * sg;
-      for (let v = 0; v < 2; v++) { const q = (k * 2 + v) * 3; P[q] = MP0[sg][q] + nx * d[i]; P[q + 2] = MP0[sg][q + 2] + nz * d[i]; } }
-    M.geometry.attributes.position.needsUpdate = true; }
+  function wallWritten(sg, a, b) { const d = MDZ[sg];
+    for (const { M, i0, n, P0 } of WALL_SIDES[sg]) { const P = M.geometry.attributes.position.array;
+      for (let j = a; j <= b; j++) { const i = (j + N) % N, k = (i - i0 + N) % N; if (k > n) continue; const s = S[i], nx = -s.tz * sg, nz = s.tx * sg; // beyond n: out of the band (tunnel, structure)
+        for (const kk of k === 0 && n >= N ? [0, N] : [k]) for (let v = 0; v < 2; v++) { const q = (kk * 2 + v) * 3; P[q] = P0[q] + nx * d[i]; P[q + 2] = P0[q + 2] + nz * d[i]; } } // a band that loops around: the last sample is the first
+      M.geometry.attributes.position.needsUpdate = true; } }
   function wallTwists(i, sg, vn) { if (vn <= 6) return; const d = Math.min(0.3, 0.03 * (vn - 6)), R = Math.max(1, Math.round((1.5 + 0.12 * vn) / DS)), D = MDZ[sg];
     for (let j = -R; j <= R; j++) { const u = 1 - Math.abs(j) / (R + 1), i2 = (i + j + N) % N; D[i2] = Math.min(0.45, D[i2] + d * u * u * (3 - 2 * u)); }
     wallWritten(sg, i - R, i + R); marksFollow(sg); }
@@ -1080,16 +1093,16 @@
       OBJ.push({ S: kind, x0: s.x - s.tz * o, z0: s.z + s.tx * o, y0: s.y + (T.vert ? wallFace(s, Math.abs(o)) : 0), p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), asleep: 1 }); } } }
   for (const [i, o, k] of TH.objectsEn || []) { const s = S[i]; OBJ.push({ S: KINDS[k], x0: s.x - s.tz * o, z0: s.z + s.tx * o, y0: s.y, p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), asleep: 1 }); } // th.objectsEn: [[sample, offset from the axis (positive to the right), kind of th.objects], …], placed by the map in addition to those at bend entries
   // h.breakable(parts, x, y, z, radius, height, shards): a scenery object (stall, jar, cart) that can be knocked over like cones; parts = [[InstancedMesh, instance], …], which leave as one block
-  for (const [pieces, x, y, z, r, ht, shard] of BREAKABLES) OBJ.push({ S: { r, h: ht, shard }, pieces: pieces.map(([im, k]) => { const m = new THREE.Matrix4(); im.getMatrixAt(k, m); im.userData.dyn = 1; return [im, k, m]; }), x0: x, z0: z, y0: y, p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), asleep: 1 });
+  for (const [pieces, x, y, z, r, ht, shard] of BREAKABLES) OBJ.push({ S: { r, h: ht, shard }, pieces: pieces.map(([im, k]) => { const m = new THREE.Matrix4(); im.getMatrixAt(k, m); im.userData.dyn = im.userData.broken = 1; return [im, k, m]; }), x0: x, z0: z, y0: y, p: new V3(), v: new V3(), q: new THREE.Quaternion(), w: new V3(), asleep: 1 });
   for (const So of KINDS) { const l = OBJ.filter(o => o.S === So); So.im = new THREE.InstancedMesh(So.geo, So.mat, Math.max(1, l.length)); So.im.count = l.length; So.im.castShadow = true; So.im.userData.dyn = 1; scene.add(So.im); l.forEach((o, k) => { o.k = k; }); }
   // shortcut: the bend's direction (sign of S.k) gives the outside; if a map defines k backwards, the objects would end up inside: to check map by map on the first pass
   const objWritten = o => { const m = new THREE.Matrix4().compose(o.p, o.q, new V3(1, 1, 1)); if (!o.pieces) { o.S.im.setMatrixAt(o.k, m); o.S.im.instanceMatrix.needsUpdate = true; return; }
     m.multiply(new THREE.Matrix4().makeTranslation(-o.x0, -o.y0 - o.S.h / 2, -o.z0)); for (const [im, k, m0] of o.pieces) { im.setMatrixAt(k, new THREE.Matrix4().multiplyMatrices(m, m0)); im.instanceMatrix.needsUpdate = true; } }; // scenery parts: the displacement from the starting pose, applied to each
-  function sceneryReset() { for (const sg in MDZ) { MDZ[sg].fill(0); if (WALL_SIDES[sg]) { WALL_SIDES[sg].geometry.attributes.position.array.set(MP0[sg]); WALL_SIDES[sg].geometry.attributes.position.needsUpdate = true; } }
+  function sceneryReset() { for (const sg in MDZ) { MDZ[sg].fill(0); for (const B of WALL_SIDES[sg]) { B.M.geometry.attributes.position.array.set(B.P0); B.M.geometry.attributes.position.needsUpdate = true; } }
     mB.fill(0); mP.fill(0); mSend();
     for (const o of OBJ) { o.p.set(o.x0, o.y0 + o.S.h / 2, o.z0); o.v.set(0, 0, 0); o.w.set(0, 0, 0); o.q.identity(); o.asleep = 1; objWritten(o); } }
   sceneryReset();
-  function wallImpact(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; mark(c, sg, c.hit); if (WALL_SIDES[sg]) wallTwists(c.idx, sg, c.hit); } // a head-on hit on the wall (not a truck: away from the edge)
+  function wallImpact(c) { const s = S[c.idx]; if (c.hit <= 3 || OFF(s) - Math.abs(c.d) > 1.6) return; const sg = Math.sign(c.d) || 1; mark(c, sg, c.hit); if (WALL_SIDES[sg].length) wallTwists(c.idx, sg, c.hit); } // a head-on hit on the wall (not a truck: away from the edge)
   // pixel particles from damaged engines: crisp squares (like the rest of the game), one colour and one size per age level, no gradient
   //   smokePuff: the grey steam from the front from 0.6 wear; black: smoke from an engine on fire; fire (CASSE mode): it smoulders at 0.7, flares at 0.85, sets the car alight when out of use
   const PXN = 900, pxP = new Float32Array(PXN * 3).fill(-1e4), pxV = new Float32Array(PXN * 3), pxC = new Float32Array(PXN * 3), pxA = new Float32Array(PXN), pxS = new Float32Array(PXN), pxL = new Float32Array(PXN), pxL0 = new Float32Array(PXN), pxK = new Uint8Array(PXN), pxGeo = new THREE.BufferGeometry(); let pxi = 0;
@@ -1139,10 +1152,10 @@
   const dirtyDe = g => g.userData.dirty || (g.userData.dirty = { n: 0, c: new THREE.Color(0.45, 0.43, 0.4), u: { uDirty: { value: 0 }, uDirtyH: { value: VO.plan.low }, uDirtyC: { value: null } } });
   function dirtyFrame(c, dt) { const g = model(c), sl = dirtyDe(g), sp = Math.hypot(c.vx, c.vz); if (sp < 3 || c.air) return;
     const q = T.surf[c.idx], k = Math.min(1, sp / 20) * (1 + Math.min(0.5, Math.abs(c.slide || 0))), washed = q.aq > 0.02 || rainAt(c.idx) > 0; // the faster and sideways, the more it picks up
-    if (washed) sl.n = Math.max(0, sl.n - (q.aq > 0.12 ? 0.5 : 0.06) * k * dt); // the ford (lots of water) washes it off at once, rain and wet gently
+    if (washed) sl.n = Math.max(0, sl.n - (q.aq > 0.08 ? 0.5 : 0.06) * k * dt); // the ford (aq caps at 0.1: threshold 0.08, the old 0.12 was never reached) washes everything at once, the rain and the wet slowly
     else { const t = DIRTIES[genre(q)], a = t[3] * k * dt * (1 - sl.n * 0.5); sl.c.lerp(TMP.setRGB(t[0], t[1], t[2]), a / (sl.n + a)); sl.n = Math.min(1, sl.n + a); }
     sl.u.uDirty.value = sl.n; }
-  const DIRTY_F = `float sHb = clamp((vSaleP.y - uSaleH) / 1.15, 0.0, 1.0), sL = uSale * (1.7 - 1.4 * sHb); // local level: the underbody 1.7 times faster, the roof 0.3 times
+  const DIRTY_F = `float sHb = clamp((vSaleP.y - uSaleH) / 1.15, 0.0, 1.0), sL = uSale * (1.7 - 1.4 * sHb); // local level: the sill 1.7 times faster, the roof 0.3 times
 float sN = fract(sin(dot(floor(vSaleP * 7.0), vec3(12.9898, 78.233, 37.719))) * 43758.5453), sN2 = fract(sin(dot(floor(vSaleP * 23.0), vec3(39.3, 11.1, 83.7))) * 43758.5453);
 float saleM = max(step(sN2, sL * 0.9) * 0.55, smoothstep(sN - 0.12, sN + 0.12, sL * 1.1 - 0.25)) * (0.55 + 0.45 * clamp(sL, 0.0, 1.0));
 diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
@@ -1173,11 +1186,17 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // but Ville goes from 950 draw calls to 150. Anything that moves, or shows and hides, must carry userData.dyn = 1 (itself or a parent):
   // sky, cars, boats, big wheel, airship… Check after adding an animated scenery: (await import('./tools/perf.js')).movables() must list nothing.
   {
-    const COBBLE = 500, BIG = 30000, batches = new Map(), NM = new THREE.Matrix3(), v = new V3(), cand = [];
+    const COBBLE = 500, BIG = 30000, batches = new Map(), shadows = [], NM = new THREE.Matrix3(), v = new V3(), cand = [];
     const fixed = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn || !p.visible) return false; return true; };
     scene.updateMatrixWorld(true);
     const simple = o => { const m = o.material, g = o.geometry; return !Array.isArray(m) && !m.transparent && g.drawRange.count === Infinity && !Object.keys(g.morphAttributes).length && fixed(o); };
     scene.traverse(o => { if (o.isMesh && !o.isInstancedMesh && simple(o)) cand.push(o); });
+    // a material family (userData.family, declared by the map: same texture, different tints) has only one merged material, each piece's tint as vertex colour: one pass for all the tints instead of one per tintMat.
+    // The piece is replaced in cand by its double (realMesh: the original mesh, removed if it is merged). The map guarantees these materials don't change during a race
+    const FAMILY = new Map(), unc = new Map(), hue = g => unc.get(g) || unc.set(g, g.clone().setAttribute('color', new THREE.Float32BufferAttribute(new Float32Array(g.attributes.position.count * 3).fill(1), 3))).get(g);
+    cand.forEach((o, i) => { const m = o.material, fa = m.userData.family; if (!fa || !m.vertexColors && o.geometry.attributes.color || m.vertexColors && !o.geometry.attributes.color) return;
+      const kf = [fa, m.type, m.side, m.vertexColors, m.emissive ? m.emissive.getHex() : ''].join('|'), fm = FAMILY.get(kf) || FAMILY.set(kf, Object.assign(m.clone(), { vertexColors: true })).get(kf); fm.color.setRGB(1, 1, 1);
+      cand[i] = { realMesh: o, geometry: m.vertexColors ? o.geometry : hue(o.geometry), material: fm, matrixWorld: o.matrixWorld, scale: o.scale, col: m.color, castShadow: o.castShadow, receiveShadow: o.receiveShadow, frustumCulled: o.frustumCulled, renderOrder: o.renderOrder, layers: o.layers, userData: {}, children: [] }; });
     // scenery placed in quantity (static InstancedMesh) goes through it too: each instance becomes a part, merged with everything sharing its material (one draw call less per shape and per zone, shadows and reflections included);
     // its tint per instance goes into a vertex colour, on a copy of the material. Beyond INST vertices, the instance stays: it would take too much memory. Its parts are not cut into blocks (it was drawn whole, in one pass), except beyond 100,000 vertices: the 15,500 blocks of the canal (560,000 vertices) cost 1.5 ms of GPU per frame, whole in the view and in each face of the reflection cube
     const INST = 600000, inst = [], vc = new Map(), ni = new Map(), unison = g => ni.get(g) || ni.set(g, g.index ? g.toNonIndexed() : g).get(g);
@@ -1195,13 +1214,16 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     // a heavy batch (more than BIG vertices) is cut into COBBLE-meter blocks, so that what is off-screen is not drawn; large parts (ground, ribbons) stay whole
     for (const [k, l] of [...batches]) {
-      if (l.reduce((s, o) => s + (o.geometry.index || o.geometry.attributes.position).count, 0) < BIG) continue;
+      const ns = l.reduce((s, o) => s + (o.geometry.index || o.geometry.attributes.position).count, 0); if (ns < BIG) continue;
       batches.delete(k);
+      // the patch grows to keep about BIG vertices each: a barely heavy batch spread over the whole port of Wan-9 made 14 patches of 800 vertices, as many draw passes for almost nothing culled
+      const bx = [1e9, -1e9, 1e9, -1e9]; for (const o of l) { v.copy(o.geometry.boundingSphere.center).applyMatrix4(o.matrixWorld); bx[0] = Math.min(bx[0], v.x); bx[1] = Math.max(bx[1], v.x); bx[2] = Math.min(bx[2], v.z); bx[3] = Math.max(bx[3], v.z); }
+      const P = Math.max(COBBLE, Math.sqrt(Math.max(bx[1] - bx[0], COBBLE) * Math.max(bx[3] - bx[2], COBBLE) * 2 * BIG / ns)); // about 2 × BIG vertices per patch
       for (const o of l) { const g = o.geometry, r = g.boundingSphere.radius * o.matrixWorld.getMaxScaleOnAxis(); v.copy(g.boundingSphere.center).applyMatrix4(o.matrixWorld);
-        const kp = k + '|' + (r < COBBLE / 2 && (!o.virt || o.huge) ? Math.floor(v.x / COBBLE) + ':' + Math.floor(v.z / COBBLE) : 'grandSz'); if (!batches.has(kp)) batches.set(kp, []); batches.get(kp).push(o); }
+        const kp = k + '|' + (r < COBBLE / 2 && (!o.virt || o.huge) ? Math.floor(v.x / P) + ':' + Math.floor(v.z / P) : 'grandSz'); if (!batches.has(kp)) batches.set(kp, []); batches.get(kp).push(o); }
     }
     for (const l of batches.values()) {
-      if (l.length < 2 && !l[0].virt) continue; // a single instance is merged anyway: its instance disappears whole
+      if (l.length < 2 && !l[0].virt) { const o = l[0].realMesh || l[0]; shadows.push([o.geometry, o.matrixWorld, o]); continue; } // a single instance is merged anyway: its instance disappears whole
       // indexed if all parts are: a shared vertex is computed only once by the GPU (a box: 24 vertices instead of 36), and the scene is mostly limited by its vertices
       const ix = l.every(o => o.geometry.index), src = l.map(o => ix ? o.geometry : unison(o.geometry)), n = src.reduce((s, g) => s + g.attributes.position.count, 0), G = new THREE.BufferGeometry();
       if (ix) { const I = new (n > 65535 ? Uint32Array : Uint16Array)(src.reduce((s, g) => s + g.index.count, 0)); let b = 0, p = 0;
@@ -1223,17 +1245,30 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
         G.setAttribute(label, new THREE.BufferAttribute(A, sz));
       }
       const o0 = l[0], m = new THREE.Mesh(G, o0.material); m.castShadow = o0.castShadow; m.receiveShadow = o0.receiveShadow; m.frustumCulled = o0.frustumCulled; m.renderOrder = o0.renderOrder; m.layers.mask = o0.layers.mask;
-      m.matrixAutoUpdate = false; m.userData.minor = l.some(o => o.userData.minor); scene.add(m);
-      if (window.__origins) m.userData.src = l.map(o => { let p = o.virt || o; while (p && !p.userData.originName) p = p.parent; return [p ? p.userData.originName : '?', (o.geometry.index || o.geometry.attributes.position).count]; }); // tools/profReport.js: where the merged parts come from
-      for (const o of l) o.userData.fade = 1;
+      m.matrixAutoUpdate = false; m.userData.minor = l.some(o => o.userData.minor); scene.add(m); shadows.push([G, null, m]);
+      if (window.__origins) m.userData.src = l.map(o => { let p = o.virt || o.realMesh || o; while (p && !p.userData.originName) p = p.parent; return [p ? p.userData.originName : '?', (o.geometry.index || o.geometry.attributes.position).count]; }); // tools/profReport.js: where the merged parts come from
+      for (const o of l) (o.realMesh || o).userData.fade = 1;
     }
+    // the shadow of the fixed scenery (see shadows) only reads depth: everything that carries it, merged or single, is drawn there into one position mesh per patch and per shadow face, on the SHDF layer that only the shadow camera sees,
+    // instead of one pass per material (up to 110 draw passes in the frame where the moon changes step). Kept apart: what the depth depends on through the material (alphaTest cutout, displacement, clipping planes)
+    { const SD = [THREE.BackSide, THREE.FrontSide, THREE.DoubleSide], MO = new Map(), lo = new Map(); // SD: the face three draws in the shadow, from material.side
+      const onlyMap = o => { const m = o.material; return o.castShadow && o.layers.mask === 1 && !o.customDepthMaterial && !(m.alphaTest > 0 && (m.map || m.alphaMap)) && !m.alphaToCoverage && !(m.displacementMap && m.displacementScale) && !(m.clippingPlanes && m.clippingPlanes.length); };
+      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? SD[o.material.side]; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
+        const k = sd + '|' + Math.floor(v.x / COBBLE) + ':' + Math.floor(v.z / COBBLE); if (!lo.has(k)) lo.set(k, []); lo.get(k).push([g, mw]); o.castShadow = false; }
+      for (const [k, l] of lo) { const n = l.reduce((s, [g]) => s + g.attributes.position.count, 0), P = new Float32Array(n * 3), I = new (n > 65535 ? Uint32Array : Uint16Array)(l.reduce((s, [g]) => s + (g.index || g.attributes.position).count, 0)); let b = 0, p = 0;
+        for (const [g, mw] of l) { const a = g.attributes.position, x = g.index, c = (x || a).count, mirror = mw && mw.determinant() < 0;
+          for (let j = 0; j < a.count; j++) { v.fromBufferAttribute(a, j); if (mw) v.applyMatrix4(mw); P[(b + j) * 3] = v.x; P[(b + j) * 3 + 1] = v.y; P[(b + j) * 3 + 2] = v.z; }
+          for (let j = 0; j < c; j++) { const jj = mirror ? j - j % 3 + [0, 2, 1][j % 3] : j; I[p + j] = b + (x ? x.getX(jj) : jj); } p += c; b += a.count; }
+        const G = new THREE.BufferGeometry(), sd = +k.split('|')[0]; G.setAttribute('position', new THREE.BufferAttribute(P, 3)); G.setIndex(new THREE.BufferAttribute(I, 1));
+        const m = new THREE.Mesh(G, MO.get(sd) || MO.set(sd, new THREE.MeshBasicMaterial({ shadowSide: sd })).get(sd)); m.castShadow = true; m.layers.set(SHDF); m.matrixAutoUpdate = false; scene.add(m);
+        if (window.__origins) m.userData.originName = 'moteur ombre du décor fixe'; } }
     for (const o of inst) o.parent.remove(o); // all its parts are merged (even alone in their batch)
-    for (const o of cand.reverse()) if (o.userData.fade && !o.virt) { if (o.children.length) o.layers.set(31); else o.parent.remove(o); } // children first; a parent that keeps some stays in the tree without being drawn (layer 31)
+    for (const c of cand.reverse()) { const o = c.realMesh || c; if (o.userData.fade && !c.virt) { if (o.children.length) o.layers.set(31); else o.parent.remove(o); } } // children first; a parent that keeps some stays in the tree without being drawn (layer 31)
   }
   { const fixed = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn || !p.visible) return false; return true; }; // moving shadows (see shadows): anything that casts a shadow without being fixed
-    scene.traverse(o => { if (o.isLight) { o.layers.enable(SHDD); o.layers.enable(SHDI); } else if (o.castShadow && !fixed(o)) o.layers.set(o.isInstancedMesh ? SHDI : SHDD); }); } // the lights too: without them, the moving-shadow pass changed three's lighting, which then recompiled the key of each material every frame
+    scene.traverse(o => { if (o.isLight) { o.layers.enable(SHDD); o.layers.enable(SHDI); } else if (o.castShadow && !fixed(o)) { o.layers.set(o.isInstancedMesh ? SHDI : SHDD); shdM.push(o); } }); } // the lights too: without them, the moving-shadow pass changed three's lighting, which then recompiled the key of each material every frame
   const moves = o => { for (let p = o; p; p = p.parent) if (p.userData.dyn) return true; return false; };
-  scene.traverse(o => { if (o.isInstancedMesh) { if (moves(o)) o.frustumCulled = false; else o.computeBoundingSphere(); } if (o.material) illuminates(o.material); }); for (const sc of [scene, fallbackScene]) sc.traverse(o => { for (const m of [].concat(o.material || [])) m.forceSinglePass = true; }); // r149+: a double-sided transparent drew in two passes (highlight doubled in additive); scenery placed in quantity is culled off-screen over the extent of its instances (sphere computed once); what moves always stays drawn
+  scene.traverse(o => { if (o.isInstancedMesh) { if (moves(o) && !o.userData.broken) o.frustumCulled = false; else { o.computeBoundingSphere(); if (o.userData.broken) o.boundingSphere.radius += 30; } } if (o.material) illuminates(o.material); }); for (const sc of [scene, fallbackScene]) sc.traverse(o => { for (const m of [].concat(o.material || [])) m.forceSinglePass = true; }); // r149+: a double-sided transparent drew in two passes (glint doubled as additive); the scenery placed in number is culled off-screen over the extent of its instances (sphere computed once)  ; what moves always stays drawn, except the breakable scenery (h.breakable), culled over the extent of its placement plus 30 m (shortcut: a copy projected farther out can disappear with its off-screen batch; revisit if a map launches them farther)
   for (const g of [carG, ...opps]) dirtyPainted(g); // the dirt is grafted onto the illuminates shader of each livery
 
   // ---------- audio: see audio.js (window.SOUND); here only what the game and the HUD read ----------
@@ -1369,12 +1404,12 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (mode === 'tourAll' && EVENING[tnOu().handle] !== M) { // the round is run on another map: we go there without reloading, and the race starts on arrival (vpr.go)
       if (!outTarget) { outTarget = EVENING[tnOu().handle]; try { sessionStorage.setItem('vpr.go', 1); } catch (e) { } changeMap(); } return; } // (tnEnd stays in place while the map arrives: a second press of Enter does not recount the round)
     const nj = online() ? NET.n : VIEWS.length; // with two players: two humans at the top of the list and the two fastest rivals, always four cars
-    race = ses.start({ mode, diff, nj, ia: isRaceMode(), duel: duel() }); fsel = 0;
+    race = ses.start({ mode, diff, nj, ia: isRaceMode(), duel: duel(), lapCount: tnLaps }); fsel = 0;
     if (race && guest()) { const g = race.glob = race.cars.slice(), h = [NET.self, ...g.slice(0, nj).map((_, i) => i).filter(i => i !== NET.self)]; race.cars = [...h.map(i => g[i]), ...g.slice(nj)]; } // guest: its car at the top of the list, like a player 1 (R.glob keeps the host's order, that of the received states)
     if (race) race.cars.forEach((c, i) => { c.k = i < nj ? (i ? 2 + i : -1) : i - nj; c.rl = c.rlT = c.bl = 0; }); // and its laps: last lap counted, its time, best lap (see frame) // rank of each car in OPP and opps: player 2 takes the last model, the rivals the first ones
     const onlyMap = race ? null : newCar(T); VIEWS.forEach((vu, i) => { follows(vu, race ? race.cars[i] : onlyMap); vu.gear = 0; vu.splitMsg = null; }); VIEWS[0].self.manual = manual1(); // (outside a race, a mode without rivals started with two players: both views follow the single car)
     state = 'count'; count = 3; shown = 0; tTraffic = 0; acc = 0; dmgReset();
-    spike = null; spikeT = 0; if (race && isRaceMode() && VIEWS.length === 1 && !demo && !online()) { const r = race.cars.filter(c => c.k >= 0 && c.k < 3); peakAt(r[Math.random() * r.length | 0], 'grid'); }
+    spike = null; spikeT = 0; said.clear(); if (race && isRaceMode() && VIEWS.length === 1 && !demo && !online()) { const r = race.cars.filter(c => c.k >= 0 && c.k < 3); peakAt(r[Math.random() * r.length | 0], 'grid'); }
   }
   // Demo mode: on the title screen (home or main menu, solo), DEMO_WAITING seconds without touching anything, the autopilot runs a Race, map after map in night order (EVENING).
   // Nothing is saved (a Race writes nothing) and the mode chosen in the menu does not change stepSec. A key, a button or a click returns to the screen we came from, on the map we came from.
@@ -1394,7 +1429,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     ['RADIO : ' + labelRadio(), zap], ['QUITTER', toMenu]];
   function toMenu() { if (NET.role === 'hostRole') NET.stop(); if (guest()) waiting(); ses.toMenu(); state = 'title'; ins = false; race = null; const c = newCar(T); for (const vu of VIEWS) follows(vu, c); msel = 5; }
   // main menu: 0 map, 1 players, 2 mode, 3 difficulty, 4 gearbox, 5 start; d = -1 / +1 (left / right; Enter counts as +1)
-  const cache = i => (i === 1 && !two()) || (i === 3 && !isRaceMode()); // in solo there is no JOUEURS line; DIFFICULTE only against BOTS
+  let tnLaps = clamp(+pref('vpr8.tnTours', '3') || 3, 1, 5); // Tournée: laps per round, the TOURS line of the menu (6: shown and walked between BOX and DEMARRER)
+  const cache = i => (i === 1 && !two()) || (i === 3 && !isRaceMode()) || (i === 6 && mode !== 'tourAll'); // in solo there is no JOUEURS line; DIFFICULTE only against BOTS
   let outTarget = null, aimT = 0; // map requested in the menu, not yet shown
   function changeMap() {
     if (outTarget === M) { outTarget = null; window.__wanted = M.id; return; }
@@ -1415,6 +1451,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     else if (msel === 2) { // one player MODES, two players: Race, Elimination, Glisse duel; difficulty has its own line
       const O = two() ? MODES2 : MODES; mode = O[(O.indexOf(mode) + d + O.length) % O.length]; setPref(cacheKey('mode'), JSON.stringify(mode)); }
     else if (msel === 3) { diff = (diff + d + DIFF.length) % DIFF.length; setPref(cacheKey('diff'), diff); } // DIFFICULTE line: only for modes with BOTS (see cache)
+    else if (msel === 6) { tnLaps = (tnLaps - 1 + d + 5) % 5 + 1; setPref('vpr8.tnTours', tnLaps); }
     else if (msel === 4) { manual = !manual; VIEWS[0].self.manual = manual; setPref('vpr.boite', manual ? 'm' : 'a'); }
     else start();
   }
@@ -1458,16 +1495,16 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if ((e.code === 'Escape' || key === 'p') && (state === 'race' || state === 'count')) { prev = state; state = 'pause'; psel = 0; return; }
     if (state === 'title') {
       const dx = (e.code === 'ArrowRight' || e.code === 'KeyD' ? 1 : 0) - (e.code === 'ArrowLeft' || e.code === 'KeyA' ? 1 : 0);
-      const stepSec = s => { do msel = (msel + s + 6) % 6; while (cache(msel)); };
+      const O = [0, 1, 2, 3, 4, 6, 5], stepSec = s => { do msel = O[(O.indexOf(msel) + s + 7) % 7]; while (cache(msel)); };
       if (e.code === 'ArrowUp' || e.code === 'KeyW') stepSec(-1);
       else if (e.code === 'ArrowDown' || e.code === 'KeyS') stepSec(1);
       else if (e.code === 'Enter' || e.code === 'Space') menuAct(1);
-      else if (dx && msel < 5) menuAct(dx);
+      else if (dx && msel !== 5) menuAct(dx);
       else if (e.code === 'Escape') { choice = true; csel = two() ? 1 : 0; if (online()) { csel = 2; enl = { sel: 0, typing: '' }; } }
       else if (key === 'i' && two()) enrolled(); // with two players: reopen sign-up to change device (taken seats are no longer asked for at the start)
       return;
     }
-    if (mode === 'tourAll' && ses.raceEnd) { if (e.code === 'Enter') { if (!ses.tnEnd) ses.enclosed(); else if (ses.tnEnd.finished) toMenu(); else start(); } } // Tournée: finish, then overall standings, then next round (no "replay")
+    if (mode === 'tourAll' && ses.raceEnd) { if (e.code === 'Enter' && performance.now() - tEnd > 1500) { ses.enclosed(); if (ses.tnEnd.finished) toMenu(); else start(); } } // Tournée: the end-of-round screen, then the next one (no "rejouer"); Enter waits 1.5 s, as in two-player
     else if (ses.raceEnd && two()) { // shared board: REVANCHE or MENU, the choice of either player. Enter (a gamepad's throttle button) only counts 1.5 s after the finish: a race is not restarted by crossing the line
       if (/^Arrow|^Key[WASD]$/.test(e.code)) fsel ^= 1; else if (e.code === 'Enter' && performance.now() - tEnd > 1500) { if (fsel) toMenu(); else start(); return; } }
     else if ((e.code === 'Enter' && ses.raceEnd) || (key === 'r' && !two())) start(); // with two players, R does not restart: the key next to the gear + of player 1 (E); RECOMMENCER is in the pause menu
@@ -1604,7 +1641,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       const ti = headingMap(M.id, HU.heading, language); txt(ti[0], cx, 44, 24, Y, 'center', 2); txt(ti[1], cx, 70, 24, Y, 'center', 2);
       if (tFlash && performance.now() - tFlash < 400) R(hg, 'rgba(255,255,255,' + (1 - (performance.now() - tFlash) / 400).toFixed(2) + ')', 0, 0, HW, HH); // white flash on leaving the home screen
       panel(cx - 160, 100, 320, 140);
-      const L = [['CARTE', (outTarget || M).label + '  ' + (MAPS.indexOf(outTarget || M) + 1) + '/' + MAPS.length], ['JOUEURS', d2 ? VIEWS.length + ' : ECRAN PARTAGE' : 'SOLO'], ['MODE', mode === 'tourAll' ? 'TOURNEE' : mode === 'raceCase' ? 'COURSE' : mode === 'broken' ? 'CASSE' : mode === 'elim' ? 'ELIMINATION' : mode === 'glisse' ? d2 ? 'GLISSE EN DUEL' : 'GLISSE' : 'CONTRE-LA-MONTRE'], ['DIFFICULTE', DIFF[diff].label], [d2 ? 'BOITE J1' : 'BOITE', manual1() ? 'MANUELLE' : 'AUTO']].map((r, i) => [...r, i]).filter(r => !cache(r[2]));
+      const L = [['CARTE', (outTarget || M).label + '  ' + (MAPS.indexOf(outTarget || M) + 1) + '/' + MAPS.length], ['JOUEURS', d2 ? VIEWS.length + ' : ECRAN PARTAGE' : 'SOLO'], ['MODE', mode === 'tourAll' ? 'TOURNEE' : mode === 'raceCase' ? 'COURSE' : mode === 'broken' ? 'CASSE' : mode === 'elim' ? 'ELIMINATION' : mode === 'glisse' ? d2 ? 'GLISSE EN DUEL' : 'GLISSE' : 'CONTRE-LA-MONTRE'], ['DIFFICULTE', DIFF[diff].label], [d2 ? 'BOITE J1' : 'BOITE', manual1() ? 'MANUELLE' : 'AUTO'], 0, ['TOURS', '' + tnLaps]].map((r, i) => r && [...r, i]).filter(r => r).filter(r => !cache(r[2]));
       const greenhouse = L.length > 4; // 5 lines (with two players, against BOTS): closer together, to leave DEMARRER above the track
       L.forEach(([l, v, i], k) => {
         const on = msel === i, y = (greenhouse ? 104 : 105) + k * (greenhouse ? 10 : 12);
@@ -1716,7 +1753,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       const f = car.nitro, full = f >= 1 && blink, n = car.sec ? Math.floor(f * 10) : Math.ceil(f * 10); // a lit segment = usable nitro (when empty, sim.js NI.sec, it waits for a full segment)
       txt('N', HW - 120, HH - 17, 8, f > 0 ? Y : '#6a6a78');
       // th.graze: grazing the wall fills the gauge (sim.js, wall); the gauge lights up while it rubs, and 0.3 s after, the segment filling in white
-      const fro = TH.graze && (vu.fro = car.rub && Math.hypot(car.vx, car.vz) > 15 ? 0.3 : Math.max(0, (vu.fro || 0) - dt)) > 0 && car.boost <= 0;
+      const fro = !!TH.graze && (vu.fro = car.rub && Math.hypot(car.vx, car.vz) > 15 ? 0.3 : Math.max(0, (vu.fro || 0) - dt)) > 0 && car.boost <= 0;
       for (let i = 0; i < 10; i++) R(hg, fro && i === Math.min(n, 9) ? '#ffffff' : i >= n ? '#30303c' : car.boost > 0 ? C : full ? '#ffffff' : fro ? '#fff2a0' : Y, HW - 108 + i * 10, HH - 17 - (fro && i === Math.min(n, 9)), 8, 7 + 2 * (fro && i === Math.min(n, 9)));
     }
     if (vu.brokenMsg && (vu.brokenMsg.T -= dt) > 0) tag(vu.brokenMsg.t, cx, 124, vu.brokenMsg.c); // CASSE: takedown inflicted or received
@@ -1760,14 +1797,25 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       panel(cx - 150, 52, 300, 166); txt((car.out ? (race.broken ? "HORS D'USAGE : " : 'ELIMINE : ') : 'ARRIVEE : ') + car.pos + (car.pos === 1 ? 'ER' : 'E'), cx, 60, 16, Y, 'center', 1); const t1 = raceOrder(race)[0].ending;
       raceOrder(race).forEach((c, i) => { const j = c !== car; txt((i + 1) + '. ' + (j ? pierBuf(c)[0] : 'VOUS'), cx - 138, 86 + i * 15, 8, j ? pierBuf(c)[1] : Y); txt(c.ending ? fmt(c.ending) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.out ? 138 : 50), 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); if (race.broken) txt(brokenPts(c) + ' PTS', cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); else if (i && c.ending) txt('+' + (c.ending - t1).toFixed(2), cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); });
       txt('MEILLEUR TOUR ' + fmt(self.bl), cx, 152, 8, C, 'center'); txt(race.broken ? 'TAKEDOWNS ' + car.ca.td + '  POINTS ' + brokenPts(car) : 'GLISSES ' + car.nDrift + '  NITRO ' + car.nBoost + '  MURS ' + car.nWall, cx, 166, 8, race.broken ? Y : '#e8e8e4', 'center'); txt('NIVEAU ' + DIFF[diff].label, cx, 180, 8, '#e8e8e4', 'center');
-      txt(!ses.raceEnd ? (VIEWS.length > 2 ? "D'AUTRES JOUEURS ROULENT ENCORE" : "L'AUTRE JOUEUR ROULE ENCORE") : mode === 'tourAll' ? 'ENTREE : CLASSEMENT GENERAL' : 'ENTREE : REJOUER   ECHAP : MENU', cx, 200, 8, C, 'center'); // (with two players: Enter and Esc only act once both players have finished)
+      txt(!ses.raceEnd ? (VIEWS.length > 2 ? "D'AUTRES JOUEURS ROULENT ENCORE" : "L'AUTRE JOUEUR ROULE ENCORE") : 'ENTREE : REJOUER   ECHAP : MENU', cx, 200, 8, C, 'center'); // (with two players: Enter and Esc only act once both players have finished)
     }
-    if (ses.tnEnd && state === 'race') { // Tournée, round closed: the overall standings, what the round earned, and what follows (or the trophy after the last one)
-      const f = ses.tnEnd, nbr = MAPS.length, ord = n => n + (n === 1 ? 'ER' : 'E');
-      panel(cx - 150, 52, 300, 166); txt(f.finished ? 'TOURNEE TERMINEE' : 'CLASSEMENT GENERAL', cx, 60, 16, Y, 'center', 1); txt('APRES LA MANCHE ' + (f.handle + 1) + '/' + nbr, cx, 82, 8, C, 'center');
-      f.ranking.forEach((j, i) => { const y = 98 + i * 15, c = j ? '#e8e8e4' : Y; txt((i + 1) + '. ' + (j ? OPP[j - 1][0] : 'VOUS'), cx - 138, y, 8, j ? OPP[j - 1][1] : Y); txt('+' + (f.pts[j] - f.before[j]), cx + 50, y, 8, c, 'right'); txt(f.pts[j] + ' PTS', cx + 138, y, 8, c, 'right'); });
-      if (f.finished) { txt(f.tier <= 3 ? 'TROPHEE ' + MEDN[3 - f.tier] : 'PAS DE TROPHEE', cx, 164, 8, f.tier <= 3 ? MEDC[3 - f.tier] : RD, 'center'); txt('NIVEAU ' + DIFF[diff].label, cx, 180, 8, '#e8e8e4', 'center'); txt('ENTREE : MENU', cx, 200, 8, C, 'center'); }
-      else { txt('SUITE : ' + EVENING[f.handle + 1].hour + ' · ' + EVENING[f.handle + 1].label, cx, 164, 8, '#e8e8e4', 'center'); txt('DEPART ' + ord(f.grid[0] + 1) + ' SUR LA GRILLE', cx, 180, 8, '#e8e8e4', 'center'); txt('ENTREE : SUITE   ECHAP : QUITTER', cx, 200, 8, C, 'center'); }
+    if (ses.tnEnd && state === 'race') { // Tournée, round closed: left the finish and the points earned, right the overall standings, below what comes next (or the trophy after the last)
+      const f = ses.tnEnd, nbr = MAPS.length, ord = n => n + (n === 1 ? 'ER' : 'E'), a = (performance.now() - tEnd) / 1000, k = (t0, d) => clamp((a - t0) / d, 0, 1), smooth = x => x * x * (3 - 2 * x);
+      const nm = j => j ? pierBuf(race.cars[j])[0] : 'VOUS', co = j => j ? pierBuf(race.cars[j])[1] : Y, podium = i => i < 3 ? MEDC[2 - i] : '#e8e8e4';
+      const line = (y, x, w, j) => { if (!j) R(hg, 'rgba(255,210,58,' + (0.12 + 0.08 * Math.sin(a * 6)) + ')', x, y - 3, w, 13); }; // the player: a band that breathes under their line
+      panel(cx - 176, 40, 352, 188); txt(f.finished ? 'TOURNEE TERMINEE' : 'MANCHE ' + (f.handle + 1) + '/' + nbr + ' : ' + ord(f.tier), cx, 48, 16, Y, 'center', 1); txt(M.hour + ' · ' + M.label, cx, 68, 8, C, 'center');
+      txt('ARRIVEE', cx - 170, 84, 8, C); txt('GENERAL', cx + 8, 84, 8, C);
+      raceOrder(race).forEach((c, i) => { const j = race.cars.indexOf(c), y = 98 + i * 15, g = f.pts[j] - f.before[j], n = Math.round(g * smooth(k(0.3 + i * 0.15, 0.5))); // the points drop one after another, from first to last
+        line(y, cx - 174, 170, j); txt((i + 1) + '.', cx - 170, y, 8, podium(i)); txt(nm(j), cx - 154, y, 8, co(j)); txt(c.ending ? fmt(c.ending) : '--', cx - 38, y, 8, '#e8e8e4', 'right');
+        txt('+' + n, cx - 8, y - (n === g && g ? 2 * (1 - k(0.8 + i * 0.15, 0.2)) : 0), 8, n === g && g ? Y : '#e8e8e4', 'right'); });
+      const before = tourAll(f.before).ranking, m = smooth(k(1.6, 0.6)); // the overall standings from before the round, then each slides to their new place (after the points have dropped)
+      f.ranking.forEach((j, i) => { const y = Math.round(98 + (before.indexOf(j) + (i - before.indexOf(j)) * m) * 15), p = Math.round(f.before[j] + (f.pts[j] - f.before[j]) * smooth(k(0.8, 0.8)));
+        line(y, cx + 4, 170, j); txt((m < 1 ? before.indexOf(j) + 1 : i + 1) + '.', cx + 8, y, 8, podium(m < 1 ? before.indexOf(j) : i)); txt(nm(j), cx + 24, y, 8, co(j)); txt(p + ' PTS', cx + 170, y, 8, j ? '#e8e8e4' : Y, 'right'); });
+      if (m === 1 && f.tier < before.indexOf(0) + 1) txt('+' + (before.indexOf(0) + 1 - f.tier), cx + 110, 98 + (f.tier - 1) * 15, 8, '#3ae87a', 'right'); // places gained in the overall standings
+      txt('MEILLEUR TOUR ' + fmt(self.bl), cx, 162, 8, '#e8e8e4', 'center');
+      if (f.finished) { txt(f.tier <= 3 ? 'TROPHEE ' + MEDN[3 - f.tier] : 'PAS DE TROPHEE', cx, 178, 8, f.tier <= 3 ? MEDC[3 - f.tier] : RD, 'center'); txt('NIVEAU ' + DIFF[diff].label, cx, 192, 8, '#e8e8e4', 'center'); }
+      else { txt('SUITE : ' + EVENING[f.handle + 1].hour + ' · ' + EVENING[f.handle + 1].label, cx, 178, 8, '#e8e8e4', 'center'); txt('DEPART ' + ord(f.grid[0] + 1) + ' SUR LA GRILLE', cx, 192, 8, '#e8e8e4', 'center'); }
+      if (a > 1.5) txt(f.finished ? 'ENTREE : MENU' : 'ENTREE : COURSE SUIVANTE   ECHAP : QUITTER', cx, 210, 8, C, 'center');
     }
     if (spike && state !== 'title' && (spike.T -= dt) > 0) { // a rival's line, radio-style: a line without background, black outline, name in its colour; fades out over the last half second
       hg.globalAlpha = Math.min(1, spike.T * 2); castiron('8px ' + PS); const n = tr(spike.n) + ' ', wn = hg.measureText(n).width, x = Math.round(cx - (wn + hg.measureText(tr(spike.s)).width) / 2);
@@ -1782,7 +1830,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   }
 
   // the moon follows the car in steps of CELL_SIZE (64 shadow texels, 24 m): between two steps, the fixed scenery's shadow map does not change (see shadows)
-  const LR = new V3().crossVectors(new V3(0, 1, 0), SD).normalize(), LU = new V3().crossVectors(SD, LR), TX = 2 * OCH / OTX, CELL_SIZE = TX * 64, tmp = new V3();
+  const LR = new V3().crossVectors(new V3(0, 1, 0), SD).normalize(), LU = new V3().crossVectors(SD, LR), TX = 2 * OCH / OTX, CELL_SIZE = TX * 64, tmp = new V3(), shdS = new THREE.Sphere();
   function sunFollow(car) {
     tmp.set(car.x, 0, car.z);
     const a = Math.round(tmp.dot(LR) / CELL_SIZE), b = Math.round(tmp.dot(LU) / CELL_SIZE), c = Math.round(tmp.dot(SD) / CELL_SIZE);
@@ -1799,7 +1847,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = packDepthToRGBA(texture2D(t, v).x); }' }),
     shadeScene = new THREE.Scene(), shadeDeep = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.BackSide }), shadeDeepI = shadeDeep.clone(), // one per layer: using the same one for both made three recompute the program key at each switch from one to the other
     shadeNul = new THREE.WebGLRenderTarget(1, 1), shadeFixed = new THREE.OrthographicCamera(-1e-6, 1e-6, 1e-6, -1e-6, 0, 1e-6); // shadeFixed: sees nothing (far below the map, null field) and only layer 0: the render that takes it only makes the fixed scenery's shadow (shadowMap.render is not called outside a render)
-  shadeFixed.position.set(0, -1e7, 0); shadeFixed.updateMatrixWorld();
+  shadeFixed.position.set(0, -1e7, 0); shadeFixed.updateMatrixWorld(); shadeFixed.layers.set(30); sun.layers.enable(30); // layer 30: the sun alone; without it, this render drew into its one-pixel target everything not culled off-screen (particles, water: about twenty passes)
   const shadeQ = new THREE.Mesh(quad.geometry, SHD); shadeQ.frustumCulled = false; shadeScene.add(shadeQ);
   sun.shadow.camera.layers.set(SHDD); renderer.shadowMap.autoUpdate = false;
   const gameCopy = (src, dst, m) => { shadeQ.material = m; m.uniforms.t.value = src; renderer.setRenderTarget(dst); renderer.autoClear = false; renderer.render(shadeScene, postCam); renderer.autoClear = true; };
@@ -1810,15 +1858,20 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const S = sun.shadow, W = S.mapSize.x; sun.updateMatrixWorld(); sun.target.updateMatrixWorld();
     if (!vu.shadows) vu.shadows = { C: new THREE.WebGLRenderTarget(W, S.mapSize.y, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false }), cacheKey: null, b: null };
     const O = vu.shadows, fixed = O.cacheKey !== cacheKey || !S.map;
-    if (fixed) { renderer.shadowMap.needsUpdate = true; S.camera.layers.set(0); /* r18x takes the layers of the shadow camera (if they exceed layer 0) instead of those of the render: it is set back on the fixed scenery */ renderer.setRenderTarget(shadeNul); renderer.render(scene, shadeFixed); gameCopy(S.map.depthTexture, O.C, SHDS); O.cacheKey = cacheKey; O.b = null; } // fixed scenery only, then kept
+    if (fixed) { renderer.shadowMap.needsUpdate = true; S.camera.layers.set(0); S.camera.layers.enable(SHDF); /* r18x takes the layers of the shadow camera (if they exceed layer 0) instead of those of the render: it is set back on the fixed scenery */ renderer.setRenderTarget(shadeNul); renderer.render(scene, shadeFixed); gameCopy(S.map.depthTexture, O.C, SHDS); O.cacheKey = cacheKey; O.b = null; } // fixed scenery only, then kept
     else S.updateMatrices(sun); // (the previous view may have left its map and its matrices)
     tmp.set(car.x, y, car.z).applyMatrix4(S.matrix); const r = SHDR / TX, b = [tmp.x * W - r, tmp.y * W - r, tmp.x * W + r, tmp.y * W + r].map(v => clamp(Math.round(v), 0, W)), p = O.b || b;
     const bx = Math.min(b[0], p[0]), by = Math.min(b[1], p[1]); S.map.scissorTest = true;
     if (!fixed) { S.map.scissor.set(bx, by, Math.max(b[2], p[2]) - bx, Math.max(b[3], p[3]) - by); gameCopy(O.C.texture, S.map, SHD); } // the copy: this square and the previous frame's one
     S.map.scissor.set(b[0], b[1], b[2] - b[0], b[3] - b[1]); O.b = b;
+    // a moving object whose shadow cannot fall in the square (its sphere, seen from the sun, is outside the square) is not drawn: the pass cost every car and all the moving scenery of the map
+    const caches = []; for (let i = shdM.length - 1; i >= 0; i--) { const o = shdM[i]; if (!o.parent) { shdM.splice(i, 1); continue; } if (!o.visible || !o.frustumCulled || !o.geometry) continue; // a group that carries castShadow is not drawn itself
+      if (!o.isInstancedMesh && !o.geometry.boundingSphere) o.geometry.computeBoundingSphere(); const sp = o.isInstancedMesh ? o.boundingSphere : o.geometry.boundingSphere; if (!sp) continue;
+      shdS.copy(sp).applyMatrix4(o.matrixWorld); tmp.copy(shdS.center).applyMatrix4(S.matrix); const rp = shdS.radius / TX;
+      if (tmp.x * W + rp < b[0] || tmp.x * W - rp > b[2] || tmp.y * W + rp < b[1] || tmp.y * W - rp > b[3]) { o.visible = false; caches.push(o); } }
     renderer.autoClear = false; renderer.setRenderTarget(S.map);
     for (const [c, m] of [[SHDD, shadeDeep], [SHDI, shadeDeepI]]) { S.camera.layers.set(c); scene.overrideMaterial = m; renderer.render(scene, S.camera); }
-    renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false;
+    renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false; for (const o of caches) o.visible = true;
   }
 
   const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
@@ -1888,7 +1941,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (state === 'race' && !ses.raceEnd) { // end of race, lap completed, Drift over: the session decides, we show and play it
         tTraffic += H; const ev = ses.stepSec(car, H);
         for (const i of ev.arrived) if (VIEWS[i]) { VIEWS[i].finished = true; SOUND.arrival(race.cars[i].pos); } // online, the other humans have no view here
-        if (ev.ending && race) tEnd = performance.now();
+        if (ev.ending && race) { tEnd = performance.now(); if (mode === 'tourAll') ses.enclosed(); } // Tournée: the round ends at the finish; a single screen shows the race and the overall standings
         if (ev.lapRun) { VIEWS[0].result = { ...ev.lapRun, T: 5, b: summary(VIEWS[0]) }; if (ev.ghostRun) padSaid('FANTÔME : ' + labelF()); SOUND.stinger(ev.lapRun.rec); } // lap time, shown for 4 s
         if (ev.glisse) SOUND.stinger(ses.glEnd.rec);
       }
@@ -1929,7 +1982,15 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (vu && ln < race.laps) vu.result = { n: ln, t: lt, pos: c.pos, of: alive().length, T: 5, b: summary(vu) };
     }
     if (state === 'race' && race && VIEWS.length === 1 && !demo && !online() && !car.ending && !car.out) for (const c of race.cars) { // rival call-outs: an overtake in either direction
-      const d = c.dist - car.dist; if (c === car || c.ending || c.out || Math.abs(d) < 3) continue; const dev = d > 0; if (c.dev !== undefined && dev !== c.dev) peakAt(c, dev ? 'pass' : 'double'); c.dev = dev; }
+      const d = c.dist - car.dist; if (c === car || c.ending || c.out) continue; if (Math.abs(d) < 10) { if ((c.pro = (c.pro || 0) + dt) > 4) { c.pro = -30; peakAt(c, '', TAUNTS.evt.squeezed); } } else if (c.pro > 0) c.pro = 0; // stuck to the player for more than 4 s: once, then 30 s of respite
+      if (Math.abs(d) < 3) continue; const dev = d > 0; if (c.dev !== undefined && dev !== c.dev) peakAt(c, dev ? 'pass' : 'double'); c.dev = dev; }
+    if (state === 'race' && race && VIEWS.length === 1 && !demo && !online() && !car.ending && !car.out) { // the player's other events, already known to the engine: wall, contact, nitro, line crossing, dirt
+      if (car.nWall > (car.nwv | 0)) { car.nwv = car.nWall; pickEvt(TAUNTS.evt.impact, 0.6); }
+      if (car.bump > 2) { if (!car.bmp) pickEvt(TAUNTS.evt.bump); car.bmp = 1; } else car.bmp = 0;
+      if (car.boost > 0) { if (!car.nit_) pickEvt(TAUNTS.evt.nitro, 0.35); car.nit_ = 1; } else car.nit_ = 0;
+      if (car.lap !== car.lapV) { const n = alive().length, ev = car.lap === race.laps ? (car.pos === 1 ? 'lastLapLeading' : car.pos === n ? 'lastLapTrailing' : 'lastLap') : car.pos === 1 ? 'leading' : car.pos === n ? 'trailing' : 'spot'; if (car.lapV) pickEvt(ev === 'spot' ? TAUNTS.mapDef[M.id] : TAUNTS.evt[ev]); car.lapV = car.lap; }
+      if (race.t > 20 && !said.has('spot') && said.add('spot')) pickEvt(TAUNTS.mapDef[M.id]); // a scenery line around 20 s
+      if (!said.has('dirty') && dirtyDe(carG).n > 0.6 && said.add('dirty')) pickEvt(TAUNTS.evt.dirty); }
     if (state === 'race' && mode === 'solo') {
       const sp = ses.saves(car, carY); if (sp) J.splitMsg = { ...sp, T: 2.5 };
     }
@@ -2088,8 +2149,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       for (const o of caches) o.visible = false; for (const o of triIdx) o.frustumCulled = true;
     }
     // the scene matrices once for the view's three renders (reflections, moving shadows, scene): each one recomputed them all
-    wheelsInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n) refFace();
+    wheelsInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n && !(vu.shadows && vu.shadows.cacheKey !== stepL)) refFace(); // not in the frame where the fixed scenery's shadow is redone (see shadows): the slice moves to the next frame
     shades(vu, stepL, car, carY);
+    if (sceneryTick && sceneryTick.liveFeed && !vu.n) sceneryTick.liveFeed(renderer); // a scenery screen that shows the live race (stadium): its capture, before the scene that shows it
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
     if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       FALLBACK.rDz.value = vu.rt.depthTexture; FALLBACK.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(fallbackScene, cam); renderer.autoClear = true; }
@@ -2107,7 +2169,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const ending = () => { cancelAnimationFrame(raf); halt.abort(); clearTimeout(padNoteT); padNote.remove(); if (COM) COM.c.remove(); };
   const frees = () => {
     for (const sc of [scene, fallbackScene]) sc.traverse(o => { if (o.geometry) o.geometry.dispose(); for (const m of [].concat(o.material || [])) { for (const k of ['map', 'emissiveMap', 'alphaMap', 'specularMap']) if (m[k]) m[k].dispose(); m.dispose(); } });
-    VIEWS.forEach(renderView); CUBE.dispose(); post.dispose(); ssr.dispose(); quad.geometry.dispose(); if (sun.shadow.map) sun.shadow.map.dispose();
+    VIEWS.forEach(renderView); CUBE.dispose(); refRT.dispose(); post.dispose(); ssr.dispose(); quad.geometry.dispose(); if (sun.shadow.map) sun.shadow.map.dispose();
   };
   // arrival on this map (first display or return): what the previous map left in sessionStorage
   const arrival = () => {

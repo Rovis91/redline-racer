@@ -3,7 +3,7 @@
 //   ses = freshSession({ T, mapDef, mapDefs, store, prefs, auto, challenge, ref, med })
 //     store: records of the map, { get(k), set(k, v) } as JSON (the game: localStorage under the map's prefix); prefs: keys common to all maps, { get(k, d), set(k, v) } as text
 //     ref = lapRef(T) (time and trace of the medals' reference lap); med = [bronze, silver, gold] as multiples of ref.t; challenge = the lap received by link (challengeRead), otherwise null; auto: the autopilot drives, nothing is recorded
-//   ses.start({ mode, diff, nj, ia, duel }) creates the race (rendered; null in time attack and solo Drift). ia: mode against the BOTS; duel: two-player Drift; nj: number of humans.
+//   ses.start({ mode, diff, nj, ia, duel, tours }) creates the race (returned, or null in time trial and in Glisse alone). ia: mode against the BOTS; duel: Glisse for two; nj: number of humans.
 //   ses.stepSec(car, dt) after each physics step in a race, as long as !ses.raceEnd: returns the step's events (reused object):
 //     arrived = humans arrived at this step (indices), lapRun = result of the completed lap in time attack, ghostRun = the ghost has just reached the next medal, drift = the two Drift laps completed, ending = the race is over for the game
 //   ses.saves(car, y) in time attack each frame: ghost trace and sectors; returns the sector crossed, otherwise null.
@@ -15,7 +15,7 @@
   function freshSession({ T, mapDef: M, mapDefs: MAPS, store, prefs, auto: AUTO = false, challenge: CHALLENGE_DEF = null, ref, med: MED }) {
     const N = T.n, REF = ref.t, GLT = 2 * REF * MED[0] * 1.3; // Drift: the score only counts if both laps are completed in under GLT (two laps at bronze time, plus 30 %)
     const smoothNoise = (k, d) => { try { return JSON.parse(prefs.get(k, null)) || d; } catch (e) { return d; } }, TNK = 'vpr8.tournee' + (AUTO ? '.auto' : '');
-    const TNS = [].concat(smoothNoise(TNK, [])), TROPHEE = [].concat(smoothNoise('vpr7.trophee', []));
+    const tns = () => [].concat(smoothNoise(TNK, [])), trophies = () => [].concat(smoothNoise('vpr7.trophee', [])); // reread each time: a map built in advance has had its session for a long time, and a frozen copy would send it back to a round already run
     const medal = t => t ? MED.filter(k => t <= REF * k).length : 0; // 0 aucune, 1 bronze, 2 argent, 3 or
     let bestSpl = store.get('splits'), ghost = store.get('ghost'), si = 0, cur = [], recG = [], finished = []; const medF = [];
     const S = { race: null, raceEnd: false, tRace: 0, lapN: 1, best: store.get('best') || 0, bestG: store.get('glisse') || 0, glEnd: null, tnEnd: null, lastIdx: null, mode: 'solo', diff: 0, GLT, medal };
@@ -25,21 +25,21 @@
     S.traceF = () => { const f = S.ghostIdx, i = f - 2; if (f < 2) return f ? ghost : null; if (f === 5) return CHALLENGE_DEF.trace; if (medF[i]) return medF[i];
       const gold = i === 2 ? G.challengeRead((G.TRACES_GOLD || {})[M.id]) : { err: 1 }; return medF[i] = gold.err ? G.stretch(ref.trace, MED[i]) : G.stretch(gold.trace, REF * MED[2] / gold.t); };
     // Championship: one in progress per difficulty (vpr8.tourAll from the night's order, { handle, pts }), trophy per difficulty (vpr7.trophy, best final place from 1 to 3)
-    S.trophy = d => TROPHEE[d] >= 1 && TROPHEE[d] <= 3 ? TROPHEE[d] : 0;
-    S.tn = d => { const t = TNS[d]; return t && MAPS[t.handle] && Array.isArray(t.pts) && t.pts.length === 4 && t.pts.every(Number.isFinite) ? t : null; }; // a damaged save, or one with a longer list of maps, is ignored
+    S.trophy = d => { const r = trophies()[d]; return r >= 1 && r <= 3 ? r : 0; };
+    S.tn = d => { const t = tns()[d]; return t && MAPS[t.handle] && Array.isArray(t.pts) && t.pts.length === 4 && t.pts.every(Number.isFinite) ? t : null; }; // a damaged save, or one with a longer list of maps, is ignored
     S.tnOu = d => S.tn(d) || { handle: 0, pts: [0, 0, 0, 0] };
     S.enclosed = () => { // end of round, as soon as the player leaves the finish board: the cars still on track finish all at once (their order could still change), then points, overall ranking and save
       const R = S.race, d = S.diff; if (S.tnEnd || S.mode !== 'tourAll' || !S.raceEnd || !R) return;
       while (!R.done && R.t < 3600) G.stepRace(R, null, H);
       const t = S.tnOu(d), r = G.tourAll(t.pts, G.raceOrder(R).map(c => R.cars.indexOf(c))), ending = !MAPS[t.handle + 1], tier = r.ranking.indexOf(0) + 1;
       S.tnEnd = { ...r, before: t.pts, handle: t.handle, finished: ending, tier };
-      TNS[d] = ending ? null : { handle: t.handle + 1, pts: r.pts }; prefs.set(TNK, JSON.stringify(TNS));
-      if (ending && tier <= 3 && !AUTO && !(S.trophy(d) && S.trophy(d) <= tier)) { TROPHEE[d] = tier; prefs.set('vpr7.trophee', JSON.stringify(TROPHEE)); } // the autopilot does not win a trophy
+      const TNS = tns(); TNS[d] = ending ? null : { handle: t.handle + 1, pts: r.pts }; prefs.set(TNK, JSON.stringify(TNS));
+      if (ending && tier <= 3 && !AUTO && !(S.trophy(d) && S.trophy(d) <= tier)) { const TR = trophies(); TR[d] = tier; prefs.set('vpr7.trophee', JSON.stringify(TR)); } // the autopilot does not win a trophy
     };
-    S.start = ({ mode, diff, nj = 1, ia = false, duel = false }) => {
+    S.start = ({ mode, diff, nj = 1, ia = false, duel = false, lapCount = 3 }) => { // laps: per round of Tournée (the other modes keep 3)
       S.mode = mode; S.diff = diff; S.tnEnd = null;
       S.race = duel ? G.newRace(T, 2, [], 0, { humans: nj, timedOut: GLT }) // two-player Drift: the two players alone on track, the solo time limit for each
-        : ia ? G.newRace(T, 3, G.AI_LVL.slice(0, 4 - nj).map(l => l * G.DIFF[diff].k), G.DIFF[diff].el, { elim: mode === 'elim', broken: mode === 'broken', grid: mode === 'tourAll' && G.tourAll(S.tnOu(diff).pts).grid, humans: nj }) : null; // two players: always four cars
+        : ia ? G.newRace(T, mode === 'tourAll' ? lapCount : 3, G.AI_LVL.slice(0, 4 - nj).map(l => l * G.DIFF[diff].k), G.DIFF[diff].el, { elim: mode === 'elim', broken: mode === 'broken', grid: mode === 'tourAll' && G.tourAll(S.tnOu(diff).pts).grid, humans: nj }) : null; // two players: always four cars
       S.raceEnd = false; S.glEnd = null; finished = []; si = 0; cur = []; recG = []; S.tRace = 0; S.lapN = 1;
       return S.race;
     };

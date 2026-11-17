@@ -1,7 +1,7 @@
 // Redline Racer — audio: everything is synthesised (original, adaptive soundtrack). Each map's stations: RADIO in mapDefs.js.
 // Interface (window.SOUND): init() on the first gesture · frame(dt, e) every frame · quitGame() / reprendre(m) around a map change in the menu · setStation(i), toggleMusic(), mapDef(M), volume(family, v) ·
 // beep(f), radio(syllables, pitch, rate), crash(), stinger(rec), thunder() · music editor: audition, resync(), note(portion, n), backdrop, stepSec, timbres, kits · read by the game: station, name, fq, genre, musicOn, beat, pulse, ana · listening bench and measure:
-// init(offline context), pump(), readyMs, live, vol, stations, raceEvent(), monitor(gain), vu, and the one-off sound effects clack(), lever(), impact(v), hiss(),
+// init(offline context), pump(), readyMs, live, vol, stations, raceEvent(), roar(v), monitor(gain), vu, and the one-shot sounds clack(), lever(), impact(v), hiss(),
 // boost(), backfire() · prises de test : ac, out, smp.
 // Chain: timbres (PATCH) → slice of the part → (drums (KIT) | pumped bus → swept filter → bus saturation) → station cut-off →
 // station colour (3 bands) → music yes/no → speed and tunnel filter → "mus" family → master → compressor. Adjustable families: mus, mot (engine, gearbox), pneu (tyres), vent (wind), amb (place), pluie (rain), choc (impacts, rubbing, boost), ui (beeps, jingle, radio).
@@ -628,6 +628,9 @@
     if (en(Z.cite)) { for (let k = 0, n = 4 + Math.random() * 4 | 0; k < n; k++) { const f = rnd(3000, 4200), o = osc('sine', f, t + k * 0.08, 0.06, 0.035, d); o && o.frequency.exponentialRampToValueAtTime(f * 1.3, t + k * 0.08 + 0.05); } return rnd(2, 5); } // a chattering of parakeets above the square
     return rnd(1.5, 4); // elsewhere: the bed alone (foliage, cicadas)
   }
+  function roar(t, v) { // the crowd: a roar that rises and falls back, and a few whistles; v = strength (1: that of the stadium stands)
+    const rnd = (a, b) => a + Math.random() * (b - a), c = nz(t, 2.6, 0.22 * v, ambBed, 'bandpass', 900, 0.6, nbuf, 0.5); c && c.frequency.linearRampToValueAtTime(1300, t + 0.8);
+    for (let i = 0; i < 3; i++) { const f = rnd(1800, 2600), o = osc('sine', f, t + rnd(0.3, 1.5), 0.35, 0.025 * v, ambBed); o && o.frequency.linearRampToValueAtTime(f * 1.25, t + 2); } }
   function ambEvent(t) { // events of the place, spaced at random; returns the delay before the next
     const id = M.id, rnd = (a, b) => a + Math.random() * (b - a);
     if (id === 'chapada') return evChapada(t);
@@ -638,8 +641,7 @@
     if (id === 'canal') { burstN(CHOPPER, t, ambBed, 'lowpass', 260); return rnd(30, 50); } // helicopter passing in the distance
     if (id === 'ville') { const o = AC.createOscillator(), g = AC.createGain(); o.frequency.setValueAtTime(620, t); for (let i = 0; i < 4; i++) { o.frequency.linearRampToValueAtTime(840, t + i + 0.5); o.frequency.linearRampToValueAtTime(620, t + i + 1); }
       o.connect(filt('lowpass', 1200, 0.7, g)); g.connect(ambBed); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 1.5); g.gain.linearRampToValueAtTime(0, t + 4); o.start(t); o.stop(t + 4.1); return rnd(25, 50); } // distant siren
-    if (id === 'stade') { const c = nz(t, 2.6, 0.22, ambBed, 'bandpass', 900, 0.6, nbuf, 0.5); c && c.frequency.linearRampToValueAtTime(1300, t + 0.8); // a clamour that rises and falls
-      for (let i = 0; i < 3; i++) { const f = rnd(1800, 2600), o = osc('sine', f, t + rnd(0.3, 1.5), 0.35, 0.025, ambBed); o && o.frequency.linearRampToValueAtTime(f * 1.25, t + 2); } return rnd(6, 12); } // + quelques sifflets
+    if (id === 'stade') { roar(t, 1); return rnd(6, 12); }
     if (id === 'givre') { nowPlaying((BELLS && BELLS.ac === AC ? BELLS : BELLS = Object.assign(bells(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // sleigh bells, in the distance
     if (id === 'perse') { const p = ambPos, D = ambEvG; // the place decides the event: fractions of the lap, or the vault (ambUnder)
       if (ambUnder > 0.5) { if (Math.random() < 0.6) { const f = rnd(1900, 2700), n = 3 + Math.random() * 4 | 0; for (let i = 0; i < n; i++) osc('triangle', f * (i % 2 ? 1.5 : 1), t + i * 0.19, 0.09, 0.035, D); } // a coppersmith's hammer
@@ -1094,7 +1096,7 @@ registerProcessor('moteur', Moteur);`;
     thunder: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // rumble + crackle in the mids
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },
     volume(fmly, v) { vol[fmly] = v; if (V[fmly]) V[fmly].gain.value = v; },
-    raceEvent: () => { ambT = 0; }, get live() { return live; },
+    raceEvent: () => { ambT = 0; }, roar: (v = 1.5) => AC && ambBed && roar(AC.currentTime, v), // the crowd reacts to the race (src/render/crowd.js) get live() { return live; },
     clack: down => AC && clack(down), lever: down => AC && lever(down), impact: v => AC && impact(v), contact: v => AC && contact(v), boost: () => AC && boostFx(), backfire: () => AC && backfire(), hiss: () => AC && hiss(), landing: l => AC && landing(l), klaxon: () => AC && klaxon(),
     monitor(v) { if (outG) outG.gain.value = OUT * v; }, get vu() { return vu; }, // listening bench gain: no effect on the game
     get vol() { return vol; }, get readyMs() { return readyMs; }, get stations() { return ST; },

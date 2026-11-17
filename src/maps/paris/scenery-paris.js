@@ -85,7 +85,7 @@
       // the arch in the middle, a large arch on the axis of the crossing; its piers are obstacles (sim.js). Its stone is lit up, golden, as at dawn: it can be seen from the end of the avenues,
       // it is the square's landmark (grey like the façades, it got lost)
       const golden = m => { m.emissive.setHex(0xffb860); m.emissiveMap = m.map; m.emissiveIntensity = 0.5; return m; };
-      h.pose('arc', { stone: golden(h.mat('stone')), relief: golden(h.mat('basRelief')) }, h.scene, [C[0], 0.02, C[1]]).forEach(m => m.rotation.y = PL.a);
+      h.pose('arcParis', { stone: golden(h.mat('stone')), relief: golden(h.mat('basRelief')) }, h.scene, [C[0], 0.02, C[1]]).forEach(m => m.rotation.y = PL.a);
       // ---- the arch's central island (sim.js: place.island): pale granite paving, a twelve-pointed star in pink cobbles, a hundred granite bollards linked by chains,
       // open on the axis of the great arch; under the arch, the slab and the flame; ten candelabra. The ring of roadway around it stays bare: that is where one slides.
       { const [RI, OUV] = PL.island, A0 = Math.PI / 2 - PL.a, cs = Math.cos(PL.a), sn = Math.sin(PL.a), P2 = (r, a) => [C[0] + Math.cos(a) * r, C[1] + Math.sin(a) * r];
@@ -107,8 +107,8 @@
           const P2 = (r, b = a) => [C[0] + Math.cos(b) * r, 0.22, C[1] + Math.sin(b) * r, -b - Math.PI / 2], k = n++; // placed on the pavement, facing the arch
           if (k % 27 === 13) subways.push(P2(PL.r + 3)); else if (k % 20 === 8) morris.push(P2(PL.r + 2.2)); else if (k === 45) kqPlace.push(P2(PL.r + 3.6)); else { trunks.push([x, 2.82, z]); crownList.push([x, 7.82, z, k * 1.7, 1, 0.9, 1]); }
           if (k % 5 === 2) benches.push(P2(PL.r + 4.8, a + stepSec / 2)); } }
-      const fm = ['#d9c9a8', '#cfc0a0', '#e0d4b8', '#e8cfa0', '#c8b4a8', '#d8c8a0'].map(p => h.mat('facadeParis', {}, p)), batches = fm.map(() => []); // the last three: the butte's descent
-      const fb = ['#e8dcc0', '#d8c8b0'].map(p => h.mat('facadeParis', {}, p, 1)), low = fb.map(() => []); // the butte's low houses
+      const fm = ['#d9c9a8', '#cfc0a0', '#e0d4b8', '#e8cfa0', '#c8b4a8', '#d8c8a0'].map(p => h.mat('facadeParisFine', {}, p)), batches = fm.map(() => []); // the last three: the butte's descent
+      const fb = ['#e8dcc0', '#d8c8b0'].map(p => h.mat('facadeParisFine', {}, p, 1)), low = fb.map(() => []); // the butte's low houses
       for (let i = 0; i < N; i += 2) {
         const s = S[i], t = TYPES[type[i]], ry = h.across(s), tun = h.zone(i, 14) > 0;
         for (const sd of [-1, 1]) {
@@ -156,7 +156,7 @@
       // one geometry each: the stone sets its texture's density to the box
       inst(h, h.geo('blk'), h.mat('stone'), cornice); inst(h, h.geo('blk'), h.mat('zinc'), attic); inst(h, h.geo('chimney'), h.mat('brick'), stumps);
       inst(h, h.geo('blk'), h.mat('matGray'), attic.map(([x, y, z, ry, sx, sy, sz]) => [x, y + sy / 2 + 0.05, z, ry, sx - 1.4, 0.1, sz - 1.4])); // the terrasson, flat, above the mansard
-      inst(h, h.geo('streetlamp'), h.mat('castiron'), masts); inst(h, h.geo('lantern'), h.mat('lantern', GLOW), lant);
+      inst(h, h.geo('streetlamp'), h.mat('castiron'), masts); inst(h, h.geo('lanternStreet'), h.mat('lantern', GLOW), lant);
       inst(h, h.geo('trunk'), h.mat('trunk'), trunks); inst(h, h.geo('canopy'), h.mat('foliage'), crownList);
       const parked = autoList.flatMap((l, i) => l.map(p => [...p, 1, 1, 1, [0x2a3a5a, 0x8a8a90, 0x5a1a1a, 0xd8d4c8][i]]));
       insts(h, 'carParked', { carBody: h.mat('lacquer'), pane: h.mat('paneDark'), chassis: h.mat('matGray'), wheelPart: h.mat('wheelPart'), tire: h.mat('tire'), lightRed: h.mat('lightRed', GLOW), lightWhite: h.mat('lampObj', GLOW) }, parked, { tintMat: 'carBody' });
@@ -196,7 +196,7 @@
       { const s = S[iE], ox = -s.tz * sdE, oz = s.tx * sdE, [x, z] = edgePt(s, sdE, s.w + 3.7), rv = [], ln = [];
         h.pose('stairsKnoll', { stairStep: h.mat('stone', {}, '#b8b0a0'), lowwall: h.mat('stone'), iron: h.mat('castiron') }, h.scene, [x, s.y + 0.22, z]).forEach(m => m.rotation.y = Math.atan2(-ox, -oz));
         for (const [k, dy] of [[-0.6, 0], [8.4, 3.74]]) { const px = x + ox * k + s.tx * 2.3, pz = z + oz * k + s.tz * 2.3; rv.push([px, s.y + 0.22 + dy + 3.2, pz]); ln.push([px, s.y + 0.22 + dy + 6.8, pz]); h.emis(iE, px, s.y + dy + 6.5, pz, 0xffd05a, 15, 1.6); }
-        inst(h, h.geo('streetlamp'), h.mat('castiron'), rv); inst(h, h.geo('lantern'), h.mat('lantern', GLOW), ln); }
+        inst(h, h.geo('streetlamp'), h.mat('castiron'), rv); inst(h, h.geo('lanternStreet'), h.mat('lantern', GLOW), ln); }
       // the bakery raising its shutter as one arrives: frontage, awning, the light of the bakehouse
       const curtain = (() => { const s = S[iB], [fx, fz] = edgePt(s, sdB, s.w + TYPES.street.setback - 1.05), ry = h.across(s) - sdB * 1.5708, P = [fx, s.y + 0.22, fz, ry], sn = Math.sin(ry), cs = Math.cos(ry);
         inst(h, h.geo('shopfront'), h.mat('shopfront', {}, ...GENRES[1]), [P]); insts(h, 'store', { cloth: h.mat('clothStriped', { side: THREE.DoubleSide }), iron: h.mat('castiron') }, [[...P, 1, 1, 1, 0x2a5a8a]], { tintMat: 'cloth' });

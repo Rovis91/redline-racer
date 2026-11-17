@@ -76,7 +76,7 @@
       ['iron', 0.12, 3.6, 0.12, 1.9, 1.8, 0.9], ['signPanel', 1.3, 0.45, 0.1, 1.9, 3.4, 0.9], ['lampObj', 0.35, 0.35, 0.35, 1.9, 3.85, 0.9]],
     // Arc de Triomphe: 45 m wide (X), 22 deep (Z), 50 high. Great arch 14.6 m under 29 m along the Z axis, side arches 8.4 m under 18.7 m along the X axis;
     // four piers with plinths and sculpted groups, tiered vaults, cornice, frieze, attic with escutcheons. Zones: stone, relief (sculpted parts)
-    arc: () => {
+    arcParis: () => {
       const L = [];
       for (const sx of [-1, 1]) for (const sz of [-1, 1]) L.push(['stone', 15.2, 22, 6.8, sx * 14.9, 11, sz * 7.6, null, 1], ['stone', 16, 1.4, 7.6, sx * 14.9, 0.7, sz * 7.6],
         ['relief', 8, 11, 0.6, sx * 14.9, 9.5, sz * 11.1], ['stone', 15.8, 0.7, 7.4, sx * 14.9, 22.2, sz * 7.6]);

@@ -22,6 +22,10 @@ Object.assign(TEXTURES, {
   //   trade: cafe, bakery, bookshop, pharmacy, florist, cheese shop, fashion, butcher; background = the panelling colour; gold = the lettering colour
   shopfront: (genre, label, backdrop, gold) => [256, 88, (g, { R, rand, veil }) => {
     R(g, backdrop, 0, 0, 256, 88); veil(g, 0.25, () => { R(g, '#000', 0, 20, 256, 2); R(g, '#fff', 0, 0, 256, 1); });
+    // the woodwork itself: grain of the wood, moulded frame of the sign, panels of the pilasters (a dark woodwork, seen up close, is no longer a flat fill)
+    veil(g, 0.1, () => { for (let i = 0; i < 260; i++) R(g, rand() < 0.5 ? '#fff' : '#000', rand() * 256 | 0, rand() * 88 | 0, 1, 3 + (rand() * 9 | 0)); });
+    veil(g, 0.3, () => { const rackFrame = (x, y, w, h, c) => { R(g, c, x, y, w, 1); R(g, c, x, y + h - 1, w, 1); R(g, c, x, y, 1, h); R(g, c, x + w - 1, y, 1, h); };
+      rackFrame(3, 3, 250, 15, '#fff'); rackFrame(4, 4, 248, 13, '#000'); for (let x = 0; x < 256; x += 16) { rackFrame(x + 3, 30, 10, 22, '#fff'); rackFrame(x + 3, 56, 10, 22, '#fff'); } });
     g.fillStyle = gold; g.font = 'bold 15px serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(label, 128, 11, 236);
     const door = rand() < 0.5 ? 12 : 214, spd = [[8, 52], [70, 52], [134, 52], [196, 52]].filter(([x]) => Math.abs(x + 26 - door - 15) > 30);
     R(g, '#1c1e22', door, 26, 30, 62); R(g, '#3a4a58', door + 4, 30, 22, 30); R(g, gold, door + 24, 58, 2, 4); // glazed door, handle
@@ -75,4 +79,41 @@ Object.assign(TEXTURES, {
     for (let i = 0; i < 22; i++) { const x = rand() * 58 | 0, y = rand() * 54 | 0, w = 3 + rand() * 6 | 0, h = 6 + rand() * 10 | 0; R(g, '#5e5038', x + 1, y + 2, w, h); R(g, '#e8dcc0', x, y, w, h - 2); R(g, '#d4c4a2', x, y + 2, w, h - 4); }
     veil(g, 0.3, () => { R(g, '#000', 0, 0, 64, 1); R(g, '#000', 0, 63, 64, 1); });
   }, 8],
+  // fine Haussmann facade (128 px, 6 px/m): the drawing of facadeParis (textures.js) runs first, unchanged, then is enlarged twice:
+  // same rnd draws (the scenery doesn't move), same lit windows. On top, drawn with rand: stone sills, light surrounds, small glazing bars,
+  // railings of the long balconies, zinc joints, ground-floor shopfronts in rusticated stone (the dark band is no longer a flat black)
+  facadeParisFine: (p, low) => { const [, , d] = TEXTURES.facadeParis(p, low); return [128, 128, (g, o) => {
+    const { R, rand, veil } = o; d(g, o); const t = document.createElement('canvas'); t.width = t.height = 64; t.getContext('2d').drawImage(g.canvas, 0, 0, 64, 64, 0, 0, 64, 64);
+    g.imageSmoothingEnabled = false; g.drawImage(t, 0, 0, 64, 64, 0, 0, 128, 128);
+    veil(g, 0.1, () => { for (let y = 22; y < 104; y += 4) R(g, '#000', 0, y, 128, 1); for (let i = 0; i < 500; i++) R(g, rand() < 0.5 ? '#fff' : '#000', rand() * 128 | 0, 18 + rand() * 86 | 0, 2, 1); }); // sills, stone grain
+    veil(g, 0.2, () => { for (let x = 1; x < 128; x += 4) R(g, '#000', x, 0, 1, 18); }); // vertical zinc joints
+    const nf = low ? 2 : 5, hf = low ? 24 : 12;
+    for (let f = 0; f < nf; f++) for (let x = 8; x < 128; x += 16) { const y = 24 + f * (low ? 36 : 16);
+      veil(g, 0.45, () => { R(g, '#f4ecd8', x - 1, y - 2, 10, 2); R(g, '#f4ecd8', x - 1, y, 1, hf); R(g, '#f4ecd8', x + 8, y, 1, hf); }); // lintel and light stone reveals
+      veil(g, 0.5, () => { R(g, '#2a2e36', x + 3, y, 2, hf); R(g, '#2a2e36', x, y + (hf >> 1), 8, 1); }); } // petits-bois
+    if (!low) for (const y of [36, 84]) { R(g, '#26262c', 0, y, 128, 1); veil(g, 0.7, () => { for (let x = 0; x < 128; x += 2) R(g, '#26262c', x, y + 1, 1, 3); }); R(g, '#26262c', 0, y + 4, 128, 1); } // balcons filants
+    R(g, '#b8ad98', 0, 104, 128, 24); veil(g, 0.25, () => { for (let y = 108; y < 128; y += 5) R(g, '#000', 0, y, 128, 1); }); // ground floor in rusticated stone
+    for (let x = 6; x < 128; x += 32) { R(g, '#2a2622', x, 108, 20, 20); veil(g, 0.35, () => R(g, '#9ab0c8', x + 2, 110, 16, 6)); R(g, '#4a4640', x + 9, 108, 2, 20); } // ground-floor bays, reflection
+    for (let x = 4; x < 128; x += 32) R(g, x % 64 > 30 ? '#c8102e' : '#1d4a3a', x, 104, 24, 4); // awning valances, as before
+  }]; },
+  // tunnel of the lanes on the embankment, wall (128 px: x from 0 = top to 128 = bottom, y along the road, 16 m): the wall drawing (textures.js) runs first
+  // to draw rnd as before, then covered over: painted concrete at the top, lit strip in boxed panels, bevelled cream tiles with joints, green band, grimy skirting
+  wallFaceParis: (neonC, p, tiles) => { const [, , d] = TEXTURES.wallFace(neonC, p, tiles); return [128, 128, (g, o) => {
+    const { R, rand, veil } = o; d(g, o);
+    R(g, '#8e8a80', 0, 0, 128, 128); veil(g, 0.15, () => { for (let i = 0; i < 300; i++) R(g, rand() < 0.6 ? '#000' : '#fff', rand() * 34 | 0, rand() * 128 | 0, 1 + (rand() * 3 | 0), 1 + (rand() * 4 | 0)); }); // painted concrete
+    R(g, p[1], 0, 0, 128, 4); R(g, '#3a3a40', 34, 0, 16, 128);
+    for (let y = 0; y < 128; y += 32) R(g, neonC, 37, y + 2, 10, 26); // strip light: one lit box every 4 m
+    R(g, "#a29d8c", 52, 0, 64, 128); for (let x = 52; x < 116; x += 6) for (let y = 0; y < 128; y += 4) { const v = rand() * 8 | 0; R(g, `rgb(${178 + v},${172 + v},${154 + v})`, x, y, 5, 3); } // bevelled tiles, joints barely darker
+    R(g, '#1d4a3a', 52, 0, 128 - 52 - 74, 128); R(g, '#1d4a3a', 82, 0, 2, 128); // filet vert
+    veil(g, 0.5, () => { for (let x = 92; x < 116; x++) R(g, '#000', x, 0, 1, 128); }); veil(g, 0.06, () => { for (let x = 96; x < 116; x += 2) R(g, '#000', x, 0, 2, 128); }); // the bottom blackened by the road
+    veil(g, 0.25, () => { for (let i = 0; i < 40; i++) R(g, '#000', 60 + rand() * 50 | 0, rand() * 128 | 0, 1 + (rand() * 2 | 0), 4 + (rand() * 20 | 0)); }); // coulures
+    R(g, p[3], 116, 0, 12, 128);
+  }]; },
+  // tunnel ceiling (128 px): the ceiling drawing runs first (rnd), then board-marked concrete slabs with joints, cable tray, damp stains
+  ceilingParis: pp => { const [, , d] = TEXTURES.ceiling(pp); return [128, 128, (g, o) => {
+    const { R, rand, veil } = o; d(g, o); R(g, pp[0], 0, 0, 128, 128);
+    veil(g, 0.2, () => { for (let i = 0; i < 500; i++) R(g, rand() < 0.5 ? '#000' : '#fff', rand() * 128 | 0, rand() * 128 | 0, 1 + (rand() * 3 | 0), 1); for (let y = 0; y < 128; y += 16) R(g, '#000', 0, y, 128, 1); });
+    veil(g, 0.3, () => { for (let i = 0; i < 6; i++) { const x = rand() * 110 | 0, y = rand() * 110 | 0; R(g, '#000', x, y, 10 + (rand() * 14 | 0), 6 + (rand() * 10 | 0)); } }); // damp
+    R(g, pp[3], 0, 62, 128, 3); R(g, pp[3], 56, 0, 14, 128); veil(g, 0.4, () => { for (let y = 0; y < 128; y += 8) R(g, '#000', 56, y, 14, 1); }); // central joint, cable tray and its clips
+  }]; },
 });

@@ -219,6 +219,8 @@ Node 22.12+ (the tests `require` the ES module `vendor/three/three.module.js`).
 | `tests/test.js` | `ville` physics in depth: track geometry, autopilot lap, car performance, drift, nitro, slipstream, races, drift scoring, elimination, Tour, 2 humans, ghosts, challenge links. Its reference times are frozen |
 | `tests/test-maps.js` | every map: valid layout, autopilot lap, plausible car, drift, traffic, gold trace on the road and under the gold time, files declared in `index.html`, English title |
 | `tests/test-session.js` | game flow without browser |
+| `tests/test-catalogs.js` | each shape and texture name is defined only once across the repo |
+| `tests/test-taunts.js` | rival taunts (`src/data/taunts.js`): enough lines per event, each with its English text |
 | `tests/test-devices.js` | input devices with fakes |
 | `tests/test-lang.js` | every displayed text has its English line in `lang.js` |
 | `tests/test-font.js` | the font subset has every Japanese character used |

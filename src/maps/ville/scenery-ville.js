@@ -98,7 +98,7 @@
           if (k % 3 === 1) emis(i, s.x, s.y + 6.5, s.z, 0xff2a30, 18, 0.7); }
         inst(h, geo('boxMesh', 0.2, 7.8, 0.2), steelMat, wires.filter(f => f[4] === 1));
         inst(h, geo('boxMesh', 1, 1, 1), mat('matGray'), wires.filter(f => f[4] !== 1));
-        inst(h, geo('lantern'), mat('paint', { emis: 1, c: 0xff2a30 }), lant);
+        inst(h, geo('lanternStreet'), mat('paint', { emis: 1, c: 0xff2a30 }), lant);
         inst(h, geo('boxMesh', 0.3, 0.12, 0.3), mat('paint', { emis: 1, c: 0xffd05a }), lant.map(p => [p[0], p[1] - 0.46, p[2], p[3]])); // the golden tassel under each lantern
         box(18, 3.2, 0.4, mat('written', GLOWI, 224, 40, '#2a0408', '#ffd05a', '夜市 MARCHE DE NUIT', 26), ...(s => [s.x, s.y + 9.2, s.z])(S[i0 + 2])).rotation.y = h.across(S[i0 + 2]); // the entrance sign, placed on the first wire
       }

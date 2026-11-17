@@ -31,7 +31,7 @@
     'ARRIVEE': 'FINISH', 'TEMPS': 'TIME', 'ECART': 'GAP', 'MEIL. TOUR': 'BEST LAP', 'MEILLEUR TOUR': 'BEST LAP', 'SORT A': 'OUT AT', 'SORT': 'OUT', 'EN PISTE': 'ON TRACK', 'REVANCHE': 'REMATCH', 'GAGNE': 'WINS', 'EGALITE': 'DRAW',
     'HORS DELAI : SCORE NON COMPTE': 'TIME OUT : SCORE NOT COUNTED', 'HORS DELAI : SCORE NUL': 'TIME OUT : NO SCORE', 'HORS DELAI': 'TIME OUT', 'DELAI': 'TIME LIMIT', 'MURS': 'WALLS', 'PLACE': 'POS', 'ASPIRATION': 'SLIPSTREAM',
     'GLACE': 'ICE', 'VIRAGE DROITE': 'RIGHT TURN', 'VIRAGE GAUCHE': 'LEFT TURN', 'DUEL FINAL': 'FINAL DUEL', 'DERNIER : DOUBLE AVANT LA LIGNE': 'LAST : OVERTAKE BEFORE THE LINE', 'ELIMINE · CAMERA SUR': 'ELIMINATED · WATCHING', 'CAMERA SUR': 'WATCHING', 'ELIMINE': 'ELIMINATED', 'ELIMINATION': 'ELIMINATION',
-    'SUR LA GRILLE': 'ON THE GRID', 'SUR': 'OF', 'DEPART': 'START', 'PREMIER TEMPS': 'FIRST TIME SET', 'EN TETE': 'LEADING', 'NOUVEAU RECORD': 'NEW RECORD', "L'AUTRE JOUEUR ROULE ENCORE": 'THE OTHER PLAYER IS STILL DRIVING', 'VOUS': 'YOU', 'CLASSEMENT GENERAL': 'STANDINGS',
+    'SUR LA GRILLE': 'ON THE GRID', 'SUR': 'OF', 'DEPART': 'START', 'PREMIER TEMPS': 'FIRST TIME SET', 'EN TETE': 'LEADING', 'NOUVEAU RECORD': 'NEW RECORD', "L'AUTRE JOUEUR ROULE ENCORE": 'THE OTHER PLAYER IS STILL DRIVING', 'VOUS': 'YOU', 'CLASSEMENT GENERAL': 'STANDINGS', 'GENERAL': 'OVERALL', 'COURSE SUIVANTE': 'NEXT RACE',
     // mode CASSE
     'CASSE': 'WRECK', "HORS D'USAGE": 'WRECKED', 'TAKEDOWNS': 'TAKEDOWNS', 'TAKEDOWN PAR': 'TAKEN DOWN BY', 'TAKEDOWN': 'TAKEDOWN', 'VAINQUEUR AUX POINTS': 'WINNER ON POINTS', 'POINTS': 'POINTS', 'PTS': 'PTS',
     // demo mode, Night Championship
@@ -47,6 +47,7 @@
     'ARENE COUVERTE · COMPLET': 'INDOOR ARENA · SOLD OUT', 'COL FERME': 'PASS CLOSED', 'AUBE': 'DAWN', '5 H 30': '5:30 AM', 'SPECIALE 7 · FIN DE JOURNEE': 'STAGE 7 · LATE AFTERNOON', 'HEURE DOREE': 'GOLDEN HOUR',
     'ROUTE ROYALE': 'ROYAL ROAD', 'COUCHANT': 'SUNSET', 'BARRAGE': 'DAM', 'VIDANGE DE PRINTEMPS': 'SPRING RELEASE', '6 H 40': '6:40 AM', 'MANUSCRIT': 'MANUSCRIPT', 'LA CITE PERDUE': 'THE LOST CITY', 'MIDI': 'NOON',
   };
+  if (G.TAUNTS) for (const L of [...G.TAUNTS.rival.flatMap(r => Object.values(r)), ...Object.values(G.TAUNTS.evt), ...Object.values(G.TAUNTS.mapDef)]) for (const [fr, en] of L) EN[fr] = en; // taunts from data/taunts.js: [French, English]
   const EN_RX = new RegExp('(?<![A-Z0-9])(' + Object.keys(EN).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![A-Z])', 'g');
   const ORD = n => n + (n % 100 > 10 && n % 100 < 14 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
   const translated = (s, language) => language !== 'en' || typeof s !== 'string' ? s : s.replace(/[À-ÖØ-Ýà-öø-ý]/g, c => c.normalize('NFD')[0]).replace(/(\d+)ER?(?![A-Z])/g, (_, n) => ORD(+n))

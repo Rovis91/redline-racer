@@ -11,7 +11,7 @@
       const { THREE, S, N, W, T, rnd } = h, D = THREE.DoubleSide, P = i => pt(h, i), IX = new Map(S.map((s, i) => [s, i])), n0 = h.scene.children.length;
       const off = (i, o) => { const s = S[(i % N + N) % N]; return [s.x - s.tz * o, s.z + s.tx * o]; }; // point at o metres from the axis (positive = to the right) at sample i
       const ss = (a, b, v) => { const t = Math.max(0, Math.min(1, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
-      const grain = (backdrop, g, o = {}) => h.mat('noise', o, backdrop, g);
+      const grain = (backdrop, g, o = {}, k) => h.mat('noiseFine', o, backdrop, g, k); // k: strength of the fine grain (textures-plage.js)
       // sheet: a horizontal polygon [[x, z], …] at height y (holes = polygons removed); the texture repeats every t metres
       const sheet = (pts, y, m, t = 12, boreHoles = []) => {
         const V = a => a.map(([x, z]) => new THREE.Vector2(x, z)), c = V(pts), ho = boreHoles.map(V), allRes = [...c, ...ho.flat()], pos = [], uv = [], nor = [], idx = [];
@@ -33,9 +33,9 @@
       const line = (i0, i1, o, stepSec = 2) => { const l = []; for (let i = i0; i <= i1; i += stepSec) l.push(off(i, typeof o === 'function' ? o(S[i % N], i) : o)); return l; };
 
       // materials of the large masses (non-directional grain)
-      const mSand = grain('#cdbb8e', ['#c2ae80', '#d8c89e', '#b8a476']), mCircuit = grain('#a8946c', ['#9c8860', '#b4a078', '#8e7c58'], OFF), mGround = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462']);
+      const mSand = grain('#cdbb8e', ['#c2ae80', '#d8c89e', '#b8a476']), mCircuit = grain('#a8946c', ['#9c8860', '#b4a078', '#8e7c58'], OFF, 0.3), mGround = grain('#bdb48e', ['#a9a078', '#cfc8a6', '#8f9462']);
       const mSlab = h.mat('pavingQuinta'), mRock = grain('#ddd2b2', ['#c8bc98', '#ece2c6', '#b4a884'], { side: D }), mRockS = grain('#8e8a78', ['#7c7868', '#a09c88', '#5e6654'], { side: D });
-      const mSascab = grain('#d2c8ae', ['#c4baa0', '#ddd4bc'], OFF), mRiprap = grain('#a8a294', ['#8e887a', '#c0baac', '#787266'], { side: D }), mWood = h.mat('boards', { side: D }), mBoards = h.mat('boardsQuay');
+      const mSascab = grain('#d2c8ae', ['#c4baa0', '#ddd4bc'], OFF, 0.3), mRiprap = grain('#a8a294', ['#8e887a', '#c0baac', '#787266'], { side: D }), mWood = h.mat('boards', { side: D }), mBoards = h.mat('boardsQuay');
       const mSeaB = grain('#9fe3d2', ['#b4ecde', '#8ad8c8'], { smooth: 1 }), mSea = grain('#4fcbc3', ['#62d4cc', '#42bfb8'], { smooth: 1 }), mSeaL = grain('#146a8c', ['#1a7496', '#105e80'], { smooth: 1 });
       const mLagoon = grain('#5d9480', ['#689e8a', '#528874', '#7a9a6a'], { smooth: 1 }), mCenote = grain('#2fb3d0', ['#49c4dc', '#27a6c4'], { smooth: 1, transparent: true, opacity: 0.5, depthWrite: false });
       const mBg = h.mat('paint', { c: 0x0b3f63 }), mHigh = grain('#d8d2b8', ['#c4c0a4', '#e6e2cc']);
@@ -86,11 +86,11 @@
       h.ribbon(...tr(11, 20, 4, 18), s => -s.w, 0.02, s => s.w, 0.02, h.mat('pavingQuinta', { ...OFF, rep: [3, 1] }), 8); // town paving
       h.ribbon(i25 + 10, tT - i25 - 10, s => -s.w, 0.02, s => s.w, 0.02, mSascab, 12); h.ribbon(t1, ix - t1 + 14, s => -s.w, 0.02, s => s.w, 0.02, mSascab, 12); // cenote sascab
       // asphalt of the 307 and the dike (X-1, X-10): worn grey with grain, yellow edge line, broken centre line; laid by the scenery, without the shiny puddles of the engine's roadway
-      { const mBit = grain('#6e7378', ['#666b70', '#787d82', '#5e6368', '#747a80'], OFF), yellow = col2(0xe8b84a), whiteN = col2(0xe8e0c8);
+      { const mBit = grain('#6e7378', ['#666b70', '#787d82', '#5e6368', '#747a80'], OFF, 0.3), yellow = col2(0xe8b84a), whiteN = col2(0xe8e0c8);
         for (const [i0, n] of [[P(20) + 15, i25 + 10 - P(20) - 15], [P(42) - 4, (P(43) + 10 - P(42) + N) % N]]) { h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mBit, 12);
           for (const sg of [-1, 1]) h.ribbon(i0, n, s => sg * (s.w - 0.75), 0.04, s => sg * (s.w - 0.5), 0.04, yellow, 8); ribbonFn(i0, n, -0.12, 0.04, 0.12, 0.04, whiteN, i => i % 9 < 3, 8); } }
       // the mangrove path (the author's return): a light earth roadway edged with pile planks, at water level, instead of asphalt
-      { const i0 = ix + 14, n = P(42) - 4 - i0, mTerre = grain('#c2b48e', ['#b4a680', '#cec29e', '#a89a74'], OFF); h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mTerre, 12);
+      { const i0 = ix + 14, n = P(42) - 4 - i0, mTerre = grain('#a99a74', ['#9e8f6a', '#b4a680', '#94865f'], OFF, 0.3); h.ribbon(i0, n, s => -s.w, 0.025, s => s.w, 0.025, mTerre, 12);
         for (const sg of [-1, 1]) { h.ribbon(i0, n, s => sg * (s.w + 0.05), 0.4, s => sg * (s.w + 0.05), -0.5, mWood, 6); h.ribbon(i0, n, s => sg * (s.w + 0.05), 0.4, s => sg * (s.w + 0.5), 0.4, mWood, 6); h.ribbon(i0, n, s => sg * (s.w + 0.5), 0.4, s => sg * (s.w + 0.5), -1.2, mWood, 6); } }
       // embankment of the 307's crest (the road passes above the flat ground)
       for (const sg of [-1, 1]) ribbonFn(P(22), P(25) + 20 - P(22), s => sg * (s.w + 0.4), -0.03, s => sg * (s.w + 0.6 + 2.6 * Math.max(0, s.y)), s => -s.y - 0.07, mGround, i => S[i].y > 0.08, 12);
@@ -128,7 +128,7 @@
         const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx); g.computeVertexNormals();
         const me = new THREE.Mesh(g, m); h.scene.add(me); return me;
       };
-      const mBanner = h.mat('streamer', { emis: 1, transparent: true, alphaTest: 0.5, side: D }), mBulb = h.mat('bulbs', { emis: 1, transparent: true, alphaTest: 0.5, side: D, fog: false });
+      const mBanner = h.mat('streamerPlage', { emis: 1, transparent: true, alphaTest: 0.5, side: D }), mBulb = h.mat('bulbs', { emis: 1, transparent: true, alphaTest: 0.5, side: D, fog: false });
       const L = { poles: [], cocos: [], boxwood: [], crownList: [], trunks: [], lamp: [], polesE: [], palapas: [], stalls: [], benches: [], mangroves: [], flamingos: [], boats: [], cubes: [], pennants: [], pickups: [], motorbikes: [], deckchairs: [], pools: [] };
       // life: LIFE = the functions (dt, car) of the tick; what moves carries userData.dyn (outside the engine's merge, outside the final re-cut). The lists below are filled by the fixed scenery and animated further down
       const LIFE = [], PEOPLE = [], PINE = [], PIER = [], D0 = new THREE.Object3D(), dyn = o => { o.userData.dyn = 1; o.frustumCulled = false; return o; }; D0.rotation.order = 'YXZ';
@@ -158,7 +158,7 @@
       // ---------- the feria square (right of the road, between the street and the hall): stalls at the edge, chapel, kiosk, stage, big wheel, carousel ----------
       placeRow(i17 - 2, i18 - 2 - i17 + 2, 1, 3, (s, i) => { const [x, z] = off(i, s.w + 2.6); L.stalls.push([x, s.y - 0.05, z, face(s, 1), 1, 1, 1, PARTY[i % 3]]); return 4.2; });
       { const s = S[i17 + 1], [x, z] = off(i17 + 1, s.w + 13); pose('chapel', x, -0.05, z, face(s, 1)); } // at the edge of the street, where it is seen on arrival
-      pose('kiosk', 590, -0.05, 250, -Math.PI / 2); pose('scene', 578, -0.05, 276, -Math.PI / 2);
+      pose('kioskPlage', 590, -0.05, 250, -Math.PI / 2); pose('scene', 578, -0.05, 276, -Math.PI / 2);
       pose('bigWheel', 628, -0.05, 244, Math.PI / 2).scale.setScalar(1.6); pose('carousel', 612, -0.05, 278); // the big wheel (38 m) rises above the roofs: visible from the street. Fixed, no animation: up close, the wheel and the carousel are out of the racing camera's view
       inst(h, h.geo('roof4'), col(0xc8452e, { side: D }), [[590, 4.7, 250, 0, 5.8, 2.6, 5.8]]); inst(h, h.geo('roofPalapa'), h.mat('toldo', { side: D }, '#e8468c', '#f4ecd8'), [[612, 5.4, 278, 0, 5.6, 2.2, 5.6]]);
       for (let k = 0; k < 14; k++) { const x = 560 + (k % 7) * 13 + rnd() * 3, z = 212 + (k / 7 | 0) * 66 + rnd() * 4; tree(x, z, 9 + rnd() * 3, 7 + rnd() * 2, 0x3f7a32); }
@@ -225,7 +225,7 @@
       for (let k = 0; k < 150; k++) { const a = rnd() * 3.14, r = 650 + rnd() * 700; bush(320 + Math.cos(a) * r, 380 + Math.sin(a) * r, 22 + rnd() * 18, 9 + rnd() * 7, -1); }
 
       // ---------- the common landmarks, at the centre of the loop (D-1) ----------
-      pose('waterTower', 300, -0.05, 168, Math.PI); pose('antenna', 440, -0.05, 300);
+      pose('waterTowerPlage', 300, -0.05, 168, Math.PI); pose('antenna', 440, -0.05, 300);
 
       // ---------- the continuous line (T-2): a line of poles and banners to the right of the road all round the loop; bulb garland in the cave ----------
       { const pts = [], amp = [], o = s => s.w + 1.4; let lastIdx = -99;
@@ -346,7 +346,7 @@
         { const xs = HALL.map(p => p[0]), zs = HALL.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), dx = Math.max(...xs) - x0, dz = Math.max(...zs) - z0;
           for (let k = 0; k < 420; k++) { const x = x0 + rnd() * dx, z = z0 + rnd() * dz; if (!within(HALL, x, z) || within(PLG, x, z) || gap(x, z) < 1.5) continue; const sc = 0.7 + rnd() * rnd() * 2.2; crag(x, -9.1 + sc * 0.5 + rnd() * 0.9, z, sc); } }
         for (let k = 0; k < FRONT.length; k += 2) crag(FRONT[k][0] + (rnd() - 0.5) * 3, -7.3 + rnd() * 0.5, FRONT[k][1] + (rnd() - 0.5) * 3, 0.6 + rnd() * 0.9);
-        tinted(inst(h, h.geo('boulder'), SKIN.leafKey, ROCK), ROCK);
+        tinted(inst(h, h.geo('boulderPlage'), SKIN.leafKey, ROCK), ROCK);
 
         // stalactites: thick rock cones (no needles: they shimmered), set into the vault, never lower than 6.6 m above the walkway; ordinary rock material, lit like the rest
         { const stall = [], xs = HALL.map(p => p[0]), zs = HALL.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), dx = Math.max(...xs) - x0, dz = Math.max(...zs) - z0;
@@ -453,7 +453,7 @@
         const swellRolls = [0, 1, 2, 3].map(k => wave(plan(1800, 1), mEc('foamWide', k), 300, -0.04, -100)), backwash = wave(plan(1800, 1), mEc('foamSea', 5), 300, -0.03, -44);
         LIFE.push(() => { swellRolls.forEach((o, k) => { const p = (TV / 15 + k / 4) % 1; o.position.z = -130 + 85 * p; o.scale.z = 4 + 7 * p; o.material.opacity = Math.min(1, p * 5, (1 - p) * 5); });
           const r = Math.sin(TV * 0.85); backwash.position.z = -44.4 + 2.1 * r; backwash.scale.z = 3.4 + 0.9 * r; });
-        const pl = PIER.filter(p => p[2] < -46 && ![505, 515, 525].includes(p[0]))   /* only the edge piles: under the deck nobody sees them */, ec = dyn(inst(h, h.geo('disc'), h.mat('paint', { c: 0xffffff, emis: 1, transparent: true, opacity: 0.5, depthWrite: false }), pl.map(p => [p[0], -0.1, p[2], 0, 1]))); ec.castShadow = ec.receiveShadow = false;
+        const pl = PIER.filter(p => p[2] < -46 && ![505, 515, 525].includes(p[0]))   /* only the edge piles: under the deck nobody sees them */, ec = dyn(inst(h, h.geo('discPlage'), h.mat('paint', { c: 0xffffff, emis: 1, transparent: true, opacity: 0.5, depthWrite: false }), pl.map(p => [p[0], -0.1, p[2], 0, 1]))); ec.castShadow = ec.receiveShadow = false;
         LIFE.push(() => { pl.forEach((p, k) => met([ec], k, p[0], -0.1, p[2], 0, 0.8 + 0.55 * (0.5 + 0.5 * Math.sin(TV * 1.3 + k * 1.7)))); ec.instanceMatrix.needsUpdate = true; });
       }
 
@@ -467,14 +467,14 @@
       { // kites above the sand square (PL-4): moored to the lanchas and the lifeguard tower (the square's piers), they pull southwards; line, diamond, tail rippling
         const ca = Math.cos(PL.a), sa = Math.sin(PL.a), A = PL.piers.filter(p => p[4] === 'lancha' || p[4] === 'torre').map(([px, pz, , , label]) => [PX + px * ca + pz * sa, label === 'torre' ? 4.3 : 1.2, PZ - px * sa + pz * ca]), n = A.length, NQ = 9;
         const CV = [PINK, YELLOW, TEAL, 0xff6a2b, 0x7a4bd6, 0xf6f2e8], whiteN = col(0xffffff, { side: D, emis: 1 }), lc = A.map((a, k) => [0, -99, 0, 0, 1, 1, 1, CV[k % 6]]), lq = A.flatMap((a, k) => Array.from({ length: NQ }, (_, j) => [0, -99, 0, 0, 1, 1, 1, CV[(k + j) % 6]]));
-        const cloth = dyn(tinted(inst(h, h.geo('boxMesh', 3, 3, 0.05), whiteN, lc), lc)), queue = dyn(tinted(inst(h, h.geo('boxMesh', 0.4, 0.4, 0.04), whiteN, lq), lq)), wire = dyn(inst(h, h.geo('boxMesh', 1, 0.04, 0.04), col(0xf6f2e8), lc));
+        const cloth = dyn(tinted(inst(h, h.geo('boxMesh', 3, 3, 0.05), whiteN, lc), lc)), tailEnd = dyn(tinted(inst(h, h.geo('boxMesh', 0.4, 0.4, 0.04), whiteN, lq), lq)), wire = dyn(inst(h, h.geo('boxMesh', 1, 0.04, 0.04), col(0xf6f2e8), lc));
         LIFE.push(() => { A.forEach(([ax, ay, az], k) => { const H = 20 + (k * 5) % 10, x = ax + 2.6 * Math.sin(TV * 0.45 + k * 1.3), y = ay + H + 1.3 * Math.sin(TV * 0.8 + k), z = az + 1.6 * H + 1.6 * Math.sin(TV * 0.6 + k * 2);
             met([cloth], k, x, y, z, 0, 1, 1, -0.5, 0.785 + 0.12 * Math.sin(TV * 1.1 + k)); tense(wire, k, ax, ay, az, x, y - 1.3, z + 0.6);
-            for (let j = 0; j < NQ; j++) met([queue], k * NQ + j, x + 0.1 * (j + 1) * Math.sin(TV * 3.2 - j * 0.9 + k), y - 1.8 - j * 0.6, z + 0.9 + j * 0.33, 0, 1, 1, -0.5, TV * 2 + j); });
-          upd([cloth, queue, wire]); });
+            for (let j = 0; j < NQ; j++) met([tailEnd], k * NQ + j, x + 0.1 * (j + 1) * Math.sin(TV * 3.2 - j * 0.9 + k), y - 1.8 - j * 0.6, z + 0.9 + j * 0.33, 0, 1, 1, -0.5, TV * 2 + j); });
+          upd([cloth, tailEnd, wire]); });
       }
       { // under the hall (HA-5): a low piñata bursts into confetti as the car passes
-        const iP = i18 + 21, sP = S[iP]; PINE.push([sP.x, sP.y + 5.4, sP.z, 0, 1.7, 1.7, 1.7, PINK]); const kP = PINE.length - 1, pine = dyn(tinted(inst(h, h.geo('buoy'), col(0xffffff), PINE), PINE));
+        const iP = i18 + 21, sP = S[iP]; PINE.push([sP.x, sP.y + 5.4, sP.z, 0, 1.7, 1.7, 1.7, PINK]); const kP = PINE.length - 1, pine = dyn(tinted(inst(h, h.geo('buoyPlage'), col(0xffffff), PINE), PINE));
         const conf = grains(220, () => [sP.x + rand(1.5), sP.y + 5.4 + rand(1.2), sP.z + rand(1.5), rand(7), 1 + Math.random() * 4, rand(7), 2.2], { imgSize: 0.16, hue: [[0.91, 0.27, 0.55], [0.12, 0.71, 0.66], [0.95, 0.76, 0.19], [1, 1, 1]], g: 7 });
         let bursts = 0;
         LIFE.push((dt, car) => { if (!bursts && nearby(car, iP, 9)) { bursts = 1; conf.salve(); cache([pine], kP); pine.instanceMatrix.needsUpdate = true; } else if (bursts && isFar(car, iP)) { bursts = 0; const p = PINE[kP]; met([pine], kP, p[0], p[1], p[2], p[3], p[4]); pine.instanceMatrix.needsUpdate = true; } });
@@ -549,10 +549,10 @@
       }
       // ---------- batches: one drawing pass per shape ----------
       inst(h, h.geo('poleWood'), mWood, L.poles); insts(h, 'coconutPalm', SKIN, L.cocos, { a: [0] }); tinted(inst(h, h.geo('bush'), grain('#ffffff', ['#e8e8e8', '#d8d8d8']), L.boxwood), L.boxwood);
-      tinted(inst(h, h.geo('canopy'), grain('#ffffff', ['#e4e4e4', '#cacaca']), MANGROVE), MANGROVE);
+      tinted(inst(h, h.geo('canopyPlage'), grain('#ffffff', ['#e4e4e4', '#cacaca']), MANGROVE), MANGROVE);
       insts(h, 'ceiba', SKIN, ARB[0], { tintMat: 'leafKey' }); insts(h, 'treeSelva', SKIN, ARB[1], { tintMat: 'leafKey' });
-      insts(h, 'lamppost', SKIN, L.lamp); insts(h, 'poleElec', SKIN, L.polesE); insts(h, 'bench', SKIN, L.benches); insts(h, 'stallPlaya', SKIN, L.stalls, { tintMat: 'cloth' }); insts(h, 'mangroveTree', SKIN, L.mangroves);
-      insts(h, 'boat', SKIN, L.boats, { tintMat: 'bandStrip' }); tinted(inst(h, h.geo('boxMesh', 1, 1, 1), mStucco, L.cubes), L.cubes); tinted(inst(h, h.geo('pennant'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), L.pennants), L.pennants).castShadow = true;
+      insts(h, 'lamppost', SKIN, L.lamp); insts(h, 'poleElec', SKIN, L.polesE); insts(h, 'benchPlage', SKIN, L.benches); insts(h, 'stallPlaya', SKIN, L.stalls, { tintMat: 'cloth' }); insts(h, 'mangroveTree', SKIN, L.mangroves);
+      insts(h, 'boatPlage', SKIN, L.boats, { tintMat: 'bandStrip' }); tinted(inst(h, h.geo('boxMesh', 1, 1, 1), mStucco, L.cubes), L.cubes); tinted(inst(h, h.geo('pennant'), h.mat('papelPicado', { side: D, alphaTest: 0.5 }), L.pennants), L.pennants).castShadow = true;
       for (const o of h.scene.children.slice(n0)) if (o.isInstancedMesh && o.count > 120 && !o.userData.dyn) {
         const cells = new Map(), M4 = new THREE.Matrix4(), C = new THREE.Color();
         for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M4); const k = Math.floor(M4.elements[12] / 350) + ':' + Math.floor(M4.elements[14] / 350); if (!cells.has(k)) cells.set(k, []); cells.get(k).push(i); }
