@@ -7,12 +7,15 @@
   // gable roof over a w × d body whose eaves are at ht, ridge along X: two tiled slopes and the two gable ends in the wall tint
   const roof = (w, ht, d, tint, rise = d * 0.22, over = 0.6) => { const a = Math.atan(rise / (d / 2)), sl = Math.hypot(rise, d / 2);
     return [...pair(sd => ['tile', w + over * 2, 0.35, sl + over, 0, ht + rise / 2, sd * d / 4, [sd * a, 0, 0]]), [tint, w - 0.1, rise * 0.5, d * 0.5, 0, ht + rise * 0.25, 0], [tint, w - 0.1, rise * 0.25, d * 0.22, 0, ht + rise * 0.62, 0]]; };
+  // window on the front (-Z) of a body d deep, at (x, y): a pale frame, the dark pane, a stone sill; door: a pale frame, a wooden leaf
+  const win = (x, y, d, w = 1.1, ht = 1.3) => [['white', w + 0.4, ht + 0.4, 0.16, x, y, -d / 2 - 0.02], ['dark', w, ht, 0.24, x, y, -d / 2 - 0.02], ['stone', w + 0.6, 0.18, 0.4, x, y - ht / 2 - 0.2, -d / 2 - 0.1]];
+  const door = (x, d, w = 1.3, ht = 2.3) => [['white', w + 0.4, ht + 0.2, 0.16, x, ht / 2 + 0.1, -d / 2 - 0.02], ['wood', w, ht, 0.24, x, ht / 2, -d / 2 - 0.02]];
   Object.assign(SHAPES, {
-    // house, w along the road × ht to the eaves × d deep, tint = its plaster (cream, ochre, coral, white): stone foot, tiled gable roof, a door and windows on the front and on both ends
+    // house, w along the road × ht to the eaves × d deep, tint = its plaster (cream, ochre, coral, white): stone foot, tiled gable roof, a wooden door and framed windows with stone sills on the front, a plain window on both ends
     maisonVolcan: (w = 12, ht = 6, d = 9, tint = 'cream') => { const nw = Math.max(2, Math.round(w / 4)), up = ht > 5.5;
       return [[tint, w, ht + 3, d, 0, (ht - 3) / 2, 0], ['stone', w + 0.3, 3.8, d + 0.3, 0, -1.1, 0], ...roof(w, ht, d, tint),
-        ['dark', 1.3, 2.3, 0.2, -w / 2 + 2, 1.15, -d / 2 - 0.05],
-        ...Array.from({ length: nw }, (_, i) => -w / 2 + (i + 0.5) * w / nw).flatMap(x => [...(Math.abs(x + w / 2 - 2) < 1.6 ? [] : [['dark', 1.1, 1.3, 0.2, x, 1.7, -d / 2 - 0.05]]), ...(up ? [['dark', 1.1, 1.3, 0.2, x, ht - 1.6, -d / 2 - 0.05]] : [])]),
+        ...door(-w / 2 + 2, d),
+        ...Array.from({ length: nw }, (_, i) => -w / 2 + (i + 0.5) * w / nw).flatMap(x => [...(Math.abs(x + w / 2 - 2) < 1.6 ? [] : win(x, 1.7, d)), ...(up ? win(x, ht - 1.6, d) : [])]),
         ...pair(sx => ['dark', 0.2, 1.3, 1.1, sx * (w / 2 + 0.05), up ? ht - 1.6 : 1.7, 0])]; },
     // harbour shed, w along the road × ht × d deep: concrete walls, a single low tiled gable, a wide dark doorway on the front
     hangarVolcan: (w = 50, ht = 7, d = 18) => [['concrete', w, ht + 3, d, 0, (ht - 3) / 2, 0], ...roof(w, ht, d, 'concrete', d * 0.14, 0.8),

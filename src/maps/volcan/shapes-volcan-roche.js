@@ -18,14 +18,14 @@
     cylVolcan: (r0 = 1, r1 = 1, ht = 1, n = 10) => SHAPES.ringsVolcan(n, [[0, r0], [ht, r1]], true),
     // the black needle of La Couronne, ht high, r at the foot: a pointed spire of basalt, 7 sides, off-centre shoulders, a scree skirt
     aiguilleVolcan: (ht = 105, r = 24, seed = 3) => SHAPES.ringsVolcan(7, [[-6, r * 1.25], [ht * 0.1, r], [ht * 0.32, r * 0.72], [ht * 0.58, r * 0.5], [ht * 0.8, r * 0.3], [ht * 0.94, r * 0.14], [ht, r * 0.04]], true, 0.2, seed),
-    // rock outcrop or fallen block, w × ht × d: one broken block, 7 sides, strongly irregular
-    rocherVolcan: (w = 10, ht = 6, d = 10, seed = 0) => SHAPES.ringsVolcan(7, [[-2, w * 0.6, d * 0.6], [ht * 0.55, w * 0.5, d * 0.5], [ht, w * 0.3, d * 0.34]], true, 0.22, seed),
+    // rock outcrop or fallen block, w × ht × d: one broken block, 7 sides, strongly irregular; its foot goes 0.6 × w into the ground, so that it holds on a slope
+    rocherVolcan: (w = 10, ht = 6, d = 10, seed = 0) => SHAPES.ringsVolcan(7, [[-Math.max(4, w * 0.6), w * 0.66, d * 0.66], [ht * 0.55, w * 0.5, d * 0.5], [ht, w * 0.3, d * 0.34]], true, 0.22, seed),
     // sea stack, r at the waterline, ht above it: steep sides, a broken top; goes down 12 m under the origin (the seabed)
     ilotVolcan: (r = 17, ht = 55, seed = 0) => SHAPES.ringsVolcan(7, [[-12, r * 1.3], [2, r], [ht * 0.5, r * 0.72], [ht * 0.85, r * 0.45], [ht, r * 0.2]], true, 0.2, seed),
     // scoria cone, r at the foot, ht high, with its small crater: 9 sides, slightly irregular
-    coneVolcan: (r = 17, ht = 24, seed = 0) => SHAPES.ringsVolcan(9, [[-3, r * 1.15], [ht * 0.55, r * 0.55], [ht, r * 0.3], [ht * 0.82, r * 0.14]], true, 0.12, seed),
+    coneVolcan: (r = 17, ht = 24, seed = 0) => SHAPES.ringsVolcan(9, [[-r * 0.7, r * 1.5], [ht * 0.55, r * 0.55], [ht, r * 0.3], [ht * 0.82, r * 0.14]], true, 0.12, seed),
     // flat slab with an irregular edge, r in radius, ht thick: plate of crust, patch of cooled lava, slag field
-    dalleVolcan: (r = 10, ht = 1, seed = 0, n = 9) => SHAPES.ringsVolcan(n, [[-2, r * 1.04], [ht, r]], true, 0.18, seed),
+    dalleVolcan: (r = 10, ht = 1, seed = 0, n = 9) => SHAPES.ringsVolcan(n, [[-r * 0.3, r * 1.04], [ht, r]], true, 0.18, seed),
     // column of steam, ht high: narrow at the vent, wider above, open (give a translucent double-sided material); static
     vapeurVolcan: (ht = 26, r = 1.2) => SHAPES.ringsVolcan(6, [[0, r], [ht * 0.4, r * 2.4], [ht, r * 4.5]], false, 0.25, 1),
     // far island on the horizon, L long along X, crests up to H, D deep: a jagged ridge with a front and a back slope, falling into the sea at both ends. A silhouette: no detail

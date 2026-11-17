@@ -49,8 +49,8 @@
       veil(g, 0.14, () => { for (let y = 0; y < 32; y += 4) R(g, rand() < 0.5 ? '#000' : '#fff', 0, y, 32, 4); });
       veil(g, 0.4, () => { for (let y = 0; y < 32; y += 4) R(g, '#2a1c10', 0, y, 32, 1); for (let i = 0; i < 8; i++) R(g, '#2a1c10', rand() * 31 | 0, rand() * 31 | 0, 1, 1); }); }, 4],
     // wall and vault of the galleries, cut in the rock (the settings of the engine's tunnel palette are ignored): rough dark basalt, tool marks, a cable run at 3 m; 8 m per tile
-    galerieVolcan: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#3a3a40', 0, 0, 64, 64);
-      veil(g, 0.2, () => { for (let i = 0; i < 26; i++) R(g, i & 1 ? '#000' : '#8a8a90', rand() * 54 | 0, rand() * 58 | 0, 4 + rand() * 10 | 0, 2 + rand() * 6 | 0); });
+    galerieVolcan: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#1f2024', 0, 0, 64, 64);
+      veil(g, 0.2, () => { for (let i = 0; i < 26; i++) R(g, i & 1 ? '#000' : '#5a5a62', rand() * 54 | 0, rand() * 58 | 0, 4 + rand() * 10 | 0, 2 + rand() * 6 | 0); });
       veil(g, 0.3, () => { for (let i = 0; i < 40; i++) R(g, '#000', rand() * 63 | 0, rand() * 58 | 0, 1, 2 + rand() * 6 | 0); }); R(g, '#14161a', 0, 38, 64, 1); grain(g, o, 300, 0.16); }, 8],
   });
 })();
