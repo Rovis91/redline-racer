@@ -53,6 +53,7 @@
     givre: [['bandpass', 320, 3, 0.05, 0.07, 0.8], ['lowpass', 200, 0.7, 0.05, 0.04, 0.5]], // wind whistling in the firs (+ distant bells)
     barrage: [['bandpass', 520, 0.5, 0.035, 0.09, 0.6], ['lowpass', 150, 0.7, 0.07]], // valley wind, water in the distance; the place sounds (fall, turbines, trains…) are placed by the scenery: SOUND.spots
     perse: [['bandpass', 420, 0.6, 0.03, 0.07, 0.6], ['lowpass', 150, 0.7, 0.05]], // warm westerly wind over the plain (+ the beds and events per zone: AMBZ)
+    egee: [['bandpass', 420, 0.6, 0.035, 0.07, 0.6], ['lowpass', 190, 0.7, 0.07, 0.09, 0.6]], // the meltemi in the air, the swell on the rocks, 11 s (+ the beds and events per zone: AMBZ; the place sounds are placed by the scenery: SOUND.spots)
   };
 
   // Beds per zone, in addition to the map's bed: de, a = fractions of the lap between which the bed sounds (open air); tun = the vault's bed, which sounds in a tunnel. c = layers, as AMB.
@@ -61,6 +62,11 @@
     perse: [{ de: 0.632, a: 0.72, c: [['highpass', 3200, 0.5, 0.02], ['bandpass', 1500, 0.8, 0.03, 0.9, 0.4]] }, // the garden: running water from the cascades and the canal
       { tun: 1, c: [['bandpass', 520, 0.7, 0.07, 0.11, 0.4], ['bandpass', 1150, 0.9, 0.035, 0.17, 0.5], ['lowpass', 160, 0.7, 0.05]] }, // the covered bazaar: the hubbub under the vault
       { de: 0.872, a: 0.994, c: [['bandpass', 600, 0.8, 0.045, 0.13, 0.4], ['bandpass', 1300, 1, 0.02, 0.19, 0.5]] }], // the bazaar street: the same, drier, in the open air
+    egee: [...[[0.934, 1], [0, 0.138]].map(([de, a]) => ({ de, a, c: [['lowpass', 380, 0.7, 0.07, 0.25, 0.7], ['bandpass', 2400, 1.2, 0.012, 0.6, 0.9], ['bandpass', 140, 0.8, 0.03, 0.4, 0.5]] })), // the harbour, either side of the line: wash on the quay, rigging, a distant diesel
+      { de: 0.138, a: 0.426, c: [['highpass', 6200, 0.7, 0.006, 55, 0.9], ['highpass', 5200, 0.7, 0.0045, 0.13, 0.9], ['bandpass', 600, 0.6, 0.02, 0.1, 0.6]] }, // the dry slope of the Ascension: cicadas (the chapada recipe), wind in the thyme
+      { de: 0.426, a: 0.596, c: [['highpass', 6200, 0.7, 0.007, 55, 0.9], ['bandpass', 500, 0.7, 0.014, 0.08, 0.5], ['bandpass', 900, 1.5, 0.008, 0.3, 0.9]] }, // the plateau: sheltered wind, cicadas
+      { de: 0.596, a: 0.745, c: [['bandpass', 450, 0.6, 0.045, 0.09, 0.6], ['lowpass', 300, 0.7, 0.05, 0.07, 0.5]] }, // the Balcon: open wind, the sea far below, no cicadas
+      { de: 0.745, a: 0.934, c: [['highpass', 6200, 0.7, 0.006, 55, 0.9], ['bandpass', 600, 0.6, 0.02, 0.1, 0.6], ['lowpass', 220, 0.7, 0.05, 0.1, 0.6]] }], // the terraces of the Descente: cicadas again, the sea coming closer
   };
   const gain = (v, dest) => { const g = AC.createGain(); g.gain.value = v; g.connect(dest); return g; };
   const filt = (type, f, q, dest) => { const b = AC.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.connect(dest); return b; };
@@ -531,6 +537,8 @@
     chopper: d => { noiseV('lowpass', 180, 0.8, 0.9, d, 11, 0.9); },
     forest: d => { noiseV('bandpass', 620, 0.5, 0.5, d, 0.11, 0.6); noiseV('highpass', 5000, 0.5, 0.05, d, 0.07, 0.8); }, // wind in the larches
     whoosh: d => { noiseV('lowpass', 260, 0.6, 0.8, d); }, // tunnel ventilation
+    murmurEgee: d => { noiseV('bandpass', 520, 0.7, 0.6, d, 0.11, 0.4); noiseV('bandpass', 1150, 0.9, 0.3, d, 0.17, 0.5); }, // egee: the voices of a café terrace
+    beesEgee: d => { oscV('sawtooth', 210, 0.3, filt('bandpass', 620, 1.5, d), 13, 9); noiseV('bandpass', 300, 3, 0.3, d, 9, 0.4); }, // egee: a row of beehives
     loudspeaker: d => { const bp = filt('bandpass', 1300, 2.5, d); for (const f of [392, 494, 587]) oscV('square', f, 0.12, bp, 5.5, 3); noiseV('highpass', 3000, 0.5, 0.03, d); }, // a street loudspeaker: a nasal chord that wobbles
   };
   function spots(id, L) { for (const l of SPOTS) if (l.g) { l.g.disconnect(); l.g = null; } spotsId = id; SPOTS = L || []; }
@@ -555,6 +563,11 @@
     clarion: (t, d) => { const lp = filt('lowpass', 2200, 1, d); [392, 523, 659, 523, 659].forEach((f, k) => noteL(t + k * 0.24, 0.22, 0.2, lp, 'square', f)); },
     sizzle: (t, d) => { const g = AC.createGain(), l = AC.createOscillator(); g.connect(d); l.frequency.value = 100; l.connect(gain(0.5, g.gain)); l.start(t); l.stop(t + 0.9); gustB(t, 0.8, 0.25, g, 'highpass', 5200); }, // a high-voltage line
     hammer: (t, d) => { for (let k = 0; k < 3; k++) noteL(t + k * 0.34, 0.12, 0.2, d, 'sine', 1900, 1750); },
+    halyardEgee: (t, d) => { const f = 1700 * (0.96 + Math.random() * 0.08); for (const [k, v] of [[1, 0.5], [2.7, 0.25], [4.1, 0.12]]) osc('sine', f * k, t, 0.05, v, d); }, // egee: a halyard tinks on a mast
+    goatEgee: (t, d) => { for (const [f, dt] of [[1100, 0], [1480, 0.09]]) osc('triangle', f * (0.98 + Math.random() * 0.04), t + dt, 0.09, 0.5, d); }, // egee: a goat bell
+    whumpEgee: (t, d) => { noteL(t, 0.1, 0.8, d, 'sine', 62, 50); gustB(t, 0.09, 0.4, d, 'lowpass', 180); }, // egee: a mill sail passes the tower
+    bellTownEgee: (t, d) => { for (const [k, v] of [[1, 0.6], [2, 0.3], [2.76, 0.22], [5.4, 0.08]]) osc('sine', 330 * k, t, 2.5 / Math.sqrt(k), v, d); }, // egee: the bell of the town church
+    bellChapelEgee: (t, d) => { for (const [k, v] of [[1, 0.6], [2, 0.3], [2.76, 0.22], [5.4, 0.08]]) osc('sine', 520 * k, t, 1.8 / Math.sqrt(k), v, d); }, // egee: the chapel's, higher
     bird: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.4, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
   };
   function spotHit(label, p, vol = 1, r = 200) {
@@ -643,6 +656,13 @@
       o.connect(filt('lowpass', 1200, 0.7, g)); g.connect(ambBed); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 1.5); g.gain.linearRampToValueAtTime(0, t + 4); o.start(t); o.stop(t + 4.1); return rnd(25, 50); } // distant siren
     if (id === 'stade') { roar(t, 1); return rnd(6, 12); }
     if (id === 'givre') { nowPlaying((BELLS && BELLS.ac === AC ? BELLS : BELLS = Object.assign(bells(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // sleigh bells, in the distance
+    if (id === 'egee') { const p = ambPos, port = p < 0.138 || p >= 0.934, balcon = p >= 0.596 && p < 0.745; if (p > 0.2 && p < 0.5) ambCall = 0; // the place decides the event (fractions of the lap, as AMBZ.egee)
+      if (balcon && !ambCall) { ambCall = 1; const lp = filt('lowpass', 420, 0.7, ambEvG); for (const f of [87, 131]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(g); g.connect(lp);
+          g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + 0.4); g.gain.setValueAtTime(0.03, t + 1.7); g.gain.linearRampToValueAtTime(0, t + 2.4); o.start(t); o.stop(t + 2.5); } return rnd(5, 9); } // the ferry's horn from the horizon, once per lap
+      if (port || balcon) { const pan = AC.createStereoPanner(), bp = filt('bandpass', 1500, 1.5, pan), v = Math.random() * 3 | 0, f = rnd(1600, 2000); pan.pan.value = rnd(-0.8, 0.8); pan.connect(ambEvG); // a gull, left or right, three calls: one long falling cry, two short ones, a laugh
+        for (let i = 0, n = [1, 2, 4][v]; i < n; i++) { const d = [0.36, 0.2, 0.11][v], o = osc('sawtooth', f, t + i * (d + 0.06), d, 0.05, bp); o && o.frequency.exponentialRampToValueAtTime(f * (v === 2 ? 0.8 : 0.5), t + i * (d + 0.06) + d * 0.85); } return rnd(6, 14); }
+      if (p < 0.426) { const c = nz(t, 2, 0.05, ambEvG, 'bandpass', 420, 0.6, nbuf, 0.7); c && c.frequency.linearRampToValueAtTime(620, t + 1); return rnd(9, 16); } // the Ascension: a gust of the meltemi, 2 s
+      return 8; }
     if (id === 'perse') { const p = ambPos, D = ambEvG; // the place decides the event: fractions of the lap, or the vault (ambUnder)
       if (ambUnder > 0.5) { if (Math.random() < 0.6) { const f = rnd(1900, 2700), n = 3 + Math.random() * 4 | 0; for (let i = 0; i < n; i++) osc('triangle', f * (i % 2 ? 1.5 : 1), t + i * 0.19, 0.09, 0.035, D); } // a coppersmith's hammer
         else { const o = osc('sawtooth', rnd(170, 230), t, 0.9, 0.03, filt('bandpass', 950, 2, D)); o && o.frequency.linearRampToValueAtTime(rnd(240, 300), t + 0.5); } return rnd(0.8, 2.2); } // or a merchant's call
@@ -736,6 +756,7 @@
     barrage: { slap: 0.14, sl: 0.12, intoWall: 0.5, rv: 0.1, dur: 2, lp: 3000 }, // steep valley: the echo returns from afar
     givre: { slap: 0.06, sl: 0.04, intoWall: 0.2, rv: 0.03, dur: 0.8, lp: 2000 }, // snow absorbs the sound
     terre: { slap: 0.12, sl: 0.06, intoWall: 0, rv: 0.03, dur: 1, lp: 2500 }, // open scrubland
+    egee: { slap: 0.17, sl: 0.12, intoWall: 0.35, rv: 0.04, dur: 1.3, lp: 3400 }, // open air; the cliff of the Ascension and the Balcon returns one short echo
     perse: { slap: 0.045, sl: 0.22, intoWall: 0.7, rv: 0.09, dur: 2.6, lp: 3400, spots: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // earth facades; spots = [from, to, factor] on the place's room, in fractions of the lap: the passage under the Porte des Nations, the hall of a hundred columns
     attempt: { slap: 0.04, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 1, lp: 3000 },
   };

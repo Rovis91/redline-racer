@@ -49,6 +49,9 @@
       for (let x = 0; x < 16;) { const w = 2 + (rand() * 3 | 0); veil(g, 0.16, () => R(g, rand() < 0.5 ? '#000' : '#fff', x, 0, w, 16)); veil(g, 0.4, () => R(g, '#000', x, 0, 1, 16)); x += w; } grain(g, o, 14, 0.2, 16); }, 2],
     // awning canvas, c = stripe colour: white and colour stripes 50 cm wide, sun-faded; 2 m per tile
     toileEgee: (c = '#1c6eb0') => [16, 16, (g, o) => { const { R } = o; R(g, '#fbf3e5', 0, 0, 16, 16); for (let x = 0; x < 16; x += 8) R(g, c, x, 0, 4, 16); grain(g, o, 10, 0.1, 16); }, 2],
+    // foam at the foot of a wall or a rock (v = 0 against the stone, 1 offshore): a torn white fringe on a transparent background, thinning out to a few flecks; pale sea-green, not pure white. 8 m per tile along the stone
+    ecumeEgee: () => [64, 16, (g, o) => { const { R, rand } = o; for (let x = 0; x < 64; x++) { const a = 5 + (Math.sin(x * 0.4) * 2 + rand() * 4 | 0); R(g, '#e4f0ea', x, 16 - a, 1, a); if (rand() < 0.5) R(g, '#c4e6e0', x, 16 - a - 1 - (rand() * 3 | 0), 1, 1); }
+      for (let i = 0; i < 16; i++) R(g, '#d4ece6', rand() * 64 | 0, rand() * 8 | 0, 2, 1); }, 8],
     // foliage, c = its tint (olive grey-green, cypress dark green, bougainvillea magenta): leaf speckle in two tones; 2 m per tile
     feuillageEgee: (c = '#76815a') => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 16, 16);
       veil(g, 0.3, () => { for (let i = 0; i < 46; i++) R(g, i % 3 ? '#000' : '#fff', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],

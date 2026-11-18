@@ -1,7 +1,7 @@
 // "egee", zone 1: Port (PK 0 to 650, 8 to 20 m, 16 m wide), and the harbour town that closes the lap from PK 4390. Tools (set, box, house) are described in scenery-egee.js.
 // Island side: the town. A continuous lime front behind a 6 m pavement, then five more rows up the slope with 8 m paved streets between them, small squares where a house is missing, the town church in the fourth row;
 // two warehouses, then rock. Third pass: café terraces, parked scooters and pick-ups, bougainvillea on the pavement of the front; drying nets, buoys, lobster pots and upturned dinghies on the quay. Sea side: the quay, three pontoons and their boats, the mole and the lighthouse. This is the only town of the island: the plateau above keeps a chapel, a few houses and the mills.
-(window.EGEE = window.EGEE || {}).port = ({ h, THREE, MAT, N, SEA, LAP, smp, set, box, house, plant, hsh }) => {
+(window.EGEE = window.EGEE || {}).port = ({ h, THREE, MAT, N, SEA, LAP, smp, set, box, house, plant, hsh, boat }) => {
   const GREEN = { ...MAT, lime: MAT.limeV, bleu: MAT.vert, toile: MAT.toileR }, HT = [8, 12, 8, 11, 9, 12, 8, 10], VAR = [4, 6, 5, 8, 6, 1, 20, 0];
   for (let pk = 4476, k = 0; pk < LAP + 345; pk += 16.5, k++) house(pk, -1, 6 + hsh(k) * 1.5, 12, HT[k % 8], 16, VAR[k % 8], k % 3 === 1 ? GREEN : MAT);                 // the front: no gap, uneven heights
   for (let r = 1; r <= 5; r++) for (let pk = 4390, k = 0; pk < LAP + 535; pk += 15.5, k++) { const p = pk % LAP;                                                          // the streets behind
@@ -15,8 +15,8 @@
   for (let pk = 4560; pk < LAP + 500; pk += 12) box('ocre', pk, 1, 9.1, 0.6, 0.7, 0.6, { y: smp(pk).y });                                                                // mooring blocks on the quay edge
   for (const pk of [4620, 25, 95, 200, 290, 400]) { const y = smp(pk).y; box('bois', pk, 1, 4.5, 1.5, 1.5, 1.5, { y }); box('boisB', pk + 1.9, 1, 4.8, 1.3, 1.3, 1.3, { y }); box('bois', pk + 0.9, 1, 4.7, 1.2, 1.2, 1.2, { y: y + 1.4 }); box('corail', pk - 2.6, 1, 4.2, 2.6, 0.5, 1.8, { y }); } // crates and a heap of nets
   [60, 150, 240].forEach((pk, i) => { set('pontonEgee', pk, 1, 29, { a: [40], y: SEA + 0.9 });
-    [[4.6, 20, MAT.corail], [-4.6, 31, MAT.bleu], [4.6, 42, MAT.blanc]].forEach(([dz, off, c], j) => set('kaikiEgee', pk + dz, 1, off, { y: SEA - 0.15, ry: (i + j) & 1 ? Math.PI : 0, skin: { ...MAT, coque: [c, MAT.bleu, MAT.corail][(i + j) % 3] } })); });
-  for (const [pk, c] of [[4600, MAT.corail], [4655, MAT.bleu], [320, MAT.corail], [420, MAT.blanc]]) set('kaikiEgee', pk, 1, 12.5, { y: SEA - 0.15, ry: Math.PI / 2, skin: { ...MAT, coque: c } }); // moored along the quay
+    [[4.6, 20, 'corail'], [-4.6, 31, 'bleu'], [4.6, 42, 'blanc']].forEach(([dz, off, c], j) => boat(pk + dz, off, 1, (i + j) & 1 ? Math.PI : 0, [c, 'bleu', 'corail'][(i + j) % 3], { pont: 1 })); });
+  for (const [pk, c] of [[4600, 'corail'], [4655, 'bleu'], [320, 'corail'], [420, 'blanc']]) boat(pk, 12.5, 1, Math.PI / 2, c, { pont: 1 }); // moored along the quay
   // life on the pavement of the front (6 m between the road wall and the houses): café terraces under parasols or a striped awning, scooters in threes, a few pick-ups, bougainvillea against the walls
   const PAINT = [MAT.corail, MAT.bleu, MAT.blanc, MAT.vert];
   [4505, 4595, 4685, 45, 135, 222, 305].forEach((pk, i) => set('terrasseEgee', pk, -1, 3.3, { a: [i % 3 === 1 ? 4 : 3, i & 1], skin: i % 3 ? MAT : { ...MAT, toile: MAT.toileR } }));
