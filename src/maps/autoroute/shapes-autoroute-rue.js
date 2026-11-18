@@ -25,8 +25,6 @@
     arbreTombeAutoroute: (l = 20) => [['bark', 3.5, 3.5, 0.8, -l / 2 + 0.5, 1.6, 0, [0, 1.57, 0.2]], ['bark', l * 0.7, 1, 1, -l * 0.12, 1, 0, [0, 0, 0.04]], ['leaf', l * 0.4, 3.6, 6, l * 0.3, 1.8, 0, [0, 0.3, 0]], ['leaf', l * 0.25, 2.6, 4.5, l * 0.12, 1.5, 1.5, [0.2, -0.4, 0]], ['bark', 3, 0.4, 0.4, l * 0.2, 2.4, -1.8, [0, 0.5, 0.5]]],
     // bank of reeds w × d, 2.4 m: a few masses of uneven height, one willow shoot
     roseauxAutoroute: (w = 12, d = 60, v = 0) => [...Array.from({ length: 5 }, (_, i) => ['reed', w * (0.5 + 0.4 * H(v, i)), 1.4 + 1.2 * H(v, i + 9), d * 0.24, (H(v, i + 20) - 0.5) * w * 0.3, 0.7 + 0.5 * H(v, i + 9), (i - 2) * d * 0.2])],
-    // ivy and brush mound w × ht × d: what grows over a wreck or at the foot of a wall
-    broussailleAutoroute: (w = 4, ht = 2, d = 4, v = 0) => [['ivy', w, ht * 0.6, d, 0, ht * 0.3, 0], ['ivy', w * 0.6, ht * 0.5, d * 0.6, w * 0.1, ht * 0.75, -d * 0.1, [0, 0.6 + H(v, 1), 0]]],
     // collapsed scaffolding w × ht × d: standards and ledgers fallen every way, torn netting
     echafaudageAutoroute: (w = 20, ht = 5, d = 8, v = 0) => [...Array.from({ length: 14 }, (_, i) => ['steel', 0.15, 0.15, 5 + 4 * H(v, i), (H(v, i + 30) - 0.5) * w * 0.8, ht * 0.2 + ht * 0.6 * H(v, i + 60), (H(v, i + 90) - 0.5) * d * 0.6, [(H(v, i + 120) - 0.5) * 2, H(v, i + 150) * 3, (H(v, i + 180) - 0.5) * 2]]),
       ['canvas', w * 0.5, 0.1, d * 0.7, -w * 0.15, ht * 0.4, 0, [0.4, 0.3, 0.5]], ['dark', w * 0.3, 0.12, 2.4, w * 0.25, ht * 0.25, 0, [0.2, 0.9, -0.3]]],

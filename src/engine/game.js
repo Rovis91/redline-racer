@@ -15,7 +15,7 @@
   const T = buildTrack(THREE, MAP_DEF), CARD = T.car, S = T.S, N = T.n, W = T.W, V3 = THREE.Vector3, M = MAP_DEF, TH = M.th; // active map and its theme: see maps.js
   const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-  const AUTO = location.search.includes('auto'); // debug: the autopilot drives
+  const AUTO = /[?&]auto(?![a-z])/.test(location.search); // debug: the autopilot drives (the parameter ?auto alone: ?map=autoroute must not switch it on)
   // 0 outside the sector, 1 inside, linear ramps of `ramp` samples (2 m) before the entry / after the exit
   const span = (a0, a1, on) => (i, ramp) => { if (!on) return 0; const a = (i - a0 + N) % N, L = a1 - a0; return a < L ? 1 : Math.max(0, 1 - (a - L) / ramp, 1 - (N - a) / ramp); };
   const zone = span(T.t0, T.t1, T.tun), hot = span(T.h0, T.h1, true); // zone = tunnel (light, scenery); hot = hot sector (music)
