@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sunken Highway: mood and reference sheet, V2</title>
+<style>
+  :root { --bg: #1c211d; --panel: #2a312b; --ink: #f1e7d6; --dim: #b9c3b4; --line: #3f4a40; --accent: #f0b46a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: .02em; }
+  h2 { font-size: 22px; margin: 40px 0 6px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 small { color: var(--accent); font-weight: 600; font-size: 14px; margin-right: 8px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); }
+  .lead { font-size: 18px; max-width: 70ch; }
+  dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 10px 0; }
+  dt { color: var(--accent); font-weight: 600; } dd { margin: 0; }
+  .sw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .sw span { width: 86px; height: 46px; border-radius: 6px; font: 11px/46px ui-monospace, monospace; text-align: center; color: #000; border: 1px solid #0006; }
+  .sw span.d { color: #fff; }
+  .pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+  figure { margin: 0; background: var(--panel); border-radius: 8px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: 220px; object-fit: cover; background: #121612; }
+  figcaption { padding: 8px 10px; font-size: 13px; } figcaption b { display: block; } figcaption a { color: var(--dim); }
+  figure.own { outline: 2px solid var(--accent); } figure.own img { height: 260px; }
+  ul { margin: 6px 0; padding-left: 20px; }
+  @media (max-width: 600px) { dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Sunken Highway</h1>
+<p class="dim">Mood and reference sheet, V2. Written after the blockout was validated; it follows the zones of the built map (<code>src/maps/autoroute/</code>), not the layout of the V2 bible, and keeps the bible's art direction.</p>
+
+<p class="lead">A fictional coastal city, evacuated in a hurry and left to itself for decades. The race is not on a track: it is the one way still open through real streets, because every other street is closed by something that happened there. <b>You drive through a city, not around a circuit: every bend has a reason you can see.</b></p>
+
+<dl>
+  <dt>Place</dt><dd>A street grid of 110 m blocks. The boulevard runs east to west through the office district; the ground falls gently east to the river, where the warehouse district stands in shallow water; a motorway crosses the city on a viaduct above one street; a metro line runs under another.</dd>
+  <dt>Time and light</dt><dd>Golden hour, late afternoon, one weather for the whole lap. Low sun from the west: long shadows across the streets, orange facades on one side and blue-grey on the other, teal water in contrast. Under the motorway and in the metro the light drops, never to black.</dd>
+  <dt>Style</dt><dd>Retro low-poly: simple volumes, modular facades, pixel textures, vegetation as bold silhouettes. Realism lives in the composition and in what each place tells, not in detail. Read at 150 km/h before being read up close.</dd>
+  <dt>Story</dt><dd>Environmental, as in <i>The Last of Us</i> (the author's references from the game and the series are shown below). People fled: traffic stands in its lanes facing the way out, the army closed streets, buildings fell later. Nature came back from where it already was: the planted trees, the park, the water.</dd>
+  <dt>Anti-references</dt><dd>A track laid in a ruined set (guardrails, chevrons, kerbs, tyre walls, a uniform racing surface); wrecks arranged as a slalom; ruin spread evenly everywhere; a city wholly under water; jungle hiding the next bend; rain and night; photorealistic clutter; any on-screen interface in the mood views.</dd>
+</dl>
+<div class="sw">
+  <span style="background:#F0C890">#F0C890 sky</span><span class="d" style="background:#3E4146">#3E4146 asphalt</span><span style="background:#A89A80">#A89A80 stone</span>
+  <span class="d" style="background:#8A5A48">#8A5A48 brick</span><span style="background:#5A8A40">#5A8A40 leaf</span><span class="d" style="background:#2A8F8A">#2A8F8A water</span><span class="d" style="background:#9A5A3A">#9A5A3A rust</span>
+</div>
+
+<h2><small>THE VIBE</small>The author's references</h2>
+<p>The look to reach, from the images the author supplied. They set the mood, the light and the density of vegetation and wrecks; the game keeps its own low-poly, pixel-textured style and copies none of them.</p>
+<div class="pics">
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-4.webp" alt="Overgrown city street with rusted cars between ivy-covered facades"><figcaption><b>Keep: the target image. Facades standing, ivy climbing from the ground, cars where they stopped, grass through the asphalt, a tower at the end of the street</b>Not this: people on foot; the photographic detail. <i>The Last of Us</i> series, HBO, image courtesy of DNEG, © 2025 Home Box Office. Author's reference, local file.</figcaption></figure>
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-7.png" alt="Wide avenue lined with yellow trees and abandoned cars, a dome at the far end"><figcaption><b>Keep: the boulevard: its width, the street trees turned to autumn gold, cars in loose groups, a landmark closing the perspective</b>Not this: overcast grey light; ours is golden hour. <i>The Last of Us</i> series, HBO. Author's reference, local file.</figcaption></figure>
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-2.webp" alt="Flooded street at sunset with a half-sunk bus and a dead tree"><figcaption><b>Keep: the light of the whole lap: low sun down the street, orange haze, dark facades, still water throwing the sky back</b>Not this: water this deep on the driven road. <i>The Last of Us</i>, Naughty Dog / Sony, concept art. Author's reference, local file.</figcaption></figure>
+</div>
+
+<h2><small>THE WHOLE LAP</small>What makes it a city and not a track</h2>
+<dl>
+  <dt>The road</dt><dd>No guardrail, no chevron, no cone, no racing line painted. The edge of the road is a kerb, a facade, a parapet, a platform edge. The asphalt is patched, cracked and stained differently street by street; lane markings survive in places only.</dd>
+  <dt>Closed streets</dt><dd>At every crossroads the streets not taken are visibly closed, each by its own event: an army barrage, a fallen facade, an overturned bus, a fallen tree, a stranded barge, a subsided roadway. Never the same one twice in a row.</dd>
+  <dt>Buildings</dt><dd>Built from a small kit of parts (ground floor, repeated storey, cornice or roof, corner), assembled block by block so that no two blocks are the same. Kind follows the district: office towers of 45 to 110 m on the boulevard, brick housing of 28 to 55 m to the south, workshops to the north, low warehouses by the river.</dd>
+  <dt>Vegetation</dt><dd>It has an origin. Street trees grown huge where they were planted; the park become a wood that spills onto its pavements; ivy on the facades that take the afternoon sun; reeds and willows where water stands; grass in the joints where traffic has stopped. Nothing at random.</dd>
+  <dt>Vehicles</dt><dd>Mid-size sedans, pickups, vans, buses, a few army trucks, all of one period. Rusted, flat tyres, some doors open, weeds through the bonnets. Grouped where a jam, a checkpoint or an accident would have put them; whole stretches have none.</dd>
+</dl>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ukraine,_Kyyivska,_Prypyat,_Prypiat,_prospekt_Lenina,_22_WMID6452665.jpg?width=640" alt="Apartment block on Lenin avenue in Pripyat among trees"><figcaption><b>Keep: trees taller than the street, facades intact behind them</b>Not this: Soviet slab blocks as the building type. jeepeg, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Ukraine,_Kyyivska,_Prypyat,_Prypiat,_prospekt_Lenina,_22_WMID6452665.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Gem_Theatre,_8th_Street,_Cairo,_IL.jpg?width=640" alt="Abandoned theatre on a main street in Cairo, Illinois"><figcaption><b>Keep: an American main street left empty, brick, signs, awnings</b>Not this: the small-town scale. w_lemay, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Gem_Theatre,_8th_Street,_Cairo,_IL.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hashima,_Nagasaki,_Japan,_20240814_1513_3478.jpg?width=640" alt="Abandoned concrete buildings on Hashima island"><figcaption><b>Keep: dense concrete blocks weathered by decades, empty windows</b>Not this: total ruin; our facades still stand. Jakub Hałun, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:Hashima,_Nagasaki,_Japan,_20240814_1513_3478.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 1</small>The boulevard</h2>
+<p>The start straight, heading east: 26 m between kerbs, open from kerb to kerb except at three places. An army checkpoint, a facade fallen from the north side, a pile-up packed against the south kerb, then under the motorway viaduct to the buried end of the boulevard.</p>
+<dl>
+  <dt>Mood</dt><dd>The main street on the day everyone left: the checkpoint that filtered them, and what has fallen since.</dd>
+  <dt>Landmark</dt><dd>The motorway viaduct crossing the boulevard 20 m up, seen from the start line between two rows of trees.</dd>
+  <dt>Read at speed</dt><dd><ul><li>two rows of huge street trees on the pavements, gold on the sunlit side</li><li>the checkpoint: staggered lines of concrete barriers, a watchtower, an olive truck and tent</li><li>a slope of pale rubble spilling from a gutted office front, taller towards the building</li><li>a tight block of rusted cars and a bus lying askew, on one side only</li><li>the dark underside and piers of the viaduct, then a wall of debris closing the street ahead</li></ul></dd>
+  <dt>Light</dt><dd>Sun behind the car at the start: the street glows ahead, long tree shadows fall across it. A band of cold shade under the viaduct.</dd>
+  <dt>Transition</dt><dd>The boulevard is buried at its east end. The only open street turns north and the ground gets wet.</dd>
+  <dt>Not this</dt><dd>Cars lining both sides of the road from end to end; obstacles alternating left and right at regular intervals; a clean tarmac ribbon between them.</dd>
+</dl>
+<div class="sw"><span style="background:#A89A80">#A89A80</span><span class="d" style="background:#5A6240">#5A6240</span><span style="background:#B8B4A8">#B8B4A8</span><span class="d" style="background:#7A756C">#7A756C</span><span style="background:#B8A050">#B8A050</span></div>
+<div class="pics">
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-6.webp" alt="Street with abandoned cars under trees, a collapsed tower in the distance"><figcaption><b>Keep: the fallen building as a slope of rubble closing the street ahead; cars half hidden by brush</b>Not this: a grey winter palette. <i>The Last of Us</i> series, HBO. Author's reference, local file.</figcaption></figure>
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-5.png" alt="Small-town street at sunset with a patrol car and crowd barriers"><figcaption><b>Keep: the checkpoint feeling: barriers left across the road, an official vehicle, warm low sun, signs still readable</b>Not this: the small-town scale; the boulevard is a big-city street. <i>The Last of Us</i>, Naughty Dog / Sony. Author's reference, local file.</figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Standing_up_checkpoint_DVIDS42361.jpg?width=640" alt="Soldiers setting up a road checkpoint"><figcaption><b>Keep: how a checkpoint is laid out across a road</b>Not this: a desert setting; people in the scene. Sgt. Jeff Ledesma, U.S. Army, public domain. <a href="https://commons.wikimedia.org/wiki/File:Standing_up_checkpoint_DVIDS42361.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Citizens_Accept_Concrete_Barriers_for_Improved_Security_DVIDS76312.jpg?width=640" alt="Concrete barriers placed along a city street"><figcaption><b>Keep: the grey concrete barrier as a module, set in lines</b>Not this: the tall wall version; ours are waist-high. Capt. Dan Cannon, U.S. Army, public domain. <a href="https://commons.wikimedia.org/wiki/File:Citizens_Accept_Concrete_Barriers_for_Improved_Security_DVIDS76312.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/2020_Aegean_Sea_earthquake_building_debris.jpg?width=640" alt="Debris of a collapsed building in a street"><figcaption><b>Keep: the slope of rubble from the facade to the road, slabs and bars</b>Not this: rescue crews and machines. Oğulcan Bakiler (VOA), public domain. <a href="https://commons.wikimedia.org/wiki/File:2020_Aegean_Sea_earthquake_building_debris.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Abandoned_cars_overgrown_with_plants_in_a_natural_setting.jpg?width=640" alt="Abandoned cars overgrown with plants"><figcaption><b>Keep: rust, flat tyres, plants through the bodywork</b>Not this: a scrapyard row; ours stand where they stopped. Shixart1985, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Abandoned_cars_overgrown_with_plants_in_a_natural_setting.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 2</small>The warehouse district</h2>
+<p>Six street corners on the low ground by the river: north, east, north, west, north, west. Narrow streets of 16 m between low warehouses, every street not driven standing in shallow water.</p>
+<dl>
+  <dt>Mood</dt><dd>Quiet and reflective: the only part of the city the water has taken, calm enough to mirror the facades.</dd>
+  <dt>Landmark</dt><dd>A barge stranded across a street, seen at the end of the first straight.</dd>
+  <dt>Read at speed</dt><dd><ul><li>long low warehouses in grey-blue sheet metal and brick, loading doors, faded painted signs</li><li>teal water at the kerb on both sides, the road dry and slightly domed</li><li>reeds and young willows in the flooded side streets, a tide line on the walls</li><li>at each corner one closed arm: barge, fallen tree, collapsed quay, tanker truck</li><li>cranes and silos over the roofs towards the river</li></ul></dd>
+  <dt>Light</dt><dd>Streets running north are in shade with a bright sky strip; streets running east and west take the low sun full length and the water throws it back.</dd>
+  <dt>Transition</dt><dd>The last street ends under the motorway at an army barrage: the only way on is the slip road, up.</dd>
+  <dt>Not this</dt><dd>Water on the driven road; a lagoon with no streets; tropical jungle.</dd>
+</dl>
+<div class="sw"><span style="background:#6F7F86">#6F7F86</span><span class="d" style="background:#2A8F8A">#2A8F8A</span><span style="background:#7A9A50">#7A9A50</span><span class="d" style="background:#45484A">#45484A</span><span style="background:#C8C2B0">#C8C2B0</span></div>
+<div class="pics">
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-3.webp" alt="Flooded street between brick buildings covered in ivy, seen from under a bridge"><figcaption><b>Keep: the flooded district: brick and ivy down to the waterline, clear shallow water, rubble banks, the frame of a deck overhead</b>Not this: wading depth on the lane; the driven street stays dry. <i>The Last of Us</i>, Naughty Dog / Sony. Author's reference, local file.</figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/New-Orleans_post_Katrina_Sept_2005-_Flood_street.jpg?width=640" alt="Flooded street in New Orleans after Katrina"><figcaption><b>Keep: still water from kerb to facade, reflections, a tide line</b>Not this: water over the driven road. Gilbert Mercier, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:New-Orleans_post_Katrina_Sept_2005-_Flood_street.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Papa_Johns_Flooded_Calhoun_Street_New_Orleans_2005.jpg?width=640" alt="Flooded commercial street in New Orleans in 2005"><figcaption><b>Keep: low commercial buildings and signs standing in shallow water</b>Not this: recent, clean buildings; ours have decades of weather. Infrogmation, CC BY 2.5. <a href="https://commons.wikimedia.org/wiki/File:Papa_Johns_Flooded_Calhoun_Street_New_Orleans_2005.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Abandoned_ship_in_Pripyat.jpg?width=640" alt="Abandoned ship aground at Pripyat"><figcaption><b>Keep: a rusted hull aground, for the barge across the street</b>Not this: the open river setting. Omar David Sandoval Sida, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Abandoned_ship_in_Pripyat.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 3</small>The motorway</h2>
+<p>The slip road climbs along the east side and merges at +12 m. Two carriageways of 14 m either side of a central reservation: the east one is jammed ahead, the lane crosses a break in the reservation to the west one, over the summit at +20 m above the boulevard, then down the last span, which has fallen to the street.</p>
+<dl>
+  <dt>Mood</dt><dd>The way out that nobody got out by, and the one place where you see the whole city.</dd>
+  <dt>Landmark</dt><dd>From the summit: the towers of the boulevard, the park as a green mass, the river and its warehouses in the sun.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a concrete central reservation with weeds, torn open at one place</li><li>the other carriageway full of cars in their lanes, all facing out of the city</li><li>a bus and a jackknifed truck lying across at the break</li><li>plain concrete parapets, sign gantries with faded green panels, lamp posts leaning</li><li>the last span tilted down as a ramp, its broken edge and bare reinforcement</li></ul></dd>
+  <dt>Light</dt><dd>The brightest place of the lap: open sky, sun from the right, the city in haze below. No shade at all until the fallen span.</dd>
+  <dt>Transition</dt><dd>The fallen span lands in a street of brick housing where every way is closed but one.</dd>
+  <dt>Not this</dt><dd>Vehicles set out as a slalom; a broken gap to jump; a modern glass-and-steel bridge.</dd>
+</dl>
+<div class="sw"><span style="background:#8F8C82">#8F8C82</span><span class="d" style="background:#3E4146">#3E4146</span><span class="d" style="background:#2F6A5A">#2F6A5A</span><span class="d" style="background:#9A5A3A">#9A5A3A</span><span style="background:#F0C890">#F0C890</span></div>
+<div class="pics">
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-8.webp" alt="Motorway slip road jammed with abandoned cars and a bus, a steel arch bridge behind"><figcaption><b>Keep: the motorway: cars packed in their lanes on the ramp, a bus among them, barriers, grass on the verges, the city and a bridge beyond</b>Not this: the clear path weaving between cars; ours keeps to one carriageway. <i>The Last of Us</i>, Naughty Dog / Sony. Author's reference, local file.</figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/I-90_viaduct_in_Wallace,_ID_-_looking_eastbound_from_6th_Street.jpg?width=640" alt="Motorway viaduct passing above a town street"><figcaption><b>Keep: a motorway on piers above a street, seen from below</b>Not this: the mountain backdrop. SounderBruce, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:I-90_viaduct_in_Wallace,_ID_-_looking_eastbound_from_6th_Street.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hurricane_Rita_evacuation_1.jpg?width=640" alt="Motorway jammed with evacuation traffic"><figcaption><b>Keep: every lane full, all facing the same way: the jammed carriageway</b>Not this: moving, shiny cars; ours are thirty years of rust. public domain. <a href="https://commons.wikimedia.org/wiki/File:Hurricane_Rita_evacuation_1.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Cypress_structure.jpeg?width=640" alt="Collapsed deck of the Cypress Street Viaduct in 1989"><figcaption><b>Keep: a span fallen as a tilted slab, the broken edge and bars</b>Not this: a double-deck structure; ours is a single deck. H.G. Wilshire, U.S. Geological Survey, public domain. <a href="https://commons.wikimedia.org/wiki/File:Cypress_structure.jpeg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/View_of_Pripyat_from_the_rooftop_of_a_building_01.jpg?width=640" alt="View over Pripyat from a rooftop, buildings among trees"><figcaption><b>Keep: the view from the summit: roofs standing out of a sea of trees</b>Not this: forest everywhere; ours keeps open streets and a river. Omar David Sandoval Sida, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:View_of_Pripyat_from_the_rooftop_of_a_building_01.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 4</small>The fallen street</h2>
+<p>A short street heading west between brick housing blocks. It ends on a ledge: the roadway has fallen into the metro, and the car drops 11 m in free fall onto the tracks, in a shaft open to the sky.</p>
+<dl>
+  <dt>Mood</dt><dd>A dead end, then the ground gives way.</dd>
+  <dt>Landmark</dt><dd>The dark rectangle of the hole across the whole street, with the buried street beyond it.</dd>
+  <dt>Read at speed</dt><dd><ul><li>broken roadway slabs tilting at the ledge, bent rails and cables hanging</li><li>the cut edge of the street in section: asphalt, fill, pipes, the tunnel roof</li><li>two metro trains crushed either side of the landing</li><li>brick facades with fire escapes rising straight above the shaft</li><li>a shaft of low sun falling into the hole</li></ul></dd>
+  <dt>Light</dt><dd>Warm street, then a sudden drop into cool shade with one bright slab of sunlight on the tracks.</dd>
+  <dt>Transition</dt><dd>The tunnel mouth, straight ahead under the buried street.</dd>
+  <dt>Not this</dt><dd>A gentle ramp; a hole the player could choose to avoid; a natural cave.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#8A5A48">#8A5A48</span><span class="d" style="background:#7A756C">#7A756C</span><span style="background:#9AA4A0">#9AA4A0</span><span class="d" style="background:#33383A">#33383A</span><span style="background:#F0C890">#F0C890</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Sinkhole_in_parking_lot.jpg?width=640" alt="Sinkhole in a car park"><figcaption><b>Keep: asphalt slabs tilting in, the layers under the surface</b>Not this: a hole one can drive around. Kayree kh, CC BY 3.0. <a href="https://commons.wikimedia.org/wiki/File:Sinkhole_in_parking_lot.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 5</small>The metro</h2>
+<p>A straight double-track tunnel under the street, the lane passing from one track to the other around stalled trains. At the station a train stands at the platform: up a heap of rubble onto the platform, along it, into the passenger corridor and up the stairs to the street. The tunnel itself goes on west, closed by a derailed train. Then one street north, back to the boulevard.</p>
+<dl>
+  <dt>Mood</dt><dd>Still and damp, lit by what is left of the emergency lighting; you leave the way a passenger would.</dd>
+  <dt>Landmark</dt><dd>The station: the train at the platform, and daylight coming down the stairs.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a rectangular concrete tunnel, columns between the two tracks, cable trays on the walls</li><li>trains as long pale boxes with dark window bands, one pushed off its track</li><li>the platform edge strip, tiled walls, a station name panel, benches</li><li>turnstiles and a ticket booth at the mouth of the corridor</li><li>roots and ferns where the stairwell lets light in, water dripping, never standing on the lane</li></ul></dd>
+  <dt>Light</dt><dd>Green-white emergency lights at regular intervals, no black holes; the stairwell is a warm rectangle that grows as you climb. Coming out, the sun is in the west, to the left.</dd>
+  <dt>Transition</dt><dd>The stairs come up under a station canopy on a side street; the boulevard and its trees are in view at the next crossroads, and the lap closes on the checkpoint.</dd>
+  <dt>Not this</dt><dd>Wide sweeping tunnel bends; a flooded tunnel; a cave; a clean modern station.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#4A5A52">#4A5A52</span><span class="d" style="background:#33383A">#33383A</span><span style="background:#A8FFC0">#A8FFC0</span><span style="background:#9AA4A0">#9AA4A0</span><span style="background:#C8C2B0">#C8C2B0</span></div>
+<div class="pics">
+  <figure class="own"><img loading="lazy" src="../../../local/sunken-highway/tlou-1.png" alt="Dark flooded underground hall with columns and a shaft of green light"><figcaption><b>Keep: the metro: near-dark, columns, one shaft of daylight with plants growing in it, a wreck as a silhouette</b>Not this: standing water on the lane; black with no reading. <i>The Last of Us</i>, Naughty Dog / Sony. Author's reference, local file.</figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Cincinnati_Subway_-_Race_St._Station.jpg?width=640" alt="Unused station of the Cincinnati subway"><figcaption><b>Keep: a bare concrete station that never opened: volumes and light</b>Not this: an empty hall with no trains; ours has them. Jonathan Warren, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Cincinnati_Subway_-_Race_St._Station.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Skylight_in_the_abandoned_City_Hall_Station_(32155).jpg?width=640" alt="Skylight in an abandoned subway station"><figcaption><b>Keep: daylight falling into a station from above, for the stairwell</b>Not this: ornate vaulted tilework. Rhododendrites, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Skylight_in_the_abandoned_City_Hall_Station_(32155).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/NYC_abandoned_staircase_vc.jpg?width=640" alt="Abandoned staircase in the New York subway"><figcaption><b>Keep: the passenger stairs, their width and walls</b>Not this: a narrow service stair; ours is the main exit. Stuart McAlpine, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:NYC_abandoned_staircase_vc.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>MISSING</small>References not found</h2>
+<p>Searched on Wikimedia Commons without a usable result; to be supplied by the author or found elsewhere:</p>
+<ul>
+  <li>a checkpoint seen from the road, with its staggered lines of barriers forcing a double bend (zone 1)</li>
+  <li>an office facade covered in ivy on its sunlit side, and a boulevard with rows of overgrown street trees (zone 1 and the whole lap)</li>
+  <li>a street of low warehouses with reeds growing in standing water (zone 2)</li>
+  <li>a street fallen into a metro tunnel, seen from the edge (zone 4): only a small car-park sinkhole was found</li>
+  <li>an abandoned metro train standing in its tunnel, and a derailed one (zone 5)</li>
+  <li>turnstiles and a ticket hall left as they were (zone 5)</li>
+</ul>
+<p class="dim" style="margin-top:36px">Images are linked from Wikimedia Commons, not copied into the repository, and are references for shapes and colours only, never textures. Licences and authors are those given by Commons at the time of writing and are to be rechecked on the source page before any other use. The images from <i>The Last of Us</i> (game by Naughty Dog / Sony, series by HBO) are the author's own references: they are read from the git-ignored <code>local/sunken-highway/</code> folder, are not committed or published, and show only on a machine that has them. They are a mood to reach, never a source of assets. The five mood images of the V2 bible are not reproduced here.</p>
+</main>
+</body>
+</html>
