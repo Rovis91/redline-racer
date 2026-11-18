@@ -238,3 +238,23 @@ console.log('OK  radio   tuning checked (themes, basses, chords) · ' + MAPS.map
     const lapRun = lvl => { const c = newCar(T); let t = 0; while (c.dist < T.n && t < 300) { step(c, autopilot(c, T, lvl), T, H); t += H; } return t; };
     const p = lapRun(0.95) / lapRun(1) - 1; assert(p > 0.025, `${id} : a rival at level 0.95 loses only ${(p * 100).toFixed(1)} % per lap`); losses.push(id + ' ' + (p * 100).toFixed(1) + ' %'); }
   console.log('OK  rival level at 0.95: ' + losses.join(', ')); }
+// solid boxes (M.obst, sim.js): a map without them has none; with one set on the autopilot's path of the widest map, the path passes 2 m clear of it, a lap on autopilot never touches it,
+// and a car sent straight at it with the wheel centred is stopped by it and never enters it
+{ const M0 = MAPS.reduce((a, b) => b.W > a.W && !b.obst && !b.place ? b : a, MAPS.find(M => !M.obst && !M.place)), T0 = buildTrack(THREE, M0), i = 80, s = T0.S[i], bx = s.x - s.tz * s.dl, bz = s.z + s.tx * s.dl;
+  assert(T0.obst === null && MAPS.filter(M => M.obst).every(M => M.id === 'autoroute'), 'obst : only autoroute declares solid boxes');
+  const T1 = buildTrack(THREE, { ...M0, obst: [[bx / M0.sc, bz / M0.sc, 1, 2, Math.atan2(s.tx, s.tz)]] }), away = Math.abs(T1.S[i].dl - s.dl);
+  assert(T1.obst[i].length === 1 && away >= 3, `obst : the autopilot's path passes ${away.toFixed(2)} m from the axis of a box 1 m wide (3 m at least)`);
+  let c = newCar(T1), t = 0, hit = 0; while (c.dist < T1.n && t < 400) { step(c, autopilot(c, T1), T1, H); t += H; if (c.rub && (c.idx - i + T1.n) % T1.n < 12) hit++; } assert(c.dist >= T1.n && !hit, 'obst : the autopilot touches the box');
+  const a = T1.S[i - 15]; c = newCar(T1); Object.assign(c, { x: a.x - a.tz * s.dl, z: a.z + a.tx * s.dl, th: Math.atan2(s.tz, s.tx), vx: s.tx * 20, vz: s.tz * 20, idx: i - 15, dist: i - 15 }); let inside = 0, stopped = 0;
+  for (let k = 0; k < 3 / H; k++) { step(c, { steer: 0, gas: 1, brake: 0, hand: false }, T1, H); const o = T1.obst[i][0], qx = c.x - o.x, qz = c.z - o.z; if (Math.abs(qx * o.c - qz * o.s) < o.hx && Math.abs(qx * o.s + qz * o.c) < o.hz) inside++; if (c.hit > 3) stopped++; }
+  assert(stopped && !inside, `obst : a car sent at the box enters it (${inside} steps) or does not feel it (${stopped} impacts)`);
+  console.log(`OK  solid boxes (${M0.id} + one box on the path): path ${away.toFixed(1)} m aside, lap without contact, head-on impact stops the car`); }
+// autoroute: collision follows the objects. Cars dropped every 40 m of the lap and steered at random for 15 s each only ever touch the road's own wall where that wall is a thing one sees:
+// the parapets of the motorway (rampe to sol), the metro tube, the banks of the cave before it (road half-width 10 m at most). Everywhere else they only meet solid boxes
+{ const M = MAPS.find(M => M.id === 'autoroute'), T = buildTrack(THREE, M), { S, n } = T, I = Object.fromEntries(Object.entries(M.key).map(([k, p]) => { let b = 0, bd = 1e9; S.forEach((s, i) => { const d = (s.x - M.pts[p][0]) ** 2 + (s.z - M.pts[p][1]) ** 2; if (d < bd) { bd = d; b = i; } }); return [k, b]; }));
+  const seen = i => (i >= I.rampe && i < I.sol) || (i >= T.t0 - 3 && i < T.t1) || (i >= I.bord && i < T.t0 && S[i].w <= 10.35); let seed = 12345, walls = 0, boxes = 0, bad = null; const rnd = () => (seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+  for (let i0 = 0; i0 < n; i0 += 20) { const c = newCar(T), s = S[i0]; Object.assign(c, { x: s.x, z: s.z, y: s.y, th: Math.atan2(s.tz, s.tx), idx: i0, dist: i0, vx: s.tx * 15, vz: s.tz * 15 }); let steer = 0.6, hold = 0;
+    for (let t = 0; t < 15; t += H) { if (--hold < 0) { steer = (rnd() * 2 - 1) * (rnd() < 0.5 ? 1 : 0.4); hold = 60 + rnd() * 240; } step(c, { steer, gas: Math.hypot(c.vx, c.vz) < 22 ? 1 : 0, brake: 0, hand: false }, T, H);
+      if (c.rub) { if (Math.abs(c.d) < S[c.idx].w - 1.1 - 1e-6) boxes++; else if (seen(c.idx)) walls++; else bad = bad || [c.idx, Math.round(c.x), Math.round(c.z)]; } } }
+  assert(!bad && boxes > 1000, 'autoroute : a car touches a wall of the road where nothing stands (sample, x, z): ' + bad);
+  console.log(`OK  autoroute: ${M.obst.length} solid boxes; random drivers touch boxes (${boxes} steps) and the road's wall only on the deck, in the tube and in the cave (${walls} steps)`); }

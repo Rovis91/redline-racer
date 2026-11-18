@@ -1,26 +1,37 @@
-// "autoroute", zone 5: Le metro (PK 1877 to 2553): a straight double-track tunnel under row 2 (18 m between walls, floor at -8.5 m), the lane passes from one track to the other around the trains.
-// At the station (PK 2177) a train stands at the platform: the lane climbs a heap of rubble onto the north platform (-7.3 m), runs along it, turns into the passenger corridor (PK 2314)
-// and goes up the stairs to column -3 (PK 2389), then north to the boulevard. The tunnel itself goes on west past the corridor, tracks and platform, closed by a derailed train.
-// Only what this zone adds, by the names of the blockout (real() in scenery-autoroute.js turns each into its scenery); helpers are described in scenery-autoroute.js. Labels are short: a board must fit under the 9 m ceiling.
-(window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ put, spot, bar, slab, set, ext, at, MAT }) => {
-  // what makes it a metro: two tracks the whole length, 4.55 m either side of the tunnel's axis (the lane drives over them, the trains stand on them), lamps on the tunnel walls,
-  // and in the station a row of ceiling lights over the platform and its enamel name plates
-  for (const z of [214.75, 216.15, 223.85, 225.25]) slab('steel', -180, -8.5, z, 660, 0.14, 0.12);
-  for (let x = 70, k = 0; x > -200; x -= 24, k++) slab('lamp', x, -4, k & 1 ? 211.15 : 228.85, 1.6, 0.3, 0.15);
-  for (let x = -226; x > -500; x -= 16) slab('lamp', x, -0.6, 206, 5, 0.12, 0.5);
-  for (const x of [-262, -300, -380, -440]) slab('plaque', x, -4.6, 199.35, 8, 2, 0.15);
-  const TRAIN = 0x9aa4a0, RUBBLE = 0x7a756c, CONC = 0x8f8c82, RUST = 0x9a5a3a, OLIVE = 0x5a6240, Y = -8.5;
-  // trains: each on its track (N = 215.45, SO = 224.55), straight, on the side the lane leaves free; its flank is the wall of the lane
-  const N = 215.45, SO = 224.55; spot('RAME', TRAIN, at(1974).x, N, 54, 3.6, 3, Y, 1); spot('RAME', TRAIN, at(2053).x, SO, 54, 3.6, 3, Y, 1); spot('RAME', TRAIN, at(2132).x, N, 36, 3.6, 3, Y, 1); put('EBOULIS', RUBBLE, 2166, 1, 0.2, 5, 3.5, 18, Y);
-  put('GRAVATS', RUBBLE, 2197, -1, 0.2, 6, 2.5, 12, Y);                                            // the heap the lane climbs to the platform
-  spot('QUAI', CONC, -373, 206.5, 254, 1.1, 15, Y, 1);                                             // the north platform: the lane runs on it, and it goes on west
-  spot('RAME', TRAIN, -292, N, 54, 3.6, 3, Y, 1);                                                   // the train stopped at the platform
-  // the tunnel beyond the corridor, 170 m more: track bed, walls, ceiling; a train derailed across the platform closes it, another stands further on
-  slab('ballast', -413, Y - 0.5, 221.5, 194, 0.5, 15);
-  ext(MAT.mur, -336, -510, [[199, -3.5], [199, Y]], 0); ext(MAT.mur, -316, -510, [[229, -3.5], [229, Y]], 0); slab('dark', -510, Y, 214, 0.5, 9.5, 31); // (the back wall starts west of the corridor mouth)
-  for (const z of [198, 186, 174]) slab('lamp', -330, -7.3 + Math.max(0, 190 - z) * 0.14 + 4.2, z, 3, 0.12, 0.5);                 // the lights of the corridor and of the foot of the stairs
-  spot('RAME', TRAIN, -364, 211, 40, 3.6, 3, Y + 1.2, 1, 0.35); set('portillonsAutoroute', -350, 203.5, { y: -7.3, ry: 0.35, a: [8] }); // (the turnstiles, pushed aside west of the corridor mouth) spot('RAME', TRAIN, -440, 224, 70, 3.6, 3, Y);
-  for (const x of [-262, -286, -310]) slab('steel', x, -7.3, 200.2, 4, 0.5, 0.9);                    // benches against the back wall of the platform
-  spot('SORTIE METRO', CONC, -330, 152, 18, 1, 44, 8.5);                                           // the canopy over the stairwell
-  bar(-3, 1, 'E', 'EPAVES EMPILEES', RUST, 3); bar(-3, 1, 'W', 'BARRICADE', OLIVE, 3);             // column -3: the side streets up to the boulevard
+// "autoroute", zone 5: Le metro. A single-track tube 7 m wide (the width of two cars) and 5.2 m to the crown, from the cave under row 2 (x = 66) west under the street, round to the north,
+// through a station (a platform on the east side, 6 m deep: its edge is the wall of the lane), round to the east, and up the line's own ramp: the tube ends at a portal (x = -405) and the ramp climbs
+// in an open trench along the south side of the boulevard, beside it, to street level (x = -365), where the lane crosses the forecourt back onto the boulevard.
+// The tube's walls are the road's own walls (M.wide 3.6); the trench's walls are solid boxes of the map (MUR TREMIE, built by real() in scenery-autoroute.js). th.tun.without 'walls': the engine only lays the floor and the lights.
+(window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ h, I, MAT, slab, quad, tuft, HH }) => {
+  const { S, T, THREE } = h, iM = T.t0 - 3, at = (s, d, y) => [s.x - s.tz * d, s.y + y, s.z + s.tx * d];
+  // the station: the samples of the northward run, from 8 m after the first bend to 8 m before the second
+  const iA = S.findIndex((s, i) => i > T.t0 && s.x < -463.9 && s.z < 172), iB = S.findIndex((s, i) => i > iA && s.z < 74);
+  // the tube: a wall 3 m high and half a vault in three facets on each side; in the station the east side opens onto the platform
+  // (no light from the engine's fixtures in a tube this low: walls and vault are self-lit, in the tones of old concrete: dark, the lamps and the daylight at both ends stand out)
+  const DS = { side: THREE.DoubleSide, emis: 1 }, WALL = h.mat('tunnelAutoroute', { ...DS, c: 0xb4b4aa }), ARCH = h.mat('tunVouteAutoroute', { ...DS, c: 0x84847c });
+  const V = [[3.5, 0], [3.5, 3], [2.6, 4.3], [1.2, 5.05], [0, 5.2]], side = (i0, n, sd) => { for (let k = 0; k < 4; k++) h.ribbon(i0, n, sd * V[k][0], V[k][1], sd * V[k + 1][0], V[k + 1][1], k ? ARCH : WALL, k ? 8 : 4); };
+  side(iM, T.t1 - iM, -1); side(iM, iA - iM, 1); side(iB, T.t1 - iB, 1);
+  { const n = iB - iA, lit = h.mat('trottoirAutoroute', { side: THREE.DoubleSide, rep: [0.75, 1], c: 0xb0b0a8 });
+    h.ribbon(iA, n, 3.5, 0, 3.5, 1.1, MAT.concrete); h.ribbon(iA, n, 3.5, 1.1, 9.5, 1.1, lit, 4); h.ribbon(iA, n, 3.55, 1.12, 3.95, 1.12, MAT.yellow); h.ribbon(iA, n, 9.5, 5.2, 9.5, 1.1, MAT.tile, 8); h.ribbon(iA, n, 0, 5.2, 9.5, 5.2, MAT.vault, 8);
+    for (const i of [iA, iB]) { const s = S[i]; quad('tile', at(s, 3.5, 0), at(s, 9.5, 0), at(s, 9.5, 5.2), at(s, 3.5, 5.2)); quad('vault', at(s, 3.5, 5.2), at(s, 3.5, 3), at(s, 2.6, 4.3), at(s, 1.2, 5.05)); }
+    // on the platform: a row of tiled columns, benches and the station's enamel plates on the back wall, strip lights on the ceiling (two in three dead), grass in the joints
+    for (let i = iA + 4, k = 0; i < iB - 2; i += 4, k++) { const s = S[i], [x, y, z] = at(s, 5.2, 1.1); slab('tile', x, y, z, 0.7, 4.1, 0.7);
+      if (k % 3 === 1) { const [bx, by, bz] = at(s, 9, 1.1); slab('steel', bx, by, bz, 0.9, 0.5, 3.4); } if (k % 4 === 2) { const [px, py, pz] = at(s, 9.4, 2.6); slab('plaque', px, py, pz, 0.15, 2, 8); }
+      if (k % 3 === 0) { const [lx, ly, lz] = at(s, 6.8, 5.05); slab('lamp', lx, ly, lz, 0.5, 0.1, 4); } } }
+  // the track: ballast and sleepers from the mouth of the tube to the top of the ramp, two rails that come out of the rubble in the cave and end under the weeds of the ramp; rails rusted orange; a lamp in its housing on the wall every 14 m, on alternate sides
+  h.ribbon(iM, I.tremie - iM, -3.5, 0.03, 3.5, 0.03, h.mat('ballastAutoroute', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, rep: [1, 1], emis: 1, c: 0xb8b8b0 }), 8);
+  const RAIL = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, emis: 1, c: 0xb06a3a }); for (const d of [-0.72, 0.72]) { h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d - 0.05, 0.16, d + 0.05, 0.16, RAIL); h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d - 0.05, 0, d - 0.05, 0.16, RAIL); h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d + 0.05, 0, d + 0.05, 0.16, RAIL); }
+  for (let i = iM + 4, k = 0; i < T.t1 - 3; i += 7, k++) { if (i > iA - 4 && i < iB + 4) continue; const s = S[i], sd = k & 1 ? 1 : -1, ry = Math.atan2(s.tx, s.tz), [x, y, z] = at(s, sd * 3.36, 3.05), [fx, fy, fz] = at(s, sd * 3.44, 2.95); slab('lamp', x, y, z, 0.16, 0.34, 1.9, ry); slab('dark', fx, fy, fz, 0.14, 0.54, 2.3, ry); } // (each in its housing)
+  // the portal: a concrete head wall round the mouth of the tube, the station's plate on it, creeper hanging over it; the tube's roof behind it is the pavement of the forecourt
+  { const s = S[T.t1], x = s.x; slab('concrete', x - 0.4, s.y + 5.2, 24, 0.9, 1.4, 7.2); slab('plaque', x + 0.1, s.y + 5.35, 24, 0.12, 1.1, 5);
+    for (let k = 0; k < 6; k++) { const z = 20.6 + k * 1.15 + HH(k, 1) * 0.4, l = 1 + 2.4 * HH(k, 2); quad(k & 1 ? 'vine' : 'vine2', [x + 0.2, s.y + 6.6 - l, z], [x + 0.2, s.y + 6.6 - l, z + 0.9], [x + 0.2, s.y + 6.6, z + 0.9], [x + 0.2, s.y + 6.6, z], 4); }
+    slab('pave', x - 9.6, 2, 24, 18.4, 0.6, 7.2); }
+  // the lids of the trench: the ground is dug out wider than the trench (a terrain vertex every 10 m), the boulevard's roadway and pavement north of it and the forecourt south of it are put back as slabs
+  slab('asphalt', -393, 1.96, 7.5, 54, 0.5, 11); slab('pave', -393, 1.9, 15.1, 54, 0.6, 4.2); slab('pave', -393, 1.9, 37.3, 54, 0.6, 17.5); slab('asphalt', -361, 1.88, 24, 13, 0.5, 44); // (the last: the forecourt at the top of the ramp)
+  // the ramp in the open: weeds between the sleepers and against the walls, a totem of the metro at the top of the ramp on the forecourt side (behind the trench wall, out of reach)
+  for (let i = T.t1 + 2; i < I.tremie; i += 2) { const s = S[i], d = (HH(i, 1) < 0.5 ? -1 : 1) * (1.6 + 1.6 * HH(i, 2)); tuft(s.x - s.tz * d, s.z + s.tx * d, s.y, i); }
+  slab('steel', -368, 2.5, 29.2, 0.3, 5, 0.3); slab('plaque', -368, 6.6, 29.2, 5, 1.3, 0.2);
+  // the trench's walls: a steel railing on each parapet, creeper falling down the concrete, rust runs under the railing posts
+  for (const zw of [20.35, 27.65]) { const zr = zw < 24 ? 18.8 : 28.05; slab('steel', -385, 4.4, zr, 40, 0.08, 0.08); for (let x = -404; x <= -366; x += 3.8) slab('steel', x, 3.5, zr, 0.08, 0.95, 0.08);
+    for (let k = 0; k < 9; k++) { const x = -403 + k * 4.2 + HH(k, zw) * 2, w = 1 + 2 * HH(k, 2), l = 1.5 + 3.5 * HH(k + 3, zw), zq = zw < 24 ? zw + 0.06 : zw - 0.06; quad(k & 1 ? 'vine' : 'vine2', [x, 3.5 - l, zq], [x + w, 3.5 - l, zq], [x + w, 3.5, zq], [x, 3.5, zq], 4); } }
 };

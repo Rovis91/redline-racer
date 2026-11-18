@@ -99,6 +99,17 @@
         if (bandStrip) for (const x of [-0.3, -0.12, 0.06]) R(g, css(bandStrip), Math.round(p.sideOf(x, 0)[0]), Math.round(p.sideOf(0, 0.62)[1]), 3, 3); } // three gold marks on the door
       if (K === 'delta') { grid(g, o, p.av, 0.3, 0.52, 0.68); ph(0.3, 0.74, 0.5, 0.7); veil(g, 0.6, () => { for (const s of [-1, 1]) rv(g, p.above, 1.15, s * 0.28, 1.5, s * 0.5, DARK); }); // bonnet vents, flank band, number
         if (bandStrip) { rv(g, p.sideOf, tail, 0.6, nose, 0.68, css(bandStrip)); rv(g, p.sideOf, tail, 0.54, nose, 0.57, css(bandStrip)); } roundel(0.2, 0.44 + 0.3); }
+      if (K === 'bison') { grid(g, o, p.av, 0.6, 0.6, 0.9, 3); ph(0.5, 0.86, 0.72, 0.88); rv(g, p.sideOf, tail, 0.7, nose, 0.73, '#8a8c88'); // a dirty white pick-up: grille, a tired trim line, then years outdoors:
+        veil(g, 0.2, () => { for (let i = 0; i < 150; i++) R(g, i % 3 ? '#5a4a36' : '#8a7a60', rand() * 122 | 0, rand() * 126 | 0, 3 + rand() * 12 | 0, 2 + rand() * 7 | 0); }); // grime over everything, glass included
+        veil(g, 0.6, () => { for (let i = 0; i < 16; i++) { const x = tail + rand() * (nose - tail), z = (rand() * 2 - 1) * W * 0.9; rv(g, p.above, x, z, x + 0.1 + rand() * 0.35, z + 0.08 + rand() * 0.25, i & 1 ? '#8a4a22' : '#6a3a1c'); } // rust through the paint of the roof, the bonnet and the bed
+          for (let i = 0; i < 22; i++) { const z = (rand() * 2 - 1) * W, y = 0.42 + rand() * 0.55; rv(g, p.ar, z, y, z + 0.1 + rand() * 0.3, y + 0.05 + rand() * 0.2, i % 3 ? '#4a3828' : '#8a4a22'); } });
+        veil(g, 0.55, () => { for (let i = 0; i < 90; i++) { const x = tail + rand() * (nose - tail); rv(g, p.sideOf, x, 0.4, x + 0.08 + rand() * 0.3, 0.46 + rand() * rand() * 0.42, i % 3 ? '#5a4630' : '#3e3020'); } // mud thrown up the flanks, higher behind each wheel
+          for (const xw of p.xs) for (let i = 0; i < 22; i++) { const x = xw - 0.5 - rand() * 0.75, y = 0.42 + rand() * 0.5; rv(g, p.sideOf, x, y, x + 0.05 + rand() * 0.14, y + 0.04 + rand() * 0.1, '#4a3828'); } });
+        veil(g, 0.6, () => { for (let i = 0; i < 20; i++) { const x = tail + rand() * (nose - tail), y = 0.44 + rand() * 0.5; rv(g, p.sideOf, x, y, x + 0.05 + rand() * 0.18, y + 0.03 + rand() * 0.1, '#8a4a22'); } // rust blooming at the sills, the arches and the seams
+          for (let i = 0; i < 10; i++) { const z = (rand() * 2 - 1) * W; rv(g, p.ar, z, 0.5 + rand() * 0.4, z + 0.12, 0.56 + rand() * 0.4, '#8a4a22'); } });
+        veil(g, 0.3, () => { for (let i = 0; i < 30; i++) { const x = tail + rand() * (nose - tail); rv(g, p.sideOf, x, 0.55 + rand() * 0.25, x + 0.03, 0.98, '#3a3024'); } }); // runs of dirt down from the bed rail and the window line
+        veil(g, 0.36, () => { for (let i = 0; i < 46; i++) { const x = tail + rand() * (nose - tail), z = (rand() * 2 - 1) * W; rv(g, p.above, x, z, x + 0.15 + rand() * 0.5, z + 0.1 + rand() * 0.3, i & 1 ? '#6a5a44' : '#8a8474'); } }); // dust and leaf mould on the bonnet, the roof and the bed
+        veil(g, 0.5, () => { for (let i = 0; i < 26; i++) { const z = (rand() * 2 - 1) * W; rv(g, p.ar, z, 0.4, z + 0.2, 0.46 + rand() * 0.4, '#4a3828'); rv(g, p.av, z, 0.4, z + 0.2, 0.44 + rand() * 0.26, '#4a3828'); } }); }
       if (K === 'heron') { grid(g, o, p.av, 0.34, 0.6, 0.8, 3); ph(0.46, 0.82, 0.6, 0.8); rv(g, p.sideOf, tail, 0.56, nose, 0.6, '#16161c'); rv(g, p.ar, -0.52, 0.6, 0.52, 0.88, '#16161c'); }
       veil(g, 0.5, () => { for (const s of [-1, 1]) rv(g, p.ar, s * 0.62, 0.24, s * 0.76, 0.3, DARK); }); // exhaust outlets
       plate(g, o, p.ar, p.plate);
