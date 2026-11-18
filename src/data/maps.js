@@ -653,7 +653,6 @@
         orb: { dir: [-0.7, 0.35, -0.4], col: '#ffd9a0', shadows: '#ffd9a0', imgSize: 200 }, hemi: [0xc8b8f0, 0xd69a72, 1], sun: [0xffd9b0, 0.8], headlights: 0, bloom: 0.03, scan: 0.05,
         chev: 1, wallH: 0, road: ['#313a46', '#3a424a', '#e8e2d7', '#e8e2d7', '#313a46', '#313a46', false], intoWall: ['#e8e9df', '#d69a72', '#a97459', '#708071'], startLine: [0xf5aa75, 0xe8e9df, '#e8e9df'],
         hud: { y: '#ffffff', c: '#7fd6dc', r: '#f5aa75', backdrop: 'rgba(49,58,70,.88)', style: 'signPanel', split: 0, jp: null, over: [null, 'BLOCKOUT · V8'], heading: ['SIGNAL', 'UNKNOWN'] } } }; }
-  // Volcanic Island V2 "La Couronne Brisée", blockout (outside MAPS: no menu, no gold trace, no records): ?map=volcan. Car and radio of the pass. 14 m roadway, one point every 40 m: point k is PK k × 40 m.
   // Volcanic Island V2 "La Couronne Brisée" (outside MAPS: no menu, no gold trace, no records): ?map=volcan. Car and radio of the pass. 14 m roadway, one point every 40 m: point k is PK k × 40 m.
   // Layout "through the crater" (6578 m), chosen by the author over the bible's 6906 m loop: the bible's road run the other way (sea on the right) from the harbour up Les Cendres and round La Couronne
   // (traced from the plan image of docs/proposals/VOLCANIC_ISLAND_V2_DOSSIER_REVISE.html), then a new road across the crater, in and out by two open cuttings through the low gaps of its rim, and hairpins down to the quay.
