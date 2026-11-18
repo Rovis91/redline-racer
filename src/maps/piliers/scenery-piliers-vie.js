@@ -12,6 +12,16 @@
   layer(84, flows(sheetMat(0, 0x6f93a6, 0.55, 9), 0.0011, 0.0003), 1, 12000); layer(88, flows(sheetMat(1, 0xffffff, 0.8, 31), 0.0042, 0), 2, 12000);
   [[100, 0.7, 0.004], [120, 0.6, 0.0065], [140, 0.5, 0.009]].forEach(([y, op, u], k) => layer(y, flows(sheetMat(k & 1, 0xffffff, op, 30 - k * 4), u, k * 0.0006), 3 + k));
 
+  // the cloud decks: the sheets above are flat, the road climbs from 150 to 225, so from the high stretches the valley (shoulders, slopes, floor) showed through them. Two decks that follow the road at 6 and 16 m under it
+  // (a lower envelope of the road's altitude, rising 0.02 m per metre away from it): from the corniches, the bridge and the descent nothing is seen below the road but white and the pillars standing out of it. They fade out toward the edge of the map
+  { const R = 2300, n = 46, step = 2 * R / n, base = (x, z) => { let m = 1e9; for (let i = 0; i < N; i += 3) m = Math.min(m, S[i].y + 0.02 * Math.hypot(S[i].x - x, S[i].z - z)); return m; };
+    const grid = []; for (let j = 0; j <= n; j++) for (let i = 0; i <= n; i++) { const x = 650 - R + i * step, z = -500 - R + j * step; grid.push([x, base(x, z), z, clamp((R - 100 - Math.max(Math.abs(x - 650), Math.abs(z + 500))) / 500)]); }
+    [[6, 0.92, 0.0035, 22], [16, 0.7, 0.006, 17]].forEach(([dy, op, u, rep], k) => { const G = new THREE.BufferGeometry(), P = [], U = [], C = [], I = [];
+      grid.forEach(([x, y, z, a], q) => { P.push(x, y - dy, z); U.push((q % (n + 1)) / n * rep, Math.floor(q / (n + 1)) / n * rep * 1.7); C.push(1, 1, 1, a); });
+      for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { const a = j * (n + 1) + i; I.push(a, a + n + 1, a + 1, a + 1, a + n + 1, a + n + 2); }
+      G.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); G.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); G.setAttribute('color', new THREE.Float32BufferAttribute(C, 4)); G.setIndex(I);
+      const o = new THREE.Mesh(G, flows(soft('brumePiliers', { c: 0xffffff, opacity: op, vertexColors: true, side: THREE.FrontSide }, k), u, 0)); o.renderOrder = 5 + k; o.frustumCulled = false; h.scene.add(o); }); }
+
   // ---------- banks of mist among the pillars: long soft quads that turn to the car (round the vertical), form, drift west and dissolve. They cross the pillars between a third and two thirds of their height:
   // the ranks. None within 150 m of a road, and those within 300 m stay under it (mist in the ravine): a bank is never between the car and its next bend. One geometry rewritten each frame: 1 draw pass
   const BANKS = [], bank = (x, y, z, w, ht, op = 0.6, span = 260, v = 3, ph = nz(x, z), o = {}) => BANKS.push({ x, y, z, w, ht, op, span, v, ph, rise: 0, grow: 0, from: 0.5, far: 1, c: 1, ...o });
@@ -31,13 +41,17 @@
 
   // ---------- the falls (FALLS: the three tower falls, the plateau fall; then the cascade of the buttress): quads from upstream to downstream, the texture slides down them. Two layers for all the falls of the map:
   // an opaque pale body, and a translucent veil 0.4 m in front of it that runs faster. 2 draw passes. tile = metres of fall per texture repeat: the speed in m/s follows it (long for the far falls, short for the near cascade)
-  const quads = () => { const P = [], U = [], I = []; return { add(a, b, w, ax, tile, lift = 0, out = [0, 0, 0]) { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), k = P.length / 3, hw = w / 2;
-      for (const [p, v] of [[a, l / tile], [b, 0]]) for (const sd of [-1, 1]) { P.push(p[0] + ax[0] * hw * sd + out[0] * lift, p[1] + out[1] * lift, p[2] + ax[2] * hw * sd + out[2] * lift); U.push(sd < 0 ? 0 : 1, v); } I.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); },
+  const quads = () => { const P = [], U = [], I = []; return { add(a, b, w, ax, tile, lift = 0, out = [0, 0, 0], vb = 0) { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), k = P.length / 3, hw = w / 2;
+      for (const [p, v] of [[a, vb + l / tile], [b, vb]]) for (const sd of [-1, 1]) { P.push(p[0] + ax[0] * hw * sd + out[0] * lift, p[1] + out[1] * lift, p[2] + ax[2] * hw * sd + out[2] * lift); U.push(sd < 0 ? 0 : 1, v); } I.push(k, k + 2, k + 1, k + 1, k + 2, k + 3); return vb + l / tile; },
     mesh(m, ro = 0) { const G = new THREE.BufferGeometry(); G.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); G.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); G.setIndex(I); G.computeVertexNormals(); const o = new THREE.Mesh(G, m); o.renderOrder = ro; o.frustumCulled = false; h.scene.add(o); return o; } }; };
   const body = quads(), veil = quads(), SPRAYS = []; // SPRAYS: where water breaks: [x, y, z, strength]
   const water = (a, b, w, tile, out, ax) => { body.add(a, b, w, ax, tile, 0, out); veil.add(a, b, w * 0.62, ax, tile * 0.8, 0.4, out); };
-  for (const [a, b, w, hero] of FALLS) { const dx = b[0] - a[0], dz = b[2] - a[2], l = Math.hypot(dx, dz) || 1, out = [dx / l, 0, dz / l], ax = [-out[2], 0, out[0]]; water(a, b, w, 32, out, ax); if (hero) veil.add(a, b, w * 0.3, ax, 20, 0.8, out);
-    bank(b[0] + out[0] * 8, 96, b[2] + out[2] * 8, hero ? 90 : 56, hero ? 44 : 30, 0.75, 40, 2.2); bank(b[0] - 14, 106, b[2], hero ? 70 : 44, hero ? 30 : 22, 0.6, 60, 3.2); } // the boil where the fall enters the clouds: two banks that form and drift away
+  // a fall follows its path (the rock profile, see fallPath in scenery-piliers.js) in short segments; the texture runs on from one to the next, from the foot up, so that no seam shows. It leaves the lip, drops clear of the face and ends in its boil
+  for (const [, b, w, hero, path] of FALLS) { const out = (() => { const dx = path[1][0] - path[0][0], dz = path[1][2] - path[0][2], l = Math.hypot(dx, dz) || 1; return [dx / l, 0, dz / l]; })(); let vb = 0, vv = 0, vh = 0;
+    for (let k = path.length - 2; k >= 0; k--) { const p = path[k], q = path[k + 1], ax = [-out[2], 0, out[0]]; // lateral axis fixed (the path is on one ray)
+      vb = body.add(p, q, w, ax, 32, 0, out, vb); vv = veil.add(p, q, w * 0.62, ax, 25.6, 0.4, out, vv); if (hero) vh = veil.add(p, q, w * 0.3, ax, 20, 0.8, out, vh); }
+    // the boil where the fall enters the clouds (its foot is 3 m over the highest mist sheet): spray beside the road's reach, and two banks that form and drift away
+    SPRAYS.push([b[0], b[1] + 1, b[2], 1.4]); bank(b[0] + out[0] * 6, b[1] + 3, b[2] + out[2] * 6, hero ? 90 : 60, hero ? 46 : 34, 0.85, 40, 2.2); bank(b[0] - 14, b[1] + 8, b[2], hero ? 70 : 46, hero ? 32 : 24, 0.7, 60, 3.2); }
   // the cascade of the buttress (descent, PK 3290, 8 m from the wall): down the beds of the cut face (STEPS), a drop at each face, a run on each bed, into the culvert at its foot
   { const [, , sd, nb, off, y] = STEPS[2], s = at(3290), tx = [s.tx, 0, s.tz], [rx, rz] = edgePt(s, sd, 1), out = [s.x - rx, 0, s.z - rz], ol = Math.hypot(out[0], out[2]); out[0] /= ol; out[2] /= ol; // out: toward the road
     const pt = (o, yy) => { const [x, z] = edgePt(s, sd, o); return [x, s.y + yy, z]; };
