@@ -25,7 +25,8 @@
         const cape = Math.max(...CAPES.map(([a, b]) => win(pk, a, b, 50))), terr = win(pk, 3520, 4420, 80), quay = pk < 520 ? ss((520 - pk) / 40) : ss((pk - 4520) / 40);
         let f = Math.max(0, d - 20 + 8 * terr - 75 * cape - 34 * win(pk, 1950, 2830, 60)) * (1.5 - 1.1 * terr); if (terr > 0.5) f = steps(f, 5);
         f += quay * (ss((d - s.w - 9) / 3) * (y - SEA + 4) + Math.max(0, d - 40) * 0.3 - f);
-        const gy = y - f; return gy < SEA ? y - (SEA - Math.min(8, (SEA - gy) * 0.12)) : f; };
+        f += Math.max(0, d - 230) * 2; // whatever the slope, the ground is under the deep bed before the terrain ends (its edge would draw a straight line in the water)
+        const gy = y - f; return gy < SEA ? y - (SEA - Math.min(9, Math.max((SEA - gy) * 0.12, 9 * ss((d - 110) / 140)))) : f; };
       // ground: dry ochre earth; bare rock where it is steep; pale sand under water; lime-jointed paving round the quay and through the village; red tilled earth on the terraces
       const pkOf = (x, z) => near(h, x, z) / N * LAP, paved = p => Math.max(win(p, -1, 560, 50), win(p, 4440, 4701, 50), win(p, 1900, 2840, 60));
       const g = terrain(h, { stepSec: 6, margin: 320, hollow: relief, mat: h.mat('solEgee'), layerSet: [{ tex: ['terreEgee'], weight: (x, z, y, p, d) => { const k = pkOf(x, z); return Math.max(win(k, 3500, 4440, 60) * (inside(x, z) ? 0 : 1), ...GROVES.map(q => win(k, q - 80, q + 80, 40) * (1 - ss((d - 75) / 15)))) * ss((d - 12) / 6); } },
