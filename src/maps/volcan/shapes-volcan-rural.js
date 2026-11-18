@@ -7,7 +7,7 @@
     // rack for drying fish, L along the road, ht to the ridge: A-frames every 3.5 m, a ridge pole, three rails a side, rows of fish hanging as pale strips under the rails
     sechoirVolcan: (L = 14, ht = 7) => { const half = ht * 0.42, a = Math.atan(half / ht), sl = Math.hypot(half, ht), n = Math.round(L / 3.5), B = [['greywood', L + 1, 0.22, 0.22, 0, ht, 0]];
       for (let i = 0; i <= n; i++) for (const sd of [-1, 1]) B.push(['greywood', 0.22, sl + 1, 0.22, -L / 2 + i * L / n, ht / 2 - 0.4, sd * half / 2, [sd * a, 0, 0]]);
-      for (const sd of [-1, 1]) for (let k = 1; k <= 3; k++) { const y = ht * (0.25 + k * 0.2), z = sd * half * (1 - y / ht); B.push(['greywood', L, 0.14, 0.14, 0, y, z], ['net', L - 1, 0.9, 0.12, 0, y - 0.6, z]); }
+      for (const sd of [-1, 1]) for (let k = 1; k <= 3; k++) { const y = ht * (0.25 + k * 0.2), z = sd * half * (1 - y / ht); B.push(['greywood', L, 0.14, 0.14, 0, y, z], ['fish', L - 1, 1.1, 0.14, 0, y - 0.7, z]); }
       return B; },
     // cairn, ht high: a pile of black stones narrowing upward, each a little turned: the marker of the old track
     cairnVolcan: (ht = 2.4, seed = 0) => Array.from({ length: 5 }, (_, i) => { const w = ht * (0.62 - i * 0.1); return ['stone', w, ht / 5 + 0.05, w * (0.8 + 0.3 * noise(i, seed)), 0.08 * (noise(i, seed + 3) - 0.5), ht / 10 + i * ht / 5, 0, [0, noise(i, seed + 5) * 1.5, 0]]; }),

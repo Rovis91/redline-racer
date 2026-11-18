@@ -19,8 +19,8 @@
     // moss over lava, c = its grey-green: lumpy cushions of two tones, black rock showing through in small gaps; 8 m per tile
     mousseVolcan: (c = '#5f664f') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); blots(g, o, 40, 0.2, '#343a2c', '#8f967a');
       veil(g, 0.55, () => { for (let i = 0; i < 46; i++) R(g, '#22241f', rand() * 62 | 0, rand() * 62 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); }); grain(g, o, 200, 0.1); }, 8],
-    // old snow, c = its white (bluish for ice): faint blue hollows, a little wind-blown grit; 8 m per tile
-    neigeVolcan: (c = '#eef2f4') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); blots(g, o, 16, 0.1, '#7a9ab4', '#fff');
+    // old snow, c = its white: faint grey hollows (never blue: on a steep face they stretched into blue patches), a little wind-blown grit; 8 m per tile
+    neigeVolcan: (c = '#eef2f4') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); blots(g, o, 16, 0.1, '#b9bcba', '#fff');
       veil(g, 0.25, () => { for (let i = 0; i < 26; i++) R(g, '#5a6068', rand() * 63 | 0, rand() * 63 | 0, 1, 1); }); }, 8],
     // surface of the lava lake (emissive): plates of crust 3 to 8 m across on about half of the molten surface, a few hotter openings; 16 m per tile
     laveVolcan: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#ff8a1e', 0, 0, 64, 64);

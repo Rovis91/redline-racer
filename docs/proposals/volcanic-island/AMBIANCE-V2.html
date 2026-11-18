@@ -30,83 +30,100 @@
 <body>
 <main>
 <h1>Volcanic Island / La Couronne Brisée</h1>
-<p class="dim">Mood and reference sheet, V2, second edition. Rewritten after the author drove the first V2: the island moves from a subtropical to a subarctic setting (Svalbard, Iceland, Lofoten, Greenland), the crater keeps a closed rim that the road crosses in two basalt galleries (third round: the open cuttings of the second edition are gone), and the zones are described as rebuilt in <code>src/maps/volcan/</code> (6.58 km, run anticlockwise with the sea on the right; the layout is unchanged).</p>
+<p class="dim">Mood and reference sheet, V2, fourth edition. Rewritten after the author's fourth round of driving; the art direction is taken up again completely. The layout is the bible's road, unchanged (6.58 km, anticlockwise, sea on the right, two galleries through the caldera wall): only the scenery and the zones change. The chainages and corners quoted in the zones below were written for a draft layout that the author refused; the chainages in force are in the header of each <code>src/maps/volcan/scenery-volcan-&lt;zone&gt;.js</code>, and the village lies along the harbour straight, not on streets the road drives through. The terrain is now an island designed on its own: a hand-drawn shoreline with bays, headlands and lava deltas, sea cliffs as high as the land behind them, a highland of stepped basalt flows rising northwards, lava lobes ending in scarps, a cone cut by ravines, and a caldera rim broken into crags and saddles with one collapsed sector. The road is laid on it with cuts and embankments.</p>
 
-<p class="lead">A fictional volcanic island in the far north Atlantic: black lava, grey-green moss, snow on the heights, and one small fishing town painted in every bright colour there is. The race runs on the old service road of the volcano observers: out of the harbour, up the moss slope, round the black needle at the pass, through the wall of the crater by two galleries, and back down to the quay by the hairpins. <b>Colour belongs to people; everything else is black, moss and white.</b></p>
+<p class="lead">A fictional subarctic volcanic island (Iceland, Faroe, Lofoten, Svalbard) with two worlds. Below, a fishing village that lives from cod and sheep, its wooden houses in every bright colour. Above, the volcano as the ground of a scientific expedition. Between them: the service road the race runs on, the power line, the hot-water pipeline, the supply track and the signs. <b>Every object has a reason to be exactly where it is; nothing is set beside the road to fill a gap.</b> A pasture belongs to a farm (house, barn, track, gate); an instrument belongs to a survey line that leads to the base camp; a rack of fish stands where the boats land.</p>
 
 <dl>
-  <dt>Place</dt><dd>One island, cold sea all round, a few icebergs and black stacks off the roadless coast. A closed crater in the middle whose rim is high, white and whole all round: the road goes through its wall in two galleries. A basalt needle at the north-east pass. The only town on the south shore.</dd>
-  <dt>Time and light</dt><dd>Late summer afternoon at high latitude: low clear sun from the south-west, long shadows, a pale cold sky, haze on the sea horizon. Snow lies from about 250 m up and in hollows lower down.</dd>
+  <dt>Place</dt><dd>One island about 2 km across. Village and harbour on the low south shore; farmland on the east side; a highland ending in 140 m sea cliffs in the north; the caldera in the middle (rim about 300 m, floor at 140 m, radius 200 m), its rim broken, the road crossing its wall in two galleries; a parasitic cone on the roadless west flank; black skerries and stacks off the coasts.</dd>
+  <dt>Time and light</dt><dd>Late summer afternoon at high latitude: low clear sun from the south-west, long shadows, a pale cold sky, haze on the sea horizon.</dd>
   <dt>Style</dt><dd>Retro arcade drift, PS1 / Saturn: faceted low-poly, 64 to 128 px textures in nearest filtering, flat readable surfaces. Read at 150 km/h before being read up close.</dd>
-  <dt>The volcano</dt><dd>Quiet, watched, not erupting. Liquid lava in one place only, the small lake on the crater floor. Its rock has no stripes: large planes of one dark tone, broken by snow and moss.</dd>
-  <dt>Anti-references</dt><dd>Palms, banana groves, vines, terraces, tiled stucco houses (the first V2); a lone harbour crane; rock textures in bands; a crater rim in teeth, notched or bent by the road; lava everywhere, red sky; a resort.</dd>
+  <dt>The volcano</dt><dd>Quiet, watched, not erupting. Liquid lava in one place only, the small lake on the caldera floor; steam vents elsewhere.</dd>
+  <dt>Anti-references</dt><dd>Objects dropped beside the road with no owner (a sheep pen with no farm, a lone hut, a row of identical cairns every 150 m); smooth rounded hills and a round coastline; pale blue patches on the volcano (the glacier tongues and blue-shadowed snow of the third edition are removed: snow is white, only on the highest crags); palms, terraces, stucco (first V2); a container port or marina; pastel houses.</dd>
 </dl>
-<div class="sw"><span class="d" style="background:#2E3034">#2E3034 lava</span><span class="d" style="background:#6E7558">#6E7558 moss</span><span style="background:#EEF2F4">#EEF2F4 snow</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span><span class="d" style="background:#C8362B">#C8362B red</span><span style="background:#E2B02A">#E2B02A yellow</span><span class="d" style="background:#2F6F9A">#2F6F9A blue</span><span class="d" style="background:#3F8A5A">#3F8A5A green</span><span style="background:#F0641E">#F0641E lava lake</span></div>
+<div class="sw"><span class="d" style="background:#2E3034">#2E3034 lava</span><span class="d" style="background:#6E7558">#6E7558 moss</span><span style="background:#EEF2F4">#EEF2F4 snow</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span><span class="d" style="background:#D2362B">#D2362B house red</span><span style="background:#F2C230">#F2C230 house yellow</span><span class="d" style="background:#2F7FC8">#2F7FC8 house blue</span><span class="d" style="background:#3FA45A">#3FA45A house green</span><span style="background:#EE6FA0">#EE6FA0 house pink</span><span style="background:#F0641E">#F0641E expedition orange</span><span style="background:#F2EEE4">#F2EEE4 expedition white</span></div>
 
-<h2><small>ZONE 1</small>Le Phare: boathouses and fish racks</h2>
-<p>PK 0 to 690, 12 to 40 m. The start leaves the quay eastwards past the working end of the harbour: red boathouses with their doors on the water side, racks of drying fish, trawlers at anchor, then bare black rock as the road begins to climb.</p>
+
+<h2><small>ZONE 1</small>Le Port: the quay and the fish racks</h2>
+<p>PK 0 to 490, 3 to 8 m. The start: the long straight along the quay, heading east, the harbour basin on the right. This is the only flat, sheltered ground on the island, so everything that arrives by sea lands here, the expedition's supplies included.</p>
 <dl>
-  <dt>Mood</dt><dd>A working fishing station at the edge of the map of the world: cold air, tar, salt fish, bright paint on wet wood.</dd>
-  <dt>Landmark</dt><dd>The line of red boathouses on the left, gable to the road, and the tall A-frames of the fish racks on the quay.</dd>
-  <dt>Read at speed</dt><dd><ul><li>boathouses in one colour, falu red, white corner boards, dark roofs</li><li>timber racks in a row, taller than a house, pale grey wood</li><li>trawlers and open boats in bright bands on dark water</li><li>red-and-white beacons on the quay edge</li><li>no tree at all; black rock and a little moss</li></ul></dd>
-  <dt>Light</dt><dd>Low, clear subarctic sun from the south-west, long shadows, a cold pale sky; colours are saturated only on what is painted.</dd>
-  <dt>Transition</dt><dd>The buildings stop at once; the quay narrows to a ledge of black rock and the moss slope of Les Cendres opens ahead, the volcano above it with snow on its rim.</dd>
-  <dt>Not this</dt><dd>A crane or container gear; a marina; palms or any subtropical planting.</dd>
+  <dt>Mood</dt><dd>A working harbour in cold air: tar, salt fish, wet paint, diesel. Busy but small.</dd>
+  <dt>Landmark</dt><dd>The red and white lighthouse at the end of the breakwater, and the tall A-frame cod racks. Both are visible from the grid.</dd>
+  <dt>Read at speed</dt><dd><ul><li>quay of basalt blocks, 3 m above the water, dark grey with a pale concrete coping: it gives the right-hand edge of the straight a hard line</li><li>trawlers (15 to 20 m) and open boats moored at the quay and in the basin, hulls in bright bands, because the village lives from cod</li><li>a concrete slipway with a boat hauled up on it and a winch, where boats are repaired</li><li>boathouses (naust) gable to the water, one colour each, white corner boards: boats are kept dry here in winter</li><li>the fish market shed, long and low, on the quay: the catch is sold where it lands</li><li>A-frame racks of drying cod, 5 to 6 m high, pale grey wood, on the quay where the catch is landed and on the windy point by the breakwater: wind dries the fish</li><li>net sheds with nets hung to dry, stacks of fish crates</li><li>breakwater ending in a red and white lighthouse, which marks the harbour mouth</li><li>on the left the first rows of the village climbing the slope</li><li>an expedition depot at the west end of the quay: orange containers, fuel drums, a crane truck. The supply track starts here, so the depot has to be here</li></ul></dd>
+  <dt>Light</dt><dd>Low sun from the south-west across the basin: the water is a dark steel blue with glitter, the painted fronts on the left are lit full on.</dd>
+  <dt>Transition</dt><dd>The quay ends and the road turns left into the main street.</dd>
+  <dt>Not this</dt><dd>A container port or marina; a crane over the road; racks on the road edge with no boats near them; pastel colours.</dd>
 </dl>
-<div class="sw"><span class="d" style="background:#A8322A">#A8322A boathouse</span><span style="background:#F2EEE4">#F2EEE4 trim</span><span class="d" style="background:#2A2D31">#2A2D31 roof</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span><span style="background:#9A968C">#9A968C grey wood</span></div>
+<div class="sw"><span class="d" style="background:#1D4A68">#1D4A68 sea</span><span class="d" style="background:#2E3034">#2E3034 basalt quay</span><span class="d" style="background:#D2362B">#D2362B house red</span><span style="background:#F2EEE4">#F2EEE4 trim</span><span style="background:#9A968C">#9A968C grey wood</span><span style="background:#F0641E">#F0641E expedition orange</span></div>
 <div class="pics">
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hamn%C3%B8y_(27063289587).jpg?width=640" alt="Red fishing cabins at Hamnøy, Lofoten"><figcaption><b>Keep: one red for a whole row of cabins, white trims, dark rock right behind</b>El Coleccionista de Instantes, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Hamn%C3%B8y_(27063289587).jpg">source</a></figcaption></figure>
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Loaded_Drying_Racks_for_Stockfish_at_Reine%2C_Lofoten%2C_Norway.jpg?width=640" alt="Stockfish drying racks at Reine, Lofoten"><figcaption><b>Keep: the A-frame racks, their height and rhythm. Not: the fish themselves in detail</b>Christoph Strässler, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Loaded_Drying_Racks_for_Stockfish_at_Reine%2C_Lofoten%2C_Norway.jpg">source</a></figcaption></figure>
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Pier_at_Siglufj%C3%B6r%C3%B0ur_overlooking_the_coast.jpg?width=640" alt="Pier at Siglufjörður, Iceland"><figcaption><b>Keep: a plain working pier under a steep bare slope</b>AdamG2016, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Pier_at_Siglufj%C3%B6r%C3%B0ur_overlooking_the_coast.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Siglufj%C3%B6r%C3%B0ur_2017_03.jpg?width=640" alt="Harbour of Siglufjörður, Iceland"><figcaption><b>Keep: quay, sheds and boats of a small northern harbour</b>Smiley.toerist, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Siglufj%C3%B6r%C3%B0ur_2017_03.jpg">source</a></figcaption></figure>
 </div>
 
-<h2><small>ZONE 2</small>Les Cendres: the moss slope</h2>
-<p>PK 690 to 2210, 40 to 177 m, climbed. A long run of S-bends up an old lava and ash slope covered in grey-green moss: black boulders, stone cairns that mark the old track, two small farms with turf-dark cabins and sheep fences, snow lying in the hollows higher up. The sea is always on the right.</p>
+<h2><small>ZONE 2</small>Le Village: the street to the church</h2>
+<p>PK 490 to 900, 8 to 20 m. Two right-angle corners: left into the main street, right round the church square. This is the first braking of the lap. The village grew along the street that climbs from the harbour to the church, so the houses follow the street and the street follows the slope.</p>
 <dl>
-  <dt>Mood</dt><dd>Empty and enormous: a road, a line of cairns, and moss as far as the snow.</dd>
-  <dt>Landmark</dt><dd>The volcano, seen whole on the left with its white rim and its broken crown; nearer, the row of cairns along the inside of the bends.</dd>
-  <dt>Read at speed</dt><dd><ul><li>moss ground: one grey-green, lumpy, with black rock showing through</li><li>cairns: man-high piles of black stones, one every 150 m</li><li>isolated black boulders, never in rows</li><li>two farms: three or four small coloured cabins, a fence, nothing else</li><li>snow patches in the hollows from 120 m up, white with a blue shadow side</li></ul></dd>
-  <dt>Light</dt><dd>Wide open; the low sun rakes the slope and every boulder throws a long shadow. Sea glitter on the right.</dd>
-  <dt>Transition</dt><dd>Moss thins to bare red-brown scoria and snow; the black needle rises ahead: the pass.</dd>
-  <dt>Not this</dt><dd>Terraces, vines or any farming in rows; stepped black walls; trees; a green alpine meadow.</dd>
+  <dt>Mood</dt><dd>Closed in, bright and domestic after the open quay: paint, fences, washing, a school flag.</dd>
+  <dt>Landmark</dt><dd>The white church with its spire on the square at the second corner. It is the braking mark.</dd>
+  <dt>Read at speed</dt><dd><ul><li>wooden houses close on both sides of the street and in three or four rows behind it, about 80 houses in all, every neighbour a different saturated colour (green, yellow, blue, red, pink), white trims, dark roofs, some gable to the street</li><li>small fenced gardens and washing lines: people live here</li><li>a shop with a sign and a school with a flagpole, a little larger than the houses, so the street has a centre</li><li>the church: white timber, a pointed dark spire, on the square at the second corner, with a churchyard bounded by a low stone wall and white crosses</li><li>street lamps along the main street, because the winters are dark</li><li>the village is far bigger than in the third edition: it is the one place where colour is dense</li></ul></dd>
+  <dt>Light</dt><dd>Sun rakes down the street from the right; shadows of the houses fall across the road and give a rhythm of light and shade.</dd>
+  <dt>Transition</dt><dd>The last houses, then the first pasture walls.</dd>
+  <dt>Not this</dt><dd>Pastel or stucco houses; tiled roofs; two identical neighbours; a church with no square or street to explain it; palms.</dd>
 </dl>
-<div class="sw"><span class="d" style="background:#6E7558">#6E7558 moss</span><span class="d" style="background:#2E3034">#2E3034 lava</span><span style="background:#EEF2F4">#EEF2F4 snow</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span></div>
+<div class="sw"><span class="d" style="background:#D2362B">#D2362B red</span><span style="background:#F2C230">#F2C230 yellow</span><span class="d" style="background:#2F7FC8">#2F7FC8 blue</span><span class="d" style="background:#3FA45A">#3FA45A green</span><span style="background:#EE6FA0">#EE6FA0 pink</span><span style="background:#F2EEE4">#F2EEE4 church white</span><span class="d" style="background:#2A2D31">#2A2D31 roof</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Wooden_church_in_Iceland_(477410141).jpg?width=640" alt="Small wooden church in Iceland"><figcaption><b>Keep: a small white timber church with a pointed spire and a dark roof, alone</b>Helgi Halldórsson, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Wooden_church_in_Iceland_(477410141).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Houses_in_Siglufj%C3%B6r%C3%B0ur_Iceland.jpg?width=640" alt="Houses at Siglufjörður, Iceland"><figcaption><b>Keep: plain coloured houses with dark roofs under a bare slope</b>Lucida sidera, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Houses_in_Siglufj%C3%B6r%C3%B0ur_Iceland.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Longyearbyen_houses_-_buiobuione.jpg?width=640" alt="Coloured houses of Longyearbyen, Svalbard"><figcaption><b>Keep: rows of plain timber houses, one strong colour each, on bare ground</b>Buiobuione, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Longyearbyen_houses_-_buiobuione.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/The_colors_from_Ilulissat_-_Greenland._-_panoramio.jpg?width=640" alt="Coloured houses of Ilulissat, Greenland"><figcaption><b>Keep: every house a different saturated colour, scattered up a rocky slope</b>patano, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:The_colors_from_Ilulissat_-_Greenland._-_panoramio.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ilulissat_View_of_the_city_Greenland_Buiobuione_02.jpg?width=640" alt="View of Ilulissat, Greenland"><figcaption><b>Keep: the town as a whole seen from the road: colour against rock and water</b>Buiobuione, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Ilulissat_View_of_the_city_Greenland_Buiobuione_02.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 3</small>Les Fermes: farms on the old flows</h2>
+<p>PK 900 to 1900, 20 to 85 m. A fast left sweep out of the village, a 260 m straight through farmland, then two hairpins up the scarp of an old lava flow. The only soil on the island lies on the old flows of the east side, so this is where the village keeps its sheep and cuts hay.</p>
+<dl>
+  <dt>Mood</dt><dd>Orderly and rural: walls, tracks, sheep, wrapped bales. The last place where people own the land.</dd>
+  <dt>Landmark</dt><dd>The red barns, and behind the hairpins the black scarp of the lava flow.</dd>
+  <dt>Read at speed</dt><dd><ul><li>four farms, each with a farmhouse in one bright colour, a red barn, a turf-roofed sheep shed, a gravel track and a gate from the road: no pasture without a farm</li><li>pastures enclosed by dry-stone walls that run in straight lines up to the scarp, so the walls show the slope</li><li>sheep inside the walls only, small white and grey dots on moss-green grass</li><li>hay bales wrapped in white plastic in the mown fields: the farms cut hay for the winter</li><li>a round stone sorting fold (réttir) at the foot of the scarp where the farm tracks meet: the autumn round-up ends here</li><li>the power line on wooden poles and the hot-water pipeline on concrete saddles leave the village along the road, so the road already serves the expedition</li><li>a road sign before the hairpins, one warning only</li><li>the lava scarp: black columns, 15 to 20 m high, behind the hairpins</li></ul></dd>
+  <dt>Light</dt><dd>Open and bright. The scarp is in shadow when the sun is behind it, which makes it the darkest shape on the horizon.</dd>
+  <dt>Transition</dt><dd>The walls stop at the top of the scarp; moss and bare lava begin; the first orange survey stakes.</dd>
+  <dt>Not this</dt><dd>A sheep pen with no farm; a lone hut; fields in strips or terraces; sheep on the road side of the wall; trees.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#6E7558">#6E7558 pasture moss</span><span class="d" style="background:#2E3034">#2E3034 scarp</span><span class="d" style="background:#D2362B">#D2362B barn red</span><span style="background:#F2C230">#F2C230 house yellow</span><span style="background:#F2EEE4">#F2EEE4 bale white</span><span style="background:#9A968C">#9A968C stone wall</span></div>
+<p><b>References to find</b></p>
+<ul><li>An Icelandic réttir sheep fold seen from the road, with the farm tracks meeting at it</li><li>A farm in Iceland or the Faroes with a red barn and a turf-roofed shed, stone walls running up a slope behind it</li></ul>
+
+<h2><small>ZONE 4</small>Les Falaises: the expedition highland</h2>
+<p>PK 1900 to 3480, 85 to 155 m. The climb across the highland to the cliff-top hairpin at the north tip, then west past the basalt needle to the base camp at the mouth of the north gallery. The expedition's ground starts where farming stops, so every object here belongs to a survey line that leads to the camp.</p>
+<dl>
+  <dt>Mood</dt><dd>Exposed and technical: wind, moss, cliffs, orange flags, instruments.</dd>
+  <dt>Landmark</dt><dd>The basalt needle (a volcanic plug, 100 m) that the road wraps, then the orange of the base camp.</dd>
+  <dt>Read at speed</dt><dd><ul><li>stepped basalt flows covered in grey-green moss, black boulders never in rows: the highland is built of flows that each end in a step</li><li>survey lines of orange stakes with flags crossing the road at right angles and running to instruments: the lines are what the expedition measures along</li><li>a seismic station (a white box, a solar panel, a short aerial) at the end of each line</li><li>a weather station on the open plateau: a mast, an anemometer, a white louvred screen, placed where nothing shelters it from the wind</li><li>the cliff-top hairpin at the north tip: a radio relay mast and a guard rail, sea stacks and skerries 140 m below</li><li>the supply track of the tracked vehicles branching off the road: two ruts with orange stakes</li><li>the base camp on a levelled gravel pad: rows of orange and white containers, yellow and orange domed tents, an antenna mast with guy wires, a field of solar panels, fuel drums, two tracked vehicles parked, a flag, crates</li><li>the power line ends at the camp's transformer; the hot-water pipeline goes into the gallery</li></ul></dd>
+  <dt>Light</dt><dd>The highest and most open light. The orange and white of the camp are the only warm notes on grey-green and black.</dd>
+  <dt>Transition</dt><dd>The basalt headwall and the gallery mouth.</dd>
+  <dt>Not this</dt><dd>A row of identical cairns every 150 m; instruments with no line leading to them; snow or pale blue patches on the moss; a lone hut.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#6E7558">#6E7558 moss</span><span class="d" style="background:#2E3034">#2E3034 basalt</span><span style="background:#F0641E">#F0641E expedition orange</span><span style="background:#F2EEE4">#F2EEE4 expedition white</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span><span style="background:#EEF2F4">#EEF2F4 snow</span></div>
 <div class="pics">
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Iceland_2008-05-27_(2684866612).jpg?width=640" alt="Moss-covered lava field of Eldhraun, Iceland"><figcaption><b>Keep: lumpy grey-green moss over black lava, no tree. This is the ground of the zone</b>Guillaume Baviere, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Iceland_2008-05-27_(2684866612).jpg">source</a></figcaption></figure>
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/View_of_%C3%96gmundarhraun_lava_field_in_Iceland_from_Road_427.jpg?width=640" alt="Ögmundarhraun lava field seen from road 427"><figcaption><b>Keep: a road laid straight on a lava field, moss and rock to the horizon</b>Alexander Grebenkov, CC BY 3.0. <a href="https://commons.wikimedia.org/wiki/File:View_of_%C3%96gmundarhraun_lava_field_in_Iceland_from_Road_427.jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/A_rock_cairn%2C_hiking_trail_from_M%C3%BDvatn_to_Dettifoss%2C_Iceland_08.jpg?width=640" alt="Stone cairn on an Icelandic trail"><figcaption><b>Keep: the cairn as a track marker, its size against the land</b>Michal Klajban, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:A_rock_cairn%2C_hiking_trail_from_M%C3%BDvatn_to_Dettifoss%2C_Iceland_08.jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Road_417_in_Iceland_02.jpg?width=640" alt="Road 417 across lava, Iceland"><figcaption><b>Keep: asphalt, edge posts, black lava beside the road</b>Hornstrandir1, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Road_417_in_Iceland_02.jpg">source</a></figcaption></figure>
-</div>
-
-<h2><small>ZONE 3</small>La Couronne: the horseshoe round the needle</h2>
-<p>PK 2210 to 3780, 177 to 232 to 200 m. The signature corner: a wide horseshoe round a 105 m basalt needle and its scree, the pass at 232 m with the belvedere deck and the observation post on the sea side, snow fields, red scoria, then the road turns its back on the sea and heads for the low point of the crater rim.</p>
-<dl>
-  <dt>Mood</dt><dd>Monumental and windy: one black spike, snow, a broken white-rimmed crater behind it, and half the ocean under the guardrail.</dd>
-  <dt>Landmark</dt><dd>The black needle inside the bend, the crater rim directly behind it on the approach.</dd>
-  <dt>Read at speed</dt><dd><ul><li>a single dark spire, faceted, isolated, never on the roadway</li><li>snow fields with hard edges on charcoal and red-brown ground</li><li>the belvedere: a pale concrete deck, a railing, three benches, an antenna on the post</li><li>the outer flank of the volcano, smooth and white-topped, well clear of the road</li><li>black sea stacks and a few icebergs far below, off the roadless north coast</li></ul></dd>
-  <dt>Light</dt><dd>The highest and coldest light of the lap: pale sky, white snow, black rock; the concrete of the post is the only warm tone.</dd>
-  <dt>Transition</dt><dd>Leaving the horseshoe the road runs at the foot of the volcano into the north gallery; the crater opens at its far end.</dd>
-  <dt>Not this</dt><dd>A needle that hides the next corner; lava on the surface here; a visitor centre with a car park.</dd>
-</dl>
-<div class="sw"><span class="d" style="background:#22272A">#22272A coal</span><span style="background:#EEF2F4">#EEF2F4 snow</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span><span style="background:#B8B5A6">#B8B5A6 concrete</span><span style="background:#A9C4D4">#A9C4D4 ice</span></div>
-<div class="pics">
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Roque_Cinchado_mit_Teide.jpg?width=640" alt="Roque Cinchado with Mount Teide behind"><figcaption><b>Keep: a spire in front of a cone, exactly this framing. Not: the dry southern light, the mushroom shape</b>Thomas Wolf (foto-tw.de), CC BY-SA 3.0 de. <a href="https://commons.wikimedia.org/wiki/File:Roque_Cinchado_mit_Teide.jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hike_on_top_of_a_mountain_near_Longyearbyen%2C_Svalbard-rocky_terrain_2.JPG?width=640" alt="Bare rocky ground above Longyearbyen, Svalbard"><figcaption><b>Keep: bare broken rock and snow patches, no plant</b>Al83tito, CC0. <a href="https://commons.wikimedia.org/wiki/File:Hike_on_top_of_a_mountain_near_Longyearbyen%2C_Svalbard-rocky_terrain_2.JPG">source</a></figcaption></figure>
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Views_of_the_Spitsbergen_mountainous_coast_seen_from_a_boat_2.JPG?width=640" alt="Mountainous coast of Spitsbergen"><figcaption><b>Keep: dark mountains streaked with snow dropping into the sea, for the far coast</b>Al83tito, CC0. <a href="https://commons.wikimedia.org/wiki/File:Views_of_the_Spitsbergen_mountainous_coast_seen_from_a_boat_2.JPG">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/An_iceberg_slightly_tilted%2C_Liefdefjord%2C_Svalbard.jpg?width=640" alt="Iceberg in Liefdefjord, Svalbard"><figcaption><b>Keep: a few small icebergs as white-blue blocks on dark water</b>Andreas Weith, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:An_iceberg_slightly_tilted%2C_Liefdefjord%2C_Svalbard.jpg">source</a></figcaption></figure>
 </div>
 
-<h2><small>ZONE 4</small>Le Cratère: through the broken crown</h2>
-<p>PK 3780 to 4890, 200 to 112 m. The crater rim is high, snow-covered and unbroken. The road goes in through the north wall in a basalt gallery (concrete portal in a headwall of basalt, organ pipes on the banks), crosses the crater floor past a small lava lake, cooled crust, a spatter cone and fumaroles, and leaves through the south-west wall in a second gallery.</p>
+<h2><small>ZONE 5</small>Le Cratère: the drilling rig and the lava lake</h2>
+<p>PK 3480 to 4270, 155 to 140 to 110 m. The north gallery, the caldera floor crossed southwards, the south-west gallery. This is what the expedition came for. The rim is broken into crags and saddles with one collapsed sector, and the road passes through the intact wall in two galleries.</p>
 <dl>
-  <dt>Mood</dt><dd>Inside the mountain under an open sky: black walls, snow above, steam, and one orange eye of lava beside the road.</dd>
-  <dt>Landmark</dt><dd>The lava lake on the left of the road in the middle of the floor; above it the white crest of the east rim.</dd>
-  <dt>Read at speed</dt><dd><ul><li>a smooth ring of dark walls, white on top, lower ahead and behind where the road passes</li><li>one small orange surface with black rafts of crust</li><li>matt black crust and scattered boulders on the other side of the road</li><li>thin pale columns of steam, a red-brown spatter cone</li><li>the galleries: a concrete portal in a basalt headwall, basalt columns on both banks, warm lamps inside</li></ul></dd>
-  <dt>Light</dt><dd>The floor is in the shadow of the west rim; the east wall and its snow are in full sun. The lake is the only warm light.</dd>
-  <dt>Transition</dt><dd>The south-west gallery opens on the flank: sudden sea, sun and the coloured town 100 m below.</dd>
-  <dt>Not this</dt><dd>An open cutting through the rim; a crater whose rim is cut into teeth or bent by the road; lava anywhere else on the map; a red sky or an ash plume.</dd>
+  <dt>Mood</dt><dd>Inside the mountain under an open sky: black walls, steam, one orange eye of lava, and cables.</dd>
+  <dt>Landmark</dt><dd>The 25 m derrick of the drilling rig, and the white observatory dome on the rim.</dd>
+  <dt>Read at speed</dt><dd><ul><li>inner walls as cliff over scree fans, dark grey with a few white crags at the top</li><li>the lava lake east of the road, the only liquid lava on the island, cordoned by stakes, with gas sensors on tripods around it</li><li>the drilling rig beside the road: a 25 m lattice derrick, mud tank, generator container, pipe racks. The road bends because the rig is there</li><li>cable runs on low trestles from the rig and the sensors to a junction box, then up the inner wall on small pylons to the observatory hut, a white dome on a platform on the rim</li><li>steam vents on scoria mounds, each with a sensor</li><li>a tracked vehicle and a container shelter at the rig</li></ul></dd>
+  <dt>Light</dt><dd>The floor is in the shadow of the west rim; the east wall is in full sun. The lake and the orange stakes are the only warm light.</dd>
+  <dt>Transition</dt><dd>The south-west gallery.</dd>
+  <dt>Not this</dt><dd>Lava anywhere else; a red sky or an ash plume; blue ice in the crater; sensors with no cable; an open cutting instead of the galleries.</dd>
 </dl>
-<div class="sw"><span style="background:#F0641E">#F0641E lava</span><span class="d" style="background:#1C1C1E">#1C1C1E crust</span><span class="d" style="background:#3A3C42">#3A3C42 wall</span><span style="background:#EEF2F4">#EEF2F4 snow</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span></div>
+<div class="sw"><span style="background:#F0641E">#F0641E lava</span><span class="d" style="background:#1C1C1E">#1C1C1E crust</span><span class="d" style="background:#3A3C42">#3A3C42 wall</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span><span style="background:#F2EEE4">#F2EEE4 dome white</span><span style="background:#EEF2F4">#EEF2F4 snow</span></div>
 <div class="pics">
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Viti_Crater_Askja_Iceland_UL1.jpg?width=640" alt="Víti crater at Askja, Iceland"><figcaption><b>Keep: a round crater with smooth steep walls and snow on the rim. Not: the blue water (ours holds lava)</b>Ulrich Latzenhofer, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Viti_Crater_Askja_Iceland_UL1.jpg">source</a></figcaption></figure>
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Crater_volc%C3%A1nico_Keri%C3%B0%2C_Su%C3%B0urland%2C_Islandia%2C_2014-08-16%2C_DD_151.jpg?width=640" alt="Kerið crater, Iceland"><figcaption><b>Keep: red scoria walls, moss on the gentler side, the even rim</b>Diego Delso, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Crater_volc%C3%A1nico_Keri%C3%B0%2C_Su%C3%B0urland%2C_Islandia%2C_2014-08-16%2C_DD_151.jpg">source</a></figcaption></figure>
@@ -114,48 +131,50 @@
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Sulphur_fumaroles%2C_Hverir.jpg?width=640" alt="Fumaroles at Hverir, Iceland"><figcaption><b>Keep: thin white steam from bare ground. Not: the yellow sulphur</b>Debivort, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Sulphur_fumaroles%2C_Hverir.jpg">source</a></figcaption></figure>
 </div>
 
-<h2><small>ZONE 5</small>Les Lacets: the hairpins above the town</h2>
-<p>PK 4890 to 6100, 112 to 12 m. Three hairpins down the south-west flank: a few coloured cabins between the legs, the white wooden church and its spire outside the second hairpin, fish racks, cairns at the bends, moss and black rock, the town getting bigger at every turn.</p>
+<h2><small>ZONE 6</small>La Descente: the old summer road</h2>
+<p>PK 4270 to 5780, 110 to 9 m. Out of the gallery, a traverse of the cone's flank through a rock cut, then three hairpins down to the west shore. This is the old road to the village's summer pastures, reused by the expedition.</p>
 <dl>
-  <dt>Mood</dt><dd>Coming home: the first colours after the crater, and the whole harbour laid out below.</dd>
-  <dt>Landmark</dt><dd>The white wooden church with its dark spire outside the second hairpin: the braking mark of the descent.</dd>
-  <dt>Read at speed</dt><dd><ul><li>cabins as small vivid cubes, each a different colour, dark roofs</li><li>white church, pointed spire, alone on its turn</li><li>a cairn at each hairpin</li><li>moss slope with black boulders, no planting</li><li>the town, the quay and the lighthouse visible below from each leg</li></ul></dd>
-  <dt>Light</dt><dd>South-west slope in full low sun: the warmest light of the lap, on cold colours.</dd>
-  <dt>Transition</dt><dd>The last hairpin lands on the quay: the road flattens, widens, and the coloured fronts line the left.</dd>
-  <dt>Not this</dt><dd>Banana groves, palms, gardens; terraces; a second village competing with the harbour.</dd>
+  <dt>Mood</dt><dd>Long and open, bare at the top and greener at every turn, with the sea growing below.</dd>
+  <dt>Landmark</dt><dd>The parasitic cone in the west with a survey mast on top, and the view over the sea.</dd>
+  <dt>Read at speed</dt><dd><ul><li>ravines and spurs of the cone, scree fans, bare black lava high up</li><li>a seismic station at each hairpin on its survey line</li><li>the cable from the caldera coming down on poles to a relay hut, so the instruments above have a link to the camp</li><li>lower, moss then grass: two summer farms (shieling), each with a turf house, a stone fold and its track</li><li>sheep on the unfenced hill in loose flocks near the folds, because the hill is open summer grazing</li><li>the hot-water pipeline following the road down from the gallery</li></ul></dd>
+  <dt>Light</dt><dd>The south-west slope in full low sun: the warmest light of the lap, on cold colours.</dd>
+  <dt>Transition</dt><dd>The shore.</dd>
+  <dt>Not this</dt><dd>Walls or fields on the open hill; a fold with no turf house; instruments with no survey line; snow below the rim.</dd>
 </dl>
-<div class="sw"><span style="background:#F4EFE2">#F4EFE2 church</span><span style="background:#D9A22A">#D9A22A yellow</span><span class="d" style="background:#2F6F9A">#2F6F9A blue</span><span class="d" style="background:#6E7558">#6E7558 moss</span><span class="d" style="background:#2A2D31">#2A2D31 roof</span></div>
+<div class="sw"><span class="d" style="background:#2E3034">#2E3034 lava</span><span class="d" style="background:#6E7558">#6E7558 moss</span><span class="d" style="background:#8C4A3E">#8C4A3E scoria</span><span class="d" style="background:#2F7FC8">#2F7FC8 house blue</span><span style="background:#F0641E">#F0641E expedition orange</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span></div>
 <div class="pics">
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Wooden_church_in_Iceland_(477410141).jpg?width=640" alt="Small wooden church in Iceland"><figcaption><b>Keep: a small white timber church with a pointed spire and a dark roof, alone</b>Helgi Halldórsson, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:Wooden_church_in_Iceland_(477410141).jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Houses_in_Siglufj%C3%B6r%C3%B0ur_Iceland.jpg?width=640" alt="Houses at Siglufjörður, Iceland"><figcaption><b>Keep: plain coloured houses with dark roofs under a bare slope</b>Lucida sidera, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Houses_in_Siglufj%C3%B6r%C3%B0ur_Iceland.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Hike_on_top_of_a_mountain_near_Longyearbyen%2C_Svalbard-rocky_terrain_2.JPG?width=640" alt="Bare rocky ground above Longyearbyen, Svalbard"><figcaption><b>Keep: bare broken rock and snow patches, no plant</b>Al83tito, CC0. <a href="https://commons.wikimedia.org/wiki/File:Hike_on_top_of_a_mountain_near_Longyearbyen%2C_Svalbard-rocky_terrain_2.JPG">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Road_417_in_Iceland_02.jpg?width=640" alt="Road 417 across lava, Iceland"><figcaption><b>Keep: asphalt, edge posts, black lava beside the road</b>Hornstrandir1, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Road_417_in_Iceland_02.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 7</small>La Côte: the shore road home</h2>
+<p>PK 5780 to 6230, 9 to 4 m. The shore road back to the harbour, flat out. It is the old coast track to the west landing, still used by the boats that land there.</p>
+<dl>
+  <dt>Mood</dt><dd>Flat, fast, bleak and salty: the lap closing.</dd>
+  <dt>Landmark</dt><dd>The village sign, then the expedition depot and the head of the quay.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a black sand and shingle beach, with skerries offshore</li><li>boats hauled up on the beach by a boathouse: the west landing is a beach landing</li><li>racks of fish on the shingle bank, where the wind is steady and the boats land</li><li>a farm on the landward side with walled hay fields, the same economy as the east farms</li><li>the village sign and a speed sign: the road is about to enter the village</li><li>the expedition depot and the head of the quay, where the supplies come in</li></ul></dd>
+  <dt>Light</dt><dd>Low sun over the sea on the right, then the lit fronts of the harbour ahead.</dd>
+  <dt>Transition</dt><dd>The quay, the start line.</dd>
+  <dt>Not this</dt><dd>A resort beach; a car park; pastel houses; a lone hut.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#2E3034">#2E3034 black sand</span><span class="d" style="background:#1D4A68">#1D4A68 sea</span><span style="background:#9A968C">#9A968C grey wood</span><span class="d" style="background:#D2362B">#D2362B boathouse red</span><span style="background:#F0641E">#F0641E expedition orange</span></div>
+<div class="pics">
   <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Drying_Stockfish_Lofoten_2009_2.JPG?width=640" alt="Stockfish racks in Lofoten"><figcaption><b>Keep: a single rack as a silhouette on a slope</b>Petr Šmerkl (Sveter), CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Drying_Stockfish_Lofoten_2009_2.JPG">source</a></figcaption></figure>
 </div>
 
-<h2><small>ZONE 6</small>Les Quais: the coloured town</h2>
-<p>PK 6100 to the line, 12 m. The home straight along the quay: three rows of wooden houses stepping up the slope on the island side, every one a different, very bright colour; on the quay the fish market, racks, crates and nets; boats in the basin, the breakwater and the lighthouse at its end.</p>
-<dl>
-  <dt>Mood</dt><dd>A polar town painted against the dark: red, yellow, blue, green, orange, each house its own.</dd>
-  <dt>Landmark</dt><dd>The wall of coloured gables on the left for the whole straight; ahead to the right, the red-and-white lighthouse.</dd>
-  <dt>Read at speed</dt><dd><ul><li>about twenty-five small gabled timber houses, no two neighbours the same colour</li><li>white window frames and corner boards, dark pitched roofs</li><li>houses on short stone feet, set in rows, gaps between them</li><li>the long low fish market on the sea side, nets and crates</li><li>the lighthouse on the breakwater, small boats in the basin</li></ul></dd>
-  <dt>Light</dt><dd>Low sun from the right over the water, straight onto the fronts: the most saturated colours of the map.</dd>
-  <dt>Transition</dt><dd>Past the line the houses give way to the red boathouses and racks of Le Phare: the lap closes.</dd>
-  <dt>Not this</dt><dd>A lone crane; stucco houses with tiled roofs; pastel colours; a tall hotel; a street narrowed by buildings on both sides.</dd>
-</dl>
-<div class="sw"><span class="d" style="background:#C8362B">#C8362B red</span><span style="background:#E2B02A">#E2B02A yellow</span><span class="d" style="background:#2F6F9A">#2F6F9A blue</span><span class="d" style="background:#3F8A5A">#3F8A5A green</span><span style="background:#E07A2A">#E07A2A orange</span><span class="d" style="background:#7A4E9A">#7A4E9A violet</span><span class="d" style="background:#2A8C8C">#2A8C8C teal</span></div>
-<div class="pics">
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Longyearbyen_houses_-_buiobuione.jpg?width=640" alt="Coloured houses of Longyearbyen, Svalbard"><figcaption><b>Keep: rows of plain timber houses, one strong colour each, on bare ground</b>Buiobuione, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Longyearbyen_houses_-_buiobuione.jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/The_colors_from_Ilulissat_-_Greenland._-_panoramio.jpg?width=640" alt="Coloured houses of Ilulissat, Greenland"><figcaption><b>Keep: every house a different saturated colour, scattered up a rocky slope</b>patano, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:The_colors_from_Ilulissat_-_Greenland._-_panoramio.jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ilulissat_View_of_the_city_Greenland_Buiobuione_02.jpg?width=640" alt="View of Ilulissat, Greenland"><figcaption><b>Keep: the town as a whole seen from the road: colour against rock and water</b>Buiobuione, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Ilulissat_View_of_the_city_Greenland_Buiobuione_02.jpg">source</a></figcaption></figure>
-  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Siglufj%C3%B6r%C3%B0ur_2017_03.jpg?width=640" alt="Harbour of Siglufjörður, Iceland"><figcaption><b>Keep: quay, sheds and boats of a small northern harbour</b>Smiley.toerist, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Siglufj%C3%B6r%C3%B0ur_2017_03.jpg">source</a></figcaption></figure>
-</div>
-
-<h2><small>GAPS</small>References not found, and what was not checked</h2>
+<h2><small>LINKS</small>Links between the two worlds</h2>
 <ul>
-  <li><b>A road gallery through a crater wall.</b> None found; the crater pictures give the walls and the rim only.</li>
-  <li><b>A small breakwater lighthouse, white with a red band, in a northern harbour.</b> None found.</li>
-  <li><b>Snow patches on moss beside a road.</b> The Svalbard ground picture stands in.</li>
-  <li><b>A basalt needle shaped like ours</b> (a pointed spire): Roque Cinchado gives the framing with the cone, not the shape or the light.</li>
-  <li>The photographs were chosen from their titles and descriptions on Wikimedia Commons, then looked at once on this page; authors and licences are as returned by the Commons API on the day and are to be rechecked on the source page before any other use.</li>
+  <li><b>The road.</b> An old pasture track, widened for the expedition. It is the reason the race exists.</li>
+  <li><b>The power line.</b> Wooden poles from the village up the east side to the base camp, ending at its transformer.</li>
+  <li><b>The hot-water pipeline.</b> On concrete saddles from the caldera down the south-west side to the village: the village is heated by the volcano.</li>
+  <li><b>The supply track.</b> Two ruts with orange stakes made by the tracked vehicles, beside the road across the highland, with a branch that cuts the loop of the tip.</li>
+  <li><b>Signs.</b> The village name, a sheep warning, "expedition ground", the gallery height.</li>
+</ul>
+
+<h2><small>GAPS</small>References not found</h2>
+<ul>
+  <li>A road gallery through a crater wall, and a small breakwater lighthouse in a northern harbour: none found.</li>
+  <li>The photographs were chosen from their titles and descriptions on Wikimedia Commons; authors and licences are to be rechecked on the source page before any other use.</li>
 </ul>
 
 <p class="dim" style="margin-top:36px">Images are linked from Wikimedia Commons, not copied into the repository, and are references for shapes and colours only, never textures.</p>
