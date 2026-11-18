@@ -26,8 +26,8 @@
     coneVolcan: (r = 17, ht = 24, seed = 0) => SHAPES.ringsVolcan(9, [[-r * 0.7, r * 1.5], [ht * 0.55, r * 0.55], [ht, r * 0.3], [ht * 0.82, r * 0.14]], true, 0.12, seed),
     // flat slab with an irregular edge, r in radius, ht thick: plate of crust, patch of cooled lava, slag field
     dalleVolcan: (r = 10, ht = 1, seed = 0, n = 9) => SHAPES.ringsVolcan(n, [[-r * 0.3, r * 1.04], [ht, r]], true, 0.18, seed),
-    // column of steam, ht high: narrow at the vent, wider above, open (give a translucent double-sided material); static
-    vapeurVolcan: (ht = 26, r = 1.2) => SHAPES.ringsVolcan(6, [[0, r], [ht * 0.4, r * 2.4], [ht, r * 4.5]], false, 0.25, 1),
+    // plume of steam over a vent, ht high: a closed column that billows, narrow at the ground, three swellings, a rounded head (give a translucent material); static
+    vapeurVolcan: (ht = 26, r = 1.2, seed = 1) => SHAPES.ringsVolcan(7, [[0, r], [ht * 0.15, r * 1.8], [ht * 0.3, r * 1.3], [ht * 0.5, r * 2.8], [ht * 0.68, r * 2], [ht * 0.85, r * 3.4], [ht, r * 1.2]], true, 0.3, seed),
     // far island on the horizon, R in radius at the waterline, H high: a closed faceted mass with a broad base, two shoulders and a broken summit. A silhouette: no detail
     ileVolcan: (R = 600, H = 220, seed = 0) => SHAPES.ringsVolcan(9, [[-10, R, R * 0.6], [H * 0.25, R * 0.78, R * 0.46], [H * 0.6, R * 0.45, R * 0.27], [H * 0.9, R * 0.2, R * 0.12], [H, R * 0.06, R * 0.04]], true, 0.18, seed),
     // basalt organ pipes against a wall, L long, columns up to ht: prisms 1.6 m wide of uneven height, set on two ranks; the higher rank is behind (+Z)
