@@ -22,6 +22,11 @@
     chevreEgee: () => [['poil', 1.1, 0.5, 0.42, 0, 0.72, 0], ['poil', 0.34, 0.36, 0.3, 0.68, 1.02, 0], ['tronc', 0.1, 0.22, 0.34, 0.66, 1.3, 0], ...[[-0.4, -0.13], [-0.4, 0.13], [0.4, -0.13], [0.4, 0.13]].map(([x, z]) => ['poil', 0.11, 0.5, 0.11, x, 0.25, z])],
     // power pole, 9 m: a tarred trunk, a crossbar with two white insulators. tr = 1: a grey transformer box under the crossbar
     poteauEgee: (tr = 0) => [['tronc', 0.3, 12, 0.3, 0, 3, 0], ['tronc', 0.16, 0.16, 2.2, 0, 8.5, 0], ['blanc', 0.16, 0.24, 0.16, 0, 8.7, -0.95], ['blanc', 0.16, 0.24, 0.16, 0, 8.7, 0.95], ...(tr ? [['noir', 0.8, 1.1, 0.7, 0.45, 7.2, 0]] : [])],
+    // substation of the island, a walled yard 10 × 14 m, gate on the front: a lime switch house with a blue door, two transformers (fins, three insulators, conservator) on plinths, and the steel gantry the lines leave from, 8.6 m, at x = 3
+    posteEgee: () => [['ocre', 10, 4, 14, 0, -1.9, 0], ['blanc', 0.3, 2, 14, -5, 1, 0], ['blanc', 10, 2, 0.3, 0, 1, -7], ['blanc', 10, 2, 0.3, 0, 1, 7], ['blanc', 0.3, 2, 5.2, 5, 1, -4.4], ['blanc', 0.3, 2, 5.2, 5, 1, 4.4], ['noir', 0.12, 1.8, 3.6, 5, 0.9, 0], ['filet', 0.06, 0.55, 0.55, 5.18, 1.35, 3],
+      ['blanc', 3.4, 3.2, 4, -2.8, 1.6, -4.4], ['blanc', 3.8, 0.25, 4.4, -2.8, 3.3, -4.4], ['bleu', 0.12, 2, 1, -1.08, 1, -4.4],
+      ...[1.2, 4.6].flatMap(z => [['ocre', 2.4, 0.3, 2.6, -1.6, 0.25, z], ['noir', 1.7, 1.9, 2, -1.6, 1.35, z], ['noir', 0.5, 0.5, 1.5, -2.2, 2.55, z], ...[-0.6, 0, 0.6].flatMap(k => [['noir', 2.3, 1.3, 0.1, -1.6, 1.3, z + k], ['blanc', 0.18, 0.6, 0.18, -1.2, 2.6, z + k]]), ['noir', 4.2, 0.07, 0.07, 0.9, 2.9, z], ['noir', 0.07, 5.6, 0.07, 3, 5.7, z]]),
+      ['noir', 0.3, 9, 0.3, 3, 4.5, -3.2], ['noir', 0.3, 9, 0.3, 3, 4.5, 6.2], ['noir', 0.3, 0.3, 9.8, 3, 8.6, 1.5], ...[-1.5, 1.2, 4.6].map(z => ['blanc', 0.18, 0.5, 0.18, 3, 8.95, z])],
     // scooter, 1.7 m, parked across the pavement, nose to +X (zone coque: its paint)
     scooterEgee: () => [['noir', 0.5, 0.5, 0.16, 0.62, 0.25, 0], ['noir', 0.5, 0.5, 0.16, -0.62, 0.25, 0], ['coque', 1.2, 0.34, 0.36, -0.05, 0.5, 0], ['coque', 0.14, 0.75, 0.42, 0.5, 0.8, 0], ['noir', 0.62, 0.14, 0.32, -0.3, 0.76, 0],
       ['noir', 0.1, 0.1, 0.66, 0.52, 1.2, 0], ['blanc', 0.1, 0.16, 0.2, 0.6, 1.02, 0]],
