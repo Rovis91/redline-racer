@@ -58,6 +58,10 @@
       veil(g, 0.5, () => { for (let i = 0; i < 900; i++) R(g, '#313a46', rand() * 512 | 0, rand() * 256 | 0, 1 + (rand() * 2 | 0), 1); }); }],
     feuVertArea51: 0x58f09a, // runway threshold lights (emit)
     cherenkovArea51: 0x4fb8ff, // the blue light of the reactor pool (emits)
+    // light ripples on the pool (emits; made to slide, see scenery-area51-vie.js): a net of wavy pale lines on `base`, each a whole number of waves so the tile repeats. On black it is the caustics thrown on the vault
+    ondeArea51: (base = '#2f8fe0') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, base, 0, 0, 64, 64);
+      for (const [w, a, c] of [[5, 0.22, '#58c0ff'], [2, 0.5, '#aee8ff']]) veil(g, a, () => { for (let l = 0; l < 5; l++) { const p = rand() * 6.28, q = rand() * 6.28, n = 1 + (l % 2), o2 = l * 12.8 + 3;
+        for (let x = 0; x < 64; x++) { const y = o2 + 4.5 * Math.sin(x / 64 * 6.2832 * n + p), u = o2 + 4.5 * Math.sin(x / 64 * 6.2832 * n + q); for (const yy of [y, y - 64, y + 64]) R(g, c, x, Math.round(yy), 1, w); for (const uu of [u, u - 64, u + 64]) R(g, c, Math.round(uu), x, w, 1); } } }); }],
     // worn white runway paint, 2 m per tile
     blancArea51: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#dcd8cc', 0, 0, 16, 16); veil(g, 0.45, () => { for (let i = 0; i < 16; i++) R(g, '#3a4048', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],
     // lit glazing band (emissive): warm panes between dark mullions, one in six unlit; stretched over the band it is put on

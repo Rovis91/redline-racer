@@ -244,6 +244,10 @@ Behaviour once `h`, `vault` or `opn` is set:
 - The sun stays off throughout the tunnel, shadow included (light comes from the columns and luminaires). There is no dedicated water-floor option: the map's scenery places its own water.
 - Cost: a few extra draw passes (the vault is cut into pieces by the openings and each column is one pass). The vault itself is one pass: fixed-scenery merging already fuses each opaque still facet with the other ribbons of its material, per 500 m tile.
 
+### `tick.indoor(i)`: a hall or underground built by the scenery
+
+A map whose hall or underground is scenery (no engine tunnel, `M.tun` null) can still have it treated as indoors: the tick its scenery returns carries `tick.indoor = i => 0..1` (the level at track sample `i`, 1 = an engine tunnel, with its own ramps at the mouths). The engine takes the larger of this level and its own tunnel: sun and sky light fade, the fog slides to `th.tun.fog` (give `th.tun = { fog, skyDay: 1 }` alone: nothing is built without `M.tun`), the eye adapts (`th.eye`), and the sound takes the tunnel reverb and the `AMBZ { tun: 1 }` bed. The light then comes from the `h.emis` lamps of the scenery. Used by area51 (`scenery-area51-vie.js`). Default: none.
+
 ### `th.eye`: eye adaptation
 
 `th.eye = { tun, blackM, clair }` (none of the three required). Visible without the `net` capture style only.

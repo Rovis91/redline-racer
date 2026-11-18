@@ -1962,7 +1962,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (state === 'title') vu.cth += dt * 0.22; else vu.cth += wrap(c.th - vu.cth) * Math.min(1, dt * 6); // in the menu, the camera orbits the car to show the map
       if ((vu.lookT -= dt) < 0) { const k = Math.exp(-dt * 5); vu.lookA *= k; vu.lookP *= k; } // mouse still for 2.5 s: the camera returns behind the car
       vu.nit = clamp(vu.nit + (c.boost > 0 ? dt / 0.7 : -dt / 1.1), 0, 1); // nitro: 0.7 s to enter, 1.1 s to exit
-      vu.lm += (zone(c.idx, 10) - vu.lm) * Math.min(1, dt * 8); // light: neon night ↔ interchange on red alarm, beating with the music
+      vu.lm += ((sceneryTick && sceneryTick.indoor ? Math.max(zone(c.idx, 10), sceneryTick.indoor(c.idx)) : zone(c.idx, 10)) - vu.lm) * Math.min(1, dt * 8); // tick.indoor(i): 0..1, a hall or underground the scenery builds itself (area51) darkens, adapts the eye and sounds like a tunnel; without it, the engine tunnel alone // light: neon night ↔ interchange on red alarm, beating with the music
     }
     const { carY, lm } = J;
 
