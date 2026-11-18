@@ -57,7 +57,8 @@
   const drive = { az: 0.32, v: 0, k: 0, hold: 2, locked: 0 };
   { const fam = { test: m => m === MAT.white || m === MAT.gray || m === MAT.steel, mat: Object.assign(MAT.white.clone(), { vertexColors: true }) }; fam.mat.color.setRGB(1, 1, 1); // one pass for the white, grey and steel of a head
     const tipM = glowM('#ff2030', {}), heads = REG.dishHead.filter(d => d.getWorldPosition(new THREE.Vector3()).x > 400 * k).map(out); // not the telemetry dish of the hairpin: a braking point
-    for (const d of heads) { weld(h, d, fam); if (d.scale.x > 0.2) star(tipM, 5, 0, 38.2, 0, d); }
+    const all = { test: () => true, mat: fam.mat }; // a 12 m calibration dish is one pass: its lattice ribs, a pixel wide from the road, are merged as plain metal
+    for (const d of heads) { weld(h, d, d.scale.x > 0.2 ? fam : all); if (d.scale.x > 0.2) star(tipM, 5, 0, 38.2, 0, d); }
     TICK.push(dt => { const [aim, , lk] = SEQ[drive.k], e = aim - drive.az;
       if (Math.abs(e) < 0.002 && Math.abs(drive.v) < 0.004) { drive.v = 0; drive.locked = lk; if ((drive.hold -= dt) < 0) { drive.k = (drive.k + 1) % SEQ.length; drive.hold = SEQ[drive.k][1]; drive.locked = 0; } }
       else { const want = Math.sign(e) * Math.min(RATE, Math.sqrt(2 * 0.006 * Math.abs(e))); drive.v += Math.max(-0.012 * dt, Math.min(0.012 * dt, want - drive.v)); drive.az += drive.v * dt; }
