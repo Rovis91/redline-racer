@@ -1,53 +1,36 @@
-// Scenery placement for "volcan" (Volcanic Island V2, subarctic, layout "through the crater"): island, volcano, sea, far islands, the shared materials, then each zone (scenery-volcan-<zone>.js).
-// See docs/methods/NEW-MAP.md, phase 3, and docs/proposals/volcanic-island/AMBIANCE-V2.html. Shapes: shapes-volcan-<family>.js; textures: textures-volcan.js.
+// Scenery placement for "volcan" (Volcanic Island, fourth edition: a fishing village below, a scientific expedition on the volcano, and what links them): island, sea, far islands, the shared materials and placers, then each zone (scenery-volcan-<zone>.js).
+// See docs/methods/NEW-MAP.md and docs/proposals/volcanic-island/AMBIANCE-V2.html. The island is relief-volcan.js (a height field of its own); shapes: shapes-volcan-<family>.js; textures: textures-volcan.js.
 (function () {
   const { near, edgePt, terrain, weld } = PLACERS;
-  const ZONES = ['phare', 'cendres', 'couronne', 'cratere', 'lacets', 'quais'], LAP = 6578; // LAP: plan length of the layout, the unit of its chainages (PK)
-  // The volcano: a closed crater whose rim is a level band 16 m wide, 200 m in radius, at the same height (top) all round: the road does not notch it, it goes through its wall in two basalt galleries (GAL).
-  // Outside, the flank comes down to the ground at `foot`; inside, the wall comes down to a floor `floor` in radius. Every profile is smooth: a crest sampled on the grid of the terrain must not be an edge.
-  const CONE = { x: -113, z: -906, rim: 200, band: 8, foot: 345, floor: 105, top: 330 };
-  const GAL = [[101, 106], [112, 117]];                                                   // the two galleries, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map). Each mouth stands where the wall is 16 to 20 m over the road
+  const ZONES = ['port', 'village', 'fermes', 'falaises', 'cratere', 'descente', 'cote'], LAP = 6230; // LAP: plan length of the layout, the unit of its chainages (PK)
+  const GAL = [[139, 149], [159, 171]];                                                   // the two galleries through the caldera wall, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map)
   const TRENCH = 20, LID = 32;                                                            // a height field cannot overhang: along a gallery the ground is trenched TRENCH m each side of the axis, and a lid LID m each side, in the ground's own material, restores the slope over it
-  const CUT = [11, 1.3];                                                                  // open road: on the volcano the ground may not rise before 11 m off the axis, then by 1.3 m per metre (the approach to each mouth)
-  const LAKE = { x: -62, z: -930, r: 34, y: 153 };                                        // lava lake: a level pit east of the road on the crater floor, a few metres below it
-  const LEDGE = 16, DECK = [3080, 3240, 46];                                              // sea side: the ground is level LEDGE m from the axis (9 m behind the wall), then falls; DECK [PK a, PK b, m] widens it for the belvedere of the pass
-  const SIDE = { x: -690, z: -930, top: 95, r: 150 };                                     // parasitic cone on the west flank
-  // shoreline: the coast road of the bible (x, z every 80 m), which this layout only follows on the south and east sides
-  const COAST = [0, 0, -82, -5, -162, -2, -242, 1, -322, 3, -401, 4, -481, 4, -561, 1, -641, -5, -720, -19, -796, -44, -863, -87, -912, -150, -943, -223, -948, -303, -922, -377, -879, -445, -848, -518, -863, -595, -911, -659, -958, -724, -989, -797, -997, -877, -981, -955, -941, -1024, -892, -1087, -851, -1156, -808, -1223, -739, -1262, -667, -1296, -609, -1351, -550, -1405, -479, -1441, -401, -1456, -321, -1452, -246, -1426, -178, -1383, -110, -1342, -32, -1328, 40, -1359, 93, -1419, 137, -1486, 192, -1544, 268, -1565, 343, -1541, 395, -1482, 403, -1404, 368, -1332, 304, -1286, 225, -1272, 153, -1241, 113, -1173, 110, -1094, 158, -1032, 233, -1008, 311, -1020, 376, -1066, 426, -1129, 475, -1192, 542, -1233, 620, -1221, 684, -1175, 739, -1116, 767, -1042, 751, -965, 696, -908, 635, -856, 603, -784, 631, -712, 694, -663, 747, -605, 747, -526, 700, -463, 630, -424, 556, -396, 492, -349, 470, -274, 509, -206, 557, -142, 559, -67, 497, -18, 421, 6, 343, 23, 263, 32, 183, 30, 104, 20, 26, 4];
-  const ss = (a, b, v) => { const k = Math.max(0, Math.min(1, (v - a) / (b - a))); return k * k * (3 - 2 * k); };
-  // height of the volcano above the ground y at (x, z)
-  const volcano = (x, z, y) => { const dx = x - CONE.x, dz = z - CONE.z, r = Math.hypot(dx, dz), q = Math.hypot(x - SIDE.x, z - SIDE.z), side = SIDE.top * (1 - ss(0, SIDE.r, q));
-    if (r > CONE.foot) return side; const up = Math.max(0, CONE.top - y);
-    return Math.max(side, up * (r > CONE.rim ? 1 - ss(CONE.rim + CONE.band, CONE.foot, r) : ss(CONE.floor, CONE.rim - CONE.band, r))); };
+  const CUT = [11, 1.3], FILL = [10, 1.1];                                                // the road on the island: a rock cut rises from 11 m off the axis by 1.3 m per metre; an embankment falls from 10 m by 1.1 m per metre
+  const LAKE = { x: -178, z: -915, r: 26, y: 136 };                                       // lava lake: a level pit west of the road on the caldera floor, a few metres below it
 
   Object.assign(SCENERY, {
     volcan(h) {
       const { THREE, S, N } = h, P = h.M.pts;
       // the loop runs anticlockwise: the island is on the left (side -1), the sea on the right (side 1)
-      const inPoly = (x, z, n, px, pz) => { let c = false; for (let i = 0, j = n - 1; i < n; j = i++) if ((pz(i) > z) !== (pz(j) > z) && x < (px(j) - px(i)) * (z - pz(i)) / (pz(j) - pz(i)) + px(i)) c = !c; return c; };
-      const cx = i => COAST[i * 2], cz = i => COAST[i * 2 + 1], NC = COAST.length / 2;
-      const toCoast = (x, z) => { let m = 1e9; for (let i = 0, j = NC - 1; i < NC; j = i++) { const ax = cx(j), az = cz(j), bx = cx(i) - ax, bz = cz(i) - az, k = Math.max(0, Math.min(1, ((x - ax) * bx + (z - az) * bz) / (bx * bx + bz * bz))); m = Math.min(m, Math.hypot(x - ax - bx * k, z - az - bz * k)); } return m; };
-      // land = inside the loop or inside the shoreline. Off the land the ground falls to a seabed at -8 m, 2 m per metre, from a LEDGE along the road (a 70 m quay along the harbour, PK 6100 to 700; the DECK of the belvedere).
-      // On land the ground is the volcano, cut along the open road (CUT), trenched along the galleries (TRENCH, closed again by lid()) and dug by the pit of the lake.
-      const gal = GAL.map(l => l.map(k => near(h, P[k][0], P[k][1]))), inGal = i => gal.some(([a, b]) => i >= a && i <= b);
-      const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), pk = i / N * LAP;
-        if (!inPoly(x, z, P.length, k => P[k][0], k => P[k][1]) && !inPoly(x, z, NC, cx, cz)) return Math.min(y + 8, Math.max(0, pk > 6100 || pk < 700 ? d - 70 : pk > DECK[0] && pk < DECK[1] ? d - DECK[2] : Math.min(d - LEDGE, toCoast(x, z))) * 2);
-        const k = ss(LAKE.r + 14, LAKE.r, Math.hypot(x - LAKE.x, z - LAKE.z)); // 1 in the pit, 0 from 14 m outside it
-        return k * (y - LAKE.y) - (1 - k) * (inGal(i) ? (d < TRENCH ? 0 : volcano(x, z, y)) : Math.min(volcano(x, z, y), Math.max(0, d - CUT[0]) * CUT[1])); };
-      // ground, in layers over bare ash and lava gravel: moss on the low and gentle slopes; red-brown scoria on the flanks of the volcano and on its floor; rock where it is steep; snow on the heights
-      const LAYERS = [
-        { tex: ['mousseVolcan'], weight: (x, z, y, p) => (1 - ss(0.14, 0.3, p)) * (1 - ss(150, 215, y)) * ss(8, 14, y), noise: 0.12 },
-        { tex: ['scorieVolcan'], weight: (x, z) => 0.9 * ss(CONE.foot + 40, CONE.foot - 80, Math.hypot(x - CONE.x, z - CONE.z)), noise: 0.15 },
-        { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.34, 0.56] }, // weak marks: on a steep face the terrain stretches them into streaks
-        { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(232, 262, y) * (1 - ss(0.5, 0.75, p)), noise: 0.1 }];
+      // The ground is the island of relief-volcan.js; the road is cut into it or carried on an embankment (CUT, FILL), the galleries are trenched (closed again by lid()), the lake has its pit.
+      const { height: HT, ss, fbm, CONE } = RELIEF_VOLCAN, gal = GAL.map(l => l.map(k => near(h, P[k][0], P[k][1]))), inGal = i => gal.some(([a, b]) => i >= a && i <= b);
+      const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), H = HT(x, z), k = ss(LAKE.r + 14, LAKE.r, Math.hypot(x - LAKE.x, z - LAKE.z)); // k: 1 in the pit, 0 from 14 m outside it
+        const t = inGal(i) ? (d < TRENCH ? Math.min(H, s.y - 0.5) : H) : Math.max(Math.min(H, y + Math.max(0, d - CUT[0]) * CUT[1]), y - Math.max(0, d - FILL[0]) * FILL[1]);
+        return y - (t + (LAKE.y - t) * k); };
+      // ground, in layers over bare ash and lava gravel: grass on the low ground away from the cone (the farmland, the village, the shore); grey-green moss on the gentle slopes of the highland and of the cone's foot; rock where it is steep; snow, white, on the highest crags of the rim only
+      const rc = (x, z) => Math.hypot(x - CONE.x, z - CONE.z), LAYERS = [
+        { tex: ['mousseVolcan', '#41633a'], weight: (x, z, y, p) => (1 - ss(0.12, 0.26, p)) * (1 - ss(44, 70, y)) * ss(2.5, 6, y) * ss(470, 600, rc(x, z) + 260 * (fbm(x / 90, z / 90) - 0.5)), noise: 0.1 },
+        { tex: ['mousseVolcan'], weight: (x, z, y, p) => (1 - ss(0.16, 0.34, p)) * (1 - ss(215, 260, y)) * ss(40, 66, y) * ss(215, 300, rc(x, z)), noise: 0.12 },
+        { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.26, 0.46] }, // weak marks: on a steep face the terrain stretches them into streaks
+        { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(296, 318, y) * (1 - ss(0.5, 0.75, p)), noise: 0.03 }];
       const g = terrain(h, { stepSec: 8, margin: 440, hollow: relief, mat: h.mat('solVolcan'), layerSet: LAYERS });
       const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), h.mat('merVolcan', { rep: [250, 250] })); sea.rotation.x = -Math.PI / 2; sea.position.set(-100, 0, -800); h.scene.add(sea);
       // MAT: the shared materials of the map, one draw pass each for the whole map: every piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the volcan assemblies.
-      const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), paint = c => h.mat('bardageVolcan', {}, c), MAT = {
+      const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), paint = c => h.mat('bardageVolcan', {}, c), flat = c => h.mat('paint', { c }), MAT = {
         rock: h.mat('rocheVolcan', {}, '#2e3034'), cliff: h.mat('basalteVolcan', {}, '#4a4d54'), crust: h.mat('rocheVolcan', {}, '#1c1c1e', 0.5), scoria: h.mat('scorieVolcan'), stone: h.mat('pierreVolcan'),
-        snow: h.mat('neigeVolcan'), ice: h.mat('neigeVolcan', {}, '#a9c4d4'), far: h.mat('rocheVolcan', {}, '#5d6f80', 0.4), farSnow: h.mat('neigeVolcan', {}, '#dfe8ee'),
-        red: paint('#c8362b'), yellow: paint('#e2b02a'), blue: paint('#2f6f9a'), green: paint('#3f8a5a'), orange: paint('#e07a2a'), violet: paint('#7a4e9a'), teal: paint('#2a8c8c'), white: paint('#f2eee4'),
-        trim: tint(0xf2eee4), roof: h.mat('toitVolcan', DS), dark: h.mat('betonVolcan', {}, '#1e2226'), concrete: h.mat('betonVolcan'), paving: h.mat('betonVolcan', {}, '#77756e'), steel: tint(0x6a7078),
+        snow: h.mat('neigeVolcan'), far: h.mat('rocheVolcan', {}, '#5d6f80', 0.4), farSnow: h.mat('neigeVolcan', {}, '#dfe8ee'), gravel: h.mat('solVolcan', {}, '#8a8378'), sand: h.mat('solVolcan', {}, '#26262a'), hay: h.mat('mousseVolcan', {}, '#9ab842'),
+        red: paint('#d2362b'), yellow: paint('#f2c230'), blue: paint('#2f7fc8'), green: paint('#3fa45a'), pink: paint('#ee6fa0'), orange: paint('#f0641e'), teal: paint('#2a9c9c'), white: paint('#f2eee4'),
+        trim: tint(0xf2eee4), roof: h.mat('toitVolcan', DS), dark: h.mat('betonVolcan', {}, '#1e2226'), concrete: h.mat('betonVolcan'), paving: h.mat('betonVolcan', {}, '#77756e'), steel: tint(0x6a7078), glass: flat(0x1c2f52), fish: flat(0xd8cfae), flag: flat(0xf0641e),
         moss: h.mat('mousseVolcan'), wood: h.mat('boisVolcan'), greywood: h.mat('boisVolcan', {}, '#9a968c'), net: h.mat('boisVolcan', {}, '#c9b58a'), gallery: h.mat('tunMurVolcan', { c: 0x8a8a8a, ...DS }), vault: h.mat('tunVouteVolcan', { c: 0x8a8a8a, ...DS }), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
         steam: h.mat('paint', { c: 0xe6ecec, transparent: true, opacity: 0.55, depthWrite: false, ...DS }) };
       const kit = new THREE.Group(); h.scene.add(kit);
@@ -59,7 +42,7 @@
       // On the ground there (road level on the ledge), or at the altitude y, or at road level with `road`. pk may be a list: one shape at each, the index appended to the settings a when `seed` is set.
       // Sea side: keep within 9 m of the wall (the ledge), or on the quay or the DECK; beyond, the piece hangs on the cliff: a piece that ends up under the roadway is reported in the console.
       const by = (shape, pk, sd, off, o = {}) => { if (Array.isArray(pk)) return pk.map((p, i) => by(shape, p, sd, off, { ...o, a: [...(o.a || []), ...(o.seed ? [i] : [])] }));
-        const { a = [], m, turn = 0, y, dy = 0, s = 1, road } = o, sm = at(pk), [x, z] = edgePt(sm, sd, sm.w + off), y1 = road ? sm.y : y ?? Math.max(g.hAt(x, z), sm.w + off <= LEDGE ? sm.y - 0.2 : -1e9);
+        const { a = [], m, turn = 0, y, dy = 0, s = 1, road } = o, sm = at(pk), [x, z] = edgePt(sm, sd, sm.w + off), y1 = road ? sm.y : y ?? g.hAt(x, z);
         if (y == null && y1 < sm.y - 4 && off < 60) console.warn('volcan: piece under the roadway', shape, 'PK ' + pk, 'side ' + sd, Math.round(y1 - sm.y) + ' m');
         const q = grp(x, y1 + dy, z, h.across(sm) + sd * Math.PI / 2 + turn, s); h.pose(shape, skin(m), q, [0, 0, 0], ...a); return q; };
       // slab(material, pk, w, ht, d, y, off): a box set from the roadway: w across the road, d along it, its underside y metres above the road, its centre `off` metres to the right of the axis
@@ -77,7 +60,7 @@
       // strip(i0, i1, section, material, ground): a sheet along the road from sample i0 to i1, one row every 8 m; section(s) = [[o, y], …]: o metres to the right of the axis, y altitude
       const strip = (i0, i1, section, m, ground) => { const rows = []; for (let i = i0; ; i = Math.min(i + 4, i1)) { const s = S[i]; rows.push(section(s).map(([o, y]) => { const [x, z] = edgePt(s, 1, o); return [x, y, z]; })); if (i === i1) break; } return sheet(rows, m, ground); };
       // lid(i0, i1): the slope of the volcano restored over the trench of a gallery, its edges on the ground LID m each side; and at each mouth a headwall of basalt down to the road, open on the roadway (8.5 m each side, 9.5 m high)
-      const rise = (s, o) => { const [x, z] = edgePt(s, 1, o); return [x, z, s.y - 0.5 + volcano(x, z, s.y - 0.5)]; };
+      const rise = (s, o) => { const [x, z] = edgePt(s, 1, o); return [x, z, HT(x, z)]; };
       const top = (s, o) => { const [xa, za, a] = rise(s, -LID), [xb, zb, b] = rise(s, LID), t = (o + LID) / (2 * LID); return rise(s, o)[2] + (g.hAt(xa, za) - a) * (1 - t) + (g.hAt(xb, zb) - b) * t + 0.15; };
       const lid = (i0, i1) => { const O = [-LID, -TRENCH, -8.5, 0, 8.5, TRENCH, LID]; strip(i0, i1, s => O.map(o => [o, top(s, o)]), null, true);
         for (const [i, way] of [[i0, 1], [i1, -1]]) { const s = S[i], wall = (os, low) => { const rows = [os.map(o => { const [x, z] = edgePt(s, 1, o); return [x, top(s, o), z]; }), os.map(o => { const [x, z] = edgePt(s, 1, o); return [x, low, z]; })]; sheet(way > 0 ? rows.reverse() : rows, MAT.cliff); };
@@ -87,10 +70,12 @@
       const frac = (i, s = 0) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); }, beside = (pk, sd, off) => edgePt(at(pk), sd, at(pk).w + off), range = (a, b, step) => Array.from({ length: Math.ceil((b - a) / step) }, (_, i) => a + i * step);
       const clear = pk => !inGal(Math.round(pk / LAP * N) % N); // not in a gallery
       // span(material, a, b, t): a bar t thick from point a to point b ([x, y, z]): wire, pipe
-      const span = (m, a, b, t = 0.08) => { const o = grp((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, 0); o.lookAt(b[0], b[1], b[2]); h.pose('boxMesh', MAT[m], o, [0, 0, 0], t, t, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])); };
-      // line(pks, sd, off, shape, a, bars): one post beside the road at each chainage and the bars from head to head: bars = [[material, thickness, dz across the line, dy], …]: power line, pipe on its saddles
-      const line = (pks, sd, off, shape, a, bars) => { let prev; for (const pk of pks) { const q = by(shape, pk, sd, off, { a }); q.updateMatrixWorld(true); const head = bars.map(([, , dz, dy]) => q.localToWorld(new THREE.Vector3(0, dy, dz)).toArray());
-        if (prev) bars.forEach(([m, t], k) => span(m, prev[k], head[k], t)); prev = head; } };
+      const span = (m, a, b, t = 0.08, ht = t) => { const o = grp((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2, 0); o.lookAt(b[0], b[1], b[2]); h.pose('boxMesh', MAT[m], o, [0, 0, 0], t, ht, Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2])); };
+      // line(pks, sd, off, shape, a, bars): one post at each stop and the bars from head to head; a stop is a chainage (the post beside the road, side sd, off m behind the wall) or a plan point [x, z] (the line leaves the road and cuts across country).
+      // bars = [[material, thickness, dz across the line, dy], …]: power line, pipe on its saddles, cable on its trestles
+      const line = (pks, sd, off, shape, a, bars) => { let prev; pks.forEach((pk, n) => { const pt = p => Array.isArray(p) ? p : beside(p, sd, off), [ax, az] = pt(pks[Math.max(n - 1, 0)]), [bx, bz] = pt(pks[Math.min(n + 1, pks.length - 1)]);
+        const q = Array.isArray(pk) ? set(shape, pk[0], pk[1], { a, ry: -Math.atan2(bz - az, bx - ax) }) : by(shape, pk, sd, off, { a }); q.updateMatrixWorld(true); const head = bars.map(([, , dz, dy]) => q.localToWorld(new THREE.Vector3(0, dy, dz)).toArray());
+        if (prev) bars.forEach(([m, t], k) => span(m, prev[k], head[k], t)); prev = head; }); };
       // drape(material, path, lift): a tongue laid on the ground along path = [[x, z, half-width], …], a row every 14 m at most: its edges sunk in the ground, its middle raised by lift, both ends closed: snow field, glacier, old lava flow
       const drape = (m, path, lift = 1.5) => { const P2 = []; path.forEach((p, i) => { if (i) { const q = path[i - 1], n = Math.ceil(Math.hypot(p[0] - q[0], p[1] - q[1]) / 14); for (let k = 1; k < n; k++) P2.push(q.map((v, j) => v + (p[j] - v) * k / n)); } P2.push(p); });
         return sheet(P2.map(([x, z, w], i) => { const [ax, az] = P2[Math.max(0, i - 1)], [bx, bz] = P2[Math.min(P2.length - 1, i + 1)], l = Math.hypot(bx - ax, bz - az), end = i === 0 || i === P2.length - 1 ? 0 : 1;
@@ -99,13 +84,17 @@
       const scatter = (a, b, m = 'moss', step = 20) => { for (let pk = a, i = Math.round(a); pk < b; pk += step, i++) if (clear(pk) && clear(pk + 9)) { const sd = frac(i) < 0.5 ? -1 : 1;
         by('dalleVolcan', pk, sd, 2.5 + frac(i, 1) * (sd > 0 ? 6 : 12), { m, a: [1.6 + frac(i, 2) * 2.2, 0.4 + frac(i, 3) * 0.7, i % 9, 7] });
         if (i % 2) by('rocherVolcan', pk + 9, -sd, 3.5 + frac(i, 4) * (sd > 0 ? 12 : 5), { m: 'rock', a: [3 + frac(i, 5) * 4, 1.8 + frac(i, 6) * 3, 3 + frac(i, 7) * 4, i % 11] }); } };
+      // wall(points, closed, m, ht): a dry-stone wall on the ground through plan points, in pieces of 7 m at most that follow the relief: the boundary of a pasture, a churchyard, a fold
+      const wall = (pts, closed, m = 'stone', ht = 1.3, t = 0.8) => { for (let n = 0; n < pts.length - (closed ? 0 : 1); n++) { const [ax, az] = pts[n], [bx, bz] = pts[(n + 1) % pts.length], k = Math.ceil(Math.hypot(bx - ax, bz - az) / 7);
+        for (let e = 0; e < k; e++) { const x0 = ax + (bx - ax) * e / k, z0 = az + (bz - az) * e / k, x1 = ax + (bx - ax) * (e + 1) / k, z1 = az + (bz - az) * (e + 1) / k; span(m, [x0, g.hAt(x0, z0) + ht / 2 - 0.3, z0], [x1, g.hAt(x1, z1) + ht / 2 - 0.3, z1], t, ht + 0.6); } } };
+      // track(points, w): a gravel track 2 w wide laid on the ground through plan points: the way from the road to a farm, a lane of the village, the supply track of the expedition
+      const track = (pts, w = 1.8, m = 'gravel') => drape(m, pts.map(([x, z]) => [x, z, w]), 0.25);
+      // flock(x, z, n, R, seed): n sheep standing within R metres of a point, each turned its own way
+      const flock = (x, z, n, R, seed = 0) => { for (let e = 0; e < n; e++) { const a = frac(e, seed) * 6.283, r = R * Math.sqrt(frac(e, seed + 5)); set('moutonVolcan', x + Math.cos(a) * r, z + Math.sin(a) * r, { ry: frac(e, seed + 9) * 6.283 }); } };
       // far islands on the horizon, dark with a snow cap (the terrain stops 440 m from the road; beyond it there is only the sea)
       for (const [x, z, R, H, ry, seed] of [[-3700, -2800, 900, 300, 0.5, 1], [3000, 500, 650, 200, 1.3, 4], [-2800, 2000, 500, 160, -0.4, 7], [1500, -3900, 750, 250, 0.1, 9]]) {
         set('ileVolcan', x, z, { y: 0, ry, m: 'far', a: [R, H, seed] }); set('ileVolcan', x, z, { y: H * 0.56, ry, m: 'farSnow', a: [R * 0.5, H * 0.46, seed] }); }
-      for (const z of ZONES) VOLCAN[z]({ h, g, at, set, by, slab, strip, gal, frac, beside, range, line, drape, scatter, MAT, LAKE, CONE });
-      // the edge of the road, the whole lap: a snow pole every 24 m on both sides, outside the galleries; the power line of the island, from the town up to the post of the pass and from the crater mouth down to the town
-      for (const pk of range(12, LAP, 24)) if (clear(pk)) for (const sd of [-1, 1]) by('jalonVolcan', pk, sd, 0.7);
-      for (const [a, b] of [[30, 3215], [4722, 6570]]) line(range(a, b, 48), -1, 4, 'poteauVolcan', [10], [['dark', 0.07, -1.3, 9.45], ['dark', 0.07, 1.3, 9.45]]);
+      for (const z of ZONES) VOLCAN[z]({ h, g, at, set, by, slab, strip, span, gal, frac, beside, range, line, drape, scatter, wall, track, flock, clear, MAT, LAKE, CONE, HT });
       weld(h, kit); // one mesh per material
     },
   });
