@@ -674,7 +674,7 @@
     ob('EBOULIS', 210.25, 189.5, 10.25, 19.5, 0, 2.5, 5); ob('EBOULIS', 246.75, 189, 11.25, 19, 0, 2.5, 4); ob('IMMEUBLE EFFONDRE', 247.5, 221, 13, 10.5, PI / 2, 2.5, 10); ob('TRAVEE EFFONDREE', 229, 246, 29, 6, 0, 2.5, 6);
     bend(206, 206, 30, -6, 102, 2.5); ob('FLECHE CHANTIER D', 228, 229.8, 1.3, 0.7, 0, 2.5, 4);                                                        // the right turn onto row 2: barriers and chevrons round the outside of it, and straight ahead of the span a road-works arrow board still flashing
     // the same barriers round the outside of every street corner the route takes (the army's diversion), and an arrow board where the boulevard ends
-    bend(316, -14, 25, 100, -10, 0); ob('FLECHE CHANTIER G', 335.6, 5.6, 1.3, 0.7, PI / 2 - 0.2, 0, 4); bend(344, -96, 25, 180, 270, -0.3); bend(426, -124, 25, 90, 0, -0.3); bend(426, -206, 25, 0, -90, -0.3); bend(344, -234, 25, 90, 180, -0.3); bend(316, -316, 25, 0, -90, -0.3); bend(260, -316, 25, 270, 180, 1.5);
+    bend(316, -14, 25, 100, -10, 0); ob('FLECHE CHANTIER G', 331.6, 2.2, 1.3, 0.7, PI / 2 - 0.1, 0, 4); bend(344, -96, 25, 180, 270, -0.3); bend(426, -124, 25, 90, 0, -0.3); bend(426, -206, 25, 0, -90, -0.3); bend(344, -234, 25, 90, 180, -0.3); bend(316, -316, 25, 0, -90, -0.3); bend(260, -316, 25, 270, 180, 1.5);
     // under the break of the motorway north of the slip road: the span that fell (built by the bridge's file)
     ob('TRAVEE TOMBEE', 214.5, -233, 9, 22, 0, 1.8, 6);
     for (const sd of [-1, 1]) ob(0, -280, sd * 9.2, 1.2, 1.2);                                                                                       // the feet of the start gantry (the engine's, 14 m wide in a road of 34)
