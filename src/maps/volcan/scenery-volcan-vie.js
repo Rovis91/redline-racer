@@ -15,8 +15,8 @@
   const out = o => { scene.attach(o); o.traverse(m => { m.userData.dyn = 1; }); return o; };                                             // out of the kit, same place: it will not be merged
 
   // ---------- the sea: its texture slides with the wind, and a second, finer, translucent layer slides faster over it (the pattern shears as the car moves). 1 more draw pass
-  flows(sea.material, -0.004, 0.0012);
-  { const m = new THREE.Mesh(sea.geometry, flows(h.mat('merVolcan', { rep: [170, 170], transparent: true, opacity: 0.35, depthWrite: false }), -0.0075, -0.002)); m.rotation.x = -PI / 2; m.position.set(-100, 0.05, -800); m.renderOrder = 1; m.userData.dyn = 1; scene.add(m); }
+  flows(sea.material, -0.012, 0.003);
+  { const m = new THREE.Mesh(sea.geometry, flows(h.mat('merVolcan', { rep: [170, 170], transparent: true, opacity: 0.4, depthWrite: false }), -0.03, -0.006)); m.rotation.x = -PI / 2; m.position.set(-100, 0.05, -800); m.renderOrder = 1; m.userData.dyn = 1; scene.add(m); }
 
   // ---------- foam: one strip mesh for the whole map, rewritten each frame. A chain is a row of ribs; a rib = a point at the foot of the rock and the direction of the open sea: the foam reaches w metres out,
   // swells and falls back every 5.5 s (a wave runs along a shore; a ring round a stack breathes as one). Chains: a ring round each of the 18 stacks and skerries, both faces of the two breakwaters,
@@ -76,15 +76,20 @@
     LIFE.push((dt, car, t) => { for (const q of GULLS) { if (!close(car, q.cx, q.cz, 520)) continue; const a = t * q.w + q.ph, sg = Math.sign(q.w), A = ease(Math.sin(t * 0.45 + q.ph * 3) * 1.5);
         pose(q.cx + Math.cos(a) * q.R, q.cy + Math.sin(a * 0.7) * 1.5, q.cz + Math.sin(a) * q.R, heading(-Math.sin(a) * sg, Math.cos(a) * sg)).multiply(mR.makeRotationX(0.3 * sg)); fly(q.o, mG, 0.12 + A * 0.6 * Math.sin(TAU * 2.3 * t + q.ph)); } }); }
 
-  // fulmars glide along the north cliffs, below the road and over the sea, the same way as the car: height and wind (falaises, samples 1500 to 1700)
-  { const F = Array.from({ length: 6 }, (_, k) => ({ o: bird(0x9aa0a6, 0xc9ced3, 3.2), k }));
-    LIFE.push((dt, car, t) => { if (car && (car.idx < 1300 || car.idx > 1800)) return; for (const f of F) { const u = (t * 4.5 / 200 + f.k / 6 + nz(f.k, 7) * 0.1) % 1, i = 1500 + u * 200, [x, y, z] = along(i, 1, 22 + 30 * nz(f.k, 3)), s = S[Math.round(i)];
-        pose(x, y - 5 - 14 * nz(f.k, 5) + Math.sin(t * 0.8 + f.k) * 1.5, z, heading(s.tx, s.tz), Math.max(ease(Math.min(u, 1 - u) / 0.08), 1e-4)); fly(f.o, mG, 0.1 + 0.06 * Math.sin(t * 2 + f.k)); } }); }
+  // fulmars glide over the cliff top of the pass, 16 to 42 m to the right of the road and 6 to 15 m above it, the same way as the car: height and wind (falaises, samples 1500 to 1700; below the road they were hidden by the ground)
+  { const F = Array.from({ length: 6 }, (_, k) => ({ o: bird(0x9aa0a6, 0xc9ced3, 4.2), k }));
+    LIFE.push((dt, car, t) => { if (car && (car.idx < 1300 || car.idx > 1800)) return; for (const f of F) { const u = (t * 4.5 / 200 + f.k / 6 + nz(f.k, 7) * 0.1) % 1, i = 1500 + u * 200, [x, y, z] = along(i, 1, 16 + 26 * nz(f.k, 3)), s = S[Math.round(i)];
+        pose(x, y + 6 + 9 * nz(f.k, 5) + Math.sin(t * 0.8 + f.k) * 1.5, z, heading(s.tx, s.tz), Math.max(ease(Math.min(u, 1 - u) / 0.08), 1e-4)); fly(f.o, mG, 0.1 + 0.06 * Math.sin(t * 2 + f.k)); } }); }
 
-  // ---------- one wind in everything that hangs. Flags: the pole stays in the kit (drapeauVolcan), the cloth is five cubes that fly toward +x, a wave running down them; only the flags within 230 m of the car are rewritten
-  { const K = 1.7, F = all('drapeauVolcan').map((e, q) => { const p = wp(e); return { x: p.x + 0.1, y: p.y + e.a[0] - 0.56 * K, z: p.z, ph: q * 2.1, c: Array.from({ length: 5 }, () => cube(PAINT[e.a[1]] || PAINT.red)) }; }); let first = 1;
-    LIFE.push((dt, car, t) => { for (const f of F) { if (!first && !close(car, f.x, f.z, 230)) continue; f.c.forEach((k, j) => { const p = TAU * 0.9 * t - 0.95 * j + f.ph, amp = 0.3 + 0.22 * j;
-          put(k, m4.makeRotationY(-0.55 * amp * Math.cos(p)).scale(sc.set(0.45 * K, 1.1 * K, 0.07)).setPosition(f.x + (j + 0.5) * 0.4 * K, f.y - 0.03 * j * j, f.z + 0.16 * K * amp * Math.sin(p))); }); } first = 0; }); }
+  // ---------- one wind in everything that hangs. Flags: the pole stays in the kit (drapeauVolcan); the cloth is a ribbon of five panels that flies toward +x, a wave running down it and growing toward the fly end
+  // (one small mesh for all the flags, rewritten for those within 230 m of the car: 1 draw pass)
+  { const K = 1.7, NS = 6, F = all('drapeauVolcan').map((e, q) => { const p = wp(e); return { x: p.x + 0.1, y: p.y + e.a[0] - 0.06, z: p.z, ph: q * 2.1, c: new THREE.Color(PAINT[e.a[1]] || PAINT.red) }; });
+    const P = new Float32Array(F.length * NS * 6), C = new Float32Array(F.length * NS * 6), I = [], G = new THREE.BufferGeometry(); let first = 1;
+    F.forEach((f, q) => { for (let j = 0; j < NS * 2; j++) f.c.toArray(C, (q * NS * 2 + j) * 3); for (let j = 0; j < NS - 1; j++) { const k = q * NS * 2 + j * 2; I.push(k, k + 2, k + 1, k + 2, k + 3, k + 1); } });
+    G.setAttribute('position', new THREE.BufferAttribute(P, 3)); G.setAttribute('color', new THREE.BufferAttribute(C, 3)); G.setIndex(I);
+    const mesh = new THREE.Mesh(G, new THREE.MeshLambertMaterial({ vertexColors: true, side: DS })); mesh.frustumCulled = false; mesh.userData.dyn = 1; scene.add(mesh);
+    LIFE.push((dt, car, t) => { let any = first; F.forEach((f, q) => { if (!first && !close(car, f.x, f.z, 230)) return; any = 1; for (let j = 0; j < NS; j++) { const p = TAU * 0.9 * t - 0.95 * j + f.ph, k = (q * NS + j) * 6, x = f.x + j * 0.4 * K, z = f.z + 0.11 * K * j * Math.sin(p), y = f.y - 0.02 * j * j;
+          P[k] = P[k + 3] = x; P[k + 2] = P[k + 5] = z; P[k + 1] = y; P[k + 4] = y - 1.1 * K; } }); if (any) { G.attributes.position.needsUpdate = true; G.computeVertexNormals(); } first = 0; }); }
   // instruments: the cups of the two weather stations spin, a dish turns on top of the camp's mast, the travelling block rises and falls inside the derrick, the dome of the observatory on the rim turns (a dark slit shows it)
   { const spin = (p, y, parts, w, r = 260) => { const o = mob(parts); let first = 1; LIFE.push((dt, car, t) => { if (first || close(car, p.x, p.z, r)) move(o, pose(p.x, p.y + y, p.z, t * w)); first = 0; }); };
     for (const e of all('meteoVolcan')) spin(wp(e), 8.5, [[PAINT.dark, 3, 0.12, 0.12, 0, 0, 0], [PAINT.dark, 0.12, 0.12, 3, 0, 0, 0], ...[[1.5, 0], [-1.5, 0], [0, 1.5], [0, -1.5]].map(([x, z]) => [PAINT.orange, 0.5, 0.5, 0.5, x, 0, z])], 5);
