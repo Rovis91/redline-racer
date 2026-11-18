@@ -2,7 +2,7 @@
 // See docs/methods/NEW-MAP.md and docs/proposals/volcanic-island/AMBIANCE-V2.html. The island is relief-volcan.js (a height field of its own); shapes: shapes-volcan-<family>.js; textures: textures-volcan.js.
 (function () {
   const { near, edgePt, terrain, weld } = PLACERS;
-  const ZONES = ['port', 'village', 'fermes', 'falaises', 'cratere', 'descente', 'cote'], LAP = 6578; // LAP: plan length of the layout, the unit of its chainages (PK)
+  const ZONES = ['port', 'village', 'fermes', 'falaises', 'cratere', 'descente', 'cote', 'vie'], LAP = 6578; // LAP: plan length of the layout, the unit of its chainages (PK)
   const GAL = [[101, 106], [112, 117]];                                                   // the two galleries through the caldera wall, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map)
   const TRENCH = 20, LID = 32;                                                            // a height field cannot overhang: along a gallery the ground is trenched TRENCH m each side of the axis, and a lid LID m each side, in the ground's own material, restores the slope over it
   const CUT = [11, 1.3], FILL = [10, 1.1];                                                // the road on the island: a rock cut rises from 11 m off the axis by 1.3 m per metre; an embankment falls from 10 m by 1.1 m per metre
@@ -35,17 +35,19 @@
         moss: h.mat('mousseVolcan'), wood: h.mat('boisVolcan'), greywood: h.mat('boisVolcan', {}, '#9a968c'), net: h.mat('boisVolcan', {}, '#c9b58a'), gallery: h.mat('tunMurVolcan', { emis: 0.45, ...DS }), vault: h.mat('tunVouteVolcan', { emis: 0.45, ...DS }), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
         steam: h.mat('paint', { c: 0xe6ecec, transparent: true, opacity: 0.4, depthWrite: false, ...DS }) };
       const kit = new THREE.Group(); h.scene.add(kit);
+      // what lives (scenery-volcan-vie.js, called last): REG = every placed piece by shape name ({ o: its group, a: its settings, pk, sd, off when placed beside the road }); LIFE = what the tick animates, (dt, car, t); flows(material, u, v) = a texture that slides (repeats per second)
+      const REG = {}, reg = (shape, o, a, pk, sd, off) => { (REG[shape] = REG[shape] || []).push({ o, a, pk, sd, off }); return o; }, LIFE = [], FLOWS = [], flows = (m, u, v) => { FLOWS.push([m.map, u, v]); return m; };
       const at = pk => S[Math.round(pk / LAP * N) % N], grp = (x, y, z, ry, s = 1) => { const o = new THREE.Group(); o.position.set(x, y, z); o.rotation.y = ry; o.scale.setScalar(s); kit.add(o); return o; };
       const skin = m => m ? MAT[m] : MAT; // an assembly takes the whole table; a simple shape takes one material, named by `m`
       // set(shape, x, z, { a, m, ry, y, dy, s }): a catalogue shape at a plan position (x east, z south), on the ground unless the altitude y is given, raised by dy, turned by ry, scaled by s; a = the shape's settings
-      const set = (shape, x, z, { a = [], m, ry = 0, y, dy = 0, s = 1 } = {}) => { const o = grp(x, (y ?? g.hAt(x, z)) + dy, z, ry, s); h.pose(shape, skin(m), o, [0, 0, 0], ...a); return o; };
+      const set = (shape, x, z, { a = [], m, ry = 0, y, dy = 0, s = 1 } = {}) => { const o = grp(x, (y ?? g.hAt(x, z)) + dy, z, ry, s); h.pose(shape, skin(m), o, [0, 0, 0], ...a); return reg(shape, o, a); };
       // by(shape, pk, side, off, { a, m, turn, y, dy, s, road }): a shape beside the road at chainage pk (m), side -1 = left (island) / 1 = right (sea), its origin `off` metres behind the wall, its front (-Z) toward the road.
       // On the ground there (road level on the ledge), or at the altitude y, or at road level with `road`. pk may be a list: one shape at each, the index appended to the settings a when `seed` is set.
       // Sea side: keep within 9 m of the wall (the ledge), or on the quay or the DECK; beyond, the piece hangs on the cliff: a piece that ends up under the roadway is reported in the console.
       const by = (shape, pk, sd, off, o = {}) => { if (Array.isArray(pk)) return pk.map((p, i) => by(shape, p, sd, off, { ...o, a: [...(o.a || []), ...(o.seed ? [i] : [])] }));
         const { a = [], m, turn = 0, y, dy = 0, s = 1, road } = o, sm = at(pk), [x, z] = edgePt(sm, sd, sm.w + off), y1 = road ? sm.y : y ?? g.hAt(x, z);
         if (y == null && y1 < sm.y - 4 && off < 60) console.warn('volcan: piece under the roadway', shape, 'PK ' + pk, 'side ' + sd, Math.round(y1 - sm.y) + ' m');
-        const q = grp(x, y1 + dy, z, h.across(sm) + sd * Math.PI / 2 + turn, s); h.pose(shape, skin(m), q, [0, 0, 0], ...a); return q; };
+        const q = grp(x, y1 + dy, z, h.across(sm) + sd * Math.PI / 2 + turn, s); h.pose(shape, skin(m), q, [0, 0, 0], ...a); return reg(shape, q, a, pk, sd, off); };
       // slab(material, pk, w, ht, d, y, off): a box set from the roadway: w across the road, d along it, its underside y metres above the road, its centre `off` metres to the right of the axis
       const slab = (m, pk, w, ht, d, y, off = 0) => { const sm = at(pk); return h.pose('boxMesh', MAT[m], grp(sm.x, sm.y, sm.z, h.across(sm)), [off, y + ht / 2, 0], w, ht, d); };
       // sheet(rows, material, ground): a surface through rows of points [x, y, z] (each row left to right, rows going forward: seen from above); with `ground`, the terrain's material and its layer weights. UVs in tiles of 8 m
@@ -95,8 +97,10 @@
       // far islands on the horizon, dark with a snow cap (the terrain stops 440 m from the road; beyond it there is only the sea)
       for (const [x, z, R, H, ry, seed] of [[-3700, -2800, 900, 300, 0.5, 1], [3000, 500, 650, 200, 1.3, 4], [-2800, 2000, 500, 160, -0.4, 7], [1500, -3900, 750, 250, 0.1, 9]]) {
         set('ileVolcan', x, z, { y: 0, ry, m: 'far', a: [R, H, seed] }); set('ileVolcan', x, z, { y: H * 0.56, ry, m: 'farSnow', a: [R * 0.5, H * 0.46, seed] }); }
-      for (const z of ZONES) VOLCAN[z]({ h, g, at, set, by, slab, strip, span, gal, frac, beside, range, line, drape, scatter, wall, track, flock, clear, MAT, LAKE, CONE, HT });
+      for (const z of ZONES) VOLCAN[z]({ h, g, at, set, by, slab, strip, span, gal, frac, beside, range, line, drape, scatter, wall, track, flock, clear, MAT, LAKE, CONE, HT, kit, sea, REG, LIFE, flows });
       weld(h, kit); // one mesh per material
+      let tv = 0; const tick = (dt, now, car) => { dt = Math.min(dt, 0.1); tv += dt; for (const f of LIFE) f(dt, car, tv); for (const [t, u, v] of FLOWS) { t.offset.x = (t.offset.x + u * dt + 1) % 1; t.offset.y = (t.offset.y + v * dt + 1) % 1; } }; // pause freezes everything (dt = 0)
+      if (LIFE.indoor) tick.indoor = LIFE.indoor; return tick;
     },
   });
 })();

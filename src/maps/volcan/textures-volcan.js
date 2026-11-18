@@ -41,6 +41,14 @@
     // the northern sea, seen from above: dark cold blue, short pale wave marks without a common direction, darker patches; 64 m per tile
     merVolcan: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#1d4a68', 0, 0, 64, 64); blots(g, o, 12, 0.14, '#0a2238', '#3a7898');
       veil(g, 0.2, () => { for (let i = 0; i < 70; i++) R(g, '#c8dfe8', rand() * 60 | 0, rand() * 63 | 0, 2 + (rand() * 4 | 0), 1); }); }, 64],
+    // foam where the sea breaks (scenery-volcan-vie.js). An opacity map, white = foam, black = clear water (used as alphaMap: a see-through drawing would darken as it shrinks with distance):
+    // the lower half of the tile (the rock side) is full foam with a few thinner streaks, its edge broken, then flecks thinning out toward the top (the open sea); 16 m per tile along the shore
+    ecumeVolcan: () => [64, 16, (g, o) => { const { R, rand } = o; R(g, '#000', 0, 0, 64, 16); R(g, '#fff', 0, 8, 64, 8); for (let x = 0; x < 64;) { const w = 2 + (rand() * 5 | 0); R(g, '#fff', x, 8 - (rand() * 6 | 0), w, 6); x += w; }
+      for (let i = 0; i < 40; i++) R(g, '#fff', rand() * 62 | 0, rand() * 6 | 0, 1 + (rand() * 3 | 0), 1); for (let i = 0; i < 26; i++) R(g, '#9a9a9a', rand() * 60 | 0, 9 + (rand() * 6 | 0), 2 + (rand() * 4 | 0), 1); }],
+    // broken cloud seen from below (scenery-volcan-vie.js), an opacity map like ecumeVolcan: v = variant; angular patches in steps (a thin fringe, a full body), about a third of the sky covered, the tile wraps
+    nuagesVolcan: (v = 0) => [128, 128, (g, o) => { const { R, rand } = o, B = (c, x, y, w, ht) => { for (const dx of [0, -128]) for (const dy of [0, -128]) R(g, c, x + dx, y + dy, w, ht); }, L = []; R(g, '#000', 0, 0, 128, 128);
+      for (let i = 0; i < 9 + v * 3; i++) { const x = rand() * 128 | 0, y = rand() * 128 | 0, n = 5 + (rand() * 6 | 0); for (let k = 0; k < n; k++) L.push([x + (rand() * 30 | 0) - 15, y + (rand() * 16 | 0) - 8, 10 + (rand() * 26 | 0), 4 + (rand() * 9 | 0)]); }
+      for (const [x, y, w, ht] of L) B('#555', x - 3, y - 2, w + 6, ht + 4); for (const [x, y, w, ht] of L) B('#e8e8e8', x, y, w, ht); }],
     // weathered concrete or paving, c = its tint: uneven slabs, stains; 8 m per tile
     betonVolcan: (c = '#b8b5a6') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); blots(g, o, 12, 0.1, '#3a3028', '#fff');
       veil(g, 0.12, () => { for (let y = 0; y < 64; y += 16) R(g, '#000', 0, y, 64, 1); for (let x = 0; x < 64; x += 16) R(g, '#000', x, 0, 1, 64); }); grain(g, o, 260, 0.12); }, 8],

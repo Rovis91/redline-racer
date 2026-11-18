@@ -51,7 +51,7 @@
     // graves of the churchyard: n white wooden crosses in two rows
     croixVolcan: (n = 10) => Array.from({ length: n }, (_, i) => { const x = ((i >> 1) - n / 4) * 2.2, z = (i & 1) * 3; return [['trim', 0.14, 1.1, 0.14, x, 0.55, z], ['trim', 0.7, 0.14, 0.14, x, 0.8, z]]; }).flat(),
     // flagpole, ht high, tint = the flag
-    drapeauVolcan: (ht = 9, tint = 'red') => [['trim', 0.14, ht, 0.14, 0, ht / 2, 0], [tint, 1.8, 1.1, 0.04, 0.98, ht - 0.7, 0], ['trim', 1.8, 0.22, 0.05, 0.98, ht - 0.7, 0], ['trim', 0.22, 1.1, 0.05, 0.7, ht - 0.7, 0]],
+    drapeauVolcan: (ht = 9, tint = 'red') => [['trim', 0.14, ht, 0.14, 0, ht / 2, 0], ['trim', 0.3, 0.3, 0.3, 0, ht + 0.1, 0]], // the pole and its knob; the cloth, in the colour `tint`, flies in the wind: scenery-volcan-vie.js
     // slipway, L long going down toward +Z (the water) × w wide: a concrete ramp, two steel rails, a winch at its head
     caleVolcan: (L = 26, w = 8) => [['concrete', w, 0.6, L, 0, -L * 0.075, L / 2, [0.15, 0, 0]], ...pair(sx => ['steel', 0.16, 0.16, L, sx * 1.2, -L * 0.075 + 0.4, L / 2, [0.15, 0, 0]]), ['steel', 1.4, 1.1, 1.2, 0, 0.55, -1.2], ['dark', 0.9, 0.9, 1.4, 0, 0.75, -1.2]],
     // white picket fence round a garden, w × d, open toward the house (+Z side left out)
