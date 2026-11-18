@@ -3,16 +3,27 @@
 (() => {
   const grain = (g, { R, rand, veil }, n, a = 0.18, S = 64) => veil(g, a, () => { for (let i = 0; i < n; i++) R(g, i % 3 ? '#000' : '#fff', rand() * S | 0, rand() * S | 0, 1 + (rand() * 2 | 0), 1); });
   Object.assign(TEXTURES, {
-    // dry island ground: ochre earth, pale limestone pebbles, grey-green tufts of thyme, no direction; 8 m per tile
+    // dry island ground: ochre earth, pale limestone pebbles, a few faint tufts (a strong tuft is what the eye catches repeating), no direction; 8 m per tile
     solEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#b9966c', 0, 0, 64, 64); grain(g, o, 520, 0.26);
       veil(g, 0.12, () => { for (let i = 0; i < 9; i++) R(g, i & 1 ? '#fff' : '#7a4a20', rand() * 52 | 0, rand() * 52 | 0, 6 + rand() * 12 | 0, 4 + rand() * 8 | 0); });
       for (let i = 0; i < 30; i++) R(g, '#f0e2c4', rand() * 63 | 0, rand() * 63 | 0, 2, 1);
-      veil(g, 0.8, () => { for (let i = 0; i < 26; i++) { const x = rand() * 61 | 0, y = rand() * 61 | 0; R(g, '#76815a', x, y, 3, 2); R(g, '#5c6a48', x + 1, y + 1, 2, 1); } }); }, 8],
+      veil(g, 0.3, () => { for (let i = 0; i < 12; i++) { const x = rand() * 61 | 0, y = rand() * 61 | 0; R(g, '#76815a', x, y, 3, 2); R(g, '#5c6a48', x + 1, y + 1, 2, 1); } }); }, 8],
     // rock of the island, c = its tint (warm ochre near, blue-grey for the far islands), a = strength of the strata (1 near, 0.3 far): uneven horizontal strata, vertical cracks; 8 m per tile
     rocheEgee: (c, a = 1) => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.2 * a, () => { for (let y = 0; y < 64;) { const ht = 2 + (rand() * 7 | 0); R(g, rand() < 0.5 ? '#4a3a2a' : '#fff', 0, y, 64, ht); y += ht + (rand() * 5 | 0); } });
       veil(g, 0.32 * a, () => { for (let y = 0; y < 64; y += 5 + (rand() * 8 | 0)) R(g, '#3a2a1a', 0, y, 64, 1); for (let i = 0; i < 9; i++) R(g, '#3a2a1a', rand() * 64 | 0, rand() * 50 | 0, 1, 4 + rand() * 12 | 0); });
       grain(g, o, 240, 0.18 * a); }, 8],
+    // dry summer grass: straw and grey-gold blades in loose clumps, a few bare patches; laid in large patches over the earth (terrain layer, 23 m per tile there)
+    herbeEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#a39562', 0, 0, 64, 64); grain(g, o, 380, 0.2);
+      veil(g, 0.22, () => { for (let i = 0; i < 16; i++) R(g, i % 3 ? '#7d7a4c' : '#c9b982', rand() * 54 | 0, rand() * 54 | 0, 5 + rand() * 12 | 0, 4 + rand() * 9 | 0); });
+      veil(g, 0.5, () => { for (let i = 0; i < 90; i++) R(g, i & 1 ? '#c4b47c' : '#857f52', rand() * 63 | 0, rand() * 62 | 0, 1, 2 + (rand() * 2 | 0)); }); }, 8],
+    // cliff and bare rock of the terrain, c = its tint: broken strata (short bands, never a line across the tile: seen from above they would stripe the hills), fractured blocks, pockets of scree; 128 px, laid at 22 m per tile
+    falaiseEgee: c => [128, 128, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 128, 128);
+      veil(g, 0.3, () => { for (let i = 0; i < 70; i++) R(g, rand() < 0.6 ? '#4a3a2a' : '#fff', rand() * 128 | 0, rand() * 128 | 0, 14 + rand() * 40 | 0, 2 + rand() * 7 | 0); });
+      veil(g, 0.2, () => { for (let i = 0; i < 12; i++) R(g, i & 1 ? '#6a5238' : '#e8d8b8', rand() * 100 | 0, rand() * 100 | 0, 18 + rand() * 30 | 0, 14 + rand() * 26 | 0); });
+      veil(g, 0.3, () => { for (let i = 0; i < 46; i++) { const x = rand() * 128 | 0, y = rand() * 128 | 0; R(g, '#3a2a1a', x, y, 8 + rand() * 26 | 0, 1); if (i % 3 === 0) R(g, '#3a2a1a', x, y, 1, 5 + rand() * 14 | 0); } });
+      for (let k = 0; k < 5; k++) { const cx = rand() * 108 | 0, cy = rand() * 108 | 0; veil(g, 0.55, () => { for (let i = 0; i < 30; i++) R(g, i & 1 ? '#e2d2b4' : '#6e5a44', cx + rand() * 20 | 0, cy + rand() * 20 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); }); }
+      grain(g, o, 700, 0.16, 128); }, 16],
     // terrace earth: red-brown tilled soil, pale stones, faint uneven clods (no furrow lines: they would strobe); 8 m per tile
     terreEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#a5876a', 0, 0, 64, 64); grain(g, o, 420, 0.16);
       veil(g, 0.14, () => { for (let i = 0; i < 14; i++) R(g, i & 1 ? '#e8c9a0' : '#4a3420', rand() * 56 | 0, rand() * 56 | 0, 4 + rand() * 8 | 0, 3 + rand() * 5 | 0); });
