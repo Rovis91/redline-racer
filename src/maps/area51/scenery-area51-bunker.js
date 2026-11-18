@@ -2,7 +2,7 @@
 // The placers are described in scenery-area51.js; the shapes are in shapes-area51-souterrain.js (shell, reactor, plant), -perimetre.js (booths, blocks, berms) and -radio.js (cylinders).
 // Why it is there: the research reactor of the base and its labs, dug into the mesa so the rock contains an accident and hides the work. The road is the service loop of the complex: an airlock, the gallery round the reactor
 // above its pool, the labs cavern, the silo, and out by the same flank. Outside, only the two portals, the stack and the headframe show.
-(window.AREA51 = window.AREA51 || {}).bunker = ({ h, g, S, MAT, kit, set, side, seg, cube, surf, pk, idx, t0: i0, t1: i1, rooms: ROOMS, room, edgePt, k }) => {
+(window.AREA51 = window.AREA51 || {}).bunker = ({ h, g, S, MAT, kit, set, side, seg, cube, surf, pk, idx, t0: i0, t1: i1, rooms: ROOMS, room, edgePt, k, reg }) => {
   const B1 = { ...MAT, concrete: MAT.murB1, dark: MAT.vouteB1, floor: MAT.solB1, rock: MAT.murB1 }; // the mass above the ceiling is concrete too: where a section ends in a room, it shows // the gallery's own wall, ceiling and floor textures
   // the shell, one section every 4 samples (8 m: short enough for the walls to read as curved in the bends), longer on the outside of bends, each set a few centimetres off its neighbours (no two faces in one plane): walls, ceiling, rock up to the surface, lights, pipes
   for (let i = i0, n = 0, pL = 12, pR = 12, pC = 10; i <= i1; i += 4, n++) { const [, , L, wide, clear, R] = room(i), s = S[i], top = Math.min(g.hAt(...edgePt(s, -1, L + 30)), g.hAt(...edgePt(s, 1, wide + 30))), len = 8.3 * (1 + Math.abs(s.k) * ((R ? Math.max(L, wide) : L) + 10));
@@ -18,7 +18,7 @@
   const voie = (i, sd, len) => seg('voieArea51', S[i], sd * 11.6, 0, { a: [len, sd] });
   voie(idx(1254, 1306), -1, 12); voie(idx(1166, 1306), -1, 12); voie(labs[0] + 14, 1, 16); voie(labs[0] + 30, 1, 16); voie(ROOMS[3][0] + 4, 1, 7);
   // reactor hall: the vessel in its blue pool 6 m below the gallery the road runs on, the polar crane over it, the control room on the outer wall, waste casks, a footbridge; a concrete wall closes the hall to the north
-  set('reacteurArea51', 1210, 1262, { y: -25 }); surf('pool', 1210, 1262, 84, 84, -24.2, 0.8); set('pontPolaireArea51', 1210, 1262, { y: 2 });
+  set('reacteurArea51', 1210, 1262, { y: -25 }); reg('pool', surf('pool', 1210, 1262, 84, 84, -24.2, 0.8)); set('pontPolaireArea51', 1210, 1262, { y: 2 });
   h.pose('boxMesh', MAT.concrete, kit, [1222 * k, -4, 1196 * k], 124, 32, 5);
   seg('salleControleArea51', S[idx(1210, 1324)], -23, 7, { a: [1] }); seg('passerelleArea51', S[idx(1148, 1262)], 22, 13); for (const [x, z] of [[1262, 1290], [1158, 1290]]) seg('futsArea51', S[idx(x, z)], -20, 0);
   // labs cavern: the building on the left with its lit windows, two armoured doors and a test chamber on the right

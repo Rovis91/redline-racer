@@ -1,5 +1,5 @@
 // Scenery placement for "area51" (Area 51 / Signal Unknown): terrain, roadway, guardrails, the shared materials, then each zone (scenery-area51-<zone>.js). See docs/methods/NEW-MAP.md, phases 2 and 3.
-// The whole static map is real scenery (V2): shapes by family in shapes-area51-*.js, textures in textures-area51.js. No sound, animation, particle or dynamic light yet (V3).
+// The whole static map is real scenery (V2): shapes by family in shapes-area51-*.js, textures in textures-area51.js. What moves, lights and sounds (V3) is in scenery-area51-vie.js, which returns the map's tick.
 // Coordinates are plan metres (x = east, z = south), the frame of the proposal's technical plan, so a position can be read off a plan directly.
 // Site logic, as on a real flight-test base: dry lake to the north, the two runways on its edge, then going south taxiway, apron, hangar row, service road, and the alluvial fan rising to the range;
 // what must be shielded sits in the relief (B1 under the mesa, the big dish in a bowl), what must see far sits on it (telemetry on the ridge).
@@ -66,7 +66,8 @@
       const smp = pk => S[Math.round(pk / LAP * N) % N], pk = (x, z) => idx(x, z) / N * LAP; // pk(x, z): chainage of the road point nearest to a plan position
       // The placers. Options o: s = scale, a = the settings of the shape, skin = MAT or, for a simple shape, one material; y = altitude instead of the ground, dy = raised by; ry = turned by
       // on(shape, X, Y, Z, ry, o): a catalogue shape at a world position. Returns its group
-      const on = (shape, X, Y, Z, ry = 0, { s = 1, a = [], skin = MAT } = {}) => { const grp = new THREE.Group(); grp.position.set(X, Y, Z); grp.rotation.y = ry; grp.scale.setScalar(s); kit.add(grp); h.pose(shape, skin, grp, [0, 0, 0], ...a); return grp; };
+      const REG = {}, reg = (n, o) => ((REG[n] = REG[n] || []).push(o), o); // every placed piece, by shape name: what scenery-area51-vie.js takes out of the kit to make it move
+      const on = (shape, X, Y, Z, ry = 0, { s = 1, a = [], skin = MAT } = {}) => { const grp = new THREE.Group(); grp.position.set(X, Y, Z); grp.rotation.y = ry; grp.scale.setScalar(s); kit.add(grp); h.pose(shape, skin, grp, [0, 0, 0], ...a); return reg(shape, grp); };
       // set(shape, x, z, o): at a plan position, on the ground
       const set = (shape, x, z, o = {}) => on(shape, x * k, (o.y ?? g.hAt(x * k, z * k)) + (o.dy || 0), z * k, o.ry || 0, o);
       // side(shape, pk, sd, off, half, o): beside the road at chainage pk, side -1 = left / 1 = right, its near face `off` m from the wall (half = its half-width across). Local Z runs along the road and local -X looks at the road (o.keep: not turned on the left side: signs)
@@ -83,12 +84,15 @@
       const surf = (m, x, z, wx, dz, top = -0.2, th = 1.3) => h.pose('boxMesh', MAT[m], kit, [x * k, (top ?? g.hAt(x * k, z * k) + 0.15) - th / 2, z * k], wx, th, dz);
       const inside = p => smp(p).k > 0 ? 1 : -1; // the side of the inside of the bend at chainage p: where the thing the road goes round stands
       // dish(x, z, s, tilt): a dish antenna of the D1 family at scale s (1 = D1, 120 m across on a 50 m mount), its reflector tilted toward the west, where the signal comes from
-      const dish = (x, z, s = 1, tilt = 0.7) => { const d = set('dishMountArea51', x, z, { s }), head = new THREE.Group(); head.position.y = 54; head.rotation.z = tilt; d.add(head); h.pose('dishBowlArea51', MAT.white, head, [0, 6, 0]); h.pose('dishBackArea51', MAT, head, [0, 6, 0]); return d; };
+      const dish = (x, z, s = 1, tilt = 0.7) => { const d = set('dishMountArea51', x, z, { s }), head = new THREE.Group(); head.position.y = 54; head.rotation.z = tilt; d.add(head); reg('dishHead', head); h.pose('dishBowlArea51', MAT.white, head, [0, 6, 0]); h.pose('dishBackArea51', MAT, head, [0, 6, 0]); return d; };
       // avion(type, x, z, o): one of the black prototypes ('sr71', 'b2', 'f117'): its lifting surface and its parts at the same place
       const avion = (type, x, z, o = {}) => { const a = set(type + 'Area51', x, z, o); h.pose(type + 'NappeArea51', MAT.stealth, a, [0, 0, 0]); return a; };
       const sideXZ = (p, sd, dist) => edgePt(smp(p), sd, smp(p).w + dist).map(v => v / k); // plan position at `dist` m outside the wall at chainage p
-      for (const z of ZONES) AREA51[z]({ h, g, S, N, MAT, near, wash, FLATS, BLOCS, RUNWAY, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt });
+      const ctx = { h, g, S, N, MAT, near, wash, FLATS, BLOCS, RUNWAY, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt, REG, reg, weld };
+      for (const z of ZONES) AREA51[z](ctx);
+      const tick = AREA51.vie(ctx); // life (V3): takes what moves out of the kit before the merge, and returns the map's tick
       weld(h, kit); // one mesh per material
+      return tick;
     },
   });
 })();
