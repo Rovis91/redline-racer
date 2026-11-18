@@ -37,6 +37,26 @@
     // radiation warning panel: black trefoil on yellow, one panel per face
     trefleArea51: () => [32, 32, (g, o) => { const { R } = o; R(g, '#e8c040', 0, 0, 32, 32); R(g, '#16181c', 0, 0, 32, 2); R(g, '#16181c', 0, 30, 32, 2); R(g, '#16181c', 0, 0, 2, 32); R(g, '#16181c', 30, 0, 2, 32);
       R(g, '#16181c', 14, 14, 4, 4); for (const [x, y, w, ht] of [[12, 4, 8, 3], [11, 7, 10, 3], [13, 10, 6, 2], [4, 19, 4, 7], [6, 17, 5, 6], [10, 17, 3, 3], [24, 19, 4, 7], [21, 17, 5, 6], [19, 17, 3, 3]]) R(g, '#16181c', x, y, w, ht); }],
+    // desert brush and bark, c = its tint (sage grey-green, creosote olive, yucca, dry wood): leaf specks light and dark, no direction; 4 m per tile
+    brousseArea51: c => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 32, 32);
+      veil(g, 0.3, () => { for (let i = 0; i < 150; i++) R(g, i % 3 ? '#1c2410' : '#f0f0c8', rand() * 32 | 0, rand() * 32 | 0, 1, 1 + (rand() * 2 | 0)); }); }, 4],
+    // bed of a dry wash: pale sand and washed pebbles, darker silt in patches; 8 m per tile
+    ouedArea51: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#dcc09a', 0, 0, 64, 64); grain(g, o, 300, 0.14);
+      veil(g, 0.3, () => { for (let i = 0; i < 70; i++) R(g, i % 4 ? '#8a6a50' : '#fff', rand() * 62 | 0, rand() * 62 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); });
+      veil(g, 0.12, () => { for (let i = 0; i < 6; i++) R(g, '#6e4630', rand() * 48 | 0, rand() * 48 | 0, 8 + rand() * 10 | 0, 5 + rand() * 8 | 0); }); }, 8],
+    // runway A where the race uses its full width: 60 × 32 m at 8 px per metre (the roadway texture, made for 20 m, was stretched three times across it). x = across, y = along.
+    // Paving lanes 7.5 m wide with staggered cross joints, rubber in the wheel paths, repair patches, white edge lines and centreline dashes; mark = what this tile carries besides:
+    // 1 touchdown-zone bars (three a side), 2 the aiming-point blocks, 0 nothing. Paint is part of the surface, as on the road
+    pisteArea51: (mark = 0) => [512, 256, (g, o) => { const { R, rand, veil } = o, P = '#dcd8cc'; R(g, '#313a46', 0, 0, 512, 256);
+      veil(g, 0.16, () => { for (let i = 0; i < 5200; i++) R(g, i % 3 ? '#000' : '#fff', rand() * 512 | 0, rand() * 256 | 0, 1, 1); });
+      veil(g, 0.1, () => { for (let i = 0; i < 9; i++) R(g, i % 2 ? '#fff' : '#000', rand() * 460 | 0, rand() * 220 | 0, 20 + rand() * 40 | 0, 14 + rand() * 30 | 0); });
+      veil(g, 0.3, () => { for (let x = 64; x < 512; x += 64) { R(g, '#000', x, 0, 1, 256); for (let y = rand() * 50 | 0; y < 256; y += 48 + (rand() * 30 | 0)) R(g, '#000', x - 64, y, 64, 1); } });
+      veil(g, 0.22, () => { for (let i = 0; i < 260; i++) { const sd = rand() < 0.5 ? -1 : 1; R(g, '#000', 256 + sd * (30 + rand() * 70) | 0, rand() * 256 | 0, 1 + (rand() * 2 | 0), 12 + rand() * 50 | 0); } });
+      for (const x of [20, 484]) R(g, P, x, 0, 8, 256); R(g, P, 252, 0, 8, 160);
+      if (mark === 1) for (const sd of [-1, 1]) for (let i = 0; i < 3; i++) R(g, P, 256 + sd * (84 + i * 28) - 7, 30, 15, 180);
+      if (mark === 2) for (const sd of [-1, 1]) R(g, P, 256 + sd * 104 - 26, 8, 52, 240);
+      veil(g, 0.5, () => { for (let i = 0; i < 900; i++) R(g, '#313a46', rand() * 512 | 0, rand() * 256 | 0, 1 + (rand() * 2 | 0), 1); }); }],
+    feuVertArea51: 0x58f09a, // runway threshold lights (emit)
     cherenkovArea51: 0x4fb8ff, // the blue light of the reactor pool (emits)
     // worn white runway paint, 2 m per tile
     blancArea51: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#dcd8cc', 0, 0, 16, 16); veil(g, 0.45, () => { for (let i = 0; i < 16; i++) R(g, '#3a4048', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],
