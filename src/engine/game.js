@@ -733,7 +733,7 @@
   // brakes: horizontal braking (1/s); 0: the cloud keeps its emitter's speed; imgSize: diameter factor; nearby: closer than 2 × nearby meters to the camera the disc fades out (nothing sticks to the lens)
   const softPuffs = (N, col, op, vitality = 1.4, brakes = 3, imgSize = 1, nearby = 0) => { const P = new Float32Array(N * 3), V = new Float32Array(N * 3), A = new Float32Array(N).fill(1), g = new THREE.BufferGeometry(); let i = 0;
     g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('age', new THREE.BufferAttribute(A, 1));
-    const d = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { col: { value: new THREE.Color(...col) }, sampN: dEch, op: { value: op }, tl: { value: imgSize }, pr: { value: nearby } },
+    const d = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { col: { value: new THREE.Color(...col) }, ech: dEch, op: { value: op }, tl: { value: imgSize }, pr: { value: nearby } },
       vertexShader: 'attribute float age; varying float a, f; uniform float ech, tl, pr; void main() { a = age; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; f = pr > 0.0 ? clamp(-p.z / pr - 1.0, 0.0, 1.0) : 1.0; gl_PointSize = age < 1.0 ? tl * ech * projectionMatrix[1][1] * (1.1 + 6.0 * age) / -p.z : 0.0; }',
       fragmentShader: 'varying float a, f; uniform vec3 col; uniform float op; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || a >= 1.0) discard; gl_FragColor = vec4(col, (1.0 - r * r) * (1.0 - a) * min(1.0, 0.15 + a * 4.0) * op * f); }' })); d.frustumCulled = false; d.visible = false; scene.add(d);
     // vivid: live particles; an empty cloud is neither drawn (one draw call per view, reflections included) nor sent to the GPU
@@ -1107,7 +1107,7 @@
   //   smokePuff: the grey steam from the front from 0.6 wear; black: smoke from an engine on fire; fire (CASSE mode): it smoulders at 0.7, flares at 0.85, sets the car alight when out of use
   const PXN = 900, pxP = new Float32Array(PXN * 3).fill(-1e4), pxV = new Float32Array(PXN * 3), pxC = new Float32Array(PXN * 3), pxA = new Float32Array(PXN), pxS = new Float32Array(PXN), pxL = new Float32Array(PXN), pxL0 = new Float32Array(PXN), pxK = new Uint8Array(PXN), pxGeo = new THREE.BufferGeometry(); let pxi = 0;
   pxGeo.setAttribute('position', new THREE.BufferAttribute(pxP, 3)); pxGeo.setAttribute('col', new THREE.BufferAttribute(pxC, 3)); pxGeo.setAttribute('al', new THREE.BufferAttribute(pxA, 1)); pxGeo.setAttribute('sz', new THREE.BufferAttribute(pxS, 1));
-  const pxMesh = new THREE.Points(pxGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { sampN: dEch },
+  const pxMesh = new THREE.Points(pxGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { ech: dEch },
     vertexShader: 'attribute vec3 col; attribute float al, sz; varying vec3 c; varying float a; uniform float ech; void main() { c = col; a = al; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_PointSize = al > 0.0 ? max(1.0, floor(sz * ech * projectionMatrix[1][1] / -p.z)) : 0.0; }',
     fragmentShader: 'varying vec3 c; varying float a; void main() { gl_FragColor = vec4(c, a); }' })); // no disc, no blur: a solid square, in whole pixels
   pxMesh.frustumCulled = false; pxMesh.userData.dyn = 1; scene.add(pxMesh);
