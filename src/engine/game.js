@@ -1880,8 +1880,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // (the computation is in sim.js: ground(), which adds the wall's height on a drivable wall; car.y is this ground, or the flight height)
   const yAt = (c, k = 0) => ground(T, c, k);
   // attitude [pitch, roll]: on the ground the car follows the slope of the track and that of the wall; in the air its nose follows its trajectory
-  const attitude = c => { const s = S[c.idx], ax = Math.cos(c.th), az = Math.sin(c.th), gn = slope(s, c.d);
-    return [c.air ? 0.7 * Math.atan2(c.vy, Math.max(5, Math.hypot(c.vx, c.vz))) : Math.atan(s.sl + gn * (s.tx * az - s.tz * ax)), -Math.atan(gn * (s.tx * ax + s.tz * az))]; };
+  const attitude = c => { const s = S[c.idx], ax = Math.cos(c.th), az = Math.sin(c.th), gn = slope(s, c.d), [df, dr] = tilt(T, c); // tilt: the slope of craters (M.dents, M.bowls), zero on every map without them
+    return [c.air ? 0.7 * Math.atan2(c.vy, Math.max(5, Math.hypot(c.vx, c.vz))) : Math.atan(s.sl + gn * (s.tx * az - s.tz * ax) + df), -Math.atan(gn * (s.tx * ax + s.tz * az) + (c.air ? 0 : dr))]; };
   freshView(); // the player's view: the scenery is built, all its light fixtures are declared
   // all the scene's shaders launched at once (the driver compiles them in parallel): scenery culled off-screen at the start no longer compiles its shader mid-race
   // at its first appearance; compile and not compileAsync: without a backdrop, everything must finish in one go (see above)

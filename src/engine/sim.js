@@ -87,6 +87,10 @@
   // Ground under the car: height of the ribbon, continuous from one sample to the next (k = offset in samples, for the camera), plus the wall
   // a tunnel that runs under a bowl (M.bowls): the car is in its tube when its sample is in the tunnel, it is between the walls and lower than the vault; then the ground is the ribbon and the tunnel walls hold, even on a plaza
   const inTube = (T, c, ry) => !!T.mapDef.bowls && (c.idx - T.t0 + T.n) % T.n < (T.t1 - T.t0 + T.n) % T.n && Math.abs(c.d) < T.W + 1 && (c.y ?? ry) < ry + 9;
+  // Slope of the ground the ribbon does not carry (M.dents, M.bowls) under the car, [toward its nose, toward its right], in metres per metre, read 1 m either side; [0, 0] on a map without them and in a tunnel tube.
+  // For the attitude of the model (game.js): the car pitches and rolls on the wall of a crater it crosses askew
+  const tilt = (T, c) => { if (!T.dent || inTube(T, c, T.S[c.idx].y)) return [0, 0]; const ax = Math.cos(c.th), az = Math.sin(c.th), D = T.dent;
+    return [(D(c.x + ax, c.z + az) - D(c.x - ax, c.z - az)) / 2, (D(c.x - az, c.z + ax) - D(c.x + az, c.z - ax)) / 2]; };
   function ground(T, c, k = 0) {
     const S = T.S, N = T.n; let i = c.idx, a = S[i], b = S[(i + 1) % N], u = ((c.x - a.x) * (b.x - a.x) + (c.z - a.z) * (b.z - a.z)) / ((b.x - a.x) ** 2 + (b.z - a.z) ** 2 || 1);
     if (u < 0) { i = (i - 1 + N) % N; u = Math.max(0, u + 1); } u = Math.min(1, u); a = S[(i + k + N) % N]; b = S[(i + k + 1 + N) % N];
@@ -313,7 +317,7 @@
     // relief: free fall, unless the ground is there
     const g = ground(T, c);
     if (!T.vert) { c.y = g; return; }
-    const vy = c.vy - T.grav * (c.air && c.gk || 1) * dt, y = c.y + vy * dt, sg = (c.x - s.x) * s.tx + (c.z - s.z) * s.tz < 0 ? S[(b - 1 + n) % n] : s, vg = sg.sl * (c.vx * sg.tx + c.vz * sg.tz); c.land = 0; // sg: the ribbon section under the car; vg: the vertical speed its slope gives the car (the wall does not count here: climbing it does not launch into the air)
+    const vy = c.vy - T.grav * (c.air && c.gk || 1) * dt, y = c.y + vy * dt, sg = (c.x - s.x) * s.tx + (c.z - s.z) * s.tz < 0 ? S[(b - 1 + n) % n] : s, vg = sg.sl * (c.vx * sg.tx + c.vz * sg.tz) + (T.dent && !inTube(T, c, sg.y) ? (T.dent(c.x + c.vx * 0.05, c.z + c.vz * 0.05) - T.dent(c.x, c.z)) / 0.05 : 0); c.land = 0; // (and the slope of craters, M.dents and M.bowls: going down one the car stays on the ground, coming out of one it is thrown up) // sg: the ribbon section under the car; vg: the vertical speed its slope gives the car (the wall does not count here: climbing it does not launch into the air)
     const p = slope(s, c.d);
     if (y > g && (c.airT || !p)) { const was = c.air; c.y = y; c.vy = vy; c.air = y - g > DROOP;
       if (c.air && !was) c.gk = T.even ? clamp(Math.hypot(c.vx, c.vz) / T.even[0], T.even[2], 1.3) ** T.even[1] : 1; // M.evenJump: gravity of this flight, lighter for a slow car (c.gk): everyone lands in the same area
@@ -626,5 +630,5 @@
     }
     return du;
   }
-  Object.assign(G, { WEAR, wear, brokenFresh, brokenImpact, CHALLENGE_V, CHALLENGE_ERR, challengeCode, challengeRead, stretch, lapRef, vAllowed, alertCorner, ground, wallFace, slope, insidePlace, buildTrack, newCar, step, autopilot, driveSkid, newRace, stepRace, dry, MO, raceOrder, tourAll, SCORING, traffic, hitTraffic, AI_LVL, DIFF, TOP, vturn, omega, SURF, GL });
+  Object.assign(G, { WEAR, wear, brokenFresh, brokenImpact, CHALLENGE_V, CHALLENGE_ERR, challengeCode, challengeRead, stretch, lapRef, vAllowed, alertCorner, ground, wallFace, slope, tilt, insidePlace, buildTrack, newCar, step, autopilot, driveSkid, newRace, stepRace, dry, MO, raceOrder, tourAll, SCORING, traffic, hitTraffic, AI_LVL, DIFF, TOP, vturn, omega, SURF, GL });
 })(typeof window !== 'undefined' ? window : globalThis);

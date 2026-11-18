@@ -5,7 +5,7 @@
   const ZONES = ['base', 'occidental', 'cretes', 'arene', 'bassin'], LAP = 5288; // LAP: plan length of the layout, the unit of its chainages (PK)
   // A crater in section: a flat floor, an inner wall that curves up ever steeper to a sharp crest, an outer slope that falls steeply from the crest and flattens out (both concave, power P).
   // The two craters the road enters: [x east, z = -north, floor radius, rim radius, outer foot radius, floor altitude, rim altitude]. EAST is the arena: inside M.place its ground is M.bowls, the same curve
-  const P = 2.5, EAST = [470, -200, 200, 360, 520, -30, 70], SOUTH = [283, 383, 60, 222, 300, -28, 25]; // the two rims are 30 m apart: each crater is a full circle
+  const P = 2.5, EAST = [470, -200, 200, 360, 520, -30, 70, 0, 0.13, 322], SOUTH = [283, 383, 60, 222, 300, -28, 25, 0.035, 0.22, 100]; // the two rims are 30 m apart: each crater is a full circle
   // the craters the road only passes: [x, z, radius, floor altitude]: western crater, satellite impact, the two fresh impacts of the chicane
   const BESIDE = [[-555, -101, 272, -32], [-232, 232, 146, -10], [-885, -10, 30, 15], [-838, -130, 30, 20]];
 
@@ -14,9 +14,16 @@
       const { THREE, S, N, T, M, W } = h, ss = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }, PL = M.place, DS = { side: THREE.DoubleSide };
       const iLip = near(h, ...M.pts[M.jumps[0][0]].slice(0, 2)), nArena = (T.t0 - iLip + N) % N, nTun = (T.t1 - T.t0 + N) % N, nOut = (iLip - T.t1 + N) % N; // the lap in three: road (tunnel exit to lip), arena (lip to tunnel), tunnel
       // the profile of an entered crater at (x, z); beyond its outer foot, y: the ground the road gives there, which the outer slope joins
-      const bowl = ([cx, cz, rf, rr, ro, yf, yr], x, z, y) => { const r = Math.hypot(x - cx, z - cz); return r > ro ? y : r < rf ? yf : r < rr ? yf + (yr - yf) * ((r - rf) / (rr - rf)) ** P : y + (yr - y) * (1 - (r - rr) / (ro - rr)) ** P; };
+      // wob(angle, seed): a fixed irregular wave round a centre, -1 to 1: what breaks a rim (its height, or its radius where nothing is driven)
+      const wob = (a, s) => 0.5 * Math.sin(a * 3 + s) + 0.3 * Math.sin(a * 7 + s * 2.1) + 0.2 * Math.sin(a * 13 + s * 3.7), hash = (i, s = 0) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); };
+      // [.., jr, jh, r0]: the radius wanders by jr (south basin: nobody drives its wall) and the crest by jh of its height, from radius r0 outward (the arena is exact up to M.place.r: the physics is a circle)
+      const bowl = ([cx, cz, rf, rr, ro, yf, yr, jr = 0, jh = 0, r0 = 0], x, z, y) => { const a = Math.atan2(z - cz, x - cx), r = Math.hypot(x - cx, z - cz) / (1 + jr * wob(a, cx)), top = yr + (yr - yf) * jh * wob(a, cz) * ss((r - r0) / 40);
+        return r > ro ? y : r < rf ? yf : r < rr ? yf + (top - yf) * ((r - rf) / (rr - rf)) ** P : y + (top - y) * (1 - (r - rr) / (ro - rr)) ** P; };
       const inside = ([cx, cz, , rr], x, z) => Math.hypot(x - cx, z - cz) < rr;
       const OVER = new Set(); // the terrain vertices raised over the tunnel
+      // small craters nobody drives into, on the plains, the outer slopes and the walls above the arena: 150 draws over the map, kept when they are clear of the arena, of the road and of each other. [x, z, radius, depth]
+      const EXTRA = []; for (let i = 0; i < 150; i++) { const x = -1250 + 2350 * hash(i, 1), z = -1300 + 2200 * hash(i, 2), r = 7 + 26 * hash(i, 3) ** 2, s = S[near(h, x, z)];
+        if (Math.hypot(x - EAST[0], z - EAST[1]) > PL.r + r + 6 && Math.hypot(s.x - x, s.z - z) > s.w + r * 0.6 + 14 && !EXTRA.some(e => Math.hypot(e[0] - x, e[1] - z) < (e[2] + r) * 0.7)) EXTRA.push([x, z, r, r * 0.24]); }
       const shape = (x, z, y) => {
         const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), k = (i - iLip + N) % N, rE = Math.hypot(x - EAST[0], z - EAST[1]), tun = k >= nArena && k < nArena + nTun;
         if (k < nArena && d < s.w + 1) return y - (s.y + 0.08 + T.dent(x, z));             // from the lip to the tunnel the ground is what the car drives on: the ribbon (which comes down from the lip under the flight) plus the bowl and its small craters; it covers the engine's roadway
@@ -26,11 +33,14 @@
         if (tun) { if (d < W + 9 && t < s.y + 10.5) { t = s.y + 10.5; OVER.add(Math.fround(x) + "," + Math.fround(z)); } return y - t; } // over the tunnel the ground is kept above the vault from one mouth to the other: a berm where the bowl is still low
         if (floor != null) return y - t;
         if (k >= nArena + nTun) t += (y - t) * (1 - ss((d - s.w - 6) / 40));               // elsewhere the road stays laid: its own level up to 6 m from the wall, the crater profile 40 m further
-        let c = 0; for (const [cx, cz, r, f] of BESIDE) { const q = Math.hypot(x - cx, z - cz) / r; if (q < 1) c = Math.max(c, (t - f) * (1 - q ** P)); }
+        let c = 0; for (const [cx, cz, r, f] of BESIDE) { const q = Math.hypot(x - cx, z - cz) / (r * (1 + 0.07 * wob(Math.atan2(z - cz, x - cx), cx))); if (q < 1) c = Math.max(c, (t - f) * (1 - q ** P)); }
+        for (const [cx, cz, r, dp] of EXTRA) { const q = Math.hypot(x - cx, z - cz) / (r * (1 + 0.14 * wob(Math.atan2(z - cz, x - cx), cz))); if (q < 1) c = Math.max(c, dp * (1 - q ** P)); }
         return y - t + Math.min(c, Math.max(0, d - 16) * 0.8);                             // passed craters: the same concave bowl, carved from 16 m off the axis, at most 0.8 m per metre
       };
-      // ground: regolith everywhere, bare stratified rock where it is steep (crater walls, cuttings)
-      const g = terrain(h, { stepSec: 8, margin: 480, hollow: shape, mat: h.mat('regolitheLune'), layerSet: [{ tex: ['rocheLune', '#636a78'], slope: [0.3, 0.55] }] });
+      // ground: regolith in three tones (the base, darker blotches, paler patches: no two hundred metres alike), bare stratified rock where it is steep (crater walls, cuttings)
+      const g = terrain(h, { stepSec: 8, margin: 480, hollow: shape, mat: h.mat('regolitheLune'), layerSet: [{ tex: ['regolitheLune', '#5c616f'], weight: (x, z) => ss((Math.sin(x * 0.013 + 1.3) * Math.sin(z * 0.017 + 0.4) + 0.5 * Math.sin(x * 0.031 - z * 0.027) - 0.2) / 0.5) },   // darker blotches 100 to 300 m across
+        { tex: ['regolitheLune', '#979dab'], weight: (x, z) => 0.8 * ss((Math.sin(x * 0.021 - 2.1) * Math.sin(z * 0.011 + 1.7) + 0.4 * Math.sin(x * 0.043 + z * 0.037) - 0.45) / 0.4) }, // paler dust in smaller patches
+        { tex: ['rocheLune', '#636a78'], slope: [0.3, 0.55] }] });
       // a height field cannot open a tube: the faces that would cross the tunnel (one corner on the berm, their centre over the roadway) are taken out; the engine's hull closes the slot from above
       { const geo = g.mesh.geometry, p = geo.attributes.position, ix = geo.index.array, keep = [], over = i => OVER.has(p.getX(i) + "," + p.getZ(i));
         for (let f = 0; f < ix.length; f += 3) { const [a, b, c] = [ix[f], ix[f + 1], ix[f + 2]], cx = (p.getX(a) + p.getX(b) + p.getX(c)) / 3, cz = (p.getZ(a) + p.getZ(b) + p.getZ(c)) / 3, q = S[near(h, cx, cz)];
@@ -38,7 +48,7 @@
         geo.setIndex(keep); }
       // the game draws the roadway at a constant ±W all round the lap: here it is hidden (no road down the crater wall nor across the arena) and laid again at the real width (±s.w, M.wide), from the tunnel exit to the lip
       { const road = h.scene.children.find(o => o.material && o.material.userData && o.material.userData.mo === 1 && o.material.userData.mo0 == null); if (road) road.visible = false; }
-      h.ribbon(T.t1, nOut, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { ...DS, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
+      h.ribbon(T.t1, nOut, s => -s.w, 0, s => s.w, 0, h.mat('routeLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road.slice(0, 4)), 32);
       // th.guardM = 0: the guardrails are placed here, on the same stretch only: none under the flight, none across the arena
       for (const sd of [-1, 1]) h.guardM(sd, T.t1, nOut, s => sd * s.w, h.TH.wallH, s => sd * s.w, -2, h.mat('guardrail', DS, h.TH.intoWall));
       // MAT: the shared materials of the map, one draw pass each for the whole map; its keys are the zone names of the lune shapes (shapes-lune-*.js). Every piece of scenery goes into the group `kit`, merged per material at the end
@@ -49,17 +59,27 @@
       MAT.tire = MAT.dark;
       const kit = new THREE.Group(); h.scene.add(kit);
       // rings laid on the ground, one mesh per material: the strata of a crater wall, the pale crest of a rim, the dark bottom of a small crater. ring(x, z, radii from inside to outside, material, [[angle, half-width], …] left open)
-      const BANDS = new Map(), ring = (cx, cz, R, m, gaps = []) => { const B = BANDS.get(m) || BANDS.set(m, { p: [], uv: [], ix: [] }).get(m), n = Math.max(24, Math.round(R[R.length - 1] * 0.5));
+      const BANDS = new Map(), ring = (cx, cz, R, m, gaps = [], jit = 0, lift = 0.7) => { const B = BANDS.get(m) || BANDS.set(m, { p: [], uv: [], ix: [] }).get(m), n = Math.max(12, Math.round(R[R.length - 1] * 0.5));
         for (let a = 0; a < n; a++) { const a0 = a / n * 2 * Math.PI, a1 = (a + 1) / n * 2 * Math.PI; if (gaps.some(([ga, gw]) => Math.abs(Math.atan2(Math.sin(a0 - ga), Math.cos(a0 - ga))) < gw)) continue;
-          for (let j = 0; j < R.length - 1; j++) { const b = B.p.length / 3; for (const [an, r] of [[a0, R[j]], [a1, R[j]], [a0, R[j + 1]], [a1, R[j + 1]]]) { const x = cx + r * Math.cos(an), z = cz + r * Math.sin(an); B.p.push(x, g.hAt(x, z) + 0.7, z); B.uv.push(an * R[R.length - 1] / 8, r / 8); } B.ix.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } } };
+          for (let j = 0; j < R.length - 1; j++) { const b = B.p.length / 3; for (const [an, r0] of [[a0, R[j]], [a1, R[j]], [a0, R[j + 1]], [a1, R[j + 1]]]) { const r = r0 * (1 + jit * wob(an, cx + cz)), x = cx + r * Math.cos(an), z = cz + r * Math.sin(an); B.p.push(x, g.hAt(x, z) + lift, z); B.uv.push(an * R[R.length - 1] / 8, r / 8); } B.ix.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } } };
       const steps = (a, b, st) => { const R = []; for (let r = a; r < b; r += st) R.push(r); R.push(b); return R; };
       const aLip = Math.atan2(S[iLip].z - EAST[1], S[iLip].x - EAST[0]), aOut = Math.atan2(S[T.t0].z - EAST[1], S[T.t0].x - EAST[0]);
       for (const [a, b] of [[225, 235], [260, 272], [295, 308], [325, 337]]) ring(EAST[0], EAST[1], steps(a, b, 6), MAT.strata, [[aLip, 0.1], [aOut, 0.1]]);              // the great crater: four strata on its wall (open under the flight and over the tunnel),
       ring(EAST[0], EAST[1], steps(354, 366, 6), MAT.crest, [[aLip, 0.08]]);                                                                                    // its pale crest (open where the road reaches the lip),
-      for (const [x, z, r] of M.dents) { ring(x, z, steps(0, r * 0.8, 5), MAT.strata); ring(x, z, steps(r, r + Math.max(3, r * 0.14), 4), MAT.crest); }          // and each small crater of the floor: dark bottom, pale rim
-      ring(SOUTH[0], SOUTH[1], steps(217, 227, 5), MAT.crest, [[Math.atan2(S[T.t1].z - SOUTH[1], S[T.t1].x - SOUTH[0]), 0.12], [2.75, 0.3]]);                   // the pale crest of the south basin (open over the tunnel and where the ramp leaves it, to the west)
+      for (const [x, z, r] of M.dents) { ring(x, z, steps(0, r * 0.8, 5), MAT.strata, [], 0.1); ring(x, z, steps(r, r + Math.max(3, r * 0.14), 4), MAT.crest, [], 0.07); }   // and each small crater of the floor: dark bottom, pale rim, neither quite round
+      // ray(x, z, from, to, angle, width): a streak of pale ejecta thrown out of a crater, tapering outward
+      const ray = (cx, cz, r0, r1, a, w) => { const B = BANDS.get(MAT.crest) || BANDS.set(MAT.crest, { p: [], uv: [], ix: [] }).get(MAT.crest), n = Math.max(2, Math.round((r1 - r0) / 8));
+        for (let k = 0; k < n; k++) { const b = B.p.length / 3; for (const [f, sd] of [[k / n, -1], [k / n, 1], [(k + 1) / n, -1], [(k + 1) / n, 1]]) { const r = r0 + (r1 - r0) * f, hw = w * (1 - f * 0.8) / 2, x = cx + r * Math.cos(a) - sd * hw * Math.sin(a), z = cz + r * Math.sin(a) + sd * hw * Math.cos(a); B.p.push(x, g.hAt(x, z) + 0.5, z); B.uv.push(r / 8, sd * hw / 8); } B.ix.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } };
+      const far2 = (x, z) => { const s = S[near(h, x, z)]; return Math.hypot(s.x - x, s.z - z) > s.w + 3; }; // clear of the roadway
+      EXTRA.forEach(([x, z, r], i) => { ring(x, z, steps(0, r * 0.75, 5), MAT.strata, [], 0.14); ring(x, z, steps(r, r + Math.max(2, r * 0.16), 3), MAT.crest, [], 0.12);
+        if (i % 3 === 0) for (let k = 0; k < 7; k++) { const a = k * 0.9 + hash(i, k) * 0.6, r1 = r * (2 + 2.5 * hash(i, k + 9)); if (far2(x + r1 * Math.cos(a), z + r1 * Math.sin(a)) && Math.hypot(x + r1 * Math.cos(a) - EAST[0], z + r1 * Math.sin(a) - EAST[1]) > PL.r) ray(x, z, r * 1.15, r1, a, r * 0.3); } }); // one in three is fresh: rays
+      for (const [x, z, r] of BESIDE.slice(2)) for (let k = 0; k < 9; k++) { const a = k * 0.7 + hash(x, k) * 0.5, r1 = r * (2.2 + 2.5 * hash(z, k)); if (far2(x + r1 * Math.cos(a), z + r1 * Math.sin(a))) ray(x, z, r * 1.2, r1, a, 9); }  // the two fresh impacts of the chicane throw long rays
+      // craterlets on the floor of the arena, too small to feel: a dark dot and a pale lip, flat on the ground, some of them biting the rim of a larger crater
+      for (let i = 0; i < 70; i++) { const a = i * 2.39996 + 1, rr = 196 * Math.sqrt((i + 0.5) / 70), x = EAST[0] + rr * Math.cos(a), z = EAST[1] + rr * Math.sin(a), r = 2.5 + 4 * hash(i, 5), dn = M.dents.find(e => Math.hypot(e[0] - x, e[1] - z) < e[2] * 0.85);
+        if (!dn && Math.hypot(S[T.t0].x - x, S[T.t0].z - z) > 30) { ring(x, z, steps(0, r * 0.7, 3), MAT.strata, [], 0.15, 0.12); ring(x, z, steps(r * 0.8, r + 1, 1), MAT.crest, [], 0.15, 0.1); } }
+      ring(SOUTH[0], SOUTH[1], steps(217, 227, 5), MAT.crest, [[Math.atan2(S[T.t1].z - SOUTH[1], S[T.t1].x - SOUTH[0]), 0.12], [2.75, 0.3]], 0.035);                   // the pale crest of the south basin (open over the tunnel and where the ramp leaves it, to the west)
       for (const [a, b] of [[150, 165], [200, 214]]) ring(BESIDE[0][0], BESIDE[0][1], steps(a, b, 8), MAT.strata);                                            // the western crater: two strata, away from the road
-      for (const [x, z] of BESIDE.slice(2)) { ring(x, z, steps(0, 20, 5), MAT.strata); ring(x, z, steps(31, 36, 5), MAT.crest); }                              // the two fresh impacts of the chicane: dark bowl, bright rim
+      for (const [x, z] of BESIDE.slice(2)) { ring(x, z, steps(0, 20, 5), MAT.strata, [], 0.12); ring(x, z, steps(31, 36, 5), MAT.crest, [], 0.1); }                              // the two fresh impacts of the chicane: dark bowl, bright rim
       for (const [m, B] of BANDS) { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(B.p, 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute(B.uv, 2)); geo.setIndex(B.ix); geo.computeVertexNormals(); kit.add(new THREE.Mesh(geo, m)); }
       // placement. stand(x, z, ry, y): an empty group at map coordinates (x east, z = -north), on the ground unless y is given. add(group, shape, settings, position, skin): poses a catalogue shape in it (skin: MAT, or one material for a simple shape)
       const at = pk => S[Math.round(pk / LAP * N) % N], low = (x, z, w, d) => Math.min(g.hAt(x, z), ...[[w, 0], [-w, 0], [0, d], [0, -d]].map(([a, b]) => g.hAt(x + a / 2, z + b / 2)));
@@ -72,7 +92,15 @@
       // the horizon. The terrain stops 480 m from the road: a dark plain runs on from there, lower than the floor of the deepest crater, and four far massifs close the view
       { const p = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), MAT.plain); p.rotation.x = -Math.PI / 2; p.position.set(0, -46, 0); p.geometry.attributes.uv.array.forEach((v, i, A) => A[i] = v * 1500); kit.add(p); }
       for (const [x, z, ry, L, H, sd] of [[-100, -1900, 0, 3400, 250, 1], [1650, -300, 1.5708, 3000, 210, 2], [100, 1500, 0, 3200, 190, 3], [-1850, -250, 1.5708, 3000, 230, 4]]) add(stand(x, z, ry, -40), 'criteLune', [L, H, 420, sd], [0, 0, 0], MAT.far);
-      for (const z of ZONES) LUNE[z]({ h, g, S, N, at, LAP, MAT, kit, stand, add, by, THREE });
+      // sit(sample, ry): a group on the axis at a road sample, at road level (chainages drift past the jump, whose fall adds length: what must meet the tunnel is placed on its own samples)
+      const sit = (s, ry = 0, lat = 0) => { const [x, z] = edgePt(s, 1, lat); return stand(x, z, h.across(s) + ry, lat ? g.hAt(x, z) : s.y); };
+      // boulders all round the lap, in three sizes, 12 to 75 m from the wall, more of them near the craters' walls; none from the lip to the tunnel exit (nothing solid where the car lands) nor round the start hall
+      for (let i = 80; i < N - 90; i += 12) { if ((i - iLip + N) % N < nArena + nTun + 10 || (iLip - i + N) % N < 60) continue;
+        for (const sd of [-1, 1]) { if (hash(i, sd) < 0.42) continue; const s = S[i], w = [3, 6, 12][hash(i, sd + 3) * 3 | 0], [x, z] = edgePt(s, sd, s.w + 12 + 63 * hash(i, sd + 5) ** 2 + w / 2);
+          if (Math.hypot(S[near(h, x, z)].x - x, S[near(h, x, z)].z - z) > 11 + w / 2) add(stand(x, z, hash(i, sd + 7) * 6.28), 'rocherLune', [w, w * (0.5 + 0.4 * hash(i, sd + 8)), w * (0.8 + 0.6 * hash(i, sd + 9)), i + sd], [0, 0, 0], hash(i, sd + 11) < 0.25 ? MAT.pale : MAT.rock); } }
+      for (let k = 0; k < 40; k++) { const a = k * 0.157 * 2.02 + hash(k, 3) * 0.1, r = PL.r + 10 + 26 * hash(k, 4), x = EAST[0] + r * Math.cos(a), z = EAST[1] + r * Math.sin(a), w = 4 + 10 * hash(k, 6); // and a broken ring of them on the wall of the arena, just above where the car can climb
+        if (Math.abs(Math.atan2(Math.sin(a - aLip), Math.cos(a - aLip))) > 0.2 && Math.abs(Math.atan2(Math.sin(a - aOut), Math.cos(a - aOut))) > 0.15) add(stand(x, z, a), 'rocherLune', [w, w * 0.6, w * 1.2, k], [0, 0, 0], k % 4 ? MAT.rock : MAT.pale); }
+      for (const z of ZONES) LUNE[z]({ h, g, S, N, at, LAP, MAT, kit, stand, add, by, sit, tunnel: [S[T.t0], S[T.t1]], lip: S[(iLip - 30 + N) % N], THREE });
       weld(h, kit); // one mesh per material
     },
   });
