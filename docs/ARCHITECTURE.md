@@ -1,6 +1,6 @@
 # Architecture
 
-Redline Racer is an arcade racing game in pixelated 3D (three.js), played in the browser: solo, 2 to 4 players on one screen, or online peer-to-peer. It has 12 maps; each one has its own track layout, car, radio stations, scenery and HUD, and the synthesised music reacts to the race. It is a static site with no build step and nothing to install.
+Redline Racer is an arcade racing game in pixelated 3D (three.js), played in the browser: solo, 2 to 4 players on one screen, or online peer-to-peer. It has 18 maps; each one has its own track layout, car, radio stations, scenery and HUD, and the synthesised music reacts to the race. It is a static site with no build step and nothing to install.
 
 Code, comments and docs are in English. On-screen game text is written in French capitals and translated at display time by `src/engine/lang.js` (the game is bilingual). Paths in this doc start at the repo root.
 
@@ -90,6 +90,8 @@ A map is an entry of `MAPS` in `src/data/maps.js` (layout, width, grip, car, rad
 - `textures-<map>.js` adds to the texture catalogue (what a surface looks like),
 - `shapes-<map>.js` adds to the shape catalogue (geometry, or assemblies of boxes with named zones),
 - `scenery-<map>.js` adds its scenery function with `Object.assign(SCENERY, { <map>(h) { … } })`: where to put which shape with which texture, through the helper object `h` (`h.pose`, `h.geo`, `h.mat`, `h.emis`, and `PLACERS`: `inst`, `insts`, `boxMesh`, `edgePt`, `marker`, `weld`, `near`, `pt`, `terrain`).
+
+Six maps (`egee`, `area51`, `piliers`, `volcan`, `lune`, `autoroute`) are written after the `MAPS` array as `if (id === '<id>') { G.MAP_DEF = … }` blocks; a loop around the blocks runs them once per id and pushes each into `MAPS`, with its French label, title, rivals and subtitle from the `NEW` table above the loop (these replace what the block says). They borrow the car and radio of `touge`. After a layout or car change on any of them: `node tools/build-gold-laps.js egee area51 piliers volcan lune autoroute`, then `sh tools/check.sh`. `lune` and `autoroute` only get the short run of `tests/test-maps.js` (the `BLOCKOUT` list there says why).
 
 A map also needs a place in `EVENING` (Tour order and time of night), a gold trace in `src/data/gold-laps.js` (`node tools/build-gold-laps.js <map>`), and an English title (`HEADING_EN` in `lang.js`, or `th.hud.heading`). Each new file must get its `<script defer>` line in `index.html` at the right place in the load order; `tests/test-maps.js` fails if `scenery-<map>.js` is missing from `index.html` or if any of the above is missing.
 
