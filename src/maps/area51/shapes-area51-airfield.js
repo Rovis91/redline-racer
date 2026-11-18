@@ -10,8 +10,8 @@
     // control tower, ht to the cab floor: a corrugated base building, the concrete shaft, the cab with its lit glazing all round, roof, aerial mast and red light
     tourArea51: (ht = 34) => [['tin', 24, 6, 16, 0, 3, 0], ['verriere', 24.2, 1.2, 16.2, 0, 4.4, 0], ['concrete', 9, ht, 9, 0, ht / 2, 0], ['concrete', 13, 2, 13, 0, ht - 1, 0], ['verriere', 16, 4.4, 16, 0, ht + 2.2, 0],
       ['gray', 18, 0.8, 18, 0, ht + 4.8, 0], ['steel', 0.4, 8, 0.4, 3, ht + 9, 3], ['fire', 0.6, 0.6, 0.6, 3, ht + 13.2, 3]],
-    // approach light bar, 30 m along Z: a steel bar on three posts, five lamps
-    rampeArea51: () => [['steel', 0.3, 0.3, 30, 0, 1.5, 0], ...[-12, 0, 12].map(z => ['steel', 0.25, 1.5, 0.25, 0, 0.75, z]), ...[-14, -7, 0, 7, 14].map(z => ['neon', 0.6, 0.5, 0.6, 0, 1.9, z])],
+    // approach light bar, len along Z (30 m: a full bar across the axis; 14 m: the half bars that flank the road where it runs down the approach), ht above the ground: a steel bar on three posts, five lamps
+    rampeArea51: (len = 30, ht = 1.5) => [['steel', 0.3, 0.3, len, 0, ht, 0], ...[-0.4, 0, 0.4].map(f => ['steel', 0.25, ht + 2, 0.25, 0, ht / 2 - 1, f * len]), ...[-2, -1, 0, 1, 2].map(i => ['neon', 0.7, 0.6, 0.7, 0, ht + 0.45, i * len * 0.233])],
     // windsock: 8 m pole, amber sock blown along Z, a white band
     mancheArea51: () => [['steel', 0.25, 8, 0.25, 0, 4, 0], ['amber', 0.9, 0.9, 3.2, 0, 7.6, 1.8, [0.15, 0, 0]], ['white', 0.95, 0.95, 0.6, 0, 7.7, 1.2, [0.15, 0, 0]]],
     // transporter track of the antenna array, len long along Z: two rails on sleepers
