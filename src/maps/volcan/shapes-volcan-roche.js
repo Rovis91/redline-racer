@@ -1,5 +1,5 @@
 // Shapes specific to "volcan", family "rock and relief": completes the shapes.js catalogue. Metres, origin at the foot, Y up. Faceted (flat shading), UVs in tiles of 8 m.
-// Simple shapes return a geometry; assemblies return boxes [zone, w, h, d, x, y, z, rotation] whose zones are keys of the map's shared materials (MAT in scenery-volcan.js): rock, cliff, lamp.
+// Simple shapes return a geometry; assemblies return boxes [zone, w, h, d, x, y, z, rotation] whose zones are keys of the map's shared materials (MAT in scenery-volcan.js): rock, cliff.
 // Assemblies: X along the road, front toward -Z (the road), +Z away from it. See docs/proposals/volcanic-island/AMBIANCE-V2.html, zones 3 and 4: charcoal basalt in large planes, red-brown scoria. Not rounded boulders, not glowing rock.
 (function () {
   const noise = (i, s = 0) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); }; // fixed pseudo-random per index: no call to the shared rnd
@@ -28,19 +28,11 @@
     dalleVolcan: (r = 10, ht = 1, seed = 0, n = 9) => SHAPES.ringsVolcan(n, [[-r * 0.3, r * 1.04], [ht, r]], true, 0.18, seed),
     // column of steam, ht high: narrow at the vent, wider above, open (give a translucent double-sided material); static
     vapeurVolcan: (ht = 26, r = 1.2) => SHAPES.ringsVolcan(6, [[0, r], [ht * 0.4, r * 2.4], [ht, r * 4.5]], false, 0.25, 1),
-    // far island on the horizon, L long along X, crests up to H, D deep: a jagged ridge with a front and a back slope, falling into the sea at both ends. A silhouette: no detail
-    creteVolcan: (L = 1200, H = 200, D = 400, seed = 0) => { const n = Math.max(6, Math.round(L / 110)), X = k => -L / 2 + L * k / n, Y = k => k === 0 || k === n ? -6 : (k === 1 || k === n - 1 ? 0.4 : 1) * H * (0.45 + 0.55 * noise(k, seed)), Z = k => D * 0.3 * (noise(k, seed + 9) - 0.5), Q = [];
-      for (let k = 0; k < n; k++) for (const sd of [1, -1]) { const a = [X(k), -6, sd * D / 2, X(k) / 16, 0], b = [X(k + 1), -6, sd * D / 2, X(k + 1) / 16, 0], c = [X(k + 1), Y(k + 1), Z(k + 1), X(k + 1) / 16, Y(k + 1) / 16], e = [X(k), Y(k), Z(k), X(k) / 16, Y(k) / 16];
-        Q.push(sd > 0 ? [b, a, e, c] : [a, b, c, e]); }
-      return quads(Q); },
+    // far island on the horizon, R in radius at the waterline, H high: a closed faceted mass with a broad base, two shoulders and a broken summit. A silhouette: no detail
+    ileVolcan: (R = 600, H = 220, seed = 0) => SHAPES.ringsVolcan(9, [[-10, R, R * 0.6], [H * 0.25, R * 0.78, R * 0.46], [H * 0.6, R * 0.45, R * 0.27], [H * 0.9, R * 0.2, R * 0.12], [H, R * 0.06, R * 0.04]], true, 0.18, seed),
     // basalt organ pipes against a wall, L long, columns up to ht: prisms 1.6 m wide of uneven height, set on two ranks; the higher rank is behind (+Z)
     orguesVolcan: (L = 30, ht = 12) => { const n = Math.round(L / 1.7), B = [['rock', L, ht * 0.45, 3, 0, ht * 0.2, 2.2]];
       for (let k = 0; k < n; k++) { const x = -L / 2 + 0.85 + k * 1.7, h1 = ht * (0.35 + 0.4 * noise(k, 1)), h2 = ht * (0.65 + 0.35 * noise(k, 2)); B.push([k % 3 ? 'rock' : 'cliff', 1.6, h1 + 3, 1.6, x, h1 / 2 - 1.5, 0], [k % 4 ? 'cliff' : 'rock', 1.6, h2 + 3, 1.6, x + 0.4, h2 / 2 - 1.5, 1.5]); }
-      return B; },
-    // mouth of a gallery cut in the rock, straddling the road (X across it, the road along Z): opening dw × dh, rough jambs and a heavy lintel of uneven blocks, a warm lamp under the lintel. No architecture
-    portailVolcan: (dw = 17, dh = 8.5, wing = 16) => { const B = [['rock', dw + wing * 2, 5, 5, 0, dh + 2.5, 0], ['cliff', dw + 6, 2.4, 5.6, 0, dh + 1.2, -0.2], ['lamp', 1.6, 0.3, 0.5, 0, dh - 0.2, -2.6]];
-      for (const sd of [-1, 1]) for (let k = 0; k < 4; k++) { const w = wing / 4 + 1, x = sd * (dw / 2 + wing / 8 + k * wing / 4), top = dh + 5 - k * (dh + 3) / 4 * (0.6 + 0.4 * noise(k, sd + 2)); B.push([k & 1 ? 'cliff' : 'rock', w, top + 4, 4.4 + 1.6 * noise(k, sd + 5), x, top / 2 - 2, 0.4 * (k & 1)]); }
-      for (let k = 0; k < 5; k++) B.push([k & 1 ? 'rock' : 'cliff', (dw + wing) / 5 + 1, 2 + 3 * noise(k, 7), 4, -(dw + wing) / 2 + (k + 0.5) * (dw + wing) / 5, dh + 5.6 + noise(k, 7), 0.3]);
       return B; },
   });
 })();
