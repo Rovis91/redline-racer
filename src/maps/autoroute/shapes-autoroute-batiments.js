@@ -1,13 +1,17 @@
 // Shapes specific to "autoroute", family "buildings": completes the shapes.js catalogue. Metres, origin on the ground at the centre of the footprint, X = width, Z = depth, Y up.
 // Assemblies (lists of boxes [zone, w, h, d, x, y, z, rotation]); the zones are the names of the map's shared materials (MAT in scenery-autoroute.js):
 // the facade given as `wall` (brick, brick2, brick3, stone, stone2, stone3, glass, glass2, tin, tin2), shop and shop2 (ground floor), hole (the dark inside of a gutted building),
-// concrete, dark (roofs), rust, ivy, rubble, steel.
+// concrete, dark (roofs), rust, vine and vine2 (creeper, cut out), rubble, steel.
 // A building is assembled from a small kit of parts, chosen by its size and by v, an integer that varies it (no randomness: the same v gives the same building), then damaged by dmg (0 to 1):
 // under 0.25 it stands whole under its ivy; from 0.25 its facades are gutted (holes with a floor slab hanging and rubble at their foot); from 0.45 its top storeys are gone (wall stubs round an open floor);
 // from 0.6 it has lost half its height; from 0.87 it has come down. No two buildings of the map are the same: v, dmg and the facade drawing all differ.
 // See docs/proposals/sunken-highway/AMBIANCE-V2.html and the author's references: gutted buildings, fallen storeys, vegetation taking everything back; not a tidy disused estate.
 (function () {
   const H = (v, k) => { const x = Math.sin(v * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); }; // 0..1, fixed by v and k
+  // creeper on a wall face, iw wide and up to ih high: strips 1 to 3 m wide side by side, each its own height (taller towards the middle) with a narrower head above it, in two greens, gaps between some,
+  // a loose strand over one in three. Never one sheet. at(zone, width, height, offset along the face, y) gives the box on the face
+  const creeper = (v, iw, ih, at) => { const L = []; for (let u = -iw / 2, i = 0; u < iw / 2; i++) { const w = 1 + 2 * H(v, 300 + i), m = 1 - Math.abs((u + w / 2) / (iw / 2)) * 0.6, ht = Math.max(2, ih * m * (0.45 + 0.55 * H(v, 330 + i))), zn = i & 1 ? 'vine' : 'vine2';
+    if (H(v, 360 + i) > 0.18) { L.push(at(zn, w * 1.15, ht, u + w / 2, ht / 2), at(zn, w * 0.55, 1.6, u + w * (0.3 + 0.4 * H(v, 420 + i)), ht + 0.8)); if (H(v, 390 + i) < 0.33) L.push(at('vine', 0.5, ht * 0.35, u + w / 2, ht * 1.25)); } u += w; } return L; };
   Object.assign(SHAPES, {
     // street building w × ht × d in the facade `wall`: 4.5 m ground floor of shops, then the storeys
     immeubleAutoroute: (w = 30, ht = 40, d = 30, wall = 'brick', v = 0, dmg = 0) => { if (dmg > 0.87) return SHAPES.ruineAutoroute(w, Math.min(26, ht * 0.5), d, wall, v);
@@ -31,8 +35,8 @@
         L.push(at('hole', hw, hh, 0.5, p, y, 0.15), at('concrete', hw * 0.7, 0.4, 3.2, p, y - hh / 2 + 0.3, 1.3, 0.5), at('rubble', hw * 0.8, 2.2, 3.4, p, 1.1, 1.8), at('rubble', hw * 0.4, 1.6, 2.4, p + 1.5, 2.5, 1.4, 0.3)); }
       // ivy climbs from the ground on three faces in four, often two: a ragged sheet, taller in the middle (not on a curtain wall)
       if (!/glass/.test(wall) && H(v, 5) < 0.75) { const f = H(v, 6) < 0.5 ? 1 : -1, ih = Math.min(h1 - 2, 12 + 30 * H(v, 7)), iw = w * (0.35 + 0.5 * H(v, 8)), x = (H(v, 9) - 0.5) * (w - iw);
-        L.push(['ivy', iw, ih, 0.7, x, ih / 2, f * (d / 2 + 0.2)], ['ivy', iw * 0.5, ih * 0.4, 0.7, x + iw * 0.2, ih * 1.15, f * (d / 2 + 0.2)]);
-        if (H(v, 10) < 0.65) L.push(['ivy', 0.7, ih * 0.7, d * 0.6, (H(v, 12) < 0.5 ? 1 : -1) * (w / 2 + 0.2), ih * 0.35, (H(v, 11) - 0.5) * d * 0.4]); }
+        L.push(...creeper(v, iw, ih, (zn, a, b, u, yy) => [zn, a, b, 0.12, x + u, yy, f * (d / 2 + 0.3)]));
+        if (H(v, 10) < 0.65) { const sx = (H(v, 12) < 0.5 ? 1 : -1) * (w / 2 + 0.3), zc = (H(v, 11) - 0.5) * d * 0.4; L.push(...creeper(v + 1, d * 0.6, ih * 0.7, (zn, a, b, u, yy) => [zn, 0.12, b, a, sx, yy, zc + u])); } }
       return L; },
     // warehouse w × ht × d in the cladding `wall`, ridge along Z: concrete plinth, steel cladding, gable roof, three loading doors on each long side, a rusted sign band.
     // From dmg 0.5 one roof slope has caved in (the inside dark, sheets hanging); from 0.8 a gable has gone and its rubble lies in front
@@ -42,7 +46,7 @@
         ...(gone ? [['hole', w / 2 - 1, 0.3, d - 2, gone * w / 4, e + 0.2, 0], ['rust', w * 0.3, 0.2, d * 0.4, gone * w * 0.3, e - 1, d * 0.1, [0.2, 0.3, gone * 0.9]], ['rust', w * 0.25, 0.2, d * 0.3, gone * w * 0.2, e + 0.5, -d * 0.25, [-0.3, 0.1, gone * 0.5]]] : []),
         ...(dmg > 0.8 ? [['hole', w * 0.7, e * 0.8, 0.5, 0, e * 0.45, d / 2 + 0.15], ['rubble', w * 0.7, 2.4, 3.6, 0, 1.2, d / 2 + 1.9], ['rust', w * 0.4, 0.2, 5, w * 0.1, 2.6, d / 2 + 2, [0.9, 0.2, 0]]] : []),
         ...[-1, 1].flatMap(s => [-1, 0, 1].map(k => ['dark', 0.4, 5, 6, s * (w / 2 + 0.1), 3.9, k * d * 0.3])), ['rust', w * 0.6, 2, 0.4, 0, e - 2, d / 2 + 0.2],
-        ...(H(v, 1) < 0.7 ? [['ivy', w * 0.5, e * 0.8, 0.6, w * 0.2, e * 0.4, -d / 2 - 0.2], ['ivy', 0.6, e * 0.6, d * 0.3, -w / 2 - 0.2, e * 0.3, d * 0.2]] : [])]; },
+        ...(H(v, 1) < 0.7 ? [...creeper(v, w * 0.5, e * 0.8, (zn, a, b, u, yy) => [zn, a, b, 0.12, w * 0.2 + u, yy, -d / 2 - 0.45]), ...creeper(v + 1, d * 0.3, e * 0.6, (zn, a, b, u, yy) => [zn, 0.12, b, a, -w / 2 - 0.45, yy, d * 0.2 + u])] : [])]; },
     // heap of rubble filling w × d, ht high at its crest (no piece larger than 0.7 of its smaller side: a small heap stays inside its footprint):
     // slabs and blocks tilted every way, steeper toward +Z (the building it fell from), bars sticking out
     eboulisAutoroute: (w = 30, ht = 5, d = 12, v = 0) => { const L = [], n = Math.max(6, Math.round(w * d / 22));
@@ -54,6 +58,6 @@
     // a building that has come down across w × d: two broken walls still standing at its back corners (toward +Z), floor slabs hanging between them, and its rubble in front
     ruineAutoroute: (w = 30, ht = 18, d = 14, wall = 'brick', v = 0) => [...SHAPES.eboulisAutoroute(w, ht * 0.4, d, v),
       [wall, w * 0.3, ht, 1, -w * 0.33, ht / 2, d / 2 - 0.5], [wall, 1, ht * 0.7, d * 0.4, -w / 2 + 0.5, ht * 0.35, d * 0.3], [wall, w * 0.22, ht * 0.55, 1, w * 0.36, ht * 0.27, d / 2 - 0.5],
-      ['concrete', w * 0.5, 0.5, d * 0.5, 0, ht * 0.45, d * 0.2, [-0.5, 0, 0.12]], ['concrete', w * 0.35, 0.5, d * 0.4, w * 0.15, ht * 0.25, 0, [-0.8, 0.2, -0.1]], ['ivy', w * 0.28, ht * 0.6, 0.7, -w * 0.33, ht * 0.3, d / 2 - 1.2]],
+      ['concrete', w * 0.5, 0.5, d * 0.5, 0, ht * 0.45, d * 0.2, [-0.5, 0, 0.12]], ['concrete', w * 0.35, 0.5, d * 0.4, w * 0.15, ht * 0.25, 0, [-0.8, 0.2, -0.1]], ...creeper(v, w * 0.28, ht * 0.6, (zn, a, b, u, yy) => [zn, a, b, 0.12, -w * 0.33 + u, yy, d / 2 - 1.15])],
   });
 })();

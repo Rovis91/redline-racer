@@ -132,6 +132,11 @@
         h += H * (((lip ? r1 : r) - rf) / (rr - rf)) ** p * (lip ? Math.max(0, 1 - (r - r1) / (0.7 * (rr - r1))) : 1); } // (nothing in the last 30 % before the rim: the lip must be the highest point)
       return h; });
     if (vert) S.forEach((s, i) => { const b = S[(i + 1) % n]; s.sl = (b.y - s.y) / Math.hypot(b.x - s.x, b.z - s.z); });
+    // M.obst = [[x, z, half-width, half-length, ry = 0, y], …]: solid boxes standing on the drivable ground (wrecks, rubble, piers, buildings), in map metres like pts; ry turns the box like a three.js rotation.y.
+    // y (altitude of its foot): given where the track passes over or under itself, the box only counts for the samples within 4 m of that altitude. T.obst[i] = the boxes within reach of sample i
+    // (the impact is in step(), the autopilot's path keeps 2.1 m clear of them below). No map without M.obst is affected.
+    const OB = (M.obst || []).map(([x, z, hx, hz, ry = 0, y]) => ({ x: x * SC, z: z * SC, hx, hz, c: Math.cos(ry), s: Math.sin(ry), y, r: Math.hypot(hx, hz) }));
+    const obst = M.obst ? S.map(s => OB.filter(o => (o.y == null || Math.abs(o.y - s.y) < 4) && Math.hypot(o.x - s.x, o.z - s.z) < o.r + s.w + 4)) : null;
     // the autopilot's path is the least-curvature line that stays on the road, 2.1 m from the walls (or from the foot of the faces: it stays on the flat), whatever the width (outside, inside line, outside).
     // One point every 8 m, each brought back to where its 4 neighbours would want it so the line turns as little as possible; then its curvature, by the circle through 3 points.
     {
@@ -139,11 +144,22 @@
       // 6000 passes over all the points: loop with no allocation (flat arrays), it was most of the loading time of a mapDef. Same operations in the same order: identical result to the bit.
       const X = new Float64Array(N), Z = new Float64Array(N), TX = new Float64Array(N), TZ = new Float64Array(N), LIM = new Float64Array(N);
       for (let j = 0; j < N; j++) { const s = S[j * m]; X[j] = s.x; Z[j] = s.z; TX[j] = s.tx; TZ[j] = s.tz; LIM[j] = s.pl - 3.2; }
+      // the limits of the path on each side. The boxes (M.obst) limit it too: of each outline (a point every 2 m) the part within 6 m along the road gives its extent across the road, d0 to d1, widened by 2.1 m;
+      // the path keeps to the gap between them that holds the axis of the road, or the nearest to it
+      const LO = LIM.map(v => -v), HI = LIM.slice();
+      if (obst) for (let j = 0; j < N; j++) { const I = []; for (const o of obst[j * m]) { let d0 = 1e9, d1 = -1e9;
+        for (let e = 0; e < 4; e++) { const [u0, v0, u1, v1] = [[-1, -1, 1, -1], [1, -1, 1, 1], [1, 1, -1, 1], [-1, 1, -1, -1]][e], q = Math.ceil((e & 1 ? o.hz : o.hx) + 1);
+          for (let i = 0; i < q; i++) { const u = (u0 + (u1 - u0) * i / q) * o.hx, v = (v0 + (v1 - v0) * i / q) * o.hz, qx = o.x + u * o.c + v * o.s - X[j], qz = o.z - u * o.s + v * o.c - Z[j];
+            if (Math.abs(qx * TX[j] + qz * TZ[j]) < 6) { const d = -qx * TZ[j] + qz * TX[j]; d0 = Math.min(d0, d); d1 = Math.max(d1, d); } } }
+        if (d0 <= d1) I.push([d0 - 2.1, d1 + 2.1]); }
+        let lo = LO[j], best = null; const gap = (a, b) => { if (b > a && (!best || Math.max(a, -b, 0) < Math.max(best[0], -best[1], 0))) best = [a, b]; };
+        for (const [a, b] of I.sort((p, q) => p[0] - q[0])) { gap(lo, Math.min(a, HI[j])); lo = Math.max(lo, b); } gap(lo, HI[j]);
+        if (best) { LO[j] = best[0]; HI[j] = best[1]; } else LO[j] = HI[j] = 0; }
       for (let it = 0; it < 6000; it++) for (let j = 0; j < N; j++) {
         const a = (j - 1 + N) % N, b = (j + 1) % N, a2 = (j - 2 + N) % N, b2 = (j + 2) % N;
         const ax = X[a] - TZ[a] * D[a], az = Z[a] + TX[a] * D[a], bx = X[b] - TZ[b] * D[b], bz = Z[b] + TX[b] * D[b];
         const a2x = X[a2] - TZ[a2] * D[a2], a2z = Z[a2] + TX[a2] * D[a2], b2x = X[b2] - TZ[b2] * D[b2], b2z = Z[b2] + TX[b2] * D[b2];
-        D[j] = clamp(-((4 * (ax + bx) - a2x - b2x) / 6 - X[j]) * TZ[j] + ((4 * (az + bz) - a2z - b2z) / 6 - Z[j]) * TX[j], -LIM[j], LIM[j]);
+        D[j] = clamp(-((4 * (ax + bx) - a2x - b2x) / 6 - X[j]) * TZ[j] + ((4 * (az + bz) - a2z - b2z) / 6 - Z[j]) * TX[j], LO[j], HI[j]);
       }
       S.forEach((s, i) => { const j = Math.floor(i / m) % N, f = i / m - Math.floor(i / m); s.dl = D[j] + (D[(j + 1) % N] - D[j]) * f; });
       S.forEach((s, i) => { const a = pt(i - m, S[(i - m + n) % n].dl), b = pt(i, s.dl), c = pt(i + m, S[(i + m) % n].dl), ux = b[0] - a[0], uz = b[1] - a[1], vx = c[0] - b[0], vz = c[1] - b[1];
@@ -163,7 +179,7 @@
     let tau = null; if (M.jam) { const [a, b, f] = M.jam, z = span(at(a), at(b), 10); tau = new Float64Array(n + 1); for (let j = 0; j < n; j++) tau[j + 1] = tau[j] + 1 / (1 - (1 - f) * z(j)); }
     // truck in double file: M.lorry = [point, offset in m]; parked against the kerb, on one side on odd laps, the other on even laps (see lorry())
     const cam = M.lorry && { i: (at(M.lorry[0]) + Math.round(M.lorry[1] / 2) + n) % n, d: W - 1.6 };
-    return { S, n, W, len, tun: !!M.tun, t0, t1, tau, cam, h0: at(M.hotList[0]), h1: at(M.hotList[1]), sp: M.sect.map(at), rainFx, surf, surfDry, surfL: SURF[sf.wide], vert, grav: M.grav || GRAV, even: M.evenJump, dent, racingLine: M.racingLine && M.racingLine.map(at), mapDef: M, car: CARD, kt: KT,
+    return { S, n, W, len, tun: !!M.tun, t0, t1, tau, cam, h0: at(M.hotList[0]), h1: at(M.hotList[1]), sp: M.sect.map(at), rainFx, surf, surfDry, surfL: SURF[sf.wide], vert, grav: M.grav || GRAV, even: M.evenJump, dent, racingLine: M.racingLine && M.racingLine.map(at), obst, mapDef: M, car: CARD, kt: KT,
       trucks: Array.from({ length: M.traffic || 0 }, (_, i) => ({ lane: [-4.6, 0, 4.6][(i * 2) % 3], v: 25 + (i * 7 % 5) * 1.5, x: 0, y: 0, z: 0, th: 0, idx: 0, d: 0, vx: 0, vz: 0 })) }; // camions : voir traffic()
   }
 
@@ -314,6 +330,15 @@
         const ax = -ex / d, az = -ez / d, Nx = ax * s0.tx - az * s0.tz, Nz = ax * s0.tz + az * s0.tx, t = c.vx * -Nz + c.vz * Nx > 0 ? 1 : -1;
         intoWall(c, Nx, Nz, CR - d, -Nz * t, Nx * t, -t, 0, dt);
       } }
+    // the solid boxes of the map (M.obst): two circles per car as for the piers; a circle whose centre is already inside a box (a thin post, at speed) leaves by its nearest face
+    if (T.obst) for (const o of T.obst[b]) for (const j of [-CO, CO]) {
+      const qx = c.x + Math.cos(c.th) * j - o.x, qz = c.z + Math.sin(c.th) * j - o.z, lx = qx * o.c - qz * o.s, lz = qx * o.s + qz * o.c;
+      let ex = lx - clamp(lx, -o.hx, o.hx), ez = lz - clamp(lz, -o.hz, o.hz), d = Math.hypot(ex, ez), p = CR - d;
+      if (d >= CR) continue;
+      if (d < 1e-6) { const px = o.hx - Math.abs(lx), pz = o.hz - Math.abs(lz); if (px < pz) { ex = Math.sign(lx) || 1; ez = 0; p = px + CR; } else { ex = 0; ez = Math.sign(lz) || 1; p = pz + CR; } d = 1; }
+      const ax = -ex / d, az = -ez / d, Nx = ax * o.c + az * o.s, Nz = -ax * o.s + az * o.c, t = c.vx * -Nz + c.vz * Nx > 0 ? 1 : -1;
+      intoWall(c, Nx, Nz, p, -Nz * t, Nx * t, -t, 0, dt);
+    }
     // relief: free fall, unless the ground is there
     const g = ground(T, c);
     if (!T.vert) { c.y = g; return; }

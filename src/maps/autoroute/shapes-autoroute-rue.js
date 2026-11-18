@@ -1,6 +1,6 @@
 // Shapes specific to "autoroute", family "street, army, metro": completes the shapes.js catalogue. Metres, origin on the ground at the centre, Y up; a piece along a street has its length on Z.
 // Assemblies (lists of boxes [zone, w, h, d, x, y, z, rotation]); zones are the names of the map's shared materials (MAT in scenery-autoroute.js):
-// concrete, dark, steel, rust, olive, canvas, bark, leaf, ivy, reed, glass, pane, sign, tile, rubble, lamp.
+// concrete, dark, steel, rust, olive, canvas, bark, leaf, asphalt, blade (reed stems, cut out), glass, pane, sign, tile, rubble, lamp.
 // See docs/proposals/sunken-highway/AMBIANCE-V2.html: the army checkpoint (staggered concrete barriers, watchtower, tent), street trees grown huge, a metro left as it was.
 (function () {
   const H = (v, k) => { const x = Math.sin(v * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
@@ -24,12 +24,14 @@
     // tree fallen across a street, l m long along X: root plate, trunk lying, the crown crushed on the ground at the far end
     arbreTombeAutoroute: (l = 20) => [['bark', 3.5, 3.5, 0.8, -l / 2 + 0.5, 1.6, 0, [0, 1.57, 0.2]], ['bark', l * 0.7, 1, 1, -l * 0.12, 1, 0, [0, 0, 0.04]], ['leaf', l * 0.4, 3.6, 6, l * 0.3, 1.8, 0, [0, 0.3, 0]], ['leaf', l * 0.25, 2.6, 4.5, l * 0.12, 1.5, 1.5, [0.2, -0.4, 0]], ['bark', 3, 0.4, 0.4, l * 0.2, 2.4, -1.8, [0, 0.5, 0.5]]],
     // bank of reeds w × d, 2.4 m: a few masses of uneven height, one willow shoot
-    roseauxAutoroute: (w = 12, d = 60, v = 0) => [...Array.from({ length: 5 }, (_, i) => ['reed', w * (0.5 + 0.4 * H(v, i)), 1.4 + 1.2 * H(v, i + 9), d * 0.24, (H(v, i + 20) - 0.5) * w * 0.3, 0.7 + 0.5 * H(v, i + 9), (i - 2) * d * 0.2])],
+    // (zone blade: stems cut out, on thin sheets standing at every angle: a clump reads as stems, never as a green block)
+    roseauxAutoroute: (w = 12, d = 60, v = 0) => { const n = Math.max(6, Math.round(w * d / 9)), L = []; for (let i = 0; i < n; i++) { const ht = 1.5 + 1.5 * H(v, i + 9), x = (H(v, i + 20) - 0.5) * w * 0.8, z = (H(v, i + 40) - 0.5) * d * 0.9;
+      L.push(['blade', 1.2 + 1.6 * H(v, i), ht, 0.04, x, ht / 2 + 0.3, z, [0, H(v, i + 60) * 3.1, (H(v, i + 80) - 0.5) * 0.3]]); } return L; },
     // collapsed scaffolding w × ht × d: standards and ledgers fallen every way, torn netting
     echafaudageAutoroute: (w = 20, ht = 5, d = 8, v = 0) => [...Array.from({ length: 14 }, (_, i) => ['steel', 0.15, 0.15, 5 + 4 * H(v, i), (H(v, i + 30) - 0.5) * w * 0.8, ht * 0.2 + ht * 0.6 * H(v, i + 60), (H(v, i + 90) - 0.5) * d * 0.6, [(H(v, i + 120) - 0.5) * 2, H(v, i + 150) * 3, (H(v, i + 180) - 0.5) * 2]]),
       ['canvas', w * 0.5, 0.1, d * 0.7, -w * 0.15, ht * 0.4, 0, [0.4, 0.3, 0.5]], ['dark', w * 0.3, 0.12, 2.4, w * 0.25, ht * 0.25, 0, [0.2, 0.9, -0.3]]],
     // slab of a broken deck or roadway w × d, 0.6 m thick, fallen at angle a about X, with its bars
-    dalleAutoroute: (w = 6, d = 10, a = 0.3) => [['concrete', w, 0.6, d, 0, Math.sin(Math.abs(a)) * d / 2 + 0.3, 0, [a, 0, 0]], ['dark', w - 0.4, 0.12, d - 0.4, 0, Math.sin(Math.abs(a)) * d / 2 + 0.66, 0, [a, 0, 0]], ...[-1, 0, 1].map(k => ['rust', 0.1, 0.1, 2, k * w * 0.3, 0.6, -d / 2 - 0.6, [a + 0.4, 0, 0]])],
+    dalleAutoroute: (w = 6, d = 10, a = 0.3) => [['concrete', w, 0.6, d, 0, Math.sin(Math.abs(a)) * d / 2 + 0.3, 0, [a, 0, 0]], ['asphalt', w - 0.4, 0.12, d - 0.4, 0, Math.sin(Math.abs(a)) * d / 2 + 0.66, 0, [a, 0, 0]], ...[-1, 0, 1].map(k => ['rust', 0.1, 0.1, 2, k * w * 0.3, 0.6, -d / 2 - 0.6, [a + 0.4, 0, 0]])],
     // metro station entrance: a steel and glass canopy on four posts over the stairwell (w × d), its sign on a mast
     ediculeAutoroute: (w = 16, d = 40, ht = 5) => [...[-1, 1].flatMap(a => [-1, 0, 1].map(b => ['steel', 0.4, ht, 0.4, a * (w / 2 - 0.4), ht / 2, b * (d / 2 - 0.4)])), ['steel', w, 0.4, d, 0, ht + 0.2, 0], ['pane', w - 1.2, 0.15, d - 1.2, 0, ht + 0.5, 0],
       ...[-1, 1].map(a => ['concrete', 0.5, 1.1, d, a * (w / 2 - 0.25), 0.55, 0]), ['steel', 0.3, 7, 0.3, w / 2 + 1, 3.5, -d / 2], ['lamp', 2.4, 1.2, 0.3, w / 2 + 1, 7, -d / 2]],

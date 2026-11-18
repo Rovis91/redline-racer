@@ -20,7 +20,10 @@
     asphalteAutoroute: (c = '#3e4146') => [128, 128, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 128, 128); grain(g, o, 1700, 0.16, 128); blotch(g, o, 14, 0.07, 128);
       veil(g, 0.12, () => { for (let i = 0; i < 7; i++) R(g, i & 1 ? '#000' : '#9a9a94', rand() * 96 | 0, rand() * 96 | 0, 14 + rand() * 34 | 0, 10 + rand() * 30 | 0); });
       veil(g, 0.5, () => { for (let i = 0; i < 14; i++) { let x = rand() * 128 | 0, y = rand() * 128 | 0; for (let k = 0; k < 26; k++) { R(g, '#15171a', x, y, 1, 1); if (rand() < 0.5) x += rand() < 0.5 ? 1 : -1; else y += 1; if (i < 6 && rand() < 0.35) R(g, '#5d7a3a', x + 1, y, 1 + (rand() * 2 | 0), 1); } } });
-      veil(g, 0.22, () => { for (let i = 0; i < 9; i++) R(g, '#101214', rand() * 120 | 0, rand() * 120 | 0, 3 + rand() * 6 | 0, 2 + rand() * 5 | 0); }); }, 16],
+      veil(g, 0.22, () => { for (let i = 0; i < 9; i++) R(g, '#101214', rand() * 120 | 0, rand() * 120 | 0, 3 + rand() * 6 | 0, 2 + rand() * 5 | 0); });
+      // moss in patches where water stands, dead leaves and grit blown over the rest
+      veil(g, 0.5, () => { for (let i = 0; i < 6; i++) { const cx = rand() * 128, cy = rand() * 128, r = 3 + rand() * 7; for (let k = 0; k < r * r * 1.4; k++) { const a = rand() * 6.3, d = r * Math.sqrt(rand()); R(g, ['#3a4f24', '#4f6a2e', '#5f7f2e', '#2f4a1f'][rand() * 4 | 0], (cx + Math.cos(a) * d * 1.5 + 128) % 128 | 0, (cy + Math.sin(a) * d + 128) % 128 | 0, 1 + (rand() * 2 | 0), 1); } } });
+      veil(g, 0.45, () => { for (let i = 0; i < 90; i++) R(g, ['#8a6a3a', '#6a4a22', '#9a8a60'][rand() * 3 | 0], rand() * 127 | 0, rand() * 127 | 0, 1, 1); }); }, 16],
     // pavement: concrete slabs of 2 m of uneven tone, open joints, weeds in the joints, a few slabs lifted (dark). 8 m per tile
     trottoirAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#7d7a70', 0, 0, 64, 64);
       veil(g, 0.12, () => { for (let x = 0; x < 64; x += 16) for (let y = 0; y < 64; y += 16) R(g, rand() < 0.5 ? '#000' : '#fff', x, y, 16, 16); });
@@ -82,7 +85,7 @@
     plaqueAutoroute: (t = '') => [128, 32, (g, o) => { const { R } = o; R(g, '#1c2c5a', 0, 0, 128, 32); R(g, '#e8e8d8', 2, 2, 124, 1); R(g, '#e8e8d8', 2, 29, 124, 1); R(g, '#e8e8d8', 2, 2, 1, 28); R(g, '#e8e8d8', 125, 2, 1, 28);
       g.fillStyle = '#f0f0e0'; g.textAlign = 'center'; g.textBaseline = 'middle'; let px = 18; do { g.font = 'bold ' + px + 'px sans-serif'; } while (g.measureText(t).width > 112 && --px > 6); g.fillText(t, 64, 17); runs(g, o, 4, '#5a2a10', 0.35); }],
     // standing water in the flooded streets: still teal, short pale glints, darker depths. 8 m per tile
-    eauAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#2a8f8a', 0, 0, 64, 64); blotch(g, o, 8, 0.08);
+    eauAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#3a7a70', 0, 0, 64, 64); blotch(g, o, 8, 0.08);
       veil(g, 0.3, () => { for (let i = 0; i < 40; i++) R(g, rand() < 0.7 ? '#bfe8d8' : '#f0c890', rand() * 60 | 0, rand() * 64 | 0, 2 + rand() * 5 | 0, 1); }); }, 8],
     // moss on concrete and asphalt: patches of several greens that leave the surface under them bare between them (transparent: laid over a deck, a parapet, a wall). 8 m per tile
     mousseAutoroute: () => [64, 64, (g, o) => { const { R, rand } = o;
@@ -96,6 +99,24 @@
     // grass and weeds gone to seed: green with dry gold tufts and bare earth. 8 m per tile
     herbeAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#5a7438', 0, 0, 64, 64);
       veil(g, 0.5, () => { for (let i = 0; i < 380; i++) R(g, ['#3a5226', '#7a9a48', '#b8a850', '#4a3a26'][rand() * 4 | 0], rand() * 63 | 0, rand() * 63 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); }); }, 8],
+    // earth and fill in section, where the street was cut through: broken strata, lumps of fill, stones. 8 m per tile
+    terreAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#4a3e30', 0, 0, 64, 64); veil(g, 0.3, () => { for (let i = 0; i < 26; i++) R(g, rand() < 0.5 ? '#000' : '#8a7458', rand() * 50 | 0, rand() * 60 | 0, 8 + rand() * 20 | 0, 1 + (rand() * 3 | 0)); for (let i = 0; i < 12; i++) R(g, ['#6a6258', '#2a221a', '#7a6a50'][rand() * 3 | 0], rand() * 54 | 0, rand() * 54 | 0, 4 + rand() * 7 | 0, 3 + rand() * 6 | 0); });
+      veil(g, 0.5, () => { for (let i = 0; i < 60; i++) R(g, ['#7a7468', '#2a221a', '#5c5852'][rand() * 3 | 0], rand() * 62 | 0, rand() * 62 | 0, 1 + (rand() * 3 | 0), 1 + (rand() * 2 | 0)); }); grain(g, o, 300, 0.2); }, 8],
+    // a crack in the asphalt, alone on a clear ground (laid flat, shown once): two lines that wander and fork, grass and moss growing in them
+    fissureAutoroute: () => [64, 64, (g, o) => { const { R, rand } = o, run = (x, y, dx, dy, n, f) => { for (let i = 0; i < n; i++) { R(g, '#0c0e10', x | 0, y | 0, rand() < 0.6 ? 2 : 1, rand() < 0.6 ? 2 : 1);
+        if (rand() < 0.45) R(g, rand() < 0.5 ? '#4f6a2e' : '#7f9a3a', (x + rand() * 2 - 1) | 0, (y + rand() * 2 - 1) | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0));
+        x += dx + (rand() - 0.5) * 1.2; y += dy + (rand() - 0.5) * 1.2; if (x < 1 || y < 1 || x > 62 || y > 62) return; if (f && rand() < 0.06) run(x, y, dy + (rand() - 0.5), -dx + (rand() - 0.5), 14 + rand() * 14, 0); } };
+      run(4 + rand() * 10, 6 + rand() * 50, 0.9, (rand() - 0.5) * 0.6, 70, 1); run(8 + rand() * 48, 4, (rand() - 0.5) * 0.5, 0.9, 50, 1); }],
+    // lane line, worn (cut out): k = 0 a dashed line along the picture's width, five dashes (laid flat, shown once); k = 1 dashes along its height, 16 m per tile (a ribbon along the road). Flecks of paint gone
+    marquageAutoroute: (k = 0) => k ? [4, 64, (g, o) => { const { R, rand } = o; R(g, '#c8c4b0', 0, 0, 4, 26); for (let i = 0; i < 26; i++) g.clearRect(rand() * 4 | 0, rand() * 26 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 3 | 0)); }, 16]
+      : [128, 4, (g, o) => { const { R, rand } = o; for (let x = 4; x < 128; x += 26) if (rand() < 0.8) R(g, '#c8c4b0', x, 0, 10, 4); for (let i = 0; i < 60; i++) g.clearRect(rand() * 128 | 0, rand() * 4 | 0, 1 + (rand() * 3 | 0), 1 + (rand() * 2 | 0)); }],
+    // dead leaves blown into a drift (cut out; laid flat, shown once): ochre and brown flecks, denser in the middle
+    feuillesAutoroute: () => [32, 32, (g, o) => { const { R, rand } = o; for (let i = 0; i < 170; i++) { const a = rand() * 6.3, d = 15 * Math.sqrt(rand()) * (0.5 + 0.5 * rand()); R(g, ['#8a6a3a', '#b5651d', '#6a4a22', '#c9a227', '#5a4a2a'][rand() * 5 | 0], 16 + Math.cos(a) * d | 0, 16 + Math.sin(a) * d | 0, 1, 1); } }],
+    // creeper on a wall, c = its green (cut out): leaves in clusters with gaps between them, the wall showing through. 4 m per tile
+    lierreDecoupeAutoroute: (c = '#3f6a34') => [32, 32, (g, o) => { const { R, rand } = o; for (let i = 0; i < 46; i++) { const x = rand() * 32, y = rand() * 32, r = 2 + rand() * 3; for (let k = 0; k < r * r * 2; k++) { const a = rand() * 6.3, d = r * Math.sqrt(rand());
+      R(g, [c, '#1c3018', '#5d8a40', '#2a4a22', c][rand() * 5 | 0], (x + Math.cos(a) * d + 32) % 32 | 0, (y + Math.sin(a) * d + 32) % 32 | 0, 1, 1); } } }, 4],
+    // reed stems (cut out): upright stems one or two pixels wide in greens and straw, of uneven height, gaps between them. 2 m per tile
+    roseauDecoupeAutoroute: () => [32, 32, (g, o) => { const { R, rand } = o; for (let x = 0; x < 32; x += 1 + (rand() * 2 | 0)) { if (rand() < 0.3) continue; const t = rand() * 14 | 0; R(g, ['#5f7f2e', '#7a9a50', '#9dbb4a', '#8a7a5a', '#3f5a22'][rand() * 5 | 0], x, t, 1 + (rand() < 0.3 ? 1 : 0), 32 - t); if (rand() < 0.2) R(g, '#6a4a22', x, t, 2, 3); } }, 2],
     // motorway sign, t = its text: faded green panel, white border, white letters. Stretched over its board (8 x 2 m)
     panneauAutoroute: (t = '') => [128, 32, (g, o) => { const { R } = o; R(g, '#2f6a5a', 0, 0, 128, 32); R(g, '#d8d8c8', 1, 1, 126, 1); R(g, '#d8d8c8', 1, 30, 126, 1); R(g, '#d8d8c8', 1, 1, 1, 30); R(g, '#d8d8c8', 126, 1, 1, 30);
       g.fillStyle = '#e8e8d8'; g.textAlign = 'center'; g.textBaseline = 'middle'; let px = 18; do { g.font = 'bold ' + px + 'px sans-serif'; } while (g.measureText(t).width > 116 && --px > 6); g.fillText(t, 64, 17);

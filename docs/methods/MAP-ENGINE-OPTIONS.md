@@ -22,7 +22,7 @@ captures.html?map=chapada&step=10&size=1920x1080&game=1&opt=<URL-encoded JSON>
 | Terrain | `th.layerSet` |
 | Light and sky | `th.shadows`, `th.skySeg`, `th.orb.spokes` |
 | Fog | `th.haze`, `th.isFar`, `th.headlightsHaze` |
-| Road | `th.wetVisible`, `th.gloss`, `M.wide`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
+| Road | `th.wetVisible`, `th.gloss`, `M.wide`, `M.obst`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
 | Tunnel and hall | `th.tun.h`, `vault`, `opn`, `spokes`, `raysK`, `ambient`, `day`, `without`, `skyDay`, `gloss`, `tex`, `th.eye` |
 | Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `h.emis` |
 
@@ -177,6 +177,12 @@ Road gloss (sun and luminaire reflection). Default 0.08 (0.2 under rain). Lower 
 ```
 
 Use a value below `W` only under a free-form tunnel (see "Tunnel and hall"), where the engine floor follows `s.w`: in the open, the road ribbon and the engine's guardrails stay at `W` and the scenery would have to cover the extra strip. Check with `node tests/test-maps.js` (autopilot lap, 0 crashes).
+
+### `M.obst`: solid boxes on the drivable ground
+
+`M.obst = [[x, z, halfWidth, halfLength, ry, y, ...], ...]` (map metres, like `pts`) declares solid boxes the cars collide with: wrecks, rubble, trees, piers, whole city blocks. `ry` turns the box like a three.js `rotation.y`. `y` is the altitude of its foot: give it where the track passes over or under itself, the box then only counts for the samples within 4 m of that altitude. Entries may carry more values after `y` (autoroute stores the name of what stands there and its height: its scenery builds each thing inside its box). Read in `src/engine/sim.js`: `buildTrack` files the boxes per sample (`T.obst`), `step()` pushes a car's two circles out of them like the piers of `M.place`, and the autopilot's path keeps 2.1 m clear of them, in the gap nearest the axis of the road. `?hitbox` draws them. A map without `M.obst` is untouched.
+
+With boxes, the road's own walls (`W`, `M.wide`) can lie behind the scenery: on autoroute the streets are 24 m wide either side of the axis and every facade, closed street and wreck is a box, so the car only ever stops against something it sees. `tests/test-maps.js` checks it (random drivers never touch the road's wall outside the deck, the tube and the cave).
 
 ### `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`: corner chevrons
 

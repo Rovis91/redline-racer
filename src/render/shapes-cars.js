@@ -234,6 +234,16 @@
       cab: [[0.9, 0.9], [0.5, 1.42], [-0.95, 1.42], [-1.45, 0.94]], wc: 1.5, wheels: [-1.32, 1.34, 0.31, 0.21], doors: [0.72, -0.2], plate: 0.46,
       pieces: (B, B2, R2, E2) => [B('blackM', 0.16, 0.14, 1.78, 2.34, 0.44, 0), B('blackM', 0.16, 0.14, 1.78, -2.34, 0.44, 0), B('blackM', 0.2, 0.1, 1.66, 2.24, 0.26, 0),
         B2('headlight', 0.04, 0.16, 0.3, 2.33, 0.7, 0.64), B2('fire', 0.04, 0.26, 0.26, -2.35, 0.74, 0.68), B2('carBody', 0.12, 0.09, 0.12, 0.8, 1.0, 0.9, 1)]
+    },
+    // Bison 1500 (invented, Sunken Highway): a 1980s full-size pick-up left out for years. Long flat bonnet, upright two-seat cab, an open bed (floor lower than its sides and tailgate),
+    // a tool rack behind the cab and a toolbox across the bed, steel bumpers, square lamps. Its livery (textures-cars.js) is the dirt: mud up the flanks, rust, dust on every flat
+    bison: {
+      above: [[2.48, 0.4], [2.54, 0.7], [2.5, 0.96], [0.9, 1.0], [-0.52, 1.0], [-0.55, 0.78], [-2.5, 0.78], [-2.5, 0.4]], low: 0.4, w: 1.9,
+      cab: [[0.9, 0.98], [0.58, 1.55], [-0.38, 1.55], [-0.52, 1.0]], wc: 1.7, wheels: [-1.5, 1.5, 0.37, 0.25], doors: [0.82, -0.46], plate: 0.55,
+      pieces: (B, B2) => [B2('carBody', 1.98, 0.24, 0.07, -1.51, 0.9, 0.915), B('carBody', 0.07, 0.24, 1.9, -2.47, 0.9, 0), // the sides of the bed and its tailgate
+        B2('blackM', 0.06, 0.62, 0.06, -0.62, 1.3, 0.8), B('blackM', 0.06, 0.06, 1.66, -0.62, 1.62, 0), B('blackM', 0.5, 0.28, 1.5, -0.92, 0.92, 0), // rack, toolbox
+        B('blackM', 0.18, 0.16, 1.92, 2.6, 0.48, 0), B('blackM', 0.18, 0.16, 1.92, -2.56, 0.48, 0),
+        B2('headlight', 0.04, 0.16, 0.3, 2.55, 0.8, 0.68), B2('fire', 0.04, 0.28, 0.12, -2.52, 0.72, 0.86), B2('carBody', 0.14, 0.1, 0.16, 0.84, 1.12, 0.98, 1)]
     }
   };
 
