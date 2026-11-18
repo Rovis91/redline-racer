@@ -3,7 +3,7 @@
 // Country-road details: roadside shrines, field huts, two small farms, a chapel, cypress pairs, an old mill stump, broken rock.
 // Third pass, what breaks the long bare slopes and makes the flank lived in: crags standing out of the cliffs, scree at their foot, prickly pear, agave and thyme on the verges, the power line that climbs to the plateau,
 // a chapel on the cliff top with its lime stair, dovecotes, a goat pen, a well, a cistern, field walls, a pick-up and a scooter at the farms.
-(window.EGEE = window.EGEE || {}).ascension = ({ MAT, set, house, wall, plant, grove, shrine, hut, poles, path, cross, pen, hsh }) => {
+(window.EGEE = window.EGEE || {}).ascension = ({ MAT, set, house, wall, plant, grove, shrine, hut, path, cross, pen, hsh }) => {
   for (const [a, b] of [[690, 830], [960, 1060], [1440, 1560], [1740, 1840]]) wall('ocre', a, b, -1, 2.5, 3.2, { cap: 1 });      // retaining walls: their top line draws the curve ahead
   wall('ocre', 1130, 1270, 1, 3, 3, { cap: 1 });                                                                                 // the big right-hander (pts 28-32)
   for (const pk of [900, 1360, 1650]) grove('olive', pk - 42, pk + 42, -1, 10, 70, 9);                                           // olive terraces
@@ -20,7 +20,6 @@
   for (let pk = 656, k = 0; pk < 1930; pk += 7, k++) { plant('caillou', pk, -1, 2.6 + hsh(k, 11) * 5, 0.6 + hsh(k, 12) * 1.5); if (k % 3 === 0) plant('caillou', pk + 3, 1, 2.6 + hsh(k, 13) * 7, 0.6 + hsh(k, 14) * 1.2); // scree at the cliff foot
     if (k % 2) plant('thym', pk + 2, k % 4 === 1 ? 1 : -1, 2.6 + hsh(k, 15) * 6, 0.5 + hsh(k, 16) * 0.4); }
   for (const pk of [700, 850, 1000, 1150, 1300, 1450, 1620, 1750, 1900]) { plant('nopal', pk, -1, 3.4, 1.3); plant('nopal', pk + 2.6, -1, 4.6, 1); plant('agave', pk + 40, 1, 6.5, 1.3); plant('agave', pk + 43, 1, 8.4, 0.9); plant('nopal', pk + 70, 1, 8, 1.2); }
-  poles(560, 1930, 1, 4.6, 28);                                                                                                  // the island's power line follows the road up, on the sea side: poles against the sky
   set('chapelleEgee', 1500, -1, 52, { s: 0.6 }); path(1474, 3.5, 1497, 44, -1, 15);                                              // a chapel on the cliff top and the lime stair that climbs to it
   set('pigeonnierEgee', 790, 1, 5.5); set('pigeonnierEgee', 1385, -1, 17);                                                       // dovecotes
   pen(925, -1, 6, 5); set('puitsEgee', 1068, 1, 5); set('citerneEgee', 1622, -1, 5.5);

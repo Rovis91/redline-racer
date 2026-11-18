@@ -1,7 +1,7 @@
 // "egee", zone 3: the plateau (PK 2000 to 2800, 161 to 171 m, 12 m wide, R ≈ 38 m near PK 2151). Tools (set, box, house, wall, plant, grove, mill) are described in scenery-egee.js.
 // Third pass: threshing floors by the mills, dovecotes, a well on the square, a cistern, a goat pen, a farm far back, the power line, field walls at right angles, prickly pear hedges, figs, a pick-up and scooters.
 // No village up here (the town is the harbour): the chapel with the blue dome and its square at PK 2400, a second small chapel, three houses, a row of three windmills, dry-stone field walls and scrub.
-(window.EGEE = window.EGEE || {}).village = ({ MAT, smp, set, box, house, wall, plant, grove, mill, hut, poles, path, cross, aire, pen, hsh }) => {
+(window.EGEE = window.EGEE || {}).village = ({ MAT, smp, set, box, house, wall, plant, grove, mill, hut, path, cross, aire, pen, hsh }) => {
   const out = pk => smp(pk).k > 0 ? -1 : 1; // the outside of the bend at pk
   box('pavage', 2400, 1, 5, 30, 0.5, 44, { y: smp(2400).y - 0.3 }); wall('blanc', 2378, 2422, 1, 35, 1.1, { th: 0.7 });                                                    // the square, on the sea side
   // the chapel, 22 m back, 1.5 times its block: the only blue dome of the island
@@ -18,7 +18,6 @@
   set('pigeonnierEgee', 2128, 1, 15); set('pigeonnierEgee', 2705, -1, 19); pen(2255, 1, 8, 5);
   set('puitsEgee', 2412, 1, 13, { y: smp(2400).y + 0.2 }); set('citerneEgee', 2492, -1, 11);
   house(2600, -1, 34, 9, 5, 11, 16); plant('figue', 2612, -1, 30, 0.9); plant('figue', 2482, -1, 20, 0.9); plant('figue', 2074, out(2060), 9, 1.2); plant('figue', 2742, out(2730), 9, 1.1);
-  poles(1950, 2800, -1, 5.2, 22);                                                                                                                                         // the line ends at the last house: the balcony keeps a clear sky
   set('terrasseEgee', 2400, 1, 22, { a: [4, 1], y: smp(2400).y + 0.2 }); for (const pk of [2381, 2419]) { plant('cypres', pk, 1, 38, 1.1); plant('olive', pk + (pk < 2400 ? 6 : -6), 1, 30, 0.9); }                      // the kafeneio of the square
   wall('pierre', 2440, 2560, 1, 24, 0.9); for (const pk of [2440, 2500, 2560]) cross('pierre', pk, 1, 5.5, 24, 0.9); grove('olive', 2448, 2554, 1, 8, 22, 10); hut(2530, 1, 28); house(2640, 1, 30, 9, 5, 11, 8); // walled olive plots and a farm on the sea side of the plateau
 
