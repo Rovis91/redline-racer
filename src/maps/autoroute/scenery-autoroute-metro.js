@@ -2,7 +2,7 @@
 // through a station (a platform on the east side, 6 m deep: its edge is the wall of the lane), round to the east, and up the line's own ramp: the tube ends at a portal (x = -405) and the ramp climbs
 // in an open trench along the south side of the boulevard, beside it, to street level (x = -365), where the lane crosses the forecourt back onto the boulevard.
 // The tube's walls are the road's own walls (M.wide 3.6); the trench's walls are solid boxes of the map (MUR TREMIE, built by real() in scenery-autoroute.js). th.tun.without 'walls': the engine only lays the floor and the lights.
-(window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ h, I, MAT, slab, quad, tuft, HH }) => {
+(window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ h, I, MAT, BODIES, set, slab, quad, tuft, HH }) => {
   const { S, T, THREE } = h, iM = T.t0 - 3, at = (s, d, y) => [s.x - s.tz * d, s.y + y, s.z + s.tx * d];
   // the station: the samples of the northward run, from 8 m after the first bend to 8 m before the second
   const iA = S.findIndex((s, i) => i > T.t0 && s.x < -463.9 && s.z < 172), iB = S.findIndex((s, i) => i > iA && s.z < 74);
@@ -10,7 +10,7 @@
   // (no light from the engine's fixtures in a tube this low: walls and vault are self-lit, in the tones of old concrete: dark, the lamps and the daylight at both ends stand out)
   const DS = { side: THREE.DoubleSide, emis: 1 }, WALL = h.mat('tunnelAutoroute', { ...DS, c: 0xb4b4aa }), ARCH = h.mat('tunVouteAutoroute', { ...DS, c: 0x84847c });
   const V = [[3.5, 0], [3.5, 3], [2.6, 4.3], [1.2, 5.05], [0, 5.2]], side = (i0, n, sd) => { for (let k = 0; k < 4; k++) h.ribbon(i0, n, sd * V[k][0], V[k][1], sd * V[k + 1][0], V[k + 1][1], k ? ARCH : WALL, k ? 8 : 4); };
-  side(iM, T.t1 - iM, -1); side(iM, iA - iM, 1); side(iB, T.t1 - iB, 1);
+  for (const sd of [-1, 1]) { side(iM, iA - iM, sd); side(iB, T.t1 - iB, sd); }
   { const n = iB - iA, lit = h.mat('trottoirAutoroute', { side: THREE.DoubleSide, rep: [0.75, 1], c: 0xb0b0a8 });
     h.ribbon(iA, n, 3.5, 0, 3.5, 1.1, MAT.concrete); h.ribbon(iA, n, 3.5, 1.1, 9.5, 1.1, lit, 4); h.ribbon(iA, n, 3.55, 1.12, 3.95, 1.12, MAT.yellow); h.ribbon(iA, n, 9.5, 5.2, 9.5, 1.1, MAT.tile, 8); h.ribbon(iA, n, 0, 5.2, 9.5, 5.2, MAT.vault, 8);
     for (const i of [iA, iB]) { const s = S[i]; quad('tile', at(s, 3.5, 0), at(s, 9.5, 0), at(s, 9.5, 5.2), at(s, 3.5, 5.2)); quad('vault', at(s, 3.5, 5.2), at(s, 3.5, 3), at(s, 2.6, 4.3), at(s, 1.2, 5.05)); }
@@ -18,6 +18,15 @@
     for (let i = iA + 4, k = 0; i < iB - 2; i += 4, k++) { const s = S[i], [x, y, z] = at(s, 5.2, 1.1); slab('tile', x, y, z, 0.7, 4.1, 0.7);
       if (k % 3 === 1) { const [bx, by, bz] = at(s, 9, 1.1); slab('steel', bx, by, bz, 0.9, 0.5, 3.4); } if (k % 4 === 2) { const [px, py, pz] = at(s, 9.4, 2.6); slab('plaque', px, py, pz, 0.15, 2, 8); }
       if (k % 3 === 0) { const [lx, ly, lz] = at(s, 6.8, 5.05); slab('lamp', lx, ly, lz, 0.5, 0.1, 4); } } }
+  // the second track, on the west side of the station: a bay 4.8 m deep with its own rails, and the train that never left, four cars stopped along the lane. Its flank is the wall of the lane (M.wide 3.6: the cars stand 3.65 m from the axis),
+  // each car set on the track at its own place (the station climbs in its northern half). Both ends of the bay: a tiled wall, the black mouth of the second tube in it
+  { const n = iB - iA, D2 = -5.05, RAIL2 = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, emis: 1, c: 0x8a5a36 });
+    h.ribbon(iA, n, -8.3, 0.03, -3.5, 0.03, h.mat('ballastAutoroute', { side: THREE.DoubleSide, rep: [0.7, 1], emis: 1, c: 0xa8a8a0 }), 8); h.ribbon(iA, n, -8.3, 0, -8.3, 5.2, MAT.tile, 8); h.ribbon(iA, n, -8.3, 5.2, 0, 5.2, MAT.vault, 8);
+    for (const d of [-0.72, 0.72]) { h.ribbon(iA, n, D2 + d - 0.05, 0.16, D2 + d + 0.05, 0.16, RAIL2); h.ribbon(iA, n, D2 + d + 0.05, 0, D2 + d + 0.05, 0.16, RAIL2); }
+    for (const i of [iA, iB]) { const s = S[i]; quad('tile', at(s, -3.5, 0), at(s, -8.3, 0), at(s, -8.3, 5.2), at(s, -3.5, 5.2)); quad('vault', at(s, -3.5, 5.2), at(s, -3.5, 3), at(s, -2.6, 4.3), at(s, -1.2, 5.05));
+      const e = i === iA ? 0.06 : -0.06, q = S[i + (i === iA ? 1 : -1)], o = [(q.x - s.x) * e * 0.5, 0, (q.z - s.z) * e * 0.5], pt = (d, y) => at(s, d, y).map((v, k) => v + o[k]); quad('hole', pt(-3.7, 0), pt(-6.6, 0), pt(-6.6, 4.1), pt(-3.7, 4.1)); }
+    for (let k = 0; k < 4; k++) { const i = iA + 6 + k * 9, s = S[i], [x, y, z] = at(s, D2, 0.05); set('rameAutoroute', x, z, { y, ry: Math.atan2(s.tx, s.tz), rx: -Math.atan2(S[i + 4].y - S[i - 4].y, 16), a: [1], skin: { ...MAT, body: BODIES[1] } }); }
+    for (let i = iA + 4, k = 0; i < iB - 2; i += 12, k++) { const [lx, ly, lz] = at(S[i], -6.9, 5.05); slab('lamp', lx, ly, lz, 0.5, 0.1, 4); } }
   // the track: ballast and sleepers from the mouth of the tube to the top of the ramp, two rails that come out of the rubble in the cave and end under the weeds of the ramp; rails rusted orange; a lamp in its housing on the wall every 14 m, on alternate sides
   h.ribbon(iM, I.tremie - iM, -3.5, 0.03, 3.5, 0.03, h.mat('ballastAutoroute', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, rep: [1, 1], emis: 1, c: 0xb8b8b0 }), 8);
   const RAIL = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, emis: 1, c: 0xb06a3a }); for (const d of [-0.72, 0.72]) { h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d - 0.05, 0.16, d + 0.05, 0.16, RAIL); h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d - 0.05, 0, d - 0.05, 0.16, RAIL); h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d + 0.05, 0, d + 0.05, 0.16, RAIL); }
