@@ -16,6 +16,9 @@
   const FLATS = [[850, 2760, -520, 832, 0]]; // graded ground, [x0, x1, z0, z1, altitude]: the lake bed, both runways, the taxiways and the apron are one flat. Slabs lie on it without the fan showing through
   const PIT = [1210, 1262, 46, 7]; // the reactor pool of B1: centre, radius, depth below the hall floor (the road runs a gallery above it)
   const RUNWAY = [[1340, 400], [1975, 400]]; // the stretch where the road is runway A itself: no guardrail there
+  // the bends of the airfield, [from, to, side of the outside of the bend (-1 left, 1 right)]: there a row of anti-ram concrete blocks stands in place of the guardrail and draws the corner
+  // (crossing of the runway end, onto the taxiway, onto the connector, onto runway A, off it by the angled exit, onto the apron)
+  const BLOCS = [[[927, 230], [1036, 359], -1], [[1050, 582], [1163, 684], 1], [[1208, 686], [1311, 586], 1], [[1311, 466], [1409, 379], -1], [[1860, 379], [2014, 427], -1], [[2258, 670], [2200, 774], -1]];
   const ss = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); };
 
   Object.assign(SCENERY, {
@@ -27,16 +30,20 @@
       const hills = (X, Z) => { let y = 130 * ss((Z - 1380) / 300) + 110 * ss((100 - X) / 300); for (const [cx, cz, rx, rz, ht] of HILLS) y += ht * ss(1 - Math.hypot((X - cx) / rx, (Z - cz) / rz));
         return y + BOWL[4] * ss(1 - Math.abs(Math.hypot(X - BOWL[0], Z - BOWL[1]) - BOWL[2]) / BOWL[3]); };
       const hollow = (x, z, y) => { const i = near(h, x, z), s = S[i], X = x / k, Z = z / k;
-        if (i >= t0 && i <= t1) { const lat = (x - s.x) * -s.tz + (z - s.z) * s.tx, [, , L, R] = room(i); // over B1: the mesa at full height, cut down to the floor only inside the rooms (12 m of margin: the walls hide the cut)
-          return lat > -L - 12 && lat < R + 12 ? y - (s.y - 2) + PIT[3] * ss((PIT[2] + 4 - Math.hypot(X - PIT[0], Z - PIT[1])) / 8) : -hills(X, Z); }
+        if (i >= t0 && i <= t1) { const lat = (x - s.x) * -s.tz + (z - s.z) * s.tx, L = Math.max(room(i - 10)[2], room(i)[2], room(i + 10)[2]), R = Math.max(room(i - 10)[3], room(i)[3], room(i + 10)[3]); // a room's cut goes on 20 m past its two ends, behind the end walls: no slope of ground comes in at a corner // over B1: the mesa at full height, cut down to the floor only inside the rooms (12 m of margin: the walls hide the cut)
+          if (lat > -L - 12 && lat < R + 12) return y - (s.y - 2) + PIT[3] * ss((PIT[2] + 4 - Math.hypot(X - PIT[0], Z - PIT[1])) / 8);
+          return -Math.max(hills(X, Z), (s.y + room(i)[4] + 6.2 - y) * ss((Math.max(-lat - L, lat - R) > 0 ? 72 - Math.max(-lat - L, lat - R) : 72) / 40)); } // the ground is banked over the shell where the mesa is still too low to cover it: no box comes out of the hill near the portals
+        const out = Math.min(Math.abs(i - t0), Math.abs(i - t1)), far = Math.hypot(s.x - x, s.z - z), bank = 16.2 * ss(1 - out / 20) * ss((far - 22) / 14) * ss((75 - far) / 40); // the same bank goes on 40 m before each portal as the two shoulders of a cutting
         let f = 0, a = 0; for (const [x0, x1, z0, z1, alt] of FLATS) { const w = ss((X - x0) / 30) * ss((x1 - X) / 30) * ss((Z - z0) / 30) * ss((z1 - Z) / 30); if (w > f) { f = w; a = alt - 0.6; } }
-        return f * (y - a) - (1 - f) * hills(X, Z) * ss((Math.hypot(s.x - x, s.z - z) - 22) / 45); }; // in the open, hills rise from 22 m off the axis (full height 45 m further)
+        return f * (y - a) - (1 - f) * Math.max(hills(X, Z) * ss((far - 22) / 45), bank); }; // in the open, hills rise from 22 m off the axis (full height 45 m further)
       const g = terrain(h, { stepSec: 10, margin: 400, ground: s => over.get(s) ?? s.y, hollow, mat: h.mat('solArea51'),
         layerSet: [{ tex: ['playaArea51'], weight: (x, z) => ss((335 - z / k) / 50) * ss((x / k - 880) / 60) }, { tex: ['rocheArea51', '#a5604a'], slope: [0.3, 0.55] }] }); // ground: gravel fan, the pale clay of the dry lake from the north edge of runway A (runway B lies on the lake), bare rock where it is steep
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
-      // guardrails (th.wallH 0: the engine draws none): everywhere but on the runway, where the road has no edge
-      const [r0, r1] = RUNWAY.map(p => idx(...p)), rail = h.mat('guardrail', { side: THREE.DoubleSide }, h.TH.intoWall); for (const sd of [-1, 1]) h.guardM(sd, r1, N - (r1 - r0), s => sd * s.w, 1.1, s => sd * s.w, -2, rail);
+      // guardrails (th.wallH 0: the engine draws none): everywhere but on the runway, where the road has no edge, and on the outside of the airfield bends (BLOCS)
+      const [r0, r1] = RUNWAY.map(p => idx(...p)), rail = h.mat('guardrail', { side: THREE.DoubleSide }, h.TH.intoWall); blocs = BLOCS.map(([a, b, sd]) => [idx(...a), idx(...b), sd]);
+      for (const sd of [-1, 1]) { const open = i => (i >= r0 && i < r1) || blocs.some(([a, b, d]) => d === sd && i >= a && i < b); // no rail on the runway, nor where blocks replace it
+        for (let i = 0, a = -1; i <= N; i++) if (i < N && !open(i)) { if (a < 0) a = i; } else if (a >= 0) { h.guardM(sd, a, i - a, s => sd * s.w, 1.1, s => sd * s.w, -2, rail); a = -1; } }
       // MAT: the shared materials of the map. Every piece of scenery goes into the group `kit`, merged per material at the end (one mesh per material).
       // Keys are also the zone names of the area51 shapes; the Object.assign line maps the zone names of the shapes borrowed from shapes.js (mastLighting, waterTower, tractor, trailerTank)
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), MAT = { tin: h.mat('toleArea51', {}, '#757a68'), roof: h.mat('toleArea51', DS, '#3e4238', 0.5), concrete: h.mat('concretePart'), dark: h.mat('concreteDark'), steel: h.mat('steelMat'), gray: h.mat('matGray'),
@@ -58,7 +65,7 @@
       // along(shape, p0, p1, sd, off, half, step, o): the same piece every `step` m of road from chainage p0 to p1 (its length is its last setting): fences and rails follow the bends instead of cutting across them
       const along = (shape, p0, p1, sd, off, half, step, o = {}) => { for (let p = p0 + step / 2; p < p1; p += step) side(shape, p, sd, off, half, { ...o, a: [...(o.a || []), step + 0.3] }); };
       // seg(shape, s, lat, y, o): in the road frame at sample s, `lat` m right of the axis, y m above the roadway: what the underground is made of
-      const seg = (shape, s, lat, y, o = {}) => { const [x, z] = edgePt(s, 1, lat); return on(shape, x, s.y + y, z, h.across(s), o); };
+      const seg = (shape, s, lat, y, o = {}) => { const [x, z] = edgePt(s, 1, lat), grp = on(shape, x, s.y + y, z, h.across(s), o); if (o.pitch) { grp.rotation.order = 'YXZ'; grp.rotation.x = o.pitch; } return grp; }; // o.pitch: tilted along the road (radians), for what must follow a ramp instead of stepping down it
       // cube(material, s, lat, w, ht, d, y): one box in the road frame at sample s, its base y m above the roadway
       const cube = (m, s, lat, w, ht, d, y) => { const [x, z] = edgePt(s, 1, lat), b = h.pose('boxMesh', MAT[m], kit, [x, s.y + y + ht / 2, z], w, ht, d); b.rotation.y = h.across(s); return b; };
       // surf(material, x, z, wx, dz, top, th): a paved surface, wx east-west by dz north-south, its top at altitude `top` (default 0.2 m under an airfield road at 0; null: just above the ground there)
@@ -69,7 +76,7 @@
       // avion(type, x, z, o): one of the black prototypes ('sr71', 'b2', 'f117'): its lifting surface and its parts at the same place
       const avion = (type, x, z, o = {}) => { const a = set(type + 'Area51', x, z, o); h.pose(type + 'NappeArea51', MAT.stealth, a, [0, 0, 0]); return a; };
       const sideXZ = (p, sd, dist) => edgePt(smp(p), sd, smp(p).w + dist).map(v => v / k); // plan position at `dist` m outside the wall at chainage p
-      for (const z of ZONES) AREA51[z]({ h, g, S, N, MAT, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt });
+      for (const z of ZONES) AREA51[z]({ h, g, S, N, MAT, BLOCS, RUNWAY, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt });
       weld(h, kit); // one mesh per material
     },
   });

@@ -16,6 +16,8 @@
     barriereArea51: (arm = 8, up = 1.2) => [['concrete', 0.9, 1.3, 0.9, 0, 0.65, 0], ['gray', 1.6, 0.6, 0.6, 0.7, 1.1, 0], ['stripe', arm, 0.28, 0.28, -Math.cos(up) * arm / 2, 1.1 + Math.sin(up) * arm / 2, 0, [0, 0, -up]]],
     // anti-ram concrete block, len long along Z, hazard-banded ends
     blocBetonArea51: (len = 14) => [['concrete', 2, 0.4, len, 0, 0.2, 0], ['concrete', 1.2, 1, len, 0, 0.9, 0], ...pair(sd => ['danger', 1.3, 1.05, 1, 0, 0.93, sd * (len / 2 - 0.5)])],
+    // road trestle, len long along Z: two red and white planks on two A-feet. Marks an edge where there is no rail
+    chevaletArea51: (len = 3.4) => [['stripe', 0.12, 0.42, len, 0, 1.05, 0], ['stripe', 0.12, 0.3, len, 0, 0.5, 0], ...pair(sd => [['gray', 0.1, 1.3, 0.1, 0, 0.65, sd * (len / 2 - 0.3)], ['gray', 1, 0.1, 0.12, 0, 0.05, sd * (len / 2 - 0.3)]]).flat()],
     // roadside board on two posts, 4 × 2.2 m, facing the car that arrives (+Z): the plate takes the material of the zone `sign`
     panneauArea51: () => [...pair(sd => ['steel', 0.2, 5, 0.2, sd * 1.6, 2.5, 0]), ['sign', 4, 2.2, 0.2, 0, 4, 0]],
     // front of a munitions igloo (the mound is the simple shape butteArea51, same origin, 24 m deep): concrete headwall and wing walls on the road side, steel door, apron, a vent on the mound
