@@ -17,8 +17,8 @@
       else if (k === 3 || (k === 2 && HH(v, 20) < 0.4)) set('entrepotAutoroute', x, z, { y, ry: HH(v, 21) < 0.5 ? 0 : Math.PI / 2, a: HH(v, 21) < 0.5 ? [w, ht, d, v] : [d, ht, w, v] });
       else set('immeubleAutoroute', x, z, { y, a: [w, ht, d, k === 0 ? (ht > 78 ? 'glass' : 'stone') : 'brick', v] }); });
   }
-  // the boulevard's two rows of trees, one every 28 m on the pavements; none at the crossroads, none in the shade of the motorway. Lamp posts between them, some leaning
-  let n = 0; for (let x = -520; x <= 540; x += 28) if (Math.abs(x - Math.round(x / G) * G) > 16 && Math.abs(x - 229) > 30) for (const z of [-15.5, 15.5]) { n++;
+  // the boulevard's two rows of trees, one every 28 m on the pavements; none at the crossroads, none in the shade of the motorway, none beyond the two ends where the boulevard is buried. Lamp posts between them, some leaning
+  let n = 0; for (let x = -324; x <= 320; x += 28) if (Math.abs(x - Math.round(x / G) * G) > 16 && Math.abs(x - 229) > 30) for (const z of [-15.5, 15.5]) { n++;
     tree(x, z, cityY(x) + 0.2, 13 + 6 * HH(n, 1), 4.5 + 2 * HH(n, 2), n);
     if (n % 4 === 1) set('lampadaireAutoroute', x + 14, z * 0.9, { y: cityY(x) + 0.2, ry: z > 0 ? Math.PI / 2 : -Math.PI / 2, a: [HH(n, 3) < 0.3 ? 0.25 : 0] }); }
   // the motorway's lamp posts, every 48 m along both parapets, one in three leaning; cranes of the river port over the warehouse roofs, far to the east
@@ -34,7 +34,7 @@
     for (const sd of [-1, 1]) { const gap = edge(s, sd) - s.w; if (gap < 1.5) continue;
       if (th === 1) { const [x, z] = edgePt(s, sd, s.w + 0.5); set('barriereAutoroute', x, z, { y: s.y, ry: h.across(s) });
         if (gap > 5 && i % 12 === 0) { const [a, b] = edgePt(s, sd, s.w + 3 + rnd() * (gap - 4.5)); set('sacsAutoroute', a, b, { y: s.y, ry: rnd() * 3, a: [5] }); } }
-      else for (let o = 1; o < gap - 0.5; o += 2.2) { if (rnd() < 0.25 && o > 1) continue; const [x, z] = edgePt(s, sd, s.w + o + rnd()), sz = 1.4 + rnd() * 1.8, ht = 0.5 + rnd() * 1.2 + 3.5 * o / 13;
+      else for (let o = 1; o < gap - 0.5; o += 2.2) { if (rnd() < 0.25 && o > 1) continue; const [x, z] = edgePt(s, sd, s.w + o + 0.5 + rnd() * 0.6), sz = Math.min(1.4 + rnd() * 1.8, o * 0.65 + 0.4), ht = 0.5 + rnd() * 1.2 + 3.5 * o / 13; // (a piece is never wider than its distance to the lane: nothing overhangs the wall)
         set('eboulisAutoroute', x, z, { y: s.y - 0.2, ry: rnd() * 3, a: [sz * 2, ht, sz * 2, i + o] }); } } });
   // cars: jam(axis, half-width, centre, from, to, keep, across): the lanes of a straight street, 3.2 m wide, a car every 6.2 m in each, wherever keep(x, z) and the open lane (wall + 1.3 m) leave room;
   // one in eight is a van. across: where the lane changes carriageway, a long vehicle lies against its wall on the side it leaves, at the lane's own angle

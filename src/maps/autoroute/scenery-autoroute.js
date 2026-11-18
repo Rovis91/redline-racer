@@ -39,7 +39,7 @@
       // relief(x, z, y) = metres to remove: in the low district the streets not driven sink under the water, and the river bed lies beyond column 5; over the metro the ground is raised (negative) above the ceiling
       const relief = (x, z, y) => { const s = S[near(h, x, z)], d = Math.hypot(s.x - x, s.z - z) - s.w;
         if (metro.has(s)) return d < edge(s, 1) + edge(s, -1) ? Math.min(0, y - (s.y + H(s) + 1)) : 0;
-        return x > 570 ? 3 : x > 285 ? Math.min(0.9, Math.max(0, d - 6) * 0.5) : 0; };
+        return x > 570 ? 3 : x > 285 + 18 * Math.sin(z * 0.045) + 8 * Math.sin(z * 0.13 + 1) ? Math.min(0.9, Math.max(0, d - 6) * 0.5) : 0; }; // (the waterline wanders: no straight shore across the streets)
       // the ground of the whole city is street asphalt; grass where the park was (the block north of the boulevard between columns -2 and -1)
       const ss = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }, park = (x, z) => ss((x + 215) / 8) * ss((-115 - x) / 8) * ss((z + 99) / 8) * ss((-11 - z) / 8);
       const g = terrain(h, { stepSec: 10, margin: 400, ground, hollow: relief, mat: h.mat('asphalteAutoroute'), layerSet: [{ tex: ['herbeAutoroute'], weight: park }] });
@@ -76,7 +76,7 @@
       // real(label, w, ht, d, x, y, z, ry): the real scenery of a blockout block, inside its footprint (w on its local X, d on its local Z, base at y). False when the name is unknown
       const real = (label, w, ht, d, x, y, z, ry = 0) => { const v = Math.round(x * 7 + z * 13), long = w >= d, L = Math.max(w, d), l = Math.min(w, d), ryL = ry + (long ? Math.PI / 2 : 0), is = r => r.test(label);
         const off = (t, u = 0) => { const dx = long ? t : u, dz = long ? u : t, c = Math.cos(ry), s = Math.sin(ry); return [x + dx * c + dz * s, z - dx * s + dz * c]; }; // a point t along the block's long side, u across it
-        const along = (shape, t, o = {}, u = 0) => set(shape, ...off(t, u), { y, ry: ryL, ...o }), veh = (k, i) => ({ a: [k], skin: { ...MAT, body: BODIES[(v + i) % BODIES.length] } });
+        const along = (shape, t, o = {}, u = 0) => set(shape, ...off(t, u), { y, ry: ryL, ...o }), veh = (k, i) => ({ a: [k], skin: { ...MAT, body: BODIES[Math.abs(v + i) % BODIES.length] } });
         const cars = stack => { const m = Math.max(2, Math.floor(L / 4.8)); for (let i = 0; i < m; i++) { const t = -L / 2 + (i + 0.5) * L / m, k = Math.floor(HH(v, i) * 4); along('voitureAutoroute', t, { ...veh(k, i), ry: ryL + (HH(v, i + 9) - 0.5) * 1.6 }, (HH(v, i + 5) - 0.5) * Math.max(0, l - 4));
           if (stack && i % 3 === 1) along('voitureAutoroute', t + 1.5, { ...veh(0, i + 3), y: y + 1.5, ry: ryL + 1.1, rz: 0.35 }); } };
         const barriers = (u = 0) => { for (let t = -L / 2 + 1.9; t < L / 2; t += 3.9) along('barriereAutoroute', t, { ry: ryL + (HH(v, t) - 0.5) * 0.2 }, u); };

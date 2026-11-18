@@ -27,9 +27,9 @@
         ...[-1, 1].map(s => ['dark', sl + 1, 0.4, d + 2, s * w / 4, e + rise / 2, 0, [0, 0, -s * a]]),
         ...[-1, 1].flatMap(s => [-1, 0, 1].map(k => ['dark', 0.4, 5, 6, s * (w / 2 + 0.1), 3.9, k * d * 0.3])), ['rust', w * 0.6, 2, 0.4, 0, e - 2, d / 2 + 0.2],
         ...(H(v, 1) < 0.5 ? [['ivy', w * 0.4, e * 0.7, 0.6, w * 0.2, e * 0.35, -d / 2 - 0.2]] : [])]; },
-    // heap of rubble filling w × d, ht high at its crest: slabs and blocks tilted every way, steeper toward +Z (the building it fell from), bars sticking out
+    // heap of rubble filling w × d, ht high at its crest (no piece larger than 0.7 of its smaller side: a small heap stays inside its footprint): slabs and blocks tilted every way, steeper toward +Z (the building it fell from), bars sticking out
     eboulisAutoroute: (w = 30, ht = 5, d = 12, v = 0) => { const L = [], n = Math.max(6, Math.round(w * d / 22));
-      for (let i = 0; i < n; i++) { const u = H(v, i * 3) - 0.5, t = H(v, i * 3 + 1), sz = 2 + 3.5 * H(v, i * 3 + 2), y = ht * t * t * (1 - 1.6 * u * u);
+      for (let i = 0; i < n; i++) { const u = H(v, i * 3) - 0.5, t = H(v, i * 3 + 1), sz = Math.min(2 + 3.5 * H(v, i * 3 + 2), Math.min(w, d) * 0.7), y = ht * t * t * (1 - 1.6 * u * u);
         L.push([i % 7 ? 'rubble' : 'concrete', sz, 0.5 + sz * 0.45, sz * (0.6 + 0.8 * H(v, i + 50)), u * (w - sz), Math.max(0.2, y * 0.5), (t - 0.5) * (d - sz * 0.5), [(H(v, i + 90) - 0.5) * 1.1, H(v, i + 70) * 3, (H(v, i + 80) - 0.5) * 1.1]]); }
       L.push(['rubble', w * 0.8, ht * 0.5, d * 0.6, 0, ht * 0.25, d * 0.15], ['rubble', w * 0.5, ht * 0.9, d * 0.3, 0, ht * 0.45, d * 0.32]);                  // the core of the heap
       for (let i = 0; i < 4; i++) L.push(['rust', 0.12, 3, 0.12, (H(v, i + 200) - 0.5) * w * 0.7, ht * 0.6, (H(v, i + 210) - 0.3) * d * 0.5, [0.5 - H(v, i + 220), 0, H(v, i + 230) - 0.5]]);
