@@ -1,7 +1,7 @@
 // "piliers", the tourist layer of the whole lap (round 4): the park gate and its coach park, the village, shrines, cliff walkways, cantilevered platforms and their needles, the cable car, the glass lift, the two temples.
 // One visitor network: every platform, stair and walkway leads to the next stop. Shapes: shapes-piliers-tourisme.js; the helpers of scenery-piliers.js are described there. See docs/proposals/sky-pillars/AMBIANCE-V2.html, "The tourist layer".
 // Side -1 = left (outside of the loop), 1 = right. Nothing here stands on the roadway: the gate spans it, its columns outside the parapets.
-(window.PILIERS = window.PILIERS || {}).tourisme = ({ h, g, at, idx, nz, MAT, kit, beam, needle, clearing, LAP, TOWERS, THREE }) => {
+(window.PILIERS = window.PILIERS || {}).tourisme = ({ h, g, at, idx, nz, MAT, kit, beam, needle, clearing, LAP, TOWERS, THREE, FLAGS, CABINS, SITES }) => {
   const { edgePt } = PLACERS, HP = Math.PI / 2, A = p => at(((p % LAP) + LAP) % LAP), away = (s, sd) => h.across(s) + (sd < 0 ? Math.PI : 0), fwd = s => Math.atan2(-s.tz, s.tx);
   // grp(east, north, ry, y): an empty group of the kit. site(pk, side, off, { fwd, y }): the same `off` metres beyond the wall at chainage pk, local X away from the road (fwd: X along the way the cars go, so a front looks at the driver);
   // on the ground, or y above the roadway. put(G, shape, [x, y, z], settings, ry, skin): a catalogue shape in the frame of G
@@ -17,12 +17,12 @@
     for (let t = 1; t < tiers; t++) { const l2 = l - d / 2 - 1.5, d2 = d / 2 - 0.5, h2 = ht * 0.45; put(G, 'hallePiliers', [x, yy + rh * 0.3, z], [l2, d2, h2, 0, 'red'], ry); yy += rh * 0.3 + h2 + 0.6; l = l2 + 3.6; d = d2 + 3.6; rh = d * 0.22 + 1.2; roof(G, [x, yy, z], l, d, rh, 1.3, ry); }
     clear(G, [x, y, z], Math.max(L, D) * 0.6 + 4); };
   const pagoda = (G, [x, y, z], w, n, sh) => { put(G, 'pagodePiliers', [x, y, z], [w, n, sh]); for (let k = 0; k < n; k++) { const a = w * 0.88 ** k + 3.6; roof(G, [x, y + 1 + (k + 1) * sh, z], a, a, k === n - 1 ? sh * 0.9 : sh * 0.42, sh * 0.28); } clear(G, [x, y, z], w + 5); return y + 1 + n * sh; };
-  const house = (G, [x, y, z], L, D, ht, stilts = 0, ry = 0) => { put(G, 'maisonPiliers', [x, y, z], [L, D, ht, stilts], ry); roof(G, [x, y + (stilts ? stilts + 0.15 : 0.7) + ht, z], L + 2.4, D + 2.8, D * 0.4, 0.6, ry); clear(G, [x, y, z], Math.max(L, D) * 0.6 + 3); };
+  const house = (G, [x, y, z], L, D, ht, stilts = 0, ry = 0) => { put(G, 'maisonPiliers', [x, y, z], [L, D, ht, stilts], ry); roof(G, [x, y + (stilts ? stilts + 0.15 : 0.7) + ht, z], L + 2.4, D + 2.8, D * 0.4, 0.6, ry); SITES.smoke.push(world(G, [x + 1.5, y + (stilts || 0.7) + ht + D * 0.4 + 0.6, z + L * 0.25])); clear(G, [x, y, z], Math.max(L, D) * 0.6 + 3); };
   const people = (G, list, y = 0) => list.forEach(([x, z], k) => put(G, 'touristePiliers', [x, y, z], [k + (x * 7 + z * 3 | 0) & 7], k * 1.7 + x).scale.setScalar(1.15));
   // band(a, b, w, ht, material): a flat bar from point a to point b; flags(a, b, sag): a string of prayer flags hanging between two points; footbridge(a, b, sag): a hanging plank footbridge with its two hand cables
   const band = (a, b, w, ht, m) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), o = h.pose('boxMesh', m, kit, a.map((v, i) => (v + b[i]) / 2), w, ht, l); o.lookAt(...b); return o; };
   const hang = (a, b, sag, n) => k => { const t = k / n; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t - sag * 4 * t * (1 - t), a[2] + (b[2] - a[2]) * t]; };
-  const flags = (a, b, sag = 1.5, n = 6) => { const P = hang(a, b, sag, n); for (let k = 0; k < n; k++) band(P(k), P(k + 1), 0.05, 0.9, MAT.flag); };
+  const flags = (a, b, sag = 1.5, n = 6) => { const P = hang(a, b, sag, n); for (let k = 0; k < n; k++) beam(P(k), P(k + 1), 0.07, MAT.dark); FLAGS.push([P, n]); }; // the string is still; its flags move (scenery-piliers-vie.js)
   const footbridge = (a, b, sag = 2.5, n = 10) => { const P = hang(a, b, sag, n), l = Math.hypot(b[0] - a[0], b[2] - a[2]), nx = -(b[2] - a[2]) / l, nz2 = (b[0] - a[0]) / l, sd = (p, s, d) => [p[0] + nx * s, p[1] + d, p[2] + nz2 * s];
     for (let k = 0; k < n; k++) { band(P(k), P(k + 1), 2.6, 0.25, MAT.plank); for (const s of [-1.3, 1.3]) { beam(sd(P(k), s, 1.3), sd(P(k + 1), s, 1.3), 0.18); beam(sd(P(k), s, 0), sd(P(k), s, 1.3), 0.12); } } };
   const lantern = (p, sd, off = 2) => { const G = site(p, sd, off, { y: 0 }); put(G, 'lanternePiliers'); clear(G, [0, 0, 0], 1.2); }, sign = (p, sd) => { const G = site(p, sd, 2.6, { fwd: 1, y: 0 }); put(G, 'panneauPiliers'); clear(G, [0, 0, 0], 2); };
@@ -77,7 +77,7 @@
   cliffWalk(1, [1, 0, 5, 4], 196, 1); // the glass walkway on P2, 12 to 16 m above the corniche road
   cliffWalk(2, [0, 5, 4, 3], 226, 0); // the plank walkway on P3, 12 to 16 m above the road
   // the glass lift up the east face of P3, from the corniche road to the summit: three shafts standing 4 to 8 m beyond the left parapet, in front of the foot of the rock; a pavilion and flags at the end of its gangway
-  { const [t] = TOWERS[2], s = A(1570), G = site(1570, -1, 9, { y: 0 }), ht = t + 1.5 - s.y, gang = 22; G.rotation.y += Math.PI; put(G, 'ascenseurPiliers', [0, 0, 0], [ht, gang]); clear(G, [3, 0, 0], 15); people(G, [[3, 13.6], [3.6, 14.6], [2.4, -13.8]], 0.6);
+  { const [t] = TOWERS[2], s = A(1570), G = site(1570, -1, 9, { y: 0 }), ht = t + 1.5 - s.y, gang = 22; G.rotation.y += Math.PI; put(G, 'ascenseurPiliers', [0, 0, 0], [ht, gang]); G.updateWorldMatrix(true, false); SITES.lift = [G.matrixWorld.clone(), ht]; clear(G, [3, 0, 0], 15); people(G, [[3, 13.6], [3.6, 14.6], [2.4, -13.8]], 0.6);
     const c = world(G, [-gang - 5, 0, 0]), S2 = grp(c[0], -c[2], G.rotation.y, t + 1.5); put(S2, 'pavillonPiliers', [0, 0.6, 0]); put(S2, 'toitPiliers', [0, 5.2, 0], [], 0, MAT.tile); clear(S2, [0, 0, 0], 9); for (const sd of [-1, 1]) flags(world(S2, [0, 8, 0]), world(G, [3, ht + 4.5, sd * 11]), 2, 8); }
   // along a cut face (the BANKS of scenery-piliers.js): a plank deck following the road at Y above it, from o1 to o2 metres beyond the wall (the bed it lies on is behind), a lattice rail, brackets every 12 m
   const bankWalk = (a, b, sd, Y, o1, o2) => { const i = idx(a), n = idx(b) - i, f = o => s => sd * (s.w + o); h.ribbon(i, n, f(o1), Y, f(o2), Y, MAT.plank, 4); h.ribbon(i, n, f(o1), Y - 0.5, f(o1), Y, MAT.steel, 4); h.ribbon(i, n, f(o1), Y, f(o1), Y + 1.2, MAT.rail, 1.2);
@@ -98,10 +98,10 @@
   // --- the cable car: from its station on the plateau at the east end of the bridge (PK 2 150, outside), the two ropes cross above the road and climb over the ravine to the summit of HERO, on two pylons standing on needles; cabins hang still
   { const s = A(2150), [x, z] = edgePt(s, -1, s.w + 26), y0 = g.hAt(x, z), HERO = TOWERS[5][0], B = [x, y0 + 8.6, z], E = [835, HERO + 11.6, -622], dx = E[0] - B[0], dz = E[2] - B[2], l = Math.hypot(dx, dz), ry = Math.atan2(-dz, dx), nx = -dz / l * 4, nzz = dx / l * 4;
     const P = t => B.map((v, i) => v + (E[i] - v) * t), G0 = grp(x, -z, ry, y0), G1 = grp(E[0], -E[2], ry + Math.PI, HERO + 3);
-    for (const G of [G0, G1]) { put(G, 'gareTelePiliers'); roofX(G, [0, 9.2, 0], 21, 17, 3.8, 1.3); } clearing(x, z, 16); clearing(E[0], E[2], 16); people(G0, [[9, 3], [9.5, 4.2], [10, -5], [3, 2]], 1.8);
+    for (const G of [G0, G1]) { put(G, 'gareTelePiliers'); roofX(G, [0, 9.2, 0], 21, 17, 3.8, 1.3); } clearing(x, z, 16); clearing(E[0], E[2], 16); SITES.station = [x, y0, z, ry]; people(G0, [[9, 3], [9.5, 4.2], [10, -5], [3, 2]], 1.8);
     [0.33, 0.68].forEach((t, k) => { const c = P(t), top = c[1] - 21; needle(c[0], -c[2], 26, 26, top, 31 + k); clearing(c[0], c[2], 14); put(grp(c[0], -c[2], ry, top), 'pyloneTelePiliers', [0, 1, 0], [20]); });
     for (const sd of [-1, 1]) { const o = t => { const c = P(t); return [c[0] + sd * nx, c[1], c[2] + sd * nzz]; }; [0, 0.33, 0.68].forEach((t, k) => beam(o(t), o([0.33, 0.68, 1][k]), 0.45));
-      for (const t of sd < 0 ? [0.2, 0.44, 0.58, 0.86] : [0.27, 0.5, 0.76, 0.93]) { const c = o(t); put(grp(c[0], -c[2], ry, c[1]), 'cabineTelePiliers').scale.setScalar(2.2); } } }
+      for (const t of sd < 0 ? [0.2, 0.44, 0.58, 0.86] : [0.27, 0.5, 0.76, 0.93]) CABINS.push([o(0), o(1), t, sd, ry]); } } // the cabins run on the ropes (scenery-piliers-vie.js): up on the left rope, down on the right
 
   // --- the summit temple, on the flat top of P5: a hall with two roofs and a seven-storey pagoda, broadside to the plateau road, which runs straight at them out of the tunnel; flags from the pagoda to four masts.
   // (HERO, the highest summit, is never in the racing camera: it only carries the upper station.)
@@ -116,7 +116,7 @@
       for (const [x, z, w, d] of [[X0 + 2, sd * (W + 7.5) / 2, 0.6, W - 7.5], [(X0 + X1) / 2 + 1, sd * W, X1 - X0 - 2, 0.6]]) { box(G, MAT.red, [x, y + 1.6, z], w, 3.2, d); box(G, MAT.tile, [x, y + 3.35, z], w + 0.7, 0.35, d + 0.7); }
       hall(G, [26, y, sd * 13.5], 13, 6.5, 3.6, 1, 'white', -sd * HP); }
     box(G, MAT.red, [X1 - 1, y + 1.6, 0], 0.6, 3.2, 2 * W); box(G, MAT.tile, [X1 - 1, y + 3.35, 0], 1.3, 0.35, 2 * W + 0.7);
-    hall(G, [X0 + 4.5, y, 0], 13, 5.5, 4.2, 1, 'red'); put(G, 'encensoirPiliers', [22, y + 0.1, 0]); hall(G, [39, y, 0], 24, 11, 5.6, 2, 'red'); const top = pagoda(G, [55.5, y, 0], 7.5, 7, 3.6);
+    hall(G, [X0 + 4.5, y, 0], 13, 5.5, 4.2, 1, 'red'); put(G, 'encensoirPiliers', [22, y + 0.1, 0]); SITES.incense = world(G, [22, y + 5, 0]); hall(G, [39, y, 0], 24, 11, 5.6, 2, 'red'); const top = pagoda(G, [55.5, y, 0], 7.5, 7, 3.6);
     for (const [fx, fz] of [[X0 + 2, W], [X0 + 2, -W], [X1 - 1, W], [X1 - 1, -W]]) flags(world(G, [55.5, top - 1, 0]), world(G, [fx, y + 3.6, fz]), 3, 9);
     people(G, [[16, 3], [16.8, 4.1], [20, -3], [24, 1.5], [30, -2], [30.8, -3], [18, -8], [4, 2.5], [2.5, -1]], y + 0.1); people(G, [[-3, 4], [-3.4, 5.2], [-4, -7]], 0.2); }
   for (let p = 2560; p < 2740; p += 24) lantern(p, 1);

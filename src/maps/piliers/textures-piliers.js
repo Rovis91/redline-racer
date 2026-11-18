@@ -60,6 +60,16 @@
     // the sea of clouds seen from above: near-white with wide pale blue hollows and bright crests, 256 m per tile so no grid shows from the road
     nuagePiliers: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#e6eef0', 0, 0, 64, 64);
       veil(g, 0.22, () => { for (let i = 0; i < 46; i++) { const w = 5 + (rand() * 14 | 0); R(g, i % 3 ? '#8baab7' : '#ffffff', rand() * 64 | 0, rand() * 64 | 0, w, 2 + (rand() * (w / 3) | 0)); } }); }, 256],
+    // falling water (the falls of scenery-piliers-vie.js; it slides along v, tileable in v). k = 0: the body, opaque and pale, long soft patches; k = 1: the veil in front, sparse white runs on nothing.
+    // Patches a quarter of the width and a third of the tile long: they still read from 250 m at 270 lines; low contrast, no sparkle
+    chutePiliers: (k = 0) => [32, 64, (g, o) => { const { R, rand, veil } = o, B = (c, x, y, w, ht) => { R(g, c, x, y, w, ht); R(g, c, x, y - 64, w, ht); }; if (!k) R(g, '#eef6f6', 0, 0, 32, 64);
+      veil(g, k ? 0.6 : 0.5, () => { for (let i = 0; i < (k ? 9 : 16); i++) B(k || i % 3 ? '#ffffff' : '#bfd6dc', rand() * 28 | 0, rand() * 64 | 0, 3 + (rand() * 6 | 0), 14 + (rand() * 22 | 0)); });
+      veil(g, k ? 0.5 : 0.25, () => { for (let i = 0; i < 12; i++) B('#ffffff', rand() * 31 | 0, rand() * 64 | 0, 1, 10 + (rand() * 30 | 0)); }); }, 8],
+    // mist and cloud seen from above: soft pale patches on nothing, tileable (the mist sheets between the pillars, the upper cloud layer, the cloud shadows); v = another drawing
+    brumePiliers: (v = 0) => [64, 64, (g, o) => { const { rand } = o; for (let i = 0; i < 8 + v * 3; i++) { const x = rand() * 64, y = rand() * 64, r = 8 + rand() * 12; for (const [dx, dy] of [[0, 0], [64, 0], [-64, 0], [0, 64], [0, -64]]) {
+      const q = g.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r); q.addColorStop(0, 'rgba(255,255,255,.9)'); q.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = q; g.fillRect(x + dx - r, y + dy - r, 2 * r, 2 * r); } } }, 300],
+    // a bank of mist seen from the side (the banks drifting among the pillars): a long soft body, ragged top and bottom, fading to nothing at the four edges
+    bancBrumePiliers: () => [128, 32, (g, o) => { const { rand } = o; for (let i = 0; i < 46; i++) { const x = 16 + rand() * 96, y = 12 + rand() * 8, r = 7 + rand() * 5 * Math.sin(Math.PI * (x - 16) / 96), q = g.createRadialGradient(x, y, 0, x, y, r); q.addColorStop(0, 'rgba(255,255,255,.8)'); q.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = q; g.fillRect(x - r, y - r, 2 * r, 2 * r); } }],
     // lining of the rock tunnel (walls and vault; the engine passes its own settings, ignored): rough-cut sandstone, darker than outside, drill lines, damp runs; 8 m per tile
     tunnelPiliers: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#6a6c5c', 0, 0, 64, 64);
       veil(g, 0.3, () => { for (let y = 0; y < 64; y += 4 + (rand() * 7 | 0)) R(g, '#1a2420', 0, y, 64, 1); for (let i = 0; i < 14; i++) R(g, i & 1 ? '#1a2420' : '#b6aa8f', rand() * 64 | 0, rand() * 50 | 0, 1, 5 + (rand() * 14 | 0)); });
