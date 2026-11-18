@@ -37,7 +37,7 @@
       veil(g, 0.4, () => { for (let i = 0; i < 6; i++) R(g, '#7a3a1a', 18 + rand() * 40 | 0, rand() * 60 | 0, 2 + rand() * 4 | 0, 1); for (let i = 0; i < 10; i++) R(g, '#cfd0c0', rand() * 64 | 0, rand() * 64 | 0, 1, 2); });
     }, 8],
     // metro track bed: dark ballast (coarse 1 to 3 px stones), sleepers every 60 cm across the track (x = across), rusted rails at the third points, puddle stains and weeds between the sleepers
-    ballastAutoroute: () => [64, 64, (g, o) => {
+    ballastMetroAutoroute: () => [64, 64, (g, o) => {
       const { R, rand, veil } = o; R(g, '#3a3a38', 0, 0, 64, 64);
       veil(g, 0.5, () => { for (let i = 0; i < 700; i++) R(g, rand() < 0.5 ? '#000' : '#8a8880', rand() * 64 | 0, rand() * 64 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); });
       for (let y = 2; y < 64; y += 5) { R(g, '#4a3a2a', 4, y, 56, 2); veil(g, 0.4, () => R(g, '#000', 4, y + 1, 56, 1)); }

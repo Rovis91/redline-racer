@@ -1,4 +1,4 @@
-// Road and tunnel textures of Lunar Outpost (lune). Road: th.roadTex = 'routeLune' (same 7 th.road settings as roadwayFine), matt (use th.gloss: 0).
+// Road and tunnel textures of Lunar Outpost (lune). Road: th.roadTex = 'chausseeLune' (same 7 th.road settings as roadwayFine), matt (use th.gloss: 0).
 // Tunnel: th.tun.tex = ['tunMurLune', 'tunVouteLune']. Walls: 64 x 64 px, x = from the top of the wall (0) to its foot, y = along the track, 8 m per tile.
 (() => {
   const over = extra => (...a) => { const [w, h, d, ...r] = TEXTURES.roadwayFine(...a); return [w, h, (g, o) => { d(g, o); g.globalCompositeOperation = 'source-atop'; extra(g, o, a); if (!a[6]) { g.globalCompositeOperation = 'destination-over'; g.fillStyle = a[0]; g.fillRect(0, 0, w, h); } g.globalCompositeOperation = 'source-over'; }, ...r]; };
@@ -6,7 +6,7 @@
   Object.assign(TEXTURES, {
     // graded sintered regolith, 2W x 32 m: very fine dark dust with no cracks or joints, scattered cobbles (2 to 6 px, a lit top-left edge and a black cast shadow at the lower right,
     // never above #7c808c), short unaligned wheel scuffs, a few crater dimples (dark hollow with a lighter lip on the sun side). Matt: nothing glints.
-    routeLune: over((g, o) => {
+    chausseeLune: over((g, o) => {
       const { R, rand, veil } = o;
       pts(g, o, 3000, '#3a3e48', 0.25);
       veil(g, 0.12, () => { for (let i = 0; i < 70; i++) R(g, '#000', 16 + rand() * 94 | 0, rand() * 512 | 0, 4 + rand() * 10 | 0, 1 + rand() * 2 | 0); });

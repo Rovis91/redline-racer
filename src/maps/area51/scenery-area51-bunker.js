@@ -3,10 +3,11 @@
 // Why it is there: the research reactor of the base and its labs, dug into the mesa so the rock contains an accident and hides the work. The road is the service loop of the complex: an airlock, the gallery round the reactor
 // above its pool, the labs cavern, the silo, and out by the same flank. Outside, only the two portals, the stack and the headframe show.
 (window.AREA51 = window.AREA51 || {}).bunker = ({ h, g, S, MAT, kit, set, side, seg, cube, surf, pk, idx, t0: i0, t1: i1, rooms: ROOMS, room, edgePt, k }) => {
+  const B1 = { ...MAT, concrete: MAT.murB1, dark: MAT.vouteB1, floor: MAT.solB1 }; // the gallery's own wall, ceiling and floor textures
   // the shell, one section every 8 samples (16 m), longer on the outside of bends, each set a few centimetres off its neighbours (no two faces in one plane): walls, ceiling, rock up to the surface, lights, pipes
   for (let i = i0, n = 0, pL = 12, pR = 12; i <= i1; i += 8, n++) { const [, , L, wide, clear, R] = room(i), s = S[i], top = Math.min(g.hAt(...edgePt(s, -1, L + 30)), g.hAt(...edgePt(s, 1, wide + 30))), len = 16.3 * (1 + Math.abs(s.k) * ((R ? Math.max(L, wide) : L) + 10));
     if (L !== pL) cube('concrete', s, -(L + pL) / 2 - 3, Math.abs(L - pL) + 6, 34, 4, -2); if (wide !== pR) cube('concrete', s, (wide + pR) / 2 + 3, Math.abs(wide - pR) + 6, 34, 4, -2); pL = L; pR = wide; // where a room opens or closes: the end wall
-    seg('galerieArea51', s, 0, 0, { a: [L, wide, clear, Math.max(4, top - s.y - clear - 1.7), R ? 1 : 0, len, (n % 3) * 0.05] }); }
+    seg('galerieArea51', s, 0, 0, { skin: B1, a: [L, wide, clear, Math.max(4, top - s.y - clear - 1.7), R ? 1 : 0, len, (n % 3) * 0.05] }); }
   seg('portailArea51', S[i0 - 6], 0, 0); seg('portailArea51', S[i1 + 6], 0, 0);
   // the nuclear airlocks: the controlled zone (reactor hall and labs) lies between two locks, each made of two armoured bulkheads the road passes through. Entry lock = the lobby; exit lock = the end of the labs cavern.
   // In the entry lock, a monitoring arch and two booths

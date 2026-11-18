@@ -2,7 +2,7 @@
 // The placers are described in scenery-area51.js; the shapes are in shapes-area51-hall.js, -avion.js and -airfield.js.
 // The row faces the runway (north) and its hangars are open: the black prototypes are what this base is for, and they are what the player must see. Sizes are set for reading from the lane, larger than the blocks of the blockout.
 (window.AREA51 = window.AREA51 || {}).hangar = ({ set, surf, avion, MAT }) => {
-  set('hallArea51', 1710, 880, { y: 0 });                                                     // H1, a 300 × 116 m hall with a door in each gable: its floor is 0.2 m under the lane
+  set('hallArea51', 1710, 880, { y: 0, skin: { ...MAT, floor: MAT.solB1 } });                                                     // H1, a 300 × 116 m hall with a door in each gable: its floor is 0.2 m under the lane
   // four prototypes in H1, alternately south and north of the weaving lane, each on a stand outlined in yellow: a needle nose to the wall, the wing along the wall, the arrowhead nose to the lane, a second needle
   const stand = (x, z, w, d) => { for (const sd of [-1, 1]) { surf('yellow', x + sd * w / 2, z, 0.5, d, 1.38, 0.08); surf('yellow', x, z + sd * d / 2, w, 0.5, 1.38, 0.08); } };
   avion('sr71', 1795, 906, { y: 1.3, s: 1.6 }); stand(1795, 906, 34, 56); avion('b2', 1725, 842, { y: 1.3 }); stand(1725, 842, 58, 26);

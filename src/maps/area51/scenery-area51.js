@@ -43,7 +43,8 @@
         lattice: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#9aa0a8'), white: h.mat('metalPale', { c: 0xe9ece7, ...DS }), red: tint(0xb5483c), amber: tint(0xf2a23a), glass: h.mat('paneDark'), neon: h.mat('lampObj', { emis: 1 }), fire: h.mat('lightRed', { emis: 1 }), pool: h.mat('cherenkovArea51', { emis: 1 }),
         verriere: h.mat('verriereArea51', { emis: 1 }), danger: h.mat('dangerArea51'), stripe: h.mat('striping'), tarmac: h.mat('tarmacArea51'), piste: h.mat('tarmacArea51', { c: 0xb4b8c4 }), yellow: h.mat('jauneArea51'), paintW: h.mat('blancArea51'),
         stealth: h.mat('furtifArea51', DS), trefle: h.mat('trefleArea51'),
-        rock: h.mat('rocheArea51', {}, '#a5604a'), far: h.mat('rocheArea51', {}, '#6a5a96', 0.4), playa: h.mat('playaArea51'), sol: h.mat('solArea51') };
+        rock: h.mat('rocheArea51', {}, '#a5604a'), far: h.mat('rocheArea51', {}, '#6a5a96', 0.4), playa: h.mat('playaArea51'), sol: h.mat('solArea51'),
+        murB1: h.mat('tunMurArea51'), vouteB1: h.mat('tunVouteArea51'), solB1: h.mat('tunSolArea51') }; // underground and hall surfaces (textures-area51-route.js)
       Object.assign(MAT, { door: MAT.gray, sign: MAT.gray, floor: MAT.tarmac, steelMat: MAT.steel, lampObj: MAT.neon, iron: MAT.gray, vat: MAT.white, chassis: MAT.gray, cabin: MAT.red, pane: MAT.glass, radiator: MAT.gray, headlight: MAT.neon, lightOrange: MAT.neon, wheelPart: MAT.steel, tire: MAT.dark });
       const kit = new THREE.Group(); h.scene.add(kit);
       const smp = pk => S[Math.round(pk / LAP * N) % N], pk = (x, z) => idx(x, z) / N * LAP; // pk(x, z): chainage of the road point nearest to a plan position
