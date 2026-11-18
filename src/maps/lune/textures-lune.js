@@ -25,6 +25,11 @@
       veil(g, 0.5, () => { for (let k = 0; k < 32; k += 8) { R(g, '#9aa6b4', k, 0, 1, 32); R(g, '#9aa6b4', 0, k, 32, 1); } }); R(g, '#d8d4c8', 0, 0, 32, 1); R(g, '#d8d4c8', 0, 0, 1, 32); }, 4],
     // lit band (emissive), c = the light: panes between dark mullions, one in six unlit; stretched over the band it is put on. Windows of the colony (warm), ceiling panels of the halls (cold)
     hublotLune: (c = '#ffe9b8') => [64, 8, (g, o) => { const { R, rand } = o; R(g, '#0c0e14', 0, 0, 64, 8); for (let x = 1; x < 64; x += 4) if (rand() > 0.17) R(g, c, x, 1, 3, 6); }],
+    // the sky of the Moon (emissive, on the engine's sky sphere: top row = zenith, middle row = horizon): black, no air so no gradient and no haze; stars spread evenly over the dome down to the horizon,
+    // most of them faint and bluish, one in four white, one in forty a bright one of 2 px; a denser, fainter band crosses it (the Milky Way)
+    cielLune: () => [1024, 512, (g, o) => { const { R, rand } = o; R(g, '#010103', 0, 0, 1024, 512);
+      for (let i = 0; i < 2600; i++) { const x = rand() * 1024 | 0, y = Math.acos(rand()) / Math.PI * 512 + 4 | 0, k = rand(); R(g, k < 0.025 ? '#ffffff' : k < 0.25 ? '#d8dcf0' : k < 0.6 ? '#8a8ac0' : '#4c4f78', x, y, k < 0.025 ? 2 : 1, k < 0.025 ? 2 : 1); }
+      for (let i = 0; i < 1500; i++) { const x = rand() * 1024, y = 150 + 110 * Math.sin(x / 1024 * 2 * Math.PI) + (rand() + rand() - 1) * 26; if (y > 0 && y < 262) R(g, rand() < 0.3 ? '#8a8ac0' : '#3a3d62', x | 0, y | 0, 1, 1); } }],
     // the Earth (emissive), on a disc: ocean blue, white cloud bands, two ochre-green land masses, the night side to the left
     terreLune: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#2f6fc4', 0, 0, 64, 64);
       veil(g, 0.75, () => { for (const [x, y, w, ht] of [[30, 14, 16, 10], [36, 22, 9, 12], [18, 36, 12, 9], [24, 44, 8, 8]]) R(g, '#6c8a4e', x, y, w, ht); });

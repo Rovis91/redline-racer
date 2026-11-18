@@ -80,6 +80,8 @@
       { const y0 = S[T.t0].y, fl = h.scene.children.find(o => o.isMesh && o.material && o.material.isMeshBasicMaterial && o.geometry.attributes.position.count === (nTun + 1) * 2 && [0, 1].every(k => Math.abs(o.geometry.attributes.position.getY(k) - y0) < 0.01)); if (fl) fl.material.map = h.tx('pisteLune'); }
       // th.guardM = 0: the guardrails are placed here, on the same stretch only: none under the flight, none across the arena
       for (const sd of [-1, 1]) h.guardM(sd, T.t1, nOut, s => sd * s.w, h.TH.wallH, s => sd * s.w, -2, h.mat('guardrail', DS, h.TH.intoWall));
+      // the sky is the engine's sphere (radius 2500, it follows the camera): it takes the Moon's sky, stars down to the horizon (the shared sky drawing keeps them above 28°, out of the racing camera's view)
+      { const sky = h.scene.children.find(o => o.isMesh && o.geometry.type === 'SphereGeometry' && o.geometry.parameters.radius === 2500); if (sky) { const t = h.tx('cielLune'); t.minFilter = THREE.NearestFilter; sky.material.map = t; } }
       // MAT: the shared materials of the map, one draw pass each for the whole map; its keys are the zone names of the lune shapes (shapes-lune-*.js). Every piece of scenery goes into the group `kit`, merged per material at the end
       const MAT = { shell: h.mat('coqueLune', {}, '#e8e2d0'), hall: h.mat('coqueLune', {}, '#9aa0ac'), dark: h.mat('concreteDark'), steel: h.mat('steelMat'), lattice: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#c8c4b8'),
         amber: h.mat('metalPale', { c: 0xd78a40 }), glow: h.mat('paint', { emis: 1, c: 0xffa040 }), hublot: h.mat('hublotLune', { emis: 1 }, '#ffe9b8'), ceil: h.mat('hublotLune', { emis: 1 }, '#cfe8ff'), solar: h.mat('solaireLune'),
