@@ -1,5 +1,5 @@
 // "piliers", what lives (docs/methods/LIFE.md, docs/proposals/sky-pillars/LIFE-V3.md): the cloud layers and their shadows, the mist sheets and the banks drifting among the pillars, the falls, the cable car,
-// the prayer flags, the lift cabins, birds, smoke, light shafts in the woods, and the placed sounds. Called last (ZONES of scenery-piliers.js): the other zone files declare (FALLS, FLAGS, CABINS, SITES), this one builds.
+// the prayer flags, the lift cabins, birds, smoke and spray, and the placed sounds. Called last (ZONES of scenery-piliers.js): the other zone files declare (FALLS, FLAGS, CABINS, SITES), this one builds.
 // One wind, to the west (-x). Everything animates on the tick's dt (pause freezes it). Nothing here stands on the roadway or collides. Costs: see "Draw passes" at each block.
 (window.PILIERS = window.PILIERS || {}).vie = ({ h, g, S, N, at, idx, nz, LIFE, flows, FALLS, FLAGS, CABINS, SITES, STEPS, THREE }) => {
   const { edgePt, inst } = PLACERS, V3 = THREE.Vector3, DS = THREE.DoubleSide, TAU = Math.PI * 2, clamp = v => Math.max(0, Math.min(1, v)), ease = v => { v = clamp(v); return v * v * (3 - 2 * v); };
@@ -14,16 +14,19 @@
 
   // ---------- banks of mist among the pillars: long soft quads that turn to the car (round the vertical), form, drift west and dissolve. They cross the pillars between a third and two thirds of their height:
   // the ranks. None within 150 m of a road, and those within 300 m stay under it (mist in the ravine): a bank is never between the car and its next bend. One geometry rewritten each frame: 1 draw pass
-  const BANKS = [], bank = (x, y, z, w, ht, op = 0.6, span = 260, v = 3, ph = nz(x, z)) => BANKS.push({ x, y, z, w, ht, op, span, v, ph });
+  const BANKS = [], bank = (x, y, z, w, ht, op = 0.6, span = 260, v = 3, ph = nz(x, z), o = {}) => BANKS.push({ x, y, z, w, ht, op, span, v, ph, rise: 0, grow: 0, from: 0.5, far: 1, c: 1, ...o });
+  // puff(point, n, w, colour, { … }): a small plume at a point, n quads of the same batch one after the other: each is born at the point, rises, drifts west, grows and fades (smoke of a chimney, spray where water breaks)
+  const puff = ([x, y, z], n, w, c, op, span, v, rise, grow = 1.5) => { for (let k = 0; k < n; k++) bank(x, y, z, w, w, op, span, v, (k + nz(x + k, z)) / n, { rise, grow, from: 0, far: 0, c }); };
   for (let k = 0; k < 90; k++) { const a = (k + nz(k, 41)) / 90 * TAU, R = 80 + 1250 * nz(k, 43), x = 650 + Math.cos(a) * R, z = -500 - Math.sin(a) * R, d = g.dAt(x, z), ht = 55 + 60 * nz(k, 47), low = S[PLACERS.near(h, x, z)].y - 8 - ht / 2;
     if (d < 150 || (d < 300 && low < 150)) continue; bank(x, d < 300 ? Math.max(150, low - 30 * nz(k, 45)) : 160 + 140 * nz(k, 45), z, (220 + 260 * nz(k, 49)) * (d < 300 ? 0.6 : 1), ht, 0.6 + 0.3 * nz(k, 51)); }
   const banksBuild = () => { const G = new THREE.BufferGeometry(); let P, C, mesh; // (called at the end: the falls add their own banks)
     { const m = BANKS.length, U = new Float32Array(m * 8), I = []; P = new Float32Array(m * 12); C = new Float32Array(m * 16).fill(1); for (let k = 0; k < m; k++) { U.set([0, 0, 1, 0, 1, 1, 0, 1], k * 8); I.push(k * 4, k * 4 + 1, k * 4 + 2, k * 4, k * 4 + 2, k * 4 + 3); }
       G.setAttribute('position', new THREE.BufferAttribute(P, 3)); G.setAttribute('uv', new THREE.BufferAttribute(U, 2)); G.setAttribute('color', new THREE.BufferAttribute(C, 4)); G.setIndex(I);
       mesh = new THREE.Mesh(G, soft('bancBrumePiliers', { c: 0xf2f7f8, vertexColors: true })); mesh.frustumCulled = false; mesh.userData.dyn = 1; mesh.renderOrder = 8; h.scene.add(mesh); }
-    LIFE.push((dt, car, t) => { const cx = car ? car.x : 300, cz = car ? car.z : -180; BANKS.forEach((b, k) => { const u = (t * b.v / b.span + b.ph) % 1, x = b.x + b.span * (0.5 - u), dx = x - cx, dz = b.z - cz, l = Math.hypot(dx, dz) || 1, rx = -dz / l * b.w / 2, rz = dx / l * b.w / 2;
-        const a = b.op * ease(Math.min(u, 1 - u) / 0.2) * ease((l - 60) / 120), y0 = b.y - b.ht / 2, y1 = b.y + b.ht / 2; // it also fades when the car comes within 180 m: a quad never cuts through the view
-        P.set([x - rx, y0, b.z - rz, x + rx, y0, b.z + rz, x + rx, y1, b.z + rz, x - rx, y1, b.z - rz], k * 12); for (let j = 0; j < 4; j++) C[k * 16 + j * 4 + 3] = a; });
+    LIFE.push((dt, car, t) => { const cx = car ? car.x : 300, cz = car ? car.z : -180; BANKS.forEach((b, k) => { const u = (t * b.v / b.span + b.ph) % 1, x = b.x + b.span * (b.from - u), dx = x - cx, dz = b.z - cz, l = Math.hypot(dx, dz) || 1, e = 1 + b.grow * u, rx = -dz / l * b.w / 2 * e, rz = dx / l * b.w / 2 * e;
+        // a far bank thins as the car comes within 400 m and is gone at 150: it stays a far thing, a quad never cuts through the view; a plume is small and beside the road: it only fades beyond 300 m
+        const a = b.op * ease(Math.min(u * (b.far ? 1 : 3), 1 - u) / 0.2) * (b.far ? ease((l - 150) / 250) : ease((320 - l) / 60)), yc = b.y + b.rise * u, y0 = yc - b.ht / 2 * e, y1 = yc + b.ht / 2 * e;
+        P.set([x - rx, y0, b.z - rz, x + rx, y0, b.z + rz, x + rx, y1, b.z + rz, x - rx, y1, b.z - rz], k * 12); for (let j = 0; j < 4; j++) { const q = k * 16 + j * 4; C[q] = C[q + 1] = C[q + 2] = b.c; C[q + 3] = a; } });
       G.attributes.position.needsUpdate = G.attributes.color.needsUpdate = true; }); };
 
   // ---------- the falls (FALLS: the three tower falls, the plateau fall; then the cascade of the buttress): quads from upstream to downstream, the texture slides down them. Two layers for all the falls of the map:
@@ -42,13 +45,13 @@
       water(pt(o1, top + 0.12), pt(o0 - 0.5, top + 0.12), 4.6, 6, [0, 1, 0], tx); water(pt(o0 - 0.5, top + 0.12), pt(o0 - 0.5, foot), 4.6, 6, out, tx); SPRAYS.push([...pt(o0 - 1, foot + 0.4), k ? 0.5 : 1]); }
     SITES.cascade = pt(off(0)(s) - 1, 1.5); }
   for (const [a, , , hero] of FALLS) if (!hero && a[1] < 240) { SPRAYS.push([a[0], a[1] + 0.5, a[2], 1]); SITES.lip = a; } // the lip of the plateau fall
-  banksBuild(); body.mesh(flows(h.mat('chutePiliers', { emis: 1, c: 0xf0f6f6, smooth: 1, side: DS }, 0), 0, 0.7)); veil.mesh(flows(soft('chutePiliers', { opacity: 0.85 }, 1), 0, 1.15), 7);
+  body.mesh(flows(h.mat('chutePiliers', { emis: 1, c: 0xf0f6f6, smooth: 1, side: DS }, 0), 0, 0.7)); veil.mesh(flows(soft('chutePiliers', { opacity: 0.85 }, 1), 0, 1.15), 7);
 
-  // ---------- particles (h.softPuffs: soft discs that grow and fade; one draw pass per cloud, only while it has live discs): white spray where water breaks, grey smoke of chimneys and incense. They lean west
-  { let spray, smoke; const pick = [1, 3, 5, 8, 11, 12, 13].map(k => SITES.smoke[k]).filter(Boolean); if (SITES.incense) pick.push(SITES.incense);
-    let ts = 0, tf = 0; const nearCar = (car, p, r) => car && (p[0] - car.x) ** 2 + (p[2] - car.z) ** 2 < r * r, j = () => Math.random() - 0.5; // Math.random: looks only, never the shared rnd
-    LIFE.push((dt, car) => { if (!spray) { spray = h.softPuffs(220, [0.93, 0.97, 0.98], 0.4, 2.4, 0.4, 2.6); smoke = h.softPuffs(200, [0.66, 0.66, 0.68], 0.34, 6, 0.05, 1.5); } ts += dt; tf += dt; // (the engine's particles exist only once the scenery is built) if (ts > 0.07) { ts = 0; for (const p of SPRAYS) if (nearCar(car, p, 260)) spray.emit(p[0] + j() * 3, p[1] + j(), p[2] + j() * 3, -1.6 + j(), 1.2 * p[3] + j(), j()); }
-      if (tf > 0.3) { tf = 0; for (const p of pick) if (nearCar(car, p, 280)) smoke.emit(p[0] + j() * 0.4, p[1], p[2] + j() * 0.4, -1.3 + j() * 0.3, 1.5 + j() * 0.3, j() * 0.3); } spray.step(dt); smoke.step(dt); }); }
+  // ---------- smoke and spray, as plumes of the mist batch (the engine's soft particles, h.softPuffs and h.steam, draw nothing at present: see the report): grey smoke at the three tea houses and the incense burner
+  // of the ledge temple (the village chimneys are under the canopy, above the frame of the racing camera: none there); white spray where the cascade breaks on each bed and at the lip of the plateau fall. They lean west
+  for (const p of [11, 12, 13].map(k => SITES.smoke[k]).filter(Boolean)) puff(p, 4, 3.2, 0.42, 0.8, 7, 1.3, 9, 2); if (SITES.incense) puff(SITES.incense, 3, 1.6, 0.5, 0.7, 3, 0.7, 7, 1.5);
+  for (const [x, y, z, k] of SPRAYS) puff([x, y + 1, z], 3, 4.5 * (0.6 + 0.4 * k), 1, 0.7, 5, 2.4, 2.5 * k, 1.2);
+  banksBuild();
 
   // ---------- the moving batch: everything that moves and is made of plain boxes (flags, cabins, lift cabins, bullwheel, birds) is one instanced mesh of unit cubes, tinted per instance: 1 draw pass.
   // cube(colour) reserves one and returns its number; put(k, M) sets its matrix. mob(parts) = a rigid object made of boxes [colour, w, h, d, x, y, z]; move(o, M) places it
@@ -79,7 +82,7 @@
   // birds, all pure scenery. bird(colour, span) = a body and a wing bar. Circling: raptors over the void beside the corniches and the descent, egrets beside the bridge deck, below it.
   // Taking off: egrets standing on the parapet in the woods fly up toward the west when the car is 110 m away, and are back for the next lap. None at a braking point
   { const bird = (c, e) => mob([[c, 1.6 * e / 4, 0.3, 0.5, 0, 0, 0], [c, 0.8, 0.12, e, -0.1, 0.1, 0]]), W = (i, sd, o, dy, R, c, e, w = 0.25) => { const s = S[i], [x, z] = edgePt(s, sd, s.w + o); return [bird(c, e), x, s.y + dy, z, R, w, i * 0.7]; };
-    const CIRC = [W(400, -1, 60, 14, 26, 0x2a2620, 4.6), W(560, 1, 70, 22, 30, 0x2a2620, 4.6, -0.2), W(740, 1, 60, 16, 24, 0x2a2620, 4.6), W(1500, -1, 70, 12, 28, 0x2a2620, 4.6, -0.22), W(1700, -1, 60, 10, 24, 0x2a2620, 4.6),
+    const CIRC = [W(400, -1, 38, 12, 26, 0x2a2620, 5.5), W(560, 1, 40, 18, 30, 0x2a2620, 5.5, -0.2), W(740, 1, 38, 14, 24, 0x2a2620, 5.5), W(1500, -1, 40, 12, 28, 0x2a2620, 5.5, -0.22), W(1700, -1, 38, 10, 24, 0x2a2620, 5.5),
       W(940, -1, 55, -9, 26, 0xf0f0e8, 3.4, 0.3), W(960, -1, 70, -14, 20, 0xf0f0e8, 3.4, -0.33), W(1000, 1, 60, -10, 24, 0xf0f0e8, 3.4, 0.28)];
     const rz = new THREE.Matrix4(); LIFE.push((dt, car, t) => { for (const [o, cx, cy, cz, R, w, ph] of CIRC) { const a = t * w + ph; pose(cx + Math.cos(a) * R, cy + Math.sin(a * 0.7) * 1.5, cz + Math.sin(a) * R, Math.atan2(-Math.cos(a) * Math.sign(w), -Math.sin(a) * Math.sign(w)) + Math.PI / 2).multiply(rz.makeRotationX(0.25 * Math.sign(w))); move(o, mG); } });
     const FLOCKS = [[120, -1], [200, -1], [300, -1], [1900, -1], [1950, 1]].map(([i0, sd]) => ({ i0, en: 0, t: 0, set: 0, p: [0, 1, 2, 3].map(k => { const s = S[i0 + k * 2], [x, z] = edgePt(s, sd, s.w + 0.3); return { o: bird(0xf0f0e8, 2.2), x, y: s.y + 1.1, z, ry: k * 1.9, vx: -5 - k * 0.8, vy: 2.6 + (k % 3) * 0.7, vz: (k - 1.5) * 1.6 }; }) }));
@@ -90,13 +93,6 @@
   // the batch itself, once every cube is declared
   { im = inst(h, h.geo('blk'), h.mat('paint'), COLS.map(() => [0, -1e4, 0])); im.userData.dyn = 1; im.castShadow = false; const col = new THREE.Color(); COLS.forEach((c, k) => im.setColorAt(k, col.setHex(c))); im.instanceColor.needsUpdate = true;
     LIFE.push(() => { im.instanceMatrix.needsUpdate = true; }); }
-
-  // ---------- light shafts in the woods (forest of the start, woods before the line): pale columns slanting down from the sun (upper left), 10 to 24 m beyond the left parapet, never over the roadway.
-  // Additive, facing the car that arrives, breathing slowly together (8 s). 1 draw pass
-  { const Q = quads(), sun = new V3(...h.TH.orb.dir).normalize(), n = new V3(), ax = new V3();
-    for (const p of [200, 290, 380, 470, 560, 3760, 3850, 3940]) { const s = at(p), [x, z] = edgePt(s, -1, s.w + 10 + 14 * nz(p, 61)), y = g.hAt(x, z) - 1, L = 34; n.set(s.tx, 0, s.tz).addScaledVector(sun, -(s.tx * sun.x + s.tz * sun.z)).normalize(); ax.crossVectors(sun, n).normalize();
-      Q.add([x + sun.x * L, y + sun.y * L, z + sun.z * L], [x, y, z], 5 + 3 * nz(p, 63), [ax.x, ax.y, ax.z], L); }
-    const m = h.addMat(h.tx('haze'), { opacity: 0.16, polygonOffset: false, color: 0xfff0c8 }), o = Q.mesh(m, 9); o.userData.dyn = 1; LIFE.push((dt, car, t) => { m.opacity = 0.14 + 0.05 * Math.sin(TAU * t / 8); }); }
 
   // ---------- the sound of the place (SOUND.spots, SOUND.brief of src/audio/audio.js): the falls, the station and the lift machinery, placed and heard by distance and side; bells struck at the temples and the shrine
   if (window.SOUND && SOUND.spots) { const V = p => ({ x: p[0], y: p[1], z: p[2] }), L = [], hero = FALLS.find(f => f[3]), tower = FALLS.find(f => !f[3] && f[0][1] > 240);
