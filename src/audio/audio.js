@@ -831,7 +831,7 @@
     volcan: { slap: 0.28, sl: 0.1, intoWall: 0.55, rv: 0.06, dur: 2.0, lp: 3200, spots: [[0.645, 0.683, 2.5]] }, // quick returns off the basalt scarps in the open; the walled floor of the caldera answers more (the galleries take the tunnel's own reverb)
     perse: { slap: 0.045, sl: 0.22, intoWall: 0.7, rv: 0.09, dur: 2.6, lp: 3400, spots: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // earth facades; spots = [from, to, factor] on the place's room, in fractions of the lap: the passage under the Porte des Nations, the hall of a hundred columns
     area51: { slap: 0.13, sl: 0.08, intoWall: 0.3, rv: 0.04, dur: 1.8, lp: 2800 }, // open basin; the hall and the underground take the tunnel reverb (the scenery declares them indoor)
-    autoroute: { slap: 0.05, sl: 0.25, intoWall: 0.9, rv: 0.1, dur: 1.5, lp: 3600, spots: [[0.658, 0.691, 3.5], [0.889, 0.925, 4.5]] }, // facades both sides: a quick slap; a longer room in the cave and on the station platform (the tube takes the tunnel reverb)
+    autoroute: { slap: 0.05, sl: 0.25, intoWall: 0.9, rv: 0.1, dur: 1.5, lp: 3600, spots: [[0.669, 0.703, 3.5], [0.898, 0.935, 4.5]] }, // facades both sides: a quick slap; a longer room in the cave and in the tram stop (the covered trench takes the tunnel reverb)
     lune: { slap: 0.012, sl: 0.03, intoWall: 0.15, rv: 0.01, dur: 0.5, lp: 1400 }, // no air: no echo at all outside, only the cabin; the hall and the tunnel take the tunnel reverb
     attempt: { slap: 0.04, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 1, lp: 3000 },
   };

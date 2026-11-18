@@ -35,8 +35,19 @@
   // the fallen span: under it and beside it, what came down with it (out of reach behind its parapets); a dark open joint where it broke off the deck
   slab('dark', 228, S[iT].y - 0.01, S[iT].z, 14, 0.05, 0.9); for (let k = 0; k < 7; k++) slab('rust', 222 + k * 2, S[iT].y - 1.2, S[iT].z + 0.8, 0.09, 0.09, 2);
   real('EBOULIS', 13, 3, 26, 228, 2.3, 168);
+  // (round 5) under the break north of the slip road, what fell (the box TRAVEE TOMBEE of the map): the span of the west carriageway still hangs by one end from the cut deck (z = -255, 10 m up), its far end down
+  // on the street; beyond its foot a second piece of deck lies flat and broken, two edge beams askew, a heap of rubble; bars hang from the cut; a car and a bus are crushed under it
+  { const gy = groundY(214), A = [206.5, 10.3, -255.2], B = [220.5, 10.3, -255.2], C = [221.5, gy + 1.5, -224], E = [205.5, gy + 0.9, -226], dn = p => [p[0], p[1] - 1.5, p[2]];
+    quad('asphalt', A, B, C, E); quad('dark', dn(A), dn(B), dn(C), dn(E)); quad('concrete', A, dn(A), dn(E), E); quad('concrete', B, dn(B), dn(C), C); quad('concrete', E, C, dn(C), dn(E));
+    for (const [x, sx] of [[206.6, 0], [220.4, 1]]) quad('concrete', [x, 10.3, -255.2], [x, 11.2, -255.2], [x + sx, gy + (sx ? 2.4 : 1.8), sx ? -224 : -226], [x + sx, gy + (sx ? 1.5 : 0.9), sx ? -224 : -226]);
+    { const m = h.mat('marquageAutoroute', { side: THREE.DoubleSide, alphaTest: 0.5, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }, 1), ln = (x, sx) => quad(m, [x - 0.11, 10.33, -255], [x + 0.11, 10.33, -255], [x + sx + 0.11, gy + 1.25, -225], [x + sx - 0.11, gy + 1.25, -225], 16); ln(211, -0.3); ln(216, 0.3); }
+    real('EBOULIS', 16, 3, 15, 214, gy, -218.5); set('dalleAutoroute', 213, -216, { y: gy + 1.2, ry: 0.35, a: [11, 8, 0.22] }); slab('concrete', 208.5, gy + 0.6, -219, 1.2, 1.4, 13, 0.5); slab('concrete', 219, gy + 1.4, -215.5, 1.2, 1.4, 11, -0.9);
+    set('dalleAutoroute', 221.5, -249, { y: gy, ry: Math.PI, a: [7, 11.5, 1.05] }); set('dalleAutoroute', 209, -246, { y: gy, ry: Math.PI + 0.3, a: [6, 9, 0.9] });   // two lengths of it stand on end against the cut, high enough to show over the slip road's parapet
+    for (let k = 0; k < 9; k++) { slab('rust', 207.2 + k * 1.6, 9.6 - HH(k, 61) * 0.5, -254.2, 0.09, 0.09, 1.6 + HH(k, 62)); if (k % 2) slab('rust', 207.6 + k * 1.6, 8.8 - 2.2 * HH(k, 63), -255, 0.08, 1 + 2.2 * HH(k, 63), 0.08); }
+    set('voitureAutoroute', 209.5, -231, { y: gy - 0.1, ry: 0.4, a: [0], skin: { ...MAT, body: MAT.rust } }).scale.y = 0.55; set('busAutoroute', 220.6, -238, { y: gy, ry: 0.1, rz: -0.1, a: [], skin: { ...MAT, body: MAT.rust } }).scale.y = 0.8; }
   // sign gantries over the lane, the first leaning forward, the second with a leg gone, its beam down on the central barrier; lamp posts along the parapet, one in two leaning
-  { const sk = t => ({ ...MAT, sign: h.mat('panneauAutoroute', {}, t) }), a = S[zi(-150)], b = S[zi(25)];
+  { const sk = t => ({ ...MAT, sign: h.mat('panneauAutoroute', {}, t) }), a = S[zi(-150)], b = S[zi(25)], c = S[zi(125)];
+    set('portiqueAutoroute', c.x, c.z, { y: c.y - 0.5, ry: across(c), rx: 0.2, a: [7.7], skin: sk('SORTIE  >>>') });                                 // (round 5) a third on the fallen span: the way off is to the right
     set('portiqueAutoroute', a.x, a.z, { y: a.y, ry: across(a), rx: 0.16, a: [7.7], skin: sk('CENTRE VILLE  2 KM') }); set('portiqueAutoroute', b.x, b.z, { y: b.y - 0.4, ry: across(b), rz: 0.3, rx: -0.08, a: [7.7], skin: sk('PONT SUD  FERME') }); }
   for (let z = -190, k = 0; z <= 110; z += 50, k++) set('lampadaireAutoroute', 236, z, { y: yD(z) - 0.4, ry: Math.PI, a: [k & 1 ? 0.14 + 0.1 * HH(k, 1) : 0] });
   // the motorway beyond both ends of the lane, never reached: north of the slip road the same deck runs on, cut off; south of the fallen span both carriageways stand, their broken end facing the lane

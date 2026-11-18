@@ -1,46 +1,52 @@
-// "autoroute", zone 5: Le metro. A single-track tube 7 m wide (the width of two cars) and 5.2 m to the crown, from the cave under row 2 (x = 66) west under the street, round to the north,
-// through a station (a platform on the east side, 6 m deep: its edge is the wall of the lane), round to the east, and up the line's own ramp: the tube ends at a portal (x = -405) and the ramp climbs
-// in an open trench along the south side of the boulevard, beside it, to street level (x = -365), where the lane crosses the forecourt back onto the boulevard.
-// The tube's walls are the road's own walls (M.wide 3.6); the trench's walls are solid boxes of the map (MUR TREMIE, built by real() in scenery-autoroute.js). th.tun.without 'walls': the engine only lays the floor and the lights.
-(window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ h, I, MAT, BODIES, LAMPS, set, slab, quad, tuft, HH }) => {
-  const { S, T, THREE } = h, iM = T.t0 - 3, at = (s, d, y) => [s.x - s.tz * d, s.y + y, s.z + s.tx * d];
-  // the station: the samples of the northward run, from 8 m after the first bend to 8 m before the second
-  const iA = S.findIndex((s, i) => i > T.t0 && s.x < -463.9 && s.z < 172), iB = S.findIndex((s, i) => i > iA && s.z < 74);
-  // the tube: a wall 3 m high and half a vault in three facets on each side; in the station the east side opens onto the platform
-  // (no light from the engine's fixtures in a tube this low: walls and vault are self-lit, in the tones of old concrete: dark, the lamps and the daylight at both ends stand out)
-  const DS = { side: THREE.DoubleSide, emis: 1 }, WALL = h.mat('tunnelAutoroute', { ...DS, c: 0x74766e }), ARCH = h.mat('tunVouteAutoroute', { ...DS, c: 0x50524c }); // dark: the light is the lamps' (LAMPS: every lamp drawn here is a real light, set by scenery-autoroute-vie.js)
-  const V = [[3.5, 0], [3.5, 3], [2.6, 4.3], [1.2, 5.05], [0, 5.2]], side = (i0, n, sd) => { for (let k = 0; k < 4; k++) h.ribbon(i0, n, sd * V[k][0], V[k][1], sd * V[k + 1][0], V[k + 1][1], k ? ARCH : WALL, k ? 8 : 4); };
-  for (const sd of [-1, 1]) { side(iM, iA - iM, sd); side(iB, T.t1 - iB, sd); }
-  { const n = iB - iA, lit = h.mat('trottoirAutoroute', { side: THREE.DoubleSide, rep: [0.75, 1], c: 0xb0b0a8 });
-    h.ribbon(iA, n, 3.5, 0, 3.5, 1.1, MAT.concrete); h.ribbon(iA, n, 3.5, 1.1, 9.5, 1.1, lit, 4); h.ribbon(iA, n, 3.55, 1.12, 3.95, 1.12, MAT.yellow); h.ribbon(iA, n, 9.5, 5.2, 9.5, 1.1, MAT.tile, 8); h.ribbon(iA, n, 0, 5.2, 9.5, 5.2, MAT.vault, 8);
-    for (const i of [iA, iB]) { const s = S[i]; quad('tile', at(s, 3.5, 0), at(s, 9.5, 0), at(s, 9.5, 5.2), at(s, 3.5, 5.2)); quad('vault', at(s, 3.5, 5.2), at(s, 3.5, 3), at(s, 2.6, 4.3), at(s, 1.2, 5.05)); }
-    // on the platform: a row of tiled columns, benches and the station's enamel plates on the back wall, strip lights on the ceiling (two in three dead), grass in the joints
-    for (let i = iA + 4, k = 0; i < iB - 2; i += 4, k++) { const s = S[i], [x, y, z] = at(s, 5.2, 1.1); slab('tile', x, y, z, 0.7, 4.1, 0.7);
-      if (k % 3 === 1) { const [bx, by, bz] = at(s, 9, 1.1); slab('steel', bx, by, bz, 0.9, 0.5, 3.4); } if (k % 4 === 2) { const [px, py, pz] = at(s, 9.4, 2.6); slab('plaque', px, py, pz, 0.15, 2, 8); }
-      if (k % 3 === 0) { const [lx, ly, lz] = at(s, 6.8, 5.05); slab('lamp', lx, ly, lz, 0.5, 0.1, 4); LAMPS.push([i, lx, ly - 0.6, lz, 1]); } } }
-  // the second track, on the west side of the station: a bay 4.8 m deep with its own rails, and the train that never left, four cars stopped along the lane. Its flank is the wall of the lane (M.wide 3.6: the cars stand 3.65 m from the axis),
-  // each car set on the track at its own place (the station climbs in its northern half). Both ends of the bay: a tiled wall, the black mouth of the second tube in it
-  { const n = iB - iA, D2 = -5.05, RAIL2 = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, emis: 1, c: 0x8a5a36 });
-    h.ribbon(iA, n, -8.3, 0.03, -3.5, 0.03, h.mat('ballastAutoroute', { side: THREE.DoubleSide, rep: [0.7, 1], emis: 1, c: 0xa8a8a0 }), 8); h.ribbon(iA, n, -8.3, 0, -8.3, 5.2, MAT.tile, 8); h.ribbon(iA, n, -8.3, 5.2, 0, 5.2, MAT.vault, 8);
-    for (const d of [-0.72, 0.72]) { h.ribbon(iA, n, D2 + d - 0.05, 0.16, D2 + d + 0.05, 0.16, RAIL2); h.ribbon(iA, n, D2 + d + 0.05, 0, D2 + d + 0.05, 0.16, RAIL2); }
-    for (const i of [iA, iB]) { const s = S[i]; quad('tile', at(s, -3.5, 0), at(s, -8.3, 0), at(s, -8.3, 5.2), at(s, -3.5, 5.2)); quad('vault', at(s, -3.5, 5.2), at(s, -3.5, 3), at(s, -2.6, 4.3), at(s, -1.2, 5.05));
-      const e = i === iA ? 0.06 : -0.06, q = S[i + (i === iA ? 1 : -1)], o = [(q.x - s.x) * e * 0.5, 0, (q.z - s.z) * e * 0.5], pt = (d, y) => at(s, d, y).map((v, k) => v + o[k]); quad('hole', pt(-3.7, 0), pt(-6.6, 0), pt(-6.6, 4.1), pt(-3.7, 4.1)); }
-    for (let k = 0; k < 4; k++) { const i = iA + 6 + k * 9, s = S[i], [x, y, z] = at(s, D2, 0.05); set('rameAutoroute', x, z, { y, ry: Math.atan2(s.tx, s.tz), rx: -Math.atan2(S[i + 4].y - S[i - 4].y, 16), a: [1], skin: { ...MAT, body: BODIES[1] } }); }
-    for (let i = iA + 4, k = 0; i < iB - 2; i += 12, k++) { const [lx, ly, lz] = at(S[i], -6.9, 5.05); slab('lamp', lx, ly, lz, 0.5, 0.1, 4); LAMPS.push([i, lx, ly - 0.6, lz, 2]); } }
-  // the track: ballast and sleepers from the mouth of the tube to the top of the ramp, two rails that come out of the rubble in the cave and end under the weeds of the ramp; rails rusted orange; a lamp in its housing on the wall every 14 m, on alternate sides
-  h.ribbon(iM, I.tremie - iM, -3.5, 0.03, 3.5, 0.03, h.mat('ballastAutoroute', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, rep: [1, 1], emis: 1, c: 0xb8b8b0 }), 8);
-  const RAIL = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, emis: 1, c: 0xb06a3a }); for (const d of [-0.72, 0.72]) { h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d - 0.05, 0.16, d + 0.05, 0.16, RAIL); h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d - 0.05, 0, d - 0.05, 0.16, RAIL); h.ribbon(iM - 12, I.tremie - 6 - iM + 12, d + 0.05, 0, d + 0.05, 0.16, RAIL); }
-  for (let i = iM + 4, k = 0; i < T.t1 - 3; i += 7, k++) { if (i > iA - 4 && i < iB + 4) continue; const s = S[i], sd = k & 1 ? 1 : -1, ry = Math.atan2(s.tx, s.tz), [x, y, z] = at(s, sd * 3.36, 3.05), [fx, fy, fz] = at(s, sd * 3.44, 2.95); slab('lamp', x, y, z, 0.16, 0.34, 1.9, ry); slab('dark', fx, fy, fz, 0.14, 0.54, 2.3, ry); LAMPS.push([i, ...at(s, sd * 2.9, 3.05), 0]); } // (each in its housing)
-  // the portal: a concrete head wall round the mouth of the tube, the station's plate on it, creeper hanging over it; the tube's roof behind it is the pavement of the forecourt
-  { const s = S[T.t1], x = s.x; slab('concrete', x - 0.4, s.y + 5.2, 24, 0.9, 1.4, 7.2); slab('plaque', x + 0.1, s.y + 5.35, 24, 0.12, 1.1, 5);
-    for (let k = 0; k < 6; k++) { const z = 20.6 + k * 1.15 + HH(k, 1) * 0.4, l = 1 + 2.4 * HH(k, 2); quad(k & 1 ? 'vine' : 'vine2', [x + 0.2, s.y + 6.6 - l, z], [x + 0.2, s.y + 6.6 - l, z + 0.9], [x + 0.2, s.y + 6.6, z + 0.9], [x + 0.2, s.y + 6.6, z], 4); }
-    slab('pave', x - 9.6, 2, 24, 18.4, 0.6, 7.2); }
-  // the lids of the trench: the ground is dug out wider than the trench (a terrain vertex every 10 m), the boulevard's roadway and pavement north of it and the forecourt south of it are put back as slabs
-  slab('asphalt', -393, 1.96, 7.5, 54, 0.5, 11); slab('pave', -393, 1.9, 15.1, 54, 0.6, 4.2); slab('pave', -393, 1.9, 37.3, 54, 0.6, 17.5); slab('asphalt', -361, 1.88, 24, 13, 0.5, 44); // (the last: the forecourt at the top of the ramp)
-  // the ramp in the open: weeds between the sleepers and against the walls, a totem of the metro at the top of the ramp on the forecourt side (behind the trench wall, out of reach)
-  for (let i = T.t1 + 2; i < I.tremie; i += 2) { const s = S[i], d = (HH(i, 1) < 0.5 ? -1 : 1) * (1.6 + 1.6 * HH(i, 2)); tuft(s.x - s.tz * d, s.z + s.tx * d, s.y, i); }
-  slab('steel', -368, 2.5, 29.2, 0.3, 5, 0.3); slab('plaque', -368, 6.6, 29.2, 5, 1.3, 0.2);
-  // the trench's walls: a steel railing on each parapet, creeper falling down the concrete, rust runs under the railing posts
-  for (const zw of [20.35, 27.65]) { const zr = zw < 24 ? 18.8 : 28.05; slab('steel', -385, 4.4, zr, 40, 0.08, 0.08); for (let x = -404; x <= -366; x += 3.8) slab('steel', x, 3.5, zr, 0.08, 0.95, 0.08);
-    for (let k = 0; k < 9; k++) { const x = -403 + k * 4.2 + HH(k, zw) * 2, w = 1 + 2 * HH(k, 2), l = 1.5 + 3.5 * HH(k + 3, zw), zq = zw < 24 ? zw + 0.06 : zw - 0.06; quad(k & 1 ? 'vine' : 'vine2', [x, 3.5 - l, zq], [x + w, 3.5 - l, zq], [x + w, 3.5, zq], [x, 3.5, zq], 4); } }
+// "autoroute", zone 5: the tram line (round 5: it was a metro tube). A double-track line built cut-and-cover just under the streets: a concrete box 13 m between its walls and 5 m under its flat roof,
+// floor 6 m under the street (a tram is 2.65 m wide and 3.4 m high: two tracks 2.4 m either side of the axis, the lane drives on whichever is free). From the hole in row 2 (x = 66) west under that street,
+// round to the north under column -4, through a stop (two platforms 30 cm high, 4.1 m from the axis, the hall 17 m wide), then out: from the stop's north end the trench is open to the sky, curves east
+// and climbs 6 % to the boulevard (x = -365), where the rails run on in the roadway, past the start and down the whole boulevard to the water.
+// What the car can hit is a box of the map (M.obst in src/data/maps.js): the trams and the masts (built by real() in scenery-autoroute.js), the walls of the open trench (MUR TREMIE), the platforms (QUAI TRAM, drawn here).
+// Under cover the walls are the road's own (M.wide 6.5) and are drawn on that line. th.tun.without 'walls': the engine only lays the floor.
+(window.AUTOROUTE = window.AUTOROUTE || {}).metro = ({ h, I, O, MAT, LAMPS, slab, quad, tuft, HH, cityY }) => {
+  const { S, N, T, THREE } = h, iM = T.t0 - 3, iA = I.station, iB = T.t1, iT = I.tremie, at = (s, d, y) => [s.x - s.tz * d, s.y + y, s.z + s.tx * d], ryOf = s => Math.atan2(s.tx, s.tz);
+  const HW = 6.5, H = 5, PQ = 4.1, PB = 8.5, TR = 2.4, up = s => cityY(s.x) - s.y; // half-width, height under the roof, platform edge and back wall, track offset; up: the street above a sample
+  // the box: walls, a haunch, the flat roof and a beam across it every 6 m (self-lit in the tones of old concrete, dark: the light is the lamps' and the day's, see scenery-autoroute-vie.js)
+  const DS = { side: THREE.DoubleSide, emis: 1 }, WALL = h.mat('tunnelAutoroute', { ...DS, c: 0x74766e }), ROOF = h.mat('tunVouteAutoroute', { ...DS, c: 0x50524c });
+  for (const sd of [-1, 1]) { h.ribbon(iM, iA - iM, sd * HW, 0, sd * HW, H - 0.8, WALL, 4); h.ribbon(iM, iA - iM, sd * HW, H - 0.8, sd * (HW - 0.8), H, ROOF, 8); }
+  h.ribbon(iM, iB - iM, -(HW - 0.8), H, HW - 0.8, H, ROOF, 8);
+  for (let i = iM + 2; i < iB; i += 3) { const s = S[i], [x, y, z] = at(s, 0, H - 0.45); slab('rib', x, y, z, 2 * (i > iA ? PB : HW), 0.45, 0.5, ryOf(s)); }
+  // the stop: the hall widens to the back walls of the platforms (tiled), the platforms themselves, a yellow line along their edge; on them benches, the stop's name on the wall, a pole with its sign,
+  // a ticket machine, the dark mouth of the stairs to the street; strip lights under the roof
+  { const a = iA + 3, n = iB - iA - 6, top = h.mat('trottoirAutoroute', { side: THREE.DoubleSide, rep: [0.75, 1], c: 0xb0b0a8 });
+    for (const sd of [-1, 1]) { h.ribbon(a, n, sd * PQ, 0, sd * PQ, 0.3, MAT.concrete); h.ribbon(a, n, sd * PQ, 0.3, sd * PB, 0.3, top, 4); h.ribbon(a, n, sd * (PQ + 0.05), 0.32, sd * (PQ + 0.4), 0.32, MAT.yellow);
+      h.ribbon(iA, iB - iA, sd * PB, 0, sd * PB, H, MAT.tile, 8); h.ribbon(iA, iB - iA, sd * (HW - 0.8), H, sd * PB, H, ROOF, 8);
+      for (const i of [iA, iB]) { const s = S[i]; quad('tile', at(s, sd * HW, 0), at(s, sd * PB, 0), at(s, sd * PB, H), at(s, sd * HW, H)); }
+      for (const i of [a, a + n]) { const s = S[i], [x, y, z] = at(s, sd * (PQ + PB) / 2, 0.3); quad('concrete', at(s, sd * PQ, 0), at(s, sd * PB, 0), at(s, sd * PB, 0.3), at(s, sd * PQ, 0.3)); slab('steel', x, y + 1, z, PB - PQ, 0.1, 0.1, ryOf(s)); slab('stripe', x, y, z, PB - PQ, 0.9, 0.06, ryOf(s)); } // (a guard panel across each end: the end of a platform is a thing one hits)
+      for (let i = a + 3, k = sd > 0 ? 0 : 2; i < a + n - 3; i += 5, k++) { const s = S[i], ry = ryOf(s), P = (d, y) => at(s, sd * d, y);
+        if (k % 2 === 0) { const [x, y, z] = P(8.1, 0.3); slab('steel', x, y, z, 0.6, 0.5, 3.2, ry); }
+        if (k % 3 === 1) { const [x, y, z] = P(PB - 0.08, 2.2); slab('plaque', x, y, z, 0.12, 1.2, 6, ry); }
+        if (k % 4 === 1) { const [x, y, z] = P(5, 0.3), [bx, by, bz] = P(5, 2.5); slab('steel', x, y, z, 0.12, 2.9, 0.12, ry); slab('plaque', bx, by, bz, 0.1, 0.5, 1.4, ry); }
+        if (k % 4 === 3) { const [x, y, z] = P(7.9, 0.3); slab('stripe', x, y, z, 0.7, 1.7, 0.9, ry); }
+        if (k === 3) { const q = S[i + 2], d = sd * (PB - 0.07); quad('hole', at(s, d, 0.3), at(q, d, 0.3), at(q, d, 3), at(s, d, 3)); const [x, y, z] = at(S[i + 1], sd * (PB - 0.1), 3.1); slab('stripe', x, y, z, 0.1, 0.5, 4.4, ry); }
+        if (k % 2 === 1) { const [x, y, z] = P(6.3, H - 0.14); slab('lamp', x, y, z, 0.5, 0.1, 4, ry); LAMPS.push([i, x, y - 0.6, z, sd > 0 ? 1 : 2]); } } } }
+  // the track bed under cover and in the open trench: ballast from wall to wall, four rails rusted orange that come out of the rubble in the hole; an emergency lamp in its housing on the wall every 14 m, on alternate sides
+  h.ribbon(iM, iT - 8 - iM, -HW, 0.03, HW, 0.03, h.mat('ballastAutoroute', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, rep: [2, 1], emis: 1, c: 0xb8b8b0 }), 8);
+  const RAILS = [-TR - 0.72, -TR + 0.72, TR - 0.72, TR + 0.72], RAIL = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, emis: 1, c: 0xb06a3a });
+  for (const d of RAILS) { h.ribbon(iM - 12, iT - 8 - iM + 12, d - 0.07, 0.03, d, 0.17, RAIL); h.ribbon(iM - 12, iT - 8 - iM + 12, d, 0.17, d + 0.07, 0.03, RAIL); }
+  for (let i = iM + 4, k = 0; i < iA - 2; i += 7, k++) { const s = S[i], sd = k & 1 ? 1 : -1, ry = ryOf(s), [x, y, z] = at(s, sd * (HW - 0.14), 3.3), [fx, fy, fz] = at(s, sd * (HW - 0.06), 3.2); slab('lamp', x, y, z, 0.16, 0.34, 1.9, ry); slab('dark', fx, fy, fz, 0.14, 0.54, 2.3, ry); LAMPS.push([i, ...at(s, sd * (HW - 0.6), 3.3), 0]); }
+  // in the street: the rails flush with the roadway, each track on its band of paving, from the top of the ramp past the start and down the boulevard into the water
+  { const iW = I.eauA - 3, bed = h.mat('dalleSolAutoroute', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -5, c: 0xb4b0a4 }), steel = h.mat('carrosserieAutoroute', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -7, polygonOffsetUnits: -7, c: 0x4a3e34 });
+    for (const [a, n] of [[iT - 8, N - iT + 8], [0, iW]]) { for (const sd of [-1, 1]) h.ribbon(a, n, sd * TR - 1.15, 0.02, sd * TR + 1.15, 0.02, bed, 4); for (const d of RAILS) h.ribbon(a, n, d - 0.07, 0.035, d + 0.07, 0.035, steel); } }
+  // the overhead wire: one over each track, under the roof, up the trench (struts across it carry them, on posts once the trench is shallow) and along the boulevard between its masts (boxes MAT TRAM), a span wire across at each pair
+  { const wire = (a, n, y) => { for (const sd of [-1, 1]) h.ribbon(a, n, sd * TR - 0.05, y, sd * TR + 0.05, y, MAT.dark); }; wire(iM, iT + 4 - iM, 4.6);
+    const M = O.filter(o => o.label === 'MAT TRAM'), xs = M.map(o => o.x), i0 = S.findIndex(s => s.x > Math.min(...xs)), i1 = S.findIndex(s => s.x > Math.max(...xs)); wire(i0, i1 - i0, 5.4);
+    for (const x of new Set(xs)) { const zs = M.filter(o => o.x === x).map(o => o.z), a = zs.length > 1 ? Math.min(...zs) : Math.min(zs[0], -4), b = zs.length > 1 ? Math.max(...zs) : Math.max(zs[0], 4); slab('dark', x, cityY(x) + 5.45, (a + b) / 2, 0.08, 0.08, b - a); }
+    for (let i = iB + 5; i < iT - 3; i += 8) { const s = S[i], ry = ryOf(s), [x, y, z] = at(s, 0, 4.75); slab('steel', x, y, z, 2 * HW + 1.8, 0.2, 0.2, ry);
+      if (up(s) + 0.9 < 4.6) for (const sd of [-1, 1]) { const [px, , pz] = at(s, sd * (HW + 0.45), 0); slab('steel', px, s.y + up(s) + 0.9, pz, 0.2, 4.95 - up(s) - 0.9, 0.2, ry); } } }
+  // the portal at the north end of the stop: the head beam of the box (its roof is the street), the stop's plate on it, creeper hanging over it
+  { const s = S[iB], ry = ryOf(s), [x, y, z] = at(s, 0, H), top = up(s) + 0.9 - H; slab('concrete', x - s.tx * 0.45, y, z - s.tz * 0.45, 2 * HW + 1.8, top, 0.9, ry); slab('plaque', x + s.tx * 0.06, y + 0.35, z + s.tz * 0.06, 5, 1.1, 0.12, ry);
+    for (let k = 0; k < 9; k++) { const d = -6 + k * 1.4 + HH(k, 1) * 0.5, l = 0.8 + 2.2 * HH(k, 2), P = (dd, yy) => { const p = at(s, dd, yy); return [p[0] + s.tx * 0.14, p[1], p[2] + s.tz * 0.14]; }; quad(k & 1 ? 'vine' : 'vine2', P(d, H + top - l), P(d + 1, H + top - l), P(d + 1, H + top), P(d, H + top), 4); } }
+  // the lids of the open trench: the ground is dug out wider than the trench (level() in scenery-autoroute.js), the square on the inside of the curve and the roadway on the outside are put back at street level, from the top of the walls outward
+  { const a = iB - 8, n = iT - a, lid = s => up(s) + 0.1; h.ribbon(a, n, HW + 0.9, lid, 30, lid, MAT.pave, 8); h.ribbon(a, n, -(HW + 0.9), lid, -30, lid, MAT.asphalt, 8); h.ribbon(a, 8, -(HW + 0.9), lid, HW + 0.9, lid, MAT.pave, 8); } // (10 cm proud of the ground: it must not flicker through)
+  // the open trench: weeds in the ballast, creeper down the walls of its straight ramp
+  for (let i = iB + 2; i < iT; i += 2) { const s = S[i], d = (HH(i, 1) < 0.5 ? -1 : 1) * (0.4 + 5.4 * HH(i, 2)); tuft(s.x - s.tz * d, s.z + s.tx * d, s.y, i); }
+  for (const sd of [-1, 1]) for (let i = S.findIndex((s, k) => k > iB && s.x > -398), k = 0; i < iT - 3; i += 2, k++) { if (HH(k, sd) < 0.35) continue; const s = S[i], q = S[i + 1], l = 1 + 3 * HH(k + 3, sd), t = cityY(s.x) + 0.9, P = (p, y) => [p.x - p.tz * sd * (HW - 0.06), y, p.z + p.tx * sd * (HW - 0.06)];
+    quad(k & 1 ? 'vine' : 'vine2', P(s, Math.max(s.y, t - l)), P(q, Math.max(q.y, t - l)), P(q, t), P(s, t), 4); }
 };
