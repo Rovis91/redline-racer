@@ -6,7 +6,7 @@
   const GAL = [[139, 149], [159, 171]];                                                   // the two galleries through the caldera wall, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map)
   const TRENCH = 20, LID = 32;                                                            // a height field cannot overhang: along a gallery the ground is trenched TRENCH m each side of the axis, and a lid LID m each side, in the ground's own material, restores the slope over it
   const CUT = [11, 1.3], FILL = [10, 1.1];                                                // the road on the island: a rock cut rises from 11 m off the axis by 1.3 m per metre; an embankment falls from 10 m by 1.1 m per metre
-  const LAKE = { x: -178, z: -915, r: 26, y: 136 };                                       // lava lake: a level pit west of the road on the caldera floor, a few metres below it
+  const LAKE = { x: -24, z: -902, r: 27, y: 136 };                                       // lava lake: a level pit east of the road on the caldera floor, outside the second bend of the chicane, a few metres below it
 
   Object.assign(SCENERY, {
     volcan(h) {
@@ -19,20 +19,20 @@
         return y - (t + (LAKE.y - t) * k); };
       // ground, in layers over bare ash and lava gravel: grass on the low ground away from the cone (the farmland, the village, the shore); grey-green moss on the gentle slopes of the highland and of the cone's foot; rock where it is steep; snow, white, on the highest crags of the rim only
       const rc = (x, z) => Math.hypot(x - CONE.x, z - CONE.z), LAYERS = [
-        { tex: ['mousseVolcan', '#41633a'], weight: (x, z, y, p) => (1 - ss(0.12, 0.26, p)) * (1 - ss(44, 70, y)) * ss(2.5, 6, y) * ss(470, 600, rc(x, z) + 260 * (fbm(x / 90, z / 90) - 0.5)), noise: 0.1 },
-        { tex: ['mousseVolcan'], weight: (x, z, y, p) => (1 - ss(0.16, 0.34, p)) * (1 - ss(215, 260, y)) * ss(40, 66, y) * ss(215, 300, rc(x, z)), noise: 0.12 },
-        { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.26, 0.46] }, // weak marks: on a steep face the terrain stretches them into streaks
-        { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(296, 318, y) * (1 - ss(0.5, 0.75, p)), noise: 0.03 }];
+        { tex: ['mousseVolcan', '#41633a'], weight: (x, z, y, p) => (1 - ss(0.05, 0.13, p)) * (1 - ss(44, 70, y)) * ss(2.5, 6, y) * ss(470, 600, rc(x, z) + 260 * (fbm(x / 90, z / 90) - 0.5)), noise: 0.1 },
+        { tex: ['mousseVolcan'], weight: (x, z, y, p) => (1 - ss(0.06, 0.15, p)) * (1 - ss(215, 260, y)) * ss(40, 66, y) * ss(215, 300, rc(x, z)), noise: 0.12 },
+        { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.07, 0.17] }, // weak marks: on a steep face the terrain stretches them into streaks
+        { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(296, 318, y) * (1 - ss(0.2, 0.42, p)), noise: 0.03 }];
       const g = terrain(h, { stepSec: 8, margin: 440, hollow: relief, mat: h.mat('solVolcan'), layerSet: LAYERS });
       const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), h.mat('merVolcan', { rep: [250, 250] })); sea.rotation.x = -Math.PI / 2; sea.position.set(-100, 0, -800); h.scene.add(sea);
       // MAT: the shared materials of the map, one draw pass each for the whole map: every piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the volcan assemblies.
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), paint = c => h.mat('bardageVolcan', {}, c), flat = c => h.mat('paint', { c }), MAT = {
-        rock: h.mat('rocheVolcan', {}, '#2e3034'), cliff: h.mat('basalteVolcan', {}, '#4a4d54'), crust: h.mat('rocheVolcan', {}, '#1c1c1e', 0.5), scoria: h.mat('scorieVolcan'), stone: h.mat('pierreVolcan'),
-        snow: h.mat('neigeVolcan'), far: h.mat('rocheVolcan', {}, '#5d6f80', 0.4), farSnow: h.mat('neigeVolcan', {}, '#dfe8ee'), gravel: h.mat('solVolcan', {}, '#8a8378'), sand: h.mat('solVolcan', {}, '#26262a'), hay: h.mat('mousseVolcan', {}, '#9ab842'),
+        rock: h.mat('rocheVolcan', {}, '#2e3034'), cliff: h.mat('basalteVolcan', {}, '#4a4d54'), crust: h.mat('rocheVolcan', {}, '#1c1c1e', 0.5), scoria: h.mat('scorieVolcan'), stone: h.mat('pierreVolcan'), drystone: h.mat('pierreVolcan', {}, '#8f8b80'),
+        snow: h.mat('neigeVolcan'), far: h.mat('rocheVolcan', {}, '#5d6f80', 0.4), farSnow: h.mat('neigeVolcan', {}, '#dfe8ee'), gravel: h.mat('solVolcan', {}, '#6f6a60'), sand: h.mat('solVolcan', {}, '#26262a'), hay: h.mat('mousseVolcan', {}, '#9ab842'),
         red: paint('#d2362b'), yellow: paint('#f2c230'), blue: paint('#2f7fc8'), green: paint('#3fa45a'), pink: paint('#ee6fa0'), orange: paint('#f0641e'), teal: paint('#2a9c9c'), white: paint('#f2eee4'),
         trim: tint(0xf2eee4), roof: h.mat('toitVolcan', DS), dark: h.mat('betonVolcan', {}, '#1e2226'), concrete: h.mat('betonVolcan'), paving: h.mat('betonVolcan', {}, '#77756e'), steel: tint(0x6a7078), glass: flat(0x1c2f52), fish: flat(0xd8cfae), flag: flat(0xf0641e),
-        moss: h.mat('mousseVolcan'), wood: h.mat('boisVolcan'), greywood: h.mat('boisVolcan', {}, '#9a968c'), net: h.mat('boisVolcan', {}, '#c9b58a'), gallery: h.mat('tunMurVolcan', { c: 0x8a8a8a, ...DS }), vault: h.mat('tunVouteVolcan', { c: 0x8a8a8a, ...DS }), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
-        steam: h.mat('paint', { c: 0xe6ecec, transparent: true, opacity: 0.55, depthWrite: false, ...DS }) };
+        moss: h.mat('mousseVolcan'), wood: h.mat('boisVolcan'), greywood: h.mat('boisVolcan', {}, '#9a968c'), net: h.mat('boisVolcan', {}, '#c9b58a'), gallery: h.mat('tunMurVolcan', { emis: 0.45, ...DS }), vault: h.mat('tunVouteVolcan', { emis: 0.45, ...DS }), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
+        steam: h.mat('paint', { c: 0xe6ecec, transparent: true, opacity: 0.4, depthWrite: false, ...DS }) };
       const kit = new THREE.Group(); h.scene.add(kit);
       const at = pk => S[Math.round(pk / LAP * N) % N], grp = (x, y, z, ry, s = 1) => { const o = new THREE.Group(); o.position.set(x, y, z); o.rotation.y = ry; o.scale.setScalar(s); kit.add(o); return o; };
       const skin = m => m ? MAT[m] : MAT; // an assembly takes the whole table; a simple shape takes one material, named by `m`
@@ -83,10 +83,10 @@
       // scatter(a, b, m, step): the verge between two chainages: a hummock of material m every `step` m, 2 to 14 m from the wall, and a black boulder at every other one on the opposite side; never in rows
       const scatter = (a, b, m = 'moss', step = 20) => { for (let pk = a, i = Math.round(a); pk < b; pk += step, i++) if (clear(pk) && clear(pk + 9)) { const sd = frac(i) < 0.5 ? -1 : 1;
         by('dalleVolcan', pk, sd, 2.5 + frac(i, 1) * (sd > 0 ? 6 : 12), { m, a: [1.6 + frac(i, 2) * 2.2, 0.4 + frac(i, 3) * 0.7, i % 9, 7] });
-        if (i % 2) by('rocherVolcan', pk + 9, -sd, 3.5 + frac(i, 4) * (sd > 0 ? 12 : 5), { m: 'rock', a: [3 + frac(i, 5) * 4, 1.8 + frac(i, 6) * 3, 3 + frac(i, 7) * 4, i % 11] }); } };
+        if (i % 2) by('rocherVolcan', pk + 9, -sd, 3.5 + frac(i, 4) * (sd > 0 ? 12 : 5), { m: 'rock', a: [1.6 + frac(i, 5) * 2.2, 1 + frac(i, 6) * 1.4, 1.6 + frac(i, 7) * 2.2, i % 11] }); } };
       // wall(points, closed, m, ht): a dry-stone wall on the ground through plan points, in pieces of 7 m at most that follow the relief: the boundary of a pasture, a churchyard, a fold
-      const wall = (pts, closed, m = 'stone', ht = 1.3, t = 0.8) => { for (let n = 0; n < pts.length - (closed ? 0 : 1); n++) { const [ax, az] = pts[n], [bx, bz] = pts[(n + 1) % pts.length], k = Math.ceil(Math.hypot(bx - ax, bz - az) / 7);
-        for (let e = 0; e < k; e++) { const x0 = ax + (bx - ax) * e / k, z0 = az + (bz - az) * e / k, x1 = ax + (bx - ax) * (e + 1) / k, z1 = az + (bz - az) * (e + 1) / k; span(m, [x0, g.hAt(x0, z0) + ht / 2 - 0.3, z0], [x1, g.hAt(x1, z1) + ht / 2 - 0.3, z1], t, ht + 0.6); } } };
+      const wall = (pts, closed, m = 'drystone', ht = 1.2, t = 0.7) => { for (let n = 0; n < pts.length - (closed ? 0 : 1); n++) { const [ax, az] = pts[n], [bx, bz] = pts[(n + 1) % pts.length], k = Math.ceil(Math.hypot(bx - ax, bz - az) / 7);
+        for (let e = 0; e < k; e++) { const x0 = ax + (bx - ax) * e / k, z0 = az + (bz - az) * e / k, x1 = ax + (bx - ax) * (e + 1) / k, z1 = az + (bz - az) * (e + 1) / k; span(m, [x0, g.hAt(x0, z0) + ht / 2 - 0.4, z0], [x1, g.hAt(x1, z1) + ht / 2 - 0.4, z1], t, ht + 0.8); } } };
       // track(points, w): a gravel track 2 w wide laid on the ground through plan points: the way from the road to a farm, a lane of the village, the supply track of the expedition
       const track = (pts, w = 1.8, m = 'gravel') => drape(m, pts.map(([x, z]) => [x, z, w]), 0.25);
       // flock(x, z, n, R, seed): n sheep standing within R metres of a point, each turned its own way

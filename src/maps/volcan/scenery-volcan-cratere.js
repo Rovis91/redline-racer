@@ -17,17 +17,17 @@
   // the drilling rig inside the chicane: the reason the road bends; its generator container, pipe store, a vehicle, the crew shelter
   const mid = (a0 + a1) / 2; by('derrickVolcan', mid, 1, 24, { a: [26] }); by('conteneurVolcan', mid - 26, 1, 12, { a: [6, 'orange'] }); by('conteneurVolcan', mid + 30, 1, 14, { a: [6, 'white'] });
   by('chenilleVolcan', mid + 20, 1, 8, { turn: 0.4 }); by('futsVolcan', mid - 16, 1, 9, { a: [8] }); by('domeVolcan', mid - 36, 1, 16, { m: 'yellow', a: [3.4] }); by('panneauVolcan', a0 + 6, 1, 1.6, { a: ['orange', 1.8] });
-  // the lava lake, level in its pit west of the rig: rafts of crust; a cordon of stakes round it and gas sensors on its bank
+  // the lava lake, level in its pit outside the second bend: rafts of crust; a cordon of stakes round it and gas sensors on its bank
   set('cylVolcan', LAKE.x, LAKE.z, { y: LAKE.y - 1.4, m: 'lava', a: [LAKE.r - 1, LAKE.r - 1, 2.2, 18] });
   [[8, 12], [-10, -12], [-4, 6]].forEach(([dx, dz], i) => set('dalleVolcan', LAKE.x + dx, LAKE.z + dz, { y: LAKE.y + 0.85, m: 'crust', a: [5 + i * 2, 0.5, i, 8] }));
   for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283, r = LAKE.r + 15; set(i % 4 ? 'piquetVolcan' : 'capteurVolcan', LAKE.x + Math.cos(a) * r, LAKE.z + Math.sin(a) * r, { ry: -a }); }
-  // steam vents on the floor east of the road, each on its mound of scoria, each watched by a sensor; the cable of the instruments runs to them on trestles
-  const VENTS = [[-58, -905, 22], [-40, -945, 16], [-66, -975, 19], [-30, -880, 13]];
+  // steam vents on the floor south of the lake and west of the rig, each on its mound of scoria, each watched by a sensor; the cable of the instruments runs to them on trestles
+  const VENTS = [[-52, -836, 20], [-18, -850, 15], [-64, -808, 17], [-70, -972, 14], [-196, -930, 18], [-204, -890, 13]];
   VENTS.forEach(([x, z, ht], i) => { set('vapeurVolcan', x, z, { m: 'steam', a: [ht, 1.3, i] }); set('rocherVolcan', x, z, { m: 'scoria', a: [6, 2, 6, i] }); set('capteurVolcan', x + 5, z + 3, {}); });
-  set('coneVolcan', -20, -925, { m: 'scoria', a: [12, 16, 2] });                                   // a spatter cone behind the vents
+  set('coneVolcan', 22, -952, { m: 'scoria', a: [12, 16, 2] });                                   // a spatter cone behind the vents
   // the cable: from the camp it comes out of the north gallery, follows the road to the junction box at the rig, then climbs the south wall on small pylons to the observatory hut on the rim, a white dome on a platform
   line(range(a0 + 4, mid - 40, 9), 1, 2, 'treteauVolcan', [], [['dark', 0.12, 0, 0.98]]);
-  line([[-124, -846], [-130, -818], [-136, -790], [-141, -762], [-146, -734], [-149, -713]], 0, 0, 'pyloneVolcan', [7], [['dark', 0.1, 0, 6.7]]);
+  line([[-72, -842], [-88, -806], [-106, -772], [-126, -742], [-149, -713]], 0, 0, 'pyloneVolcan', [7], [['dark', 0.1, 0, 6.7]]);
   set('observatoireVolcan', -149, -706, { ry: 3.14 }); set('domeVolcan', -146, -706, { dy: 0.9, m: 'trim', a: [2.8] });
   // blocks fallen from the walls lie at the foot of the scree, largest near the wall
   [[-196, -1000, 9], [-60, -1010, 7], [-30, -990, 10], [-206, -850, 8], [-40, -822, 9], [-90, -812, 6], [-214, -940, 7]].forEach(([x, z, w], i) => set('rocherVolcan', x, z, { m: 'rock', a: [w, w * 0.7, w, i + 3] }));

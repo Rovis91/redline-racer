@@ -13,8 +13,8 @@
   const graze = (pk, sd, n, k) => flock(...beside(pk, sd, 26), n, 17, k);
   const mown = (a, b, sd, k) => { drape('hay', range(a + 8, b - 4, 16).map(pk => [...beside(pk, sd, 34), 24]), 0.3); by('balleVolcan', (a + b) / 2, sd, 13, { a: [6, k] }); by('balleVolcan', (a + b) / 2 + 20, sd, 30, { turn: 1.2, a: [4, k + 1] }); };
   // sea side, from the last houses to the first hairpin: two farms, six fields down to the cliff edge
-  fields(905, 1372, 1, 78, [985, 1065, 1140, 1215, 1295], [1010, 1245]);
-  farm(1010, 1, 'yellow'); farm(1245, 1, 'blue'); graze(945, 1, 11, 1); mown(1068, 1138, 1, 2); graze(1178, 1, 12, 3); graze(1335, 1, 9, 5);
+  fields(850, 1372, 1, 78, [915, 985, 1065, 1140, 1215, 1295], [1010, 1245]);
+  farm(1010, 1, 'yellow'); farm(1245, 1, 'blue'); graze(880, 1, 9, 12); graze(945, 1, 11, 1); mown(1068, 1138, 1, 2); graze(1178, 1, 12, 3); graze(1335, 1, 9, 5);
   // island side: the fields of the third farm run back to the black scarp of the lava lobe
   fields(915, 1346, -1, 56, [1000, 1090, 1180, 1262], [1135]);
   farm(1135, -1, 'green'); mown(918, 998, -1, 6); graze(1045, -1, 10, 7); graze(1222, -1, 10, 8); graze(1305, -1, 8, 9);
@@ -27,6 +27,6 @@
   by('panneauVolcan', 1290, 1, 1.6, { a: ['yellow', 1.3] }); by('panneauVolcan', 930, 1, 1.6, { a: ['yellow', 1.3] });   // hairpins ahead; sheep on the road
   // the scarp of the old flow behind the hairpins: black columns facing the road, fallen blocks at its foot; in the rock cut of the third leg, the same columns on both banks
   set('orguesVolcan', 599, -708, { ry: PI, a: [44, 12] }); set('orguesVolcan', 551, -470, { a: [40, 10] });
-  by('orguesVolcan', [1690, 1722], -1, 5, { a: [30, 12] }); by('orguesVolcan', [1700, 1730], 1, 5, { a: [26, 9] }); by('orguesVolcan', [1800, 1850], -1, 9, { a: [28, 8] });
+  by('orguesVolcan', [1690, 1722], -1, 5, { a: [30, 7] }); by('orguesVolcan', [1700, 1730], 1, 5, { a: [26, 5] });
   [[640, -704, 7], [566, -716, 9], [520, -486, 6], [586, -462, 8]].forEach(([x, z, w], i) => set('rocherVolcan', x, z, { m: 'rock', a: [w, w * 0.6, w, i + 2] }));
 };

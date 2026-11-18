@@ -6,6 +6,7 @@
   // the main street and the church street: a house every 13 m on both sides, 1 m of verge between the door and the road
   range(548, 640, 13).forEach((pk, i) => { by('maisonVolcan', pk, -1, 5, { a: dims(i * 2) }); by('maisonVolcan', pk + 5, 1, 5, { a: dims(i * 2 + 3) }); });
   range(708, 822, 13.5).forEach((pk, i) => { if (i < 3 || i > 4) by('maisonVolcan', pk, -1, 5, { a: dims(i * 3 + 1) }); by('maisonVolcan', pk + 4, 1, 5, { a: dims(i * 3 + 2) }); });
+  [834, 848, 862, 876, 890].forEach((pk, i) => { by('maisonVolcan', pk, -1, 6, { a: dims(i * 2 + 1) }); if (i < 2) by('maisonVolcan', pk + 4, 1, 6, { a: dims(i * 3) }); }); // the last houses, along the sweep out of the village
   by('reverbereVolcan', range(540, 830, 30), 1, 1.2); by('panneauVolcan', 556, 1, 1.6, { a: ['white', 2.2, 3.4] }); // street lamps; the sign of the shop
   // the blocks: five lanes parallel to the main street, houses on both sides of each lane, door to the lane; two cross lanes
   [200, 250, 350, 400, 450].forEach((lx, n) => { track([[lx, -24], [lx, -150]], 2);

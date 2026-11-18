@@ -6,12 +6,16 @@
   for (const pk of range(1910, 3470, 30)) if (clear(pk)) for (const sd of [-1, 1]) by('jalonVolcan', pk, sd, 0.7); // snow poles: the road is kept open for the expedition all year
   line([...range(1900, 3190, 46), beside(3236, 1, 30)], -1, 4, 'poteauVolcan', [10], [['dark', 0.07, -1.3, 9.45], ['dark', 0.07, 1.3, 9.45]]); // the power line, up to the transformer of the camp
   // survey(pk, sd): a survey line across the road: orange stakes every 12 m on both sides, out to 100 m, and a seismic station on it 22 m from the road on side sd
-  const survey = (pk, sd) => { for (const s of [-1, 1]) for (let off = 8; off < 100; off += 12) if (s !== sd || Math.abs(off - 20) > 5) by('piquetVolcan', pk, s, off); by('stationVolcan', pk, sd, 13); };
+  const survey = (pk, sd) => { for (const s of [-1, 1]) for (let off = 5; off < 100; off += 9) if (s !== sd || Math.abs(off - 20) > 5) by('piquetVolcan', pk, s, off, { s: 1.6 }); by('stationVolcan', pk, sd, 11, { s: 1.7 }); };
   survey(2040, -1); survey(2330, 1); survey(2580, -1); survey(3060, 1);
   by('meteoVolcan', 2450, 1, 12); by('panneauVolcan', 1960, 1, 1.6, { a: ['orange', 1.8] });      // the weather station on the open plateau; "expedition ground"
-  // the supply track of the tracked vehicles cuts the loop of the tip, from the northward leg to the road round the needle: two ruts of gravel, a vehicle on its way up
+  // the supply track of the tracked vehicles runs beside the road on the sea side across the plateau, marked by stakes: two vehicles on it, one towing its sledge of crates; a relay hut of the radio link half way; warm ground steaming before the tip, each vent with its sensor
+  track(range(1930, 2640, 22).map(pk => beside(pk, 1, 9)), 2.2); by('piquetVolcan', range(1940, 2640, 44), 1, 5.5, { s: 1.5 });
+  by('chenilleVolcan', 2150, 1, 9, { turn: 1.57 }); by('caissesVolcan', 2141, 1, 9, { a: [6] }); by('chenilleVolcan', 2470, 1, 9, { turn: -1.57, a: ['white'] });
+  by('conteneurVolcan', 2250, -1, 12, { a: [4, 'orange'] }); by('mastVolcan', 2262, -1, 13, { a: [14] }); by('solaireVolcan', 2238, -1, 12, { turn: 3.14, a: [2] });
+  [[2395, -1, 22, 15], [2412, -1, 36, 11], [2428, -1, 18, 9], [2650, 1, 24, 13], [2668, 1, 34, 10]].forEach(([pk, sd, off, ht], i) => { by('vapeurVolcan', pk, sd, off, { m: 'steam', a: [ht, 1.2, i] }); by('rocherVolcan', pk, sd, off, { m: 'scoria', a: [5, 1.6, 5, i] }); by('capteurVolcan', pk + 4, sd, off - 4); });
+  // a branch of the supply track cuts the loop of the tip, from the northward leg to the road round the needle: two ruts of gravel, a vehicle on its way up
   track([[360, -1392], [336, -1386], [311, -1380]], 2.2); by('piquetVolcan', [2512, 2524], -1, 3); set('chenilleVolcan', 338, -1387, { ry: 0.2 });
-  by('orguesVolcan', [2130, 2410, 2650, 2905], -1, 15, { a: [28, 7] }); by('orguesVolcan', [2250, 2530, 3010], 1, 17, { a: [24, 6] }); // the edges of the stacked flows show as low black scarps beside the road
   // the tip: the relay mast of the expedition on the cliff top outside the hairpin, the radio link to the mainland; stacks and skerries in the sea below
   by('mastVolcan', 2762, 1, 12, { a: [30] }); by('conteneurVolcan', 2740, 1, 9, { a: [4, 'white'] }); by('solaireVolcan', 2786, 1, 8, { turn: 3.14, a: [3] });
   [[250, -1790, 16, 60], [420, -1770, 12, 44], [140, -1750, 9, 30], [560, -1700, 14, 52], [610, -1640, 8, 24]].forEach(([x, z, r, ht], i) => set('ilotVolcan', x, z, { y: 0, m: 'rock', a: [r, ht, i + 9] }));

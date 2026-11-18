@@ -12,6 +12,7 @@
   by('caleVolcan', 180, 1, 21.4, { road: true, a: [30, 8] }); by('barqueVolcan', 180, 1, 31, { road: true, dy: -0.9, turn: 1.57, a: [8, 'yellow', 'trim'] });
   by('sechoirVolcan', [218, 242, 266], 1, 8, { a: [18, 8] }); by('sechoirVolcan', [230, 254], 1, 16, { a: [16, 7] });
   by('crieeVolcan', 336, 1, 11, { a: [44, 14] });
+  by('filetsVolcan', [292, 384], 1, 8); by('sechoirVolcan', [398, 420], 1, 8, { a: [16, 7] }); by('barqueVolcan', [306, 372], 1, 6, { dy: 0.5, turn: 0.3, a: [8, 'red', 'trim'] });
   by('bollardVolcan', range(20, 470, 25), 1, 19.2); by('reverbereVolcan', range(30, 480, 40), 1, 1.2);
   // boats at the quay and in the basin; a pontoon; the breakwater and its lighthouse close the basin to the east, a shorter mole to the west
   [[100, 'blue'], [292, 'red'], [404, 'green']].forEach(([pk, c]) => by('bateauVolcan', pk, 1, 25.8, { y: 0, a: [16, c, 'trim'] }));
