@@ -24,7 +24,7 @@ captures.html?map=chapada&step=10&size=1920x1080&game=1&opt=<URL-encoded JSON>
 | Fog | `th.haze`, `th.isFar`, `th.headlightsHaze` |
 | Road | `th.wetVisible`, `th.gloss`, `M.wide`, `M.obst`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
 | Tunnel and hall | `th.tun.h`, `vault`, `opn`, `spokes`, `raysK`, `ambient`, `day`, `without`, `skyDay`, `gloss`, `tex`, `th.eye` |
-| Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `h.emis` |
+| Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `th.dustBallistic`, `th.vacuum`, `h.emis` |
 
 ## Textures
 
@@ -282,6 +282,14 @@ th: { tun: { ...usualTunnel, raysK: 0.35, ambient: 0.7 },   // quieter columns, 
 ```js
 th: { dust: [r, g, b], leaves: [[0.6, 0.4, 0.12], [0.4, 0.24, 0.1]] }
 ```
+
+### `th.dustBallistic`: grains on parabolas instead of the dust plume
+
+`th: { dust: [r, g, b], dustBallistic: { grav, rate, size, up } }` (lune: no air). Each car throws small opaque grains from its rear wheels; they fly with no drag, fall back, bounce once, lie still a moment and are reused (700 at most, one draw pass). `grav`: their gravity as a share of the map's (0.4); `rate`: grains per second for a followed car at full speed (50), twice as many in a slide, a third for the other cars; `size` in metres (0.2), capped on screen so a grain near the lens stays a grain; `up`: highest launch speed in m/s (3.5). A grain thrown while its car is in the air keeps the car's velocity and gravity: it stays beside the car down a jump. A landing after more than a quarter of a second in the air throws a ring. None in the engine tunnel nor where the scenery's `tick.indoor` is above 0.5. With the option the engine's three soft effects are off for the map: the dust plume, the tyre smoke of a slide and the puff of a landing. Requires `th.dust` (the grains' tint). Default: off.
+
+### `th.vacuum`: no air for the sound
+
+`th: { vacuum: 1 }` (lune). In `src/audio/audio.js`: the wind roar is silent at any speed, and once a car has been in the air for a quarter of a second its engine drops to a murmur until it lands (the tyres are already cut in the air). The engine is otherwise untouched. Default: off.
 
 ### `h.emis` returns its luminaire
 

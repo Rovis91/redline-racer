@@ -750,6 +750,20 @@
       step(dt) { const fr = Math.exp(-2.4 * dt); for (let k = 0; k < n; k++) if (L[k] > 0) { const j = k * 3; L[k] -= dt; V[j] *= fr; V[j + 2] *= fr; V[j + 1] = Math.max(-1.3, V[j + 1] - 7 * dt);
           P[j] += (V[j] + Math.sin(L[k] * 9 + k) * 1.6) * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += (V[j + 2] + Math.cos(L[k] * 7 + k) * 1.6) * dt; if (L[k] <= 0) P[j + 1] = -1e4; }
         g.attributes.position.needsUpdate = true; } }; })();
+  // th.dustBallistic = { grav, rate, size, up } (lune: no air). Instead of the plume, each car throws opaque grains that fly on parabolas and fall back: no drag, no growth, no fade. A grain bounces once, lies still a moment, then is reused.
+  //   grav: their gravity, as a share of the map's (0.4); rate: grains per second for a followed car at full speed (50); size in metres (0.2); up: their highest launch speed (3.5 m/s).
+  //   With it the two soft effects of a car are off as well (the rising puff of a landing, the tyre smoke of a slide): a cloud that hangs is air.
+  //   A grain thrown while its car is in the air keeps the car's velocity and falls at the car's own gravity: it stays beside the car all the way down (its ground is then read under that car, each step). Off by default: no other map sets it
+  const GRAIN = TH.dust && TH.dustBallistic && (() => { const n = 700, P = new Float32Array(n * 3).fill(-1e4), V = new Float32Array(n * 3), C = new Float32Array(n * 3), Gv = new Float32Array(n), Gd = new Float32Array(n), L = new Float32Array(n), B = new Uint8Array(n), OW = new Array(n), g = new THREE.BufferGeometry(); let i = 0;
+    g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+    const mt = new THREE.PointsMaterial({ size: TH.dustBallistic.size || 0.2, vertexColors: true }), d = new THREE.Points(g, mt); d.frustumCulled = false; scene.add(d);
+    mt.onBeforeCompile = s => { s.vertexShader = s.vertexShader.replace('#include <logdepthbuf_vertex>', 'gl_PointSize = min(gl_PointSize, 9.0); #include <logdepthbuf_vertex>'.replace('; ', ';\n')); }; // a grain that passes close to the lens stays a grain: its size on screen is capped (set at the image)
+    return { emit(x, y, z, vx, vy, vz, grav, ground, owner) { const k = i++ % n, t = 0.7 + Math.random() * 0.45; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); C.set([TH.dust[0] * t, TH.dust[1] * t, TH.dust[2] * t], k * 3); Gv[k] = grav; Gd[k] = ground; L[k] = 6; B[k] = 0; OW[k] = owner; g.attributes.color.needsUpdate = true; },
+      step(dt) { for (let k = 0; k < n; k++) if (L[k] > 0) { const j = k * 3; L[k] -= dt;
+          if (B[k] < 2) { V[j + 1] -= Gv[k] * dt; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; const o = OW[k], gd = (o ? S[o.idx].y + (T.dent ? T.dent(P[j], P[j + 2]) : 0) : Gd[k]) + 0.06;
+            if (P[j + 1] < gd) { P[j + 1] = gd; if (B[k]++) L[k] = Math.min(L[k], 1.2); else { V[j + 1] = Math.min(2, -0.3 * V[j + 1]); V[j] *= 0.4; V[j + 2] *= 0.4; } } }
+          if (L[k] <= 0) P[j + 1] = -1e4; }
+        g.attributes.position.needsUpdate = true; } }; })();
   if (BURST) BURST.d.renderOrder = -4; // the cloud from other cars passes under the ford's water sheet (renderOrder -2 in scenery-terre.js), as before the sheet went under the particles: seen from afar, it veils their base
   // ford water spray (Spéciale des Ocres: the only earth map with a wet zone): behind each front wheel, drops as white streaks fanned out to the side, falling back, and a bit of foam at water level (short-lived discs: longer-lived, they grow into haze); taller and wider with speed
   //   Seen from its own camera (self: a view follows it), the same spray blocked the screen: its braked discs stayed behind the car and grew in front of the lens. For that view, the effect is redone at chase-camera scale:
@@ -802,9 +816,9 @@
     }
     geo.attributes.position.needsUpdate = geo.attributes.color.needsUpdate = true;
     // emissions
-    if (land > 3) for (let i = 0; i < Math.min(14, land * 1.5); i++) { const sd = i & 1 ? 1 : -1, av = i & 2 ? 1.4 : -1.4; // landing: a puff of dust blown from each wheel, outward
+    if (land > 3 && !GRAIN) for (let i = 0; i < Math.min(14, land * 1.5); i++) { const sd = i & 1 ? 1 : -1, av = i & 2 ? 1.4 : -1.4; // landing: a puff of dust blown from each wheel, outward
       emit(car.x + fx * av - fz * sd * 0.9, carY + 0.15, car.z + fz * av + fx * sd * 0.9, car.vx * 0.6 - fz * sd * (3 + Math.random() * 5), 0.5 + Math.random() * 2, car.vz * 0.6 + fx * sd * (3 + Math.random() * 5), 0.35, 0.2, 0.19, 0.17, -1); }
-    if ((car.slide > 0.3 || car.frA || car.dd) && sp > 10 && !car.air) for (const sd of [-0.9, 0.9]) SMOKE.emit(car.x - fx * 1.4 + rx * sd + jit(0.4), carY + 0.25, car.z - fz * 1.4 + rz * sd + jit(0.4), car.vx * 0.65 + rx * sd * 2 + jit(3), 0.6 + Math.random(), car.vz * 0.65 + rz * sd * 2 + jit(3)); // tyre smoke: a cloud that swells and rises, blown outward; it keeps part of the speed, otherwise it passes behind the camera before it has swelled
+    if ((car.slide > 0.3 || car.frA || car.dd) && sp > 10 && !car.air && !GRAIN) for (const sd of [-0.9, 0.9]) SMOKE.emit(car.x - fx * 1.4 + rx * sd + jit(0.4), carY + 0.25, car.z - fz * 1.4 + rz * sd + jit(0.4), car.vx * 0.65 + rx * sd * 2 + jit(3), 0.6 + Math.random(), car.vz * 0.65 + rz * sd * 2 + jit(3)); // tyre smoke: a cloud that swells and rises, blown outward; it keeps part of the speed, otherwise it passes behind the camera before it has swelled
     if (hit > 3) { const s = S[car.idx], sg = Math.sign(car.d); for (let i = 0; i < 16; i++) emit(car.x - s.tz * sg, carY + 0.5, car.z + s.tx * sg, car.vx * 0.5 + jit(14), 2 + Math.random() * 7, car.vz * 0.5 + jit(14), 0.5, 1, 0.75, 0.25, 22); }
     else if (car.rub && sp > 8) { const s = S[car.idx], sg = Math.sign(car.d); for (let i = 0; i < 3; i++) emit(car.x - s.tz * sg, carY + 0.4, car.z + s.tx * sg, car.vx * 0.6 + jit(5), 1 + Math.random() * 4, car.vz * 0.6 + jit(5), 0.35, 1, 0.75, 0.25, 22); } // continuous friction: finer spray than the impact
     for (const fl of hu.fl) { fl.visible = car.boost > 0; fl.scale.y = (0.5 + Math.random() * 0.7) * Math.min(1, car.boost * 2); } // nitro: two flickering exhaust flames, the trails turn blue
@@ -827,13 +841,19 @@
     const { lm, self: car } = VIEWS[0]; // the thunder is player 1's (a single sound, like SOUND.frame)
     if (TH.dust) { for (const c of race ? race.cars : [car]) { const q = T.surf[c.idx], v = Math.hypot(c.vx, c.vz), sd = Math.random() < 0.5 ? -0.8 : 0.8, x = c.x - Math.cos(c.th) * 1.6 - Math.sin(c.th) * sd, z = c.z - Math.sin(c.th) * 1.6 + Math.cos(c.th) * sd; // each car kicks up a plume behind it; in the ford, a spray of water. The dust leaves at the car's speed, then slows down: the plume stays in the chase camera's view
         if (c.air) c.waterT = 0; // in the air, we are no longer in the water: landing a jump in a flooded zone repeats the bow hit (chapada thresholds)
+        if (GRAIN) { const O = TH.dustBallistic, gr = T.grav * (O.grav || 0.4), up = O.up || 3.5, me = VIEWS.some(u => u.car === c), nb = f => (f | 0) + (Math.random() < f % 1); // th.dustBallistic: grains on parabolas instead of the plume; none on the clean floors (the tunnel, a hall the scenery declares indoor)
+          const on = !c.out && !(T.tun && (c.idx - T.t0 + N) % N <= T.t1 - T.t0) && !(sceneryTick && sceneryTick.indoor && sceneryTick.indoor(c.idx) > 0.5), landed = c.grAir > 0.25 && !c.air; c.grAir = c.air ? (c.grAir || 0) + dt : 0;
+          if (on && landed) for (let k = 36; k--;) { const a = Math.random() * 6.283, l = 2 + Math.random() * 6; GRAIN.emit(c.x + Math.cos(a), c.y + 0.1, c.z + Math.sin(a), c.vx * 0.9 + Math.cos(a) * l, 1 + Math.random() * up, c.vz * 0.9 + Math.sin(a) * l, gr, c.y, null); } // the landing: a ring thrown off the wheels
+          if (on && v > 8) for (let k = nb((me ? 1 : 0.35) * (O.rate || 50) * dt * (c.air ? 0.5 : Math.min(1, v / 30) * (1 + Math.min(1, c.slide || 0)))); k--;) { const u = c.air ? 0.9 + Math.random() * 0.1 : 0.8 + Math.random() * 0.17, b = Math.random() * dt; // a slide throws twice as many; b: born at a random instant of the frame
+            GRAIN.emit(x + jit(0.5) - c.vx * b, c.y + 0.12, z + jit(0.5) - c.vz * b, c.vx * u + jit(c.air ? 1 : 2), c.air ? c.vy : 0.6 + Math.random() * up, c.vz * u + jit(c.air ? 1 : 2), c.air ? T.grav * (c.gk || 1) : gr, c.y, c.air ? c : null); }
+          continue; }
         if (v < 8 || c.air || c.out || !(VIEWS.some(v => v.car === c) || c.drift || Math.random() < 0.5)) continue;
         const aq = j => T.surf[(c.idx + j) % N].aq > 0.099, insideWater = aq(0) || aq(1), self = !window.__g.view && VIEWS.some(u => u.car === c); // aq(1): the front wheels, 2 m ahead, are already there
         c.waterT = insideWater ? (c.waterT || 0) + dt : 0; // time spent in the water (scenery only, the simulation does not read it)
         if (insideWater) burst(c, v, self, dt, 1 + 2.5 * Math.max(0, 1 - c.waterT / 0.35) + (aq(4) ? 0 : 2)); // strong: the bow hit at entry, and the wave over the last 8 meters before exit; out of the water, nothing // the ford: a water spray on each side, only where the wet zone is full; on its muddy edges, neither spray nor dust (scenery-terre.js lays the sheet there), and nothing in its muddy edges; lightened for a car followed by a chase camera (not in the inspection camera, __g.view, which looks from afar)
         else if (q.rollAmt > 0.25 && !q.aq) for (let k = 0; k < 2; k++) dust(x + jit(0.6), c.y + 0.15, z + jit(0.6), c.vx * 0.7 + jit(2), 0.3 + Math.random() * 1.2, c.vz * 0.7 + jit(2));
         else if (FIRE && !q.aq && !(T.tun && (c.idx - T.t0 + N) % N <= T.t1 - T.t0)) for (let k = Math.max(1, Math.round((c.drift ? 3 : 1.5) * dt * 60)); k--;) FIRE.emit(x + jit(2), c.y + 0.12, z + jit(2), c.vx * 0.85 + jit(6), 1.5 + Math.random() * 4.5, c.vz * 0.85 + jit(6)); } // they leave at the car's speed then slow down, like the dust: the wake stays in the chase camera's view
-      POUS.step(dt); if (FIRE) FIRE.step(dt); if (BURST) { BURST.step(dt); BURST1.step(dt); FOAM.step(dt); } }
+      POUS.step(dt); if (GRAIN) GRAIN.step(dt); if (FIRE) FIRE.step(dt); if (BURST) { BURST.step(dt); BURST1.step(dt); FOAM.step(dt); } }
     dmgFrame(dt); sceneryFrame(dt); SMOKE.step(dt); dEch.value = RH / 2;
     for (const p of STMS) { for (p.t += dt; p.t > 0.12; p.t -= 0.12) p.f.emit(p.x + jit(0.6), p.y, p.z + jit(0.6), 0.3 + jit(0.4), 1 + Math.random() * 0.6, jit(0.4)); p.f.step(dt); } // steam: always, even far away (40 points per manhole)
     for (let i = 0; i < VN; i++) { const j = i * 6, s = i * VK; if (vS[s + 3] <= 0) { vLayer.fill(0, j, j + 6); continue; }

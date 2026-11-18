@@ -1,4 +1,4 @@
-// Scenery placement for "lune" (Lunar Outpost): terrain with its craters and the arena, roadway, guardrails, the shared materials, the horizon, then each zone (scenery-lune-<zone>.js).
+// Scenery placement for "lune" (Lunar Outpost): terrain with its craters and the arena, roadway, guardrails, the shared materials, the horizon, then each zone (scenery-lune-<zone>.js), then the life of the map (scenery-lune-vie.js).
 // Shapes: shapes-lune-*.js; textures: textures-lune.js; mood and references: docs/proposals/lunar-outpost/AMBIANCE-V2.html. See docs/methods/NEW-MAP.md, phase 3.
 (function () {
   const { near, edgePt, terrain, weld } = PLACERS;
@@ -115,7 +115,7 @@
       // placement. stand(x, z, ry, y): an empty group at map coordinates (x east, z = -north), on the ground unless y is given. add(group, shape, settings, position, skin): poses a catalogue shape in it (skin: MAT, or one material for a simple shape)
       const at = pk => S[Math.round(pk / LAP * N) % N], low = (x, z, w, d) => Math.min(g.hAt(x, z), ...[[w, 0], [-w, 0], [0, d], [0, -d]].map(([a, b]) => g.hAt(x + a / 2, z + b / 2)));
       const stand = (x, z, ry = 0, y) => { const grp = new THREE.Group(); grp.position.set(x, y ?? g.hAt(x, z), z); grp.rotation.y = ry; kit.add(grp); return grp; };
-      const add = (grp, shape, a = [], pos = [0, 0, 0], skin = MAT) => { h.pose(shape, skin, grp, pos, ...a); return grp; };
+      const REG = {}, add = (grp, shape, a = [], pos = [0, 0, 0], skin = MAT) => { (REG[shape] = REG[shape] || []).push({ grp, meshes: h.pose(shape, skin, grp, pos, ...a), pos, a }); return grp; }; // REG: every placed shape by name, for the life of the map (scenery-lune-vie.js)
       // by(pk, side, off, [w, d], ry): a group beside the road at chainage pk, side -1 = left / 1 = right, the near face of its w × d footprint `off` metres from the wall, on the lowest ground under that footprint (mid: on the ground at its centre, for what has its own plinth);
       // turned so that the local -X (the front of a building) faces the road and the local Z runs along it. side 0: on the axis, at road level (a frame, a hall bay)
       const by = (pk, sd, off = 0, [w, d] = [0, 0], ry = 0, mid = false) => { const s = at(pk); if (!sd) return stand(s.x, s.z, h.across(s) + ry, s.y);
@@ -132,7 +132,9 @@
       for (let k = 0; k < 40; k++) { const a = k * 0.157 * 2.02 + hash(k, 3) * 0.1, r = PL.r + 10 + 26 * hash(k, 4), x = EAST[0] + r * Math.cos(a), z = EAST[1] + r * Math.sin(a), w = 4 + 10 * hash(k, 6); // and a broken ring of them on the wall of the arena, just above where the car can climb
         if (Math.abs(Math.atan2(Math.sin(a - aLip), Math.cos(a - aLip))) > 0.2 && Math.abs(Math.atan2(Math.sin(a - aOut), Math.cos(a - aOut))) > 0.15) add(stand(x, z, a), 'rocherLune', [w, w * 0.6, w * 1.2, k], [0, 0, 0], k % 4 ? MAT.rock : MAT.pale); }
       for (const z of ZONES) LUNE[z]({ h, g, S, N, at, LAP, MAT, kit, stand, add, by, sit, tunnel: [S[T.t0], S[T.t1]], lip: S[(iLip - 30 + N) % N], THREE });
+      const tick = LUNE.vie({ h, g, S, N, T, LAP, MAT, kit, add, by, REG, iLip, EAST, PL, THREE, edgePt, weld }); // what moves, lights and sounds: it takes its movers out of the kit before the merge
       weld(h, kit); // one mesh per material
+      return tick;
     },
   });
 })();
