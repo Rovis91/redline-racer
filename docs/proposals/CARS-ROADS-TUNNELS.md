@@ -7,14 +7,15 @@ Status: **to validate by the author. Nothing is built.** Written against `main` 
 | Map (id) | Car | Inspiration | Body (`MODELS`) | Road in one phrase | Tunnel in one phrase |
 |---|---|---|---|---|---|
 | Aegean Cliffs (`egee`) | MELTEMI GTA-SA | Alfa Romeo Giulia Sprint GTA-SA (1967) | `gtr`, scaled down (acceptable) | sun-bleached island tarmac, fine grain, lime paint, no kerb stripes | none |
-| Area 51 / Signal Unknown (`area51`) | NIGHTHAWK TT-4 | Dodge Stealth R/T TT / Mitsubishi 3000GT VR-4 (1994) | `a80` (stopgap; a pop-up wedge would be better) | segmented dark tarmac `#313a46`, amber taxiway-yellow centre line | B1 reactor complex (850 m) = engine `tun`, scenery makes the shell; hangar H1 is scenery only |
+| Area 51 / Signal Unknown (`area51`) | DELOREAN-style DMC-12: **KELVIN DM-12** | DeLorean DMC-12 (1981) | **new body needed** (gullwing wedge, stainless) | dark segmented tarmac on base roads; pale runway tarmac with white marks (scenery ribbon) | B1 reactor complex (850 m) = engine `tun`, scenery makes the shell; hangar H1 is scenery only |
 | Sky Pillars (`piliers`) | TIANMEN SW-22 | Subaru Impreza 22B STi (1998) | `groupeb` (acceptable) | cool blue-grey mountain asphalt, cream paint, stone parapets by the scenery | 80 m rock tunnel, bare sandstone lining, warm sodium lamps, exit seen as a bright dot |
 | Volcanic Island (`volcan`) | LEVADA HF EVO | Lancia Delta HF Integrale Evoluzione (1993) | `r5` (acceptable) | lighter basalt-grey asphalt (it must leave the black rock), stone-yellow paint | north gallery (200 m, engine); south gallery is scenery; dark basalt, sparse warm lamps |
-| Lunar Outpost (`lune`) | SELENE S1 TURBO | Lotus Esprit Turbo (1980) | **none fits: new wedge body needed** (stopgap `berlinette`) | matt dark sintered regolith, ivory edge lines, orange centre dashes, zero gloss | 320 m pressurised ivory tube, cold instrument-blue lamps, black outside |
+| Lunar Outpost (`lune`) | SELENE MOLAB-1 | GM MOLAB (1964) / Apollo Lunar Roving Vehicle, closed cabin | **new body needed** (closed rover) | matt dark graded regolith, loose regolith in the arena (scenery + `terre`), ivory pad in the base | 320 m pressurised ivory tube, cold instrument-blue lamps, black outside |
 | Sunken Highway (`autoroute`) | HERON 240 TURBO | Volvo 240 Turbo, touring-car tune (1985) | `peykan` (acceptable) | the city's own patched street asphalt (scenery material), no paint, no kerb stripes | metro tunnel (PK 1877 to 2553): engine lays floor and lights only, scenery builds everything else |
 
 ### What is shared
 
+- **Several road types per map are possible, see the new section "Road sections" below.** The engine draws one road texture for the whole lap; extra types are scenery ribbons laid over it (as `autoroute` and `lune` already do), plus `surf` zones for grip.
 - **One white-patch fix for every map that has a lit road** (diagnosis in each "Road style"): `th.roadTex: 'roadwayFine'` (no light patches or cracks), `th.gloss: 0.02` (0 on the moon), paint colours one notch below pure cream, and, if needed, hemisphere intensity 0.8 and sun 0.8 (the shipped midday map `plage` runs 0.6 / 0.72). This is one recipe, applied to egee, area51, piliers, volcan, lune. Autoroute uses its own scenery asphalt and only needs the gloss line.
 - **Same road structure on the three "daylight mountain" maps** (egee, piliers, volcan): dark cool-grey tarmac, no kerb stripes (the scenery draws parapets or the engine draws `wallH` walls), paint one cream, `chevronGES` chevrons on egee and piliers.
 - **Gearing rule found with `rpm.js` on all six layouts:** these layouts are wide and fast, so any car whose top speed is above about 200 km/h spends over 95 % of the lap in top gear whatever the ratios (the touge car does on every one of them). What a car changes here is the speed band and the number of brakings, and the lever is the car's own `grip` multiplier (0.85 to 1), not the gears. Only `autoroute` (slow street layout) really uses several gears. The map-level `grip` field has no effect on the simulation (`sim.js` reads only `car.grip`), so it is not changed here.
@@ -37,6 +38,93 @@ The seven values are `[asph, spk, edge, dash, k1, k2, wet]`:
 | 7 | `wet` | `false` dry; `true` more puddles and gloss 0.2; `2` central gutter (canal) |
 
 `roadway` also lays white (`#fff`) patches and speckle at low opacity, plus dark cracks; `roadwayFine` only darkens (patches "a little darker, never lighter"). Gloss defaults to 0.08 (0.2 wet) and is the sun/lamp reflection.
+
+## Road sections: do the textures we have suffice?
+
+**How a map gets several road types.** The engine draws one road ribbon for the whole lap with one texture (`th.roadTex`) and one set of seven colours (`th.road`). A section with another surface is obtained in three ways, which combine:
+
+1. **A scenery ribbon laid over the road** for that stretch (what `autoroute` does with `asphalteAutoroute` and `lune` does with its relaid road): `h.ribbon(t0, n, -w, 0, w, 0, h.mat(<texture>, opts, …args), 4)`. It is static scenery, merged with the rest, so it is cheap.
+2. **The same procedural road with other colours.** `roadway` and `roadwayFine` take the seven colour arguments, so a ribbon can reuse them with a pale concrete or a faded-paint variant without any new texture.
+3. **`surf` zones** (`sec`, `damp`, `cobbles`, `terre`, `iceSurf`, `snowSurf`) change grip, braking and roll for the stretch; the look still comes from 1 or 2 (`wetVisible` only darkens `damp`). Use them only where the surface should also drive differently.
+
+`th.road` should always match the **dominant** surface, because the engine road is what shows wherever no ribbon covers it.
+
+**What exists.** Catalogue (all texture files are loaded by `index.html`, so another map's texture can be reused; reuse across maps not tried here): `roadway`, `roadwayFine` (any asphalt or concrete tone), `roadwayTerre` (packed earth), `roadwayGES`, `slabsJungle`, `slabsQuay` (quay slabs), `slabsStreet`, `slabsPerse`, `slabsEdge`, `groundHangar` (grey 8 m tile floor), `groundPort` (yard), `concreteGES`, `cobbles`, `sandHard`, `sandDry`, `sandDamp`, `sandTraces`. On the six branches, per map: egee `pavageEgee`, `solEgee`, `terreEgee`; area51 `tarmacArea51`, `solArea51`, `playaArea51`, `jauneArea51`, `blancArea51`, `dangerArea51`; piliers `pierrePiliers`, `acierPiliers`, `solPiliers`; volcan `betonVolcan`, `solVolcan`, `basalteVolcan`; lune `terreLune`, `regolitheLune`, `coqueLune`; autoroute `asphalteAutoroute`, `trottoirAutoroute`, `carrelageAutoroute`. **Judged from names and signatures, not from renders**: whether each reads well at 270 lines is a `plan.js` question.
+
+**Verdict.** The textures we have should be enough for every section of the six maps; no new road texture is required. Two small additions are optional (area51 tow line and hall-floor marking, lune deck plate for the garage floor). The tables below are what each section should be.
+
+### Aegean Cliffs
+
+| Section (zone) | Points | Surface | How | Enough? |
+|---|---|---|---|---|
+| Port, the quay | 0 to 16 | asphalt on the quay road, stone slabs at the edges | engine road (`roadwayFine`) | yes |
+| Quarry road | 16 to 50 | old dry asphalt, pale dust at the edges | engine road | yes |
+| Village | 50 to 70 | whitewashed stone paving (kalderimi) between the houses | ribbon `pavageEgee`, optional `surf` `cobbles` 0.4 for slightly slippery marble | yes, `pavageEgee` exists |
+| Balcony | 70 to 88 | asphalt | engine road | yes |
+| Terraces descent | 88 to 0 | patched asphalt | engine road | yes |
+
+Two road types. The village paving is the signature change of surface and a good place for the `cobbles` zone (a small fishtail in the one narrow passage).
+
+### Area 51
+
+| Section | Points | Surface | How | Enough? |
+|---|---|---|---|---|
+| Apron and fire alley | 0 to about 8 | pale concrete apron | ribbon `solArea51` or `groundHangar` | yes |
+| Hall H1 | start line, 300 m | dark polished concrete floor with a yellow tow line | scenery floor; `jauneArea51` for the line | needs a small tow-line marking (already a "CREATE" in the area51 inventory) |
+| Base roads, B1 ramp and complex | 8 to 60 | dark tarmac; B1 floor concrete | engine road; B1 via `th.tun.ground` | yes |
+| Antenna field, ridge | 60 to about 185 | service tarmac, dusty at the edges | engine road | yes |
+| Runway A and taxiways | about 185 to 201, plus the crossing and connector | pale grey runway tarmac with white edge, centre and threshold marks; yellow taxiway centre line | ribbon `tarmacArea51` + `blancArea51` / `jauneArea51` markings | yes, they exist on the branch |
+
+Three road types (service tarmac, concrete apron and hall, runway). The runway must be paler and greyer than the base road: it is the one section where the road changes tone, which also helps the 30 m half-width read as "runway". `th.road` stays the dark service tarmac.
+
+### Sky Pillars
+
+| Section (zone) | PK | Surface | How | Enough? |
+|---|---|---|---|---|
+| Forest | 0 to 735 and 3700 to the line | asphalt | engine road | yes |
+| Corniches | 735 to 1710 | asphalt, 16 m | engine road | yes |
+| Suspension bridge | 1710 to 2181 | asphalt on a steel deck (deck structure is scenery) | engine road; steel expansion joints as scenery strips with `acierPiliers` if wanted | yes |
+| Plateau and tunnel | 2181 to 2826 | asphalt; tunnel floor via `th.tun.ground` | engine road | yes |
+| Descent | 2826 to 3700 | asphalt | engine road | yes |
+
+One road type. The sheet gives no change of surface; the variety is in the parapets, the rock and the bridge. A timber deck would contradict the "16 m of asphalt" and the road-bridge brief.
+
+### Volcanic Island
+
+| Section (zone) | PK | Surface | How | Enough? |
+|---|---|---|---|---|
+| Le Phare, the harbour | 0 to 690 | concrete quay road | ribbon `betonVolcan` (or `slabsQuay`) | yes |
+| Les Cendres, ash slope | 690 to 2210 | asphalt, ash drifted at the edges | engine road | yes |
+| La Couronne, the pass | 2210 to 3780 | asphalt; concrete belvedere deck is scenery | engine road | yes |
+| Le Cratère | 3780 to 4890 | north gallery floor (`th.tun.ground`), asphalt dusted black on the crater floor, south gallery floor by the scenery | engine road, tunnel floor | yes |
+| Les Lacets | 4890 to 6100 | asphalt | engine road | yes |
+| Les Quais, home straight | 6100 to the line | concrete quay road again | ribbon `betonVolcan` | yes |
+
+Two road types, bookending the lap: concrete quay at both ends, asphalt between. Start and finish read as the same harbour. A `damp` zone is not proposed.
+
+### Lunar Outpost
+
+| Section (zone) | PK | Surface | How | Enough? |
+|---|---|---|---|---|
+| Base and start airlock | 5080 to 500 | garage and hall floor (ivory deck or dark floor under a 160 m hall), concrete pad outside | scenery floor with `coqueLune` or `groundHangar`; a deck-plate texture would be nicer | yes (deck plate optional) |
+| Western crater, ridge | 500 to 3000 | graded, sintered, dark regolith track | engine road (`roadwayFine`, gloss 0) | yes |
+| Eastern crater, arena | 3000 to 3920 | bare loose regolith, no road, driven anywhere | scenery `terreLune` + `surf` `terre` 0.4 over points 78 to 90 | yes |
+| Tunnel | points 91 to 99 | tube floor via `th.tun.ground` | engine tunnel | yes |
+| South basin | 3920 to 5130 | graded track on the basin floor and the 8 % ramp, then the maintenance pad | engine road, pad ribbon `coqueLune` | yes |
+
+Three surfaces, and the only map where a section changes the **driving** (loose regolith in the arena), which `surf` already supports. The sheet says the tunnel is 280 m; the blockout's `tun: [91, 99]` spans 320 m (PK 3620 to 3941): to reconcile.
+
+### Sunken Highway
+
+| Section (zone) | Surface | How | Enough? |
+|---|---|---|---|
+| Boulevard (26 m, kerb to kerb) | patched asphalt, a few surviving lane marks | scenery ribbon `asphalteAutoroute` over the engine road (already there) | yes |
+| Warehouse district (16 m streets) | stained asphalt, dry road, water at the kerbs | same ribbon, other tint (the texture takes a colour) | yes |
+| Motorway (two 14 m carriageways) | grey asphalt, faded white lane dashes, hard shoulder | `roadwayFine` ribbon with `dash` at a faded `#b8b4a0` and `edge` at `#a8a494` | yes, no new texture |
+| Fallen street | asphalt between brick blocks | `asphalteAutoroute` | yes |
+| Metro | track bed and platform tiles; the lane crosses between tracks | scenery (`carrelageAutoroute`, track bed); engine floor under it | yes |
+
+Three looks from one texture family. The faded dashes are the one place paint survives; they come from the existing `roadwayFine` dash argument, not from a decal (the ART-STYLE rule against decals on the road still holds).
 
 ---
 
@@ -97,22 +185,25 @@ No `surf` zone and no wet option: the road is dry all lap.
 
 Nevada flight-test base at blue hour. 6 778 m, W 10 (runway half-width 30 at points 185 to 201): hangar line with hall H1 at the start, reactor complex B1 under the mesa (points 33 to 60), listening dish, security ridge, runways. 1960s to 1980s concrete and steel, in use and worn.
 
-### 2.1 Car: NIGHTHAWK TT-4
+### 2.1 Car: KELVIN DM-12 (a DeLorean)
 
-**Why.** The base is a secret test site of the early 1990s in the car culture: the Dodge Stealth R/T Twin Turbo / Mitsubishi 3000GT VR-4 (3.0 V6 twin turbo, about 300 hp, four-wheel drive, 1 700 kg), a heavy, technical, "stealth-fighter" GT. Four-wheel drive and six gears suit the long runway and the hall chicane, and the weight makes the apron and the reactor ramp feel heavy. White with amber stripes echoes the space-programme paint and reads on the dark tarmac at blue hour (the dark gunmetal of the real car would vanish on `#313a46`).
+**Why.** The author's choice, and it fits: a stainless-steel, gullwing, rear-engined 1981 wedge in a 1960s-to-1980s secret base at blue hour. Real car: DeLorean DMC-12 (PRV 2.85 L V6, 130 hp, 1 230 kg, five-speed, rear engine and rear drive; famously slow, about 175 km/h). Unpainted brushed steel reads silver against the dark `#313a46` tarmac and the violet sky, and the car becomes the map's joke: the slowest car of the six, on the fastest, flattest runway. Name: kelvin (colour temperature of the base lights); change freely, "DeLorean" itself should not be used in-game.
 
-**Body.** `a80` (long round coupe with arch spoiler), which is the body of `wangan`'s KAIRYU RZ. It works as a stopgap. A faceted pop-up-light wedge would suit the F-117 spirit better; that is optional new modelling, not required.
+**Body: new body needed, no existing one fits.** `berlinette` is a wedge but a rally coupe with louvres and long-range lights. Silhouette needed (later): a low, flat, slab-sided wedge about 4.2 m long and 1.85 m wide; flat horizontal bonnet and tail; a steep windscreen and a near-horizontal roof; **gullwing doors** (raised, or a door line drawn high on the roof); a black louvred panel over the rear window and engine cover; large round wheels with the rear wider; small rectangular headlights flush in a black nose panel; unpainted brushed-steel body with a black lower sill. Livery: flat brushed-grey `col`, black `stripes`; there is no paint to take.
 
 ```js
-// Dodge Stealth R/T Twin Turbo / Mitsubishi 3000GT VR-4 (1994): 3.0 L V6 twin turbo, about 300 hp, 1 700 kg, 6-speed, four-wheel drive (ratios approximate)
-car: car({ label: 'NIGHTHAWK TT-4', ratios: [3.62, 2.19, 1.54, 1.15, 0.92, 0.72], final: 3.6, wheel: 0.32, mass: 1700, idle: 800, red: 6500, cd: 0.32, area: 2.0,
-  tq: [0, 150, 250, 330, 390, 407, 407, 380, 300], trac: 11, rwd: 0, sound: 0.95, engine: 'l6', turbo: 1,
-  look: { type: 'a80', col: 0xdfe3e6, stripes: 0xf5aa75, l: 1.02, w: 1.02, h: 0.96, nose: 0.66, cab: [-0.45, 2.1, 0.5], tailFin: 2 } }),
+// DeLorean DMC-12 (1981): PRV 2.85 L V6, 130 hp, 1 230 kg, 5-speed, rear engine, rear-wheel drive (ratios approximate)
+car: car({ label: 'KELVIN DM-12', ratios: [3.17, 1.88, 1.30, 0.97, 0.76], final: 3.7, wheel: 0.31, mass: 1230, idle: 900, red: 6000, cd: 0.35, area: 1.9,
+  tq: [0, 150, 200, 215, 220, 215, 200, 170, 0], trac: 9, rwd: 1, sound: 0.9, engine: 'v8',
+  look: { type: 'delorean', col: 0xb9bec4, stripes: 0x16161c, l: 1.0, w: 1.0, h: 0.86, nose: 0.62, cab: [-0.2, 1.9, 0.5], tailFin: 0 } }),  // 'delorean' = the new MODELS body; use 'berlinette' as a stopgap
 ```
 
-**On this layout (rpm.js).** Top 258 km/h (the limiter would allow 302, drag stops it), 141 to 258 km/h, average 211, 5th 30 %, 6th 65 %, a few per cent in 4th. The brakings counted (about 150) include many short lifts on the 226-point trace; the real stops are the hangar chicane, the guard-post serpentine, the reactor ramp and the dish loop. It uses 4th to 6th; gears 1 to 3 only at the start and exits. Gearing is backed by figures; the ratio table itself is approximate.
+`engine: 'v8'` is the closest timbre to a V6 with a low burble (`l6` is the alternative, brighter).
 
-**Map-level settings.** `kmh: 0.9` (shows 232 at 258), `spd: [150, 255]`, `grip` car default (omit), `med` default.
+**On this layout (rpm.js).** Top 206 km/h, 142 to 206, average 185, about 50 brakings, 4th 26 %, 5th 74 %. Simulated lap 130 s (the borrowed car: 112 s). It is flat out on the runways and braking at the hangar chicane, serpentine, ramp and dish loop. Optional "turbo conversion" variant if the author wants more punch: peak torque 340 N·m, `red: 6500`, `tq: [0, 170, 260, 320, 340, 340, 320, 290, 0]` gives 212 average, 142 to 254. Gearing is backed by figures; the ratio table is approximate.
+
+**Map-level settings.** `kmh: 0.85` (shows 175 at 206, the real car's top), `spd: [140, 205]`, car `grip` default, `med` default.
+
 
 ### 2.2 Road style
 
@@ -129,6 +220,8 @@ chev: 1, chevExcept: [[33, 60], [185, 201]],              // none in B1 (the sce
 ```
 
 `roadwayFine` joints every 16 m give the "segmented asphalt" of the sheet. No `surf` zone.
+
+The runway, apron and hall floor are other surfaces: see "Road sections" (area51).
 
 **Readability.** Tarmac `#313a46` against sand verge `#D69A72` and light concrete `#E8E9DF`: good separation. Paint is pale, not white; the centre dash is amber, which also makes it different from the white runway markings. The tarmac is a cool dark blue-grey, close to the dark floor of the hall (scenery), but the hall is inside a shell, so no conflict.
 
@@ -156,7 +249,7 @@ Keep the engine shell off: `faces` removed means no engine walls, vault or hull.
 ### 2.4 Open choices
 
 1. **Which section gets the engine tunnel?** B1 (recommended: 800 m, dark, echo and eye adaptation matter most) or H1 (at the start, 300 m, cannot straddle the start line). Recommendation: **B1**.
-2. **Car body.** `a80` as is, or a new faceted wedge for the one car whose silhouette matters to the story. Recommendation: **`a80` now, wedge later if the author wants it**.
+2. **DeLorean tune.** Stock 130 hp (recommended: slowest car, 142 to 206 km/h, the joke is the point) or the turbo conversion (142 to 254). Recommendation: **stock**; the body is new either way.
 3. **Runway markings and `chev`.** Keep the hazard chevrons on the base roads (yellow/black reads as industrial) but not on the runway or in B1. Recommendation: **yes, with `chevExcept` as above**.
 
 ---
@@ -299,22 +392,22 @@ The engine shell is wanted here (the scenery supplies only the texture, so no `f
 
 1970s lunar colony between impact craters, black sky, one hard white sun, no haze. 5 280 m, W 9, a jump off the rim of an immense crater (`grav: 8`, `jumps: [[77, 40, 3]]`), arena floor driven anywhere, a pressurised tunnel out (points 91 to 99, PK 3620 to 3941 = 320 m).
 
-### 5.1 Car: SELENE S1 TURBO
+### 5.1 Car: SELENE MOLAB-1 (a closed lunar rover)
 
-**Why.** The sheet is "the space programmes of the 1970s had gone on past their brochures". The car of that dream is the Giugiaro wedge: Lotus Esprit Turbo (1980: 2.2 L four turbo, about 210 hp, 1 050 kg, five speeds, mid-engine rear drive), the car that "turned into a submarine". Light, low and rear-driven, which matters for a jump and a bowl. Ivory and orange hull is the Apollo palette. The sheet forbids open rovers with a visible driver, so a closed coupe is right.
+**Why.** The author's brief: a lunar-rover type vehicle, but with a roof and walls. The retro-futurist real thing is the 1964 GM MOLAB (Mobile Laboratory) concept, a pressurised six-wheel cabin on big mesh wheels, crossed with the proportions of the Apollo Lunar Roving Vehicle (open chassis, wire wheels, dish antenna). The sheet bans open rovers with a visible driver, so the cabin is closed. A 1970s colony would run it as a pressurised utility car: boxy, tall, high-set cabin, big wheels, solar roof, ivory and orange. It is also physically sensible for the jump and the bowl: big wheels, long travel.
 
-**Body.** **No existing `MODELS` body fits.** `berlinette` (Garrigue, a 1970s mid-engine wedge) is the only wedge and is stopgap only: it is a rally coupe with louvres and long-range lights. A new silhouette is needed (for later): a low, razor-flat wedge nose, near-straight beltline rising to a high truncated tail, flat angular roof with a large rear glass slope, pop-up lamps or a slotted nose panel, no rally lights, flush panels, a small lip spoiler, ivory with a continuous orange stripe.
+**Body: new body needed, no existing one fits** (`buggy` is an open beach buggy with a visible driver, `pickup` is a stadium truck). Silhouette needed (later): a boxy pressurised cabin about 3.6 m long and 2.2 m wide, set high on a flat chassis; large rounded-rectangle windscreen strip and small round portholes along the sides; flat roof carrying a solar panel and a small dish; very large wheels (radius about 0.45 m, wire-mesh look) at the four corners, wide track; short stubby nose with two flat lamps; a rear radiator or battery pack panel; a thin ivory rail or skirt at the sill. Livery: ivory `col` with an orange `stripes` band under the windows. Sound: `engine: 'rot'` (smooth rotary whine reads as an electric drive; there is no electric timbre).
 
 ```js
-// Lotus Esprit Turbo (1980): 2.2 L four turbo, about 210 hp, 1 050 kg, 5-speed, mid-engine rear drive (ratios approximate); in vacuum drag is irrelevant, cd/area kept low
-car: car({ label: 'SELENE S1 TURBO', ratios: [3.2, 2.1, 1.45, 1.1, 0.85], final: 4.1, wheel: 0.3, mass: 1000, idle: 900, red: 7000, cd: 0.3, area: 1.6,
-  tq: [0, 120, 170, 200, 215, 220, 215, 200, 160], trac: 9.5, rwd: 1, sound: 1.2, engine: 'l4', turbo: 1,
-  look: { type: 'berlinette', col: 0xd78a40, stripes: 0xe8e2d0, l: 0.92, w: 1.0, h: 0.9, nose: 0.4, cab: [-0.3, 2.0, 0.55], tailFin: 0 } }),  // type: stopgap until the new wedge body exists
+// GM MOLAB (1964) concept / Apollo LRV: pressurised electric rover, game-tuned: 4-wheel drive, 1 500 kg, 3 gears, big wheels
+car: car({ label: 'SELENE MOLAB-1', ratios: [3.6, 2.0, 1.2], final: 3.5, wheel: 0.45, mass: 1500, idle: 600, red: 6000, cd: 0.3, area: 2.6,
+  tq: [0, 300, 330, 320, 300, 260, 200, 0, 0], trac: 9, rwd: 0, sound: 1.6, engine: 'rot',
+  look: { type: 'molab', col: 0xe8e2d0, stripes: 0xd78a40, l: 1.0, w: 1.0, h: 1.0, nose: 0.3, cab: [0.0, 2.6, 0.7], tailFin: 0 } }),  // 'molab' = the new MODELS body; no existing body is a usable stopgap
 ```
 
-**On this layout (rpm.js, with `grav: 8` and the jump).** Top 227 km/h, 96 to 227, average 194, about 66 brakings (the run-up hairpin and the six ridge bends), 3 % in 3rd, 13 % in 4th, 84 % in 5th. The jump itself (landing distance with `grav: 8`) was not checked: only the lap speeds above come from `rpm.js`. Gearing is backed by figures for the speed band only.
+**On this layout (rpm.js, with `grav: 8` and the jump).** Top 192 km/h, 81 to 192, average 164, about 35 brakings, 2nd 7 %, 3rd 93 %. It is the slow, heavy, high car of the lap: it brakes earlier for the six ridge bends and the hairpin and is the least flat-out of the six on this map. The jump (landing distance with `grav: 8`) was not simulated: only the lap speeds come from `rpm.js`. A three-gear table is deliberate (a rover has few); gearing is backed by figures for the speed band only.
 
-**Map-level settings.** `kmh: 0.9` (shows 204), `spd: [120, 225]`, `grip` car default, `med` default. The jump height and `grav` of the map are untouched by this proposal.
+**Map-level settings.** `kmh: 0.9` (shows 173 at 192), `spd: [100, 190]`, car `grip` default, `med` default.
 
 ### 5.2 Road style
 
@@ -357,7 +450,7 @@ The blockout has `without: ['gates', 'lamps']`; this proposal drops `'lamps'` ([
 
 ### 5.4 Open choices
 
-1. **New wedge body?** Without it the Esprit is a `berlinette` (Garrigue's silhouette in orange). Recommendation: **model the wedge** (this is the one car of the six that needs a new body) and ship the stopgap meanwhile.
+1. **Rover body.** The closed rover needs a new model; there is no stopgap (the DeLorean wedge and the rover are the two new bodies of this proposal). Recommendation: **build it as one small boxy model with the big wheels**; the wheel size does most of the work.
 2. **Loose regolith in the arena** (`terre` zone 0.4) or the same grip as the track. Recommendation: **yes, 0.4**: with `grav: 8` the drift is the fun of the bowl.
 3. **Tunnel length.** 320 m of tube or shorten it to about 200 m. Recommendation: **keep 320 m** unless the author finds it long in play.
 
@@ -431,9 +524,9 @@ The blockout already has everything but `ambient`, `gloss` and `eye`, which are 
 
 ## Cars that need a new body model
 
-- **Lunar Outpost (SELENE S1 TURBO): yes, a new wedge body.** Brief in section 5.1.
-- **Area 51 (NIGHTHAWK TT-4): optional.** `a80` works; a pop-up wedge would be better.
-- The other four use existing bodies (egee `gtr` scaled, piliers `groupeb`, volcan `r5`, autoroute `peykan`). Every body used (including the lune stopgap) is already used by a shipped map (`ville`, `wangan`, `givre`, `paris`, `terre`, `perse`), so livery and proportions carry the difference until new models exist.
+- **Area 51, KELVIN DM-12: yes**, a gullwing stainless wedge (brief in 2.1).
+- **Lunar Outpost, SELENE MOLAB-1: yes**, a closed pressurised rover with big wheels (brief in 5.1).
+- The other four use existing bodies: egee `gtr` scaled, piliers `groupeb`, volcan `r5`, autoroute `peykan`. Each is already used by a shipped map (`ville`, `givre`, `paris`, `perse`), so livery and proportions carry the difference.
 
 ## How the figures were made
 
