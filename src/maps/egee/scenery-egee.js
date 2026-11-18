@@ -2,7 +2,7 @@
 // The island: the road is a loop run anticlockwise, so the left of the road (side -1) is always the island and the right (side 1) the sea. Chainages (PK) are plan metres from the start line, 0 to 4700:
 // Port 0-650, Ascension 650-2000, Village 2000-2800, Balcon 2800-3500, Descente 3500-4700.
 // Asset families (P0, P1 of the sheet) and where they live: rock and relief (shapes-egee-relief.js: outcrops, far islands; cliffs, capes, terraces and the quay are terrain), lime-washed buildings (shapes-egee-bati.js: house, warehouse,
-// chapel and dome, mill, lighthouse, ruin), harbour and vegetation (shapes-egee-port.js: boat, pontoon, olive tree; cypress and bush are borrowed from perse and plage), walls (boxes laid along the road: `wall`).
+// chapel and dome, mill, lighthouse, ruin), harbour and vegetation (shapes-egee-port.js: boat, pontoon, olive tree; cypress and bush are borrowed from perse and plage), island life (shapes-egee-vie.js: dovecote, well, cistern, goat pen, power pole, scooter, pick-up, fishing gear, café terrace, prickly pear, agave), walls (boxes laid along the road: `wall`, `cross`).
 (function () {
   const { near, edgePt, terrain, weld, inst } = PLACERS;
   const ZONES = ['port', 'ascension', 'village', 'balcon', 'descente'], LAP = 4700, SEA = 6; // LAP: plan length of the layout, the unit of the chainages. SEA: water level; the quay road is at 8 m
@@ -28,10 +28,16 @@
         f += quay * (ss((d - s.w - 9) / 3) * (y - SEA + 4) + Math.max(0, d - 40) * 0.3 - f);
         f += Math.max(0, d - 230) * 2; // whatever the slope, the ground is under the deep bed before the terrain ends (its edge would draw a straight line in the water)
         const gy = y - f; return gy < SEA ? y - (SEA - Math.min(9, Math.max((SEA - gy) * 0.12, 9 * ss((d - 110) / 140)))) : f; };
-      // ground: dry ochre earth (also the seabed: a mid tone, so the shallows are cyan and not white); bare rock where it is steep; lime-jointed paving under the harbour town and the chapel square; red tilled earth on the terraces
-      const pkOf = (x, z) => near(h, x, z) / N * LAP, paved = (p, d) => Math.max(Math.max(win(p, -1, 570, 40), win(p, 4370, 4701, 40)) * (1 - ss((d - 122) / 10)), win(p, 2350, 2450, 20) * (1 - ss((d - 44) / 8))); // the whole harbour town; the chapel square
-      const g = terrain(h, { stepSec: 6, margin: 320, hollow: relief, mat: h.mat('solEgee'), layerSet: [{ tex: ['terreEgee'], weight: (x, z, y, p, d) => { const k = pkOf(x, z); return Math.max(win(k, 3500, 4440, 60) * (inside(x, z) ? 0 : 1), ...GROVES.map(q => win(k, q - 80, q + 80, 40) * (1 - ss((d - 75) / 15)))) * ss((d - 12) / 6); } },
-        { tex: ['pavageEgee'], weight: (x, z, y, p, d) => inside(x, z) || d < 20 ? paved(pkOf(x, z), d) : 0 }, { tex: ['rocheEgee', ROCK], slope: [0.1, 0.24] }] });
+      // ground: dry ochre earth (also the seabed: a mid tone, so the shallows are cyan and not white), and over it, so that no slope shows one tile: dry grass in patches 50 to 80 m across, red tilled earth on the terraces and
+      // in fields along the Ascension and the plateau, lime-jointed paving under the harbour town and the chapel square, rock where it is steep and in bare slabs here and there. Each layer has its own tile size (rep)
+      let lx, lz, lk; const pkOf = (x, z) => x === lx && z === lz ? lk : (lx = x, lz = z, lk = near(h, x, z) / N * LAP), // the layers ask for the same vertex one after the other
+        blot = (x, z, f, ph) => Math.sin(x * f + ph) * Math.sin(z * f * 1.27 + ph * 1.7) + 0.55 * Math.sin(x * f * 2.3 - z * f * 1.9 + ph * 0.6) + 0.3 * Math.sin(x * f * 4.7 + z * f * 5.3 + ph), // fixed blotches, -1.8 to 1.8, about 3 / f metres across
+        land = (x, z, y, d) => y > SEA + 1.5 ? 1 - paved(pkOf(x, z), d) : 0, // dry land outside the paved town
+        paved = (p, d) => Math.max(Math.max(win(p, -1, 570, 40), win(p, 4370, 4701, 40)) * (1 - ss((d - 122) / 10)), win(p, 2350, 2450, 20) * (1 - ss((d - 44) / 8))); // the whole harbour town; the chapel square
+      const g = terrain(h, { stepSec: 6, margin: 320, hollow: relief, mat: h.mat('solEgee'), layerSet: [{ tex: ['herbeEgee'], rep: 0.43, weight: (x, z, y, p, d) => 0.9 * land(x, z, y, d) * ss((blot(x, z, 0.043, 1.3) + 0.05) / 0.5) },
+        { tex: ['terreEgee'], rep: 0.7, weight: (x, z, y, p, d) => { const k = pkOf(x, z); return Math.max(win(k, 3500, 4440, 60) * (inside(x, z) ? 0 : 1), ...GROVES.map(q => win(k, q - 80, q + 80, 40) * (1 - ss((d - 75) / 15))),
+          0.9 * land(x, z, y, d) * ss((blot(x, z, 0.061, 4.1) - 0.6) / 0.35)) * ss((d - 12) / 6); } },
+        { tex: ['pavageEgee'], weight: (x, z, y, p, d) => inside(x, z) || d < 20 ? paved(pkOf(x, z), d) : 0 }, { tex: ['falaiseEgee', '#a08c74'], rep: 0.45, weight: (x, z, y, p, d) => Math.max(ss((p - 0.15 + 0.07 * blot(x, z, 0.09, 2.2)) / 0.16), 0.85 * land(x, z, y, d) * ss((blot(x, z, 0.072, 7.7) - 0.55) / 0.4)) }] });
       // sea: a deep-blue bed under everything and the water over it, half transparent
       const plane = (m, y) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), m); p.rotation.x = -Math.PI / 2; p.position.set(0, y, -550); h.scene.add(p); return p; };
       plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); plane(h.mat('seaTurquoise', { rep: [1200, 1200], transparent: true, opacity: 0.6, depthWrite: false }), SEA);
@@ -42,7 +48,8 @@
       // MAT: the shared materials of the map, one draw pass each: every real piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the egee shapes
       const lime = c => h.mat('chauxEgee', {}, c), leaf = c => h.mat('feuillageEgee', {}, c), MAT = { lime: h.mat('facadeEgee'), limeV: h.mat('facadeEgee', {}, '#2f7d6b'), blanc: lime('#e4dccb'), bleu: lime('#1c6eb0'), corail: lime('#ed7956'), vert: lime('#2f7d6b'),
         pierre: h.mat('pierreEgee'), ocre: h.mat('stone'), roche: h.mat('rocheEgee', {}, ROCK), cap: h.mat('rocheEgee', {}, '#bfa684'), loin: h.mat('rocheEgee', {}, '#6e6a62', 0.5), pavage: h.mat('pavageEgee', DS), bois: h.mat('boisEgee'), boisB: h.mat('boisEgee', {}, '#3f7fb0'),
-        tronc: h.mat('boisEgee', {}, '#5a4632'), toile: h.mat('toileEgee', DS), toileR: h.mat('toileEgee', DS, '#ed7956'), chaume: h.mat('thatch'), olive: leaf('#76815a'), cypres: leaf('#3f5a44'), fleur: leaf('#d74e92'), buisson: leaf('#8a8f5e'), feu: h.mat('lampObj', { emis: 1 }) };
+        tronc: h.mat('boisEgee', {}, '#5a4632'), toile: h.mat('toileEgee', DS), toileR: h.mat('toileEgee', DS, '#ed7956'), chaume: h.mat('thatch'), olive: leaf('#76815a'), cypres: leaf('#3f5a44'), fleur: leaf('#d74e92'), buisson: leaf('#8a8f5e'), figue: leaf('#5f7f45'), nopal: leaf('#86a56c'), agave: leaf('#7f9a8c'), thym: leaf('#8f84a0'),
+        noir: lime('#30333a'), verre: lime('#4a6a80'), filet: lime('#d2a23c'), feu: h.mat('lampObj', { emis: 1 }) };
       const kit = new THREE.Group(); h.scene.add(kit);
       const smp = pk => S[((Math.round(pk / LAP * N) % N) + N) % N];
       // pos(pk, sd, off): the point `off` metres beyond the road wall at chainage pk, side sd (-1 island, 1 sea): its ground altitude and the rotation that turns a shape's front (+X) to the road
@@ -60,7 +67,7 @@
       const wall = (m, pk0, pk1, sd, off, ht, { cap = 0, th = 0.9, up = 0 } = {}) => { for (let pk = pk0 + 4; pk < pk1; pk += 8) { const p = pos(pk, sd, off), top = pos(pk, sd, off + up).y + ht, G = grp(p, { y: top });
         h.pose('boxMesh', MAT[m], G, [0, -(ht + 6) / 2, 0], th, ht + 6, 8.6 + off * 0.05); if (cap) h.pose('boxMesh', MAT.blanc, G, [0, 0.12, 0], th + 0.3, 0.25, 8.6 + off * 0.05); } };
       // trees and bushes, placed in number at the end (one draw pass per kind). plant(kind, pk, sd, off, scale): one of them, on the ground, unless it would stand in the water, on a cliff or within reach of any stretch of road
-      const PLANTS = { olive: [], cypres: [], buisson: [], fleur: [] };
+      const PLANTS = { olive: [], figue: [], cypres: [], buisson: [], fleur: [], thym: [], nopal: [], agave: [], caillou: [] }; // figue: a fig tree, the olive shape in a darker green; thym: a low mauve cushion; caillou: a stone of the scree
       const plant = (kind, pk, sd, off, sc = 1, dy = 0) => { const p = pos(pk, sd, off), q = pos(pk, sd, off + 3); if (p.y < SEA + 1 || Math.abs(q.y - p.y) > 2.4 || g.dAt(p.x, p.z) < p.s.w + 2.5) return; PLANTS[kind].push([p.x, p.y - 0.2 + dy, p.z, hsh(pk, off) * 6.28, sc, sc * (0.85 + 0.3 * hsh(off, pk)), sc]); };
       // grove(kind, pk0, pk1, sd, off0, off1, step, scale): a loose grid of plants, one about every `step` metres, each moved and scaled a little
       const grove = (kind, pk0, pk1, sd, off0, off1, step, sc = 1) => { for (let pk = pk0; pk < pk1; pk += step) for (let o = off0; o < off1; o += step) plant(kind, pk + (hsh(pk, o) - 0.5) * step * 0.7, sd, o + (hsh(o, pk) - 0.5) * step * 0.7, sc * (0.8 + 0.4 * hsh(pk + 1, o))); };
@@ -69,10 +76,29 @@
       // small things of the country road. shrine(pk, sd): a roadside shrine, a lime box under a blue cap; hut(pk, sd, off): a dry-stone field hut with a lime roof
       const shrine = (pk, sd) => { box('blanc', pk, sd, 2.4, 0.9, 1.5, 0.9); box('bleu', pk, sd, 2.3, 1.1, 0.25, 1.1, { dy: 1.5 }); };
       const hut = (pk, sd, off) => { box('pierre', pk, sd, off, 5, 4.2, 6, { dy: -1.5 }); box('blanc', pk, sd, off - 0.2, 5.4, 0.3, 6.4, { dy: 2.7 }); };
+      // poles(pk0, pk1, sd, off, step): a line of power poles and its two wires. The spans are straight: in a bend the chord cuts the curve, so the step stays short
+      const poles = (pk0, pk1, sd, off, step = 26) => { let a = null; for (let pk = pk0, k = 0; pk <= pk1; pk += step, k++) { const b = pos(pk, sd, off); set('poteauEgee', pk, sd, off, { a: [k % 5 === 2 ? 1 : 0] });
+        if (a) for (const dy of [8.75, 8.2]) { const G = new THREE.Group(), len = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); G.position.set((a.x + b.x) / 2, (a.y + b.y) / 2 + dy, (a.z + b.z) / 2); kit.add(G); G.lookAt(b.x, b.y + dy, b.z); G.name = 'wire PK ' + Math.round(pk);
+          h.pose('boxMesh', MAT.tronc, G, [0, 0, 0], 0.09, 0.09, len); } a = b; } };
+      // path(pk0, off0, pk1, off1, sd, n): a lime-washed stair or mule path from one point to the other, n slabs, each on its own ground and 2.7 m deep in it
+      const path = (pk0, off0, pk1, off1, sd, n, w = 2.4) => { for (let i = 0; i <= n; i++) box('blanc', pk0 + (pk1 - pk0) * i / n, sd, off0 + (off1 - off0) * i / n, w, 3, w, { dy: -2.7 }); };
+      // cross(material, pk, sd, off0, off1, ht): a field wall that leaves the road at right angles, from off0 to off1 metres beyond the road wall, in 4 m pieces that follow the ground
+      const cross = (m, pk, sd, off0, off1, ht = 1.1) => { for (let o = off0; o < off1; o += 4) box(m, pk, sd, o, 4.3, ht + 2.5, 0.8, { dy: -2.5 }); };
+      // aire(pk, sd, off): a threshing floor, a paved disc 14 m across inside a low dry-stone rim
+      const aire = (pk, sd, off) => { set('ringsEgee', pk, sd, off, { a: [14, [[-3, 7.6, 7.6], [0.55, 7.6, 7.6], [0.55, 6.9, 6.9]]], skin: MAT.pierre }); set('tourEgee', pk, sd, off, { a: [6.95, 6.95, 0.3, 14, 3], skin: MAT.pavage }); };
+      // pen(pk, sd, off, n): a goat pen, its near wall `off` metres beyond the road wall, and n goats inside
+      const pen = (pk, sd, off, n = 4) => { set('enclosEgee', pk, sd, off + 5); for (let i = 0; i < n; i++) set('chevreEgee', pk - 3.5 + hsh(pk, i) * 7, sd, off + 1.5 + hsh(i, pk) * 6, { s: 1.3, ry: hsh(i, 9) * 6.28, skin: { ...MAT, poil: [MAT.blanc, MAT.tronc, MAT.ocre][i % 3] } }); };
+      // rocky islets at mid distance, [PK, metres beyond the wall on the sea side, width, height, depth]: the warm rock of the capes, low and wide, a smaller rock beside each; the largest carries a chapel
+      [[120, 330, 90, 16, 60], [300, 430, 60, 11, 45], [1250, 300, 110, 22, 70], [1700, 380, 70, 14, 50], [3050, 420, 130, 26, 80], [3350, 330, 80, 15, 55], [3800, 380, 100, 20, 60], [4300, 340, 70, 13, 50]].forEach(([pk, off, w, ht, d], i) => {
+        set('rocherEgee', pk, 1, off, { a: [w, ht, d, i + 80], skin: MAT.cap, y: SEA - 0.5 }); set('rocherEgee', pk + 30, 1, off + 25 + w * 0.4, { a: [w * 0.4, ht * 0.5, d * 0.45, i + 90], skin: MAT.roche, y: SEA - 0.5 }); });
+      set('chapelleEgee', 1250, 1, 300, { s: 0.8, y: SEA + 15 });
+      // fishing boats at anchor in the bay, [PK, metres beyond the wall, scale]: all head to the same wind; the further, the bigger. None where the ground is not well under water
+      [[40, 75, 1.4], [200, 100, 1.6], [470, 60, 1.4], [560, 90, 1.6], [640, 130, 1.8], [4480, 70, 1.5], [4380, 110, 1.8], [900, 160, 2], [1200, 190, 2.2], [1500, 170, 2], [1800, 200, 2.2], [3000, 260, 2.6], [3300, 230, 2.6], [3600, 170, 2], [3850, 190, 2.2], [4100, 160, 2]]
+        .forEach(([pk, off, s], i) => { if (pos(pk, 1, off).y < SEA - 1.5) set('kaikiEgee', pk, 1, off, { s, y: SEA - 0.15 * s, skin: { ...MAT, coque: [MAT.corail, MAT.bleu, MAT.blanc][i % 3] } }).rotation.y = 0.6 + hsh(i, 2) * 0.25; });
       // far islands on the horizon, [bearing °, distance, width, height, depth]: long dark backs of dry land, low on the water, greyed by distance (fog). Not pale peaks: they read as icebergs
       [[100, 1700, 1300, 80, 420], [150, 2100, 900, 60, 300], [215, 1900, 1500, 95, 500], [290, 2000, 1000, 70, 380], [10, 1900, 1100, 75, 400], [55, 2200, 800, 55, 300]].forEach(([b, r, w, ht, d], i) => { const a = b * Math.PI / 180;
         const m = h.pose('ileEgee', MAT.loin, kit, [60 + Math.sin(a) * r, SEA - 1, -550 - Math.cos(a) * r], w, ht, d, i); m.rotation.y = -a; });
-      for (const z of ZONES) EGEE[z]({ h, g, THREE, MAT, kit, S, N, SEA, LAP, smp, pos, grp, set, box, house, wall, plant, grove, mill, shrine, hut, hsh });
+      for (const z of ZONES) EGEE[z]({ h, g, THREE, MAT, kit, S, N, SEA, LAP, smp, pos, grp, set, box, house, wall, plant, grove, mill, shrine, hut, poles, path, cross, aire, pen, hsh });
       // nothing over the road: a piece whose footprint (its box in its own frame, read every 4 m) comes within 1.5 m of the drivable band at road height is taken out, whatever placed it.
       // A long piece set beside one stretch of road can reach another one further along the lap (bends, the stacked stretches of the Ascension)
       { const B = new THREE.Box3(), b = new THREE.Box3(), v = new THREE.Vector3(); const out = []; for (const G of [...kit.children]) { if (!G.isGroup) continue; G.updateMatrixWorld(true); B.makeEmpty();
@@ -83,7 +109,8 @@
           if (hit) { kit.remove(G); out.push(G.name || 'box'); } } if (out.length) console.info('egee: ' + out.length + ' pieces taken out, too close to the road: ' + out.join(', ')); }
       weld(h, kit); // one mesh per material
       inst(h, h.geo('olivierEgee'), MAT.olive, PLANTS.olive); inst(h, h.geo('troncEgee'), MAT.tronc, PLANTS.olive); inst(h, h.geo('cypress'), MAT.cypres, PLANTS.cypres);
-      inst(h, h.geo('bush'), MAT.buisson, PLANTS.buisson); inst(h, h.geo('bush'), MAT.fleur, PLANTS.fleur);
+      inst(h, h.geo('bush'), MAT.buisson, PLANTS.buisson); inst(h, h.geo('bush'), MAT.fleur, PLANTS.fleur); inst(h, h.geo('bush'), MAT.thym, PLANTS.thym);
+      inst(h, h.geo('olivierEgee'), MAT.figue, PLANTS.figue); inst(h, h.geo('troncEgee'), MAT.tronc, PLANTS.figue); inst(h, h.geo('nopalEgee'), MAT.nopal, PLANTS.nopal); inst(h, h.geo('agaveEgee'), MAT.agave, PLANTS.agave); inst(h, h.geo('caillouEgee'), MAT.roche, PLANTS.caillou);
     },
   });
 })();
