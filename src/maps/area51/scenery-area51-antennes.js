@@ -15,7 +15,6 @@
   for (let i = 0; i < 10; i++) { const p = l0 + i * step, what = i % 5;
     if (what === 0 || what === 3) side('mastLighting', p, -1, 9, 2.5, { s: 0.5 }); else if (what === 1) side('gueriteArea51', p, -1, 10, 3, { a: [6, 10] }); else if (what === 2) dish(...sideXZ(p, -1, 22), 0.1); else side(i === 4 ? 'mastRelaisArea51' : 'transfoArea51', p, -1, 12, i === 4 ? 1 : 6, { a: i === 4 ? [26] : [12, 10] }); }
   dish(690, 760, 0.34); dish(805, 690, 0.34); dish(712, 625, 0.34);                            // D2, D3, D4 (40 m) on their pads either side of the arm: the kinks of the road dodge the pads
-  along('railsArea51', pk(755, 770), pk(752, 670), -1, 6, 1.5, 10, { tilt: 1 });                            // the transporter track along the arm
   set('shedArea51', 835, 805, { a: [34, 30, 34], ry: Math.PI / 2 });                           // the barn where a dish is overhauled, its door toward the arm
   set('transfoArea51', 805, 575, { a: [12, 12] }); set('shedArea51', 690, 525, { a: [30, 8, 20], ry: -Math.PI / 2 }); // the control building of the array, inside the left turn that leaves the arm
 };

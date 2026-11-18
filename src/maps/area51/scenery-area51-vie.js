@@ -24,11 +24,11 @@
 
   // ---------- indoors: hall H1 (its two gable doors) and B1 (its two portals). Level 1 = an engine tunnel; the hall keeps some dusk through its 40 m doors ----------
   const iH0 = idx(1860, 880), iH1 = idx(1560, 880), IN = new Float32Array(N);
-  for (const [a, b, lv] of [[iH0, iH1, 0.8], [t0 - 6, t1 + 6, 1]]) for (let i = a - 6; i <= b + 6; i++) IN[i] = Math.max(IN[i], lv * ss(Math.min(i - a + 6, b + 6 - i) / 14));
+  for (const [a, b, lv] of [[iH0, iH1, 0.65], [t0 - 6, t1 + 6, 1]]) for (let i = a - 6; i <= b + 6; i++) IN[i] = Math.max(IN[i], lv * ss(Math.min(i - a + 6, b + 6 - i) / 14));
   // real lamps where lamps are drawn. Hall: under the strip lights, along the lane. B1: one ceiling fitting in three (24 m), at the height of the room it is in
-  for (let i = iH0 + 6; i < iH1; i += 14) h.emis(i, S[i].x, S[i].y + 19, S[i].z, 0xfff0d0, 40, 2.4);
-  for (let i = t0 - 2; i <= t1 + 2; i += 12) { const c = room(i)[4]; h.emis(i, S[i].x, S[i].y + c - 1.5, S[i].z, 0xd8e6ff, Math.max(20, c * 1.5), 2.6); }
-  for (const i of [t0 - 10, t1 + 10]) h.emis(i, S[i].x, S[i].y + 9, S[i].z, 0xffb85a, 30, 2.5); // a sodium lamp over each portal: the mouth is lit before the dark
+  for (let i = iH0 + 4; i < iH1; i += 8) h.emis(i, S[i].x, S[i].y + 17, S[i].z, 0xfff4e0, 56, 1.5); // a working hangar: strong, even, white light from the strip runs
+  for (let i = t0 - 2; i <= t1 + 2; i += 12) { const c = Math.min(room(i)[4], 12); h.emis(i, S[i].x, S[i].y + c - 1.5, S[i].z, 0xd8e6ff, 32, 2.2); } // every lamp at the same height over the road, the same range and strength: the level does not jump from one room to the next
+  for (const i of [t0 - 10, t1 + 10]) h.emis(i, S[i].x, S[i].y + 9, S[i].z, 0xffb85a, 30, 1.8); // a sodium lamp over each portal: the mouth is lit before the dark
   // hall floor: a pale streak under each run of strip lights, as on a polished floor (no wet pass: the map lays its own roadway). Just above the lane, which crosses them
   { const pg = new THREE.PlaneGeometry(288, 2.6, 1, 2), u = pg.attributes.uv; for (let i = 0; i < u.count; i++) u.setXY(i, 0.5, Math.abs(u.getY(i) - 0.5) * 2); pg.rotateX(-PI / 2);
     const m = glowM('#fff2d0', { opacity: 0.3 }); for (const z of [-40, -14, 14, 40]) { const q = new THREE.Mesh(pg, m); q.position.set(1710 * k, 1.58, (880 + z) * k); kit.add(q); } }
@@ -41,15 +41,15 @@
     const L2 = lay(84, 84, 1210, yW + 0.06, 1262, -PI / 2, 3, 0.55, -0.016, 0.01);                     // on the water, the other way
     const C1 = lay(124, 96, 1216, sp.y + 25.6, 1250, PI / 2, 3, 0.2, 0.01, -0.006), C2 = lay(124, 96, 1216, sp.y + 25.5, 1250, PI / 2, 2, 0.16, -0.007, 0.009); // under the vault
     const C3 = lay(118, 30, 1222, sp.y + 12, 1198.7, 0, 3, 0.2, 0.008, 0.012);                          // on the wall across the pool
-    const l1 = h.emis(iP, 1210 * k, yW + 4, 1262 * k, 0x4fb8ff, 110, 4.5), l2 = h.emis(iP, (1210 * k + sp.x) / 2, sp.y + 1, (1262 * k + sp.z) / 2, 0x4fb8ff, 46, 2.5), c1 = l1.c.clone(), c2 = l2.c.clone();
+    const l1 = h.emis(iP, 1210 * k, yW + 4, 1262 * k, 0x4fb8ff, 80, 3), l2 = h.emis(iP, (1210 * k + sp.x) / 2, sp.y + 1, (1262 * k + sp.z) / 2, 0x4fb8ff, 46, 2.5), c1 = l1.c.clone(), c2 = l2.c.clone();
     const crane = out(REG.pontPolaireArea51[0]), z0 = crane.position.z; weld(h, crane);
     TICK.push(dt => { for (const [t, u, v] of FL) { t.offset.x = (t.offset.x + u * dt) % 1; t.offset.y = (t.offset.y + v * dt) % 1; }
       const b = 0.85 + 0.15 * Math.sin(T * 1.047); l1.c.copy(c1).multiplyScalar(b); l2.c.copy(c2).multiplyScalar(b); L2.material.opacity = 0.55 * b; C1.material.opacity = 0.2 * b; C2.material.opacity = 0.16 * b; C3.material.opacity = 0.2 * b; // 6 s breath
       crane.position.z = z0 + 10 * Math.sin(T * 0.157); }); }                                          // 20 m and back in 40 s
   // the lock (Z2-07): an amber beacon turning between the two bulkheads, its light sweeping the walls (steady turn, no flash: the lock is in a bend)
   { const i = (rooms[0][0] + rooms[0][1]) >> 1, s = S[i], b = new THREE.Group(); b.position.set(s.x, s.y + 9.9, s.z); b.userData.dyn = 1; scene.add(b); h.pose('boxMesh', lampM(0xff9a20), b, [0, 0, 0], 2.8, 0.7, 0.7); h.pose('boxMesh', MAT.gray, b, [0, 0.6, 0], 0.6, 0.6, 0.6);
-    const l = h.emis(i, s.x, s.y + 8, s.z, 0xff8a20, 30, 3), c0 = l.c.clone(); TICK.push(dt => { b.rotation.y += dt * 4.2; l.c.copy(c0).multiplyScalar(0.75 + 0.25 * Math.sin(b.rotation.y * 2)); }); }
-  { const i = idx(1210, 1324), s = S[i], [x, z] = edgePt(s, 1, -17); h.emis(i, x, s.y + 9, z, 0xbfe0ff, 22, 2.5); } // the control-room glazing lights the gallery below it
+    const l = h.emis(i, s.x, s.y + 8, s.z, 0xff8a20, 30, 2), c0 = l.c.clone(); TICK.push(dt => { b.rotation.y += dt * 4.2; l.c.copy(c0).multiplyScalar(0.75 + 0.25 * Math.sin(b.rotation.y * 2)); }); }
+  { const i = idx(1210, 1324), s = S[i], [x, z] = edgePt(s, 1, -17); h.emis(i, x, s.y + 9, z, 0xbfe0ff, 22, 1.8); } // the control-room glazing lights the gallery below it
   h.steam(1285 * k, hAt(1285, 1440) + 14, 1440 * k);                                                    // the cooler on the mesa (Z2-10)
 
   // ---------- everything that listens turns together (Z3-01 to Z3-04): the dishes on one shared drive, slewing, then locking on the bearing of the signal ----------
@@ -104,39 +104,40 @@
     const fl = star(glowM('#ffa030', {}), 1, 5, 4.9, 0, tug); // its amber light: it swells and thins, it never goes out (the chicane is not far)
     TICK.push((dt, car) => { const f = 1.8 * (0.55 + 0.45 * beat(T, 1.3)); for (const d of fl) d.scale.setScalar(f); if (car.idx > 200 && car.idx < 800) tug.position.x = 1868 * k; else tug.position.x = Math.max(1765 * k, tug.position.x - 2 * dt); tugP.x = tug.position.x; }); }
 
-  // ---------- the takeoff on runway B (Z5-01 to Z5-03): once per lap, alongside the runway A sprint. One of the hangar's prototypes: the needle on even laps (afterburner), the arrowhead on odd laps (dark) ----------
-  const iA = idx(1409, 379), TRIG = iA - 300, END = idx(1975, 400) + 120, X0 = 1320, jetP = { x: X0 * k, y: 0, z: 120 * k }, jet = { t: -1, type: 0, thr: 0 };
+  // ---------- the takeoff on runway B (Z5-01 to Z5-03): once per lap, alongside the runway A sprint. The hangar's needle every lap, afterburner lit; it rolls 170 m off the car (it was 280), kicks up dust, and climbs across the sky ahead ----------
+  const iA = idx(1409, 379), TRIG = iA - 170, END = idx(1975, 400) + 120, X0 = 1320, JZ = 300, jetP = { x: X0 * k, y: 0, z: JZ * k }, jet = { t: -1, type: 0, thr: 0 };
   { const J = [out(REG.sr71Area51.find(a => Math.abs(a.position.z - 120 * k) < 1)), out(avion('f117', X0, 120, { y: -0.2, s: 2.2, ry: PI / 2 }))];
-    for (const j of J) { weld(h, j); j.rotation.order = 'YXZ'; j.scale.multiplyScalar(1.25); }
-    const ab = new THREE.Group(), cg = new THREE.CylinderGeometry(0.12, 0.85, 9, 8); cg.rotateX(-PI / 2); cg.translate(0, 0, -4.5); ab.position.z = -10.9; J[0].add(ab); for (const sd of [-1, 1]) { const c = new THREE.Mesh(cg, lampM(0xffb060)); c.position.set(sd * 4.6, 2.8, 0); ab.add(c); }
+    for (const j of J) { weld(h, j); j.rotation.order = 'YXZ'; j.scale.multiplyScalar(1.7); }
+    const ab = new THREE.Group(), cg = new THREE.CylinderGeometry(0.2, 1.25, 16, 8), cg2 = new THREE.CylinderGeometry(0.1, 0.6, 10, 8); cg.rotateX(-PI / 2); cg.translate(0, 0, -8); cg2.rotateX(-PI / 2); cg2.translate(0, 0, -5); ab.position.z = -10.9 * 1.0; J[0].add(ab);
+    for (const sd of [-1, 1]) for (const [g2, c2] of [[cg, 0xff9a40], [cg2, 0xfff0c8]]) { const c = new THREE.Mesh(g2, lampM(c2)); c.position.set(sd * 4.6, 2.8, 0); ab.add(c); } // an orange flame with a white core, 16 m long
     const glare = new THREE.Mesh(DISC, glowM('#ff9a40', {})); glare.userData.dyn = 1; scene.add(glare); h.beams.push(glare);
-    const SPOOL = 3;
+    const SPOOL = 3, dustM = glowM('#d8bc94', { opacity: 0.5 }), PUFF = Array.from({ length: 30 }, () => { const m = new THREE.Mesh(DISC, dustM); m.userData.dyn = 1; m.visible = false; scene.add(m); return { m, a: 9 }; }); let nP = 0, tP = 0; // dust: a ring of soft discs the nozzles blow up the runway, each swelling, rising and thinning over 4 s
     TICK.push((dt, car) => { const i = car.idx, lap = Math.floor((car.dist || 0) / N);
-      if (jet.t < 0) { jet.type = lap & 1; if (i >= TRIG && i < END) jet.t = i < TRIG + 40 ? 0 : (i - TRIG) * 2 / 46; } // a car set down past the trigger (replay, capture) finds the aircraft where it would be
+      if (jet.t < 0) { jet.type = 0; if (i >= TRIG && i < END) jet.t = i < TRIG + 40 ? 0 : (i - TRIG) * 2 / 46; } // a car set down past the trigger (replay, capture) finds the aircraft where it would be
       else { jet.t += dt; if (i >= 200 && i <= t1) jet.t = -1; }                                        // back to the hold while the car is in the hall or under the mesa
       const ty = jet.type, A = ty ? 5 : 4.8, VR = ty ? 68 : 78, tau = jet.t - SPOOL, tR = VR / A, u = tau - tR, j = J[ty]; J[1 - ty].visible = false;
-      let x = X0, y = -0.2, z = 120, pitch = 0, bank = 0, yaw = 0, thr = jet.t < 0 ? 0 : 0.5 * ss(jet.t / SPOOL), fire = 0;
-      if (tau > 0) { thr = 0.5 + 0.5 * ss(tau); fire = ss(tau / 1.2) * (1 - ss((u - 3) / 7));
-        if (u < 0) x += A / 2 * tau * tau; else { const v = VR + 2 * u, w = Math.max(0, u - 0.6), q = Math.max(0, u - 5), lat = q < 8 ? 2.2 * q * q : 140.8 + 35.2 * (q - 8);
-          x += A / 2 * tR * tR + VR * u + u * u; pitch = 0.24 * ss((u + 0.8) / 3); y += 0.22 * (VR * w + w * w) * ss(w / 1.5); bank = 0.35 * ss(q / 4); yaw = Math.atan2(Math.min(q, 8) * 4.4, v); z -= lat; } }
+      let x = X0, y = -0.2, z = JZ, pitch = 0, bank = 0, yaw = 0, thr = jet.t < 0 ? 0 : 0.35 * ss(jet.t / SPOOL), fire = 0;
+      if (tau > 0) { thr = 0.35 + 0.65 * ss(tau / (tR + 8)); fire = ss(tau / 1.2) * (1 - ss((u - 6) / 12)); // the roar and the flame grow through the whole roll and the climb
+        if (u < 0) x += A / 2 * tau * tau; else { const v = VR + 2 * u, w = Math.max(0, u - 0.6), q = Math.max(0, u - 5), lat = q < 8 ? 0.8 * q * q : 51.2 + 12.8 * (q - 8);
+          x += A / 2 * tR * tR + VR * u + u * u; pitch = 0.32 * ss((u + 0.8) / 3); y += 0.3 * (VR * w + w * w) * ss(w / 1.5); bank = 0.2 * ss(q / 4); yaw = Math.atan2(Math.min(q, 8) * 1.6, v); z -= lat; } }
       j.visible = x < 6500; j.position.set(x * k, y, z * k); j.rotation.set(-pitch, PI / 2 + yaw, -bank); jetP.x = x * k; jetP.y = y; jetP.z = z * k; jet.thr = thr;
       ab.visible = glare.visible = !ty && fire > 0.02; ab.scale.z = fire * (0.9 + 0.1 * Math.sin(T * 9)); // the flames lengthen with the throttle and die out in the climb
-      if (glare.visible) { glare.position.set((x - 24 * Math.cos(yaw)) * k, y + 5.6 + 22 * Math.sin(pitch), (z + 24 * Math.sin(yaw)) * k); glare.scale.setScalar(10 * fire); } }); }
+      if (glare.visible) { glare.position.set((x - 24 * Math.cos(yaw)) * k, y + 5.6 + 22 * Math.sin(pitch), (z + 24 * Math.sin(yaw)) * k); glare.scale.setScalar(26 * fire); }
+      tP -= dt; if (tau > 0 && y < 4 && thr > 0.4 && tP < 0) { tP = 0.07; const q = PUFF[nP++ % PUFF.length]; q.a = 0; q.x = x - 14 - Math.random() * 6; q.z = z + (Math.random() - 0.5) * 14; q.s = 5 + Math.random() * 4; } // dust on the runway while it rolls
+      for (const q of PUFF) { if (q.a < 4) { q.a += dt; const f = q.a / 4; q.m.visible = true; q.m.position.set(q.x * k, 1 + 9 * f, q.z * k); q.m.scale.setScalar(q.s * (1 + 3.5 * f)); dustM.opacity = 0.5; q.m.scale.y *= 0.55; } else q.m.visible = false; } }); }
 
-  // ---------- the visitors (Z4-08): each shows on three laps in eight, a different set every lap; two of them wave. None appears or leaves within 120 m of the car ----------
+  // ---------- the visitors (Z4-08): all eight are there on every lap, pale against the blue hour; two of them wave ----------
   { const V = (REG.alienArea51 || []).map(out), W = []; for (const v of V) weld(h, v);
     for (const n of [1, 3]) if (V[n]) { const a = new THREE.Group(); a.position.copy(V[n].position); a.quaternion.copy(V[n].quaternion); a.scale.copy(V[n].scale); a.userData.dyn = 1; scene.add(a); h.pose('alienArea51', MAT, a, [0, 0, 0], 1.4, 0); weld(h, a); a.visible = false; W.push([V[n], a]); }
-    const shown = V.map(() => true);
-    TICK.push((dt, car) => { const lap = Math.floor((car.dist || 0) / N);
-      V.forEach((v, n) => { if (Math.hypot(v.position.x - car.x, v.position.z - car.z) > 120) shown[n] = (lap * 3 + n * 5) % 8 < 3; v.visible = shown[n]; });
-      for (const [v, a] of W) { const n = V.indexOf(v), up = Math.sin(T * 6.28) > 0; v.visible = shown[n] && up; a.visible = shown[n] && !up; } }); }
+    TICK.push(() => {
+      for (const [v, a] of W) { const n = V.indexOf(v), up = Math.sin(T * 6.28) > 0; v.visible = up; a.visible = !up; } }); }
 
   // ---------- the sound of the place (SOUND.spots, SOUND.brief of audio.js): sources heard by distance and side; the beds per zone are AMB and AMBZ ----------
   if (window.SOUND && SOUND.spots) { const P = (x, y, z) => ({ x: x * k, y, z: z * k }), tower = P(1480, 30, 800);
     const sJet = { p: jetP, sound: 'jetArea51', r: 1500, vol: 0 }, sServo = { p: P(560, hAt(560, 1010) + 20, 1010), sound: 'servoArea51', r: 280, vol: 0.2 }, sPick = { p: pickP, sound: 'dieselArea51', r: 90, vol: 0.6 };
     SOUND.spots('area51', [sJet, sServo, sPick, { p: tugP, sound: 'dieselArea51', r: 130, vol: 0.5 }, { p: P(1210, S[idx(1210, 1262)].y - 4, 1262), sound: 'turbine', r: 120, vol: 0.8, int: 1 }, { p: P(1535, hAt(1535, 1150) + 4, 1150), sound: 'transformer', r: 130, vol: 0.8 }]);
     let tChime = 20, tClang = 12;
-    TICK.push((dt, car) => { sJet.vol = jet.t < 0 ? 0 : 0.7 * jet.thr * jet.thr; sServo.vol = 0.2 + 0.8 * Math.abs(drive.v) / RATE; const i = car.idx;
+    TICK.push((dt, car) => { sJet.vol = jet.t < 0 ? 0 : 0.95 * jet.thr * jet.thr; sServo.vol = 0.2 + 0.8 * Math.abs(drive.v) / RATE; const i = car.idx;
       if ((i > iD0 + 100 || i < iH0) && (tChime -= dt) < 0) { tChime = 40 + Math.random() * 30; SOUND.brief('chimeArea51', tower, 1, 1200); }               // Z5-09: the tower's chime over the airfield
       if (i > t0 && i < t1 && (tClang -= dt) < 0) { tClang = 20 + Math.random() * 20; const s = S[(i + 30) % N]; SOUND.brief('clangArea51', { x: s.x, y: s.y + 6, z: s.z }, 1, 160); } }); } // Z2-09: metal struck somewhere down the gallery
 
