@@ -30,6 +30,13 @@
     jauneArea51: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#e2b838', 0, 0, 16, 16); veil(g, 0.4, () => { for (let i = 0; i < 14; i++) R(g, '#4c525a', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],
     // hazard band, yellow and black at 45°, 4 m per tile
     dangerArea51: () => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, '#e8c040', 0, 0, 32, 32); for (let k = -32; k < 32; k += 16) for (let i = 0; i < 32; i++) R(g, '#16181c', k + i, i, 8, 1); veil(g, 0.25, () => { for (let i = 0; i < 20; i++) R(g, '#000', rand() * 32 | 0, rand() * 32 | 0, 2, 1); }); }, 4],
+    // skin of the black prototypes: near-black radar-absorbing paint, panel lines every 2 m, a few lighter access panels; 8 m per tile
+    furtifArea51: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#262a34', 0, 0, 64, 64);
+      veil(g, 0.22, () => { for (let k = 0; k < 64; k += 16) { R(g, '#9aa4b8', 0, k, 64, 1); R(g, '#9aa4b8', k, 0, 1, 64); } });
+      veil(g, 0.14, () => { for (let i = 0; i < 7; i++) R(g, '#9aa4b8', rand() * 56 | 0, rand() * 56 | 0, 4 + rand() * 6 | 0, 3 + rand() * 4 | 0); }); grain(g, o, 160, 0.14); }, 8],
+    // radiation warning panel: black trefoil on yellow, one panel per face
+    trefleArea51: () => [32, 32, (g, o) => { const { R } = o; R(g, '#e8c040', 0, 0, 32, 32); R(g, '#16181c', 0, 0, 32, 2); R(g, '#16181c', 0, 30, 32, 2); R(g, '#16181c', 0, 0, 2, 32); R(g, '#16181c', 30, 0, 2, 32);
+      R(g, '#16181c', 14, 14, 4, 4); for (const [x, y, w, ht] of [[12, 4, 8, 3], [11, 7, 10, 3], [13, 10, 6, 2], [4, 19, 4, 7], [6, 17, 5, 6], [10, 17, 3, 3], [24, 19, 4, 7], [21, 17, 5, 6], [19, 17, 3, 3]]) R(g, '#16181c', x, y, w, ht); }],
     cherenkovArea51: 0x4fb8ff, // the blue light of the reactor pool (emits)
     // worn white runway paint, 2 m per tile
     blancArea51: () => [16, 16, (g, o) => { const { R, rand, veil } = o; R(g, '#dcd8cc', 0, 0, 16, 16); veil(g, 0.45, () => { for (let i = 0; i < 16; i++) R(g, '#3a4048', rand() * 16 | 0, rand() * 16 | 0, 1 + (rand() * 2 | 0), 1); }); }, 2],

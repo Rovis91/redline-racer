@@ -2,14 +2,14 @@
 // The placers are described in scenery-area51.js; the shapes are in shapes-area51-relief.js, -perimetre.js, -radio.js and -dish.js. Why this sector exists: it is the security side of the base.
 // The ridge carries the telemetry dish and its relay mast for line of sight over the range (passive: a radar there would deafen D1); the munitions igloos are near the gate, so convoys never cross the base,
 // and in the lee of the spur, so the relief shields the hangars; the fence and its watchtowers close the basin; the main gate is where the access road from outside comes in, clear of the lake bed.
-(window.AREA51 = window.AREA51 || {}).collines = ({ h, MAT, set, side, surf, inside, dish, pk, THREE, k }) => {
+(window.AREA51 = window.AREA51 || {}).collines = ({ h, MAT, set, side, along, surf, inside, dish, pk, THREE, k }) => {
   [[520, 472], [295, 425]].forEach(([x, z], i) => side('rocherArea51', pk(x, z), inside(pk(x, z)), 6, 9, { a: [16, 10, 22, i + 3], skin: MAT.rock })); // outcrops the climb and the descent bend round
   surf('concrete', 318, 565, 44, 36, null, 9); dish(310, 560, 0.1); set('mastRelaisArea51', 332, 576); // the telemetry pad fills the inside of the hairpin: the road is its access loop
   [[110, 420, 90, 35, 140], [330, 180, 120, 30, 80], [860, 90, 160, 28, 60]].forEach(([x, z, w, ht, d], i) => set('mesaArea51', x, z, { a: [w, ht, d, i], skin: MAT.rock })); // capped mesas, far from the edges
   // munitions depot: earth-covered igloos 40 m apart. North row: doors on the road. South row: 46 m back, so no two doors face each other at less than 70 m. Its guard hut at the entry
   for (let p = pk(500, 277); p < pk(720, 225); p += 40) for (const [q, sd, off] of [[p, -1, 16], [p + 20, 1, 46]]) { side('butteArea51', q, sd, off, 12, { skin: MAT.sol }); side('iglooArea51', q, sd, off, 12); }
   side('gueriteArea51', pk(500, 277) - 30, 1, 4, 2.2);
-  for (const [x, z] of [[560, 255], [700, 228], [840, 220]]) side('clotureArea51', pk(x, z), -1, 60, 0.5, { a: [140] }); // the fence, outside the depot and the perimeter road
+  along('clotureArea51', pk(500, 277), pk(900, 222), -1, 60, 0.5, 20);                        // the fence, outside the depot and the perimeter road
   for (const [x, z] of [[700, 228], [840, 220]]) side('miradorArea51', pk(x, z), -1, 52, 2);
   // main gate, where the access road meets the perimeter road: a booth and a raised striped barrier on each side, no narrowing; the inspection pad is inside the bend that follows
   const gate = pk(905, 224); for (const sd of [-1, 1]) { side('gueriteArea51', gate, sd, 3, 2.2); side('barriereArea51', gate + 9, sd, 0.6, 0.5); }
