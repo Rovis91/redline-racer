@@ -46,9 +46,10 @@
       { const G = g.mesh.geometry, P = G.attributes.position, Nn = G.attributes.normal, U = G.attributes.uv; for (let k = 0; k < P.count; k++) if (Nn.getY(k) < 0.72) U.setXY(k, (P.getX(k) + P.getZ(k)) * 0.07, P.getY(k) / 10); }
       const DS = { side: THREE.DoubleSide };
       // MAT: the shared materials of the map, one draw pass each for the whole map: every real piece of scenery goes into the group `kit`, merged per material at the end. Keys are also the zone names of the piliers assemblies
-      const MAT = { rock: h.mat('gresPiliers', DS), warm: h.mat('gresPiliers', DS, '#d2b8a2', 0.7), far: h.mat('gresPiliers', DS, '#8c9184', 0.7, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c2a48c', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#6f6e5c', 0.5, 0.6),
+      const VC = { vertexColors: true, ...DS }; // the rock shapes carry a colour per face (shapes-piliers-roche.js)
+      const MAT = { rock: h.mat('gresPiliers', VC, '#c9c1a6'), warm: h.mat('gresPiliers', VC, '#e6cfba', 0.7), far: h.mat('gresPiliers', VC, '#a9ac9c', 0.7, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c2a48c', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#6f6e5c', 0.5, 0.6),
         stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), deep: h.mat('feuillagePiliers', DS, '#35593f'), pale: h.mat('feuillagePiliers', DS, '#7fa860'), gold: h.mat('feuillagePiliers', DS, '#84894a'), bark: h.mat('ecorcePiliers'),
-        rock0: h.mat('gresPiliers', DS), rock1: h.mat('gresPiliers', DS, '#a8a084', 1, 1, 0, 1), rock2: h.mat('gresPiliers', DS, '#8e9479', 1, 0.6, 0, 2),
+        rock0: h.mat('gresPiliers', VC, '#c9c1a6', 1, 1, 0, 3), rock1: h.mat('gresPiliers', VC, '#d2c4a0', 1, 1, 0, 1), rock2: h.mat('gresPiliers', VC, '#bcc0a6', 1, 0.6, 0, 2),
         steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }) };
       const ROCKS = [MAT.rock0, MAT.rock1, MAT.rock2]; // three drawings and tints of the same sandstone, dealt among towers and needles
       const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('nuagePiliers', { rep: [47, 47] })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
@@ -100,7 +101,7 @@
           const min = s.w + 6 + 0.12 * Math.max(0, y - s.y); if ((i - T.t0 + 14 + N) % N <= T.t1 - T.t0 + 28) { if (Math.abs(lat) < s.w + 9 && y < s.y + 12.5) cut[k] = 1; continue; } // round the tunnel: every face that reaches into the opening is removed
           if (y < s.y - 40 || Math.abs(lat) >= min || Math.abs(lon) > 30) continue;
           const l = (lat < 0 ? -1 : 1) * min; P.setX(k, s.x + s.tx * lon - s.tz * l); P.setZ(k, s.z + s.tz * lon + s.tx * l); }
-        if (cut.some(v => v)) for (const a of [P, G.attributes.uv]) { const keep = []; for (let k = 0; k < P.count; k += 3) if (!cut[k] && !cut[k + 1] && !cut[k + 2]) keep.push(...a.array.subarray(k * a.itemSize, (k + 3) * a.itemSize)); G.setAttribute(a === P ? 'position' : 'uv', new THREE.Float32BufferAttribute(keep, a.itemSize)); }
+        if (cut.some(v => v)) for (const name of ['position', 'uv', 'color']) { const a = G.attributes[name], keep = []; for (let k = 0; k < P.count; k += 3) if (!cut[k] && !cut[k + 1] && !cut[k + 2]) keep.push(...a.array.subarray(k * a.itemSize, (k + 3) * a.itemSize)); G.setAttribute(name, new THREE.Float32BufferAttribute(keep, a.itemSize)); }
         G.computeVertexNormals(); return G; };
       // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown and two pines; far = 1: in the pale tints of the distance, no pines
       const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.far : ROCKS[seed % 3] }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf });
@@ -110,9 +111,10 @@
       TOWERS.forEach(([t, P], q) => { const rock = q === 4 ? MAT.warm : ROCKS[q % 3], G = clear(h.pose('stackPiliers', rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
         const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length;
         // the summit: pines and broadleaf trees standing on the crown, denser toward the edge
-        for (let k = 0; k < 16; k++) { const [x, n] = P[k % P.length], f = 0.2 + 0.65 * nz(k, q), X = cx + (x - cx) * f, Z = -(cn + (n - cn) * f); k % 3 ? pine(X, Z, 10 + 9 * nz(q, k), t + 2) : tree(X, Z, 9 + 6 * nz(k, q + 1), 1.1, t + 1); }
-        // the ledges of the stack: a pine, a shrub or a tuft holding on the widest steps, away from the road
-        for (const [x, y, z] of G.userData.ledges) { if (g.dAt(x, z) < 26 || y < 90) continue; const v = nz(x, z + y); v > 0.62 ? pine(x, z, 5 + 6 * nz(y, x), y - 0.5) : v > 0.3 ? shrub(x, z, 1 + 1.5 * v, y - 0.3) : bush(x, z, 4 + 3 * v, 1.6, y - 0.4); }
+        for (let k = 0; k < 28; k++) { const [x, n] = P[k % P.length], f = 0.15 + 0.78 * nz(k, q), X = cx + (x - cx) * f, Z = -(cn + (n - cn) * f); k % 3 ? pine(X, Z, 12 + 12 * nz(q, k), t + 2) : tree(X, Z, 9 + 6 * nz(k, q + 1), 1.1, t + 1); }
+        // the shoulders of the stack: pines (one or two, taller on a wide shoulder), a shrub or a tuft on every step, away from the road
+        for (const [x, y, z, w] of G.userData.ledges) { if (g.dAt(x, z) < 24 || y < 85) continue; const v = nz(x, z + y), k = Math.min(1.6, w / 3);
+          if (v > 0.4) { pine(x, z, (6 + 7 * nz(y, x)) * k, y - 0.5); if (v > 0.7) pine(x + 2.5, z - 2, (5 + 5 * nz(x, y)) * k, y - 0.5); } else v > 0.15 ? shrub(x, z, 1 + 1.5 * v, y - 0.3) : bush(x, z, 4 + 3 * v, 1.6, y - 0.4); }
         // columns split off the tower: lower needles standing against its flanks
         if (q < 6) for (let k = 0; k < 6; k++) { const i = (k * 2 + q) % P.length, [x, n] = P[i], l = Math.hypot(x - cx, n - cn), o = 1 + (16 + 26 * nz(k, q + 3)) / l, X = cx + (x - cx) * o, Nn = cn + (n - cn) * o, w = 12 + 12 * nz(q, k + 5);
           if (g.dAt(X, -Nn) > 60) needle(X, Nn, w, w * (0.8 + 0.5 * nz(k, q)), t * (0.42 + 0.34 * nz(q + k, 2)), q * 7 + k); }

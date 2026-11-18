@@ -2,9 +2,9 @@
 // See docs/proposals/sky-pillars/AMBIANCE-V2.html, "Rock": this sandstone is stacked. Horizontal beds, vertical joints that cut the towers into square-edged columns, ledges, a wider foot. Not a smooth slope, not a cone.
 (function () {
   const noise = (i, s = 0) => { const v = Math.sin(i * 12.9898 + s * 78.233) * 43758.5453; return v - Math.floor(v); }; // fixed pseudo-random per index: no call to the shared rnd
-  // a faceted geometry from triangles of corners [x, y, z, u, v]
-  const mesh = Tr => { const P = [], UV = []; for (const p of Tr) { P.push(p[0], p[1], p[2]); UV.push(p[3], p[4]); }
-    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.computeVertexNormals(); return g; };
+  // a faceted geometry from triangles of corners [x, y, z, u, v, colour]: the colour (white when absent) is read by the materials that ask for vertex colours, the rock
+  const mesh = Tr => { const P = [], UV = [], C = []; for (const p of Tr) { P.push(p[0], p[1], p[2]); UV.push(p[3], p[4]); C.push(...(p[5] || [1, 1, 1])); }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); g.computeVertexNormals(); return g; };
   // the outline of a footprint [[east, north], …] in world axes (z = -north), cut into sides of at most `fine` metres: [x, z, outward normal x, outward normal z, metres along the outline]
   const outline = (poly, fine) => { const V = []; let A = 0, L = 0; poly.forEach(([x, n], i) => { const [bx, bn] = poly[(i + 1) % poly.length], k = Math.max(1, Math.ceil(Math.hypot(bx - x, bn - n) / fine)); A += x * -bn - bx * -n;
       for (let j = 0; j < k; j++) V.push([x + (bx - x) * j / k, -(n + (bn - n) * j / k)]); });
@@ -17,16 +17,20 @@
   // and its corners move in and out by `jit` metres, the same way over four beds: that is what draws the columns (neighbouring corners share their offset: flat column faces with a step between them). cap: 1 = closed by a flat rock top; bottom: 1 = closed underneath (a mass over a void)
   const stack = (poly, y0, y1, seed = 0, taper = 0.125, bed = 6, cap = 0, jit = 2.2, bottom = 0, fine = 10) => { const V = outline(poly, fine), n = V.length, Y = [y0], Tr = [], U = Math.max(1, Math.round(V.per / 16)), ku = U / V.per, T = 16; // rock is read from far: 16 m per tile, beds 1 to 3 m
     for (let b = 0; Y[b] < y1 - bed * 0.5; b++) Y.push(Math.min(y1, Y[b] + bed * (0.55 + 0.9 * noise(b, seed + 3)))); Y[Y.length - 1] = y1;
-    const nb = Y.length - 1, ring = b => { const top = b === nb - 1, off = (y1 - (Y[b] + Y[b + 1]) / 2) * taper + (top ? 0 : jit * 1.1 + 0.9 * noise(b, seed + 7));
-      return V.map(([x, z, nx, nz, l], j) => { const o = off + (top ? 0 : jit * (noise((j + (b >> 2)) >> 1, seed + (b >> 2) * 5) - 0.5) * 2); return [x + nx * o, z + nz * o, l * ku, o]; }); };
-    const quad = (a, b, c, d) => Tr.push(a, b, c, a, c, d), ledges = []; let low = null, last; // ledges: [x, y, z] of the widest steps, where a pine or a bush can hold
-    for (let b = 0; b < nb; b++) { const R = ring(b); last = R;
+    // blocks: the beds are grouped into blocks 22 to 56 m high. A block is a vertical face; the taper is taken all at once at its foot, as a shoulder several metres wide where trees hold
+    const nb = Y.length - 1, base = [], grp = []; for (let b = 0, g0 = y0, gi = 0; b < nb; b++) { if (Y[b] - g0 > 22 + 34 * noise(gi, seed + 13)) { g0 = Y[b]; gi++; } base[b] = g0; grp[b] = gi; }
+    const ring = b => { const top = b === nb - 1, off = (y1 - base[b]) * taper + (top ? 0 : jit * 1.1 + 0.9 * noise(b, seed + 7));
+      return V.map(([x, z, nx, nz, l], j) => { const o = off + (top ? 0 : jit * (noise((j + grp[b]) >> 1, seed + grp[b] * 5) - 0.5) * 2); return [x + nx * o, z + nz * o, l * ku, o]; }); };
+    // colour per face, multiplied with the texture: each column of each block between weathered grey and fresh ochre, each bed a little off its neighbours; the ledges mossy. No two towers, and no two blocks, show the same tile
+    const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t), tint = (j, b) => mix([0.74, 0.78, 0.78], [1, 0.9, 0.72], Math.min(1, 0.5 * noise((j + grp[b]) >> 1, seed + grp[b] * 9 + 40) + 0.4 * noise(b, seed + 50 + (j >> 2)))), MOSS = [0.6, 0.72, 0.52];
+    const quad = (a, b, c, d, col) => { for (const p of [a, b, c, a, c, d]) Tr.push([...p, col]); }, ledges = []; let low = null, last; // ledges: [x, y, z, width] of the steps more than 2 m wide, where a pine or a bush can hold
+    for (let b = 0; b < nb; b++) { const R = ring(b), du = noise(b, seed + 31); last = R;
       for (let j = 0; j < n; j++) { const p = R[j], q = R[(j + 1) % n], uq = j === n - 1 ? U : q[2];
-        quad([p[0], Y[b], p[1], p[2], Y[b] / T], [q[0], Y[b], q[1], uq, Y[b] / T], [q[0], Y[b + 1], q[1], uq, Y[b + 1] / T], [p[0], Y[b + 1], p[1], p[2], Y[b + 1] / T]);
-        if (low && low[j][3] - p[3] > 1.6 && noise(j * 7 + b, seed + 11) > 0.45) ledges.push([(low[j][0] + p[0]) / 2, Y[b], (low[j][1] + p[1]) / 2]);
-        if (low) { const lp = low[j], lq = low[(j + 1) % n], ul = uq; quad([lp[0], Y[b], lp[1], lp[2], (Y[b] + lp[3]) / T], [lq[0], Y[b], lq[1], ul, (Y[b] + lq[3]) / T], [q[0], Y[b], q[1], uq, (Y[b] + q[3]) / T], [p[0], Y[b], p[1], p[2], (Y[b] + p[3]) / T]); } }
+        quad([p[0], Y[b], p[1], p[2] + du, Y[b] / T], [q[0], Y[b], q[1], uq + du, Y[b] / T], [q[0], Y[b + 1], q[1], uq + du, Y[b + 1] / T], [p[0], Y[b + 1], p[1], p[2] + du, Y[b + 1] / T], tint(j, b));
+        if (low && low[j][3] - p[3] > 2) ledges.push([(low[j][0] + p[0]) / 2, Y[b], (low[j][1] + p[1]) / 2, low[j][3] - p[3]]);
+        if (low) { const lp = low[j], lq = low[(j + 1) % n], ul = uq; quad([lp[0], Y[b], lp[1], lp[2], (Y[b] + lp[3]) / T], [lq[0], Y[b], lq[1], ul, (Y[b] + lq[3]) / T], [q[0], Y[b], q[1], uq, (Y[b] + q[3]) / T], [p[0], Y[b], p[1], p[2], (Y[b] + p[3]) / T], MOSS); } }
       low = R; }
-    const lid = (R, y) => { for (const [a, b, c] of THREE.ShapeUtils.triangulateShape(R.map(p => new THREE.Vector2(p[0], p[1])), [])) Tr.push(...[a, b, c].map(k => [R[k][0], y, R[k][1], R[k][0] / 8, R[k][1] / 8])); };
+    const lid = (R, y) => { for (const [a, b, c] of THREE.ShapeUtils.triangulateShape(R.map(p => new THREE.Vector2(p[0], p[1])), [])) Tr.push(...[a, b, c].map(k => [R[k][0], y, R[k][1], R[k][0] / 8, R[k][1] / 8, MOSS])); };
     if (cap) lid(last, y1); if (bottom) lid(ring(0), y0);
     const G = mesh(Tr); G.userData.ledges = ledges; return G; };
   Object.assign(SHAPES, {
