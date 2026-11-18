@@ -2,7 +2,7 @@
 // Specification: docs/proposals/sunken-highway/LIFE-V3.md; method: docs/methods/LIFE.md. What is set in the map's entry (src/data/maps.js): soft shadows, eye, haze, leaves, the wet lane; in src/audio/audio.js: the beds and events.
 // Rules kept here: one clock t that only advances with dt (pause freezes everything); one wind, from the west (the sun) to the east (the river), in gusts of 6 to 12 s; nothing flips like a switch (lights dip and recover on ramps);
 // nothing that moves stands where a car drives, and nothing here collides: what is added stands above the lane, on a wreck, behind a wall or flat on the ground. No call to the shared randomness (h.rnd).
-(window.AUTOROUTE = window.AUTOROUTE || {}).vie = ({ h, I, MAT, kit, HH, water, cityY, TREES, LAMPS, REEDS }) => {
+(window.AUTOROUTE = window.AUTOROUTE || {}).vie = ({ h, I, O, MAT, kit, HH, water, cityY, TREES, LAMPS, REEDS }) => {
   const { THREE, S, N, T, scene } = h, { inst, insts, near } = PLACERS, TICK = [], PI = Math.PI, ss = t => { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }, DS = { side: THREE.DoubleSide };
   let t = 0, gust = 0.5; TICK.push(dt => { t += dt; gust = 0.55 + 0.45 * Math.sin(t * 0.71) * Math.sin(t * 0.23 + 1); }); // gust: 0.1 (lull) to 1, shared by everything the wind moves
   const dyn = o => { o.userData.dyn = 1; o.frustumCulled = false; o.castShadow = false; scene.add(o); return o; }, wet = i => T.surf[((i % N) + N) % N].aq > 0.099;
@@ -65,14 +65,14 @@
 
   // ---------- the hole breathes (Z4-01 to Z4-06): the low sun comes in over what is left of the street (x = 96) and falls east across the cave in one wide bar and a thin one, dust turning in it, a warm pool where it lands;
   // a broken main pours out of the south bank into a runnel at its foot; cables hang from the broken edge ahead and swing in the draught ----------
-  { const L = [0.867, -0.379, -0.325], A = [104, 2.6, 227.5], LEN = 28.5; shaft(A, L, LEN, 2.6, 1.5, 0xffd9a0, 0.16); shaft([100, 2.6, 215.5], L, LEN, 1.1, 0.8, 0xffd9a0, 0.12);
-    h.emis(I.bord + 10, 128.5, -5.6, 218.3, 0xffd8a0, 14, 1.5);
+  { const L = [0.867, -0.379, -0.325], A = [104, 2.6, 227.5], LEN = 15; shaft(A, L, LEN, 2.6, 1.5, 0xffd9a0, 0.16); shaft([100, 2.6, 215.5], L, LEN, 1.1, 0.8, 0xffd9a0, 0.12);
+    h.emis(I.bord + 10, 117, -1.6, 222.6, 0xffd8a0, 14, 1.5);
     const dust = puffs(70, [1, 0.9, 0.7], 0.22, 4.5, 0.05); let acc = 0;
     TICK.push((dt, car) => { if (car.idx < I.bord - 70 || car.idx > T.t0 + 10) return; for (acc += dt; acc > 0.1; acc -= 0.1) { const f = 0.2 + 0.75 * Math.random(); dust.emit(A[0] + L[0] * LEN * f + rnd(3), A[1] + L[1] * LEN * f + rnd(2), A[2] + L[2] * LEN * f + rnd(4), 0.3, 0.1, 0); } });
-    // the main: a stub of pipe in the bank, the sheet falling 5.7 m in an arc (its drawing slides down), spray at its foot, and the runnel along the foot of the bank toward the tube
+    // the main: a stub of pipe in the bank, the sheet falling 3 m in an arc (its drawing slides down), spray at its foot, and the runnel along the foot of the bank toward the tube
     const X = 116, Y = S[near(h, 116, 220)].y, fw = q => Math.min(10, q.w - 0.3), fallM = h.mat('waterDrop', { emis: 1, c: 0xd8e8e2, ...DS, transparent: true, opacity: 0.9, depthWrite: false, smooth: 1 }, 6), runM = h.mat('waterDrop', { emis: 1, c: 0x9ab4a8, ...DS, transparent: true, opacity: 0.4, depthWrite: false, smooth: 1, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }, 6);
-    box(MAT.rust, 1.3, 1.3, 2.2, X, -2.2, 230.4); box(MAT.dark, 1, 1, 0.1, X, -2.2, 229.28);
-    { const P = [], U = [], ix = [], n = 8; for (let k = 0; k <= n; k++) { const f = k / n, z = 229.3 - 2 * Math.sqrt(f), y = -2.3 + (Y + 0.1 + 2.3) * f, w = 1 + 0.5 * f; P.push(X - w, y, z, X + w, y, z); U.push(0, f * 1.3, 1, f * 1.3); if (k) { const a = k * 2 - 2; ix.push(a, a + 1, a + 3, a, a + 3, a + 2); } }
+    box(MAT.rust, 1.3, 1.3, 2.2, X, 0.3, 230.4); box(MAT.dark, 1, 1, 0.1, X, 0.3, 229.28);
+    { const P = [], U = [], ix = [], n = 8; for (let k = 0; k <= n; k++) { const f = k / n, z = 229.3 - 2 * Math.sqrt(f), y = 0.2 + (Y + 0.1 - 0.2) * f, w = 1 + 0.5 * f; P.push(X - w, y, z, X + w, y, z); U.push(0, f * 1.3, 1, f * 1.3); if (k) { const a = k * 2 - 2; ix.push(a, a + 1, a + 3, a, a + 3, a + 2); } }
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(ix); const m = new THREE.Mesh(g, fallM); m.userData.dyn = 1; m.renderOrder = 3; scene.add(m); }
     const i0 = near(h, X, 220); h.ribbon(i0, 9, q => -(fw(q) - 0.2), 0.07, q => -(fw(q) - 2.4), 0.07, runM, 6).userData.dyn = 1;
     const spray = puffs(50, [0.9, 0.94, 0.9], 0.4, 0.9, 0.1); let ac2 = 0;
@@ -81,14 +81,14 @@
     const C = [[128, 9.5, [[213, 4.5], [218.5, 3], [226, 5.5]]], [107, 8.5, [[211.5, 5], [222, 3.5], [227.5, 6]]]].flatMap(([x, y, l]) => { box(MAT.dark, 0.14, 0.14, 23, x, y, 220); return l.map(([z, len], k) => { const p = hinge(x, y, z); box(MAT.dark, 0.18, len, 0.18, 0, -len / 2, 0, p); if (k & 1) box(MAT.dark, 0.5, 0.6, 0.4, 0, -len, 0, p); return p; }); });
     TICK.push(() => C.forEach((p, k) => { p.rotation.z = (0.04 + 0.1 * gust) * Math.sin(t * (1.1 + 0.13 * k) + k * 2.1); p.rotation.x = 0.03 * Math.sin(t * 0.8 + k); })); }
 
-  // ---------- the metro (Z5-01, Z5-02, Z5-06): every lamp drawn is a real light. Tube: green-white emergency lamps, one in five sags to a third and recovers (never off); station: the live strip lights, one in two stuttering;
-  // two grates in the crown of the tube let the day down: a pale panel behind its bars, a bar of light to the floor, a warm pool ----------
+  // ---------- the tram line under cover (Z5-01, Z5-02, Z5-06): every lamp drawn is a real light. Box: green-white emergency lamps, one in five sags to a third and recovers (never off); stop: the live strip lights, one in two stuttering;
+  // ventilation grates in the roof (the street is just above), two on the run and two over the stop, let the day down: a pale panel behind its bars, a bar of light to the floor, a warm pool ----------
   { const DIP = []; LAMPS.forEach(([i, x, y, z, kind], n) => { const l = h.emis(i, x, y, z, kind === 1 ? 0xfff0d0 : kind === 2 ? 0xd8f0e0 : 0xa8ffc0, kind ? 17 : 13, kind ? 2.6 : 2.4); if (kind ? n & 1 : n % 5 === 2) DIP.push([l, l.c.clone(), n * 1.7, kind]); });
     TICK.push(() => { for (const [l, c, ph, kind] of DIP) { const u = Math.sin(t * (kind ? 1.7 : 0.9) + ph) * Math.sin(t * 0.37 + ph * 2.3), d = ss((u - 0.3) / 0.3); l.c.copy(c).multiplyScalar(1 - 0.66 * d * (0.82 + 0.18 * Math.sin(t * 11 + ph))); } });
     const sky = h.mat('lampObj', { emis: 1, c: 0xffe9c0, ...DS }), pool = glow('#ffe2b0', { opacity: 0.5 }), dg = discG();
-    for (const i of [T.t0 + 98, T.t0 + 222]) { const s = S[i], g = new THREE.Group(); g.position.set(s.x, s.y, s.z); g.rotation.y = Math.atan2(s.tx, s.tz); kit.add(g);
-      box(sky, 2.2, 0.06, 6, 0, 5.08, 0, g); for (let k = -2; k <= 2; k++) box(MAT.dark, 2.3, 0.1, 0.14, 0, 5.02, k * 1.2, g); box(MAT.dark, 0.14, 0.1, 6.1, 0, 5.02, 0, g);
-      shaft([s.x, s.y + 5, s.z], [0.12, -1, 0.05], 5, 2.6, 0.9, 0xffe6b8, 0.3); const d = new THREE.Mesh(dg, pool); d.position.set(s.x, s.y + 0.12, s.z); d.rotation.y = g.rotation.y; d.scale.set(1.9, 1, 3.6); d.userData.dyn = 1; d.renderOrder = 3; scene.add(d);
+    for (const i of [T.t0 + 70, T.t0 + 150, I.station + 14, I.station + 38]) { const s = S[i], g = new THREE.Group(); g.position.set(s.x, s.y, s.z); g.rotation.y = Math.atan2(s.tx, s.tz); kit.add(g);
+      box(sky, 3.2, 0.06, 6, 0, 4.97, 0, g); for (let k = -2; k <= 2; k++) box(MAT.dark, 3.3, 0.1, 0.14, 0, 4.9, k * 1.2, g); box(MAT.dark, 0.14, 0.1, 6.1, 0, 4.9, 0, g);
+      shaft([s.x, s.y + 4.9, s.z], [0.12, -1, 0.05], 5, 2.6, 0.9, 0xffe6b8, 0.3); const d = new THREE.Mesh(dg, pool); d.position.set(s.x, s.y + 0.12, s.z); d.rotation.y = g.rotation.y; d.scale.set(1.9, 1, 3.6); d.userData.dyn = 1; d.renderOrder = 3; scene.add(d);
       h.emis(i, s.x, s.y + 2.6, s.z, 0xffe0b0, 12, 2.8); } }
 
   // ---------- one wind (Z1-02, Z1-04, Z2-04, Z3-06): the rows of trees of the boulevard rock, the reeds lean, a torn flag streams from the watchtower, the tent's door and the lorry's cover flap. All east, all on the same gusts ----------
@@ -112,8 +112,20 @@
   // ---------- dust (Z3-05): a thin pale plume off the broken end of the fallen span, leaning east ----------
   { const s = S[I.travee], f = puffs(40, [0.84, 0.8, 0.7], 0.3, 3, 0.3); let acc = 0; TICK.push((dt, car) => { if (Math.abs(car.idx - I.travee) > 150) return; for (acc += dt; acc > 0.15; acc -= 0.15) f.emit(s.x + 8 + rnd(3), s.y - 0.5, s.z + rnd(3), 1.6 + 1.5 * gust, 0.5 + Math.random() * 0.6, rnd(0.6)); }); }
 
+  // ---------- (round 5) dust still falls from the span that lies under the break of the motorway, beside the slip road ----------
+  { const f = puffs(40, [0.84, 0.8, 0.7], 0.3, 3, 0.3), i0 = near(h, 240, -250); let acc = 0; TICK.push((dt, car) => { if (Math.abs(car.idx - i0) > 150) return; for (acc += dt; acc > 0.15; acc -= 0.15) f.emit(213 + rnd(10), 3 + Math.random() * 4, -235 + rnd(22), 1.2 + 1.5 * gust, 0.4 + Math.random() * 0.5, rnd(0.6)); }); }
+
+  // ---------- (round 5) still switched on, like the traffic light: the road-works arrow boards (boxes FLECHE CHANTIER of the map) show which way the road goes on. Nine amber lamps drawn as an arrow,
+  // swelling and thinning together every 1.2 s (ramps of 150 ms, never dark), a real light in front of each board ----------
+  { const m = glow('#ffb040', { opacity: 1 }); m.side = THREE.DoubleSide; const B = O.filter(o => /FLECHE CHANTIER/.test(o.label)).map(o => { const dir = /D$/.test(o.label) ? -1 : 1, i = near(h, o.x, o.z), y = S[i].y, P = [], U = [], ix = [];
+      for (const [lx, ly] of [[1.05, 0], [0.65, 0.38], [0.65, -0.38], [0.28, 0.72], [0.28, -0.72], [0.2, 0], [-0.25, 0], [-0.7, 0], [-1.08, 0]]) { const n = P.length / 3, cx = lx * dir, cy = 3 + ly, r = 0.3;
+        P.push(cx, cy, -0.1, cx - r, cy - r, -0.1, cx + r, cy - r, -0.1, cx + r, cy + r, -0.1, cx - r, cy + r, -0.1); U.push(0.5, 0, 0.5, 1, 0.5, 1, 0.5, 1, 0.5, 1); ix.push(n, n + 1, n + 2, n, n + 2, n + 3, n, n + 3, n + 4, n, n + 4, n + 1); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setIndex(ix); const me = new THREE.Mesh(g, m); me.userData.dyn = 1; me.renderOrder = 3; const p = hinge(o.x, y, o.z, o.ry); p.scale.setScalar(1.4); p.add(me);
+      const l = h.emis(i, o.x - Math.sin(o.ry) * 2, y + 4, o.z - Math.cos(o.ry) * 2, 0xffb040, 20, 2.8); return { l, c: l.c.clone() }; });
+    TICK.push(() => { const u = t % 1.2, b = 0.35 + 0.65 * ss(u / 0.15) * (1 - ss((u - 0.6) / 0.15)); m.opacity = b; for (const q of B) q.l.c.copy(q.c).multiplyScalar(b); }); }
+
   // ---------- sound placed in the place (Z4-07): the broken main, heard by distance and side; beds, acoustics and events are AMB, AMBZ, ACOUSTICS and ambEvent of src/audio/audio.js ----------
-  if (window.SOUND && SOUND.spots) SOUND.spots('autoroute', [{ p: { x: 116, y: -5, z: 228 }, sound: 'waterfall', r: 80, vol: 0.7 }]);
+  if (window.SOUND && SOUND.spots) SOUND.spots('autoroute', [{ p: { x: 116, y: -1, z: 228 }, sound: 'waterfall', r: 80, vol: 0.7 }]);
 
   return (dt, now, car) => { if (!car) return; dt = Math.min(dt, 0.1); for (const f of TICK) f(dt, car); };
 };

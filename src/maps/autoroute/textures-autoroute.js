@@ -117,6 +117,11 @@
       R(g, [c, '#1c3018', '#5d8a40', '#2a4a22', c][rand() * 5 | 0], (x + Math.cos(a) * d + 32) % 32 | 0, (y + Math.sin(a) * d + 32) % 32 | 0, 1, 1); } } }, 4],
     // reed stems (cut out): upright stems one or two pixels wide in greens and straw, of uneven height, gaps between them. 2 m per tile
     roseauDecoupeAutoroute: () => [32, 32, (g, o) => { const { R, rand } = o; for (let x = 0; x < 32; x += 1 + (rand() * 2 | 0)) { if (rand() < 0.3) continue; const t = rand() * 14 | 0; R(g, ['#5f7f2e', '#7a9a50', '#9dbb4a', '#8a7a5a', '#3f5a22'][rand() * 5 | 0], x, t, 1 + (rand() < 0.3 ? 1 : 0), 32 - t); if (rand() < 0.2) R(g, '#6a4a22', x, t, 2, 3); } }, 2],
+    // chevron board of a road closure: one red chevron on off-white, pointing along +u, the paint flaked. Repeats along the board
+    chevronAutoroute: () => [16, 16, (g, o) => { const { R, rand } = o; R(g, '#cfcabb', 0, 0, 16, 16); for (let y = 0; y < 16; y++) R(g, '#a8372a', 1 + Math.round(7.5 - Math.abs(y - 7.5)), y, 7, 1); for (let i = 0; i < 14; i++) R(g, rand() < 0.5 ? '#8a8272' : '#7a3a2a', rand() * 16 | 0, rand() * 16 | 0, 1, 1); }],
+    // turn arrow painted on the roadway, worn (cut out; laid flat, shown once): a shaft up the picture that bends to one side, k = 0 to the right of the picture, 1 to the left
+    flecheAutoroute: (k = 0) => [32, 64, (g, o) => { const { R, rand } = o, P = (x, y, w, ht) => R(g, '#c8c4b0', k ? 32 - x - w : x, y, w, ht); P(9, 20, 5, 42); P(9, 14, 12, 6); for (let i = 0; i < 10; i++) P(21 + i, 17 - (10 - i), 1, 2 * (10 - i) + 1);
+      for (let i = 0; i < 90; i++) g.clearRect(rand() * 32 | 0, rand() * 64 | 0, 1 + (rand() * 3 | 0), 1 + (rand() * 3 | 0)); }],
     // motorway sign, t = its text: faded green panel, white border, white letters. Stretched over its board (8 x 2 m)
     panneauAutoroute: (t = '') => [128, 32, (g, o) => { const { R } = o; R(g, '#2f6a5a', 0, 0, 128, 32); R(g, '#d8d8c8', 1, 1, 126, 1); R(g, '#d8d8c8', 1, 30, 126, 1); R(g, '#d8d8c8', 1, 1, 1, 30); R(g, '#d8d8c8', 126, 1, 1, 30);
       g.fillStyle = '#e8e8d8'; g.textAlign = 'center'; g.textBaseline = 'middle'; let px = 18; do { g.font = 'bold ' + px + 'px sans-serif'; } while (g.measureText(t).width > 116 && --px > 6); g.fillText(t, 64, 17);
