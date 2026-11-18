@@ -4,7 +4,7 @@
 // Runways, taxiway and apron are tied by connectors: three between the runways, five between runway A and the taxiway; the apron touches the taxiway along its whole length.
 // On runway A the race road is the runway itself, full width, without guardrail: nothing marks an edge. The race uses the airfield the way a landing aircraft does:
 // taxiway, 90° connector, runway, angled exit back to the taxiway, apron. Nothing tall stands inside the runway strips: radars and aerials are beyond them.
-(window.AREA51 = window.AREA51 || {}).pistes = ({ h, MAT, set, side, avion, surf, inside, pk }) => {
+(window.AREA51 = window.AREA51 || {}).pistes = ({ h, MAT, set, side, along, avion, surf, inside, pk, BLOCS, RUNWAY }) => {
   const line = (m, x, z, wx, dz) => surf(m, x, z, wx, dz, -0.12, 0.08); // paint: 8 cm above its slab, still under the roadway
   // paved surfaces, their top 0.2 m under the roadway (the road lies flush on them): runways and taxiways in the tone of the roadway, the apron lighter. Beyond the terrain the playa goes on to the far range as one slab
   surf('playa', 1500, -900, 4400, 1500, -0.7, 1);
@@ -29,6 +29,10 @@
   set('radarArea51', 2050, 590); set('radarArea51', 1450, 580); set('glideArea51', 1390, 545);  // 200 m off the axis, one radar per landing direction
   // what the road goes round on the airfield: the localizer aerial at the taxiway end, the windsock at the angled exit, the blast fence of the fuel-truck stand at the last right
   const round = (shape, x, z, off, half) => side(shape, pk(x, z), inside(pk(x, z)), off, half); round('localizerArea51', 1065, 625, 8, 1); round('mancheArea51', 2030, 440, 8, 0.5); round('pareSouffleArea51', 2285, 715, 6, 2);
+  // the bends are drawn in the language of the base. Outside: anti-ram concrete blocks with hazard ends, on the line of the guardrail they replace (scenery-area51.js leaves the rail out there).
+  // Inside, on the runway, where nothing else marks an edge: red and white trestles with a cone between two, from the turn-in to the apex and from the apex of the exit to its end
+  for (const [a, b, sd] of BLOCS) along('blocBetonArea51', pk(...a), pk(...b), sd, 0, 1, 10);
+  const [r0, r1] = RUNWAY.map(p => pk(...p)); for (const [a, b] of [[r0, r0 + 78], [r1 - 96, r1]]) for (let p = a + 3, n = 0; p < b; p += 6, n++) n % 2 ? side('cylArea51', p, 1, 0.5, 0.4, { a: [0.4, 1, 6, 0.25], skin: MAT.amber }) : side('chevaletArea51', p, 1, 0.5, 0.2);
   // braking zone F1, down the exit: announcing boards on both sides, off the roadway
   ['300', '200', '100'].forEach((txt, i) => { const sign = h.mat('written', {}, 64, 32, '#f5aa75', '#16181c', txt, 26); for (const sd of [-1, 1]) side('panneauArea51', pk(2250, 660) - 300 + i * 100, sd, 3, 2, { keep: 1, skin: { ...MAT, sign } }); });
 };
