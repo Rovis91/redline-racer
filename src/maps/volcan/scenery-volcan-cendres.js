@@ -8,5 +8,4 @@
     [[50, 20], [-26, 42], [24, 46]].forEach(([dx, dz]) => set('arbreVolcan', x + dx, z + dz, { a: [9] })); }
   by('arbusteVolcan', [800, 1000, 1256, 1500, 1906, 2100], 1, 4, { a: [1.2] });                   // low sparse bushes on the sea side, never above the wall
   by('rocherVolcan', [860, 1300, 1640, 2040], -1, 8, { m: 'rock', a: [8, 4, 10], seed: 1 }); by('rocherVolcan', [868, 1310, 1650, 2050], -1, 13, { m: 'rock', a: [5, 3, 6], seed: 1 }); // scree at the foot of the bank
-  by('muretVolcan', [1025, 1055, 1565, 1595, 2145, 2175], 1, 1.6, { a: [29] });
 };

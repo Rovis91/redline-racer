@@ -612,7 +612,7 @@
         orb: { dir: [-0.55, 0.6, 0.5], col: '#fff0d0', shadows: '#fff0d0', imgSize: 200 }, hemi: [0xd8e8ff, 0x6f6258, 1], sun: [0xfff0d0, 0.95], headlights: 0, bloom: 0.03, scan: 0.05,
         chev: 1, wallH: 1.1, road: ['#3a3d42', '#46494f', '#e8d9ac', '#e8d9ac', '#3a3d42', '#3a3d42', false], intoWall: ['#e8d9ac', '#555a60', '#34373d', '#23292d'], startLine: [0xb75d43, 0xe8d9ac, '#e8d9ac'],
         tun: { ground: ['#2c2f34', '#3a3d42', '#e8d9ac', '#e8d9ac', '#2c2f34', '#2c2f34'], wallMeshes: ['#e8d9ac', '#e8d9ac'], wallFace: ['#555a60', '#6a7078', '#80868e', '#23292d'], ceiling: ['#34373d', '#e8d9ac', '#e8d9ac', '#555a60'],
-          fog: 0x23292d, portal: 0x555a60, neons: [0xffc878, 0xffc878], hull: 80, tex: ['galerieVolcan', 'galerieVolcan'], without: ['portals'], ambient: 0.3 },
+          fog: 0x23292d, portal: 0x555a60, neons: [0xffc878, 0xffc878], hull: 80, tex: ['galerieVolcan', 'galerieVolcan'], without: ['portals'], ambient: 0.3, gloss: 0.1 }, gloss: 0.02, // low road shine: the afternoon sun otherwise leaves white patches on the asphalt
         hud: { y: '#ffffff', c: '#7db3d8', r: '#d88d72', backdrop: 'rgba(35,41,45,.88)', style: 'signPanel', split: 0, jp: null, over: [null, 'BLOCKOUT · V2'], heading: ['VOLCANIC', 'ISLAND'] } } }; }
   if (id === 'egee') { const T = G.MAPS.find(m => m.id === 'touge');
     G.MAP_DEF = { id: 'egee', label: 'AEGEAN CLIFFS', W: 6, wide: [[71, 53, 7], [87, 50, 7.5], [89, 19, 8]], kmh: 0.8, spd: [150, 200], grip: 21, sc: 1, tun: null, hotList: [50, 70], sect: [50, 88], amb: [], lookAhead: 1, car: T.car, radio: T.radio,

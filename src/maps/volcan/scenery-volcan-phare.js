@@ -8,6 +8,5 @@
   by('pontonVolcan', [200, 400], 1, 68, { y: 1.4, a: [36] });
   by('baliseVolcan', [106, 256, 406, 556], 1, 5);
   by('palmierVolcan', [330, 390, 450, 510, 570], -1, 7, { a: [9], seed: 1 });                    // a few palms, spaced: never a row of trees
-  by('muretVolcan', [565, 595, 625, 655], 1, 1.6, { a: [29] });
   by('rocherVolcan', [600, 640, 676], -1, 15, { m: 'rock', a: [18, 10, 20], seed: 1 });          // transition: the sheds stop, black rock begins
 };
