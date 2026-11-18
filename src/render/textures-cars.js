@@ -25,11 +25,12 @@
   Object.assign(TEXTURES, {
     // livery of a car in the game: p = the plan of SHAPES.vehicle, col = body tint, bande = stripe tint (Viper)
     livery: (p, col, bandStrip) => [128, 128, (g, o) => {
-      const l = ((col >> 16 & 255) * 0.3 + (col >> 8 & 255) * 0.59 + (col & 255) * 0.11) / 255, k = l < 0.5 ? (0.5 - l) * 1.2 : 0; // dark tint lightened toward silver, so that it reads at night
+      const l = ((col >> 16 & 255) * 0.3 + (col >> 8 & 255) * 0.59 + (col & 255) * 0.11) / 255, k = l < 0.5 && !/^(giulia|sw22|delta|heron)$/.test(p.K) ? (0.5 - l) * 1.2 : 0; // dark tint lightened toward silver, so that it reads at night (not the four daylight cars: their paint would turn pastel)
       col = [16, 8, 0].reduce((s, d) => s | Math.round((col >> d & 255) * (1 - k) + 230 * k) << d, 0);
       const { R, veil, rand } = o, C = css(col), [xr, xf] = p.xs, ra = p.ra, belt = p.cab[0][1], beltR = p.cab[3][1], hw = p.wc / 2 - 0.11, W = p.w / 2;
       const nose = Math.max(...p.aboveBody.map(q => q[0])), tail = Math.min(...p.aboveBody.map(q => q[0]));
       R(g, C, 0, 0, 128, 128);
+      if (p.K === 'delorean') veil(g, 0.1, () => { for (let y = 0; y < 128; y++) R(g, rand() < 0.5 ? '#fff' : '#000', 0, y, 128, 1); }); // unpainted brushed steel: fine streaks along the car, under everything else
       // modelling: light shoulder, darker lower body, reflection along the bonnet and roof
       veil(g, 0.14, () => { rv(g, p.sideOf, -2.7, 0.45, 2.7, p.low, '#000'); rv(g, p.av, -1.05, 0.34, 1.05, 0, '#000'); rv(g, p.ar, -1.05, 0.34, 1.05, 0, '#000'); });
       veil(g, 0.3, () => { rv(g, p.sideOf, tail, belt - 0.05, nose, belt - 0.03, '#fff'); rv(g, p.above, tail + 0.2, 0.28, nose - 0.2, 0.34, '#fff'); });
@@ -79,6 +80,26 @@
       if (K === 'groupeb') { grid(g, o, p.av, 0.42, 0.42, 0.58); ph(0.44, 0.78, 0.43, 0.57); for (let k = 0; k < 3; k++) rv(g, p.sideOf, -0.66 - k * 0.07, 0.5, -0.69 - k * 0.07, 0.72, DARK); }
       if (K === 'pickup') { grid(g, o, p.av, 0.5, 0.7, 0.96, 3); ph(0.46, 0.8, 0.78, 0.94); rv(g, p.above, -2.06, -W + 0.1, -0.64, W - 0.1, '#1a1a1e'); // flatbed, and the number in its white circle on the door
         { const [cx, cy] = p.sideOf(0.05, 0.78); g.beginPath(); g.arc(cx, cy, 6, 0, 7); g.fillStyle = '#f0ece0'; g.fill(); R(g, '#16161c', (cx | 0) - 1, (cy | 0) - 4, 2, 8); R(g, '#16161c', (cx | 0) - 2, (cy | 0) - 3, 1, 1); } }
+      // the six cars below: the number in its white circle on the door, a round porthole
+      const roundel = (x, y) => { const [cx, cy] = p.sideOf(x, y); g.beginPath(); g.arc(cx, cy, 5.5, 0, 7); g.fillStyle = '#f0ece0'; g.fill(); R(g, '#17120e', (cx | 0) - 3, (cy | 0) - 2, 2, 5); R(g, '#17120e', (cx | 0) + 1, (cy | 0) - 2, 2, 5); };
+      const disc = (v, a, b, r, c) => { const [cx, cy] = v(a, b); g.beginPath(); g.arc(cx, cy, r * p.PX, 0, 7); g.fillStyle = c; g.fill(); };
+      if (K === 'delorean') { grid(g, o, p.av, 0.5, 0.24, 0.36); rv(g, p.sideOf, tail, 0.5, nose, 0.54, '#16161c'); // black rubbing strip; grey end caps; bonnet grooves; gull-wing cuts in the roof; louvres and engine vents
+        veil(g, 0.22, () => { rv(g, p.sideOf, nose - 0.2, p.low, nose + 0.1, 0.7, '#000'); rv(g, p.sideOf, tail - 0.1, p.low, tail + 0.2, 0.9, '#000'); });
+        veil(g, 0.45, () => { for (const s of [-1, 1]) { rv(g, p.above, 0.95, s * 0.3, 1.98, s * 0.33, '#000'); rv(g, p.above, x2, s * 0.2, x1, s * 0.24, '#000'); rv(g, p.above, -0.2, s * 0.22, -0.24, s * hw, '#000'); } });
+        rv(g, p.above, x3, -hw, x2 - 0.02, hw, DARK); veil(g, 0.5, () => { for (let x = x2 - 0.1; x > x3; x -= 0.19) rv(g, p.above, x, -hw + 0.04, x - 0.06, hw - 0.04, '#5a5c64'); });
+        veil(g, 0.8, () => { for (const s of [-1, 1]) for (let x = -1.66; x > -1.96; x -= 0.08) rv(g, p.above, x, s * 0.16, x - 0.04, s * 0.62, DARK); }); }
+      if (K === 'molab') { const OR = '#d78a40'; // sealed pod: the side glazing gives way to three portholes over an orange band, the windscreen to a strip; airlock hatch at the rear, solar panel on the roof, orange mudguards
+        poly(g, p.sideOf, p.cab, C); rv(g, p.sideOf, -1.24, 1.05, 1.12, 1.13, OR); for (const x of [-0.72, -0.07, 0.58]) { disc(p.sideOf, x, 1.31, 0.15, FRAME); disc(p.sideOf, x, 1.31, 0.11, '#1c3050'); }
+        rv(g, p.av, -hw, 0.98, hw, 1.2, C); rv(g, p.av, -hw, 1.05, hw, 1.13, OR); rv(g, p.ar, -hw, 0.98, hw, 1.5, C); rv(g, p.ar, -hw, 1.05, hw, 1.13, OR); disc(p.ar, 0, 1.32, 0.17, FRAME); disc(p.ar, 0, 1.32, 0.13, C); disc(p.ar, 0, 1.32, 0.05, '#1c3050');
+        rv(g, p.above, x3, -hw, x2, hw, C); rv(g, p.above, -0.94, -0.7, 0.8, 0.7, FRAME); rv(g, p.above, -0.9, -0.66, 0.76, 0.66, '#16233a');
+        veil(g, 0.6, () => { for (let x = -0.9; x < 0.76; x += 0.25) rv(g, p.above, x, -0.66, x + 0.04, 0.66, '#4a6a9a'); rv(g, p.above, -0.9, -0.02, 0.76, 0.02, '#4a6a9a'); });
+        for (const s of [-1, 1]) for (const x of p.xs) rv(g, p.above, x - 0.54, s * 0.86, x + 0.54, s * 1.05, OR); rv(g, p.sideOf, -1.84, 0.92, -1.32, 0.98, OR); rv(g, p.sideOf, 1.22, 0.92, 1.84, 0.98, OR); }
+      if (K === 'giulia') { grid(g, o, p.av, 0.5, 0.5, 0.7); rv(g, p.av, -0.1, 0.44, 0.1, 0.74, DARK); plate(g, o, p.av, 0.32, 0.4); roundel(-0.02, 0.58); }
+      if (K === 'sw22') { grid(g, o, p.av, 0.4, 0.46, 0.56); ph(0.42, 0.8, 0.48, 0.64); grid(g, o, p.av, 0.34, 0.24, 0.34, 3); veil(g, 0.7, () => rv(g, p.above, 1.18, -0.2, 1.24, 0.2, DARK)); // scoop mouth
+        if (bandStrip) for (const x of [-0.3, -0.12, 0.06]) R(g, css(bandStrip), Math.round(p.sideOf(x, 0)[0]), Math.round(p.sideOf(0, 0.62)[1]), 3, 3); } // three gold marks on the door
+      if (K === 'delta') { grid(g, o, p.av, 0.3, 0.52, 0.68); ph(0.3, 0.74, 0.5, 0.7); veil(g, 0.6, () => { for (const s of [-1, 1]) rv(g, p.above, 1.15, s * 0.28, 1.5, s * 0.5, DARK); }); // bonnet vents, flank band, number
+        if (bandStrip) { rv(g, p.sideOf, tail, 0.6, nose, 0.68, css(bandStrip)); rv(g, p.sideOf, tail, 0.54, nose, 0.57, css(bandStrip)); } roundel(0.2, 0.44 + 0.3); }
+      if (K === 'heron') { grid(g, o, p.av, 0.34, 0.6, 0.8, 3); ph(0.46, 0.82, 0.6, 0.8); rv(g, p.sideOf, tail, 0.56, nose, 0.6, '#16161c'); rv(g, p.ar, -0.52, 0.6, 0.52, 0.88, '#16161c'); }
       veil(g, 0.5, () => { for (const s of [-1, 1]) rv(g, p.ar, s * 0.62, 0.24, s * 0.76, 0.3, DARK); }); // exhaust outlets
       plate(g, o, p.ar, p.plate);
       // light wear: splashes on the lower body and behind the wheels
@@ -92,8 +113,8 @@
       const disc = (r, c) => { g.beginPath(); g.arc(cx, cy, r, 0, 7); g.fillStyle = c; g.fill(); };
       disc(26, '#1a1a1e'); veil(g, 0.4, () => { g.strokeStyle = '#3a3a40'; g.beginPath(); g.arc(cx, cy, 23, 0, 7); g.stroke(); });
       disc(rj + 1, '#9a9ca4'); disc(rj - 1, '#26262c'); R(g, '#6a2024', 41, 20, 3, 5); // rim well, disc and caliper
-      const c = { buggy: '#f0f0ec', berlinette: '#d8c890', groupeb: '#d4b050', pickup: '#b0b2b8' }[K] || (K === 'onca' ? '#e2ddcc' : K === 'peykan' ? '#e4dcc8' : K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84');
-      const n = { gtr: 12, fd: 5, a80: 5, gts: 5, berlinette: 8, groupeb: 6 }[K] || 0;
+      const c = { buggy: '#f0f0ec', berlinette: '#d8c890', groupeb: '#d4b050', pickup: '#b0b2b8', delorean: '#a8aab2', molab: '#c8c4b4', giulia: '#d8d8dc', sw22: '#d4b050', delta: '#f0f0ec', heron: '#b0b2b8' }[K] || (K === 'onca' ? '#e2ddcc' : K === 'peykan' ? '#e4dcc8' : K === 'r5' ? '#d8d8dc' : K === 'gts' ? '#c8cad0' : K === 'fd' ? '#b8bac2' : K === 'a80' ? '#a8aab2' : '#7a7c84');
+      const n = { gtr: 12, fd: 5, a80: 5, gts: 5, berlinette: 8, groupeb: 6, delorean: 10, molab: 16, sw22: 6, delta: 5 }[K] || 0;
       if (n) { g.strokeStyle = c; g.lineWidth = n > 6 ? 2 : K === 'a80' ? 5 : 3.5; for (let i = 0; i < n; i++) { const a = i * 2 * Math.PI / n; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.cos(a) * rj, cy + Math.sin(a) * rj); g.stroke(); } }
       else { disc(rj - 1, c); for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2 + 0.6; R(g, '#26262c', Math.round(cx + Math.cos(a) * 11) - 2, Math.round(cy + Math.sin(a) * 11) - 2, 4, 4); } }
       disc(5, c); disc(2.5, '#2a2a30'); for (let i = 0; i < 5; i++) { const a = i * 1.2566; R(g, '#e0e0e6', Math.round(cx + Math.cos(a) * 4), Math.round(cy + Math.sin(a) * 4), 1, 1); }
