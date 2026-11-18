@@ -65,8 +65,7 @@
       tipM.opacity += ((drive.locked ? 1 : 0.2 + 0.8 * beat(T, 1.6)) - tipM.opacity) * Math.min(1, dt * 12); }); } // locked: the tip lights burn steady
   // the two airfield radars scan (Z5-04): the lattice scanner on its mast, one turn in 10 s
   { const sc = REG.radarArea51.map(r => lift(r, m => m.material === MAT.lattice)); TICK.push(dt => { for (const p of sc) p.rotation.y += dt * 0.63; }); }
-  // the tower beacon (Z5-05): a white and a green face at a right angle, turning; each swells and thins as it turns to the viewer, white then green every 2.4 s
-  { const tw = REG.tourArea51[0], b = new THREE.Group(); b.position.set(tw.position.x, top(tw) - 8, tw.position.z); b.userData.dyn = 1; scene.add(b); disc(glowM('#fff2d0'), 8, 0, 0, 0, 1, b); disc(glowM('#58f09a'), 8, 0, 0, 0, 2, b); TICK.push(dt => { b.rotation.y += dt * 1.3; }); }
+  // (Z5-05, the tower's white and green beacon, was dropped: an additive light does not show against the bright horizon the tower stands on)
   // the windsock (Z5-08): streams east, swings a little, droops in the lulls. Near a braking board: small and slow
   { const w = REG.mancheArea51[0], p = lift(w, m => m.material === MAT.amber || m.material === MAT.white, [0, 7.7, 0]); p.rotation.order = 'YXZ';
     TICK.push(() => { const gust = 0.5 + 0.5 * Math.sin(T * 0.45) * Math.sin(T * 0.13 + 1); p.rotation.y = PI / 2 + 0.14 * Math.sin(T * 0.9) * (0.4 + 0.6 * gust); p.rotation.x = 0.22 * (1 - gust); }); }
