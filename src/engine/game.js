@@ -1957,7 +1957,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     for (const vu of VIEWS) { const c = vu.car, [tg, rl] = attitude(c);
       if (vu.hit > 8) vu.stun = 0.7; if (vu.land > 7) vu.stun = Math.max(vu.stun, Math.min(0.45, (vu.land - 6) * 0.08)); vu.stun -= dt; // a hard landing shakes too
       vu.up = drivetrain(vu, dt, vu.gas);
-      { const s = S[c.idx], [df, dr] = tilt(T, c), ax = Math.cos(c.th), az = Math.sin(c.th); const q = (df * (c.vx * ax + c.vz * az) + dr * (c.vz * ax - c.vx * az)) * dt; if (!c.air) vu.carY += s.sl * (c.vx * s.tx + c.vz * s.tz) * dt + q; if (q && !c.air) { vu.cy += q; vu.ly += q; } } vu.carY += (c.y - vu.carY) * Math.min(1, dt * 18); // the slope first, then the smoothing: without it the smoothed car dragged under the road going uphill (30 cm at 13 %) and floated going downhill; q, from tilt: the same for the slope of craters (M.dents, M.bowls), zero on a map without them, and for the two smoothed heights of the camera (cy, ly), which lagged 1.7 m behind a car diving into a crater
+      { const s = S[c.idx], [df, dr] = tilt(T, c), ax = Math.cos(c.th), az = Math.sin(c.th); const q = (df * (c.vx * ax + c.vz * az) + dr * (c.vz * ax - c.vx * az)) * dt; if (!c.air) vu.carY += s.sl * (c.vx * s.tx + c.vz * s.tz) * dt + q; if (q && !c.air) { vu.cy += q; vu.ly += q; } if (M.fallCam && c.air) { vu.cy += c.vy * dt; vu.ly += c.vy * dt; } } vu.carY += (c.y - vu.carY) * Math.min(1, dt * 18); // the slope first, then the smoothing: without it the smoothed car dragged under the road going uphill (30 cm at 13 %) and floated going downhill; q, from tilt: the same for the slope of craters (M.dents, M.bowls), zero on a map without them, and for the two smoothed heights of the camera (cy, ly), which lagged 1.7 m behind a car diving into a crater
       vu.pitch += (tg - vu.pitch) * Math.min(1, dt * 10); vu.roll += (rl - vu.roll) * Math.min(1, dt * 10); // pitch and roll (slope, wall, flight): on their own line, a comment had swallowed them
       if (state === 'title') vu.cth += dt * 0.22; else vu.cth += wrap(c.th - vu.cth) * Math.min(1, dt * 6); // in the menu, the camera orbits the car to show the map
       if ((vu.lookT -= dt) < 0) { const k = Math.exp(-dt * 5); vu.lookA *= k; vu.lookP *= k; } // mouse still for 2.5 s: the camera returns behind the car
@@ -2043,7 +2043,10 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const ky = Math.min(1, dt * (car.air ? 2.5 : 10)), smoothNoise = (k, t) => (vu[k] = Math.abs(t - vu[k]) < 20 ? vu[k] + (t - vu[k]) * ky : t);
     const yc = Math.max(smoothNoise('cy', yGround(-3)), yAt(car, -3) + 0.8 - (M.camH || 3.2)), yl = smoothNoise('ly', yGround(5)); // never under the road at the camera's position
     cam.position.set(px + vib() * shake + (Math.random() - 0.5) * impact, Math.max(pc, yc + (M.camH || 3.2) + lookP - 0.5 * rc) + vib() * shake * 0.7 + (Math.random() - 0.5) * impact, pz);
-    cam.lookAt(car.x + cx * 10, yl + 1.1, car.z + cz * 10); cam.rotateZ(-0.6 * roll);
+    // M.fallCam (a map with a long fall: the Moon's crater jump): in flight the two smoothed heights get the car's vertical speed (views loop: at 30 m/s of fall their 0.4 s of lag left the car 12 m under the frame),
+    // and the camera looks down the trajectory (vu.dive: the slope of the flight, eased in and out over ~0.3 s, so it comes back level after the landing). Other maps: dive stays 0
+    const dive = vu.dive = (vu.dive || 0) + ((M.fallCam && car.air ? clamp(car.vy / Math.max(20, sp), -0.6, 0.15) : 0) - (vu.dive || 0)) * Math.min(1, dt * 3);
+    cam.lookAt(car.x + cx * 10, yl + 1.1 + 6 * dive, car.z + cz * 10); cam.rotateZ(-0.6 * roll);
     cam.rotateX(vib() * shake * 0.12); cam.rotateY(vib() * shake * 0.08); // the image itself jerks (≈ 0.4° at the peak), sharp and small
     const nitE = vu.nit * vu.nit * (3 - 2 * vu.nit); // nitro: smooth start and end (widened field and vignette)
     cam.fov = 62 + 20 * rc + 10 * rv * rv + 3 * car.slide + 6 * nitE; // + grand-angle en fin de course : l'effet tunnel

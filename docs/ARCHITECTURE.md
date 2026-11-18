@@ -157,14 +157,14 @@ In `src/data/maps.js`, per map:
 | `grip` | lateral grip (m/s²): 44 on `ville` (arcade), 15–24 elsewhere |
 | `car` | gears, torque curve, mass, aero, traction, `look.type` (model in `src/render/shapes-cars.js`) |
 | `tun`, `hotList`, `sect`, `amb` | tunnel, sector where the music goes wild, split times, ambience-sound zones (point indices) |
-| `camH`, `spd`, `kmh` | camera height, speed range of speed effects, speedometer factor |
+| `camH`, `spd`, `kmh`, `fallCam` | camera height, speed range of speed effects, speedometer factor; `fallCam: 1` (`lune`): in flight the chase camera keeps the car's vertical speed and looks down the trajectory, for a long fall |
 | `radio` | the stations (data in `RADIO` at the top of the file) |
 | `th` | theme: sky, fog, lights, road colours, `th.scenery` (which `SCENERY` function), engine options |
 | `th.hud` | HUD style, rev gauge (`gauge`), `mph`, Japanese labels (`jp`), title |
 | `th.rainFx` | rain: `1` everywhere, or zones `[a, b, force]` |
 | `surf` | road surface: `{ backdrop, zones: [[a, b, surface, force]] }`; coefficients per surface in `SURF` at the top of `sim.js` |
 | `jumps`, `trough` | relief: jumps and rideable banked walls; gives the car height and gravity (`GRAV`, `DROOP`, `LAND*` in `sim.js`) |
-| `grav`, `evenJump`, `dents`, `bowls` | with relief on: free-fall gravity of the map (9.81 by default; `lune`: 8); `[speed, power, floor]` that lightens it for a car taking off slower than `speed` (jump lengths close to each other); `[[x, z, radius, depth], ...]` small bowls dug in the ground under the car; `[[x, z, floor radius, rim radius, height, power, ...]]` a crater whose wall the car drives up, with a tunnel allowed under it (`T.dent` gives both to the scenery for its terrain; see `buildTrack` in `sim.js`) |
+| `grav`, `evenJump`, `loft`, `dents`, `bowls` | with relief on: free-fall gravity of the map (9.81 by default; `lune`: 8); `[speed, power, floor]` that lightens it for a car taking off slower than `speed` (jump lengths close to each other); `[[x, z, radius, depth], ...]` small bowls dug in the ground under the car; `[[x, z, floor radius, rim radius, height, power, ...]]` a crater whose wall the car drives up, with a tunnel allowed under it `loft: [share, gravity]` (`lune` only) gives the car inertia on that crater ground: it falls after the ground past a rim and hops off a lip with `share` of its upward speed, falling at `grav × gravity` (`docs/PHYSICS.md`, "Jumps and relief"; without it the car follows craters like a rail) (`T.dent` gives both to the scenery for its terrain; see `buildTrack` in `sim.js`) |
 | `traffic`, `rivals`, `med` | trucks on the road, rival names, medal ratios |
 | `th.objects`, `th.isFar` | knock-over objects, minimum camera far distance |
 
