@@ -85,10 +85,12 @@
   const wallFace = (s, d) => { const x = s.rc ? tube(s, d) : 0; return x > 0 ? s.rc - Math.sqrt(s.rc * s.rc - x * x) : 0; };
   const slope = (s, d) => { const x = s.rc ? tube(s, d) : 0; return x > 0 && Math.abs(d) - s.pl < 0.98 * s.rc ? Math.sign(d) * x / Math.sqrt(s.rc * s.rc - x * x) : 0; };
   // Ground under the car: height of the ribbon, continuous from one sample to the next (k = offset in samples, for the camera), plus the wall
+  // a tunnel that runs under a bowl (M.bowls): the car is in its tube when its sample is in the tunnel, it is between the walls and lower than the vault; then the ground is the ribbon and the tunnel walls hold, even on a plaza
+  const inTube = (T, c, ry) => !!T.mapDef.bowls && (c.idx - T.t0 + T.n) % T.n < (T.t1 - T.t0 + T.n) % T.n && Math.abs(c.d) < T.W + 1 && (c.y ?? ry) < ry + 9;
   function ground(T, c, k = 0) {
     const S = T.S, N = T.n; let i = c.idx, a = S[i], b = S[(i + 1) % N], u = ((c.x - a.x) * (b.x - a.x) + (c.z - a.z) * (b.z - a.z)) / ((b.x - a.x) ** 2 + (b.z - a.z) ** 2 || 1);
     if (u < 0) { i = (i - 1 + N) % N; u = Math.max(0, u + 1); } u = Math.min(1, u); a = S[(i + k + N) % N]; b = S[(i + k + 1 + N) % N];
-    return a.y + (b.y - a.y) * u + wallFace(S[c.idx], c.d);
+    const ry = a.y + (b.y - a.y) * u; return ry + wallFace(S[c.idx], c.d) + (T.dent && !inTube(T, c, ry) ? T.dent(c.x, c.z) : 0);
   }
 
   // M = the map (one entry of MAPS). Control points (x,z) in metres, clockwise = bends toward rightDir. Start at [0]. HGT = altitude of each point.
@@ -116,6 +118,15 @@
       for (let k = 1; k <= nl; k++) S[(i0 - nl + k + n) % n].y += h * (k / nl) ** 2;
       for (let k = 1; k <= nf; k++) S[(i0 + k) % n].y -= P * Math.min(1, (nf - k) / 8); }
     const vert = !!(M.jumps || M.trough);
+    // M.evenJump = [speed (m/s), power, floor]: a car that takes off at v falls at grav × clamp(v / speed, floor, 1.3) ^ power. At power 2 the jump length no longer depends on v; at 0 nothing changes
+    // M.bowls = [[x, z, floor radius, rim radius, height, power, r1, lipX, lipZ, halfWidth], …]: the ground rises round a flat floor like the inside of a crater, height × ((r - floor) / (rim - floor)) ^ power.
+    //   The ribbon is at floor level inside it. Under the jump (within halfWidth of the line from the centre to the lip, beyond r1) the bowl fades to 0 at the rim: there the ribbon itself comes down from the lip
+    // M.grav: the free-fall gravity of the map (the Moon: 1.62); M.dents = [[x, z, radius, depth], …]: bowls dug in the ground wherever the car drives (small craters), in map metres like pts
+    const dent = (M.dents || M.bowls) && ((x, z) => { let h = 0; for (const [cx, cz, r, p] of M.dents || []) { const q = ((x - cx * SC) ** 2 + (z - cz * SC) ** 2) / (r * r * SC * SC); if (q < 1) h = Math.min(h, -p * (1 - q)); }
+      for (const [cx, cz, rf, rr, H, p, r1, lx, lz, hw] of M.bowls || []) { const dx = x / SC - cx, dz = z / SC - cz, r = Math.hypot(dx, dz); if (r <= rf || r >= rr) continue;
+        const l = Math.hypot(lx - cx, lz - cz), lip = r > r1 && dx * (lx - cx) + dz * (lz - cz) > 0 && Math.abs(dx * (lz - cz) - dz * (lx - cx)) / l < hw; // under the jump
+        h += H * (((lip ? r1 : r) - rf) / (rr - rf)) ** p * (lip ? Math.max(0, 1 - (r - r1) / (0.7 * (rr - r1))) : 1); } // (nothing in the last 30 % before the rim: the lip must be the highest point)
+      return h; });
     if (vert) S.forEach((s, i) => { const b = S[(i + 1) % n]; s.sl = (b.y - s.y) / Math.hypot(b.x - s.x, b.z - s.z); });
     // the autopilot's path is the least-curvature line that stays on the road, 2.1 m from the walls (or from the foot of the faces: it stays on the flat), whatever the width (outside, inside line, outside).
     // One point every 8 m, each brought back to where its 4 neighbours would want it so the line turns as little as possible; then its curvature, by the circle through 3 points.
@@ -148,7 +159,7 @@
     let tau = null; if (M.jam) { const [a, b, f] = M.jam, z = span(at(a), at(b), 10); tau = new Float64Array(n + 1); for (let j = 0; j < n; j++) tau[j + 1] = tau[j] + 1 / (1 - (1 - f) * z(j)); }
     // truck in double file: M.lorry = [point, offset in m]; parked against the kerb, on one side on odd laps, the other on even laps (see lorry())
     const cam = M.lorry && { i: (at(M.lorry[0]) + Math.round(M.lorry[1] / 2) + n) % n, d: W - 1.6 };
-    return { S, n, W, len, tun: !!M.tun, t0, t1, tau, cam, h0: at(M.hotList[0]), h1: at(M.hotList[1]), sp: M.sect.map(at), rainFx, surf, surfDry, surfL: SURF[sf.wide], vert, racingLine: M.racingLine && M.racingLine.map(at), mapDef: M, car: CARD, kt: KT,
+    return { S, n, W, len, tun: !!M.tun, t0, t1, tau, cam, h0: at(M.hotList[0]), h1: at(M.hotList[1]), sp: M.sect.map(at), rainFx, surf, surfDry, surfL: SURF[sf.wide], vert, grav: M.grav || GRAV, even: M.evenJump, dent, racingLine: M.racingLine && M.racingLine.map(at), mapDef: M, car: CARD, kt: KT,
       trucks: Array.from({ length: M.traffic || 0 }, (_, i) => ({ lane: [-4.6, 0, 4.6][(i * 2) % 3], v: 25 + (i * 7 % 5) * 1.5, x: 0, y: 0, z: 0, th: 0, idx: 0, d: 0, vx: 0, vz: 0 })) }; // camions : voir traffic()
   }
 
@@ -269,9 +280,10 @@
     const s = S[b], nx = -s.tz, nz = s.tx, L = s.w - 1.1;
     c.d = (c.x - s.x) * nx + (c.z - s.z) * nz; c.hit = 0; c.rub = 0; c.wallT = (c.wallT || 0) - dt;
     const o = Math.abs(c.d) - L, P = T.mapDef.place, pr = P ? Math.hypot(c.x - P.c[0], c.z - P.c[1]) - (P.r - 1.1) : Infinity; // pr > 0: outside the plaza circle
-    if (o > 0 && pr > 0) { // off the road and off the plaza: the nearest wall
+    const tube = o > 0 && inTube(T, c, s.y);
+    if (o > 0 && (pr > 0 || tube)) { // off the road and off the plaza: the nearest wall
       // P.gap: the circle is only a wall beyond gap m from the road, where the scenery draws it; closer, the road wall continues straight (a gap between the two, at the join)
-      if (pr < o && o > (P.gap || 0)) { const dx = (c.x - P.c[0]) / (pr + P.r - 1.1), dz = (c.z - P.c[1]) / (pr + P.r - 1.1), t = c.vx * -dz + c.vz * dx > 0 ? 1 : -1; intoWall(c, dx, dz, pr, -dz * t, dx * t, -t, 1 / P.r, dt); }
+      if (!tube && pr < o && o > (P.gap || 0)) { const dx = (c.x - P.c[0]) / (pr + P.r - 1.1), dz = (c.z - P.c[1]) / (pr + P.r - 1.1), t = c.vx * -dz + c.vz * dx > 0 ? 1 : -1; intoWall(c, dx, dz, pr, -dz * t, dx * t, -t, 1 / P.r, dt); }
       else { const sg = Math.sign(c.d); c.d = sg * L; intoWall(c, nx * sg, nz * sg, o, s.tx, s.tz, sg, -s.k * sg, dt); }
     }
     if (T.racingLine && !c.rub && o > -1 && Math.hypot(c.vx, c.vz) > 15 && (b - T.racingLine[0] + n) % n < (T.racingLine[1] - T.racingLine[0] + n) % n) gains(c, NI.racingLine * dt); // the inside line grazing the wall, without touching it (M.racingLine)
@@ -301,9 +313,11 @@
     // relief: free fall, unless the ground is there
     const g = ground(T, c);
     if (!T.vert) { c.y = g; return; }
-    const vy = c.vy - GRAV * dt, y = c.y + vy * dt, sg = (c.x - s.x) * s.tx + (c.z - s.z) * s.tz < 0 ? S[(b - 1 + n) % n] : s, vg = sg.sl * (c.vx * sg.tx + c.vz * sg.tz); c.land = 0; // sg: the ribbon section under the car; vg: the vertical speed its slope gives the car (the wall does not count here: climbing it does not launch into the air)
+    const vy = c.vy - T.grav * (c.air && c.gk || 1) * dt, y = c.y + vy * dt, sg = (c.x - s.x) * s.tx + (c.z - s.z) * s.tz < 0 ? S[(b - 1 + n) % n] : s, vg = sg.sl * (c.vx * sg.tx + c.vz * sg.tz); c.land = 0; // sg: the ribbon section under the car; vg: the vertical speed its slope gives the car (the wall does not count here: climbing it does not launch into the air)
     const p = slope(s, c.d);
-    if (y > g && (c.airT || !p)) { c.y = y; c.vy = vy; c.air = y - g > DROOP; return; } // (on a wall you do not take off: the speed pins the car to it, it follows the surface)
+    if (y > g && (c.airT || !p)) { const was = c.air; c.y = y; c.vy = vy; c.air = y - g > DROOP;
+      if (c.air && !was) c.gk = T.even ? clamp(Math.hypot(c.vx, c.vz) / T.even[0], T.even[2], 1.3) ** T.even[1] : 1; // M.evenJump: gravity of this flight, lighter for a slow car (c.gk): everyone lands in the same area
+      return; } // (on a wall you do not take off: the speed pins the car to it, it follows the surface)
     if (c.airT) { c.land = vg - vy; const k = 1 - clamp((c.land - LAND0) * LANDK, 0, LANDX); c.vx *= k; c.vz *= k; c.airT = 0; }
     c.y = g; c.vy = vg; c.air = false;
     { const hp = wallFace(s, c.d), dh = hp - (c.hp ?? hp); c.hp = hp; // c.hp: height on the wall at the previous step
