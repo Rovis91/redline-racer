@@ -10,22 +10,22 @@
       veil(g, 0.8, () => { for (let i = 0; i < 26; i++) { const x = rand() * 61 | 0, y = rand() * 61 | 0; R(g, '#76815a', x, y, 3, 2); R(g, '#5c6a48', x + 1, y + 1, 2, 1); } }); }, 8],
     // rock of the island, c = its tint (warm ochre near, blue-grey for the far islands), a = strength of the strata (1 near, 0.3 far): uneven horizontal strata, vertical cracks; 8 m per tile
     rocheEgee: (c, a = 1) => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
-      veil(g, 0.2 * a, () => { for (let y = 0; y < 64;) { const ht = 2 + (rand() * 7 | 0); R(g, rand() < 0.5 ? '#5a2a10' : '#fff', 0, y, 64, ht); y += ht + (rand() * 5 | 0); } });
-      veil(g, 0.32 * a, () => { for (let y = 0; y < 64; y += 5 + (rand() * 8 | 0)) R(g, '#3a1a08', 0, y, 64, 1); for (let i = 0; i < 9; i++) R(g, '#3a1a08', rand() * 64 | 0, rand() * 50 | 0, 1, 4 + rand() * 12 | 0); });
+      veil(g, 0.2 * a, () => { for (let y = 0; y < 64;) { const ht = 2 + (rand() * 7 | 0); R(g, rand() < 0.5 ? '#4a3a2a' : '#fff', 0, y, 64, ht); y += ht + (rand() * 5 | 0); } });
+      veil(g, 0.32 * a, () => { for (let y = 0; y < 64; y += 5 + (rand() * 8 | 0)) R(g, '#3a2a1a', 0, y, 64, 1); for (let i = 0; i < 9; i++) R(g, '#3a2a1a', rand() * 64 | 0, rand() * 50 | 0, 1, 4 + rand() * 12 | 0); });
       grain(g, o, 240, 0.18 * a); }, 8],
     // terrace earth: red-brown tilled soil, pale stones, faint uneven clods (no furrow lines: they would strobe); 8 m per tile
-    terreEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#b9805a', 0, 0, 64, 64); grain(g, o, 420, 0.16);
-      veil(g, 0.14, () => { for (let i = 0; i < 14; i++) R(g, i & 1 ? '#e8c9a0' : '#5a2a10', rand() * 56 | 0, rand() * 56 | 0, 4 + rand() * 8 | 0, 3 + rand() * 5 | 0); });
+    terreEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#a5876a', 0, 0, 64, 64); grain(g, o, 420, 0.16);
+      veil(g, 0.14, () => { for (let i = 0; i < 14; i++) R(g, i & 1 ? '#e8c9a0' : '#4a3420', rand() * 56 | 0, rand() * 56 | 0, 4 + rand() * 8 | 0, 3 + rand() * 5 | 0); });
       for (let i = 0; i < 14; i++) R(g, '#e7c49a', rand() * 63 | 0, rand() * 63 | 0, 2, 1); }, 8],
     // quay and village paving: large pale limestone slabs of uneven size, lime-washed joints (the joints are lighter than the stone, as in the Cyclades), a few worn slabs; 8 m per tile
     pavageEgee: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#c4ae88', 0, 0, 64, 64);
       for (let y = 0; y < 64;) { const ht = 6 + (rand() * 5 | 0); for (let x = 0; x < 64;) { const w = 7 + (rand() * 9 | 0); R(g, ['#bfa882', '#c9b48e', '#b59e78', '#d0bc98'][rand() * 4 | 0], x, y, w, ht); R(g, '#f4ecdc', x, y, 1, ht); x += w; } R(g, '#f4ecdc', 0, y, 64, 1); y += ht; }
       grain(g, o, 200, 0.1); }, 8],
     // lime wash, c = its tint: chalky white, faint trowel patches, a grey splash band at the foot is left to the pieces that touch the ground; 8 m per tile
-    chauxEgee: (c = '#fbf6ea') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
+    chauxEgee: (c = '#e4dccb') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64);
       veil(g, 0.07, () => { for (let i = 0; i < 26; i++) R(g, i & 1 ? '#8a7a68' : '#fff', rand() * 54 | 0, rand() * 54 | 0, 5 + rand() * 10 | 0, 3 + rand() * 8 | 0); }); grain(g, o, 90, 0.06); }, 8],
     // house wall, c = joinery colour: lime wash with one window per 4 m (two shutters, a sill) between 1.1 and 2.5 m of each 4 m storey, a blue-grey splash band at the foot; 4 m per tile, the bottom of the texture is the ground
-    facadeEgee: (c = '#1c6eb0') => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, '#fbf6ea', 0, 0, 32, 32);
+    facadeEgee: (c = '#1c6eb0') => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, '#e4dccb', 0, 0, 32, 32);
       veil(g, 0.07, () => { for (let i = 0; i < 10; i++) R(g, i & 1 ? '#8a7a68' : '#fff', rand() * 26 | 0, rand() * 26 | 0, 4 + rand() * 6 | 0, 3 + rand() * 5 | 0); });
       R(g, '#22303c', 12, 12, 8, 11); R(g, c, 9, 12, 4, 11); R(g, c, 19, 12, 4, 11); veil(g, 0.3, () => { for (let y = 13; y < 23; y += 2) { R(g, '#000', 9, y, 4, 1); R(g, '#000', 19, y, 4, 1); } }); R(g, '#e4dccb', 8, 23, 16, 1);
       veil(g, 0.1, () => R(g, '#5a6a78', 0, 29, 32, 3)); }, 4],
