@@ -6,7 +6,7 @@ const assert = require('assert'), fs = require('fs');
 require('../src/engine/lang.js'); require('../src/engine/sim.js');
 const SAME = new Set(['XYZ', 'YXZ', 'YZX', // ordres de rotation de three.js
   'SPEED', 'CITY', 'NOODLE', 'BAR', 'KENJI', 'REI', 'JUN', // scenery signs, rival names
-  'RADIO', 'SOLO', 'REC', 'SHIFT', 'GO', 'AUTO', 'MODE', 'NITRO', 'RECORD', 'MENU', 'PAUSE', 'SCORE', 'PTS', 'KM', 'TUNNEL', 'BRONZE', 'NORMAL', 'ENGLISH', 'FRANCAIS', 'JOY', 'CON', 'IA', 'FM', 'SPEEDWAY', 'PARIS', 'KARASU', 'TOGE', 'WAN', 'BAYSHORE', 'CANAL', 'SIX', 'PRIX', 'GRAND', 'SILENCE', 'PERSEPOLIS', 'BAHIA', 'PLAYA', 'RIVIERA', 'MAYA',
+  'RADIO', 'SOLO', 'REC', 'SHIFT', 'GO', 'AUTO', 'MODE', 'NITRO', 'RECORD', 'MENU', 'PAUSE', 'SCORE', 'PTS', 'KM', 'TUNNEL', 'BRONZE', 'NORMAL', 'ENGLISH', 'FRANCAIS', 'JOY', 'CON', 'IA', 'FM', 'SPEEDWAY', 'PARIS', 'KARASU', 'TOGE', 'WAN', 'BAYSHORE', 'CANAL', 'SIX', 'PRIX', 'GRAND', 'SILENCE', 'PERSEPOLIS', 'BAHIA', 'PLAYA', 'RIVIERA', 'MAYA', 'CYCLADES', 'NEVADA', 'HUNAN',
   'ER', // shortcut: ordinal in pieces (n + 'ER' / 'E'), which translated() reads whole; to revisit if a lone "ER" becomes text
 ]);
 const without = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '');

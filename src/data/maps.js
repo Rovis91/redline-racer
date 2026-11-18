@@ -590,11 +590,14 @@
           h: [[0, 7.5], [1, 6.3]] },   // no light columns from the engine (th.tun.spokes): the sun enters through the scenery's shafts
         hud: { y: '#fffbe8', c: '#ff3d7f', r: '#ff6a2b', backdrop: 'rgba(10,70,90,.88)', style: 'signPanel', split: 0, jp: null, over: [null, 'RIVIERA MAYA · MIDI'], heading: ['PLAYA', '307'] } } },
   ];
-  // La Tournée runs one night, from dusk to dawn: its heats in clock order, not menu order. hour: what the clock shows at the heat (demo mode follows the same order)
-  G.EVENING = [['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['givre', '05:00'], ['paris', '05:30'], ['barrage', '06:10'], ['chapada', '07:00'], ['plage', '11:45']]
-    .map(([id, hour]) => Object.assign(G.MAPS.find(m => m.id === id), { hour }));
   let id = 'ville';
   if (typeof location !== 'undefined') try { id = (/^#defi=\d+\.([a-z0-9]+)\./.exec(location.hash) || [])[1] || new URLSearchParams(location.search).get('map') || localStorage.getItem('vpr.carte') || id; } catch (e) { } // a challenge link (#defi=version.mapDef.données, see challengeCode in sim.js) opens its map
+  // The six maps written below as "if (id === '<id>') { G.MAP_DEF = … }" blocks are full members of MAPS: this loop runs the blocks once per id and pushes each G.MAP_DEF into MAPS, in menu order.
+  // The blocks themselves are untouched (their sessions edit them); the loop closes just above "const q", where the map asked for (asked) is selected again. NEW: id -> [label, title on two lines, rivals, line under the title], which replace what the block says (the game is written in French, lang.js translates).
+  const NEW = { egee: ['FALAISES EGEENNES', ['FALAISES', 'EGEENNES'], ['NIKOS', 'ELENI', 'YANNIS'], 'CYCLADES · 14 H 30'], area51: ['SIGNAL INCONNU', ['SIGNAL', 'INCONNU'], ['WADE', 'RHONDA', 'CODY'], 'NEVADA · HEURE BLEUE'],
+    piliers: ['PILIERS DU CIEL', ['PILIERS', 'DU CIEL'], ['WEI', 'MEILIN', 'BO'], 'HUNAN · PETIT MATIN'], volcan: ['COURONNE BRISEE', ['COURONNE', 'BRISEE'], ['SIGRUN', 'EINAR', 'FREYA'], 'ATLANTIQUE NORD · 17 H 30'],
+    lune: ['AVANT-POSTE LUNAIRE', ['AVANT-POSTE', 'LUNAIRE'], ['GENE', 'VALYA', 'DEKE'], 'MATIN LUNAIRE · 1978'], autoroute: ['AUTOROUTE ENGLOUTIE', ['AUTOROUTE', 'ENGLOUTIE'], ['NOE', 'MAYA', 'ELIAS'], 'VILLE EVACUEE · HEURE DOREE'] }, asked = id;
+  for (id in NEW) { G.MAP_DEF = null; // the next line is then a no-op kept in place (a buffer line for merges): the block of this id sets G.MAP_DEF
   G.MAP_DEF = G.MAP_DEF || G.MAPS.find(m => m.id === id) || G.MAPS[0];
   // Sky Pillars proposal, V2 static map (Zhangjiajie; outside MAPS like egee below: no menu, no tests, no records): ?map=piliers
   // Layout = docs/proposals/sky-pillars/trace.csv, 101 control points, one every 40 m (x east, z = -north, altitude above the ravine floor): low forest at +150 (pts 0-18), corniches (18-43),
@@ -683,6 +686,12 @@
   // Driving test track (outside MAPS: no menu, no tests, no shared records): ?map=essai&grip=1&ground=sec|mouille|neige|terre|glace&car=<id of a map>
   // Flat, 9 m half-width: straight, fast sweeper, 90° straight, tight hairpin like the pass's, straight, chicane, long bend, S run, long straight and return.
   // Scenery, radio and car (default) of the pass.
+  // end of the registration loop opened above the Sky Pillars block: the French label and title, the rivals and the line under the title (NEW), then the map enters MAPS
+    { const [label, heading, rivals, sub] = NEW[id]; Object.assign(G.MAP_DEF, { label, rivals }); Object.assign(G.MAP_DEF.th.hud, { heading, over: [null, sub] }); G.MAPS.push(G.MAP_DEF); } }
+  id = asked; G.MAP_DEF = G.MAPS.find(m => m.id === id) || G.MAPS[0];
+  // La Tournée runs one day round, from the afternoon to the next noon: its heats in clock order, not menu order. hour: what the clock shows at the heat (demo mode follows the same order)
+  G.EVENING = [['egee', '14:30'], ['volcan', '17:30'], ['autoroute', '18:10'], ['terre', '18:40'], ['perse', '19:15'], ['canal', '19:50'], ['area51', '20:30'], ['stade', '22:00'], ['ville', '00:00'], ['touge', '02:00'], ['wangan', '03:30'], ['lune', '04:20'], ['givre', '05:00'], ['paris', '05:30'], ['barrage', '06:10'], ['piliers', '06:35'], ['chapada', '07:00'], ['plage', '11:45']]
+    .map(([id, hour]) => Object.assign(G.MAPS.find(m => m.id === id), { hour }));
   const q = typeof location !== 'undefined' ? new URLSearchParams(location.search) : null;
   if (q && id === 'attempt') {
     const T = G.MAPS.find(m => m.id === 'touge'), V = G.MAPS.find(m => m.id === q.get('car')) || T, gr = +q.get('grip') || 1, ground = q.get('ground') || 'sec';
