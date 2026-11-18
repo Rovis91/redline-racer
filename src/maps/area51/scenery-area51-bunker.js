@@ -14,9 +14,6 @@
   const lock = ROOMS[0], labs = ROOMS[2], sas = (i, r) => seg('sasArea51', S[i], 0, 0, { a: [r[2], r[3], r[4]] });
   sas(lock[0] + 1, lock); sas(lock[1] - 1, lock); sas(labs[1] - 16, labs); sas(labs[1] - 1, labs);
   seg('portiqueArea51', S[(lock[0] + lock[1]) >> 1], 0, 0); for (const sd of [-1, 1]) seg('gueriteArea51', S[(lock[0] + lock[1]) >> 1], sd * 16.5, 0, { a: [4, 8] });
-  // goods sidings at a right angle to the road, each with its wagon: what feeds the reactor hall, the labs and the silo
-  const voie = (i, sd, len) => seg('voieArea51', S[i], sd * 11.6, 0, { a: [len, sd] });
-  voie(idx(1254, 1306), -1, 12); voie(idx(1166, 1306), -1, 12); voie(labs[0] + 14, 1, 16); voie(labs[0] + 30, 1, 16); voie(ROOMS[3][0] + 4, 1, 7);
   // reactor hall: the vessel in its blue pool 6 m below the gallery the road runs on, the polar crane over it, the control room on the outer wall, waste casks, a footbridge; a concrete wall closes the hall to the north
   set('reacteurArea51', 1210, 1262, { y: -25 }); reg('pool', surf('pool', 1210, 1262, 84, 84, -24.2, 0.8)); set('pontPolaireArea51', 1210, 1262, { y: 2 });
   h.pose('boxMesh', MAT.concrete, kit, [1222 * k, -4, 1196 * k], 124, 32, 5);
@@ -28,12 +25,8 @@
   // on the mesa: the stack (what says reactor from afar), the filter house, the headframe above the silo, the low cooler and its pond, ventilation shafts
   set('cylArea51', 1300, 1350, { a: [3, 60, 8, 0.55], skin: MAT.concrete }); set('boxMesh', 1300, 1350, { a: [1.4, 1.4, 1.4], skin: MAT.fire, dy: 61 }); set('filtresArea51', 1328, 1350); set('chevalementArea51', 930, 1268);
   set('aeroArea51', 1285, 1440); surf('glass', 1200, 1420, 40, 25, null, 2); set('puitsArea51', 1300, 1380); set('puitsArea51', 1050, 1300);
-  // the power line from the transformer at the portal down to the back shops of the base: four pylons, three conductors with their sag between each pair; then the approach: two berms and the guard post
-  const P = [[1535, 1150, 7], [1540, 1100, 30], [1600, 1045, 30], [1660, 990, 30], [1716, 1010, 9]], Y = P.map(([x, z, ht]) => g.hAt(x * k, z * k) + ht);
-  const wire = (ax, ay, az, bx, by, bz) => { const dx = bx - ax, dz = bz - az, L = Math.hypot(dx, dz), w = h.pose('boxMesh', MAT.gray, kit, [(ax + bx) / 2, (ay + by) / 2, (az + bz) / 2], Math.hypot(L, by - ay), 0.16, 0.16); w.rotation.set(0, -Math.atan2(dz, dx), Math.atan2(by - ay, L), 'YZX'); };
-  for (let i = 0; i < P.length - 1; i++) for (const o of [-5, 0, 5]) { const [ax, az] = P[i], [bx, bz] = P[i + 1], n = Math.hypot(bx - ax, bz - az), ox = -(bz - az) / n * o, oz = (bx - ax) / n * o, ay = Y[i] - (P[i][2] > 20 ? 9 : 0), by = Y[i + 1] - (P[i + 1][2] > 20 ? 9 : 0), my = Math.min(ay, by) - 2.5;
-    wire((ax + ox) * k, ay, (az + oz) * k, ((ax + bx) / 2 + ox) * k, my, ((az + bz) / 2 + oz) * k); wire(((ax + bx) / 2 + ox) * k, my, ((az + bz) / 2 + oz) * k, (bx + ox) * k, by, (bz + oz) * k); }
-  for (const [x, z] of P.slice(1, 4)) set('pyloneArea51', x, z); set('transfoArea51', 1535, 1150);
+  // the transformer at the portal, then the approach: two berms and the guard post (no overhead line: nothing in the air to read)
+  set('transfoArea51', 1535, 1150);
   for (const sd of [-1, 1]) for (const d of [-25, 0, 25]) side('merlonArea51', pk(1440, 1020) + d, sd, 8, 7, { a: [12, 6, 27, sd + d], skin: MAT.sol });
   side('gueriteArea51', pk(1425, 955), 1, 4, 2.2);
 };
