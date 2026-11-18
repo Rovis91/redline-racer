@@ -2,7 +2,7 @@
 // See docs/methods/NEW-MAP.md and docs/proposals/volcanic-island/AMBIANCE-V2.html. The island is relief-volcan.js (a height field of its own); shapes: shapes-volcan-<family>.js; textures: textures-volcan.js.
 (function () {
   const { near, edgePt, terrain, weld } = PLACERS;
-  const ZONES = ['port', 'village', 'fermes', 'falaises', 'cratere', 'descente', 'cote', 'vie'], LAP = 6578; // LAP: plan length of the layout, the unit of its chainages (PK)
+  const ZONES = ['port', 'village', 'fermes', 'falaises', 'approche', 'cratere', 'galerie', 'descente', 'cote', 'flore', 'vie'], LAP = 6578; // LAP: plan length of the layout, the unit of its chainages (PK)
   const GAL = [[101, 106], [112, 117]];                                                   // the two galleries through the caldera wall, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map)
   const TRENCH = 20, LID = 32;                                                            // a height field cannot overhang: along a gallery the ground is trenched TRENCH m each side of the axis, and a lid LID m each side, in the ground's own material, restores the slope over it
   const CUT = [11, 1.3], FILL = [10, 1.1];                                                // the road on the island: a rock cut rises from 11 m off the axis by 1.3 m per metre; an embankment falls from 10 m by 1.1 m per metre
@@ -20,11 +20,14 @@
         return y - (t + (LAKE.y - t) * k); };
       // ground, in layers over bare ash and lava gravel: grass on the low ground away from the cone (the farmland, the village, the shore); grey-green moss on the gentle slopes of the highland and of the cone's foot; rock where it is steep; snow, white, on the highest crags of the rim only
       const rc = (x, z) => Math.hypot(x - CONE.x, z - CONE.z), LAYERS = [
-        { tex: ['mousseVolcan', '#41633a'], weight: (x, z, y, p) => (1 - ss(0.05, 0.13, p)) * (1 - ss(44, 70, y)) * ss(2.5, 6, y) * ss(470, 600, rc(x, z) + 260 * (fbm(x / 90, z / 90) - 0.5)), noise: 0.1 },
-        { tex: ['mousseVolcan'], weight: (x, z, y, p) => (1 - ss(0.06, 0.15, p)) * (1 - ss(215, 260, y)) * ss(40, 66, y) * ss(215, 300, rc(x, z)), noise: 0.12 },
+        { tex: ['herbeVolcan', '#41633a'], weight: (x, z, y, p) => (1 - ss(0.05, 0.13, p)) * (1 - ss(44, 70, y)) * ss(2.5, 6, y) * ss(470, 600, rc(x, z) + 260 * (fbm(x / 90, z / 90) - 0.5)), noise: 0.1 },
+        { tex: ['lichenVolcan'], weight: (x, z, y, p) => (1 - ss(0.06, 0.15, p)) * (1 - ss(215, 260, y)) * ss(40, 66, y) * ss(215, 300, rc(x, z)), noise: 0.12 },
         { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.07, 0.17] }, // weak marks: on a steep face the terrain stretches them into streaks
         { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(338, 360, y) * (1 - ss(0.2, 0.42, p)), noise: 0.03 }];
       const g = terrain(h, { stepSec: 8, margin: 440, hollow: relief, mat: h.mat('solVolcan'), layerSet: LAYERS });
+      // the road's walls: th.wallH 0 buries the engine's guardrail; the dry-stone wall that replaces it is laid at ±s.w, on the collision line, the whole lap (h.guardM: it wears down on impacts), with a coping on top
+      { const stone = h.mat('murRouteVolcan', { side: THREE.DoubleSide }), cap = h.mat('pierreVolcan', { side: THREE.DoubleSide }, '#9a968a'), { t0, t1 } = h.T, sw = gal[1], runs = [[t1, sw[0] - t1], [sw[1], N - sw[1] + t0]]; // none in the engine tunnel (t0 to t1) nor in the south-west gallery, which have their own walls
+        for (const sd of [-1, 1]) for (const [i0, n] of runs) { h.guardM(sd, i0, n, s => sd * s.w, 0.9, s => sd * s.w, -0.6, stone, 4); h.ribbon(i0, n, s => sd * (s.w - 0.3), 0.9, s => sd * (s.w + 0.3), 0.9, cap, 4); } }
       const sea = h.water(0, { size: [16000, 16000], x: -100, z: -800, depth: 10, clarity: 2, shallow: 0x2f7f86, deep: 0x0a2836, ripple: 12, rough: 0.5, wind: [-0.9, 0.3] }); // the engine's water (MAP-ENGINE-OPTIONS.md "Water"): a dark northern sea, rougher than a harbour
       // MAT: the shared materials of the map, one draw pass each for the whole map: every piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the volcan assemblies.
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), paint = c => h.mat('bardageVolcan', {}, c), flat = c => h.mat('paint', { c }), MAT = {
@@ -32,7 +35,7 @@
         snow: h.mat('neigeVolcan'), far: h.mat('rocheVolcan', {}, '#5d6f80', 0.4), farSnow: h.mat('neigeVolcan', {}, '#dfe8ee'), gravel: h.mat('solVolcan', {}, '#6f6a60'), sand: h.mat('solVolcan', {}, '#26262a'), hay: h.mat('mousseVolcan', {}, '#9ab842'),
         red: paint('#d2362b'), yellow: paint('#f2c230'), blue: paint('#2f7fc8'), green: paint('#3fa45a'), pink: paint('#ee6fa0'), orange: paint('#f0641e'), teal: paint('#2a9c9c'), white: paint('#f2eee4'),
         trim: tint(0xf2eee4), roof: h.mat('toitVolcan', DS), dark: h.mat('betonVolcan', {}, '#1e2226'), concrete: h.mat('betonVolcan'), paving: h.mat('betonVolcan', {}, '#77756e'), steel: tint(0x6a7078), glass: flat(0x1c2f52), fish: flat(0xd8cfae), flag: flat(0xf0641e),
-        moss: h.mat('mousseVolcan'), wood: h.mat('boisVolcan'), greywood: h.mat('boisVolcan', {}, '#9a968c'), net: h.mat('boisVolcan', {}, '#c9b58a'), gallery: h.mat('tunMurVolcan', { emis: 0.45, ...DS }), vault: h.mat('tunVouteVolcan', { emis: 0.45, ...DS }), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
+        moss: h.mat('mousseVolcan'), tussock: h.mat('mousseVolcan', {}, '#6e6a36'), tuft: h.mat('mousseVolcan', {}, '#41602a'), scrub: h.mat('mousseVolcan', {}, '#34502a'), lichenRock: h.mat('rocheVolcan', {}, '#7d866a'), puddle: flat(0x0e1a22), wood: h.mat('boisVolcan'), greywood: h.mat('boisVolcan', {}, '#9a968c'), net: h.mat('boisVolcan', {}, '#c9b58a'), gallery: h.mat('tunMurVolcan', { emis: 0.45, ...DS }), vault: h.mat('tunVouteVolcan', { emis: 0.45, ...DS }), lava: h.mat('laveVolcan', { emis: 1 }), lamp: h.mat('lampObj', { emis: 1 }),
         steam: h.mat('paint', { c: 0xe6ecec, transparent: true, opacity: 0.4, depthWrite: false, ...DS }) };
       const kit = new THREE.Group(); h.scene.add(kit);
       // what lives (scenery-volcan-vie.js, called last): REG = every placed piece by shape name ({ o: its group, a: its settings, pk, sd, off when placed beside the road }); LIFE = what the tick animates, (dt, car, t); flows(material, u, v) = a texture that slides (repeats per second)
