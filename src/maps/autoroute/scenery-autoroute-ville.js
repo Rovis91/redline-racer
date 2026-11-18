@@ -47,7 +47,7 @@
       let s = L[0], bd = 1e9; for (const t of L) { const d = (t.x - x) ** 2 + (t.z - z) ** 2; if (d < bd) { bd = d; s = t; } }
       if (Math.abs((x - s.x) * -s.tz + (z - s.z) * s.tx) < s.w + clear || bd > 900 || across.some(([bx, bz]) => Math.hypot(bx - x, bz - z) < 7.5)) continue;
       const van = rnd() < 0.12, ry = (rnd() - 0.5) * 0.1 + (ax === 'x' ? Math.PI / 2 : 0), k = van ? 3 : nb++ % 3;
-      cars[k].push([x, s.y, z, ry, 1, 1, 1, TINT[(nb * 7 + k) % TINT.length]]); if (nb % 6 === 0) bush(x, z, s.y, 3, 2.2, 4, nb); } // one wreck in six is overgrown
+      cars[k].push([x, s.y, z, ry, 1, 1, 1, TINT[(nb * 7 + k) % TINT.length]]); if (nb % 6 === 0 && ax === 'x') bush(x, z, s.y, 3, 2.2, 4, nb); } // one wreck in six is overgrown (in the streets: nothing grows on the motorway)
     return L; };
   // (its first row stands along the wall of the lane itself, a car every 6 m at the lane's angle: the collision line is that row; the lanes behind it are packed)
   on('x', 0).forEach((s, i) => { if (s.x < 108 || s.x > 200 || i % 3) return; for (const sd of [-1, 1]) if (edge(s, sd) - s.w > 2.2) { const [x, z] = edgePt(s, sd, s.w + 1); cars[i % 3 ? 1 : 0].push([x, s.y, z, h.across(s) + (HH(i, sd) - 0.5) * 0.3, 1, 1, 1, TINT[i % TINT.length]]); } });
@@ -63,6 +63,6 @@
       if (r < 0.3) bush(x, z, y, 3 + 2 * HH(v, 2), 1.6 + HH(v, 3), 3 + 3 * HH(v, 4), v); else if (r < 0.42) tree(x, z, y, 7 + 4 * HH(v, 2), 2.6, v + 1);
       else if (r < 0.5) set('eboulisAutoroute', x, z, { y, ry, a: [3.2, 1.2, 3.2, v] }); else if (r < 0.58) cars[v & 1].push([x, y, z, ry + 0.3 * (HH(v, 5) - 0.5), 1, 1, 1, TINT[Math.abs(v) % TINT.length]]); } });
   cars.forEach((l, k) => insts(h, 'voitureAutoroute', MAT, l, { a: [k], tintMat: 'body' }));
-  // the central reservation: a concrete wall 2 m wide down the middle of the deck, broken between z = -110 and z = -55, weeds on it
-  for (let z = -257; z <= 196; z += 10) if (z < -110 || z > -55) { real('TERRE-PLEIN', 2, 1.1, 10, 220, yAt(z), z); if (HH(z, 1) < 0.4) bush(220, z, yAt(z) + 1, 1.8, 1.4, 4, z); }
+  // the central reservation: a concrete wall 2 m wide down the middle of the deck, broken between z = -110 and z = -55, moss on it
+  for (let z = -257; z <= 196; z += 10) if (z < -110 || z > -55) { real('TERRE-PLEIN', 2, 1.1, 10, 220, yAt(z), z); if (HH(z, 1) < 0.6) slab('moss', 220, yAt(z) + 1.1, z, 2.06, 0.03, 10); }
 };

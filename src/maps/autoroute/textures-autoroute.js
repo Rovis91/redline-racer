@@ -84,6 +84,15 @@
     // standing water in the flooded streets: still teal, short pale glints, darker depths. 8 m per tile
     eauAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#2a8f8a', 0, 0, 64, 64); blotch(g, o, 8, 0.08);
       veil(g, 0.3, () => { for (let i = 0; i < 40; i++) R(g, rand() < 0.7 ? '#bfe8d8' : '#f0c890', rand() * 60 | 0, rand() * 64 | 0, 2 + rand() * 5 | 0, 1); }); }, 8],
+    // moss on concrete and asphalt: patches of several greens that leave the surface under them bare between them (transparent: laid over a deck, a parapet, a wall). 8 m per tile
+    mousseAutoroute: () => [64, 64, (g, o) => { const { R, rand } = o;
+      for (let i = 0; i < 12; i++) { const cx = rand() * 64, cy = rand() * 64, r = 2 + rand() * 7; for (let k = 0; k < r * r * 2.2; k++) { const a = rand() * 6.3, d = r * Math.sqrt(rand());
+        R(g, ['#34481f', '#44582a', '#566a30', '#2a3a1c', '#66703a'][rand() * 5 | 0], (cx + Math.cos(a) * d + 64) % 64 | 0, (cy + Math.sin(a) * d * 1.6 + 64) % 64 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); } } }, 8],
+    // fallen deck or platform slab the lane drives on: concrete plates 4 m long with open joints, cracks running from them, rust where the bars show, moss in the joints, dust. 8 m per tile
+    dalleSolAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#8a867a', 0, 0, 64, 64); blotch(g, o, 10, 0.07); grain(g, o, 420, 0.14);
+      for (const y of [0, 32]) { R(g, '#3a3832', 0, y, 64, 1); veil(g, 0.5, () => { for (let i = 0; i < 14; i++) R(g, '#4a6430', rand() * 62 | 0, y + (rand() < 0.5 ? -1 : 1), 2 + (rand() * 4 | 0), 1); }); }
+      veil(g, 0.45, () => { for (let i = 0; i < 5; i++) { let x = rand() * 64 | 0, y = rand() * 64 | 0; for (let k = 0; k < 18; k++) { R(g, '#2a2824', x, y, 1, 1); x = (x + (rand() < 0.5 ? 1 : 0)) % 64; y = (y + (rand() < 0.7 ? 1 : 0)) % 64; } } });
+      veil(g, 0.35, () => { for (let i = 0; i < 7; i++) R(g, '#7a4a2a', rand() * 60 | 0, rand() * 62 | 0, 2 + (rand() * 4 | 0), 1); }); }, 8],
     // grass and weeds gone to seed: green with dry gold tufts and bare earth. 8 m per tile
     herbeAutoroute: () => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, '#5a7438', 0, 0, 64, 64);
       veil(g, 0.5, () => { for (let i = 0; i < 380; i++) R(g, ['#3a5226', '#7a9a48', '#b8a850', '#4a3a26'][rand() * 4 | 0], rand() * 63 | 0, rand() * 63 | 0, 1 + (rand() * 2 | 0), 1 + (rand() * 2 | 0)); }); }, 8],
