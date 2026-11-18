@@ -25,6 +25,8 @@
       veil(g, 0.4, () => { for (let x = 6; x < 60; x += 9 + (rand() * 6 | 0)) { let xx = x; for (let y = 0; y < 64; y++) { if (rand() < 0.25) xx += rand() < 0.5 ? -1 : 1; R(g, '#000', xx, y, 1, 1); } } }); // column joints, vertical and slightly wandering
       veil(g, 0.15, () => { for (let i = 0; i < 12; i++) R(g, '#9aa8b0', 4 + rand() * 54 | 0, rand() * 64 | 0, 1, 3 + rand() * 12 | 0); }); // wet mineral streaks
       veil(g, 0.3, () => { R(g, '#000', 52, 0, 12, 64); });
+      for (const [x, y, w, ht] of [[6, 6, 22, 15], [30, 38, 18, 20]]) { R(g, '#14161a', x - 1, y - 1, w + 2, ht + 2); R(g, '#64665f', x, y, w, ht); veil(g, 0.35, () => { for (let i = 0; i < 40; i++) R(g, rand() < 0.5 ? '#4a4c48' : '#a2a39a', x + rand() * w | 0, y + rand() * ht | 0, 1 + (rand() * 2 | 0), 1); R(g, '#3a3c3c', x + 3, y + ht - 4, 2, 6); }); } // shotcrete patches: pale, speckled, dark-edged, with a seepage stain
+      for (let x = 12; x < 52; x += 20) for (let y = 4; y < 64; y += 21) { R(g, '#0c0d10', x - 1, y - 1, 5, 5); R(g, '#8b9096', x, y, 3, 3); R(g, '#d0b27a', x + 1, y + 2, 1, 4); } // rock bolts: plates on a 2.5 m grid, rust running from each
     }, 8],
     // basalt gallery vault: flatter, darker, broken by overbreak hollows and a few rock-bolt heads
     tunVouteVolcan: () => [64, 64, (g, o) => {
@@ -32,6 +34,8 @@
       veil(g, 0.22, () => { for (let i = 0; i < 80; i++) R(g, rand() < 0.65 ? '#000' : '#7a8088', rand() * 64 | 0, rand() * 64 | 0, 2 + rand() * 6 | 0, 1 + rand() * 3 | 0); });
       veil(g, 0.35, () => { for (let i = 0; i < 5; i++) R(g, '#000', rand() * 54 | 0, rand() * 54 | 0, 6 + rand() * 10 | 0, 4 + rand() * 8 | 0); });
       veil(g, 0.5, () => { for (let x = 8; x < 64; x += 24) for (let y = 8; y < 64; y += 16) R(g, '#8a8e94', x + (rand() * 3 | 0), y + (rand() * 3 | 0), 2, 2); });
+      R(g, '#14161a', 17, 21, 27, 19); R(g, '#64665f', 18, 22, 25, 17); veil(g, 0.35, () => { for (let i = 0; i < 40; i++) R(g, rand() < 0.5 ? '#4a4c48' : '#a2a39a', 18 + rand() * 25 | 0, 22 + rand() * 17 | 0, 1 + (rand() * 2 | 0), 1); }); // a shotcrete patch over an overbreak hollow
+      for (let x = 6; x < 64; x += 20) for (let y = 4; y < 64; y += 20) { R(g, '#0c0d10', x - 1, y - 1, 5, 5); R(g, '#8b9096', x, y, 3, 3); }
     }, 8],
   });
 })();
