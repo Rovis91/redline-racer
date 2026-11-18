@@ -16,6 +16,12 @@
     futPiliers: (ht = 14) => join([new THREE.CylinderGeometry(0.16, 0.34, ht * 0.9, 5, 1, true).rotateZ(0.05), 0.3, ht * 0.45, 0, 0.5, ht / 4]),
     // the foliage of a pine clinging to the rock: three flat tiers pushed to one side by the wind, 14 m high in all
     pinPiliers: (ht = 14) => join(...[[0.5, 0.36, -0.1], [0.72, 0.28, 0.5], [0.93, 0.17, 0.2]].map(([y, r, x]) => [new THREE.ConeGeometry(ht * r, ht * r * 0.5, 6), x + 0.6, ht * y, x * 0.5, 3, 1])),
+    // a fir, 18 m: four stacked cones on a short bare trunk (one shape, foliage; its trunk is futPiliers)
+    sapinPiliers: (ht = 18) => join(...[[0.2, 0.26, 0.34], [0.42, 0.21, 0.3], [0.62, 0.15, 0.26], [0.8, 0.09, 0.22]].map(([y, r, hh]) => [new THREE.ConeGeometry(ht * r, ht * hh, 6), 0, ht * (y + hh / 2), 0, 3, 2])),
+    // a tall narrow crown, 10 m across and 14 high: a slender broadleaf; origin at the centre of the crown
+    houppierHautPiliers: (r = 5) => join([blob(r, 1.3), 0, 0, 0, 4, 4], [blob(r * 0.7, 1.1), r * 0.5, -r * 0.7, 0.3 * r, 3, 3]),
+    // a shrub 3 m across: three small masses at different heights, origin on the ground
+    arbustePiliers: () => join([blob(1.2, 0.8), 0, 0.8, 0, 2, 1], [blob(0.9, 0.9), 0.9, 1.3, 0.4, 2, 1], [blob(0.8, 0.8), -0.7, 0.6, -0.6, 2, 1]),
     // a mound of undergrowth, 1 m across and 1 m high: scaled per instance; its lower part is in the ground
     taillisPiliers: () => join([blob(0.6, 1.1), 0, 0.35, 0, 2, 1]),
   });

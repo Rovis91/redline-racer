@@ -46,9 +46,12 @@
       { const G = g.mesh.geometry, P = G.attributes.position, Nn = G.attributes.normal, U = G.attributes.uv; for (let k = 0; k < P.count; k++) if (Nn.getY(k) < 0.72) U.setXY(k, (P.getX(k) + P.getZ(k)) * 0.07, P.getY(k) / 10); }
       const DS = { side: THREE.DoubleSide };
       // MAT: the shared materials of the map, one draw pass each for the whole map: every real piece of scenery goes into the group `kit`, merged per material at the end. Keys are also the zone names of the piliers assemblies
-      const MAT = { rock: h.mat('gresPiliers', DS), warm: h.mat('gresPiliers', DS, '#d2b8a2', 0.7), far: h.mat('gresPiliers', DS, '#8c9184', 0.7, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c2a48c', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#6f6e5c', 0.5, 0.6),
-        stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), bark: h.mat('ecorcePiliers'),
+      const VC = { vertexColors: true, ...DS }; // the rock shapes carry a colour per face (shapes-piliers-roche.js)
+      const MAT = { rock: h.mat('gresPiliers', VC, '#c9c1a6'), warm: h.mat('gresPiliers', VC, '#e6cfba', 0.7), far: h.mat('gresPiliers', VC, '#a9ac9c', 0.7, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c2a48c', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#6f6e5c', 0.5, 0.6),
+        stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), deep: h.mat('feuillagePiliers', DS, '#35593f'), pale: h.mat('feuillagePiliers', DS, '#7fa860'), gold: h.mat('feuillagePiliers', DS, '#84894a'), bark: h.mat('ecorcePiliers'),
+        rock0: h.mat('gresPiliers', VC, '#c9c1a6', 1, 1, 0, 3), rock1: h.mat('gresPiliers', VC, '#d2c4a0', 1, 1, 0, 1), rock2: h.mat('gresPiliers', VC, '#bcc0a6', 1, 0.6, 0, 2),
         steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }) };
+      const ROCKS = [MAT.rock0, MAT.rock1, MAT.rock2]; // three drawings and tints of the same sandstone, dealt among towers and needles
       const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('nuagePiliers', { rep: [47, 47] })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1, ...DS }, ...h.TH.road), 32);
@@ -77,33 +80,64 @@
       // beam(a, b, t, material): a square bar t thick from point a to point b [x, y, z]: cables, hangers
       const beam = (a, b, t, m = MAT.steel) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), o = h.pose('boxMesh', m, kit, a.map((v, i) => (v + b[i]) / 2), t, t, l); o.lookAt(...b); return o; };
       // trees are instanced: one draw pass per shape for the whole map. tree = a big broadleaf (trunk and crown), pine = a flat-tiered pine, bush = a mound of undergrowth w wide
-      const TR = { troncPiliers: [], houppierPiliers: [], futPiliers: [], pinPiliers: [], taillisPiliers: [] };
-      const tree = (x, z, ht = 20, r = 1) => { const y = g.hAt(x, z) - 0.6, k = ht / 22, c = (0.8 + 0.45 * nz(x, z)) * k * r; TR.troncPiliers.push([x, y, z, nz(z, x) * 6, k, k, k]); TR.houppierPiliers.push([x, y + ht * 0.84, z, nz(x, 7) * 6, c, c, c]); };
-      const pine = (x, z, ht = 14, y = g.hAt(x, z) - 0.4) => { const k = ht / 14; TR.futPiliers.push([x, y, z, 0, k, k, k]); TR.pinPiliers.push([x, y, z, nz(x, z) * 6, k, k, k]); };
-      const bush = (x, z, w = 6, ht = 2.5) => TR.taillisPiliers.push([x, g.hAt(x, z) - 0.3, z, nz(x, z) * 6, w, ht, w * (0.7 + 0.6 * nz(z, 3))]);
-      // wood(pk, side, off, w, d, kind): a wood filling a footprint w deep from `off` metres beyond the wall and d long, centred on chainage pk. kind 1: broadleaf with a few pines and undergrowth at its feet; 0: undergrowth and small trees.
+      const TR = new Map(), put = (shape, m, e) => { const k = shape + '|' + m; (TR.get(k) || TR.set(k, []).get(k)).push(e); }, same = (x, y, z, k, ry = nz(x, z) * 6) => [x, y, z, ry, k, k, k];
+      // tree(x, z, ht, r, y): a broadleaf, one of three (wide crown, tall narrow crown, wide crown in pale green), a few of them in old gold; r = size of the crown; y = its foot when it does not stand on the terrain
+      const tree = (x, z, ht = 20, r = 1, y = g.hAt(x, z) - 0.6) => { const k = ht / 22, v = nz(x * 0.37, z * 0.91), c = (0.8 + 0.45 * nz(x, z)) * k * r, m = nz(z, x * 3) > 0.93 ? 'gold' : v > 0.7 ? 'pale' : v < 0.2 ? 'deep' : 'leaf';
+        put('troncPiliers', 'bark', same(x, y, z, k)); v > 0.35 && v < 0.6 ? put('houppierHautPiliers', m, same(x, y + ht * 0.95, z, c * 1.25)) : put('houppierPiliers', m, same(x, y + ht * 0.84, z, c)); };
+      const pine = (x, z, ht = 14, y = g.hAt(x, z) - 0.4) => { const k = ht / 14; put('futPiliers', 'bark', same(x, y, z, k, 0)); put('pinPiliers', 'pine', same(x, y, z, k)); };
+      const fir = (x, z, ht = 18, y = g.hAt(x, z) - 0.4) => { const k = ht / 18; put('futPiliers', 'bark', same(x, y, z, k * 0.5, 0)); put('sapinPiliers', nz(x, z + 5) > 0.5 ? 'pine' : 'deep', same(x, y, z, k)); };
+      const bush = (x, z, w = 6, ht = 2.5, y = g.hAt(x, z) - 0.3) => put('taillisPiliers', nz(z, x) > 0.6 ? 'pale' : 'leaf', [x, y, z, nz(x, z) * 6, w, ht, w * (0.7 + 0.6 * nz(z, 3))]);
+      const shrub = (x, z, k = 1, y = g.hAt(x, z) - 0.2, m = nz(x, z * 2) > 0.88 ? 'gold' : nz(x, z * 2) > 0.4 ? 'deep' : 'pale') => put('arbustePiliers', m, same(x, y, z, k));
+      const rocks = (x, z, w, ht, seed, m = MAT.rock) => set('rocherPiliers', x, -z, { ry: seed, a: [w, ht, w * (0.7 + 0.6 * nz(seed, 2)), seed], skin: m });
+      // wood(pk, side, off, w, d, kind): a wood filling a footprint w deep from `off` metres beyond the wall and d long, centred on chainage pk. kind 1: broadleaf with pines and firs and undergrowth at its feet; 0: undergrowth, shrubs and small trees.
       // Nothing is planted within 11 m of any stretch of road, nor where the ground has fallen into the ravine
       const wood = (p, sd, off, w, d, kind = 1) => { for (let a = -d / 2; a <= d / 2; a += kind ? 11 : 8) for (let o = off + 3; o < off + w; o += kind ? 12 : 7) {
         const s = at(p + a + 6 * (nz(a, o + p) - 0.5) + LAP), [x, z] = edgePt(s, sd, s.w + o + 5 * nz(o, a + p)), v = nz(a * 3 + p, o); if (g.hAt(x, z) < s.y - 12 || g.dAt(x, z) < 11) continue;
-        if (!kind) v > 0.8 ? tree(x, z, 9 + 4 * v, 0.9) : bush(x, z, 5 + 5 * v, 2 + 2.5 * v); else { v > 0.22 ? tree(x, z, 15 + 9 * nz(o, a)) : pine(x, z, 16 + 6 * v); if (o < off + 16) bush(x + 4, z + 3, 6 + 4 * v, 3); } } };
+        if (!kind) v > 0.8 ? tree(x, z, 9 + 4 * v, 0.9) : v > 0.5 ? shrub(x, z, 1 + v) : bush(x, z, 5 + 5 * v, 2 + 2.5 * v);
+        else { v > 0.32 ? tree(x, z, 15 + 9 * nz(o, a)) : v > 0.14 ? fir(x, z, 16 + 10 * v) : pine(x, z, 16 + 6 * v); if (o < off + 16) nz(a, o) > 0.5 ? bush(x + 4, z + 3, 6 + 4 * v, 3) : shrub(x + 4, z + 3, 1.2 + v); } } };
       // the towers: a stack of beds over each terrain pillar (the terrain is the core, 2.5 m inside), a wooded crown, pines on it. Along the road the stack is cut back to a face 6 m beyond the wall, leaning 12 cm per metre;
       // round the tunnel the faces that reach lower than 12.5 m above the roadway are removed, and the stone portals of zone 4 stand in the two openings, a rock panel behind each
       const clear = G => { const P = G.attributes.position, cut = new Uint8Array(P.count); for (let k = 0; k < P.count; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k), i = near(h, x, z), s = S[i], lat = (x - s.x) * -s.tz + (z - s.z) * s.tx, lon = (x - s.x) * s.tx + (z - s.z) * s.tz;
           const min = s.w + 6 + 0.12 * Math.max(0, y - s.y); if ((i - T.t0 + 14 + N) % N <= T.t1 - T.t0 + 28) { if (Math.abs(lat) < s.w + 9 && y < s.y + 12.5) cut[k] = 1; continue; } // round the tunnel: every face that reaches into the opening is removed
           if (y < s.y - 40 || Math.abs(lat) >= min || Math.abs(lon) > 30) continue;
           const l = (lat < 0 ? -1 : 1) * min; P.setX(k, s.x + s.tx * lon - s.tz * l); P.setZ(k, s.z + s.tz * lon + s.tx * l); }
-        if (cut.some(v => v)) for (const a of [P, G.attributes.uv]) { const keep = []; for (let k = 0; k < P.count; k += 3) if (!cut[k] && !cut[k + 1] && !cut[k + 2]) keep.push(...a.array.subarray(k * a.itemSize, (k + 3) * a.itemSize)); G.setAttribute(a === P ? 'position' : 'uv', new THREE.Float32BufferAttribute(keep, a.itemSize)); }
+        if (cut.some(v => v)) for (const name of ['position', 'uv', 'color']) { const a = G.attributes[name], keep = []; for (let k = 0; k < P.count; k += 3) if (!cut[k] && !cut[k + 1] && !cut[k + 2]) keep.push(...a.array.subarray(k * a.itemSize, (k + 3) * a.itemSize)); G.setAttribute(name, new THREE.Float32BufferAttribute(keep, a.itemSize)); }
         G.computeVertexNormals(); return G; };
-      TOWERS.forEach(([t, P], q) => { clear(h.pose('stackPiliers', q === 4 ? MAT.warm : MAT.rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
-        const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length; for (let k = 0; k < 7; k++) { const [x, n] = P[k % P.length], f = 0.25 + 0.5 * nz(k, q); pine(cx + (x - cx) * f, -(cn + (n - cn) * f), 12 + 8 * nz(q, k), t + 2); } });
-      // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown; far = 1: in the pale tints of the distance
-      const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.far : MAT.rock }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf }); };
-      // the horizon: the terrain stops 320 m from the road; beyond it a ring of far needles and massifs stands in the sea of clouds, 950 to 1 600 m from the centre of the lap
-      for (let k = 0; k < 18; k++) { const a = k / 18 * 6.2832 + nz(k, 1) * 0.25, R = 950 + 650 * nz(k, 2), w = 50 + 60 * nz(k, 3); const x = 650 + Math.cos(a) * R, n = 500 + Math.sin(a) * R, top = 280 + 190 * nz(k, 5);
-        needle(x, n, w, w * (0.7 + 0.6 * nz(k, 4)), top, 20 + k, 1); needle(x + w * 0.75, n + w * (nz(k, 6) - 0.5), w * 0.5, w * 0.6, top * (0.55 + 0.3 * nz(k, 7)), 40 + k, 1); } // each massif: a main needle and a lower one against it
-      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, bush, wood, needle, THREE });
+      // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown and two pines; far = 1: in the pale tints of the distance, no pines
+      const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.far : ROCKS[seed % 3] }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf });
+        if (!far) for (let k = 0; k < 2; k++) pine(x + (nz(seed, k) - 0.5) * w * 0.5, -n + (nz(k, seed) - 0.5) * d * 0.5, 9 + 6 * nz(seed + k), top + 1); };
+      // a white fall down a rock face, from (x, y, z) to (x1, y1, z1), w wide: still water, seen from far
+      const fall = (a, b, w) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), q = h.pose('boxMesh', MAT.fall, kit, a.map((v, i) => (v + b[i]) / 2), w, 0.8, l); q.lookAt(...b); };
+      TOWERS.forEach(([t, P], q) => { const rock = q === 4 ? MAT.warm : ROCKS[q % 3], G = clear(h.pose('stackPiliers', rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
+        const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length;
+        // the summit: pines and broadleaf trees standing on the crown, denser toward the edge
+        for (let k = 0; k < 28; k++) { const [x, n] = P[k % P.length], f = 0.15 + 0.78 * nz(k, q), X = cx + (x - cx) * f, Z = -(cn + (n - cn) * f); k % 3 ? pine(X, Z, 12 + 12 * nz(q, k), t + 2) : tree(X, Z, 9 + 6 * nz(k, q + 1), 1.1, t + 1); }
+        // the shoulders of the stack: pines (one or two, taller on a wide shoulder), a shrub or a tuft on every step, away from the road
+        for (const [x, y, z, w] of G.userData.ledges) { if (g.dAt(x, z) < 24 || y < 85) continue; const v = nz(x, z + y), k = Math.min(1.6, w / 3);
+          if (v > 0.4) { pine(x, z, (6 + 7 * nz(y, x)) * k, y - 0.5); if (v > 0.7) pine(x + 2.5, z - 2, (5 + 5 * nz(x, y)) * k, y - 0.5); } else v > 0.15 ? shrub(x, z, 1 + 1.5 * v, y - 0.3) : bush(x, z, 4 + 3 * v, 1.6, y - 0.4); }
+        // columns split off the tower: lower needles standing against its flanks
+        if (q < 6) for (let k = 0; k < 6; k++) { const i = (k * 2 + q) % P.length, [x, n] = P[i], l = Math.hypot(x - cx, n - cn), o = 1 + (16 + 26 * nz(k, q + 3)) / l, X = cx + (x - cx) * o, Nn = cn + (n - cn) * o, w = 12 + 12 * nz(q, k + 5);
+          if (g.dAt(X, -Nn) > 60) needle(X, Nn, w, w * (0.8 + 0.5 * nz(k, q)), t * (0.42 + 0.34 * nz(q + k, 2)), q * 7 + k); }
+        // a fall on the three tallest, down the flank that looks at the ravine
+        if (q === 0 || q === 2 || q === 5) { const [x, n] = P[q === 5 ? 3 : 1], l = Math.hypot(x - cx, n - cn), at2 = (o, y) => [cx + (x - cx) * (1 + o / l), y, -(cn + (n - cn) * (1 + o / l))]; fall(at2(7.5, t - 14), at2((t - 84) / 8 + 9, 84), 5); } });
+      // the far field: the map is a forest of pillars in a sea of clouds. Instanced needles (four silhouettes, scaled) at three ranges from the centre of the lap: 120 between 0.75 and 1.2 km in the tints of the near rock,
+      // 150 out to 1.9 km and 130 out to 2.8 km in the pale tints of the distance, larger as they get farther so they still read; none within 150 m of the road
+      { const L = new Map(), add = (k, e) => (L.get(k) || L.set(k, []).get(k)).push(e);
+        [[120, 750, 1200, 22, 34, 'rock'], [150, 1200, 1900, 30, 50, 'far'], [130, 1900, 2800, 44, 80, 'far']].forEach(([n, r0, r1, w0, dw, m], band) => { for (let k = 0; k < n; k++) {
+          const a = (k + nz(k, band)) / n * 6.2832, R = r0 + (r1 - r0) * nz(k, band + 3), x = 650 + Math.cos(a) * R, z = -500 - Math.sin(a) * R, w = (w0 + dw * nz(k, band + 5)) / 40, top = (190 + 250 * nz(k, band + 7) ** 1.5) / 250, v = k % 4;
+          if (g.dAt(x, z) < 150) continue; const e = [x, 0, z, nz(k, 9) * 6, w, top, w * (0.75 + 0.5 * nz(k, band + 11))]; add(v + '|' + (m === 'rock' ? 'rock' + k % 3 : 'far'), e); add(v + 'c|' + (m === 'rock' ? 'leaf' : 'farLeaf'), e); } });
+        for (const [k, list] of L) { const [v, m] = k.split('|'); inst(h, h.geo(v.endsWith('c') ? 'aiguilleCouronnePiliers' : 'aiguillePiliers', 40, 40, 250, parseInt(v) + 60), MAT[m], list); } }
+      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, THREE });
+      // the verges of the whole lap outside the woods, the bridge and the tunnel: every 7 m on each side, a shrub, a tuft, a boulder, a small pine or nothing, 3 to 12 m beyond the parapet, only on ground at road level
+      for (let p = 640; p < 3700; p += 7) for (const sd of [-1, 1]) { if ((p > 1790 && p < 2090) || (p > 2370 && p < 2510)) continue;
+        const s = at(p), [x, z] = edgePt(s, sd, s.w + 3 + 9 * nz(p, sd)), v = nz(p * 1.7, sd + 2), y = g.hAt(x, z), plateau = p > 2090 && p < 2826; if (Math.abs(y - s.y) > 3 || g.dAt(x, z) < s.w + 2.5) continue;
+        if (v > 0.8) rocks(x, z, 2 + 3 * nz(p, 4), 1.2 + 2 * nz(p, 5), p, p > 2826 ? MAT.warm : MAT.rock); else if (v > 0.55) shrub(x, z, 0.8 + nz(p, 6)); else if (v > 0.38) bush(x, z, 3 + 3 * nz(p, 7), 1.2 + nz(p, 8));
+        else if (v > 0.3) pine(x, z, 6 + 5 * nz(p, 9)); else if (plateau && v > 0.18) tree(x, z, 8 + 5 * nz(p, 10), 0.9); }
+      // trees on top of the cut faces of the banks: a green line over the rock, as on the buttress of the references
+      BANKS.forEach(([a, b, sd, H]) => { for (let p = a + 40; p < b - 40; p += 9 + 8 * nz(p, H)) { const s = at(p), [x, z] = edgePt(s, sd, s.w + 12 + 1.4 * Math.ceil(H / 5) + 9 + 14 * nz(p, 2)), v = nz(p, 3); if (g.hAt(x, z) < s.y + H * 0.6 || g.dAt(x, z) < 20) continue;
+        v > 0.6 ? pine(x, z, 9 + 7 * v) : v > 0.3 ? fir(x, z, 10 + 10 * v) : v > 0.12 ? tree(x, z, 10 + 20 * v) : shrub(x, z, 2); } });
       weld(h, kit); // one mesh per material
-      for (const [shape, m] of [['troncPiliers', MAT.bark], ['houppierPiliers', MAT.leaf], ['futPiliers', MAT.bark], ['pinPiliers', MAT.pine], ['taillisPiliers', MAT.leaf]]) if (TR[shape].length) inst(h, h.geo(shape), m, TR[shape]);
+      for (const [k, list] of TR) { const [shape, m] = k.split('|'); inst(h, h.geo(shape), MAT[m], list); }
     },
   });
 })();

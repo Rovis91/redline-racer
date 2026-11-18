@@ -1,7 +1,9 @@
 // "piliers", zone 4: Hauts plateaux (PK 2181 to 2826, +215 to +225 to +215 m, 14 m wide; tunnel PK 2401 to 2481, straight, east 1230). Only the scenery of this zone; the helpers are described in scenery-piliers.js.
 // Relief and rock (scenery-piliers.js): tower P4 and its spur at +300, 75 m above the road, which the tunnel goes through; after the tunnel the retaining wall and the cliff edge come 12 m from the left parapet.
-(window.PILIERS = window.PILIERS || {}).plateaux = ({ h, g, S, T, at, by, on, set, pine, MAT, kit }) => {
+(window.PILIERS = window.PILIERS || {}).plateaux = ({ h, g, S, T, at, by, on, set, pine, wood, MAT, kit }) => {
   const { edgePt } = PLACERS;
+  // groves of the plateau, set back from the road: behind the platform, beyond the basin, and on both sides after the tunnel
+  wood(2190, -1, 34, 40, 70, 1); wood(2200, 1, 30, 30, 60, 0); wood(2340, -1, 14, 36, 60, 1); wood(2600, 1, 14, 44, 110, 1); wood(2740, 1, 12, 30, 70, 0);
   // the viewing platform with its small pavilion, set back on the left, never on the axis
   by('belvederePiliers', 2250, -1, 18); { const s = at(2250), [x, z] = edgePt(s, -1, s.w + 18), y = g.hAt(x, z) + 1, ry = h.across(s); set('pavillonPiliers', x, -z, { ry, y }); set('toitPiliers', x, -z, { ry, y: y + 4.6, skin: MAT.tile }); }
   // the basin on the inside; its stream runs to the edge of the plateau and falls into the ravine. It never crosses the road
