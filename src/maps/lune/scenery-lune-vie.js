@@ -106,11 +106,11 @@
       const st = { p, d, a: 0 }; light(p, 5, 0xffffff, () => st.a, 1, 0.12); light(p, 5, 0xffffff, () => st.a, 0.12, 1); return st; }), v = V3(0, 0, 0);
     TICK.push((dt, car) => { for (const st of G) { const c = v.set(car.x - st.p.x, car.y + 3 - st.p.y, car.z - st.p.z).normalize().dot(st.d), want = ss((c - 0.975) / 0.02); st.a += (want - st.a) * Math.min(1, dt / (want > st.a ? 0.08 : 0.3)); } }); } // rise 0.08 s, fall 0.3 s
 
-  // ---------- vented gas (Z1-13, Z6-05): as the car comes up, a fan of white grains shoots out of the dome's lock, and out of the maintenance tank; they fly straight and fall, no cloud ----------
-  { const dome = (REG.domeLune || [])[0], tank = (REG.citerneLune || []).find(c => PLACERS.near(h, c.grp.position.x, c.grp.position.z) > N / 2), V = [];
-    if (dome) V.push([wp(dome.grp, -44.6, 5, 4), wp(dome.grp, -44.6, 5, 5).sub(wp(dome.grp, -44.6, 5, 4))]); if (tank) V.push([wp(tank.grp, 0, 7.2, 0), wp(tank.grp, -1, 0, 0).sub(wp(tank.grp, 0, 0, 0))]);
+  // ---------- vented gas (Z6-05): as the car comes up, a fan of white grains shoots out of the maintenance tank; they fly straight and fall, no cloud. (Z1-13, the same at the dome's lock, was dropped: white grains do not show against the sunlit ivory dome) ----------
+  { const tank = (REG.citerneLune || []).find(c => PLACERS.near(h, c.grp.position.x, c.grp.position.z) > N / 2), V = [];
+    if (tank) V.push([wp(tank.grp, 0, 7.2, 0), wp(tank.grp, -1, 0, 0).sub(wp(tank.grp, 0, 0, 0))]);
     for (const [p, d] of V) { const i = PLACERS.near(h, p.x, p.z), ev = event(i - 45, i + 60), gd = g.hAt(p.x + d.x * 8, p.z + d.z * 8); let acc = 0;
-      TICK.push(dt => { if (ev.t > 0.2 && ev.t < 1.7) for (acc += dt * 30; acc > 1; acc--) { const a = Math.atan2(d.z, d.x) + jit(0.5), sp = 7 + Math.random() * 4; grain(p.x, p.y, p.z, Math.cos(a) * sp, 1 + Math.random() * 3, Math.sin(a) * sp, 0.5, 0xf2f4f8, gd, 3, 4); } }); } }
+      TICK.push(dt => { if (ev.t > 0.2 && ev.t < 1.7) for (acc += dt * 40; acc > 1; acc--) { const a = Math.atan2(d.z, d.x) + jit(0.5), sp = 8 + Math.random() * 5; grain(p.x, p.y, p.z, Math.cos(a) * sp, 2 + Math.random() * 4, Math.sin(a) * sp, 1.1, 0xf2f4f8, gd, 3, 4); } }); } }
 
   // ---------- a meteor (Z2-01, Z2-02): one lap in three, a flash on the floor of the western crater, a fountain of sunlit chips thrown 30 m up (pale: dark ones do not show against the black sky), a flat ring of grains; the ground carries the blow half a second later ----------
   { const s = S[METEOR[0]], [x, z] = edgePt(s, -1, METEOR[1]), p = V3(x, g.hAt(x, z), z), fp = V3(x, p.y + 3, z), ev = event(METEOR[0] - 125, METEOR[0] + 40, lap => lap % 3 === 1), fl = light(fp, 60, 0xffffff, () => 0);
