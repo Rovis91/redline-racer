@@ -7,10 +7,10 @@
   const pair = f => [-1, 1].map(f), oct = (z, w, ht, x, y, zz) => [0, 0.7854].map(a => [z, w, ht, w, x, y, zz, [0, a, 0]]); // oct: two crossed boxes, an octagon in plan
   Object.assign(SHAPES, {
     // one section of B1, len long: free width L to the left and R to the right of the axis, `clear` under the ceiling, `cap` m of rock above it up to the surface, a lid in the colour of the ground;
-    // wallR = 0 where the room goes on to the right (reactor hall). Side walls with an amber line at 1.4 m, a ceiling light, two pipe runs on the left wall, chamfered corners in the 24 m gallery.
+    // wallR = 0 where the room goes on to the right (reactor hall). Side walls with an amber line at 1.4 m, a paved floor flush under the roadway (not in the hall: its floor is the pool), a ceiling light, two pipe runs on the left wall, chamfered corners in the 24 m gallery.
     // e = a few centimetres by which this section is set out and up from its neighbours: sections overlap in the bends, and two faces in the same plane would flicker
     galerieArea51: (L = 12, R = 12, clear = 10, cap = 4, wallR = 1, len = 16.5, e = 0) => { const W = L + R, cx = (R - L) / 2, wall = sd => [['concrete', 6, clear + 3, len, sd * ((sd < 0 ? L : R) + 3 + e), (clear + 3) / 2 - 2, 0], ['amber', 0.3, 0.5, len, sd * ((sd < 0 ? L : R) - 0.1 + e), 1.4, 0]];
-      return [...wall(-1), ...(wallR ? wall(1) : []), ['dark', W + 12, 1.2, len, cx, clear + 0.6 + e, 0], ['rock', W + 30, cap, len, cx, clear + 1.8 + cap / 2 + e, 0], ['sol', W + 32, 1, len + 0.5, cx, clear + 2.3 + cap + 2 * e, 0],
+      return [...wall(-1), ...(wallR ? [...wall(1), ['floor', W + 6, 0.5, len, cx, -0.5 + e, 0]] : []), ['dark', W + 12, 1.2, len, cx, clear + 0.6 + e, 0], ['rock', W + 30, cap, len, cx, clear + 1.8 + cap / 2 + e, 0], ['sol', W + 32, 1, len + 0.5, cx, clear + 2.3 + cap + 2 * e, 0],
         ...(W <= 24 ? pair(sd => ['concrete', 4, 4, len, sd * (L - 0.4 + e), clear - 0.4, 0, [0, 0, 0.7854]]) : []),
         ['neon', 1.4, 0.25, 7, cx / 2, clear - 0.15, 0], ['gray', 0.8, 0.8, len, -L + 0.9 - e, clear - 2.4, 0], ['amber', 0.5, 0.5, len, -L + 0.8 - e, clear - 3.5, 0]]; },
     // airlock bulkhead across a room (L, R, clear as for galerieArea51), the road passing through an opening 2 × W wide and 8.5 m high: a 3 m concrete wall, a hazard frame, the two steel leaves slid aside
