@@ -16,13 +16,14 @@
       // the profile of an entered crater at (x, z); beyond its outer foot, y: the ground the road gives there, which the outer slope joins
       const bowl = ([cx, cz, rf, rr, ro, yf, yr], x, z, y) => { const r = Math.hypot(x - cx, z - cz); return r > ro ? y : r < rf ? yf : r < rr ? yf + (yr - yf) * ((r - rf) / (rr - rf)) ** P : y + (yr - y) * (1 - (r - rr) / (ro - rr)) ** P; };
       const inside = ([cx, cz, , rr], x, z) => Math.hypot(x - cx, z - cz) < rr;
+      const OVER = new Set(); // the terrain vertices raised over the tunnel
       const shape = (x, z, y) => {
         const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), k = (i - iLip + N) % N, rE = Math.hypot(x - EAST[0], z - EAST[1]), tun = k >= nArena && k < nArena + nTun;
         if (k < nArena && d < s.w + 1) return y - (s.y + 0.08 + T.dent(x, z));             // from the lip to the tunnel the ground is what the car drives on: the ribbon (which comes down from the lip under the flight) plus the bowl and its small craters; it covers the engine's roadway
         const floor = rE < PL.r ? EAST[5] + 0.08 + T.dent(x, z) : null;                    // the arena: M.bowls and M.dents, as in the physics
         const tE = bowl(EAST, x, z, y), tS = bowl(SOUTH, x, z, y);
         let t = floor ?? (inside(EAST, x, z) ? tE : inside(SOUTH, x, z) ? tS : Math.max(tE, tS)); // inside a rim, that crater alone; outside both, the higher of the two outer slopes: a valley between the two crests
-        if (tun) { if (d < W + 9) t = k - nArena > nTun / 2 ? Math.max(t, s.y + 10.5) : t < s.y + 9.5 ? s.y - 0.4 : t; return y - t; }        // the tunnel leaves from the floor: where the bowl is still lower than its vault the ground gives way to it (the engine's hull shows: a covered way into the wall); on the basin side the ground is kept above the vault to the very end, a mound over the mouth
+        if (tun) { if (d < W + 9 && t < s.y + 10.5) { t = s.y + 10.5; OVER.add(Math.fround(x) + "," + Math.fround(z)); } return y - t; } // over the tunnel the ground is kept above the vault from one mouth to the other: a berm where the bowl is still low
         if (floor != null) return y - t;
         if (k >= nArena + nTun) t += (y - t) * (1 - ss((d - s.w - 6) / 40));               // elsewhere the road stays laid: its own level up to 6 m from the wall, the crater profile 40 m further
         let c = 0; for (const [cx, cz, r, f] of BESIDE) { const q = Math.hypot(x - cx, z - cz) / r; if (q < 1) c = Math.max(c, (t - f) * (1 - q ** P)); }
@@ -30,6 +31,11 @@
       };
       // ground: regolith everywhere, bare stratified rock where it is steep (crater walls, cuttings)
       const g = terrain(h, { stepSec: 8, margin: 480, hollow: shape, mat: h.mat('regolitheLune'), layerSet: [{ tex: ['rocheLune', '#636a78'], slope: [0.3, 0.55] }] });
+      // a height field cannot open a tube: the faces that would cross the tunnel (one corner on the berm, their centre over the roadway) are taken out; the engine's hull closes the slot from above
+      { const geo = g.mesh.geometry, p = geo.attributes.position, ix = geo.index.array, keep = [], over = i => OVER.has(p.getX(i) + "," + p.getZ(i));
+        for (let f = 0; f < ix.length; f += 3) { const [a, b, c] = [ix[f], ix[f + 1], ix[f + 2]], cx = (p.getX(a) + p.getX(b) + p.getX(c)) / 3, cz = (p.getZ(a) + p.getZ(b) + p.getZ(c)) / 3, q = S[near(h, cx, cz)];
+          if (!((over(a) || over(b) || over(c)) && Math.hypot(q.x - cx, q.z - cz) < W + 4)) keep.push(a, b, c); }
+        geo.setIndex(keep); }
       // the game draws the roadway at a constant ±W all round the lap: here it is hidden (no road down the crater wall nor across the arena) and laid again at the real width (±s.w, M.wide), from the tunnel exit to the lip
       { const road = h.scene.children.find(o => o.material && o.material.userData && o.material.userData.mo === 1 && o.material.userData.mo0 == null); if (road) road.visible = false; }
       h.ribbon(T.t1, nOut, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { ...DS, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
