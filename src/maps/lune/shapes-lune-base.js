@@ -48,6 +48,18 @@
     // parked buggy, closed cabin, along Z: an ivory hull with an orange sill, an opaque dark canopy, four exposed wheels, a whip antenna with its light
     roverLune: () => [['shell', 2.6, 1.3, 5.6, 0, 1.55, 0], ['amber', 2.7, 0.3, 5.7, 0, 1.15, 0], ['glass', 2.3, 1.1, 2.7, 0, 2.7, 0.5], ['shell', 2.4, 0.2, 2.9, 0, 3.35, 0.5],
       ...pair(sx => pair(sz => [0, 0.7854].map(a => ['tire', 0.7, 1.3, 1.3, sx * 1.6, 0.65, sz * 1.9, [a, 0, 0]])).flat()).flat(), ['steel', 0.1, 1.8, 0.1, 0.8, 4.2, -2.2], ['glow', 0.3, 0.3, 0.3, 0.8, 5.2, -2.2]],
+    // landing pad, 40 m across: a dark octagonal slab, an orange cross, a light at each corner
+    padLune: () => [['dark', 40, 0.6, 16.6, 0, 0.3, 0], ['dark', 40, 0.6, 16.6, 0, 0.3, 0, [0, 0.7854, 0]], ['dark', 40, 0.6, 16.6, 0, 0.3, 0, [0, 1.5708, 0]], ['dark', 40, 0.6, 16.6, 0, 0.3, 0, [0, 2.3562, 0]],
+      ['amber', 26, 0.1, 2.4, 0, 0.66, 0], ['amber', 2.4, 0.1, 26, 0, 0.66, 0], ...[0.3927, 1.9635, 3.5343, 5.1051].map(t => ['glow', 0.8, 0.8, 0.8, Math.cos(t) * 19, 1, Math.sin(t) * 19])],
+    // descent stage left on its pad: an octagonal ivory body on four splayed legs with footpads, an engine bell, an orange tank on two sides, a mast and its light; 9 m high
+    landerLune: () => [['shell', 7, 3.2, 3, 0, 4.4, 0], ['shell', 7, 3.2, 3, 0, 4.4, 0, [0, 0.7854, 0]], ['shell', 7, 3.2, 3, 0, 4.4, 0, [0, 1.5708, 0]], ['shell', 7, 3.2, 3, 0, 4.4, 0, [0, 2.3562, 0]],
+      ...[0.7854, 2.3562, 3.927, 5.4978].flatMap(t => [['steel', 0.3, 5.4, 0.3, Math.cos(t) * 4.6, 2.4, Math.sin(t) * 4.6, [Math.sin(t) * 0.5, 0, -Math.cos(t) * 0.5]], ['dark', 1.6, 0.3, 1.6, Math.cos(t) * 5.9, 0.15, Math.sin(t) * 5.9]]),
+      ['dark', 2.2, 1.6, 2.2, 0, 2, 0], ...pair(sd => ['amber', 1.6, 2, 1.6, sd * 3.9, 4.4, 0]), ['hublot', 3, 0.8, 0.3, 0, 5, 3.6], ['steel', 0.15, 2.6, 0.15, 1, 7.3, 0], ['glow', 0.4, 0.4, 0.4, 1, 8.8, 0]],
+    // instrument station: a small ivory box on three legs, a solar panel on a post, an orange flag; what the colony leaves along the ridge and on the rims
+    capteurLune: () => [['shell', 1.6, 1.1, 1.6, 0, 1.3, 0], ...[0, 2.094, 4.189].map(t => ['steel', 0.12, 1.2, 0.12, Math.cos(t) * 0.9, 0.5, Math.sin(t) * 0.9, [Math.sin(t) * 0.5, 0, -Math.cos(t) * 0.5]]),
+      ['steel', 0.12, 2.6, 0.12, 1.6, 1.3, 0], ['solar', 2.4, 0.1, 1.6, 1.6, 2.7, 0, [0.5, 0, 0]], ['steel', 0.08, 3, 0.08, -1.4, 1.5, 1], ['amber', 0.9, 0.6, 0.06, -0.95, 2.7, 1]],
+    // pipe run on low supports, L long along Z: two parallel pipes, a support every 8 m
+    tuyauLune: (L = 40) => [...pair(sd => ['hall', 0.7, 0.7, L, sd * 0.6, 1.5, 0]), ...range(Math.max(2, Math.round(L / 8)), i => ['dark', 2.2, 1.2, 0.5, 0, 0.6, -L / 2 + 4 + i * 8]), ['amber', 2, 0.9, 0.9, 0, 1.5, 0]],
     // beacon, ht high: a dark post, an orange sleeve, a light at the top. On the rim of a fresh impact, at a guidance point
     baliseLune: (ht = 9) => [['dark', 0.5, ht, 0.5, 0, ht / 2, 0], ['amber', 1.2, 2, 1.2, 0, ht * 0.7, 0], ['glow', 0.9, 0.9, 0.9, 0, ht + 0.5, 0]],
   });

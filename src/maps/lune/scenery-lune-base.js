@@ -12,5 +12,8 @@
   add(by(135, -1, 34, [10, 10]), 'tourLune'); add(by(265, -1, 40, [50, 70]), 'hangarLune'); add(by(230, 1, 120, [4, 4]), 'antenneLune'); add(by(LAP - 110, -1, 14, [30, 50]), 'entrepotLune');
   for (const pk of [400, 455]) add(by(pk, -1, 30, [50, 50]), 'champSolaireLune');               // solar fields, set back from the trajectory
   for (const pk of [385, 405, 425]) add(by(pk, 1, 16, [8, 8]), 'citerneLune', [4, 7], [0, 0, 0], MAT.shell);
+  { const grp = by(60, -1, 60, [40, 40]); add(grp, 'padLune'); add(grp, 'landerLune', [], [0, 0.6, 0]); }       // the landing pad beside the hall, a descent stage left on it
+  add(by(180, -1, 30, [3, 40]), 'tuyauLune'); add(by(300, 1, 8, [3, 40]), 'tuyauLune'); add(by(LAP - 180, 1, 8, [3, 40]), 'tuyauLune'); add(by(40, 1, 22, [3, 60]), 'tuyauLune', [60]); // pipe runs between the buildings
+  add(by(350, 1, 30, [4, 4]), 'antenneLune', [24]); for (const pk of [440, 480]) add(by(pk, 1, 10, [3, 3]), 'capteurLune');
   for (let pk = 130; pk <= 490; pk += 40) for (const sd of [-1, 1]) add(by(pk, sd, 1.5, [1, 1]), 'baliseLune', [3.5]); // orange beacons behind the rails: they stop where the rock takes over
 };
