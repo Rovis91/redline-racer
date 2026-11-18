@@ -1,11 +1,14 @@
-// "egee", zone 1: Port (PK 0 to 650, 8 to 20 m, 16 m wide), and the harbour houses that close the lap from PK 4476. Tools (set, box, house, wall, plant) are described in scenery-egee.js.
-// Island side: a continuous lime town front behind a 6 m pavement, two more rows stacked on the slope behind it, then two warehouses and the first cliff. Sea side: the quay, three pontoons and their boats, the mole and the lighthouse.
+// "egee", zone 1: Port (PK 0 to 650, 8 to 20 m, 16 m wide), and the harbour town that closes the lap from PK 4390. Tools (set, box, house) are described in scenery-egee.js.
+// Island side: the town. A continuous lime front behind a 6 m pavement, then five more rows up the slope with 8 m paved streets between them, small squares where a house is missing, the town church in the fourth row;
+// two warehouses, then rock. Sea side: the quay, three pontoons and their boats, the mole and the lighthouse. This is the only town of the island: the plateau above keeps a chapel, a few houses and the mills.
 (window.EGEE = window.EGEE || {}).port = ({ h, THREE, MAT, N, SEA, LAP, smp, set, box, house, hsh }) => {
   const GREEN = { ...MAT, lime: MAT.limeV, bleu: MAT.vert, toile: MAT.toileR }, HT = [8, 12, 8, 11, 9, 12, 8, 10], VAR = [4, 6, 5, 8, 6, 1, 20, 0];
   for (let pk = 4476, k = 0; pk < LAP + 345; pk += 16.5, k++) house(pk, -1, 6 + hsh(k) * 1.5, 12, HT[k % 8], 16, VAR[k % 8], k % 3 === 1 ? GREEN : MAT);                 // the front: no gap, uneven heights
-  for (let pk = 4500, k = 0; pk < LAP + 330; pk += 31, k++) { house(pk, -1, 25 + hsh(k, 1) * 8, 10, 7, 13, k & 1 ? 1 : 8, k % 4 === 2 ? GREEN : MAT); if (k % 2) house(pk + 12, -1, 46 + hsh(k, 2) * 10, 10, 6, 12, 1); } // the rows behind, higher on the slope
+  for (let r = 1; r <= 5; r++) for (let pk = 4390, k = 0; pk < LAP + 535; pk += 15.5, k++) { const p = pk % LAP;                                                          // the streets behind
+    if (hsh(k, r) < 0.1 || (r === 1 && p > 345 && p < 480) || (r === 4 && p > 120 && p < 185)) continue;                                                                  // a small square; the warehouses; the church
+    house(pk + hsh(k, r + 9) * 3, -1, 6 + r * 19 + hsh(k, r) * 3, 11, 6 + (hsh(k, r + 3) * 3 | 0) + (r & 1), 12.5, [0, 1, 8, 1, 16, 9, 4, 2][(k + r) % 8], (k + 2 * r) % 4 === 2 ? GREEN : MAT); }
+  set('chapelleEgee', 152, -1, 6 + 4 * 19 + 9, { s: 1.5 });                                                                                                              // the town church: its bell wall above the roofs
   for (const pk of [372, 452]) set('entrepotEgee', pk, -1, 18, { a: [20, 9, 40] });
-  set('falaiseEgee', 590, -1, 21, { a: [30, 24, 90, 1], skin: MAT.roche });                                                                                              // transition: the built front stops, the walls turn to rock
   // the quay: a paved deck 10 m wide beyond the road wall and its stone face down into the water, from the last bend of the Descente to the end of the harbour
   const i0 = Math.round(4540 / LAP * N), cnt = Math.round(680 / LAP * N), face = h.mat('stone', { side: THREE.DoubleSide });
   h.ribbon(i0, cnt, s => s.w, 0.03, s => s.w + 10, 0.03, MAT.pavage, 8); h.ribbon(i0, cnt, s => s.w + 10, 0.03, s => s.w + 10, -5, face, 8);
