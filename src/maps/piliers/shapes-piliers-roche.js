@@ -22,7 +22,7 @@
     const ring = b => { const top = b === nb - 1, off = (y1 - base[b]) * taper + (top ? 0 : jit * 1.1 + 0.9 * noise(b, seed + 7));
       return V.map(([x, z, nx, nz, l], j) => { const o = off + (top ? 0 : jit * (noise((j + grp[b]) >> 1, seed + grp[b] * 5) - 0.5) * 2); return [x + nx * o, z + nz * o, l * ku, o]; }); };
     // colour per face, multiplied with the texture: each column of each block between weathered grey and fresh ochre, each bed a little off its neighbours; the ledges mossy. No two towers, and no two blocks, show the same tile
-    const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t), tint = (j, b) => mix([0.74, 0.78, 0.78], [1, 0.9, 0.72], Math.min(1, 0.5 * noise((j + grp[b]) >> 1, seed + grp[b] * 9 + 40) + 0.4 * noise(b, seed + 50 + (j >> 2)))), MOSS = [0.6, 0.72, 0.52];
+    const mix = (a, b, t) => a.map((v, i) => v + (b[i] - v) * t), tint = (j, b) => noise((j + grp[b] * 3) >> 1, seed + b * 0.37 + 70) > 0.8 ? GROWN : mix([0.7, 0.78, 0.74], [0.98, 0.93, 0.8], Math.min(1, 0.5 * noise((j + grp[b]) >> 1, seed + grp[b] * 9 + 40) + 0.4 * noise(b, seed + 50 + (j >> 2)))), MOSS = [0.44, 0.66, 0.38], GROWN = [0.6, 0.76, 0.52]; // GROWN: one face in five is overgrown, a green patch on the rock
     const quad = (a, b, c, d, col) => { for (const p of [a, b, c, a, c, d]) Tr.push([...p, col]); }, ledges = []; let low = null, last; // ledges: [x, y, z, width] of the steps more than 2 m wide, where a pine or a bush can hold
     for (let b = 0; b < nb; b++) { const R = ring(b), du = noise(b, seed + 31); last = R;
       for (let j = 0; j < n; j++) { const p = R[j], q = R[(j + 1) % n], uq = j === n - 1 ? U : q[2];
@@ -44,6 +44,11 @@
       return mesh(Tr); },
     // a needle standing alone, w × d at the summit, ht high, origin at the centre of its base: thinner taper than a tower, beds 9 m thick, closed by a rock top
     aiguillePiliers: (w = 40, d = 40, ht = 250, seed = 0, taper = 0.07) => stack(oval(w, d, 8, seed), 0, ht, seed, taper, 9, 1, 2.5, 0, 16),
+    // a far needle (one of the silhouettes of aiguillePiliers, 40 × 40 × 250): the same rock with the UVs of a painted pillar, u = twice round the needle, v = foot to summit (texture lointainPiliers)
+    aiguilleLointainePiliers: (seed = 0) => { const G = SHAPES.aiguillePiliers(40, 40, 250, seed), P = G.attributes.position, U = G.attributes.uv;
+      for (let k = 0; k < P.count; k += 3) { const a = [0, 1, 2].map(i => Math.atan2(P.getZ(k + i), P.getX(k + i))); // per triangle, so that no face runs backwards across the seam
+        for (let i = 0; i < 3; i++) { const d = a[i] - a[0]; U.setXY(k + i, (a[i] - (d > Math.PI ? 6.2832 : d < -Math.PI ? -6.2832 : 0)) / Math.PI, 0.005 + 0.99 * P.getY(k + i) / 250); } }
+      return G; },
     // the footprint of a needle's summit, for its crown: same outline as aiguillePiliers
     aiguilleCouronnePiliers: (w = 40, d = 40, ht = 250, seed = 0) => SHAPES.couronnePiliers(oval(w, d, 8, seed), ht, seed, Math.min(w, d) / 10),
     // a boulder w × ht × d, origin at its foot (1.5 m buried): two thick beds, strongly broken corners
