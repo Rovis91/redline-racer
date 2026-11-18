@@ -2,19 +2,20 @@
 // See docs/methods/NEW-MAP.md and docs/proposals/volcanic-island/AMBIANCE-V2.html. The island is relief-volcan.js (a height field of its own); shapes: shapes-volcan-<family>.js; textures: textures-volcan.js.
 (function () {
   const { near, edgePt, terrain, weld } = PLACERS;
-  const ZONES = ['port', 'village', 'fermes', 'falaises', 'cratere', 'descente', 'cote'], LAP = 6230; // LAP: plan length of the layout, the unit of its chainages (PK)
-  const GAL = [[139, 149], [159, 171]];                                                   // the two galleries through the caldera wall, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map)
+  const ZONES = ['port', 'village', 'fermes', 'falaises', 'cratere', 'descente', 'cote'], LAP = 6578; // LAP: plan length of the layout, the unit of its chainages (PK)
+  const GAL = [[101, 106], [112, 117]];                                                   // the two galleries through the caldera wall, [point in, point out] of the layout: north (the engine tunnel, M.tun) and south-west (built by scenery-volcan-cratere.js: the engine has one tunnel per map)
   const TRENCH = 20, LID = 32;                                                            // a height field cannot overhang: along a gallery the ground is trenched TRENCH m each side of the axis, and a lid LID m each side, in the ground's own material, restores the slope over it
   const CUT = [11, 1.3], FILL = [10, 1.1];                                                // the road on the island: a rock cut rises from 11 m off the axis by 1.3 m per metre; an embankment falls from 10 m by 1.1 m per metre
-  const LAKE = { x: -24, z: -902, r: 27, y: 136 };                                       // lava lake: a level pit east of the road on the caldera floor, outside the second bend of the chicane, a few metres below it
+  const LAKE = { x: -62, z: -930, r: 34, y: 153 };                                       // lava lake: a level pit east of the road on the caldera floor, a few metres below it, a few metres below it
 
   Object.assign(SCENERY, {
     volcan(h) {
       const { THREE, S, N } = h, P = h.M.pts;
       // the loop runs anticlockwise: the island is on the left (side -1), the sea on the right (side 1)
-      // The ground is the island of relief-volcan.js; the road is cut into it or carried on an embankment (CUT, FILL), the galleries are trenched (closed again by lid()), the lake has its pit.
+      // The ground follows the level of the road and takes its forms from relief-volcan.js; near the road it is cut or carried on an embankment (CUT, FILL), the galleries are trenched (closed again by lid()), the lake has its pit.
       const { height: HT, ss, fbm, CONE } = RELIEF_VOLCAN, gal = GAL.map(l => l.map(k => near(h, P[k][0], P[k][1]))), inGal = i => gal.some(([a, b]) => i >= a && i <= b);
-      const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), H = HT(x, z), k = ss(LAKE.r + 14, LAKE.r, Math.hypot(x - LAKE.x, z - LAKE.z)); // k: 1 in the pit, 0 from 14 m outside it
+      const inLoop = (x, z) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > z) !== (P[j][1] > z) && x < (P[j][0] - P[i][0]) * (z - P[i][1]) / (P[j][1] - P[i][1]) + P[i][0]) c = !c; return c; };
+      const relief = (x, z, y) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), H = HT(x, z, y, inLoop(x, z) ? d : -d), k = ss(LAKE.r + 14, LAKE.r, Math.hypot(x - LAKE.x, z - LAKE.z)); // k: 1 in the pit, 0 from 14 m outside it
         const t = inGal(i) ? (d < TRENCH ? Math.min(H, s.y - 0.5) : H) : Math.max(Math.min(H, y + Math.max(0, d - CUT[0]) * CUT[1]), y - Math.max(0, d - FILL[0]) * FILL[1]);
         return y - (t + (LAKE.y - t) * k); };
       // ground, in layers over bare ash and lava gravel: grass on the low ground away from the cone (the farmland, the village, the shore); grey-green moss on the gentle slopes of the highland and of the cone's foot; rock where it is steep; snow, white, on the highest crags of the rim only
@@ -22,7 +23,7 @@
         { tex: ['mousseVolcan', '#41633a'], weight: (x, z, y, p) => (1 - ss(0.05, 0.13, p)) * (1 - ss(44, 70, y)) * ss(2.5, 6, y) * ss(470, 600, rc(x, z) + 260 * (fbm(x / 90, z / 90) - 0.5)), noise: 0.1 },
         { tex: ['mousseVolcan'], weight: (x, z, y, p) => (1 - ss(0.06, 0.15, p)) * (1 - ss(215, 260, y)) * ss(40, 66, y) * ss(215, 300, rc(x, z)), noise: 0.12 },
         { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.07, 0.17] }, // weak marks: on a steep face the terrain stretches them into streaks
-        { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(296, 318, y) * (1 - ss(0.2, 0.42, p)), noise: 0.03 }];
+        { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(338, 360, y) * (1 - ss(0.2, 0.42, p)), noise: 0.03 }];
       const g = terrain(h, { stepSec: 8, margin: 440, hollow: relief, mat: h.mat('solVolcan'), layerSet: LAYERS });
       const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), h.mat('merVolcan', { rep: [250, 250] })); sea.rotation.x = -Math.PI / 2; sea.position.set(-100, 0, -800); h.scene.add(sea);
       // MAT: the shared materials of the map, one draw pass each for the whole map: every piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the volcan assemblies.
@@ -60,7 +61,7 @@
       // strip(i0, i1, section, material, ground): a sheet along the road from sample i0 to i1, one row every 8 m; section(s) = [[o, y], …]: o metres to the right of the axis, y altitude
       const strip = (i0, i1, section, m, ground) => { const rows = []; for (let i = i0; ; i = Math.min(i + 4, i1)) { const s = S[i]; rows.push(section(s).map(([o, y]) => { const [x, z] = edgePt(s, 1, o); return [x, y, z]; })); if (i === i1) break; } return sheet(rows, m, ground); };
       // lid(i0, i1): the slope of the volcano restored over the trench of a gallery, its edges on the ground LID m each side; and at each mouth a headwall of basalt down to the road, open on the roadway (8.5 m each side, 9.5 m high)
-      const rise = (s, o) => { const [x, z] = edgePt(s, 1, o); return [x, z, HT(x, z)]; };
+      const rise = (s, o) => { const [x, z] = edgePt(s, 1, o); return [x, z, HT(x, z, s.y - 0.5, Math.abs(o))]; };
       const top = (s, o) => { const [xa, za, a] = rise(s, -LID), [xb, zb, b] = rise(s, LID), t = (o + LID) / (2 * LID); return rise(s, o)[2] + (g.hAt(xa, za) - a) * (1 - t) + (g.hAt(xb, zb) - b) * t + 0.15; };
       const lid = (i0, i1) => { const O = [-LID, -TRENCH, -8.5, 0, 8.5, TRENCH, LID]; strip(i0, i1, s => O.map(o => [o, top(s, o)]), null, true);
         for (const [i, way] of [[i0, 1], [i1, -1]]) { const s = S[i], wall = (os, low) => { const rows = [os.map(o => { const [x, z] = edgePt(s, 1, o); return [x, top(s, o), z]; }), os.map(o => { const [x, z] = edgePt(s, 1, o); return [x, low, z]; })]; sheet(way > 0 ? rows.reverse() : rows, MAT.cliff); };
@@ -82,7 +83,7 @@
           return [-1, -0.5, 0, 0.5, 1].map(t => { const px = x - (bz - az) / l * w * t, pz = z + (bx - ax) / l * w * t; return [px, g.hAt(px, pz) + (1 - t * t) * lift * end * (0.8 + 0.4 * frac(i, t)) - 0.4, pz]; }); }), MAT[m]); };
       // scatter(a, b, m, step): the verge between two chainages: a hummock of material m every `step` m, 2 to 14 m from the wall, and a black boulder at every other one on the opposite side; never in rows
       const scatter = (a, b, m = 'moss', step = 20) => { for (let pk = a, i = Math.round(a); pk < b; pk += step, i++) if (clear(pk) && clear(pk + 9)) { const sd = frac(i) < 0.5 ? -1 : 1;
-        by('dalleVolcan', pk, sd, 2.5 + frac(i, 1) * (sd > 0 ? 6 : 12), { m, a: [1.6 + frac(i, 2) * 2.2, 0.4 + frac(i, 3) * 0.7, i % 9, 7] });
+        by('dalleVolcan', pk, sd, 2.5 + frac(i, 1) * (sd > 0 ? 6 : 12), { m, a: [1.4 + frac(i, 2) * 1.6, 0.25 + frac(i, 3) * 0.3, i % 9, 7] });
         if (i % 2) by('rocherVolcan', pk + 9, -sd, 3.5 + frac(i, 4) * (sd > 0 ? 12 : 5), { m: 'rock', a: [1.6 + frac(i, 5) * 2.2, 1 + frac(i, 6) * 1.4, 1.6 + frac(i, 7) * 2.2, i % 11] }); } };
       // wall(points, closed, m, ht): a dry-stone wall on the ground through plan points, in pieces of 7 m at most that follow the relief: the boundary of a pasture, a churchyard, a fold
       const wall = (pts, closed, m = 'drystone', ht = 1.2, t = 0.7) => { for (let n = 0; n < pts.length - (closed ? 0 : 1); n++) { const [ax, az] = pts[n], [bx, bz] = pts[(n + 1) % pts.length], k = Math.ceil(Math.hypot(bx - ax, bz - az) / 7);
