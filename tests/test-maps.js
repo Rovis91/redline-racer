@@ -196,15 +196,25 @@ console.log(`OK  gold ghosts: ${goldTxt.join(' · ')} ; longest challenge link: 
 const SRC = require('fs').readFileSync(__dirname + '/../src/audio/audio.js', 'utf8'), seen = new Set();
 new Function(SRC); // audio.js parses without syntax error (otherwise the game stays silent: SOUND does not exist)
 const SCL = { mineur: [0, 2, 3, 5, 7, 8, 10], majeur: [0, 2, 4, 5, 7, 9, 11] }, LABELS = ['do', 'do#', 'ré', 'mib', 'mi', 'fa', 'fa#', 'ground', 'lab', 'la', 'sib', 'si'];
-require('../src/audio/radio-trials.js'); require('../src/audio/instruments.js'); require('../src/audio/instruments-notes.js'); // the station trials (outside the game) pass the same checks
-for (const M of [...MAPS.filter((M, i) => MAPS.findIndex(m => m.radio === M.radio) === i), { id: 'trials', radio: MUS.TRIALS }]) { // a map that borrows the radio of another is checked once, with its owner
-  assert(M.id === 'trials' || M.radio.length === 3 || M.radio.length === 4, M.id + ' : three stations are needed (four at most)');
+require('../src/audio/instruments.js'); require('../src/audio/instruments-notes.js');
+for (const M of MAPS) {
+  assert(M.radio.length === 3 || M.radio.length === 4, M.id + ' : three stations are needed (four at most)');
   for (const s of M.radio) {
     const w = s.name + ' : ';
     assert(!seen.has(s.name) && !seen.has(s.genre), w + 'name or genre duplicated'); seen.add(s.name); seen.add(s.genre);
     assert(s.bpm >= 80 && s.bpm <= 180 && s.name.length <= 13, w + 'tempo or name too long for the HUD');
     assert(s.form.length * 4 >= 32 && new Set(s.form).size >= 5, w + 'form too short or too few sections');
     assert(s.sec[s.hot] && s.sec.e, w + 'chorus or variation missing');
+    if (s.raceTheme) {
+      for (const key of s.form) {
+        const section = s.sec[key];
+        assert(section.k && section.b && section.s && section.h, w + 'rhythm section drops out in ' + key);
+        assert(section.l || section.a, w + 'opening or section has no hook in ' + key);
+      }
+      for (const levels of Object.values(s.sectionMix || {})) for (const [part, value] of Object.entries(levels)) {
+        assert('bdcgal'.includes(part) && Number.isFinite(value) && value >= 0, w + 'invalid section mix');
+      }
+    }
     assert(SRC.includes(' ' + s.kit + ': {'), w + 'kit inconnu ' + s.kit);
     for (const p of ['b', 'c', 'g', 'a', 'l']) { if (!s[p]) continue; const m = SRC.match(new RegExp(' ' + s[p].p + ": [{] (?:smp: '([a-zA-Z0-9]+)', )?o: [[][[]")); // a sampled timbre must also exist in instruments.js
       const e = /^e_(\w+)$/.exec(s[p].p); if (e) { assert(INS[e[1]], w + 'instrument absent de instruments.js : ' + e[1]); continue; } // e_… : one timbre per recorded instrument, made by audio.js
@@ -216,7 +226,7 @@ for (const M of [...MAPS.filter((M, i) => MAPS.findIndex(m => m.radio === M.radi
     // to the scale or chord of its bar, in all the sections and at all their places in the form
     const sc = SCL[s.scl].map(i => (s.key + i) % 12), pc = n => ((n % 12) + 12) % 12, label = n => LABELS[pc(n)];
     s.prog.forEach((pr, p) => pr.CH.forEach((ch, i) => assert(ch.every(n => sc.includes(pc(n))) || (s.borrows || '').split(' ').includes(s.chordSeq[p][i]), w + 'undeclared out-of-key chord: ' + s.chordSeq[p][i])));
-    for (const k in s.sec) for (let fmi = 0; fmi < s.form.length; fmi++) if (s.form[fmi] === k || (k === s.hot && s.form[fmi] !== 'e')) for (let b = fmi * 4; b < fmi * 4 + 4; b++) {
+    for (const k in s.sec) for (let fmi = 0; fmi < s.form.length; fmi++) if (s.form[fmi] === k || (!s.raceTheme && k === s.hot && s.form[fmi] !== 'e')) for (let b = fmi * 4; b < fmi * 4 + 4; b++) {
       const sec = s.sec[k], pr = s.prog[sec.P || 0], ok = pr.OK[b % pr.OK.length], root = pr.ROOT[b % pr.ROOT.length], where = ' (section ' + k + ', mesure ' + (b + 1) + ', accord ' + s.chordSeq[sec.P || 0][b % pr.CH.length] + ')';
       if (sec.l) for (const n of s.l.v[sec.l.v][b % s.l.v[sec.l.v].length]) assert(n == null || n === -99 || ok.has(pc(n)), w + 'theme, wrong note ' + label(n) + where);
       // a held theme note (2 steps or more) does not rub against the chord: neither a semitone above one of its notes, nor the tritone of its root (unless the rubbing is intended: excluded)

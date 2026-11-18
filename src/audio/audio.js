@@ -13,7 +13,7 @@
   // music editor hooks (editor.html): mute / solo per part, section played in a loop, indicators (until when each part sounds), current section
   const EC = { mute: {}, solo: null, loopSec: null, nowPlaying: {}, sec: '', pause: false }, playNote = (p, t, d = 0.12) => { EC.nowPlaying[p] = t + d; };
   const pv = (st, p) => (EC.solo ? EC.solo === p : !EC.mute[p]) ? (st.mx && st.mx[p] != null ? st.mx[p] : 1) : 0; // level of a part: st.mx, set in the editor
-  let AC, live = true, timer, readyMs = Promise.resolve(), ana, master, musicG, tuneG, drumG, hatG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motorSend, nbuf, outG, vu;
+  let AC, live = true, timer, readyMs = Promise.resolve(), ana, master, masterComp, musicG, tuneG, drumG, hatG, musF, duckG, swF, busDry, busDrv, acid, fuzz, kdrv, bsat, dly, dlyFb, eqL, eqM, eqH, mrevG, drumRv, revIn, echoIn, choIn, mbuf, secG, drumF, gritDry, gritWet, hpF, rev, musSend, motorSend, nbuf, outG, vu;
   let t0 = 0, nextT = 0, stp = 0, musicOn = true, lastHit = 0, lastMus = -9, lastN = 0, lastB = 0, menu = true;
   const vol = { mus: 1, motorFam: 1, tire: 1, wind: 1, amb: 1, impact: 1, ui: 1, rainFx: 1 }, V = {}; // volume per family (listening bench) and their nodes
   // musical state driven by the race: mix = hot sector, inten = speed, driftL = skid, drums = drums, fin = last sector
@@ -27,8 +27,8 @@
   let rubT = 0, satT = 0, turntable = 0; // brief friction between cars; saturation of the music after an impact; turntable slowdown (1 → 0)
   const VX = [], UN = [], PANJ = 0.35; // engine + gearbox + tyre voices: VX[0] the solo one (centre, plugged in as always), VX[1] and VX[2] those of the split screen (player 1 on the left, player 2 on the right); UN: single-player list, reused when the game does not pass one
   let scrapeG, windG, windL, windF, nitroG, gbuf, acoustic, AU = [], rainFx, ambBed, ambT = 2, inZone = false, uiF, CH = null, ambZG = [], ambEvG = null, ambPos = 0, ambUnder = 0, ambCall = 0; // CH: the sounds specific to chapada (soundChapada)
-  const randIndex = () => Math.random() * ST.length | 0; // on each map, one of its stations at random
-  let station = randIndex(), S16 = 60 / ST[station].bpm / 4;
+  const initialStation = () => ST[0].raceTheme ? 0 : Math.random() * ST.length | 0;
+  let station = initialStation(), S16 = 60 / ST[station].bpm / 4;
 
   // menu music: one calm track for all maps — same tempo, same chords (Dm7 BbM7 C7 A), same bell melody, same lowland.
   // Each map only changes its colour: pad and melody (arp) timbre, melody octave (oct), low-pass (lp), level (v, set per bar).
@@ -147,6 +147,15 @@
     bDist: { o: [['sawtooth'], ['square', 0, 9]], flt: ['lowpass', 900, 200, 0.2, 4], d: 0.2, s: 0.4, bus: 'fuzz', lv: 0.8 }, // clipped
     bAcid: { o: [['sawtooth']], flt: ['lowpass', 3200, 250, 0.14, 16], d: 0.2, s: 0.3, gl: 0.05, bus: 'sat' }, // resonant, TB-303 style
     bFM: { o: [['sine'], ['sine', -12, 0, 0.6]], fm: [1, 3.5, 0.12, 0.2], d: 0.25, s: 0.3, lv: 1.3 }, // 80s FM bass
+    bDonk: { o: [['sine'], ['sine', 0, 0, 0.45]], fm: [2, 8, 0.039, 0.4], a: 0.003, d: 0.11, s: 0.06, r: 0.065, len: 1.35, bus: 'sat', lv: 1.5 },
+    bPhonk: { o: [['sine'], ['triangle', 0, 0, 0.5], ['sawtooth', 0, 0, 0.12]], flt: ['lowpass', 1550, 430, 0.09, 1.5], a: 0.006, d: 0.28, s: 0.75, r: 0.065, gl: 0.035, lv: 1.45 },
+    bPhonkOpen: { o: [['sine'], ['sine', -12, 0, 0.7], ['triangle', 0, 0, 0.6], ['sawtooth', 12, 0, 0.18]], flt: ['lowpass', 3600, 1600, 0.18, 0.7], a: 0.005, d: 0.4, s: 0.88, r: 0.1, gl: 0.035, lv: 1.7 },
+    bPhonkDrive: { o: [['sawtooth', 0, 0, 0.85], ['sine', 0, 0, 0.65], ['sine', -12, 0, 0.3], ['triangle', 12, 0, 0.35]], flt: ['lowpass', 6200, 3200, 0.2, 0.8], a: 0.005, d: 0.35, s: 0.75, r: 0.08, gl: 0.035, lv: 1.35 },
+    drift808: { o: [['sine']], flt: ['lowpass', 4200, 2200, 0.25, 0.65], dist: 2, a: 0.004, d: 0.85, s: 0.68, r: 0.055, len: 0.98, lv: 1.4 },
+    driftCowbell: { o: [['square'], ['square', 6.797, 0, 0.65]], flt: ['bandpass', 2600, 1900, 0.15, 0.65], dist: 1.8, a: 0.002, d: 0.16, s: 0.015, r: 0.035, ec: 0.05, rv: 0.03, lv: 0.16 },
+    cloudAnalog: { o: [['triangle'], ['sawtooth', 0, -3, 0.28], ['sawtooth', 0, 3, 0.28]], flt: ['lowpass', 3700, 2300, 0.28, 0.65], a: 0.025, d: 0.5, s: 0.65, r: 0.16, leg: 0.025, vib: [5, 9, 0.3], ec: 0.12, rv: 0.1, lv: 0.15 },
+    bFrench: { o: [['sawtooth'], ['square', -12, 0, 0.32]], flt: ['lowpass', 1850, 340, 0.13, 2.5], a: 0.007, d: 0.2, s: 0.24, r: 0.055, gl: 0.025, lv: 1.25 },
+    bMotor: { o: [['square'], ['sawtooth', 0, 7, 0.35], ['sine', 0, 0, 0.45]], flt: ['lowpass', 2200, 520, 0.09, 2.2], a: 0.005, d: 0.13, s: 0.35, r: 0.05, lv: 1.1 },
     bSlap: { o: [['pulse'], ['sawtooth', 0, 6, 0.5]], ks: { b: 0.7, t: 1.2, pos: 0.08 }, using: 1, flt: ['lowpass', 5000, 500, 0.07, 6], nz: ['bandpass', 2500, 2, 0.25, 0.012], d: 0.2, s: 0.25, lv: 1.2 }, // slapped
     bPick: { o: [['triangle'], ['pulse', 0, 0, 0.4]], ks: { b: 0.45, t: 1.6, pos: 0.12 }, using: 1, flt: ['lowpass', 2200, 400, 0.1, 2], nz: ['bandpass', 1800, 2, 0.15, 0.01], d: 0.22, s: 0.35, lv: 1.4 }, // electric bass with pick
     bMoog: { o: [['sawtooth'], ['triangle', 0, 5], ['sine', -12, 0, 0.5]], flt: ['lowpass', 700, 350, 0.2, 3], s: 0.8, gl: 0.07, len: 1, lv: 1.3 }, // round, with portamento
@@ -200,6 +209,24 @@
     ldNylon: { o: [['triangle'], ['pulse', 0, 0, 0.3]], ks: { b: 0.5, t: 2, pos: 0.12 }, using: 1, flt: ['lowpass', 3000, 1400, 0.2, 1], a: 0.004, d: 0.5, s: 0.4, r: 0.15, vib: [5.5, 12, 0.25], gl: 0.03, rv: 0.3, ec: 0.15, lv: 0.16 }, // nylon-string guitar, plucked: plucked string mixed with the synth
     ldCrunch: { o: [['sawtooth', 0, -6], ['square', 0, 6, 0.5]], ks: { b: 0.6, t: 2, pos: 0.12 }, using: 1, flt: ['lowpass', 1400, 1100, 0.2, 1], a: 0.01, s: 0.9, vib: [5.5, 12, 0.3], gl: 0.03, bus: 'sat', lv: 0.18 }, // slightly distorted, dark guitar: without the fuzz guitar's whistle
     ldElectro: { o: [['square'], ['square', 12, 3, 0.25]], flt: ['lowpass', 2400, 2400, 1, 0.7], a: 0.005, d: 0.25, s: 0.6, r: 0.08, ec: 0.25, rv: 0.15, lv: 0.12 }, // 80s electro: plain, sharp square, filtered, without glide or vibrato
+    ldPressure: { o: [['square'], ['square', 12, 3, 0.16]], flt: ['lowpass', 2050, 1800, 0.15, 0.7], a: 0.018, d: 0.32, s: 0.62, r: 0.15, ec: 0.24, rv: 0.17, lv: 0.12 },
+    ldCowbell: { o: [['square'], ['square', 6.797, 0, 0.75]], flt: ['highpass', 500, 500, 1, 0.7], a: 0.004, d: 0.2, s: 0.14, r: 0.09, ec: 0.12, rv: 0.07, lv: 0.13 },
+    ldCircuit: { o: [['ak_fmsynth_0015'], ['pulse', -12, 5, 0.4]], flt: ['lowpass', 2600, 1600, 0.22, 0.8], a: 0.025, d: 0.35, s: 0.55, r: 0.15, gl: 0.025, ec: 0.16, rv: 0.1, lv: 0.14 },
+    ldCoast: { o: [['sawtooth', 0, -7], ['sawtooth', 0, 7], ['triangle', -12, 0, 0.28]], flt: ['lowpass', 3600, 1500, 0.22, 0.8], a: 0.014, d: 0.32, s: 0.4, r: 0.12, ec: 0.19, rv: 0.1, lv: 0.105 },
+    ldCloud: { o: [['ak_fmsynth_0008'], ['triangle', -12, 5, 0.5]], flt: ['lowpass', 1700, 3700, 0.16, 1.2], a: 0.018, d: 0.25, s: 0.42, r: 0.11, ec: 0.17, rv: 0.07, lv: 0.13 },
+    ldRobot: { o: [['sawtooth'], ['square', -12, 0, 0.65]], form: 1, a: 0.012, d: 0.24, s: 0.65, r: 0.08, gl: 0.025, ec: 0.12, rv: 0.06, lv: 0.13 },
+    ldTurbo: { o: [['sawtooth', 0, -4], ['square', 0, 4, 0.35]], flt: ['lowpass', 3200, 1250, 0.18, 1.8], a: 0.01, d: 0.24, s: 0.46, r: 0.1, ec: 0.16, rv: 0.06, lv: 0.115 },
+    chFrench: { o: [['sawtooth', 0, -4], ['sawtooth', 0, 4]], flt: ['lowpass', 2800, 750, 0.16, 1.3], a: 0.009, d: 0.18, s: 0.12, r: 0.06, ec: 0.13, rv: 0.05, lv: 1.2, holdTime: 1.5, str: 0.001 },
+    chRally: { o: [['pulse'], ['sawtooth', 0, 4, 0.45]], flt: ['lowpass', 3300, 800, 0.12, 1.8], a: 0.008, d: 0.16, s: 0.15, r: 0.07, ec: 0.16, rv: 0.07, lv: 1.1, holdTime: 1.4, str: 0.002 },
+    pianoDrive: { smp: 'piano', o: [['triangle']], flt: ['lowpass', 3600, 2300, 0.45, 0.7], a: 0.012, d: 1.2, s: 0.48, r: 0.28, rv: 0.16, ec: 0.1, lv: 16, holdTime: 6, str: 0.005 },
+    pianoHouse: { smp: 'rhodes', o: [['triangle']], flt: ['lowpass', 4200, 2400, 0.35, 0.7], a: 0.009, d: 0.7, s: 0.4, r: 0.18, rv: 0.12, ec: 0.13, lv: 3.8, holdTime: 3.5, str: 0.004 },
+    leadSilk: { o: [['sawtooth', 0, -6], ['sawtooth', 0, 6], ['triangle', -12, 0, 0.4]], flt: ['lowpass', 2000, 3000, 0.2, 0.65], a: 0.035, d: 0.5, s: 0.7, r: 0.18, leg: 0.035, ec: 0.2, rv: 0.15, lv: 0.11 },
+    voiceSilk: { smp: 'oohs', o: [['triangle']], flt: ['lowpass', 2100, 1700, 0.3, 0.7], a: 0.12, s: 0.9, r: 0.3, leg: 0.09, gl: 0.09, rv: 0.32, ec: 0.14, lv: 1.55 },
+    leadClean: { smp: 'gtClean', o: [['triangle']], flt: ['lowpass', 4000, 2800, 0.3, 0.7], a: 0.014, d: 0.8, s: 0.65, r: 0.2, ec: 0.19, rv: 0.18, lv: 1.1, gl: 0.025 },
+    leadRhodes: { smp: 'rhodes', o: [['sine']], flt: ['lowpass', 3800, 2500, 0.3, 0.7], a: 0.02, d: 0.85, s: 0.45, r: 0.22, ec: 0.18, rv: 0.14, lv: 0.9 },
+    leadBrass: { smp: 'synBrass', o: [['sawtooth']], flt: ['lowpass', 6200, 4200, 0.22, 0.8], a: 0.015, d: 0.38, s: 0.65, r: 0.14, ec: 0.12, rv: 0.1, lv: 1.2 },
+    leadOverdrive: { smp: 'gtOver', o: [['sawtooth']], flt: ['lowpass', 6800, 4800, 0.25, 0.7], a: 0.012, d: 0.6, s: 0.7, r: 0.14, gl: 0.025, ec: 0.14, rv: 0.11, lv: 1.25 },
+    hardStab: { o: [['pulse'], ['sawtooth', 0, 4, 0.45]], flt: ['lowpass', 6500, 2800, 0.12, 0.9], a: 0.005, d: 0.16, s: 0.18, r: 0.07, ec: 0.1, rv: 0.05, lv: 0.12, holdTime: 2, str: 0.001 },
     ldEuro: { o: [['sawtooth', 0, -9], ['square', 0, 9, 0.6]], flt: ['lowpass', 3200, 1800, 0.2, 1], a: 0.01, d: 0.3, s: 0.7, ec: 0.3, rv: 0.25, lv: 0.1 }, // gimmick d'eurodance
     ldGtr: { o: [['sawtooth', 0, -5], ['sawtooth', 0, 5]], s: 0.9, vib: [5.5, 16, 0.15], gl: 0.05, bus: 'fuzz', lv: 0.2 }, // distorted guitar
     ldSiren: { o: [['triangle'], ['square', 0, 0, 0.3]], flt: ['lowpass', 3000, 3000, 1, 0.7], s: 1, gl: 0.15, ec: 0.3, lv: 0.1 },
@@ -254,7 +281,8 @@
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vel, t + a); g.gain.setTargetAtTime(vel * s, t + a, (P.d || dur) / 3); g.gain.setTargetAtTime(0, end, r / 3);
     dest = P.bus === 'fuzz' ? dest.fz || fuzz : P.bus === 'sat' ? bsat : dest; g.connect(dest); // fuzz: the part's amp (a guitar no longer saturates with the others)
     let d = g;
-    if (P.flt) { const [type, f0, f1, ft, q, kt] = P.flt, k = (kt ? f : 1) * (type === 'highpass' ? 1 : ex ** 1.5); d = filt(type, Math.min(18000, f0 * k), q, g); d.frequency.setValueAtTime(Math.min(18000, f0 * k), t); d.frequency.exponentialRampToValueAtTime(Math.min(18000, f1 * k), t + Math.min(ft, dur)); }
+    if (P.flt) { const [type, f0, f1, ft, q, kt] = P.flt, brightness = !menu && type === 'lowpass' ? ST[station].brightness || 1 : 1, k = (kt ? f : 1) * brightness * (type === 'highpass' ? 1 : ex ** 1.5); d = filt(type, Math.min(18000, f0 * k), q, g); d.frequency.setValueAtTime(Math.min(18000, f0 * k), t); d.frequency.exponentialRampToValueAtTime(Math.min(18000, f1 * k), t + Math.min(ft, dur)); }
+    if (P.dist) d = shaper(P.dist, d); // per-voice drive retains the part's envelope, pan and mix controls
     if (P.sing) { const fm = FORM[P.sing][P.syl[syl++ % P.syl.length]], src = AC.createGain(); src.gain.value = 5;
       fm.forEach((fr, i) => src.connect(gain([1, 0.55, 0.25][i], filt('bandpass', fr, fr / [70, 90, 120][i], d)))); d = src;
       nz(t, 0.05, vel * 0.5, src, 'highpass', 1500, 0.7); } // breath: the attack of a syllable
@@ -410,8 +438,8 @@
   }
   // A sixteenth-note step. The station gives a form (a sequence of 4-bar sections: intro, verses, chorus, break, rise…); each
   // section says which parts play and with which pattern variant (format: see RADIO in mapDefs.js). The race adds to it: nothing but the
-  // countdown tick; in the hot sector and on the last sector (big), parts marked "!" come in and all sections become
-  // the chorus (hot), except the variation (e); drum restart at each end of section.
+  // countdown tick; in the hot sector and on the last sector (big), parts marked "!" come in.
+  // Race themes keep their written form. Older stations switch to the chorus, except the variation (e).
   // Nothing abrupt outside a race event: parts fade in, drums withdraw before a break and fade back in, the chorus
   // only starts at the beginning of a bar and only restarts at the end of a section; filters open slowly.
   // human feel: DR[p] the offset of part p, which drifts slowly (a musician is ahead or behind several notes in a row, never pure chance)
@@ -422,14 +450,14 @@
     const bar = s >> 4, q = s % 16, d = drums, fmi = (bar >> 2) % st.form.length, nxt = st.form[(fmi + 1) % st.form.length];
     if ((q === 0 && ((bar & 3) === 0 || mix > 0.5 || ending || boostL)) || (boostL && !bigS && q % 4 === 0)) { const b = !entering && (mix > 0.5 || ending || boostL); if (bigS && !b) exitAt = bar >> 2; bigS = b; } // the nitro is an action: it opens the chorus from the next beat // the hot-sector chorus comes in at the next bar and only restarts at the end of a section: never in the middle of a bar
     const big = bigS;
-    let key = st.form[fmi]; if (big && key !== 'e') key = st.hot;
+    let key = st.form[fmi]; if (big && !st.raceTheme && key !== 'e') key = st.hot;
     else if (exitAt === bar >> 2 && !st.sec[key].k) key = st.form[1]; // leaving the hot sector we fall back on a verse, never on a break: no hole // hot sector: the chorus, and its variation when the form reaches it
     if (EC.loopSec && st.sec[EC.loopSec]) key = EC.loopSec; EC.sec = key;
     const mxv = p => pv(st, p);
     const sec = st.sec[key], pr = st.prog[sec.P || 0], ch = pr.CH[bar % pr.CH.length], root = pr.ROOT[bar % pr.ROOT.length], pos = ((bar & 3) * 16 + q) / 64; // pos: progress through the section
     curRoot = root;
-    // first lap of race mode: neither theme nor percussion outside the hot sector
-    const on = p => { const x = st[p] && sec[p]; return x && (!x.big || big) && !(lap === 0 && !big && (p === 'l' || p === 'p')) ? x : null; }, pat = (v, x) => { const b = v[x.v % v.length]; return b[bar % b.length]; };
+    // The new race arrangements keep the hook and rhythm audible from the first lap.
+    const on = p => { const x = st[p] && sec[p]; return x && (!x.big || big) && !(lap === 0 && !big && !st.raceTheme && (p === 'l' || p === 'p')) ? x : null; }, pat = (v, x) => { const b = v[x.v % v.length]; return b[bar % b.length]; };
     // human feel (st.game, 1 by default, 0: machine): hj(p, place, j) the instant of a note of part p, at its place around the beat (s, the snare and the theme a little behind),
     // plus its slow drift and a little chance (±j/2); arc: the section breathes (it rises gradually, its first bar accented)
     const J = st.game == null ? 1 : st.game, hj = (p, place, j) => { DR[p] = (DR[p] || 0) * 0.85 + (Math.random() - 0.5) * j * 0.6; return Math.max(t - 0.004, t + J * (place + DR[p] + (Math.random() - 0.5) * j)); };
@@ -438,13 +466,16 @@
     // human feel of the instruments: velocity that follows the bar (strong beat, off-beat), a bit of chance on the strength (±), a bit of offset (s, doubled with an acoustic drum kit)
     const acc = q % 4 === 0 ? 1.08 : q % 2 === 0 ? 0.97 : 0.88, jit = a => 1 + (Math.random() - 0.5) * 2 * a, lt = j => t + (Math.random() - 0.5) * 2 * (K.hum ? 2 * j : j);
     const vch = pr.V ? pr.V[bar % pr.V.length] : ch; // the chord in the inversion closest to the previous one (see voice() in mapDefs.js)
-    const runSuite = st.sec[big && nxt !== 'e' ? st.hot : nxt], dur = S16 * 16; // the coming section; duration of a bar
+    const runSuite = st.sec[big && !st.raceTheme && nxt !== 'e' ? st.hot : nxt], dur = S16 * 16; // the coming section; duration of a bar
     const fillN = (bar & 3) === 3 && K.fill && sec.k && runSuite.k ? (nxt !== st.form[fmi] ? 8 : 4) : 0, fill = d && fillN && q >= 16 - fillN;
     if (q === 0) { // start of a bar: nothing comes in or goes out at once
       for (const p in strip) { const now = !!(st[p] && sec[p] && (!sec[p].big || big)), g = strip[p].in.gain; // a part coming in fades up over the bar
-        if (now && !was[p]) { g.cancelScheduledValues(t); g.setValueAtTime(MX[p] * 0.15, t); g.linearRampToValueAtTime(MX[p], t + dur * (p === 'b' ? 0.3 : 0.8)); } was[p] = now; }
+        if (st.sectionMix) {
+          const level = st.sectionMix[key] && st.sectionMix[key][p];
+          g.setTargetAtTime(now ? MX[p] * (level == null ? 1 : level) : 0, t, dur / 3);
+        } else if (now && !was[p]) { g.cancelScheduledValues(t); g.setValueAtTime(MX[p] * 0.15, t); g.linearRampToValueAtTime(MX[p], t + dur * (p === 'b' ? 0.3 : 0.8)); } was[p] = now; }
       const kNow = !!(d && st.k && sec.k), g = drumF.gain;
-      if (kNow && !was.k) { g.cancelScheduledValues(t); g.setValueAtTime(0.3, t); g.linearRampToValueAtTime(1, t + dur * 0.8); } // the drums come back with a fade
+      if (kNow && !was.k) { g.cancelScheduledValues(t); g.setValueAtTime(st.raceTheme ? 1 : 0.3, t); g.linearRampToValueAtTime(1, t + dur * 0.8); } // the drums come back with a fade
       else if (kNow && (bar & 3) === 3 && !runSuite.k) { g.cancelScheduledValues(t); g.setValueAtTime(1, t); g.linearRampToValueAtTime(0.25, t + dur); } // they withdraw on the last bar before a break
       else if (!kNow && was.k) { g.cancelScheduledValues(t); g.setValueAtTime(0.25, t); g.linearRampToValueAtTime(1, t + dur * 2); }
       was.k = kNow;
@@ -508,6 +539,12 @@
   function retune(t, retain) { // guard: the editor changes a setting while listening, the sequencer does not restart from the beginning // (re)sets the sequencer, the bus and the mix slices to the station or to the menu loop
     const st = ST[station], mn = MENU[M.id] || MENU.ville; S16 = 60 / (menu ? MENU.bpm : st.bpm) / 4; if (!retain) { t0 = nextT = t; stp = !menu && drums ? 64 : 0; lastN = lastB = 0; voiceL = null; } // in a race, a station picked up on the fly starts at the first verse, not at the intro
     if (!AC) return;
+    // The race themes retain their drum transients. Returning to an older station restores the original master settings.
+    const compression = !menu && st.raceTheme ? [-16, 3, 12, 0.018, 0.1] : [-24, 12, 30, 0.003, 0.25];
+    for (const [i, parameter] of ['threshold', 'ratio', 'knee', 'attack', 'release'].entries()) {
+      masterComp[parameter].cancelScheduledValues(t);
+      masterComp[parameter].setValueAtTime(compression[i], t);
+    }
     const e = menu ? [3, 0.5] : st.echo || [3, 0.4], q = menu ? [0, 1000, 0, 0] : st.eq || [0, 1000, 0, 0];
     dly.delayTime.value = Math.min(0.95, S16 * e[0]); dlyFb.gain.value = e[1];
     const dv = menu ? 0 : st.drive || 0; busDry.gain.value = 1 - 0.7 * dv; busDrv.gain.value = 0.45 * dv; // saturation of the whole bus (saturated electro, industrial techno)
@@ -538,10 +575,10 @@
     for (let k = 0; k < 3; k++) nz(t + 0.14 + Math.random() * 0.2, 0.012, 0.25, V.ui, 'highpass', 2000);
     if (!menu) retune(t + 0.38);
   }
-  function mapDef(m, i) { // map change (listening bench): stations, ambience and menu colour; i: the station (otherwise a random one)
+  function mapDef(m, i) { // map change (listening bench): stations, ambience and menu colour; i: optional station override
     if (dk ? m === dk.M2 : m === mixDone && i == null) return; // a DJ transition leads there, or has just led there: nothing to redo
     if (dk) endMix(); mixDone = null;
-    M = m; ST = M.radio; TH = M.th; station = randIndex(); loadRadios(ST);
+    M = m; ST = M.radio; TH = M.th; station = initialStation(); loadRadios(ST);
     if (i != null) station = clamp(i, 0, ST.length - 1);
     S16 = 60 / ST[station].bpm / 4;
     if (AC) { retune(AC.currentTime + 0.05, menu); if (menu) swF.frequency.setTargetAtTime((MENU[M.id] || MENU.ville).lp, AC.currentTime, 0.5); buildAmb(); } // in the menu, the shared track keeps playing: only its colour changes
@@ -961,10 +998,10 @@ registerProcessor('moteur', Moteur);`;
     if (AC && live && !ctx) return AC.resume();
     if (AC && live) AC.close();
     AC = ctx || new (window.AudioContext || window.webkitAudioContext)(); live = !ctx;
-    const comp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); comp.connect(outG); // headroom after the compressor: measured, no peak above -3 dB
+    masterComp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); masterComp.connect(outG);
     vu = AC.createAnalyser(); vu.fftSize = 2048; outG.connect(vu); // what actually comes out, for the listening bench's VU meter
     lastHit = 0; lastMus = -9; ambT = 2; rubT = satT = turntable = 0; bigS = false; lastFill = lastRoll = -9; exitAt = -1; grit = tens = 0; glisse = acquired = acqSaid = boostPend = boostL = false; for (const p in was) was[p] = false; drums = 0; mix = inten = driftL = 0; ending = inZone = false; // a new context restarts from stopped
-    master = gain(0.9, comp); ana = AC.createAnalyser(); ana.fftSize = 64; master.connect(ana);
+    master = gain(0.9, masterComp); ana = AC.createAnalyser(); ana.fftSize = 64; master.connect(ana);
     for (const k in vol) V[k] = gain(vol[k], master);
     nbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
     const d = nbuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -1147,7 +1184,13 @@ registerProcessor('moteur', Moteur);`;
     if (near && !wasNear) riser(t, clamp((N - a0) * 2 / Math.max(sp, 20), 0.5, 3));
     if (TH.alarm && inside && !wasIn && racing) for (let i = 0; i < 6; i++) osc('square', i % 2 ? 660 : 880, t + 0.25 + i * 0.18, 0.16, 0.07, strip.a.in); // alarm siren at the entry
     wasNear = near; wasIn = inside;
-    if (racing && !drums && !menu) { stp = 64; nextT = Math.max(nextT, t); for (const p of 'kbdcgal') was[p] = true; bigS = false; } // the start is a race event: everything comes in boldly // start: the intro is skipped, the race opens on the first verse (the intro returns when the form loops)
+    if (racing && !drums && !menu) {
+      nextT = Math.max(nextT, t);
+      stp = ST[station].raceTheme ? 0 : 64; // the new themes open with their pre-intro; older stations open on the first verse
+      if (!stp) t0 = nextT;
+      for (const p of 'kbdcgal') was[p] = true;
+      bigS = false;
+    }
     // over the laps of race mode (e.lapRun, e.lapCount): first lap sober, then the full arrangement, and the last lap a semitone higher; crossing the line is a race event, marked by the cymbal
     const nl = !e.lapCount ? 1 : e.lapRun <= 0 ? 0 : e.lapRun >= e.lapCount - 1 ? 2 : 1;
     if (racing && e.lapCount && e.lapRun !== lapN) { if (lapN >= 0 && e.lapRun > lapN) crash(t, 0.5); lapN = e.lapRun; } if (!racing) lapN = -1;
@@ -1194,7 +1237,8 @@ registerProcessor('moteur', Moteur);`;
     thunder: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // rumble + crackle in the mids
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },
     volume(fmly, v) { vol[fmly] = v; if (V[fmly]) V[fmly].gain.value = v; },
-    raceEvent: () => { ambT = 0; }, roar: (v = 1.5) => AC && ambBed && roar(AC.currentTime, v), // the crowd reacts to the race (src/render/crowd.js) get live() { return live; },
+    raceEvent: () => { ambT = 0; }, roar: (v = 1.5) => AC && ambBed && roar(AC.currentTime, v), // the crowd reacts to the race (src/render/crowd.js)
+    get live() { return live; },
     clack: down => AC && clack(down), lever: down => AC && lever(down), impact: v => AC && impact(v), contact: v => AC && contact(v), boost: () => AC && boostFx(), backfire: () => AC && backfire(), hiss: () => AC && hiss(), landing: l => AC && landing(l), klaxon: () => AC && klaxon(),
     monitor(v) { if (outG) outG.gain.value = OUT * v; }, get vu() { return vu; }, // listening bench gain: no effect on the game
     get vol() { return vol; }, get readyMs() { return readyMs; }, get stations() { return ST; },
