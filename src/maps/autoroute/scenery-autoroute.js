@@ -42,7 +42,7 @@
       const g = terrain(h, { stepSec: 10, margin: 300, hollow: (x, z, y) => y - level(x, z), mat: h.mat('asphalteAutoroute'), layerSet: [{ tex: ['herbeAutoroute'], weight: park }, { tex: ['herbeAutoroute'], weight: (x, z) => { const l = lane(x, z); return Math.min(0.7, wild(x, z)) * (l ? ss((l[1] - 5) / 6) : 1); } }] });
       const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 2000), MAT.water); water.rotation.x = -Math.PI / 2; water.position.set(725, 0, 0); water.renderOrder = 2; h.scene.add(water); // east of x = 275: the shore is where the streets dip under it, around x = 312
       // one street asphalt over the engine's own roadway (14 m down the axis of the lane), the same as the ground beside it: the street is one surface from facade to facade
-      { const m = h.mat('asphalteAutoroute', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, rep: [1.4, 1] }); for (const [a, b] of [[0, I.rampe], [I.sol, I.bord], [I.tremie, N]]) h.ribbon(a, b - a, -7.05, 0.01, 7.05, 0.01, m, 10); }
+      { const m = h.mat('asphalteAutoroute', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, rep: [1.4, 1] }); for (const [a, b] of [[0, I.eauA + 10], [I.eauB - 10, I.rampe], [I.sol, I.bord], [I.tremie, N]]) h.ribbon(a, b - a, -7.05, 0.01, 7.05, 0.01, m, 10); }
       // the far city: the terrain stops 300 m from the road. A ground slab under the horizon (in four pieces: the cave and the trench lie lower), then a ring of towers in the haze, lower across the river
       for (const [x0, x1, z0, z1] of [[-2600, -480, -2600, 2600], [180, 2600, -2600, 2600], [-480, 180, -2600, 0], [-480, 180, 255, 2600]]) h.pose('boxMesh', MAT.dark, kit, [(x0 + x1) / 2, -2.2, (z0 + z1) / 2], x1 - x0, 1, z1 - z0);
       for (let i = 0; i < 64; i++) { const a = i / 64 * Math.PI * 2, r = 860 + 420 * HH(i, 1), x = Math.cos(a) * r * 1.25, z = Math.sin(a) * r, e = x > 700, w = 50 + 60 * HH(i, 2), ht = e ? 25 + 40 * HH(i, 3) : 70 + 150 * HH(i, 4) * HH(i, 3);
@@ -59,7 +59,7 @@
       const decal = (m, x, y, z, w, d, ry = 0) => { const c = Math.cos(ry), s = Math.sin(ry), p = (u, v) => [x + u * c + v * s, y, z - u * s + v * c]; mesh(MAT[m], [...p(-w / 2, -d / 2), ...p(w / 2, -d / 2), ...p(w / 2, d / 2), ...p(-w / 2, d / 2)], [0, 0, 1, 0, 1, 1, 0, 1], [0, 2, 1, 0, 3, 2]); };
       // vegetation, instanced (catalogue shapes trunk and canopy). tree: a trunk and three faceted masses, gold for one in three. bush: never one green block: three to five masses of uneven size and of three greens,
       // the dark one low and wide, the pale ones smaller and higher. tuft: a low clump of grass (the car drives through it)
-      const TREES = { bark: [], leaf: [], gold: [], ivy: [], ivy2: [], reed: [] };
+      const TREES = { bark: [], leaf: [], gold: [], ivy: [], ivy2: [], reed: [] }, LAMPS = [], REEDS = []; // LAMPS: [sample, x, y, z, kind] of every lamp drawn underground; REEDS: the reed beds (scenery-autoroute-vie.js lights the first and sways the second)
       const tree = (x, z, y, ht, r, v) => { const L = TREES[v % 3 ? 'leaf' : 'gold'], k = r / 3.4; TREES.bark.push([x, y + ht * 0.3, z, HH(v, 1) * 3, 1.8, ht * 0.6 / 5.2, 1.8]);
         L.push([x, y + ht * 0.72, z, HH(v, 2) * 6, k, k * 0.8, k], [x + r * 0.5, y + ht * 0.88, z - r * 0.3, HH(v, 3) * 6, k * 0.7], [x - r * 0.6, y + ht * 0.62, z + r * 0.4, HH(v, 4) * 6, k * 0.65]); };
       const bush = (x, z, y, w, ht, d, v = 0) => { const n = 3 + Math.floor(HH(v, 9) * 3); for (let i = 0; i < n; i++) { const f = i ? 0.35 + 0.3 * HH(v, 10 + i) : 0.7, ox = i ? (HH(v, 20 + i) - 0.5) * w * 0.7 : 0, oz = i ? (HH(v, 30 + i) - 0.5) * d * 0.7 : 0;
@@ -103,7 +103,7 @@
         else if (is(/BARGE/)) along('bargeAutoroute', 0, { y: -1.2, ry: ryL + 0.25, skin: { ...MAT, body: MAT.rust } });
         else if (is(/ECHAFAUDAGE/)) { set('echafaudageAutoroute', x, z, { y, ry, a: [w, ht + 2, d, v] }); set('eboulisAutoroute', x, z, { y, ry, a: [w * 0.6, 1.5, d, v] }); }
         else if (is(/TRAVEE EFFONDREE|DALLE CASSEE/)) { set('dalleAutoroute', x, z, { y, ry, a: [w, d, 0.3] }); if (w > 12) set('eboulisAutoroute', x, z, { y, ry, a: [w, 2, d, v] }); }
-        else if (is(/ROSELIERE/)) { set('roseauxAutoroute', x, z, { y: -0.6, ry: ry + (long ? Math.PI / 2 : 0), a: [l, L, v] }); }
+        else if (is(/ROSELIERE/)) { REEDS.push(set('roseauxAutoroute', x, z, { y: -0.6, ry: ry + (long ? Math.PI / 2 : 0), a: [l, L, v] })); }
         else if (is(/MUR TREMIE/)) slab('concrete', x, -9.5, z, w, 13, d, ry);                                                      // the walls of the trench, from under its floor to a parapet 1 m above the street
         else return false; return true; };
       // every solid box of the map with a name gets its scenery, on the lane's ground at that place (the lane's own altitude where one passes within 30 m at that level, the ground elsewhere)
@@ -111,9 +111,11 @@
       for (const [x, z, hx, hz, ry, oy, label, ht] of M.obst) { if (!label || NONE.test(label)) continue; let y = null, bd = 900; for (const s of S) { const d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd && Math.abs(s.y - oy) < 4) { bd = d; y = s.y; } }
         if (!real(label, 2 * hx, ht, 2 * hz, x, y ?? g.hAt(x, z), z, ry)) console.warn('autoroute: nothing built for', label); }
       const O = M.obst.map(([x, z, hx, hz, ry, y, label, ht]) => ({ x, z, hx, hz, ry, y, label, ht }));
-      for (const z of ZONES) AUTOROUTE[z]({ h, g, I, zone, O, MAT, BODIES, kit, set, slab, quad, mesh, decal, real, tree, bush, tuft, HH, cityY, groundY, G, colL, colR, row });
+      for (const z of ZONES) AUTOROUTE[z]({ h, g, I, zone, O, MAT, BODIES, LAMPS, kit, set, slab, quad, mesh, decal, real, tree, bush, tuft, HH, cityY, groundY, G, colL, colR, row });
+      const tick = AUTOROUTE.vie({ h, g, I, zone, O, MAT, BODIES, kit, set, slab, quad, mesh, HH, cityY, groundY, water, TREES, LAMPS, REEDS }); // life and atmosphere, before the merge: what it animates stays out of the kit
       inst(h, h.geo('trunk'), MAT.bark, TREES.bark); for (const k of ['leaf', 'gold', 'ivy', 'ivy2', 'reed']) inst(h, h.geo('canopy'), MAT[k], TREES[k]);
       weld(h, kit); // one mesh per material
+      return tick;
     },
   });
 })();
