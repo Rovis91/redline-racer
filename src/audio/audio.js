@@ -56,6 +56,7 @@
     egee: [['bandpass', 420, 0.6, 0.035, 0.07, 0.6], ['lowpass', 190, 0.7, 0.07, 0.09, 0.6]], // the meltemi in the air, the swell on the rocks, 11 s (+ the beds and events per zone: AMBZ; the place sounds are placed by the scenery: SOUND.spots)
     piliers: [['bandpass', 380, 0.6, 0.022, 0.08, 0.6], ['lowpass', 110, 0.7, 0.035, 0.05, 0.4]], // wind over the pillars, deep air of the ravine (+ the beds and events per zone: AMBZ; falls, machinery and bells are placed by the scenery: SOUND.spots)
     area51: [['bandpass', 380, 0.6, 0.035, 0.07, 0.6], ['lowpass', 120, 0.7, 0.06, 0.04, 0.4], ['bandpass', 100, 8, 0.012]], // desert wind, the low rumble of the base, a narrow band at 100 Hz that reads as mains hum (+ beds per zone: AMBZ; place sounds: SOUND.spots)
+    lune: [['lowpass', 90, 0.7, 0.05, 0.04, 0.3], ['bandpass', 700, 0.8, 0.018, 0.2, 0.95], ['highpass', 6500, 0.6, 0.003, 0.37, 0.9]], // no air outside: the bed is the cabin. Life-support hum, the suit's breathing (one breath in 5 s), a trace of radio carrier (+ the radio and its beeps: ambEvent; pings, chimes and thumps: SOUND.brief from the scenery)
   };
 
   // Beds per zone, in addition to the map's bed: de, a = fractions of the lap between which the bed sounds (open air); tun = the vault's bed, which sounds in a tunnel. c = layers, as AMB.
@@ -79,6 +80,7 @@
       { de: 0.29, a: 0.50, c: [['bandpass', 900, 3, 0.02, 0.09, 0.7], ['bandpass', 2300, 8, 0.004, 1.3, 0.9]] }, // the antenna field: wind in the lattice, a halyard
       { de: 0.47, a: 0.60, c: [['bandpass', 45, 4, 0.05, 0.07, 0.9], ['bandpass', 57, 6, 0.02, 0.11, 0.8]] }, // the ridge: the sub-bass hum of the signal, swelling every 14 s like its glow (not phase-locked to it)
       { de: 0.66, a: 0.97, c: [['bandpass', 300, 0.5, 0.03, 0.06, 0.6], ['lowpass', 90, 0.7, 0.06]] }], // the airfield: wider, lower wind over the lake bed
+    lune: [{ tun: 1, c: [['lowpass', 160, 0.7, 0.07], ['bandpass', 900, 1.5, 0.02, 0.13, 0.6], ['bandpass', 480, 0.9, 0.02, 0.17, 0.5]] }], // the two pressurised places, the start hall (the scenery declares it indoor) and the tunnel: air handlers, a ventilation drone
   };
   const gain = (v, dest) => { const g = AC.createGain(); g.gain.value = v; g.connect(dest); return g; };
   const filt = (type, f, q, dest) => { const b = AC.createBiquadFilter(); b.type = type; b.frequency.value = f; b.Q.value = q; b.connect(dest); return b; };
@@ -554,6 +556,7 @@
     jetArea51: d => { noiseV('lowpass', 700, 0.6, 0.9, d, 9, 0.12); noiseV('bandpass', 2400, 2, 0.14, d, 13, 0.3); oscV('sawtooth', 138, 0.05, filt('bandpass', 1900, 5, d), 0.4, 6); }, // a jet engine at full thrust: broadband roar, a crackling top, the whine of the compressor; the scenery sets its level (vol) with the throttle
     servoArea51: d => { oscV('sawtooth', 62, 0.3, filt('bandpass', 700, 3, d), 0.3, 2); oscV('sine', 50, 0.4, d); }, // the drive of a big dish: a thin motor whine over the 50 Hz of the pedestal
     dieselArea51: d => { const lp = filt('lowpass', 300, 0.7, d); oscV('sawtooth', 48, 0.4, lp, 11, 2); oscV('sawtooth', 96, 0.2, lp); }, // a diesel idling (tug, patrol pickup)
+    rumbleLune: d => { oscV('sine', 55, 0.6, d, 0.7, 3); noiseV('lowpass', 110, 0.8, 0.9, d, 5, 0.3); }, // lune: a rocket engine felt through the ground and the chassis (nothing is heard in a vacuum): 55 Hz and a low rumble; the scenery sets its level with the thrust
     loudspeaker: d => { const bp = filt('bandpass', 1300, 2.5, d); for (const f of [392, 494, 587]) oscV('square', f, 0.12, bp, 5.5, 3); noiseV('highpass', 3000, 0.5, 0.03, d); }, // a street loudspeaker: a nasal chord that wobbles
   };
   function spots(id, L) { for (const l of SPOTS) if (l.g) { l.g.disconnect(); l.g = null; } spotsId = id; SPOTS = L || []; }
@@ -588,6 +591,12 @@
     bird: (t, d) => { const f = 2800 + Math.random() * 1400; for (let k = 0; k < 3; k++) noteL(t + k * 0.13, 0.09, 0.4, d, 'sine', f, f * (1.1 + Math.random() * 0.3)); },
     bellPiliers: (t, d) => { for (const [f, v, dur] of [[220, 0.5, 4.5], [519, 0.25, 3], [607, 0.15, 2.2], [1188, 0.06, 1.2]]) osc('sine', f, t, dur, v, d); }, // a temple bell: a low hum and inharmonic partials that die one after the other
     chimePiliers: (t, d) => { for (let k = 0; k < 4; k++) osc('sine', [1568, 1760, 2093, 2349, 2637][Math.random() * 5 | 0], t + k * 0.12 + Math.random() * 0.2, 1.2, 0.12, d); }, // wind chimes under the eaves
+    pingLune: (t, d) => { osc('sine', 1320, t, 0.12, 0.35, d); osc('sine', 660, t + 0.05, 0.5, 0.14, d); }, // lune: the cabin radio picks up the transponder of a navigation antenna as the car passes it
+    bipLune: (t, d) => { noteL(t, 0.06, 0.3, d, 'sine', 1000); }, // lune: the radar altimeter in flight (the scenery spaces them by the height left), and the countdown before the lip
+    goLune: (t, d) => { noteL(t, 0.3, 0.3, d, 'sine', 1500); }, // lune: the long high beep that ends the countdown, at the lip
+    chimeLune: (t, d) => { const lp = filt('lowpass', 2200, 1, d); noteL(t, 0.3, 0.2, lp, 'sine', 880); noteL(t + 0.3, 0.45, 0.2, lp, 'sine', 660); }, // lune: the two-note chime of a pressure door
+    hissLune: (t, d) => { gustB(t, 0.5, 0.5, d, 'highpass', 3000); }, // lune: air at the mouth of a pressurised place
+    thumpLune: (t, d) => { noteL(t, 1.2, 0.9, d, 'sine', 55, 38); gustB(t, 0.9, 0.9, d, 'lowpass', 120); }, // lune: a blow carried by the ground (a touchdown, a lift-off, a meteor impact, the rover's own landing)
   };
   function spotHit(label, p, vol = 1, r = 200) {
     if (!AC || !nbuf || spotsId !== M.id || !HITS[label]) return; const t = AC.currentTime + 0.02, dx = p.x - EAR.x, dz = p.z - EAR.z, d = Math.hypot(dx, dz, (p.y || 0) - EAR.y), a = clamp(1 - d / r, 0, 1); if (a <= 0) return;
@@ -677,6 +686,11 @@
     if (id === 'area51') { if (ambUnder > 0.5) return rnd(5, 10); // indoors the scenery places its own sounds
       if (Math.random() < 0.5) { const o = osc('sine', rnd(520, 640), t, 1.6, 0.025, ambEvG); o && o.frequency.exponentialRampToValueAtTime(rnd(820, 980), t + 0.5); o && o.frequency.exponentialRampToValueAtTime(rnd(560, 620), t + 1.5); } // a coyote, far off
       else gustB(t, rnd(0.25, 0.7), 0.05, ambEvG, 'bandpass', 2600, 1.5); return rnd(30, 70); } // or a short burst of radio static, no voice
+    if (id === 'lune') { const D = ambEvG, f0 = Math.random() < 0.5 ? 118 : 168, n = 3 + (Math.random() * 3 | 0), out = filt('highpass', 500, 0.7, filt('lowpass', 2600, 0.7, D)); let u = t + 0.18; // the radio in the cabin, wordless: squelch, a beep, three to five syllables of one of two voices, the key released; one time in three a two-tone roger
+      gustB(t, 0.1, 0.05, D, 'bandpass', 2500, 0.8); osc('sine', 1040, t + 0.08, 0.07, 0.03, D);
+      for (let i = 0; i < n; i++, u += 0.13 + Math.random() * 0.08) { const f = f0 * (0.85 + Math.random() * 0.3); for (const F of VOY[Math.random() * 5 | 0]) noteL(u, 0.11, 0.12, filt('bandpass', F, 6, out), 'sawtooth', f, f * 0.9); }
+      gustB(u, 0.06, 0.05, D, 'bandpass', 2500, 0.8); if (Math.random() < 0.33) { osc('sine', 880, u + 0.14, 0.08, 0.03, D); osc('sine', 1175, u + 0.26, 0.1, 0.03, D); }
+      return ambPos < 0.1 || ambPos > 0.9 ? rnd(8, 15) : rnd(15, 30); } // more traffic near the base
     if (id === 'givre') { nowPlaying((BELLS && BELLS.ac === AC ? BELLS : BELLS = Object.assign(bells(), { ac: AC }))[Math.random() * 4 | 0], t, ambBed); return rnd(20, 40); } // sleigh bells, in the distance
     if (id === 'egee') { const p = ambPos, port = p < 0.138 || p >= 0.934, balcon = p >= 0.596 && p < 0.745; if (p > 0.2 && p < 0.5) ambCall = 0; // the place decides the event (fractions of the lap, as AMBZ.egee)
       if (balcon && !ambCall) { ambCall = 1; const lp = filt('lowpass', 420, 0.7, ambEvG); for (const f of [87, 131]) { const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(g); g.connect(lp);
@@ -786,6 +800,7 @@
     piliers: { slap: 0.30, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 2.6, lp: 3000 }, // the pillars answer from far: a long late echo
     perse: { slap: 0.045, sl: 0.22, intoWall: 0.7, rv: 0.09, dur: 2.6, lp: 3400, spots: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // earth facades; spots = [from, to, factor] on the place's room, in fractions of the lap: the passage under the Porte des Nations, the hall of a hundred columns
     area51: { slap: 0.13, sl: 0.08, intoWall: 0.3, rv: 0.04, dur: 1.8, lp: 2800 }, // open basin; the hall and the underground take the tunnel reverb (the scenery declares them indoor)
+    lune: { slap: 0.012, sl: 0.03, intoWall: 0.15, rv: 0.01, dur: 0.5, lp: 1400 }, // no air: no echo at all outside, only the cabin; the hall and the tunnel take the tunnel reverb
     attempt: { slap: 0.04, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 1, lp: 3000 },
   };
   const MOTOR_JS = `
@@ -1051,7 +1066,8 @@ registerProcessor('moteur', Moteur);`;
       const P = MOTOR[CARD.engine] || MOTOR.l6;
       if (v.node) { if (v.typ !== P) { v.node.port.postMessage(P); v.typ = P; } k(v.node.parameters.get('rpm'), rpm * CARD.red, 0.02); k(v.node.parameters.get('load'), load, 0.03); k(v.node.parameters.get('dmg'), j.dmgP || 0, 0.2); } // the real rpm: the pitch comes from the physics
       k(v.eng.gain, 0.5 + 0.5 * load, 0.05);
-      k(v.out.gain, state === 'title' ? 0.004 : 0.025 + 0.022 * load + 0.0125 * rpm); // under the music, but present
+      v.airS = c.air ? (v.airS || 0) + dt : 0; const fly = TH.vacuum && v.airS > 0.25; // th.vacuum (lune): after a quarter of a second in the air the cabin falls silent, the engine drops to a murmur (the tyres are already cut in the air)
+      k(v.out.gain, (state === 'title' ? 0.004 : 0.025 + 0.022 * load + 0.0125 * rpm) * (fly ? 0.1 : 1), fly ? 0.07 : 0.04); // under the music, but present
       const li = state !== 'title' && j.gas && rpm > 0.985 ? 0.5 : 0; k(v.lim.gain, 1 - li, 0.01); k(v.limD.gain, li, 0.01);
       const tb = CARD.turbo ? j.spool : 0; k(v.tw.frequency, 900 + 2600 * tb, 0.1); k(v.twG.gain, 0.005 * tb * tb * (0.25 + 0.75 * load), 0.1);
       if (v.gas && !j.gas && racing) { if (rpm > 0.55 && j.spool > 0.5) backfire(j.spool, t, v.motorFam); if (tb > 0.4) hiss(tb, t, v.motorFam); v.crk = rpm > 0.5 ? 1 : 0; }
@@ -1072,7 +1088,8 @@ registerProcessor('moteur', Moteur);`;
       if ((j.land || 0) > 3.5 && t - (v.landT || 0) > 0.3 && racing) { v.landT = t; landing(j.land, t); } // jump landing (separate from impacts)
       hit = Math.max(hit, j.hit || 0); bump = Math.max(bump, j.bump || 0); rub = rub || !!c.rub;
     }
-    const w = clamp((r - 0.2) / 0.8, 0, 1) * (1 - tun); k(windL.gain, 0.05 * w * w, 0.2); k(windG.gain, 0.035 * w ** 3, 0.2); k(windF.frequency, 500 + 1300 * r, 0.3); // wind: rises with speed, cut in a tunnel
+    const w = clamp((r - 0.2) / 0.8, 0, 1) * (1 - tun) * (TH.vacuum ? 0 : 1); // th.vacuum (lune): no air, no wind roar
+    k(windL.gain, 0.05 * w * w, 0.2); k(windG.gain, 0.035 * w ** 3, 0.2); k(windF.frequency, 500 + 1300 * r, 0.3); // wind: rises with speed, cut in a tunnel
     k(nitroG.gain, racing && car.boost > 0 ? 0.08 : 0, 0.08);
     rainFrame(state === 'title' ? 0 : (e.rainFx != null ? e.rainFx : T.rainFx ? T.rainFx[car.idx] : 0) * (1 - tun), r, car.aq || 0, k);
     rubT -= dt; if (bump > 0.3) rubT = 0.35; // two cars touching: a small impact, then they scrape for a moment
