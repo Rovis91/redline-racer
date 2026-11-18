@@ -7,17 +7,20 @@
   const pair = f => [-1, 1].map(f), oct = (z, w, ht, x, y, zz) => [0, 0.7854].map(a => [z, w, ht, w, x, y, zz, [0, a, 0]]); // oct: two crossed boxes, an octagon in plan
   Object.assign(SHAPES, {
     // one section of B1, len long: free width L to the left and R to the right of the axis, `clear` under the ceiling, `cap` m of rock above it up to the surface, a lid in the colour of the ground;
-    // wallR = 0 where the room goes on to the right (reactor hall). Side walls with an amber line at 1.4 m, a ceiling light, two pipe runs on the left wall, chamfered corners in the 24 m gallery
-    galerieArea51: (L = 12, R = 12, clear = 10, cap = 4, wallR = 1, len = 16.5) => { const W = L + R, cx = (R - L) / 2, wall = sd => [['concrete', 6, clear + 3, len, sd * ((sd < 0 ? L : R) + 3), (clear + 3) / 2 - 2, 0], ['amber', 0.3, 0.5, len, sd * ((sd < 0 ? L : R) - 0.1), 1.4, 0]];
-      return [...wall(-1), ...(wallR ? wall(1) : []), ['dark', W + 12, 1.2, len, cx, clear + 0.6, 0], ['rock', W + 30, cap, len, cx, clear + 1.2 + cap / 2, 0], ['sol', W + 32, 1, len + 0.5, cx, clear + 1.7 + cap, 0],
-        ...(W <= 24 ? pair(sd => ['concrete', 4, 4, len, sd * (L - 0.4), clear - 0.4, 0, [0, 0, 0.7854]]) : []),
-        ['neon', 1.4, 0.25, 7, cx / 2, clear - 0.15, 0], ['gray', 0.8, 0.8, len, -L + 0.9, clear - 2.4, 0], ['amber', 0.5, 0.5, len, -L + 0.8, clear - 3.5, 0]]; },
-    // overhead tram rail, len long, hung `hang` m under the ceiling
-    railTramArea51: (hang = 1, len = 16.5) => [['steel', 0.6, 0.8, len, 0, 0, 0], ['gray', 0.3, hang, 0.3, 0, 0.4 + hang / 2, 0]],
-    // tram car hanging from the rail (origin on the rail): white body, dark window band, two bogies
-    tramArea51: () => [['white', 3, 3.2, 12, 0, -2.6, 0], ['glass', 3.1, 1.1, 10.4, 0, -2.2, 0], ...pair(sd => ['gray', 1, 0.9, 1.6, 0, -0.6, sd * 4])],
-    // tram platform, its edge toward f
-    quaiArea51: (f = 1) => [['concrete', 5, 1, 14, 0, 0.5, 0], ['danger', 0.5, 1.05, 14, f * 2.3, 0.53, 0], ['gray', 0.2, 2.4, 0.2, -f * 2, 2.2, 5], ['neon', 0.3, 0.3, 4, -f * 2, 3.4, 5]],
+    // wallR = 0 where the room goes on to the right (reactor hall). Side walls with an amber line at 1.4 m, a ceiling light, two pipe runs on the left wall, chamfered corners in the 24 m gallery.
+    // e = a few centimetres by which this section is set out and up from its neighbours: sections overlap in the bends, and two faces in the same plane would flicker
+    galerieArea51: (L = 12, R = 12, clear = 10, cap = 4, wallR = 1, len = 16.5, e = 0) => { const W = L + R, cx = (R - L) / 2, wall = sd => [['concrete', 6, clear + 3, len, sd * ((sd < 0 ? L : R) + 3 + e), (clear + 3) / 2 - 2, 0], ['amber', 0.3, 0.5, len, sd * ((sd < 0 ? L : R) - 0.1 + e), 1.4, 0]];
+      return [...wall(-1), ...(wallR ? wall(1) : []), ['dark', W + 12, 1.2, len, cx, clear + 0.6 + e, 0], ['rock', W + 30, cap, len, cx, clear + 1.8 + cap / 2 + e, 0], ['sol', W + 32, 1, len + 0.5, cx, clear + 2.3 + cap + 2 * e, 0],
+        ...(W <= 24 ? pair(sd => ['concrete', 4, 4, len, sd * (L - 0.4 + e), clear - 0.4, 0, [0, 0, 0.7854]]) : []),
+        ['neon', 1.4, 0.25, 7, cx / 2, clear - 0.15, 0], ['gray', 0.8, 0.8, len, -L + 0.9 - e, clear - 2.4, 0], ['amber', 0.5, 0.5, len, -L + 0.8 - e, clear - 3.5, 0]]; },
+    // airlock bulkhead across a room (L, R, clear as for galerieArea51), the road passing through an opening 2 × W wide and 8.5 m high: a 3 m concrete wall, a hazard frame, the two steel leaves slid aside
+    // with their radiation panels, red lights on the lintel. Two of them in a row make a lock
+    sasArea51: (L = 20, R = 20, clear = 12, W = 11.3) => [...pair(sd => { const half = sd < 0 ? L : R, pw = half - W + 6; return [['concrete', pw, clear + 3, 3, sd * (W + pw / 2), (clear + 3) / 2 - 2, 0], ['danger', 1.2, 8.5, 3.4, sd * (W + 0.6), 4.25, 0],
+        ['gray', W * 0.8, 8.5, 1, sd * (W + 1.4 + W * 0.4), 4.25, -2.1], ['steel', W * 0.8, 0.5, 1.2, sd * (W + 1.4 + W * 0.4), 4.25, -2.1], ['trefle', 3.6, 3.6, 0.2, sd * (W + 1.4 + W * 0.4), 6.4, -2.72], ['fire', 0.7, 0.7, 0.7, sd * (W - 1), 9.9, -1.9]]; }).flat(),
+      ['concrete', 2 * W, clear - 6.5, 3, 0, 8.5 + (clear - 6.5) / 2, 0], ['danger', 2 * W + 2.4, 1.1, 3.4, 0, 9.05, 0]],
+    // goods siding at a right angle to the road, len long toward f (origin at its road end): narrow-gauge rails on sleepers, a flat wagon with two crates, a buffer stop
+    voieArea51: (len = 12, f = 1) => [...pair(sd => ['steel', len, 0.2, 0.15, f * len / 2, 0.25, sd * 0.5]), ...Array.from({ length: Math.round(len / 1.3) }, (_, i) => ['dark', 0.3, 0.14, 1.7, f * (0.65 + i * 1.3), 0.08, 0]),
+      ['danger', 0.6, 1.1, 1.8, f * len, 0.55, 0], ['gray', 3.4, 0.4, 1.5, f * len * 0.5, 0.75, 0], ['amber', 1.3, 1.2, 1.2, f * (len * 0.5 - 0.8), 1.55, 0], ['white', 1.1, 0.9, 1.1, f * (len * 0.5 + 0.8), 1.4, 0]],
     // tunnel portal, W = half-width of the opening: concrete jambs and lintel, a hazard band under the lintel, a lit sign
     portailArea51: (W = 14) => [...pair(sd => ['concrete', 4, 14, 5, sd * (W + 2), 6, 0]), ['concrete', 2 * W + 12, 4, 5, 0, 14, 0], ['danger', 2 * W + 0.2, 1, 5.2, 0, 11.5, 0], ['neon', 7, 1.2, 0.3, 0, 14, 2.7]],
     // monitoring arch over the road, W = half-width: amber frame, two columns of sensors

@@ -42,8 +42,9 @@
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), MAT = { tin: h.mat('toleArea51', {}, '#757a68'), roof: h.mat('toleArea51', DS, '#3e4238', 0.5), concrete: h.mat('concretePart'), dark: h.mat('concreteDark'), steel: h.mat('steelMat'), gray: h.mat('matGray'),
         lattice: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#9aa0a8'), white: h.mat('metalPale', { c: 0xe9ece7, ...DS }), red: tint(0xb5483c), amber: tint(0xf2a23a), glass: h.mat('paneDark'), neon: h.mat('lampObj', { emis: 1 }), fire: h.mat('lightRed', { emis: 1 }), pool: h.mat('cherenkovArea51', { emis: 1 }),
         verriere: h.mat('verriereArea51', { emis: 1 }), danger: h.mat('dangerArea51'), stripe: h.mat('striping'), tarmac: h.mat('tarmacArea51'), piste: h.mat('tarmacArea51', { c: 0xb4b8c4 }), yellow: h.mat('jauneArea51'), paintW: h.mat('blancArea51'),
+        stealth: h.mat('furtifArea51', DS), trefle: h.mat('trefleArea51'),
         rock: h.mat('rocheArea51', {}, '#a5604a'), far: h.mat('rocheArea51', {}, '#6a5a96', 0.4), playa: h.mat('playaArea51'), sol: h.mat('solArea51') };
-      Object.assign(MAT, { door: MAT.gray, sign: MAT.gray, steelMat: MAT.steel, lampObj: MAT.neon, iron: MAT.gray, vat: MAT.white, chassis: MAT.gray, cabin: MAT.red, pane: MAT.glass, radiator: MAT.gray, headlight: MAT.neon, lightOrange: MAT.neon, wheelPart: MAT.steel, tire: MAT.dark });
+      Object.assign(MAT, { door: MAT.gray, sign: MAT.gray, floor: MAT.tarmac, steelMat: MAT.steel, lampObj: MAT.neon, iron: MAT.gray, vat: MAT.white, chassis: MAT.gray, cabin: MAT.red, pane: MAT.glass, radiator: MAT.gray, headlight: MAT.neon, lightOrange: MAT.neon, wheelPart: MAT.steel, tire: MAT.dark });
       const kit = new THREE.Group(); h.scene.add(kit);
       const smp = pk => S[Math.round(pk / LAP * N) % N], pk = (x, z) => idx(x, z) / N * LAP; // pk(x, z): chainage of the road point nearest to a plan position
       // The placers. Options o: s = scale, a = the settings of the shape, skin = MAT or, for a simple shape, one material; y = altitude instead of the ground, dy = raised by; ry = turned by
@@ -53,6 +54,8 @@
       const set = (shape, x, z, o = {}) => on(shape, x * k, (o.y ?? g.hAt(x * k, z * k)) + (o.dy || 0), z * k, o.ry || 0, o);
       // side(shape, pk, sd, off, half, o): beside the road at chainage pk, side -1 = left / 1 = right, its near face `off` m from the wall (half = its half-width across). Local Z runs along the road and local -X looks at the road (o.keep: not turned on the left side: signs)
       const side = (shape, p, sd, off, half, o = {}) => { const s = smp(p), [x, z] = edgePt(s, sd, s.w + off + half); return on(shape, x, (o.y ?? g.hAt(x, z)) + (o.dy || 0), z, h.across(s) + (sd < 0 && !o.keep ? Math.PI : 0), o); };
+      // along(shape, p0, p1, sd, off, half, step, o): the same piece every `step` m of road from chainage p0 to p1 (its length is its last setting): fences and rails follow the bends instead of cutting across them
+      const along = (shape, p0, p1, sd, off, half, step, o = {}) => { for (let p = p0 + step / 2; p < p1; p += step) side(shape, p, sd, off, half, { ...o, a: [...(o.a || []), step + 0.3] }); };
       // seg(shape, s, lat, y, o): in the road frame at sample s, `lat` m right of the axis, y m above the roadway: what the underground is made of
       const seg = (shape, s, lat, y, o = {}) => { const [x, z] = edgePt(s, 1, lat); return on(shape, x, s.y + y, z, h.across(s), o); };
       // cube(material, s, lat, w, ht, d, y): one box in the road frame at sample s, its base y m above the roadway
@@ -62,7 +65,10 @@
       const inside = p => smp(p).k > 0 ? 1 : -1; // the side of the inside of the bend at chainage p: where the thing the road goes round stands
       // dish(x, z, s, tilt): a dish antenna of the D1 family at scale s (1 = D1, 120 m across on a 50 m mount), its reflector tilted toward the west, where the signal comes from
       const dish = (x, z, s = 1, tilt = 0.7) => { const d = set('dishMountArea51', x, z, { s }), head = new THREE.Group(); head.position.y = 54; head.rotation.z = tilt; d.add(head); h.pose('dishBowlArea51', MAT.white, head, [0, 6, 0]); h.pose('dishBackArea51', MAT, head, [0, 6, 0]); return d; };
-      for (const z of ZONES) AREA51[z]({ h, g, S, N, MAT, kit, on, set, side, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt });
+      // avion(type, x, z, o): one of the black prototypes ('sr71', 'b2', 'f117'): its lifting surface and its parts at the same place
+      const avion = (type, x, z, o = {}) => { const a = set(type + 'Area51', x, z, o); h.pose(type + 'NappeArea51', MAT.stealth, a, [0, 0, 0]); return a; };
+      const sideXZ = (p, sd, dist) => edgePt(smp(p), sd, smp(p).w + dist).map(v => v / k); // plan position at `dist` m outside the wall at chainage p
+      for (const z of ZONES) AREA51[z]({ h, g, S, N, MAT, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt });
       weld(h, kit); // one mesh per material
     },
   });
