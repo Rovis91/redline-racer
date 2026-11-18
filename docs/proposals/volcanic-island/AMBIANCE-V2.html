@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Volcanic Island / La Couronne Brisée: mood and reference sheet, V2</title>
+<style>
+  :root { --bg: #161d22; --panel: #232c33; --ink: #f1e9d8; --dim: #b4bec4; --line: #38454e; --accent: #d88d72; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: .02em; }
+  h2 { font-size: 22px; margin: 40px 0 6px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 small { color: var(--accent); font-weight: 600; font-size: 14px; margin-right: 8px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); }
+  .lead { font-size: 18px; max-width: 70ch; }
+  dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 10px 0; }
+  dt { color: var(--accent); font-weight: 600; } dd { margin: 0; }
+  .sw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .sw span { min-width: 86px; padding: 0 8px; height: 46px; border-radius: 6px; font: 11px/46px ui-monospace, monospace; text-align: center; color: #000; border: 1px solid #0006; }
+  .sw span.d { color: #fff; }
+  .pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+  figure { margin: 0; background: var(--panel); border-radius: 8px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: 220px; object-fit: cover; background: #0e1418; }
+  figcaption { padding: 8px 10px; font-size: 13px; } figcaption b { display: block; } figcaption a { color: var(--dim); }
+  ul { margin: 6px 0; padding-left: 20px; }
+  @media (max-width: 600px) { dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Volcanic Island / La Couronne Brisée</h1>
+<p class="dim">Mood and reference sheet, V2. Written after the blockout was validated; it follows the zones of the built map (<code>src/maps/volcan/</code>, 6.58 km, run anticlockwise with the sea on the right), not the layout of the bible, and keeps the bible's art direction.</p>
+
+<p class="lead">A fictional Atlantic island born of its volcano, in the family of Madeira's cliff roads and the red-and-black ground of the Canaries and Cape Verde. The race runs on the old service road of the volcano observers: out of the fishing harbour, up the terraced ash slope, round the black needle at the pass, through the crater itself, and back down to the quay by the hairpins. <b>You do not drive round a volcano: you cross every layer of an island, from its daily life to its core of rock.</b></p>
+
+<dl>
+  <dt>Place</dt><dd>One island, sea all round. A closed summit crater (rim near 360 m) in the middle, a basalt needle at the north-east pass, sea cliffs and stacks on the roadless west and north coast, the only harbour on the south shore.</dd>
+  <dt>Time and light</dt><dd>Clear afternoon, sun in the south-west, sky slightly veiled toward the horizon. Hard readable shadows outside; the crater floor in shade, lit by its own lake; the galleries dark with sparse warm lamps.</dd>
+  <dt>Style</dt><dd>Retro arcade drift, PS1 / Saturn: faceted low-poly, 64 to 128 px textures in nearest filtering, flat readable surfaces. Ocean and basalt dominate; vegetation is occasional. Read at 150 km/h before being read up close.</dd>
+  <dt>The volcano</dt><dd>Quiet, watched, not erupting. Liquid lava exists in one place only, the lake on the crater floor (a decision of the author after the blockout; the bible had none). Everywhere else: cold flows, scoria, steam.</dd>
+  <dt>Anti-references</dt><dd>Liquid lava everywhere, red sky or ash plume; dense jungle; road ribbons floating without structure, or junctions that look like the circuit; a resort island (hotels, marina, golf); a big town at the harbour.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#34373D">#34373D basalt</span><span class="d" style="background:#194B72">#194B72 Atlantic</span><span class="d" style="background:#6A5D52">#6A5D52 ground</span><span class="d" style="background:#9B5348">#9B5348 scoria</span><span style="background:#E8D9AC">#E8D9AC stone</span><span style="background:#D88D72">#D88D72 coral</span><span class="d" style="background:#B75D43">#B75D43 tiles</span><span class="d" style="background:#677658">#677658 olive</span><span style="background:#F0641E">#F0641E lava</span><span style="background:#D9E9E7">#D9E9E7 foam</span></div>
+
+<h2><small>ZONE 1</small>Le Phare: the working end of the harbour</h2>
+<p>PK 0 to 690, 12 to 40 m. The start leaves the quay eastwards: the last house fronts and the café, three low sheds, the crane and its crates on the quay edge, boats at anchor, then black rock as the road begins to climb.</p>
+<dl>
+  <dt>Mood</dt><dd>A small fishing harbour on a working afternoon: nets drying, a crane left mid-swing, the sea flat and very blue beside you.</dd>
+  <dt>Landmark</dt><dd>The harbour crane, its jib over the quay edge, on the right as the cars leave the line.</dd>
+  <dt>Read at speed</dt><dd><ul><li>low sheds with a single pitched roof, cream and pale concrete, doors open on the dark</li><li>bright hulls (coral, white, blue) and thin masts against dark water</li><li>stacked wooden crates and coiled rope on a wide basalt quay</li><li>red beacons and a low cream wall drawing the sea-side edge</li><li>a few palms, spaced, never a row of trees</li></ul></dd>
+  <dt>Light</dt><dd>Clear afternoon, sun high behind the left shoulder, sky slightly veiled toward the horizon. Warm fronts, cold water, hard short shadows under the sheds.</dd>
+  <dt>Transition</dt><dd>The sheds stop, the quay narrows to a ledge, black rocks stand on the island side: the ash slope of Les Cendres opens ahead with the volcano above it.</dd>
+  <dt>Not this</dt><dd>A marina with white yachts and glass; a container port; a town avenue. Three to five buildings, set back from the racing axis.</dd>
+</dl>
+<div class="sw"><span style="background:#D88D72">#D88D72 coral</span><span style="background:#E8D9AC">#E8D9AC stone</span><span style="background:#B8B5A6">#B8B5A6 concrete</span><span class="d" style="background:#194B72">#194B72 Atlantic</span><span class="d" style="background:#34373D">#34373D basalt</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%A2mara_de_Lobos_(Madeira%2C_Portugal)%2C_Porto_de_C%C3%A2mara_de_Lobos_--_2025_--_1897.jpg?width=640" alt="Fishing harbour of Câmara de Lobos, Madeira"><figcaption><b>Keep: small boats painted in bright bands, hauled up on a dark slip</b>Dietmar Rabich, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:C%C3%A2mara_de_Lobos_(Madeira%2C_Portugal)%2C_Porto_de_C%C3%A2mara_de_Lobos_--_2025_--_1897.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Madeira-Paul_do_Mar-harbour-Waterfall-01ASD.jpg?width=640" alt="Harbour of Paul do Mar under the cliff"><figcaption><b>Keep: a concrete quay at the foot of a cliff. Not: the waterfall</b>Asurnipal, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Madeira-Paul_do_Mar-harbour-Waterfall-01ASD.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Paul_do_Mar-001.JPG?width=640" alt="Village of Paul do Mar along the shore"><figcaption><b>Keep: a thin strip of houses between sea and slope</b>Harald Lordick, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Paul_do_Mar-001.JPG">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 2</small>Les Cendres: the terraced ash slope</h2>
+<p>PK 690 to 2210, 40 to 177 m, climbed. A long run of S-bends up old consolidated ash: three steps of black stone terraces with vines, two hamlets with a chapel and a cistern, plots, scree at the foot of the bank, the sea always on the right.</p>
+<dl>
+  <dt>Mood</dt><dd>Dry, dusty and lived-in: people farm what the volcano left, one low wall at a time.</dd>
+  <dt>Landmark</dt><dd>The volcano itself, seen whole for the first time on the left, its crater rim cut against the sky; nearer, the white chapel of the first hamlet.</dd>
+  <dt>Read at speed</dt><dd><ul><li>stepped black dry-stone walls running with the contour, green strips between them</li><li>grey-brown ash ground, rust where it is scoria</li><li>hamlets of four to six small cubes, cream and rust, flat or single-pitch roofs</li><li>a white chapel with a square tower and a round cistern beside each hamlet</li><li>low sparse bushes on the sea side, never above the wall</li></ul></dd>
+  <dt>Light</dt><dd>Open and bright; the slope faces east and south, so the walls catch the light and throw thin stepped shadows. The sea glitters on the right.</dd>
+  <dt>Transition</dt><dd>The terraces thin out above 170 m, the ground turns red-brown, the needle appears ahead: the pass.</dd>
+  <dt>Not this</dt><dd>A lush green valley; a farm track that looks like a branch of the circuit; houses on the apex of a bend.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#65635D">#65635D ash</span><span class="d" style="background:#A05F50">#A05F50 rust</span><span class="d" style="background:#677658">#677658 olive</span><span style="background:#E8D9AC">#E8D9AC cream</span><span class="d" style="background:#2C2E30">#2C2E30 black stone</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/2016_Minifundismo._C%C3%A2mara_de_Lobos._Madeira_-122.jpg?width=640" alt="Smallholding terraces above Câmara de Lobos"><figcaption><b>Keep: narrow terraces stepping up a steep slope, houses among them. Not: the density of buildings</b>Luis Miguel Bugallo Sánchez, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:2016_Minifundismo._C%C3%A2mara_de_Lobos._Madeira_-122.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ch%C3%A3_das_Caldeiras-Enclos.jpg?width=640" alt="Stone enclosures on volcanic ash at Chã das Caldeiras, Fogo"><figcaption><b>Keep: black stone walls on bare ash, the dry colours</b>Ji-Elle, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Ch%C3%A3_das_Caldeiras-Enclos.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Cape_Verde_Pico_do_Fogo_caldeira_road.jpg?width=640" alt="Road on ash below Pico do Fogo"><figcaption><b>Keep: a road laid on ash with the cone above. Not: the flat caldera floor (ours climbs)</b>Cayambe, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Cape_Verde_Pico_do_Fogo_caldeira_road.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Stone_building_by_Seara_Velha_in_Murteira%2C_Curral_das_Freiras%2C_C%C3%A2mara_de_Lobos%2C_Madeira%2C_2023_May.jpg?width=640" alt="Stone building in a hamlet of Curral das Freiras"><figcaption><b>Keep: the size and plainness of a hamlet building</b>Ximonic (Simo Räsänen), CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Stone_building_by_Seara_Velha_in_Murteira%2C_Curral_das_Freiras%2C_C%C3%A2mara_de_Lobos%2C_Madeira%2C_2023_May.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 3</small>La Couronne: the horseshoe round the needle</h2>
+<p>PK 2210 to 3780, 177 to 232 to 200 m. The signature corner: a wide horseshoe round a 105 m basalt needle and its scree, the pass at 232 m with the belvedere deck and the observation post on the sea side, slag fields and small scoria cones, then the road turns its back on the sea and heads for the volcano.</p>
+<dl>
+  <dt>Mood</dt><dd>Monumental and windy: one black spike, a huge cone behind it, and half the ocean under the guardrail.</dd>
+  <dt>Landmark</dt><dd>The black needle inside the bend, with the volcano directly behind it on the approach.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a single dark spire, faceted, isolated, never on the roadway</li><li>red-brown scoria fields and small cones against charcoal ground</li><li>the belvedere: a pale concrete deck, a railing, three benches, an antenna on the post</li><li>the outer flank of the volcano rising steeply 120 m from the inside of the bend</li><li>sea stacks far below, off the roadless north coast</li></ul></dd>
+  <dt>Light</dt><dd>The highest and most exposed light of the lap: pale sky, hard contrast between charcoal rock and the bright concrete of the post. A faint steam on the flank, nothing glowing.</dd>
+  <dt>Transition</dt><dd>Leaving the horseshoe the road drops into a cutting: rock walls close in on both sides and the mouth of the north gallery appears.</dd>
+  <dt>Not this</dt><dd>A needle that hides the next corner; lava on the surface here; a visitor centre with a car park.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#22272A">#22272A coal</span><span class="d" style="background:#9B5348">#9B5348 scoria</span><span class="d" style="background:#4F4B53">#4F4B53 mineral</span><span style="background:#B8B5A6">#B8B5A6 concrete</span><span style="background:#ADADB0">#ADADB0 steam</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Roque_Cinchado_mit_Teide.jpg?width=640" alt="Roque Cinchado with Mount Teide behind"><figcaption><b>Keep: a spire in front of a cone, exactly this framing. Not: the top-heavy mushroom shape</b>Thomas Wolf (foto-tw.de), CC BY-SA 3.0 de. <a href="https://commons.wikimedia.org/wiki/File:Roque_Cinchado_mit_Teide.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Volcanic_Cones_in_Timanfaya_National_Park_on_Lanzarote_in_Canary_Islands_2015.jpg?width=640" alt="Scoria cones in Timanfaya, Lanzarote"><figcaption><b>Keep: red-brown cones and slag fields, flat colours</b>Enric Rubio Ros, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Volcanic_Cones_in_Timanfaya_National_Park_on_Lanzarote_in_Canary_Islands_2015.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Cabo_Gir%C3%A3o_lookout_in_C%C3%A2mara_de_Lobos%2C_Madeira%2C_2023_May.jpg?width=640" alt="Lookout platform of Cabo Girão, Madeira"><figcaption><b>Keep: a deck and railing hung over the cliff. Not: the glass floor</b>Ximonic (Simo Räsänen), CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Cabo_Gir%C3%A3o_lookout_in_C%C3%A2mara_de_Lobos%2C_Madeira%2C_2023_May.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ch%C3%A3_das_Caldeiras-Surveillance_du_volcan.jpg?width=640" alt="Volcano monitoring installation at Chã das Caldeiras"><figcaption><b>Keep: small, utilitarian monitoring gear</b>Ji-Elle, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Ch%C3%A3_das_Caldeiras-Surveillance_du_volcan.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 4</small>Le Cratère: through the volcano</h2>
+<p>PK 3780 to 4890, 200 to 112 m. A cutting, the north gallery (200 m), then 320 m in the open across the crater floor: the lava lake lies level in its pit on the left, 3 to 14 m below the road, cooled black crust on the right, a spatter cone, bombs, three fumaroles, the observers’ hut. The closed rim stands 200 m above, with a bench halfway up the wall. Out by the south gallery (260 m).</p>
+<dl>
+  <dt>Mood</dt><dd>The one place on the island where the mountain is still awake: dark, enclosed, hot on one side, and you are driving through it.</dd>
+  <dt>Landmark</dt><dd>The orange disc of the lava lake, seen the moment the north gallery ends.</dd>
+  <dt>Read at speed</dt><dd><ul><li>the ring of cliffs all round, a horizontal bench halfway up</li><li>one orange surface with black rafts of crust and two brighter spots</li><li>matt black crust and scattered boulders on the other side of the road</li><li>thin pale columns of steam, a red-brown spatter cone beyond the lake</li><li>two gallery mouths cut in the rock, plain, with a warm lamp line inside</li></ul></dd>
+  <dt>Light</dt><dd>In shadow for most of the floor: the rim hides the sun, the sky is a bright disc overhead. The lake is the only warm light and tints the near wall and the left side of the car. The galleries are dark with sparse warm lamps; the south exit frames the sea.</dd>
+  <dt>Transition</dt><dd>The south gallery ends on the open south-west flank: sudden sea, sun and the harbour 100 m below.</dd>
+  <dt>Not this</dt><dd>Lava anywhere else on the map; rivers of lava across the road; red sky, smoke plume or eruption; a clean concrete motorway tunnel.</dd>
+</dl>
+<div class="sw"><span style="background:#F0641E">#F0641E lava</span><span style="background:#FFB347">#FFB347 glow</span><span class="d" style="background:#1C1C1E">#1C1C1E crust</span><span class="d" style="background:#6A5D52">#6A5D52 wall</span><span class="d" style="background:#23292D">#23292D gallery</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Nyiragongo_Lava_Lake.jpg?width=640" alt="Lava lake in the crater of Nyiragongo"><figcaption><b>Keep: a level lake in a pit, benches on the crater wall. Not: the night glow and smoke</b>Cai Tjeenk Willink, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Nyiragongo_Lava_Lake.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Erta_Ale_491.jpg?width=640" alt="Surface of the Erta Ale lava lake"><figcaption><b>Keep: dark crust plates split by bright cracks, for the lake surface</b>Rolf Cosar, CC BY 3.0. <a href="https://commons.wikimedia.org/wiki/File:Erta_Ale_491.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Masaya_Crater.jpg?width=640" alt="Crater of Masaya volcano"><figcaption><b>Keep: the lake lighting the crater wall above it. Not: the night and the red sky (ours is a daytime crater)</b>Saraedum, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Masaya_Crater.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Caldera_Las_Ca%C3%B1adas_mit_Roques_de_Garc%C3%ADa_und_TF-21.jpg?width=640" alt="Road TF-21 across the Las Cañadas caldera, Tenerife"><figcaption><b>Keep: an ordinary road crossing a volcanic floor. Not: the width of the caldera (ours is 340 m)</b>Thomas Wolf (foto-tw.de), CC BY-SA 3.0 de. <a href="https://commons.wikimedia.org/wiki/File:Caldera_Las_Ca%C3%B1adas_mit_Roques_de_Garc%C3%ADa_und_TF-21.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Fumaroles%2C_%22La_Fossa_crater%22_(11305151865).jpg?width=640" alt="Fumaroles in La Fossa crater, Vulcano"><figcaption><b>Keep: thin white steam from the ground. Not: the yellow sulphur crusts</b>Vladimír Javůrek, CC0. <a href="https://commons.wikimedia.org/wiki/File:Fumaroles%2C_%22La_Fossa_crater%22_(11305151865).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Short_tunnel_in_the_massive_rock_on_the_north_coast_of_Madeira_(54027881861).jpg?width=640" alt="Short road tunnel cut in rock, north coast of Madeira"><figcaption><b>Keep: a mouth cut straight into the rock, no architecture</b>Frank Kovalchek, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Short_tunnel_in_the_massive_rock_on_the_north_coast_of_Madeira_(54027881861).jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 5</small>Les Lacets: the hairpins above the harbour</h2>
+<p>PK 4890 to 6100, 112 to 12 m. Three hairpins down the south-west flank: hillside houses and their outbuildings between the legs, three banana groves, black terraces and gardens on the outer side, the white chapel and its bell tower outside the second hairpin, a pair of palms at the first and the last.</p>
+<dl>
+  <dt>Mood</dt><dd>Sunny and domestic after the crater: gardens, washing-line colours, the harbour getting bigger at every turn.</dd>
+  <dt>Landmark</dt><dd>The white chapel and bell tower outside the second hairpin: the braking mark of the descent.</dd>
+  <dt>Read at speed</dt><dd><ul><li>houses as small bright cubes (cream, ochre, coral) stepping down the slope</li><li>banana groves as low, dense, bright-green blocks: the only saturated green of the map</li><li>black stone terraces with a green strip on top</li><li>white chapel, square tower, alone on its turn</li><li>the whole harbour and the lighthouse visible below from each leg</li></ul></dd>
+  <dt>Light</dt><dd>Full afternoon sun on a south-west slope: the warmest and most colourful light of the lap. Long view to the sea haze.</dd>
+  <dt>Transition</dt><dd>The last hairpin lands on the quay: the road flattens, widens, and the house fronts line the left.</dd>
+  <dt>Not this</dt><dd>A dense jungle of bananas; a suburb of villas; a second village centre competing with the harbour.</dd>
+</dl>
+<div class="sw"><span style="background:#E8D9AC">#E8D9AC cream</span><span style="background:#D8A85A">#D8A85A ochre</span><span style="background:#5F8A4A">#5F8A4A banana</span><span style="background:#F4EFE2">#F4EFE2 chapel</span><span class="d" style="background:#2C2E30">#2C2E30 black stone</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/094_Descent_to_Curral_das_Freiras.jpg?width=640" alt="Road descending in hairpins to Curral das Freiras"><figcaption><b>Keep: houses seen far below from a road cut in the slope. Not: the forest</b>Andy Hawkins, CC BY-SA 2.0. <a href="https://commons.wikimedia.org/wiki/File:094_Descent_to_Curral_das_Freiras.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Banana_plantations_in_Madalena_do_Mar.jpg?width=640" alt="Banana plantations at Madalena do Mar, Madeira"><figcaption><b>Keep: groves as dense green blocks between houses and walls</b>Patrice78500, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Banana_plantations_in_Madalena_do_Mar.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Madeira-Jardim_do_Mar-01ASD.jpg?width=640" alt="Village of Jardim do Mar on its slope"><figcaption><b>Keep: small houses stepping down toward the sea</b>Asurnipal, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Madeira-Jardim_do_Mar-01ASD.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Capela_de_Nossa_Senhora_de_F%C3%A1tima_in_S%C3%A3o_Vicente%2C_Madeira%2C_2023_May.jpg?width=640" alt="Chapel of Nossa Senhora de Fátima on a hill, São Vicente"><figcaption><b>Keep: a white chapel with a tower, alone on a height</b>Ximonic (Simo Räsänen), CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Capela_de_Nossa_Senhora_de_F%C3%A1tima_in_S%C3%A3o_Vicente%2C_Madeira%2C_2023_May.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 6</small>Les Quais: the home straight</h2>
+<p>PK 6100 to the line, 12 m. The quay straight: two rows of houses on the island side, the fish market and the boat workshop on the quay, crates, nets drying, mooring posts, boats and a pontoon in the basin, the breakwater and the lighthouse at its end.</p>
+<dl>
+  <dt>Mood</dt><dd>Arrival: the centre of the island, warm fronts, the lighthouse dead ahead to the right.</dd>
+  <dt>Landmark</dt><dd>The lighthouse at the end of the breakwater, white with a red band, visible down the whole straight.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a front row of two-storey houses in ochre, cream and coral, tiled roofs, a second row behind</li><li>the long low red-tiled fish market on the sea side</li><li>nets laid flat, crates, a line of mooring posts on the quay edge</li><li>small open boats in the basin, the dark line of the breakwater</li><li>the start gantry and flags</li></ul></dd>
+  <dt>Light</dt><dd>Low afternoon sun from the right over the water, warm on the fronts, the lighthouse lit against a darker sea.</dd>
+  <dt>Transition</dt><dd>Past the line the fronts give way to the sheds and the crane of Le Phare: the lap closes.</dd>
+  <dt>Not this</dt><dd>A second harbour; a street narrowed by buildings on both sides; a tall resort hotel.</dd>
+</dl>
+<div class="sw"><span style="background:#D8A85A">#D8A85A ochre</span><span style="background:#D88D72">#D88D72 coral</span><span class="d" style="background:#B75D43">#B75D43 tiles</span><span style="background:#F4EFE2">#F4EFE2 lighthouse</span><span class="d" style="background:#194B72">#194B72 Atlantic</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/C%C3%A2mara_de_Lobos_(Madeira%2C_Portugal)%2C_Porto_de_C%C3%A2mara_de_Lobos_--_2025_--_1901.jpg?width=640" alt="Harbour front of Câmara de Lobos"><figcaption><b>Keep: hull colours and the slip of the basin</b>Dietmar Rabich, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:C%C3%A2mara_de_Lobos_(Madeira%2C_Portugal)%2C_Porto_de_C%C3%A2mara_de_Lobos_--_2025_--_1901.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Ponta_do_Pargo_(Madeira%2C_Portugal)%2C_Farol_da_Ponta_do_Pargo_--_2025_--_1795.jpg?width=640" alt="Lighthouse of Ponta do Pargo, Madeira"><figcaption><b>Keep: the proportions of tower and lantern. Not: its cliff-top setting and keeper’s house (ours stands on the breakwater)</b>Dietmar Rabich, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Ponta_do_Pargo_(Madeira%2C_Portugal)%2C_Farol_da_Ponta_do_Pargo_--_2025_--_1795.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Lighthouse_Capelinhos_1.jpg?width=640" alt="Lighthouse of Capelinhos beside the volcano, Faial"><figcaption><b>Keep: a lighthouse read against volcanic ground</b>BBCLCD, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Lighthouse_Capelinhos_1.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>GAPS</small>References not found, and what was not checked</h2>
+<ul>
+  <li><b>Breakwater lighthouse, white with a red band.</b> No free image found of a small harbour light of this kind on a breakwater in Madeira or the Canaries; the two lighthouses above give proportions only.</li>
+  <li><b>Madeiran terraces (poios) in black stone with vines, seen side-on from a road.</b> The searches returned general views; the Fogo enclosures stand in for the stone and the ash.</li>
+  <li><b>Inside of an old unlined road gallery</b> (rough rock vault, sparse lamps). Only a short tunnel mouth was found.</li>
+  <li><b>Harbour house fronts facing a quay, and stacked hairpins with retaining walls.</b> The images found show boats and a valley view; neither shows the thing itself.</li>
+  <li><b>Small harbour crane and a fish market building</b> of this region: none found.</li>
+  <li><b>A basalt needle shaped like ours</b> (a pointed spire): Roque Cinchado gives the framing with the cone, not the shape.</li>
+  <li>The photographs were chosen from their titles and descriptions on Wikimedia Commons, then looked at once on this page; authors and licences are as returned by the Commons API on the day and are to be rechecked on the source page before any other use.</li>
+</ul>
+
+<p class="dim" style="margin-top:36px">Images are linked from Wikimedia Commons, not copied into the repository, and are references for shapes and colours only, never textures.</p>
+</main>
+</body>
+</html>
