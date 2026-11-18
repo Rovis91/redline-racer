@@ -1,11 +1,9 @@
-// "volcan", zone 2: Les Cendres (PK 690 to 2210, 40 to 177 m), the terraced ash slope, climbed. set(), by(), slab() and gate() are described in scenery-volcan.js; the shapes in shapes-volcan-<family>.js.
+// "volcan", zone 2: Les Cendres (PK 690 to 2210, 40 to 177 m), the moss slope, climbed. set(), by() and slab() are described in scenery-volcan.js; the shapes in shapes-volcan-<family>.js.
 (window.VOLCAN = window.VOLCAN || {}).cendres = ({ set, by }) => {
-  for (let pk = 720, i = 0; pk < 2120; pk += 140, i++) by('terrasseVolcan', pk, -1, 26, { a: [40, 3, i % 3 === 2 ? 'olive' : 'vine'] }); // three steps of black dry-stone walls, vines on top
-  by('jardinVolcan', [926, 1436, 1956], -1, 33, { a: [36, 14, 'leaf'] });                        // small cultivated plots between two terraces
-  for (const [x, z, ry] of [[421, -494, 0.3], [445, -809, -0.5]]) {                              // the two hamlets of the plan, away from the apexes: houses, a chapel, a cistern, a few trees
-    [[0, 0, 'cream', 0], [-8, 30, 'cream', 0.4], [44, -14, 'ochre', -0.3], [26, 12, 'coral', 1.6], [18, -26, 'cream', 1.2], [-30, 4, 'ochre', 0.8]].forEach(([dx, dz, c, r], i) => set('maisonVolcan', x + dx, z + dz, { ry: ry + r, a: [11 + (i & 1) * 2, 4.5 + (i % 3) * 0.8, 8, c] }));
-    set('chapelleVolcan', x + 4, z - 56, { ry: ry + 3.1 }); set('cylVolcan', x - 36, z - 24, { m: 'concrete', a: [4, 4, 5, 10], dy: -1 });
-    [[50, 20], [-26, 42], [24, 46]].forEach(([dx, dz]) => set('arbreVolcan', x + dx, z + dz, { a: [9] })); }
-  by('arbusteVolcan', [800, 1000, 1256, 1500, 1906, 2100], 1, 4, { a: [1.2] });                   // low sparse bushes on the sea side, never above the wall
-  by('rocherVolcan', [860, 1300, 1640, 2040], -1, 8, { m: 'rock', a: [8, 4, 10], seed: 1 }); by('rocherVolcan', [868, 1310, 1650, 2050], -1, 13, { m: 'rock', a: [5, 3, 6], seed: 1 }); // scree at the foot of the bank
+  for (let pk = 760, i = 0; pk < 2180; pk += 150, i++) by('cairnVolcan', pk, -1, 5, { a: [2.6, i] });  // the cairns of the old track, one every 150 m on the island side
+  [[820, 26, 9], [900, 60, 14], [1090, 34, 7], [1220, 80, 16], [1390, 22, 8], [1530, 54, 12], [1700, 30, 9], [1840, 70, 15], [2010, 40, 10]].forEach(([pk, off, w], i) => by('rocherVolcan', pk, -1, off, { m: 'rock', a: [w, w * 0.55, w * 1.1, i] })); // isolated black boulders, never in rows
+  for (const [x, z, ry] of [[421, -494, 0.3], [445, -809, -0.5]]) {                              // the two farms of the plan, away from the apexes: a few small coloured cabins and a sheep fence
+    [[0, 0, 'red', 0], [22, 14, 'yellow', 1.5], [-20, 20, 'blue', 0.4], [10, -24, 'green', -0.3]].forEach(([dx, dz, c, r], i) => set('maisonVolcan', x + dx, z + dz, { ry: ry + r, a: [8 + (i & 1) * 2, 3.6 + (i % 3) * 0.5, 7, c] }));
+    [[0, 40, 0], [30, -6, 1.57], [-36, -4, 1.57]].forEach(([dx, dz, r]) => set('clotureVolcan', x + dx, z + dz, { ry: ry + r, a: [36] })); }
+  [[1560, 46, 16], [1720, 70, 22], [1880, 40, 18], [2040, 64, 24], [2150, 36, 16]].forEach(([pk, off, r], i) => by('dalleVolcan', pk, -1, off, { m: 'snow', a: [r, 0.5, i, 10] })); // snow lying in the hollows from 120 m up
 };
