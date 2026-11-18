@@ -609,7 +609,7 @@
         orb: { dir: [-0.8, 0.35, 0.3], col: '#ffe0a0', shadows: '#ffe0a0', imgSize: 200 }, hemi: [0xffe8c8, 0x5a6a4a, 1], sun: [0xffd8a0, 0.9], headlights: 0, bloom: 0.03, scan: 0.05,
         chev: 0, withoutCones: 1, guardM: 0, wallH: 0, road: ['#3e4146', '#3e4146', '#3e4146', '#3e4146', '#3e4146', '#3e4146', false], intoWall: ['#c8c2b0', '#9a9484', '#7a8a5a', '#6a6a60'], startLine: [0xe9b850, 0xf0e6c8, '#f0e6c8'],
         tun: { ground: ['#33383a', '#33383a', '#33383a', '#33383a', '#33383a', '#33383a'], wallMeshes: ['#2c2a24', '#2c2a24'], wallFace: ['#2c3a34', '#3a4a40', '#4a5a4c', '#141a16'], ceiling: ['#1c1a16', '#2a2620', '#2a2620', '#2a2620'],
-          fog: 0x2e3c34, portal: 0x8f8c82, neons: [0xd8e8c8, 0xd8e8c8], hull: 0, h: [[0, 9], [0.82, 9], [0.86, 4.5], [1, 4.5]], without: ['walls', 'gates', 'lamps'], day: 0.2 }, // the scenery builds the metro: straight walls, the track winds between them
+          fog: 0x2e3c34, portal: 0x8f8c82, neons: [0xd8e8c8, 0xd8e8c8], hull: 0, h: [[0, 9], [0.82, 9], [0.86, 4.5], [1, 4.5]], without: ['walls', 'gates', 'lamps'], day: 0.4 }, // the scenery builds the metro: straight walls, the track winds between them
         hud: { y: '#ffffff', c: '#29c0c4', r: '#e97e56', backdrop: 'rgba(10,39,49,.88)', style: 'signPanel', split: 0, jp: null, over: [null, 'BLOCKOUT · TRACE 6'], heading: ['SUNKEN', 'HIGHWAY'] } } }; }
   // Blockout of the Aegean Cliffs V2 proposal (outside MAPS, like the test track below: no menu, no tests, no records): ?map=egee
   // Layout = docs/proposals coordonnees.csv, one control point every 40 m (x east, z = -north, altitude): harbour at 8 m (pts 0-16), climb (16-50), perched village at 12 m wide (50-70), balcony (70-88), descent (88-0).

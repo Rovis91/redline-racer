@@ -1,5 +1,5 @@
 // Shapes specific to "autoroute", family "vehicles": completes the shapes.js catalogue. Metres, origin on the ground at the centre, Z = length (front toward -Z), X = width, Y up.
-// Assemblies (lists of boxes [zone, w, h, d, x, y, z, rotation]); zones: body (bodywork, tinted per copy or per material), pane (dark glass), tyre, steel, olive (army), canvas, concrete.
+// Assemblies (lists of boxes [zone, w, h, d, x, y, z, rotation]); zones: body (bodywork, tinted per copy or per material), pane (dark glass), tyre, steel, olive (army), canvas, concrete, stripe (the line colour of the metro).
 // Wrecks left for decades: flat tyres (the body sits low), no lights, nothing shiny. One period for all: mid-size saloons, pickups, vans, buses, lorries.
 // See docs/proposals/sunken-highway/AMBIANCE-V2.html: grouped where a jam, a checkpoint or an accident put them. Not a scrapyard row, not a slalom.
 (function () {
@@ -18,7 +18,7 @@
     // armoured carrier: hull with sloped front, turret, eight wheels. 3 × 2.6 × 7 m
     blindeAutoroute: () => [['olive', 3, 1.3, 7, 0, 1.35, 0], ['olive', 2.6, 0.7, 2.4, 0, 1.2, -3.6, [0.5, 0, 0]], ['olive', 1.8, 0.7, 2, 0, 2.35, 0.3], ['steel', 0.2, 0.2, 3, 0, 2.4, -1.8], ...wheels(3, [-2.5, -0.9, 0.9, 2.5], 1.1)],
     // metro train of n cars of 17 m, 2.8 × 3.5 m: body, window band, dark doors, bogies; the cars follow one another along Z, centred
-    rameAutoroute: (n = 3) => Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * 18).flatMap(z => [['body', 2.8, 2.9, 17, 0, 2.05, z], ['pane', 2.86, 0.9, 15.6, 0, 2.5, z], ...[-5.6, 0, 5.6].map(k => ['steel', 2.9, 2, 1.4, 0, 1.75, z + k]),
+    rameAutoroute: (n = 3) => Array.from({ length: n }, (_, i) => (i - (n - 1) / 2) * 18).flatMap(z => [['body', 2.8, 2.9, 17, 0, 2.05, z], ['pane', 2.86, 0.9, 15.6, 0, 2.5, z], ['stripe', 2.84, 0.35, 16.8, 0, 1.25, z], ...[-5.6, 0, 5.6].map(k => ['steel', 2.9, 2, 1.4, 0, 1.75, z + k]),
       ['steel', 2.2, 0.6, 3, 0, 0.3, z - 5.5], ['steel', 2.2, 0.6, 3, 0, 0.3, z + 5.5], ['steel', 2.4, 0.25, 15, 0, 3.6, z]]),
     // river barge aground, 8 × 38 m: rusted hull, hatch covers, wheelhouse aft. Origin at its keel line
     bargeAutoroute: () => [['body', 8, 3, 38, 0, 1.5, 0], ['steel', 7.2, 0.6, 26, 0, 3.3, -3], ['steel', 8.3, 0.4, 38.4, 0, 2.9, 0], ['concrete', 6, 3, 5, 0, 4.5, 15], ['pane', 6.1, 0.9, 4.6, 0, 5.1, 15], ['steel', 6.6, 0.3, 5.6, 0, 6.15, 15], ['steel', 0.4, 4, 0.4, 0, 8, 14]],
