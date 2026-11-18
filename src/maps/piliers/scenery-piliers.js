@@ -3,7 +3,7 @@
 // and the scenery of each zone (scenery-piliers-<zone>.js). Shapes: shapes-piliers-<family>.js; textures: textures-piliers.js. See docs/methods/NEW-MAP.md, phase 3, and docs/proposals/sky-pillars/AMBIANCE-V2.html.
 (function () {
   const { near, edgePt, terrain, weld, inst } = PLACERS;
-  const ZONES = ['foret', 'corniches', 'pont', 'plateaux', 'descente', 'tourisme'], LAP = 4041.88, BRIDGE = [1813, 2063]; // LAP: plan length of the proposal, the unit of its chainages (PK); BRIDGE: the deck of the bible
+  const ZONES = ['foret', 'corniches', 'pont', 'plateaux', 'descente', 'tourisme', 'vie'], LAP = 4041.88, BRIDGE = [1813, 2063]; // LAP: plan length of the proposal, the unit of its chainages (PK); BRIDGE: the deck of the bible
   // the drivable shoulders A (south and west), B (north-west) and C (north-east) of the proposal's plan (construire.py), in metres [east, north]; everything else is the ravine, floor at 0
   const SHOULDERS = [[[40, 100], [380, 100], [640, 30], [790, 180], [910, 170], [1110, 50], [1300, 120], [1350, 340], [1210, 460], [1100, 380], [930, 310], [780, 320], [650, 400], [500, 430], [290, 330], [160, 430], [180, 580], [240, 640], [290, 790], [150, 840], [60, 720], [40, 440]],
     [[145, 610], [230, 850], [350, 890], [460, 820], [470, 640], [510, 570], [580, 590], [580, 780], [650, 940], [825, 960], [825, 880], [730, 840], [700, 650], [660, 480], [470, 460], [380, 540], [350, 710], [280, 700], [240, 590]],
@@ -51,14 +51,17 @@
       const MAT = { rock: h.mat('gresPiliers', VC, '#b3b5a0'), warm: h.mat('gresPiliers', VC, '#d0c2aa', 0.7), far0: h.mat('lointainPiliers', VC, 0), far1: h.mat('lointainPiliers', VC, 1), far2: h.mat('lointainPiliers', VC, 2), cut: h.mat('gresPiliers', DS, '#8f9a7c', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#b3a58c', 0.7, 1, 1), rubble: h.mat('solPiliers', DS, '#5c7a50'),
         stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), deep: h.mat('feuillagePiliers', DS, '#35593f'), pale: h.mat('feuillagePiliers', DS, '#7fa860'), gold: h.mat('feuillagePiliers', DS, '#84894a'), bark: h.mat('ecorcePiliers'),
         rock0: h.mat('gresPiliers', VC, '#b3b5a0', 1, 1, 0, 3), rock1: h.mat('gresPiliers', VC, '#bdb8a0', 1, 1, 0, 1), rock2: h.mat('gresPiliers', VC, '#a8b2a0', 1, 1, 0, 2),
-        steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }),
+        steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }),
         // the tourist layer (scenery-piliers-tourisme.js): planks, red lacquer, plaster, paving, pale glass, brass, lanterns, prayer flags, park signs, coaches, cloth, cabins, figures
         plank: h.mat('laquePiliers', DS, '#7a5a3c'), red: h.mat('laquePiliers', DS, '#b0382c'), white: h.mat('enduitPiliers', DS), pave: h.mat('pavePiliers', DS), glass: h.mat('paint', { c: 0x9fd8e6, transparent: true, opacity: 0.5, depthWrite: false, ...DS }),
-        brass: h.mat('paint', { c: 0xe0b040 }), lamp: h.mat('paint', { c: 0xe23a2a, emis: 1 }), flag: h.mat('fanionPiliers', { alphaTest: 0.5, ...DS }), sign: h.mat('panneauPiliers'), coach: h.mat('paint', { c: 0xf0ead8 }), coachB: h.mat('paint', { c: 0x2f8a5a }),
+        brass: h.mat('paint', { c: 0xe0b040 }), lamp: h.mat('paint', { c: 0xe23a2a, emis: 1 }), sign: h.mat('panneauPiliers'), coach: h.mat('paint', { c: 0xf0ead8 }), coachB: h.mat('paint', { c: 0x2f8a5a }),
         pane: h.mat('paint', { c: 0x22323a }), tire: h.mat('paint', { c: 0x17191b }), cloth: h.mat('paint', { c: 0xd8a23a }), cloth2: h.mat('paint', { c: 0x2f6f9a }), cabin: h.mat('paint', { c: 0xd8452a }), skin: h.mat('paint', { c: 0xe8c4a0 }),
         shirt0: h.mat('paint', { c: 0x3a78c8 }), shirt1: h.mat('paint', { c: 0xe8e0d0 }), shirt2: h.mat('paint', { c: 0xd85a3a }), ice: h.mat('paint', { c: 0xbfe6ee }) };
       const ROCKS = [MAT.rock0, MAT.rock1, MAT.rock2]; // three drawings and tints of the same sandstone, dealt among towers and needles
-      const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('nuagePiliers', { rep: [47, 47] })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
+      // what lives (scenery-piliers-vie.js builds it at the end): LIFE = what the tick animates, (dt, car, t), t = game time (frozen in pause); flows(material, u, v) = a texture that slides (repeats per second);
+      // FALLS, FLAGS, CABINS: the falls, flag strings and cable-car cabins the zone files declare instead of placing still pieces. The map's wind blows to the west (-x)
+      const LIFE = [], FLOWS = [], flows = (m, u, v) => { FLOWS.push([m.map, u, v]); return m; }, FALLS = [], FLAGS = [], CABINS = [], SITES = { smoke: [] }; // SITES: the places the tourist layer hands to the life (chimneys, lift, station, incense burner)
+      const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), flows(h.mat('nuagePiliers', { rep: [47, 47] }), 0.003, 0)); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road; it drifts west at 0.8 m/s
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1, ...DS }, ...h.TH.road), 32);
       // the dirt stretches: packed earth laid over the roadway from wall to wall; the same chainages as the 'terre' surf zones of the map block (pts 4-17 and 63-70 in maps.js): what is seen is what is driven
@@ -122,8 +125,8 @@
       // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown and two pines; far = 1: in the pale tints of the distance, no pines
       const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: ROCKS[seed % 3] }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf });
         if (!far) for (let k = 0; k < 2; k++) pine(x + (nz(seed, k) - 0.5) * w * 0.5, -n + (nz(k, seed) - 0.5) * d * 0.5, 9 + 6 * nz(seed + k), top + 1); };
-      // a white fall down a rock face, from (x, y, z) to (x1, y1, z1), w wide: still water, seen from far
-      const fall = (a, b, w) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), q = h.pose('boxMesh', MAT.fall, kit, a.map((v, i) => (v + b[i]) / 2), w, 0.8, l); q.lookAt(...b); };
+      // a white fall down a rock face, from (x, y, z) to (x1, y1, z1), w wide; hero = 1: the signature fall, wider, with a bright core (built by scenery-piliers-vie.js: sliding sheets)
+      const fall = (a, b, w, hero = 0) => FALLS.push([a, b, w, hero]);
       TOWERS.forEach(([t, P], q) => { const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length;
         const rock = q === 4 ? MAT.warm : ROCKS[q % 3], G = clear(h.pose('stackPiliers', rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry, ...(q < 6 ? [cx, -cn] : [])); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
         // the summit: pines and broadleaf trees standing on the crown, denser toward the edge
@@ -136,7 +139,7 @@
         if (q < 6) for (let k = 0; k < 6; k++) { const i = (k * 2 + q) % P.length, [x, n] = P[i], l = Math.hypot(x - cx, n - cn), o = 1 + (16 + 26 * nz(k, q + 3)) / l, X = cx + (x - cx) * o, Nn = cn + (n - cn) * o, w = 12 + 12 * nz(q, k + 5);
           if (g.dAt(X, -Nn) > 60) needle(X, Nn, w, w * (0.8 + 0.5 * nz(k, q)), t * (0.42 + 0.34 * nz(q + k, 2)), q * 7 + k); }
         // a fall on the three tallest, down the flank that looks at the ravine
-        if (q === 0 || q === 2 || q === 5) { const [x, n] = P[q === 5 ? 3 : 1], l = Math.hypot(x - cx, n - cn), at2 = (o, y) => [cx + (x - cx) * (1 + o / l), y, -(cn + (n - cn) * (1 + o / l))]; fall(at2(7.5, t - 14), at2((t - 84) / 8 + 9, 84), 5); } });
+        if (q === 0 || q === 2 || q === 5) { const [x, n] = P[q === 5 ? 3 : 1], l = Math.hypot(x - cx, n - cn), at2 = (o, y) => [cx + (x - cx) * (1 + o / l), y, -(cn + (n - cn) * (1 + o / l))]; fall(at2(7.5, t - 14), at2((t - 76) / 8 + 9, 76), q === 5 ? 9 : 5, q === 5); } });
       // the far field: the map is a forest of pillars in a sea of clouds. Instanced needles (four silhouettes, scaled) at three ranges from the centre of the lap: 120 between 0.75 and 1.2 km, 150 out to 1.9 km
       // and 130 out to 2.8 km, larger as they get farther so they still read; none within 150 m of the road. They carry no trees: each is painted (lointainPiliers, three drawings: wooded cap, clinging trees,
       // gullies, ledges, strata) and takes one of seven tints, so no two neighbours read the same; only the faceted crown that rounds the summit is a second shape
@@ -146,7 +149,7 @@
           if (g.dAt(x, z) < 150) continue; const e = [x, 0, z, nz(k, 9) * 6, w, top, w * (0.75 + 0.5 * nz(k, band + 11)), TINT[(k * 3 + band + (nz(k, band + 13) * 3 | 0)) % 7]]; add(v + '|far' + (k + band) % 3, e); add(v + 'c|' + (band ? 'farLeaf' : 'leaf'), e); } });
         for (const [k, list] of L) { const [v, m] = k.split('|'), crown = v.endsWith('c'), o = inst(h, crown ? h.geo('aiguilleCouronnePiliers', 40, 40, 250, parseInt(v) + 60) : h.geo('aiguilleLointainePiliers', parseInt(v) + 60), MAT[m], list);
           if (!crown) { list.forEach((e, i) => o.setColorAt(i, new THREE.Color(e[7]))); o.instanceColor.needsUpdate = true; } } }
-      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, fern, ivy, cliffPine, clearing, LAP, TOWERS, THREE });
+      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, fern, ivy, cliffPine, clearing, LAP, TOWERS, THREE, LIFE, flows, fall, FALLS, FLAGS, CABINS, SITES, STEPS });
       // the verges of the whole lap, bridge and tunnel excepted: every 4 m on each side, 3 to 12 m beyond the parapet and only on ground at road level, a fern, a shrub, a tuft, a small tree or pine, a boulder
       const open = p => !((p > 1790 && p < 2090) || (p > 2370 && p < 2510));
       for (let p = 0; p < LAP; p += 4) for (const sd of [-1, 1]) { if (!open(p)) continue;
@@ -170,6 +173,7 @@
         v > 0.6 ? pine(x, z, 9 + 7 * v) : v > 0.3 ? fir(x, z, 10 + 10 * v) : v > 0.12 ? tree(x, z, 10 + 20 * v) : shrub(x, z, 2); } });
       weld(h, kit); // one mesh per material
       for (const [k, list] of TR) { const [shape, m] = k.split('|'); const kept = list.filter(e => !CLEARS.some(([x, z, r]) => (e[0] - x) ** 2 + (e[2] - z) ** 2 < r * r)); if (kept.length) inst(h, h.geo(shape), MAT[m], kept); }
+      let tv = 0; return (dt, now, car) => { tv += dt; for (const f of LIFE) f(dt, car, tv); for (const [t, u, v] of FLOWS) { t.offset.x = (t.offset.x + u * dt + 1) % 1; t.offset.y = (t.offset.y + v * dt + 1) % 1; } }; // pause freezes everything (dt = 0)
     },
   });
 })();
