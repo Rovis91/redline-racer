@@ -11,6 +11,6 @@
     const water = (a, b, w, m) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), q = h.pose('boxMesh', m, kit, a.map((v, i) => (v + b[i]) / 2), w, 1.2, l); q.lookAt(...b); };
     water([bx, y, bz], [ex, y - 0.3, ez], 3, MAT.water); water([ex, s.y - 1, ez], [ex, 76, ez + 0.01], 5, MAT.fall); }
   // dressed stone portals at the two mouths of the tunnel; the rock of the spur closes over them
-  for (const [i, turn] of [[T.t0 - 4, 0], [T.t1 + 4, Math.PI]]) on('portailPiliers', S[i], { ry: h.across(S[i]) + turn, a: [2 * S[i].w + 5, 9, 10, 16] }); // a vestibule 16 m deep in front of each mouth, standing 3 m proud of the rock
+  for (const [i, turn] of [[T.t0 - 4, 0], [T.t1 + 4, Math.PI]]) on('portailPiliers', S[i], { ry: h.across(S[i]) + turn, a: [2 * S[i].w + 0.6, 8.4, 12.2, 16] }); // a vestibule 16 m deep in front of each mouth, standing 3 m proud of the rock
   for (const p of [2560, 2700]) for (const [da, o, ht] of [[0, 8, 14], [5, 10.5, 10]]) { const s = at(p + da), [x, z] = edgePt(s, 1, s.w + o); pine(x, z, ht); } // isolated pines at the edge, none at the portal
 };
