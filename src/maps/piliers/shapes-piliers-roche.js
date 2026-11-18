@@ -19,15 +19,16 @@
     for (let b = 0; Y[b] < y1 - bed * 0.5; b++) Y.push(Math.min(y1, Y[b] + bed * (0.55 + 0.9 * noise(b, seed + 3)))); Y[Y.length - 1] = y1;
     const nb = Y.length - 1, ring = b => { const top = b === nb - 1, off = (y1 - (Y[b] + Y[b + 1]) / 2) * taper + (top ? 0 : jit * 1.1 + 0.9 * noise(b, seed + 7));
       return V.map(([x, z, nx, nz, l], j) => { const o = off + (top ? 0 : jit * (noise((j + (b >> 2)) >> 1, seed + (b >> 2) * 5) - 0.5) * 2); return [x + nx * o, z + nz * o, l * ku, o]; }); };
-    const quad = (a, b, c, d) => Tr.push(a, b, c, a, c, d); let low = null, last;
+    const quad = (a, b, c, d) => Tr.push(a, b, c, a, c, d), ledges = []; let low = null, last; // ledges: [x, y, z] of the widest steps, where a pine or a bush can hold
     for (let b = 0; b < nb; b++) { const R = ring(b); last = R;
       for (let j = 0; j < n; j++) { const p = R[j], q = R[(j + 1) % n], uq = j === n - 1 ? U : q[2];
         quad([p[0], Y[b], p[1], p[2], Y[b] / T], [q[0], Y[b], q[1], uq, Y[b] / T], [q[0], Y[b + 1], q[1], uq, Y[b + 1] / T], [p[0], Y[b + 1], p[1], p[2], Y[b + 1] / T]);
+        if (low && low[j][3] - p[3] > 1.6 && noise(j * 7 + b, seed + 11) > 0.45) ledges.push([(low[j][0] + p[0]) / 2, Y[b], (low[j][1] + p[1]) / 2]);
         if (low) { const lp = low[j], lq = low[(j + 1) % n], ul = uq; quad([lp[0], Y[b], lp[1], lp[2], (Y[b] + lp[3]) / T], [lq[0], Y[b], lq[1], ul, (Y[b] + lq[3]) / T], [q[0], Y[b], q[1], uq, (Y[b] + q[3]) / T], [p[0], Y[b], p[1], p[2], (Y[b] + p[3]) / T]); } }
       low = R; }
     const lid = (R, y) => { for (const [a, b, c] of THREE.ShapeUtils.triangulateShape(R.map(p => new THREE.Vector2(p[0], p[1])), [])) Tr.push(...[a, b, c].map(k => [R[k][0], y, R[k][1], R[k][0] / 8, R[k][1] / 8])); };
     if (cap) lid(last, y1); if (bottom) lid(ring(0), y0);
-    return mesh(Tr); };
+    const G = mesh(Tr); G.userData.ledges = ledges; return G; };
   Object.assign(SHAPES, {
     // a rock tower over a footprint given in plan coordinates [[east, north], …], from altitude y0 to its summit y1: place it at the origin. The crown (couronnePiliers) closes it
     stackPiliers: (poly, y0, y1, seed, taper, bed, cap, jit, bottom) => stack(poly, y0, y1, seed, taper, bed, cap, jit, bottom),

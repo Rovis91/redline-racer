@@ -4,13 +4,14 @@
   const grain = (g, { R, rand, veil }, n, a = 0.18, S = 64) => veil(g, a, () => { for (let i = 0; i < n; i++) R(g, i % 3 ? '#000' : '#fff', rand() * S | 0, rand() * S | 0, 1 + (rand() * 2 | 0), 1); });
   Object.assign(TEXTURES, {
     // stacked quartz sandstone, c = its tint (sage grey near, salmon on the descent, blue-grey for the far needles), a = strength of beds and joints (1 near; 0.45 far, a silhouette), m = moss on the ledges (0 to 1).
-    // 8 m per tile on the cut faces and 16 m on the towers: beds of uneven thickness and tone, a dark line under each, vertical joints that cross two or three beds, moss hanging from some ledges; rot = 1: turned a quarter, for a ribbon along the road (its u runs down the wall)
-    gresPiliers: (c = '#9b9a7e', a = 1, m = 1, rot = 0) => [64, 64, (g, o) => { const { R, rand, veil } = o; if (rot) g.setTransform(0, 1, 1, 0, 0, 0); R(g, c, 0, 0, 64, 64);
+    // 8 m per tile on the cut faces and 16 m on the towers: beds of uneven thickness and tone, a dark line under each, vertical joints that cross two or three beds, moss hanging from some ledges; rot = 1: turned a quarter, for a ribbon along the road (its u runs down the wall); v = another drawing of the same rock, so neighbouring towers do not show the same tile
+    gresPiliers: (c = '#9b9a7e', a = 1, m = 1, rot = 0, v = 0) => [64, 64, (g, o) => { const { R, rand, veil } = o; if (rot) g.setTransform(0, 1, 1, 0, 0, 0); R(g, c, 0, 0, 64, 64);
       const beds = []; for (let y = 0; y < 64;) { const ht = 4 + (rand() * 9 | 0); beds.push([y, ht]); y += ht; }
       veil(g, 0.13 * a, () => { for (const [y, ht] of beds) R(g, rand() < 0.5 ? '#000' : '#fff', 0, y, 64, ht); });
       veil(g, 0.09 * a, () => { for (const [y, ht] of beds) for (let x = 0; x < 64;) { const w = 6 + (rand() * 22 | 0); R(g, rand() < 0.5 ? '#000' : '#fff', x, y, w, ht); x += w; } }); // each bed in blocks of uneven tone, not one band
       veil(g, 0.42 * a, () => { for (const [y] of beds) if (rand() < 0.7) R(g, '#1a2420', rand() * 30 | 0, y, 20 + (rand() * 44 | 0), 1); for (let i = 0; i < 16; i++) { const [y, ht] = beds[rand() * beds.length | 0]; R(g, '#1a2420', rand() * 64 | 0, y, 1 + (i % 4 === 0), ht * (1 + (rand() * 4 | 0))); } });
       veil(g, 0.5 * a * m, () => { for (const [y] of beds) if (rand() < 0.4) for (let x = rand() * 20 | 0; x < 64; x += 2 + (rand() * 14 | 0)) R(g, '#4e7752', x, y + 1, 1 + (rand() * 4 | 0), 1 + (rand() * 2 | 0)); });
+      veil(g, 0.2 * a, () => { for (let i = 0; i < 3 + v; i++) { const x = rand() * 60 | 0, w = 2 + (rand() * 4 | 0), y = rand() * 30 | 0; R(g, i & 1 ? '#fff' : '#1a2420', x, y, w, 20 + (rand() * 40 | 0)); R(g, i & 1 ? '#fff' : '#1a2420', x + 1, y - 4, Math.max(1, w - 2), 4); } }); // long runs of damp and of pale lichen down the face
       grain(g, o, 240, 0.14); }, 8],
     // ground of the shoulders, c = its tint (moss green in the forest, pale stone and moss on the plateau): low plants as dabs of two greens, a few pale stones, no direction; 8 m per tile
     solPiliers: (c = '#4f6f4a') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); grain(g, o, 380, 0.16);
