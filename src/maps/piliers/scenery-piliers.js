@@ -3,7 +3,7 @@
 // and the scenery of each zone (scenery-piliers-<zone>.js). Shapes: shapes-piliers-<family>.js; textures: textures-piliers.js. See docs/methods/NEW-MAP.md, phase 3, and docs/proposals/sky-pillars/AMBIANCE-V2.html.
 (function () {
   const { near, edgePt, terrain, weld, inst } = PLACERS;
-  const ZONES = ['foret', 'corniches', 'pont', 'plateaux', 'descente'], LAP = 4041.88, BRIDGE = [1813, 2063]; // LAP: plan length of the proposal, the unit of its chainages (PK); BRIDGE: the deck of the bible
+  const ZONES = ['foret', 'corniches', 'pont', 'plateaux', 'descente', 'tourisme'], LAP = 4041.88, BRIDGE = [1813, 2063]; // LAP: plan length of the proposal, the unit of its chainages (PK); BRIDGE: the deck of the bible
   // the drivable shoulders A (south and west), B (north-west) and C (north-east) of the proposal's plan (construire.py), in metres [east, north]; everything else is the ravine, floor at 0
   const SHOULDERS = [[[40, 100], [380, 100], [640, 30], [790, 180], [910, 170], [1110, 50], [1300, 120], [1350, 340], [1210, 460], [1100, 380], [930, 310], [780, 320], [650, 400], [500, 430], [290, 330], [160, 430], [180, 580], [240, 640], [290, 790], [150, 840], [60, 720], [40, 440]],
     [[145, 610], [230, 850], [350, 890], [460, 820], [470, 640], [510, 570], [580, 590], [580, 780], [650, 940], [825, 960], [825, 880], [730, 840], [700, 650], [660, 480], [470, 460], [380, 540], [350, 710], [280, 700], [240, 590]],
@@ -16,6 +16,7 @@
     [300, [[1150, 686], [1320, 686], [1320, 612], [1150, 612]]]];
   const BANKS = [[150, 640, 1, 8], [960, 1190, -1, 10], [2860, 3680, 1, 26]]; // [pk from, pk to, side, height]: a bank or rock wall along the road (forest inner bank, corniche cut, buttress wall of the descent)
   const EDGES = [[640, 735, -1, 14], [760, 900, -1, 12], [2560, 2826, -1, 12], [2880, 3650, -1, 12]]; // [pk from, pk to, side, metres beyond the wall]: where the cliff edge comes close, so the void is seen from the car
+  const DIRT = [[152, 697], [2536, 2839]]; // [pk from, pk to]: the forest floor from the park gate to the first open view, and the old service road of the plateau from the tunnel to the temple
   const clamp = v => Math.max(0, Math.min(1, v));
   // metres from (x, north) to polygon P, 0 inside
   const dist = (P, x, n) => { let d = 1e9, c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const [ax, ay] = P[j], [bx, by] = P[i], dx = bx - ax, dy = by - ay;
@@ -50,11 +51,18 @@
       const MAT = { rock: h.mat('gresPiliers', VC, '#b3b5a0'), warm: h.mat('gresPiliers', VC, '#d0c2aa', 0.7), far0: h.mat('lointainPiliers', VC, 0), far1: h.mat('lointainPiliers', VC, 1), far2: h.mat('lointainPiliers', VC, 2), cut: h.mat('gresPiliers', DS, '#8f9a7c', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#b3a58c', 0.7, 1, 1), rubble: h.mat('solPiliers', DS, '#5c7a50'),
         stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), deep: h.mat('feuillagePiliers', DS, '#35593f'), pale: h.mat('feuillagePiliers', DS, '#7fa860'), gold: h.mat('feuillagePiliers', DS, '#84894a'), bark: h.mat('ecorcePiliers'),
         rock0: h.mat('gresPiliers', VC, '#b3b5a0', 1, 1, 0, 3), rock1: h.mat('gresPiliers', VC, '#bdb8a0', 1, 1, 0, 1), rock2: h.mat('gresPiliers', VC, '#a8b2a0', 1, 1, 0, 2),
-        steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }) };
+        steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }),
+        // the tourist layer (scenery-piliers-tourisme.js): planks, red lacquer, plaster, paving, pale glass, brass, lanterns, prayer flags, park signs, coaches, cloth, cabins, figures
+        plank: h.mat('laquePiliers', DS, '#7a5a3c'), red: h.mat('laquePiliers', DS, '#b0382c'), white: h.mat('enduitPiliers', DS), pave: h.mat('pavePiliers', DS), glass: h.mat('paint', { c: 0x9fd8e6, transparent: true, opacity: 0.5, depthWrite: false, ...DS }),
+        brass: h.mat('paint', { c: 0xe0b040 }), lamp: h.mat('paint', { c: 0xe23a2a, emis: 1 }), flag: h.mat('fanionPiliers', { alphaTest: 0.5, ...DS }), sign: h.mat('panneauPiliers'), coach: h.mat('paint', { c: 0xf0ead8 }), coachB: h.mat('paint', { c: 0x2f8a5a }),
+        pane: h.mat('paint', { c: 0x22323a }), tire: h.mat('paint', { c: 0x17191b }), cloth: h.mat('paint', { c: 0xd8a23a }), cloth2: h.mat('paint', { c: 0x2f6f9a }), cabin: h.mat('paint', { c: 0xd8452a }), skin: h.mat('paint', { c: 0xe8c4a0 }),
+        shirt0: h.mat('paint', { c: 0x3a78c8 }), shirt1: h.mat('paint', { c: 0xe8e0d0 }), shirt2: h.mat('paint', { c: 0xd85a3a }), ice: h.mat('paint', { c: 0xbfe6ee }) };
       const ROCKS = [MAT.rock0, MAT.rock1, MAT.rock2]; // three drawings and tints of the same sandstone, dealt among towers and needles
       const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('nuagePiliers', { rep: [47, 47] })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
       // the game draws the roadway at a constant ±W; the walls are at ±s.w (M.wide): the roadway is laid again at the real width, as on givre
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1, ...DS }, ...h.TH.road), 32);
+      // the dirt stretches: packed earth laid over the roadway from wall to wall; the same chainages as the 'terre' surf zones of the map block (pts 4-17 and 63-70 in maps.js): what is seen is what is driven
+      for (const [a, b] of DIRT) h.ribbon(idx(a), idx(b) - idx(a), s => -s.w, 0, s => s.w, 0, h.mat('pistePiliers', { polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, ...DS }), 16);
       // the bridge: a steel box girder 3 m deep under the roadway, an open steel railing; the towers, cables and anchor blocks are in zone 3
       const b0 = idx(BRIDGE[0]), b1 = idx(BRIDGE[1]), girder = s => s.w + 0.4;
       h.ribbon(b0, b1 - b0, s => -girder(s), -3, girder, -3, MAT.steel, 4); for (const sd of [-1, 1]) { h.ribbon(b0, b1 - b0, s => sd * girder(s), 0.2, s => sd * girder(s), -3, MAT.steel, 4); h.guardM(sd, b0, b1 - b0, s => sd * s.w, 1.2, s => sd * s.w, 0, MAT.rail); }
@@ -81,6 +89,7 @@
       // beam(a, b, t, material): a square bar t thick from point a to point b [x, y, z]: cables, hangers
       const beam = (a, b, t, m = MAT.steel) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), o = h.pose('boxMesh', m, kit, a.map((v, i) => (v + b[i]) / 2), t, t, l); o.lookAt(...b); return o; };
       // trees are instanced: one draw pass per shape for the whole map. tree = a big broadleaf (trunk and crown), pine = a flat-tiered pine, bush = a mound of undergrowth w wide
+      const CLEARS = [], clearing = (x, z, r) => CLEARS.push([x, z, r]); // clearing(x, z, r): no instanced plant is kept within r metres of this point (the built sites of the tourist layer)
       const TR = new Map(), put = (shape, m, e) => { const k = shape + '|' + m; (TR.get(k) || TR.set(k, []).get(k)).push(e); }, same = (x, y, z, k, ry = nz(x, z) * 6) => [x, y, z, ry, k, k, k];
       // tree(x, z, ht, r, y): a broadleaf, one of three (wide crown, tall narrow crown, wide crown in pale green), a few of them in old gold; r = size of the crown; y = its foot when it does not stand on the terrain
       const tree = (x, z, ht = 20, r = 1, y = g.hAt(x, z) - 0.6) => { const k = ht / 22, v = nz(x * 0.37, z * 0.91), c = (0.8 + 0.45 * nz(x, z)) * k * r, m = nz(z, x * 3) > 0.93 ? 'gold' : v > 0.7 ? 'pale' : v < 0.2 ? 'deep' : 'leaf';
@@ -137,7 +146,7 @@
           if (g.dAt(x, z) < 150) continue; const e = [x, 0, z, nz(k, 9) * 6, w, top, w * (0.75 + 0.5 * nz(k, band + 11)), TINT[(k * 3 + band + (nz(k, band + 13) * 3 | 0)) % 7]]; add(v + '|far' + (k + band) % 3, e); add(v + 'c|' + (band ? 'farLeaf' : 'leaf'), e); } });
         for (const [k, list] of L) { const [v, m] = k.split('|'), crown = v.endsWith('c'), o = inst(h, crown ? h.geo('aiguilleCouronnePiliers', 40, 40, 250, parseInt(v) + 60) : h.geo('aiguilleLointainePiliers', parseInt(v) + 60), MAT[m], list);
           if (!crown) { list.forEach((e, i) => o.setColorAt(i, new THREE.Color(e[7]))); o.instanceColor.needsUpdate = true; } } }
-      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, fern, ivy, cliffPine, THREE });
+      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, fern, ivy, cliffPine, clearing, LAP, TOWERS, THREE });
       // the verges of the whole lap, bridge and tunnel excepted: every 4 m on each side, 3 to 12 m beyond the parapet and only on ground at road level, a fern, a shrub, a tuft, a small tree or pine, a boulder
       const open = p => !((p > 1790 && p < 2090) || (p > 2370 && p < 2510));
       for (let p = 0; p < LAP; p += 4) for (const sd of [-1, 1]) { if (!open(p)) continue;
@@ -160,7 +169,7 @@
       BANKS.forEach(([a, b, sd, H]) => { for (let p = a + 40; p < b - 40; p += 9 + 8 * nz(p, H)) { const s = at(p), [x, z] = edgePt(s, sd, s.w + 12 + 1.4 * Math.ceil(H / 5) + 9 + 14 * nz(p, 2)), v = nz(p, 3); if (g.hAt(x, z) < s.y + H * 0.6 || g.dAt(x, z) < 20) continue;
         v > 0.6 ? pine(x, z, 9 + 7 * v) : v > 0.3 ? fir(x, z, 10 + 10 * v) : v > 0.12 ? tree(x, z, 10 + 20 * v) : shrub(x, z, 2); } });
       weld(h, kit); // one mesh per material
-      for (const [k, list] of TR) { const [shape, m] = k.split('|'); inst(h, h.geo(shape), MAT[m], list); }
+      for (const [k, list] of TR) { const [shape, m] = k.split('|'); const kept = list.filter(e => !CLEARS.some(([x, z, r]) => (e[0] - x) ** 2 + (e[2] - z) ** 2 < r * r)); if (kept.length) inst(h, h.geo(shape), MAT[m], kept); }
     },
   });
 })();
