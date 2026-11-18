@@ -9,9 +9,9 @@
     // habitat dome: a faceted cap of radius r and height ht, 12 sides, 5 rings: the triangulated shell read from far
     coupoleLune: (r = 35, ht = 30) => SHAPES.ringsLune(12, [0, 0.38, 0.72, 1.05, 1.36].map(a => [ht * Math.sin(a) / Math.sin(1.36), r * Math.cos(a) / Math.cos(0) * (a ? 1 : 1)]), true),
     // pressurised cylinder lying on its cradles, L long along Z, radius r, 8 sides, its ends drawn in: the module, the tank, the tube between two buildings
-    cylindreLune: (L = 26, r = 4.5) => { const g = SHAPES.ringsLune(8, [[-L / 2, r * 0.5], [-L / 2 + 1.4, r], [L / 2 - 1.4, r], [L / 2, r * 0.5]], true); g.rotateX(Math.PI / 2); g.translate(0, r + 1.2, 0); g.computeVertexNormals(); return g; },
-    // standing tank, radius r, height ht: a cylinder with a drawn-in top, 10 sides
-    citerneLune: (r = 4, ht = 7) => SHAPES.ringsLune(10, [[0, r], [ht * 0.72, r], [ht * 0.9, r * 0.8], [ht, r * 0.45]], true),
+    cylindreLune: (L = 26, r = 4.5) => { const g = SHAPES.ringsLune(8, [[-L / 2, r * 0.5], [-L / 2 + 1.4, r], [L / 2 - 1.4, r], [L / 2, r * 0.5]], 2); g.rotateX(Math.PI / 2); g.translate(0, r + 1.2, 0); g.computeVertexNormals(); return g; },
+    // standing tank, radius r, height ht: a cylinder with a drawn-in top, 10 sides, its foot 8 m down (it stands whole on a slope or on ground lower than the road)
+    citerneLune: (r = 4, ht = 7) => SHAPES.ringsLune(10, [[-8, r], [ht * 0.72, r], [ht * 0.9, r * 0.8], [ht, r * 0.45]], true),
     // dish: a shallow paraboloid of radius r opening toward +Y, 10 sides (DoubleSide material); the placement tilts it
     soucoupeLune: (r = 5, dp = 1.6) => SHAPES.ringsLune(10, [0.12, 0.45, 0.75, 1].map(t => [dp * t * t, r * t])),
     // the Earth: a disc of radius r facing +Z
@@ -43,6 +43,11 @@
       ...range(4, i => -L / 2 + 5 + i * 10).flatMap(z => [...pair(sd => ['shell', 1.4, ht, 1.4, sd * (w / 2 - 0.7), ht / 2, z]), ['shell', w, 1.4, 1.4, 0, ht - 0.7, z], ...pair(sd => ['ceil', 7, 0.3, 4, sd * 6, ht - 0.25, z + 5])])],
     // frame across the road, w wide inside, ht high, in the material `zone`: two posts, a lintel, a light on each post. The doors of the airlock, the open frames before the base, the mouth of the tunnel
     portiqueLune: (w = 24, ht = 12, zone = 'amber') => [...pair(sd => [zone, 2.2, ht, 2.2, sd * (w / 2 + 1.1), ht / 2, 0]), [zone, w + 4.4, 2.2, 2.2, 0, ht + 1.1, 0], ...pair(sd => ['glow', 0.9, 0.9, 0.9, sd * (w / 2 + 1.1), ht + 2.7, 0])],
+    // mouth of the tunnel, the road along Z: the headwall that holds the berm of the covered way, W2 wide, H high and dp deep, pierced by the tube (w × ht, 15 cm clear of its walls: nothing coincides with them), its two sides 6 m into the ground;
+    // an orange frame round the opening, a lit strip above it, a dark coping, a light at each end
+    boucheLune: (w = 18, ht = 8, W2 = 36, H = 12, dp = 7.6) => { const a = w / 2 + 0.15, sw = W2 / 2 - a; return [...pair(sd => ['hall', sw, H + 6, dp, sd * (a + sw / 2), H / 2 - 3, 0]), ['hall', 2 * a, H - ht - 0.15, dp, 0, (H + ht + 0.15) / 2, 0],
+      ...pair(sd => ['amber', 0.9, ht + 1.05, dp + 0.3, sd * (a + 0.45), (ht + 1.05) / 2, 0]), ['amber', 2 * a, 0.9, dp + 0.3, 0, ht + 0.6, 0], ['hublot', w * 0.6, 1, dp + 0.2, 0, ht + 2.4, 0],
+      ['dark', W2 + 0.6, 0.6, dp + 0.6, 0, H + 0.3, 0], ...pair(sd => ['glow', 0.9, 0.9, 0.9, sd * (W2 / 2 - 2), H + 1.05, 0])]; },
     // buggy garage, 26 × 10 × 40: an ivory box, an orange band, two large doors and a lit strip on the front (-X), two roof units
     garageLune: () => [['shell', 26, 10, 40, 0, 5, 0], ['amber', 26.3, 0.8, 40.3, 0, 8.8, 0], ...pair(sd => ['dark', 0.6, 6.4, 13, -13.1, 3.2, sd * 9]), ['hublot', 0.5, 1.2, 30, -13.15, 7.6, 0], ...pair(sd => ['dark', 6, 2, 6, 4, 11, sd * 10])],
     // parked buggy, closed cabin, along Z: an ivory hull with an orange sill, an opaque dark canopy, four exposed wheels, a whip antenna with its light

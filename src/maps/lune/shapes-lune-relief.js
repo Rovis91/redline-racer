@@ -6,12 +6,13 @@
   const quads = Q => { const P = [], UV = []; for (const [a, b, c, d] of Q) for (const p of [a, b, c, a, c, d]) { P.push(p[0], p[1], p[2]); UV.push(p[3], p[4]); }
     const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); g.computeVertexNormals(); return g; };
   Object.assign(SHAPES, {
-    // a solid of revolution with n flat sides: rings = [[y, radius x, radius z], …] from bottom to top; cap = closes the top; jit = share of radius moved per vertex (rock); seed = which rock.
+    // a solid of revolution with n flat sides: rings = [[y, radius x, radius z], …] from bottom to top; cap = closes the top (2: the bottom too, for a shape whose first ring is seen: a lying cylinder); jit = share of radius moved per vertex (rock); seed = which rock.
     // Also the dome, the tanks, the cylinders and the dishes of the colony (shapes-lune-base.js). Faces are seen from outside; give the material DoubleSide to see the inside of an open shell
     ringsLune: (n, rings, cap = false, jit = 0, seed = 0) => { const pt = (r, k) => { const [y, rx, rz = rx] = rings[r], a = (k % n) / n * 6.2832, j = 1 + jit * (noise(k % n, seed + r) - 0.5) * 2;
         return [Math.cos(a) * rx * j, y, Math.sin(a) * rz * j, k / n * Math.max(1, Math.round(Math.max(rings[0][1], rings[0][2] ?? 0) * 6.2832 / 8)), y / 8]; }, Q = [];
       for (let r = 0; r < rings.length - 1; r++) for (let k = 0; k < n; k++) Q.push([pt(r, k), pt(r + 1, k), pt(r + 1, k + 1), pt(r, k + 1)]);
       if (cap) { const r = rings.length - 1, y = rings[r][0]; for (let k = 0; k < n; k++) { const a = pt(r, k), b = pt(r, k + 1); Q.push([[0, y, 0, 0, 0], [b[0], y, b[2], b[0] / 8, b[2] / 8], [a[0], y, a[2], a[0] / 8, a[2] / 8], [0, y, 0, 0, 0]]); } }
+      if (cap > 1) { const y = rings[0][0]; for (let k = 0; k < n; k++) { const a = pt(0, k), b = pt(0, k + 1); Q.push([[0, y, 0, 0, 0], [a[0], y, a[2], a[0] / 8, a[2] / 8], [b[0], y, b[2], b[0] / 8, b[2] / 8], [0, y, 0, 0, 0]]); } }
       return quads(Q); },
     // boulder, w × h × d: one broken block, 7 sides, strongly irregular, its foot buried
     rocherLune: (w, ht, d, seed = 0) => SHAPES.ringsLune(7, [[-2, w * 0.6, d * 0.6], [ht * 0.5, w * 0.52, d * 0.5], [ht, w * 0.3, d * 0.34]], true, 0.24, seed),

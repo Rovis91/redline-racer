@@ -24,13 +24,16 @@
       // small craters nobody drives into, on the plains, the outer slopes and the walls above the arena: 150 draws over the map, kept when they are clear of the arena, of the road and of each other. [x, z, radius, depth]
       const EXTRA = []; for (let i = 0; i < 150; i++) { const x = -1250 + 2350 * hash(i, 1), z = -1300 + 2200 * hash(i, 2), r = 7 + 26 * hash(i, 3) ** 2, s = S[near(h, x, z)];
         if (Math.hypot(x - EAST[0], z - EAST[1]) > PL.r + r + 6 && Math.hypot(s.x - x, s.z - z) > s.w + r * 0.6 + 14 && !EXTRA.some(e => Math.hypot(e[0] - x, e[1] - z) < (e[2] + r) * 0.7)) EXTRA.push([x, z, r, r * 0.24]); }
-      const shape = (x, z, y) => {
+      let natLast; const NAT = [], LAYERS = [{ tex: ['regolitheLune', '#5c616f'], weight: (x, z) => ss((Math.sin(x * 0.013 + 1.3) * Math.sin(z * 0.017 + 0.4) + 0.5 * Math.sin(x * 0.031 - z * 0.027) - 0.2) / 0.5) },   // darker blotches 100 to 300 m across
+        { tex: ['regolitheLune', '#979dab'], weight: (x, z) => 0.8 * ss((Math.sin(x * 0.021 - 2.1) * Math.sin(z * 0.011 + 1.7) + 0.4 * Math.sin(x * 0.043 + z * 0.037) - 0.45) / 0.4) }, // paler dust in smaller patches
+        { tex: ['rocheLune', '#636a78'], slope: [0.3, 0.55] }];
+      const shape = (x, z, y) => { natLast = null;
         const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), k = (i - iLip + N) % N, rE = Math.hypot(x - EAST[0], z - EAST[1]), tun = k >= nArena && k < nArena + nTun;
         if (k < nArena && d < s.w + 1) return y - (s.y + 0.08 + T.dent(x, z));             // from the lip to the tunnel the ground is what the car drives on: the ribbon (which comes down from the lip under the flight) plus the bowl and its small craters; it covers the engine's roadway
         const floor = rE < PL.r ? EAST[5] + 0.08 + T.dent(x, z) : null;                    // the arena: M.bowls and M.dents, as in the physics
         const tE = bowl(EAST, x, z, y), tS = bowl(SOUTH, x, z, y);
         let t = floor ?? (inside(EAST, x, z) ? tE : inside(SOUTH, x, z) ? tS : Math.max(tE, tS)); // inside a rim, that crater alone; outside both, the higher of the two outer slopes: a valley between the two crests
-        if (tun) { if (d < W + 9 && t < s.y + 10.5) { t = s.y + 10.5; OVER.add(Math.fround(x) + "," + Math.fround(z)); } return y - t; } // over the tunnel the ground is kept above the vault from one mouth to the other: a berm where the bowl is still low
+        if (tun) { natLast = t; if (d < W + 9 && t < s.y + 10.5) { t = s.y + 10.5; OVER.add(Math.fround(x) + "," + Math.fround(z)); } return y - t; } // over the tunnel the ground is kept above the vault from one mouth to the other: a berm where the bowl is still low
         if (floor != null) return y - t;
         if (k >= nArena + nTun) t += (y - t) * (1 - ss((d - s.w - 6) / 40));               // elsewhere the road stays laid: its own level up to 6 m from the wall, the crater profile 40 m further
         let c = 0; for (const [cx, cz, r, f] of BESIDE) { const q = Math.hypot(x - cx, z - cz) / (r * (1 + 0.07 * wob(Math.atan2(z - cz, x - cx), cx))); if (q < 1) c = Math.max(c, (t - f) * (1 - q ** P)); }
@@ -38,9 +41,33 @@
         return y - t + Math.min(c, Math.max(0, d - 16) * 0.8);                             // passed craters: the same concave bowl, carved from 16 m off the axis, at most 0.8 m per metre
       };
       // ground: regolith in three tones (the base, darker blotches, paler patches: no two hundred metres alike), bare stratified rock where it is steep (crater walls, cuttings)
-      const g = terrain(h, { stepSec: 8, margin: 480, hollow: shape, mat: h.mat('regolitheLune'), layerSet: [{ tex: ['regolitheLune', '#5c616f'], weight: (x, z) => ss((Math.sin(x * 0.013 + 1.3) * Math.sin(z * 0.017 + 0.4) + 0.5 * Math.sin(x * 0.031 - z * 0.027) - 0.2) / 0.5) },   // darker blotches 100 to 300 m across
-        { tex: ['regolitheLune', '#979dab'], weight: (x, z) => 0.8 * ss((Math.sin(x * 0.021 - 2.1) * Math.sin(z * 0.011 + 1.7) + 0.4 * Math.sin(x * 0.043 + z * 0.037) - 0.45) / 0.4) }, // paler dust in smaller patches
-        { tex: ['rocheLune', '#636a78'], slope: [0.3, 0.55] }] });
+      const g = terrain(h, { stepSec: 8, margin: 480, hollow: (x, z, y) => { const c = shape(x, z, y); NAT.push(natLast ?? y - c); return c; }, mat: h.mat('regolitheLune'), layerSet: LAYERS }); // NAT: the ground of each vertex before the berm of the tunnel
+      // The grid of the terrain is 8 m: too coarse for the ground the car drives on off the ribbon (the small craters, 20 m across for the smallest, were drawn up to 2 m away from the physics: the car sank into the ground or floated)
+      // and for the two mouths of the tunnel (stair-stepped berm, holes in front of the tube). Its cells are drawn again on a 2 m grid wherever the arena is not flat and round each mouth.
+      // fineH: the ground there. In the arena, exactly what the physics reads (M.bowls, M.dents); over the tunnel, 2 samples in from each mouth, the berm of the covered way: flat above the hull (W + 3), then a talus
+      { const [bx0, bz0, bx1] = g.box, cnx = Math.ceil((bx1 - bx0) / 8) + 1, hC = g.hAt, geo = g.mesh.geometry, FLAT = EAST[5] + 0.08;
+        const natAt = (x, z) => { const fx = (x - bx0) / 8, fz = (z - bz0) / 8, ix = fx | 0, iz = fz | 0, a = fx - ix, b = fz - iz, k = iz * cnx + ix; return (NAT[k] * (1 - a) + NAT[k + 1] * a) * (1 - b) + (NAT[k + cnx] * (1 - a) + NAT[k + cnx + 1] * a) * b; };
+        const fineH = (x, z) => { const i = near(h, x, z), s = S[i], d = Math.hypot(s.x - x, s.z - z), k = (i - iLip + N) % N, kk = k - nArena;
+          const t = Math.hypot(x - EAST[0], z - EAST[1]) < PL.r ? (k < nArena && d < s.w + 1 ? s.y : EAST[5]) + 0.08 + T.dent(x, z) : natAt(x, z);
+          return kk >= 2 && kk <= nTun - 2 ? Math.max(t, s.y + 10.6 - Math.max(0, d - W - 3) * 2.1) : Math.abs(kk - nTun) < 6 && d < W + 1 ? Math.min(t, s.y - 0.5) : t; }; // (at the exit the basin stands over the roadway: kept under it across the mouth)
+        const nearS = (x, z, i0, i1, r) => { for (let i = i0; i <= i1; i += 2) { const s = S[(i + N) % N]; if (Math.hypot(s.x - x, s.z - z) < r) return true; } return false; };
+        const FC = new Set(), fin = (ix, iz) => FC.has(iz * cnx + ix); // the cells drawn fine: round the exit of the tunnel; in the arena, round its entry and wherever one of 9 points of the cell is off the flat floor
+        for (let c = 0; c < geo.index.count / 6; c++) { const ix = c % (cnx - 1), iz = c / (cnx - 1) | 0, x = bx0 + ix * 8, z = bz0 + iz * 8;
+          if (nearS(x + 4, z + 4, T.t1 - 45, T.t1 + 6, 34) || ![0, 8].some(a => [0, 8].some(b => Math.hypot(x + a - EAST[0], z + b - EAST[1]) > PL.r + 10))
+            && (nearS(x + 4, z + 4, T.t0 - 6, T.t0 + 2, 30) || [0, 4, 8].some(a => [0, 4, 8].some(b => Math.abs(fineH(x + a, z + b) - FLAT) > 1e-3)))) FC.add(iz * cnx + ix); }
+        geo.setIndex([...geo.index.array].filter((v, f) => { const c = f / 6 | 0; return !fin(c % (cnx - 1), c / (cnx - 1) | 0); }));
+        // a vertex on the edge of the fine area keeps the height of the coarse grid (no crack); a 2 m face inside the tube at a mouth is left out (from 1 sample in at the entry: the floor of the tunnel is there, the headwall boucheLune stands over the cut)
+        const V = new Map(), P = [], UV = [], IX = [], vert = (gx, gz) => { const key = gz * 1e5 + gx; let v = V.get(key); if (v == null) { const x = bx0 + gx * 2, z = bz0 + gz * 2, cx = gx >> 2, cz = gz >> 2;
+          const inner = fin(cx, cz) && (gx & 3 || fin(cx - 1, cz)) && (gz & 3 || fin(cx, cz - 1)) && (gx & 3 || gz & 3 || fin(cx - 1, cz - 1));
+          V.set(key, v = P.length / 3); P.push(x, inner ? fineH(x, z) : hC(x, z), z); UV.push(x / 10, z / 10); } return v; };
+        for (const c of FC) { const ix = c % cnx, iz = c / cnx | 0; for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) { const gx = ix * 4 + a, gz = iz * 4 + b, x = bx0 + gx * 2 + 1, z = bz0 + gz * 2 + 1, i = near(h, x, z), kk = (i - iLip + N) % N - nArena, m = Math.min(kk, nTun - kk);
+          if (kk >= 1 && kk <= nTun && m < 4 && Math.hypot(S[i].x - x, S[i].z - z) < W + 1) continue; // (up to the last sample at the exit: the basin stands 2 m over the floor of the tube there)
+          const p = vert(gx, gz), q = vert(gx + 1, gz), r = vert(gx, gz + 1), u = vert(gx + 1, gz + 1); IX.push(p, r, q, q, r, u); } }
+        const fg = new THREE.BufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); fg.setAttribute('uv', new THREE.Float32BufferAttribute(UV, 2)); fg.setIndex(IX); fg.computeVertexNormals();
+        const C = new Float32Array(P.length / 3 * 4), nr = fg.attributes.normal.array; // the same three layers as the terrain (scenery.js, terrain: a slope or a weight per layer)
+        for (let k = 0; k < P.length / 3; k++) LAYERS.forEach((c, j) => { C[k * 4 + j] = Math.max(0, Math.min(1, c.slope ? ss((1 - nr[k * 3 + 1] - c.slope[0]) / (c.slope[1] - c.slope[0])) : c.weight(P[k * 3], P[k * 3 + 2]))); });
+        fg.setAttribute('layer', new THREE.BufferAttribute(C, 4)); const fm = new THREE.Mesh(fg, g.mesh.material); fm.receiveShadow = true; h.scene.add(fm);
+        g.hAt = (x, z) => fin((x - bx0) / 8 | 0, (z - bz0) / 8 | 0) ? fineH(x, z) : hC(x, z); } // what stands or lies on the ground (rings, pieces) reads the fine ground where it is drawn
       // a height field cannot open a tube: the faces that would cross the tunnel (one corner on the berm, their centre over the roadway) are taken out; the engine's hull closes the slot from above
       { const geo = g.mesh.geometry, p = geo.attributes.position, ix = geo.index.array, keep = [], over = i => OVER.has(p.getX(i) + "," + p.getZ(i));
         for (let f = 0; f < ix.length; f += 3) { const [a, b, c] = [ix[f], ix[f + 1], ix[f + 2]], cx = (p.getX(a) + p.getX(b) + p.getX(c)) / 3, cz = (p.getZ(a) + p.getZ(b) + p.getZ(c)) / 3, q = S[near(h, cx, cz)];
@@ -48,25 +75,27 @@
         geo.setIndex(keep); }
       // the game draws the roadway at a constant ±W all round the lap: here it is hidden (no road down the crater wall nor across the arena) and laid again at the real width (±s.w, M.wide), from the tunnel exit to the lip
       { const road = h.scene.children.find(o => o.material && o.material.userData && o.material.userData.mo === 1 && o.material.userData.mo0 == null); if (road) road.visible = false; }
-      h.ribbon(T.t1, nOut, s => -s.w, 0, s => s.w, 0, h.mat('routeLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road.slice(0, 4)), 32);
+      h.ribbon(T.t1, nOut, s => -s.w, 0, s => s.w, 0, h.mat('pisteLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), 32);
+      // the floor of the tunnel is the engine's (its material is lit by the tunnel): found by its shape, a ribbon of the tunnel's length at road level, it takes the same track drawing
+      { const y0 = S[T.t0].y, fl = h.scene.children.find(o => o.isMesh && o.material && o.material.isMeshBasicMaterial && o.geometry.attributes.position.count === (nTun + 1) * 2 && [0, 1].every(k => Math.abs(o.geometry.attributes.position.getY(k) - y0) < 0.01)); if (fl) fl.material.map = h.tx('pisteLune'); }
       // th.guardM = 0: the guardrails are placed here, on the same stretch only: none under the flight, none across the arena
       for (const sd of [-1, 1]) h.guardM(sd, T.t1, nOut, s => sd * s.w, h.TH.wallH, s => sd * s.w, -2, h.mat('guardrail', DS, h.TH.intoWall));
       // MAT: the shared materials of the map, one draw pass each for the whole map; its keys are the zone names of the lune shapes (shapes-lune-*.js). Every piece of scenery goes into the group `kit`, merged per material at the end
       const MAT = { shell: h.mat('coqueLune', {}, '#e8e2d0'), hall: h.mat('coqueLune', {}, '#9aa0ac'), dark: h.mat('concreteDark'), steel: h.mat('steelMat'), lattice: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#c8c4b8'),
         amber: h.mat('metalPale', { c: 0xd78a40 }), glow: h.mat('paint', { emis: 1, c: 0xffa040 }), hublot: h.mat('hublotLune', { emis: 1 }, '#ffe9b8'), ceil: h.mat('hublotLune', { emis: 1 }, '#cfe8ff'), solar: h.mat('solaireLune'),
         glass: h.mat('paneDark'), dish: h.mat('metalPale', { c: 0xe8e2d0, ...DS }), rock: h.mat('rocheLune', {}, '#5d6472'), pale: h.mat('rocheLune', {}, '#a9afba', 0.6), far: h.mat('rocheLune', {}, '#3a404c', 0.4),
-        strata: h.mat('rocheLune', DS, '#3d4452', 0.5), crest: h.mat('regolitheLune', DS, '#c4c8d2'), plain: h.mat('regolitheLune', {}, '#565b68'), earth: h.mat('terreLune', { emis: 1, fog: false }) };
+        strata: h.mat('rocheLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, '#3d4452', 0.5), crest: h.mat('regolitheLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, '#c4c8d2'), plain: h.mat('regolitheLune', {}, '#565b68'), earth: h.mat('terreLune', { emis: 1, fog: false }) };
       MAT.tire = MAT.dark;
       const kit = new THREE.Group(); h.scene.add(kit);
       // rings laid on the ground, one mesh per material: the strata of a crater wall, the pale crest of a rim, the dark bottom of a small crater. ring(x, z, radii from inside to outside, material, [[angle, half-width], …] left open)
-      const BANDS = new Map(), ring = (cx, cz, R, m, gaps = [], jit = 0, lift = 0.7) => { const B = BANDS.get(m) || BANDS.set(m, { p: [], uv: [], ix: [] }).get(m), n = Math.max(12, Math.round(R[R.length - 1] * 0.5));
+      const BANDS = new Map(), ring = (cx, cz, R, m, gaps = [], jit = 0, lift = 0.7) => { const B = BANDS.get(m) || BANDS.set(m, { p: [], uv: [], ix: [] }).get(m), n = Math.max(24, Math.round(R[R.length - 1] * 0.5));
         for (let a = 0; a < n; a++) { const a0 = a / n * 2 * Math.PI, a1 = (a + 1) / n * 2 * Math.PI; if (gaps.some(([ga, gw]) => Math.abs(Math.atan2(Math.sin(a0 - ga), Math.cos(a0 - ga))) < gw)) continue;
           for (let j = 0; j < R.length - 1; j++) { const b = B.p.length / 3; for (const [an, r0] of [[a0, R[j]], [a1, R[j]], [a0, R[j + 1]], [a1, R[j + 1]]]) { const r = r0 * (1 + jit * wob(an, cx + cz)), x = cx + r * Math.cos(an), z = cz + r * Math.sin(an); B.p.push(x, g.hAt(x, z) + lift, z); B.uv.push(an * R[R.length - 1] / 8, r / 8); } B.ix.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } } };
       const steps = (a, b, st) => { const R = []; for (let r = a; r < b; r += st) R.push(r); R.push(b); return R; };
       const aLip = Math.atan2(S[iLip].z - EAST[1], S[iLip].x - EAST[0]), aOut = Math.atan2(S[T.t0].z - EAST[1], S[T.t0].x - EAST[0]);
       for (const [a, b] of [[225, 235], [260, 272], [295, 308], [325, 337]]) ring(EAST[0], EAST[1], steps(a, b, 6), MAT.strata, [[aLip, 0.1], [aOut, 0.1]]);              // the great crater: four strata on its wall (open under the flight and over the tunnel),
       ring(EAST[0], EAST[1], steps(354, 366, 6), MAT.crest, [[aLip, 0.08]]);                                                                                    // its pale crest (open where the road reaches the lip),
-      for (const [x, z, r] of M.dents) { ring(x, z, steps(0, r * 0.8, 5), MAT.strata, [], 0.1); ring(x, z, steps(r, r + Math.max(3, r * 0.14), 4), MAT.crest, [], 0.07); }   // and each small crater of the floor: dark bottom, pale rim, neither quite round
+      for (const [x, z, r] of M.dents) { ring(x, z, steps(0, r * 0.8, 2.5), MAT.strata, [], 0.1, 0.12); ring(x, z, steps(r, r + Math.max(3, r * 0.14), 4), MAT.crest, [], 0.07, 0.12); } // (12 cm over the fine ground: the car drives on them)   // and each small crater of the floor: dark bottom, pale rim, neither quite round
       // ray(x, z, from, to, angle, width): a streak of pale ejecta thrown out of a crater, tapering outward
       const ray = (cx, cz, r0, r1, a, w) => { const B = BANDS.get(MAT.crest) || BANDS.set(MAT.crest, { p: [], uv: [], ix: [] }).get(MAT.crest), n = Math.max(2, Math.round((r1 - r0) / 8));
         for (let k = 0; k < n; k++) { const b = B.p.length / 3; for (const [f, sd] of [[k / n, -1], [k / n, 1], [(k + 1) / n, -1], [(k + 1) / n, 1]]) { const r = r0 + (r1 - r0) * f, hw = w * (1 - f * 0.8) / 2, x = cx + r * Math.cos(a) - sd * hw * Math.sin(a), z = cz + r * Math.sin(a) + sd * hw * Math.cos(a); B.p.push(x, g.hAt(x, z) + 0.5, z); B.uv.push(r / 8, sd * hw / 8); } B.ix.push(b, b + 2, b + 1, b + 1, b + 2, b + 3); } };
