@@ -11,8 +11,24 @@
       veil(g, 0.09 * a, () => { for (const [y, ht] of beds) for (let x = 0; x < 64;) { const w = 6 + (rand() * 22 | 0); R(g, rand() < 0.5 ? '#000' : '#fff', x, y, w, ht); x += w; } }); // each bed in blocks of uneven tone, not one band
       veil(g, 0.42 * a, () => { for (const [y] of beds) if (rand() < 0.7) R(g, '#1a2420', rand() * 30 | 0, y, 20 + (rand() * 44 | 0), 1); for (let i = 0; i < 16; i++) { const [y, ht] = beds[rand() * beds.length | 0]; R(g, '#1a2420', rand() * 64 | 0, y, 1 + (i % 4 === 0), ht * (1 + (rand() * 4 | 0))); } });
       veil(g, 0.5 * a * m, () => { for (const [y] of beds) if (rand() < 0.4) for (let x = rand() * 20 | 0; x < 64; x += 2 + (rand() * 14 | 0)) R(g, '#4e7752', x, y + 1, 1 + (rand() * 4 | 0), 1 + (rand() * 2 | 0)); });
+      veil(g, 0.55 * a * m, () => { for (let i = 0; i < 5; i++) { const [y] = beds[rand() * beds.length | 0], x = rand() * 56 | 0, w = 4 + (rand() * 9 | 0); R(g, '#3f6b46', x, y, w, 2 + (rand() * 2 | 0)); R(g, '#6fa05c', x + 1, y, w - 3, 1); for (let d = x; d < x + w; d += 2 + (rand() * 3 | 0)) R(g, '#3f6b46', d, y + 2, 1, 1 + (rand() * 5 | 0)); } }); // plants hanging from the ledges: a green band, a lit top, drips of ivy
       veil(g, 0.2 * a, () => { for (let i = 0; i < 3 + v; i++) { const x = rand() * 60 | 0, w = 2 + (rand() * 4 | 0), y = rand() * 30 | 0; R(g, i & 1 ? '#fff' : '#1a2420', x, y, w, 20 + (rand() * 40 | 0)); R(g, i & 1 ? '#fff' : '#1a2420', x + 1, y - 4, Math.max(1, w - 2), 4); } }); // long runs of damp and of pale lichen down the face
       grain(g, o, 240, 0.14); }, 8],
+    // a whole far pillar on one tile (aiguilleLointainePiliers: u = half the way round, v = foot to summit), v = one of three drawings. No geometry is added on the far pillars: everything is painted.
+    // From the top: a wooded cap with a ragged lower edge and trees standing out of it, strata of uneven tone with a few warm beds, dark eroded gullies with a lit lip, hollows, ledges carrying a green band and ivy,
+    // trees clinging to the faces (a dark mass, a lit top), and the mist of the sea of clouds over the lower third. Pale base tone: each instance multiplies it by its own tint
+    lointainPiliers: (v = 0) => [64, 128, (g, o) => { const { R, rand, veil } = o, GR = ['#2c5238', '#3f6f48', '#6fa860']; R(g, '#aeb4a8', 0, 0, 64, 128);
+      veil(g, 0.14, () => { for (let y = 0; y < 128;) { const ht = 3 + (rand() * 8 | 0); R(g, rand() < 0.5 ? '#000' : '#fff', 0, y, 64, ht); y += ht; } });
+      veil(g, 0.2, () => { for (let i = 0; i < 4 + v; i++) R(g, '#c89a6a', 0, 14 + (rand() * 90 | 0), 64, 2 + (rand() * 3 | 0)); });
+      veil(g, 0.1, () => { for (let i = 0; i < 40; i++) R(g, i & 1 ? '#000' : '#fff', rand() * 64 | 0, rand() * 128 | 0, 6 + (rand() * 14 | 0), 3 + (rand() * 6 | 0)); });
+      for (let i = 0; i < 9 + v; i++) { const x = rand() * 62 | 0, w = 1 + (rand() * 3 | 0), y = rand() * 50 | 0, l = 36 + (rand() * 70 | 0); veil(g, 0.42, () => R(g, '#22322e', x, y, w, l)); veil(g, 0.22, () => R(g, '#fff', x + w, y + 2, 1, l - 4)); } // gullies
+      veil(g, 0.3, () => { for (let i = 0; i < 7; i++) { const x = rand() * 58 | 0, y = 12 + (rand() * 90 | 0), w = 3 + (rand() * 6 | 0), ht = 5 + (rand() * 10 | 0); R(g, '#22322e', x, y, w, ht); R(g, '#22322e', x + 1, y - 1, Math.max(1, w - 2), 1); } }); // hollows
+      const tree = (x, y) => { R(g, GR[0], x, y, 3, 2); R(g, GR[0], x + 1, y - 1, 2, 1); R(g, GR[2], x, y - 1, 2, 1); };
+      for (let i = 0; i < 6; i++) { const y = 16 + (rand() * 84 | 0), x0 = rand() * 40 | 0, w = 14 + (rand() * 40 | 0); veil(g, 0.5, () => R(g, '#1a2a24', x0, y + 2, w, 1)); // ledges
+        for (let x = x0; x < x0 + w; x += 1 + (rand() * 3 | 0)) { R(g, GR[1], x % 64, y, 2, 2); if (rand() < 0.3) R(g, GR[1], x % 64, y + 2, 1, 1 + (rand() * 4 | 0)); if (rand() < 0.3) tree(x % 64, y - 1); } }
+      for (let i = 0; i < 26; i++) tree(rand() * 61 | 0, 10 + (rand() * 96 | 0));
+      for (let x = 0; x < 64; x += 2) { const d = 7 + (rand() * 8 | 0); R(g, GR[1], x, 0, 2, d); R(g, GR[0], x, d - 1, 2, 1 + (rand() * 3 | 0)); if (rand() < 0.5) R(g, GR[2], x, rand() * (d - 2) | 0, 2, 1); if (rand() < 0.25) R(g, GR[1], x, d, 1, 2 + (rand() * 6 | 0)); } // the cap
+      [[60, 0.12], [72, 0.24], [84, 0.38], [96, 0.52]].forEach(([y, a2]) => veil(g, a2 - (y > 60 ? 0.1 : 0), () => R(g, '#dfeaee', 0, y, 64, 128 - y))); }, 8],
     // ground of the shoulders, c = its tint (moss green in the forest, pale stone and moss on the plateau): low plants as dabs of two greens, a few pale stones, no direction; 8 m per tile
     solPiliers: (c = '#4f6f4a') => [64, 64, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 64, 64); grain(g, o, 380, 0.16);
       veil(g, 0.5, () => { for (let i = 0; i < 60; i++) R(g, i & 1 ? '#263e37' : '#82c98c', rand() * 60 | 0, rand() * 60 | 0, 2 + (rand() * 5 | 0), 2 + (rand() * 3 | 0)); });
@@ -21,7 +37,7 @@
     pierrePiliers: (rot = 0) => [64, 64, (g, o) => { const { R, rand, veil } = o; if (rot) g.setTransform(0, 1, 1, 0, 0, 0); R(g, '#c2bba3', 0, 0, 64, 64);
       for (let y = 0; y < 64; y += 4) for (let x = -(rand() * 6 | 0); x < 64;) { const w = 6 + (rand() * 7 | 0); veil(g, 0.14, () => R(g, rand() < 0.5 ? '#000' : '#fff', x, y, w, 4)); veil(g, 0.5, () => { R(g, '#5d5a4c', x, y, 1, 4); }); x += w; }
       veil(g, 0.5, () => { for (let y = 0; y < 64; y += 4) R(g, '#5d5a4c', 0, y, 64, 1); });
-      veil(g, 0.3, () => { for (let i = 0; i < 16; i++) R(g, '#687c65', rand() * 62 | 0, 40 + (rand() * 22 | 0), 2 + (rand() * 3 | 0), 1); });
+      veil(g, 0.42, () => { for (let i = 0; i < 44; i++) R(g, '#5d8358', rand() * 62 | 0, i % 4 ? 36 + (rand() * 27 | 0) : rand() * 20 | 0, 2 + (rand() * 4 | 0), 1 + (i % 3 === 0)); });
       grain(g, o, 160, 0.12); }, 8],
     // foliage, c = its tint (broadleaf green, dark pine, pale far crown): clumps of light on top and shade below, 4 m per tile
     feuillagePiliers: (c = '#4e7752') => [32, 32, (g, o) => { const { R, rand, veil } = o; R(g, c, 0, 0, 32, 32);

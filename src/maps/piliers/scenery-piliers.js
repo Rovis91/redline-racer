@@ -37,19 +37,19 @@
         if (d > s.w + 20) { for (const [a, b, sd, H] of BANKS) if (sd === side && p > a && p < b) top += H * ramp(a, b) * clamp((d - s.w - 20) / (H / 2.5)) * clamp((118 - d) / 40);
           for (const [t, P] of TOWERS) top = Math.max(top, t - dist(P, x, -z) * 8); }
         return y - top; };
-      // ground: moss and low plants; pale stone and moss on the high plateau; bare rock rubble along the ledges of zones 2 and 5; bedded sandstone wherever it is steep, salmon on the buttress of the descent
+      // ground: moss and low plants everywhere (a lighter green on the high plateau, a duller one along the ledges of zones 2 and 5: this massif is green, never bare); bedded sandstone wherever it is steep, salmon on the buttress of the descent
       const zone = (a, b) => (x, z) => { const p = PKV.get(Math.round(x) + ',' + Math.round(z)); return clamp(Math.min(p - a, b - p) / 80); }, ledge = [zone(700, 1760), zone(2800, 3690)];
       const g = terrain(h, { stepSec: 8, margin: 320, hollow: relief, mat: h.mat('solPiliers'),
-        layerSet: [{ tex: ['solPiliers', '#7f8a66'], weight: zone(2181, 2826) }, { tex: ['gresPiliers', '#6f6e5c', 0.5, 0.6], weight: (x, z) => Math.max(ledge[0](x, z), ledge[1](x, z)), edgePt: [30, 70] },
+        layerSet: [{ tex: ['solPiliers', '#648a56'], weight: zone(2181, 2826) }, { tex: ['solPiliers', '#5c7a50'], weight: (x, z) => Math.max(ledge[0](x, z), ledge[1](x, z)), edgePt: [30, 70] },
           { tex: ['gresPiliers'], slope: [0.3, 0.55] }, { tex: ['gresPiliers', '#c9ad94'], slope: [0.3, 0.55], weight: zone(2826, 3700) }] });
       // on a steep face the texture follows the altitude instead of the plan: the beds stay horizontal and are not stretched down the cliffs
       { const G = g.mesh.geometry, P = G.attributes.position, Nn = G.attributes.normal, U = G.attributes.uv; for (let k = 0; k < P.count; k++) if (Nn.getY(k) < 0.72) U.setXY(k, (P.getX(k) + P.getZ(k)) * 0.07, P.getY(k) / 10); }
       const DS = { side: THREE.DoubleSide };
       // MAT: the shared materials of the map, one draw pass each for the whole map: every real piece of scenery goes into the group `kit`, merged per material at the end. Keys are also the zone names of the piliers assemblies
       const VC = { vertexColors: true, ...DS }; // the rock shapes carry a colour per face (shapes-piliers-roche.js)
-      const MAT = { rock: h.mat('gresPiliers', VC, '#c9c1a6'), warm: h.mat('gresPiliers', VC, '#e6cfba', 0.7), far: h.mat('gresPiliers', VC, '#a9ac9c', 0.7, 0.3), cut: h.mat('gresPiliers', DS, '#9b9a7e', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#c2a48c', 0.7, 1, 1), rubble: h.mat('gresPiliers', DS, '#6f6e5c', 0.5, 0.6),
+      const MAT = { rock: h.mat('gresPiliers', VC, '#b3b5a0'), warm: h.mat('gresPiliers', VC, '#d0c2aa', 0.7), far0: h.mat('lointainPiliers', VC, 0), far1: h.mat('lointainPiliers', VC, 1), far2: h.mat('lointainPiliers', VC, 2), cut: h.mat('gresPiliers', DS, '#8f9a7c', 1, 1, 1), cutWarm: h.mat('gresPiliers', DS, '#b3a58c', 0.7, 1, 1), rubble: h.mat('solPiliers', DS, '#5c7a50'),
         stone: h.mat('pierrePiliers'), wall: h.mat('pierrePiliers', DS, 1), leaf: h.mat('feuillagePiliers', DS), pine: h.mat('feuillagePiliers', DS, '#3c554a'), farLeaf: h.mat('feuillagePiliers', DS, '#58755e'), deep: h.mat('feuillagePiliers', DS, '#35593f'), pale: h.mat('feuillagePiliers', DS, '#7fa860'), gold: h.mat('feuillagePiliers', DS, '#84894a'), bark: h.mat('ecorcePiliers'),
-        rock0: h.mat('gresPiliers', VC, '#c9c1a6', 1, 1, 0, 3), rock1: h.mat('gresPiliers', VC, '#d2c4a0', 1, 1, 0, 1), rock2: h.mat('gresPiliers', VC, '#bcc0a6', 1, 0.6, 0, 2),
+        rock0: h.mat('gresPiliers', VC, '#b3b5a0', 1, 1, 0, 3), rock1: h.mat('gresPiliers', VC, '#bdb8a0', 1, 1, 0, 1), rock2: h.mat('gresPiliers', VC, '#a8b2a0', 1, 1, 0, 2),
         steel: h.mat('acierPiliers', DS), rail: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#24404c'), wood: h.mat('laquePiliers'), tile: h.mat('tuilePiliers', DS), water: h.mat('eauPiliers', { smooth: 1 }), fall: h.mat('eauPiliers', { smooth: 1, ...DS }, '#eef6f4'), dark: h.mat('tunnelPiliers', { c: 0x2a2c28 }) };
       const ROCKS = [MAT.rock0, MAT.rock1, MAT.rock2]; // three drawings and tints of the same sandstone, dealt among towers and needles
       const clouds = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), h.mat('nuagePiliers', { rep: [47, 47] })); clouds.rotation.x = -Math.PI / 2; clouds.position.set(650, 80, -500); h.scene.add(clouds); // the sea of clouds, 70 m under the lowest road
@@ -66,8 +66,9 @@
       for (const [a, b, sd, e] of EDGES) { const o = s => sd * (s.w + e + 3), r = s => clamp(Math.min(here(s) - a, b - here(s)) / 60) - 1; // r: sinks the wall into the ground where the edge fades out
         h.ribbon(...span(a, b), s => sd * (s.w + 0.6), 0.25, o, s => 0.25 + r(s) * 9, MAT.rubble, 8); h.ribbon(...span(a, b), o, s => 0.25 + r(s) * 9, o, s => -7.75 + r(s) * 9, MAT.wall); }
       // cut faces along the banks (BANKS): beds 5 m high, each set back from the one below, their line broken every 10 to 22 m; the terrain bank is behind them
+      const STEPS = []; // the beds of the cut faces, for the plants that grow on them (below)
       BANKS.forEach(([a, b, sd, H], q) => { const m = q === 2 ? MAT.cutWarm : MAT.cut, nb = Math.ceil(H / 5), up = s => H * clamp(Math.min(here(s) - a, b - here(s)) / 60);
-        const off = k => s => sd * (s.w + 9.5 + k * 1.4 + 3.6 * nz((I.get(s) + k * 3) / (5 + 6 * nz(k, a)) | 0, k + a)), y = k => s => k ? up(s) * k / nb : -1;
+        STEPS.push([a, b, sd, nb, k => s => Math.abs(off(k)(s)), k => s => (k ? up(s) * k / nb : -1)]); const off = k => s => sd * (s.w + 9.5 + k * 1.4 + 3.6 * nz((I.get(s) + k * 3) / (5 + 6 * nz(k, a)) | 0, k + a)), y = k => s => k ? up(s) * k / nb : -1;
         for (let k = 0; k < nb; k++) { h.ribbon(...span(a, b), off(k), y(k + 1), off(k), y(k), m); h.ribbon(...span(a, b), off(k), y(k + 1), k < nb - 1 ? off(k + 1) : s => off(k)(s) + sd * 16, y(k + 1), m); } });
 
       const kit = new THREE.Group(); h.scene.add(kit);
@@ -88,6 +89,10 @@
       const fir = (x, z, ht = 18, y = g.hAt(x, z) - 0.4) => { const k = ht / 18; put('futPiliers', 'bark', same(x, y, z, k * 0.5, 0)); put('sapinPiliers', nz(x, z + 5) > 0.5 ? 'pine' : 'deep', same(x, y, z, k)); };
       const bush = (x, z, w = 6, ht = 2.5, y = g.hAt(x, z) - 0.3) => put('taillisPiliers', nz(z, x) > 0.6 ? 'pale' : 'leaf', [x, y, z, nz(x, z) * 6, w, ht, w * (0.7 + 0.6 * nz(z, 3))]);
       const shrub = (x, z, k = 1, y = g.hAt(x, z) - 0.2, m = nz(x, z * 2) > 0.88 ? 'gold' : nz(x, z * 2) > 0.4 ? 'deep' : 'pale') => put('arbustePiliers', m, same(x, y, z, k));
+      // cliffPine: a pine leaning toward ry (out over the void); fern: a clump of ferns; ivy(x, y, z, ry, w, ht): a curtain hanging ht metres down a face whose normal is ry
+      const cliffPine = (x, z, ht, ry, y) => { const k = ht / 10; put('futPenchePiliers', 'bark', [x, y, z, ry, k, k, k]); put('pinPenchePiliers', nz(x, z + 7) > 0.5 ? 'pine' : 'deep', [x, y, z, ry, k, k, k]); };
+      const fern = (x, z, k = 1, y = g.hAt(x, z) - 0.15) => put('fougerePiliers', nz(z, x + 1) > 0.5 ? 'pale' : 'leaf', same(x, y, z, k));
+      const ivy = (x, y, z, ry, w, ht) => put('lierrePiliers', nz(x + y, z) > 0.55 ? 'leaf' : 'deep', [x, y, z, ry, 1.6, ht, w]);
       const rocks = (x, z, w, ht, seed, m = MAT.rock) => set('rocherPiliers', x, -z, { ry: seed, a: [w, ht, w * (0.7 + 0.6 * nz(seed, 2)), seed], skin: m });
       // wood(pk, side, off, w, d, kind): a wood filling a footprint w deep from `off` metres beyond the wall and d long, centred on chainage pk. kind 1: broadleaf with pines and firs and undergrowth at its feet; 0: undergrowth, shrubs and small trees.
       // Nothing is planted within 11 m of any stretch of road, nor where the ground has fallen into the ravine
@@ -97,42 +102,60 @@
         else { v > 0.32 ? tree(x, z, 15 + 9 * nz(o, a)) : v > 0.14 ? fir(x, z, 16 + 10 * v) : pine(x, z, 16 + 6 * v); if (o < off + 16) nz(a, o) > 0.5 ? bush(x + 4, z + 3, 6 + 4 * v, 3) : shrub(x + 4, z + 3, 1.2 + v); } } };
       // the towers: a stack of beds over each terrain pillar (the terrain is the core, 2.5 m inside), a wooded crown, pines on it. Along the road the stack is cut back to a face 6 m beyond the wall, leaning 12 cm per metre;
       // round the tunnel the faces that reach lower than 12.5 m above the roadway are removed, and the stone portals of zone 4 stand in the two openings, a rock panel behind each
-      const clear = G => { const P = G.attributes.position, cut = new Uint8Array(P.count); for (let k = 0; k < P.count; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k), i = near(h, x, z), s = S[i], lat = (x - s.x) * -s.tz + (z - s.z) * s.tx, lon = (x - s.x) * s.tx + (z - s.z) * s.tz;
+      const clear = (G, cx, cz) => { const P = G.attributes.position, cut = new Uint8Array(P.count); for (let k = 0; k < P.count; k++) { const x = P.getX(k), y = P.getY(k), z = P.getZ(k), i = near(h, x, z), s = S[i], lat = (x - s.x) * -s.tz + (z - s.z) * s.tx, lon = (x - s.x) * s.tx + (z - s.z) * s.tz;
           const min = s.w + 6 + 0.12 * Math.max(0, y - s.y); if ((i - T.t0 + 14 + N) % N <= T.t1 - T.t0 + 28) { if (Math.abs(lat) < s.w + 9 && y < s.y + 12.5) cut[k] = 1; continue; } // round the tunnel: every face that reaches into the opening is removed
-          if (y < s.y - 40 || Math.abs(lat) >= min || Math.abs(lon) > 30) continue;
-          const l = (lat < 0 ? -1 : 1) * min; P.setX(k, s.x + s.tx * lon - s.tz * l); P.setZ(k, s.z + s.tz * lon + s.tx * l); }
+          // a vertex of the wide foot that lands beyond the road is brought back to the tower's own side: no face may span the roadway
+          const own = cx === undefined ? 0 : (cx - s.x) * -s.tz + (cz - s.z) * s.tx < 0 ? -1 : 1, wrong = own && lat * own < 0 && Math.abs(lat) < 90;
+          if (y < s.y - 40 || Math.abs(lon) > 30 || (Math.abs(lat) >= min && !wrong)) continue;
+          const l = (wrong ? own : lat < 0 ? -1 : 1) * min; P.setX(k, s.x + s.tx * lon - s.tz * l); P.setZ(k, s.z + s.tz * lon + s.tx * l); }
         if (cut.some(v => v)) for (const name of ['position', 'uv', 'color']) { const a = G.attributes[name], keep = []; for (let k = 0; k < P.count; k += 3) if (!cut[k] && !cut[k + 1] && !cut[k + 2]) keep.push(...a.array.subarray(k * a.itemSize, (k + 3) * a.itemSize)); G.setAttribute(name, new THREE.Float32BufferAttribute(keep, a.itemSize)); }
         G.computeVertexNormals(); return G; };
       // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown and two pines; far = 1: in the pale tints of the distance, no pines
-      const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.far : ROCKS[seed % 3] }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf });
+      const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: ROCKS[seed % 3] }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf });
         if (!far) for (let k = 0; k < 2; k++) pine(x + (nz(seed, k) - 0.5) * w * 0.5, -n + (nz(k, seed) - 0.5) * d * 0.5, 9 + 6 * nz(seed + k), top + 1); };
       // a white fall down a rock face, from (x, y, z) to (x1, y1, z1), w wide: still water, seen from far
       const fall = (a, b, w) => { const l = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), q = h.pose('boxMesh', MAT.fall, kit, a.map((v, i) => (v + b[i]) / 2), w, 0.8, l); q.lookAt(...b); };
-      TOWERS.forEach(([t, P], q) => { const rock = q === 4 ? MAT.warm : ROCKS[q % 3], G = clear(h.pose('stackPiliers', rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
-        const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length;
+      TOWERS.forEach(([t, P], q) => { const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length;
+        const rock = q === 4 ? MAT.warm : ROCKS[q % 3], G = clear(h.pose('stackPiliers', rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry, ...(q < 6 ? [cx, -cn] : [])); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
         // the summit: pines and broadleaf trees standing on the crown, denser toward the edge
-        for (let k = 0; k < 28; k++) { const [x, n] = P[k % P.length], f = 0.15 + 0.78 * nz(k, q), X = cx + (x - cx) * f, Z = -(cn + (n - cn) * f); k % 3 ? pine(X, Z, 12 + 12 * nz(q, k), t + 2) : tree(X, Z, 9 + 6 * nz(k, q + 1), 1.1, t + 1); }
+        for (let k = 0; k < 46; k++) { const [x, n] = P[k % P.length], f = 0.15 + 0.78 * nz(k, q), X = cx + (x - cx) * f, Z = -(cn + (n - cn) * f); k % 3 ? pine(X, Z, 12 + 12 * nz(q, k), t + 2) : tree(X, Z, 9 + 6 * nz(k, q + 1), 1.1, t + 1); }
         // the shoulders of the stack: pines (one or two, taller on a wide shoulder), a shrub or a tuft on every step, away from the road
         for (const [x, y, z, w] of G.userData.ledges) { if (g.dAt(x, z) < 24 || y < 85) continue; const v = nz(x, z + y), k = Math.min(1.6, w / 3);
-          if (v > 0.4) { pine(x, z, (6 + 7 * nz(y, x)) * k, y - 0.5); if (v > 0.7) pine(x + 2.5, z - 2, (5 + 5 * nz(x, y)) * k, y - 0.5); } else v > 0.15 ? shrub(x, z, 1 + 1.5 * v, y - 0.3) : bush(x, z, 4 + 3 * v, 1.6, y - 0.4); }
+          const out = Math.atan2(-(z + cn), x - cx); bush(x, z, 4 + 4 * v, 1.8, y - 0.4); ivy(x + Math.cos(out) * w * 0.5, y, z - Math.sin(out) * w * 0.5, out, 5 + 6 * v, 5 + 9 * nz(z, y));
+          if (v > 0.62) cliffPine(x, z, (9 + 8 * nz(y, x)) * k, out, y - 0.5); else if (v > 0.3) { pine(x, z, (6 + 7 * nz(y, x)) * k, y - 0.5); if (v > 0.45) pine(x + 2.5, z - 2, (5 + 5 * nz(x, y)) * k, y - 0.5); } else shrub(x, z, 1 + 1.5 * v, y - 0.3); }
         // columns split off the tower: lower needles standing against its flanks
         if (q < 6) for (let k = 0; k < 6; k++) { const i = (k * 2 + q) % P.length, [x, n] = P[i], l = Math.hypot(x - cx, n - cn), o = 1 + (16 + 26 * nz(k, q + 3)) / l, X = cx + (x - cx) * o, Nn = cn + (n - cn) * o, w = 12 + 12 * nz(q, k + 5);
           if (g.dAt(X, -Nn) > 60) needle(X, Nn, w, w * (0.8 + 0.5 * nz(k, q)), t * (0.42 + 0.34 * nz(q + k, 2)), q * 7 + k); }
         // a fall on the three tallest, down the flank that looks at the ravine
         if (q === 0 || q === 2 || q === 5) { const [x, n] = P[q === 5 ? 3 : 1], l = Math.hypot(x - cx, n - cn), at2 = (o, y) => [cx + (x - cx) * (1 + o / l), y, -(cn + (n - cn) * (1 + o / l))]; fall(at2(7.5, t - 14), at2((t - 84) / 8 + 9, 84), 5); } });
-      // the far field: the map is a forest of pillars in a sea of clouds. Instanced needles (four silhouettes, scaled) at three ranges from the centre of the lap: 120 between 0.75 and 1.2 km in the tints of the near rock,
-      // 150 out to 1.9 km and 130 out to 2.8 km in the pale tints of the distance, larger as they get farther so they still read; none within 150 m of the road
-      { const L = new Map(), add = (k, e) => (L.get(k) || L.set(k, []).get(k)).push(e);
-        [[120, 750, 1200, 22, 34, 'rock'], [150, 1200, 1900, 30, 50, 'far'], [130, 1900, 2800, 44, 80, 'far']].forEach(([n, r0, r1, w0, dw, m], band) => { for (let k = 0; k < n; k++) {
+      // the far field: the map is a forest of pillars in a sea of clouds. Instanced needles (four silhouettes, scaled) at three ranges from the centre of the lap: 120 between 0.75 and 1.2 km, 150 out to 1.9 km
+      // and 130 out to 2.8 km, larger as they get farther so they still read; none within 150 m of the road. They carry no trees: each is painted (lointainPiliers, three drawings: wooded cap, clinging trees,
+      // gullies, ledges, strata) and takes one of seven tints, so no two neighbours read the same; only the faceted crown that rounds the summit is a second shape
+      { const L = new Map(), add = (k, e) => (L.get(k) || L.set(k, []).get(k)).push(e), TINT = [0xffffff, 0xdde8d4, 0xf2e6d0, 0xd4e0e6, 0xe6ecd8, 0xc8d8c6, 0xeadcc8];
+        [[120, 750, 1200, 22, 34], [150, 1200, 1900, 30, 50], [130, 1900, 2800, 44, 80]].forEach(([n, r0, r1, w0, dw], band) => { for (let k = 0; k < n; k++) {
           const a = (k + nz(k, band)) / n * 6.2832, R = r0 + (r1 - r0) * nz(k, band + 3), x = 650 + Math.cos(a) * R, z = -500 - Math.sin(a) * R, w = (w0 + dw * nz(k, band + 5)) / 40, top = (190 + 250 * nz(k, band + 7) ** 1.5) / 250, v = k % 4;
-          if (g.dAt(x, z) < 150) continue; const e = [x, 0, z, nz(k, 9) * 6, w, top, w * (0.75 + 0.5 * nz(k, band + 11))]; add(v + '|' + (m === 'rock' ? 'rock' + k % 3 : 'far'), e); add(v + 'c|' + (m === 'rock' ? 'leaf' : 'farLeaf'), e); } });
-        for (const [k, list] of L) { const [v, m] = k.split('|'); inst(h, h.geo(v.endsWith('c') ? 'aiguilleCouronnePiliers' : 'aiguillePiliers', 40, 40, 250, parseInt(v) + 60), MAT[m], list); } }
-      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, THREE });
-      // the verges of the whole lap outside the woods, the bridge and the tunnel: every 7 m on each side, a shrub, a tuft, a boulder, a small pine or nothing, 3 to 12 m beyond the parapet, only on ground at road level
-      for (let p = 640; p < 3700; p += 7) for (const sd of [-1, 1]) { if ((p > 1790 && p < 2090) || (p > 2370 && p < 2510)) continue;
-        const s = at(p), [x, z] = edgePt(s, sd, s.w + 3 + 9 * nz(p, sd)), v = nz(p * 1.7, sd + 2), y = g.hAt(x, z), plateau = p > 2090 && p < 2826; if (Math.abs(y - s.y) > 3 || g.dAt(x, z) < s.w + 2.5) continue;
-        if (v > 0.8) rocks(x, z, 2 + 3 * nz(p, 4), 1.2 + 2 * nz(p, 5), p, p > 2826 ? MAT.warm : MAT.rock); else if (v > 0.55) shrub(x, z, 0.8 + nz(p, 6)); else if (v > 0.38) bush(x, z, 3 + 3 * nz(p, 7), 1.2 + nz(p, 8));
-        else if (v > 0.3) pine(x, z, 6 + 5 * nz(p, 9)); else if (plateau && v > 0.18) tree(x, z, 8 + 5 * nz(p, 10), 0.9); }
+          if (g.dAt(x, z) < 150) continue; const e = [x, 0, z, nz(k, 9) * 6, w, top, w * (0.75 + 0.5 * nz(k, band + 11)), TINT[(k * 3 + band + (nz(k, band + 13) * 3 | 0)) % 7]]; add(v + '|far' + (k + band) % 3, e); add(v + 'c|' + (band ? 'farLeaf' : 'leaf'), e); } });
+        for (const [k, list] of L) { const [v, m] = k.split('|'), crown = v.endsWith('c'), o = inst(h, crown ? h.geo('aiguilleCouronnePiliers', 40, 40, 250, parseInt(v) + 60) : h.geo('aiguilleLointainePiliers', parseInt(v) + 60), MAT[m], list);
+          if (!crown) { list.forEach((e, i) => o.setColorAt(i, new THREE.Color(e[7]))); o.instanceColor.needsUpdate = true; } } }
+      for (const z of ZONES) PILIERS[z]({ h, g, S, N, T, at, idx, pk, nz, MAT, kit, set, by, on, beam, tree, pine, fir, bush, shrub, rocks, wood, needle, fern, ivy, cliffPine, THREE });
+      // the verges of the whole lap, bridge and tunnel excepted: every 4 m on each side, 3 to 12 m beyond the parapet and only on ground at road level, a fern, a shrub, a tuft, a small tree or pine, a boulder
+      const open = p => !((p > 1790 && p < 2090) || (p > 2370 && p < 2510));
+      for (let p = 0; p < LAP; p += 4) for (const sd of [-1, 1]) { if (!open(p)) continue;
+        const s = at(p), [x, z] = edgePt(s, sd, s.w + 3 + 9 * nz(p, sd)), v = nz(p * 1.7, sd + 2), y = g.hAt(x, z); if (Math.abs(y - s.y) > 3 || g.dAt(x, z) < s.w + 2.5) continue;
+        if (v > 0.9) rocks(x, z, 2 + 3 * nz(p, 4), 1.2 + 2 * nz(p, 5), p, p > 2826 ? MAT.warm : MAT.rock); else if (v > 0.66) shrub(x, z, 0.8 + nz(p, 6)); else if (v > 0.46) bush(x, z, 3 + 3 * nz(p, 7), 1.2 + nz(p, 8));
+        else if (v > 0.38) pine(x, z, 6 + 5 * nz(p, 9)); else if (v > 0.3 && p > 640) tree(x, z, 8 + 5 * nz(p, 10), 0.9); else fern(x, z, 0.8 + 0.9 * nz(p, 11)); }
+      // behind them, outside the forest of zone 1: low woods on both sides all along (undergrowth, shrubs, small trees: the far view stays open over them)
+      for (let p = 660; p < 3720; p += 56) for (const sd of [-1, 1]) if (open(p) && open(p + 28)) wood(p, sd, 9, 30, 56, 0);
+      // the cut faces of the banks: on each bed, a line of undergrowth and ferns, and ivy hanging over its edge
+      for (const [a, b, sd, nb, off, y] of STEPS) for (let k = 0; k < nb; k++) for (let p = a + 30; p < b - 30; p += 4 + 5 * nz(p, k)) { const s = at(p), top = s.y + y(k + 1)(s), v = nz(p, k + 20); if (y(k + 1)(s) - y(k)(s) < 1.5) continue;
+        const [x, z] = edgePt(s, sd, off(k)(s) - 0.3), [x2, z2] = edgePt(s, sd, off(k)(s) + 1.2), ry = h.across(s) + (sd < 0 ? 0 : Math.PI);
+        if (v > 0.35) ivy(x, top + 0.3, z, ry, 2.5 + 4 * v, 1.5 + 3.5 * nz(k, p)); v > 0.6 ? bush(x2, z2, 3 + 2 * v, 1.6, top - 0.3) : v > 0.3 ? fern(x2, z2, 1 + v, top - 0.1) : v > 0.2 ? shrub(x2, z2, 1, top - 0.2) : 0; }
+      // the tower faces cut back along the road (clear): ivy and hanging plants down the first 34 m, so that no bare wall stands over the roadway
+      for (let p = 0; p < LAP; p += 5) for (const sd of [-1, 1]) { const s = at(p), [fx, fz] = edgePt(s, sd, s.w + 9); if (!open(p)) continue;
+        if (!TOWERS.some(([t, P], q) => q < 6 && dist(P, fx, -fz) < (t - s.y) * 0.125 - 3)) continue;
+        for (let j = 0; j < 2; j++) { const yy = 3 + 31 * nz(p, sd + j * 5), [x, z] = edgePt(s, sd, s.w + 5.7 + 0.12 * yy); ivy(x, s.y + yy, z, h.across(s) + (sd < 0 ? 0 : Math.PI), 3 + 5 * nz(j, p), 3 + 7 * nz(p + j, 3)); } }
+      // pines leaning out over the void where the cliff edge comes close to the road (EDGES)
+      for (const [a, b, sd, e] of EDGES) for (let p = a + 66; p < b - 66; p += 18 + 14 * nz(p, e)) { const s = at(p), [x, z] = edgePt(s, sd, s.w + e + 1); cliffPine(x, z, 8 + 6 * nz(p, 1), h.across(s) + (sd < 0 ? Math.PI : 0), s.y); }
       // trees on top of the cut faces of the banks: a green line over the rock, as on the buttress of the references
       BANKS.forEach(([a, b, sd, H]) => { for (let p = a + 40; p < b - 40; p += 9 + 8 * nz(p, H)) { const s = at(p), [x, z] = edgePt(s, sd, s.w + 12 + 1.4 * Math.ceil(H / 5) + 9 + 14 * nz(p, 2)), v = nz(p, 3); if (g.hAt(x, z) < s.y + H * 0.6 || g.dAt(x, z) < 20) continue;
         v > 0.6 ? pine(x, z, 9 + 7 * v) : v > 0.3 ? fir(x, z, 10 + 10 * v) : v > 0.12 ? tree(x, z, 10 + 20 * v) : shrub(x, z, 2); } });

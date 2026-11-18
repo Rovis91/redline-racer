@@ -22,6 +22,13 @@
     houppierHautPiliers: (r = 5) => join([blob(r, 1.3), 0, 0, 0, 4, 4], [blob(r * 0.7, 1.1), r * 0.5, -r * 0.7, 0.3 * r, 3, 3]),
     // a shrub 3 m across: three small masses at different heights, origin on the ground
     arbustePiliers: () => join([blob(1.2, 0.8), 0, 0.8, 0, 2, 1], [blob(0.9, 0.9), 0.9, 1.3, 0.4, 2, 1], [blob(0.8, 0.8), -0.7, 0.6, -0.6, 2, 1]),
+    // a pine leaning out of a cliff toward +X, 10 m: its bent trunk (bark), then its foliage, three flat pads carried out over the void
+    futPenchePiliers: (ht = 10) => join([new THREE.CylinderGeometry(0.2, 0.4, ht * 0.5, 5, 1, true).rotateZ(-0.5), ht * 0.12, ht * 0.22, 0, 0.5, ht / 8], [new THREE.CylinderGeometry(0.13, 0.2, ht * 0.5, 5, 1, true).rotateZ(-0.15), ht * 0.277, ht * 0.687, 0, 0.5, ht / 8]),
+    pinPenchePiliers: (ht = 10) => join(...[[0.5, 0.52, 0.26, 0.3], [0.3, 0.78, 0.33, -0.2], [0.36, 0.96, 0.2, 0.1]].map(([x, y, r, z]) => [new THREE.ConeGeometry(ht * r, ht * r * 0.36, 6), ht * x, ht * y, ht * z * 0.5, 3, 1])),
+    // a clump of ferns 3 m across: six fronds arching out from the foot
+    fougerePiliers: () => join(...[0, 1, 2, 3, 4, 5].map(k => [new THREE.ConeGeometry(0.34, 1.7, 3).translate(0, 0.85, 0).rotateZ(-0.75 - 0.3 * noise(k, 1)).rotateY(k * 1.047 + noise(k, 2)), 0, 0, 0, 1, 1])),
+    // ivy hanging down a rock face: 1 m wide (Z) and 1 m high below its origin, 0.35 m thick (X, the normal of the face): scaled per instance
+    lierrePiliers: () => join([blob(0.5, 1).scale(0.35, 1, 1), 0, -0.45, 0, 2, 2], [blob(0.32, 1).scale(0.35, 1, 1), 0.05, -0.75, 0.3, 1, 2]),
     // a mound of undergrowth, 1 m across and 1 m high: scaled per instance; its lower part is in the ground
     taillisPiliers: () => join([blob(0.6, 1.1), 0, 0.35, 0, 2, 1]),
   });
