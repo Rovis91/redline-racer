@@ -12,9 +12,9 @@
 //   --style=game    the game's real rendering (270 lines, with the interface) instead of the net rendering      --size=1920x1080   image size (960x540 by default)
 //   --hud          keeps the game interface on the image (removed by default: it hides the corners of the scenery)
 //   --name=porte    saves this shot (sample and view) under this name in tools/plans.json
-// Variables: CHROME, PORT (one port per copy of the game, derived from the path: two worktrees do not interfere), DBG (9400). Close the kept Chrome: node tools/bench-quick.js --close
+// Variables: CHROME, PORT (derived from the path; a port already serving another copy of the game is skipped), DBG (9400). Close the kept Chrome: node tools/bench-quick.js --close
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
-const REPO_ROOT = path.join(__dirname, '..'), DBG = +process.env.DBG || 9400, PORT = +process.env.PORT || 8900 + [...REPO_ROOT].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % 90, BASE = 'http://127.0.0.1:' + PORT + '/';
+const REPO_ROOT = path.join(__dirname, '..'), DBG = +process.env.DBG || 9400; let PORT = +process.env.PORT || 8900 + [...REPO_ROOT].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7) % 90, BASE = 'http://127.0.0.1:' + PORT + '/';
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));
 const args = process.argv.slice(2), val = k => (args.find(a => a.startsWith('--' + k + '=')) || '').split('=')[1], opt = k => args.includes('--' + k);
 const ids = fs.readFileSync(path.join(REPO_ROOT, 'src', 'data', 'maps.js'), 'utf8').match(/\{ id: '(\w+)'/g).map(s => s.slice(7, -1)), [mapDef, ...requested] = args.filter(a => !a.startsWith('--'));
@@ -61,8 +61,15 @@ const PAGE = `(() => {
 
 (async () => {
   if (!ids.includes(mapDef) || !requested.length) ending(2, 'usage: node tools/plan.js <map> <shot…|tour|@sample|name> [--avant] [--vue=a,d,h] [--rafale=n] [--pas=n] [--style=game] [--hud] [--taille=LxH] [--nom=x]\nmaps: ' + ids.join(', ') + (labels[mapDef] ? '\nnamed shots from ' + mapDef + ' : ' + Object.keys(labels[mapDef]).join(', ') : ''));
-  if (!(await responds(BASE + 'index.html'))) { spawn('python', [path.join('tools', 'capture.py'), String(PORT)], { cwd: REPO_ROOT, stdio: 'ignore', detached: true }).unref(); if (!(await waitFor(BASE + 'index.html', 40))) ending(2, 'FAIL: the server does not start on port ' + PORT); }
-  if ((await req(BASE + 'tools/plan.js').catch(() => '')).replace(/\r/g, '') !== fs.readFileSync(__filename, 'utf8').replace(/\r/g, '')) ending(2, 'FAIL: the server on port ' + PORT + ' serves another copy of the game; pick another port (PORT=8995 node tools/plan.js …)');
+  const serve = async () => { if (!(await responds(BASE + 'index.html'))) { spawn('python', [path.join('tools', 'capture.py'), String(PORT)], { cwd: REPO_ROOT, stdio: 'ignore', detached: true }).unref(); if (!(await waitFor(BASE + 'index.html', 40))) ending(2, 'FAIL: the server does not start on port ' + PORT); } };
+  await serve();
+  // The port derived from the path can collide with another worktree's (90 ports), and tools/plan.js is the same file in every copy: a copy is recognised by its maps too.
+  // A port that serves another copy is skipped (the next free or matching one is taken), unless PORT was given.
+  const sameCopy = async () => { for (const p of ['tools/plan.js', 'src/data/maps.js']) if ((await req(BASE + p).catch(() => '')).replace(/\r/g, '') !== fs.readFileSync(path.join(REPO_ROOT, p), 'utf8').replace(/\r/g, '')) return false; return true; };
+  for (let k = 0; !(await sameCopy()); k++) {
+    if (process.env.PORT || k > 20) ending(2, 'FAIL: the server on port ' + PORT + ' serves another copy of the game; pick another port (PORT=8995 node tools/plan.js …)');
+    BASE = 'http://127.0.0.1:' + ++PORT + '/'; await serve();
+  }
   if (!(await responds('http://127.0.0.1:' + DBG + '/json/version'))) {
     if (!CHROME) ending(2, 'FAIL: Chrome not found (CHROME variable)');
     // the same flags as tools/bench-quick.js: it is the same kept Chrome

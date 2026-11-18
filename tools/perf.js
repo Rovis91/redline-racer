@@ -48,7 +48,7 @@ export async function runSuite() { // launched by ?perf: each map in turn; ?perf
   const loadTest = Math.round(performance.now()), ids = MAPS.map(m => m.id), i = ids.indexOf(__g.M.id), Q = new URLSearchParams(location.search), onlyMap = Q.has('solo');
   // the number of views is always written in the address: without it the game would follow the menu preference, and the solo bench would run two-player for whoever last played two-player
   const n = Q.get('players') === '2' ? 2 : 1, d = n > 1 ? '2' : '', K = 'vpr.perf' + d, url = id => location.pathname + '?perf&auto&players=' + n + (onlyMap ? '&solo' : '') + '&map=' + id;
-  if (!Q.get('map') || !Q.get('players') || __g.mode !== 'raceCase') { localStorage.setItem('vpr7.mode' + d, '"course"'); localStorage.removeItem(K); location.href = url(onlyMap && Q.get('map') || ids[0]); return; }
+  if (!Q.get('map') || !Q.get('players') || __g.mode !== 'raceCase') { localStorage.setItem('vpr7.mode' + d, '"raceCase"'); localStorage.removeItem(K); location.href = url(onlyMap && Q.get('map') || ids[0]); return; }
   const everything = onlyMap ? [] : JSON.parse(localStorage.getItem(K) || '[]'), r = await lapRun(); r.loading = loadTest; // loading: ms between opening the page and the game being ready
   everything.push(r); localStorage.setItem(K, JSON.stringify(everything));
   if (!onlyMap && i + 1 < ids.length) location.href = url(ids[i + 1]);

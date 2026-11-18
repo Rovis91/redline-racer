@@ -1,6 +1,6 @@
 # Architecture
 
-Redline Racer is an arcade racing game in pixelated 3D (three.js), played in the browser: solo, 2 to 4 players on one screen, or online peer-to-peer. It has 12 maps; each one has its own track layout, car, radio stations, scenery and HUD, and the synthesised music reacts to the race. It is a static site with no build step and nothing to install.
+Redline Racer is an arcade racing game in pixelated 3D (three.js), played in the browser: solo, 2 to 4 players on one screen, or online peer-to-peer. It has 18 maps; each one has its own track layout, car, radio stations, scenery and HUD, and the synthesised music reacts to the race. It is a static site with no build step and nothing to install.
 
 Code, comments and docs are in English. On-screen game text is written in French capitals and translated at display time by `src/engine/lang.js` (the game is bilingual). Paths in this doc start at the repo root.
 
@@ -91,6 +91,8 @@ A map is an entry of `MAPS` in `src/data/maps.js` (layout, width, grip, car, rad
 - `shapes-<map>.js` adds to the shape catalogue (geometry, or assemblies of boxes with named zones),
 - `scenery-<map>.js` adds its scenery function with `Object.assign(SCENERY, { <map>(h) { … } })`: where to put which shape with which texture, through the helper object `h` (`h.pose`, `h.geo`, `h.mat`, `h.emis`, and `PLACERS`: `inst`, `insts`, `boxMesh`, `edgePt`, `marker`, `weld`, `near`, `pt`, `terrain`).
 
+Six maps (`egee`, `area51`, `piliers`, `volcan`, `lune`, `autoroute`) are written after the `MAPS` array as `if (id === '<id>') { G.MAP_DEF = … }` blocks; a loop around the blocks runs them once per id and pushes each into `MAPS`, with its French label, title, rivals and subtitle from the `NEW` table above the loop (these replace what the block says). They borrow the car and radio of `touge`. After a layout or car change on any of them: `node tools/build-gold-laps.js egee area51 piliers volcan lune autoroute`, then `sh tools/check.sh`. `lune` and `autoroute` only get the short run of `tests/test-maps.js` (the `BLOCKOUT` list there says why).
+
 A map also needs a place in `EVENING` (Tour order and time of night), a gold trace in `src/data/gold-laps.js` (`node tools/build-gold-laps.js <map>`), and an English title (`HEADING_EN` in `lang.js`, or `th.hud.heading`). Each new file must get its `<script defer>` line in `index.html` at the right place in the load order; `tests/test-maps.js` fails if `scenery-<map>.js` is missing from `index.html` or if any of the above is missing.
 
 `?map=attempt&grip=…&ground=…&car=<map>` opens a driving test track that is not in `MAPS` (end of `maps.js`).
@@ -155,13 +157,14 @@ In `src/data/maps.js`, per map:
 | `grip` | lateral grip (m/s²): 44 on `ville` (arcade), 15–24 elsewhere |
 | `car` | gears, torque curve, mass, aero, traction, `look.type` (model in `src/render/shapes-cars.js`) |
 | `tun`, `hotList`, `sect`, `amb` | tunnel, sector where the music goes wild, split times, ambience-sound zones (point indices) |
-| `camH`, `spd`, `kmh` | camera height, speed range of speed effects, speedometer factor |
+| `camH`, `spd`, `kmh`, `fallCam` | camera height, speed range of speed effects, speedometer factor; `fallCam: 1` (`lune`): in flight the chase camera keeps the car's vertical speed and looks down the trajectory, for a long fall |
 | `radio` | the stations (data in `RADIO` at the top of the file) |
 | `th` | theme: sky, fog, lights, road colours, `th.scenery` (which `SCENERY` function), engine options |
 | `th.hud` | HUD style, rev gauge (`gauge`), `mph`, Japanese labels (`jp`), title |
 | `th.rainFx` | rain: `1` everywhere, or zones `[a, b, force]` |
 | `surf` | road surface: `{ backdrop, zones: [[a, b, surface, force]] }`; coefficients per surface in `SURF` at the top of `sim.js` |
 | `jumps`, `trough` | relief: jumps and rideable banked walls; gives the car height and gravity (`GRAV`, `DROOP`, `LAND*` in `sim.js`) |
+| `grav`, `evenJump`, `loft`, `dents`, `bowls` | with relief on: free-fall gravity of the map (9.81 by default; `lune`: 8); `[speed, power, floor]` that lightens it for a car taking off slower than `speed` (jump lengths close to each other); `[[x, z, radius, depth], ...]` small bowls dug in the ground under the car; `[[x, z, floor radius, rim radius, height, power, ...]]` a crater whose wall the car drives up, with a tunnel allowed under it `loft: [share, gravity]` (`lune` only) gives the car inertia on that crater ground: it falls after the ground past a rim and hops off a lip with `share` of its upward speed, falling at `grav × gravity` (`docs/PHYSICS.md`, "Jumps and relief"; without it the car follows craters like a rail) (`T.dent` gives both to the scenery for its terrain; see `buildTrack` in `sim.js`) |
 | `traffic`, `rivals`, `med` | trucks on the road, rival names, medal ratios |
 | `th.objects`, `th.isFar` | knock-over objects, minimum camera far distance |
 

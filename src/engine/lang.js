@@ -46,13 +46,16 @@
     'VILLE A PLEIN REGIME': 'FULL THROTTLE CITY', 'PREMIER METRO': 'FIRST TRAIN', 'GRAND VACARME': 'GRAND ROAR', 'NUIT BLANCHE': 'WHITE NIGHT', 'SPECIALE DES OCRES': 'OCHRE STAGE', 'LIGNE DE BAIE': 'BAYSHORE LINE', 'DESCENTE DE NUIT': 'NIGHT DOWNHILL',
     'ARENE COUVERTE · COMPLET': 'INDOOR ARENA · SOLD OUT', 'COL FERME': 'PASS CLOSED', 'AUBE': 'DAWN', '5 H 30': '5:30 AM', 'SPECIALE 7 · FIN DE JOURNEE': 'STAGE 7 · LATE AFTERNOON', 'HEURE DOREE': 'GOLDEN HOUR',
     'ROUTE ROYALE': 'ROYAL ROAD', 'COUCHANT': 'SUNSET', 'BARRAGE': 'DAM', 'VIDANGE DE PRINTEMPS': 'SPRING RELEASE', '6 H 40': '6:40 AM', 'MANUSCRIT': 'MANUSCRIPT', 'LA CITE PERDUE': 'THE LOST CITY', 'MIDI': 'NOON',
+    'FALAISES EGEENNES': 'AEGEAN CLIFFS', 'SIGNAL INCONNU': 'SIGNAL UNKNOWN', 'PILIERS DU CIEL': 'SKY PILLARS', 'COURONNE BRISEE': 'BROKEN CROWN', 'AVANT-POSTE LUNAIRE': 'LUNAR OUTPOST', 'AUTOROUTE ENGLOUTIE': 'SUNKEN HIGHWAY',
+    '14 H 30': '2:30 PM', 'HEURE BLEUE': 'BLUE HOUR', 'PETIT MATIN': 'EARLY MORNING', 'ATLANTIQUE NORD · 17 H 30': 'NORTH ATLANTIC · 5:30 PM', 'MATIN LUNAIRE': 'LUNAR MORNING', 'VILLE EVACUEE': 'EVACUATED CITY',
   };
   if (G.TAUNTS) for (const L of [...G.TAUNTS.rival.flatMap(r => Object.values(r)), ...Object.values(G.TAUNTS.evt), ...Object.values(G.TAUNTS.mapDef)]) for (const [fr, en] of L) EN[fr] = en; // taunts from data/taunts.js: [French, English]
   const EN_RX = new RegExp('(?<![A-Z0-9])(' + Object.keys(EN).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')(?![A-Z])', 'g');
   const ORD = n => n + (n % 100 > 10 && n % 100 < 14 ? 'TH' : ['TH', 'ST', 'ND', 'RD'][n % 10] || 'TH');
   const translated = (s, language) => language !== 'en' || typeof s !== 'string' ? s : s.replace(/[À-ÖØ-Ýà-öø-ý]/g, c => c.normalize('NFD')[0]).replace(/(\d+)ER?(?![A-Z])/g, (_, n) => ORD(+n))
     .replace(EN_RX, k => EN[k]).replace(/ : /g, ': ').replace(/(\d),(\d)/g, '$1.$2'); // "3E SUR 4" -> "3RD OF 4" ; "4,2 KM" -> "4.2 KM"
-  const HEADING_EN = { ville: ['FULL THROTTLE', 'CITY'], paris: ['FIRST', 'TRAIN'], stade: ['GRAND', 'ROAR'], givre: ['WHITE', 'NIGHT'], terre: ['OCHRE', 'STAGE'], perse: ['ROYAL', 'ROAD'] }; // titles on two lines: the word order changes
+  const HEADING_EN = { ville: ['FULL THROTTLE', 'CITY'], paris: ['FIRST', 'TRAIN'], stade: ['GRAND', 'ROAR'], givre: ['WHITE', 'NIGHT'], terre: ['OCHRE', 'STAGE'], perse: ['ROYAL', 'ROAD'],
+    egee: ['AEGEAN', 'CLIFFS'], area51: ['SIGNAL', 'UNKNOWN'], piliers: ['SKY', 'PILLARS'], volcan: ['BROKEN', 'CROWN'], lune: ['LUNAR', 'OUTPOST'], autoroute: ['SUNKEN', 'HIGHWAY'] }; // titles on two lines: the word order changes
   const headingMap = (id, fr, language) => language === 'en' && HEADING_EN[id] || fr; // menu title on two lines; fr = that of the map's theme
   Object.assign(G, { EN, EN_RX, HEADING_EN, translated, headingMap });
 })(typeof window !== 'undefined' ? window : globalThis);

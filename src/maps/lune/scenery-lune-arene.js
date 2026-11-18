@@ -1,0 +1,8 @@
+// "lune", zone 4: Grand cratère oriental (PK 3080 to 3960): the jump from the rim (73 m) to the floor (-30 m), the arena (M.place: a flat floor Ø 400 m with its small craters, M.dents, and the foot of the wall, M.bowls)
+// and its only way out: the tunnel (M.tun), which leaves from the edge of the floor straight ahead of the jump and goes into the wall as a covered way: lip, centre and tunnel are on one line. No road, beacon or light on the floor.
+// The crater (Ø 720 m), its strata, its crest and the small craters are terrain and rings (scenery-lune.js). by(), add() and stand() are described in scenery-lune.js.
+(window.LUNE = window.LUNE || {}).arene = ({ add, stand, sit, tunnel, MAT }) => { const MOUTH = -3.5; // local Z points back down the lap
+  for (const sd of [-1, 1]) add(sit(tunnel[0], 0, sd * 23), 'baliseLune', [6]);                // a beacon each side of the mouth
+  add(sit(tunnel[0]), 'boucheLune', [], [0, 0, MOUTH]); add(sit(tunnel[1]), 'boucheLune', [], [0, 0, -MOUTH]); // the two mouths of the tunnel (the exit is in the south basin): one headwall each, set 3.5 m into the tube. In the arena the car cannot drive through the covered way: M.place.piers, one box along each side of it, from the headwall to where the wall of the crater covers the tube
+  { const grp = stand(359, 147, 0.3); add(grp, 'cylindreLune', [20, 4], [0, 0, 0], MAT.shell); add(grp, 'moduleLune', [20, 4]); add(grp, 'coupoleLune', [8, 8], [14, 0, 2], MAT.shell); add(grp, 'antenneLune', [18], [-9, 0, -4]); } // the study station on the far rim, above the tunnel: it gives the scale of the crater
+};

@@ -22,9 +22,9 @@ captures.html?map=chapada&step=10&size=1920x1080&game=1&opt=<URL-encoded JSON>
 | Terrain | `th.layerSet` |
 | Light and sky | `th.shadows`, `th.skySeg`, `th.orb.spokes` |
 | Fog | `th.haze`, `th.isFar`, `th.headlightsHaze` |
-| Road | `th.wetVisible`, `th.gloss`, `M.wide`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
+| Road | `th.wetVisible`, `th.gloss`, `M.wide`, `M.obst`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
 | Tunnel and hall | `th.tun.h`, `vault`, `opn`, `spokes`, `raysK`, `ambient`, `day`, `without`, `skyDay`, `gloss`, `tex`, `th.eye` |
-| Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `h.emis` |
+| Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `th.dustBallistic`, `th.vacuum`, `h.emis` |
 
 ## Textures
 
@@ -178,6 +178,12 @@ Road gloss (sun and luminaire reflection). Default 0.08 (0.2 under rain). Lower 
 
 Use a value below `W` only under a free-form tunnel (see "Tunnel and hall"), where the engine floor follows `s.w`: in the open, the road ribbon and the engine's guardrails stay at `W` and the scenery would have to cover the extra strip. Check with `node tests/test-maps.js` (autopilot lap, 0 crashes).
 
+### `M.obst`: solid boxes on the drivable ground
+
+`M.obst = [[x, z, halfWidth, halfLength, ry, y, ...], ...]` (map metres, like `pts`) declares solid boxes the cars collide with: wrecks, rubble, trees, piers, whole city blocks. `ry` turns the box like a three.js `rotation.y`. `y` is the altitude of its foot: give it where the track passes over or under itself, the box then only counts for the samples within 4 m of that altitude. Entries may carry more values after `y` (autoroute stores the name of what stands there and its height: its scenery builds each thing inside its box). Read in `src/engine/sim.js`: `buildTrack` files the boxes per sample (`T.obst`), `step()` pushes a car's two circles out of them like the piers of `M.place`, and the autopilot's path keeps 2.1 m clear of them, in the gap nearest the axis of the road. `?hitbox` draws them. A map without `M.obst` is untouched.
+
+With boxes, the road's own walls (`W`, `M.wide`) can lie behind the scenery: on autoroute the streets are 24 m wide either side of the axis and every facade, closed street and wreck is a box, so the car only ever stops against something it sees. `tests/test-maps.js` checks it (random drivers never touch the road's wall outside the deck, the tube and the cave).
+
 ### `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`: corner chevrons
 
 - `th.chev: 1` places chevrons on the outside of corners, every 12 m once the radius is under 167 m.
@@ -238,6 +244,10 @@ Behaviour once `h`, `vault` or `opn` is set:
 - The sun stays off throughout the tunnel, shadow included (light comes from the columns and luminaires). There is no dedicated water-floor option: the map's scenery places its own water.
 - Cost: a few extra draw passes (the vault is cut into pieces by the openings and each column is one pass). The vault itself is one pass: fixed-scenery merging already fuses each opaque still facet with the other ribbons of its material, per 500 m tile.
 
+### `tick.indoor(i)`: a hall or underground built by the scenery
+
+A map whose hall or underground is scenery (no engine tunnel, `M.tun` null) can still have it treated as indoors: the tick its scenery returns carries `tick.indoor = i => 0..1` (the level at track sample `i`, 1 = an engine tunnel, with its own ramps at the mouths). The engine takes the larger of this level and its own tunnel: sun and sky light fade, the fog slides to `th.tun.fog` (give `th.tun = { fog, skyDay: 1 }` alone: nothing is built without `M.tun`), the eye adapts (`th.eye`), and the sound takes the tunnel reverb and the `AMBZ { tun: 1 }` bed. The light then comes from the `h.emis` lamps of the scenery. Used by area51 (`scenery-area51-vie.js`). Default: none.
+
 ### `th.eye`: eye adaptation
 
 `th.eye = { tun, blackM, clair }` (none of the three required). Visible without the `net` capture style only.
@@ -272,6 +282,14 @@ th: { tun: { ...usualTunnel, raysK: 0.35, ambient: 0.7 },   // quieter columns, 
 ```js
 th: { dust: [r, g, b], leaves: [[0.6, 0.4, 0.12], [0.4, 0.24, 0.1]] }
 ```
+
+### `th.dustBallistic`: grains on parabolas instead of the dust plume
+
+`th: { dust: [r, g, b], dustBallistic: { grav, rate, size, up } }` (lune: no air). Each car throws small opaque grains from its rear wheels; they fly with no drag, fall back, bounce once, lie still a moment and are reused (700 at most, one draw pass). `grav`: their gravity as a share of the map's (0.4); `rate`: grains per second for a followed car at full speed (50), twice as many in a slide, a third for the other cars; `size` in metres (0.2), capped on screen so a grain near the lens stays a grain; `up`: highest launch speed in m/s (3.5). A grain thrown while its car is in the air keeps the car's velocity and gravity: it stays beside the car down a jump. A landing after more than a quarter of a second in the air throws a ring. None in the engine tunnel nor where the scenery's `tick.indoor` is above 0.5. With the option the engine's three soft effects are off for the map: the dust plume, the tyre smoke of a slide and the puff of a landing. Requires `th.dust` (the grains' tint). Default: off.
+
+### `th.vacuum`: no air for the sound
+
+`th: { vacuum: 1 }` (lune). In `src/audio/audio.js`: the wind roar is silent at any speed, and once a car has been in the air for a quarter of a second its engine drops to a murmur until it lands (the tyres are already cut in the air). The engine is otherwise untouched. Default: off.
 
 ### `h.emis` returns its luminaire
 

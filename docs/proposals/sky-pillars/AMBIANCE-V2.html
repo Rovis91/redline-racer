@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sky Pillars: mood and reference sheet, V2</title>
+<style>
+  :root { --bg: #162e39; --panel: #213f4a; --ink: #f0e8d8; --dim: #b4c6c8; --line: #35555f; --accent: #e9b45b; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 30px; margin: 0 0 4px; letter-spacing: .02em; }
+  h2 { font-size: 22px; margin: 40px 0 6px; padding-top: 18px; border-top: 2px solid var(--line); }
+  h2 small { color: var(--accent); font-weight: 600; font-size: 14px; margin-right: 8px; }
+  p { margin: 6px 0; } .dim { color: var(--dim); }
+  .lead { font-size: 18px; max-width: 70ch; }
+  dl { display: grid; grid-template-columns: 150px 1fr; gap: 4px 14px; margin: 10px 0; }
+  dt { color: var(--accent); font-weight: 600; } dd { margin: 0; }
+  .sw { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .sw span { width: 86px; height: 46px; border-radius: 6px; font: 11px/46px ui-monospace, monospace; text-align: center; color: #000; border: 1px solid #0006; }
+  .sw span.d { color: #fff; }
+  .pics { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 12px 0; }
+  figure { margin: 0; background: var(--panel); border-radius: 8px; overflow: hidden; }
+  figure img { display: block; width: 100%; height: 220px; object-fit: cover; background: #0f222b; }
+  figcaption { padding: 8px 10px; font-size: 13px; } figcaption b { display: block; } figcaption i { display: block; font-style: normal; color: var(--dim); } figcaption a { color: var(--dim); }
+  ul { margin: 6px 0; padding-left: 20px; }
+  code { font-size: 14px; }
+  @media (max-width: 600px) { dl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Sky Pillars</h1>
+<p class="dim">Mood and reference sheet, V2. Written after the blockout was validated; it follows the zones of the built map (<code>src/maps/piliers/</code>, relief in <code>scenery-piliers.js</code>), not the wording of the bible, and keeps the bible's art direction. Chainages (PK) are metres along the 4 042 m lap.</p>
+
+<p class="lead">A fictional service road through sandstone pillars inspired by Zhangjiajie (Hunan, China), early in the morning. The lap climbs out of a forest, wraps two towers on a ledge, crosses the only gap on a suspension bridge, goes through a rock spur on the high plateau and comes back down a buttress above the cloud. <b>Vertigo is the thing you drive: the rock is always close on one side and the void open on the other.</b></p>
+
+<dl>
+  <dt>Place</dt><dd>Three rock shoulders round a deep ravine, floor 150 to 225 m under the road. Six towers rise from them (P1 to P5, 280 to 370 m) and one needle stands alone in the middle of the ravine (HERO, 410 m): the compass of the lap. A flat sea of clouds lies 70 m under the lowest road.</dd>
+  <dt>Time and light</dt><dd>Early morning, warm and even. Cream side light on the rock, pale powder-blue sky, cool blue-grey in the voids. The mist stays far below the road: never on an apex, never at the vanishing point.</dd>
+  <dt>Style</dt><dd>Retro low-poly, 1995 to 1998 console racing: faceted volumes, pixel textures, flat readable colours. Read at 150 km/h before being read up close.</dd>
+  <dt>Rock</dt><dd>The point raised on the blockout: the terrain is too smooth for what it stands for. This sandstone is <b>stacked</b>: horizontal beds 3 to 8 m thick, vertical joints that cut the towers into square-edged columns, ledges where pines and moss hold, a darker foot. Every wall near the road must show beds and joints as facets, not as a gradient.</dd>
+  <dt>Road works</dt><dd>Small against the rock and all of one family: grey-cream dressed stone. A low stone parapet on the void side, a masonry retaining wall under the road where the ledge is built out, a cut face on the rock side. They are objects placed on a simple terrain, as in the references, not painted on it.</dd>
+  <dt>Anti-references</dt><dd>Floating islands or rock with no foot; Japanese torii or any Japanese temple form (the gates here are Chinese paifang, the roofs grey tile with upturned corners), a pagoda taller than the towers, several viaducts; a glass-floor footbridge used as the road bridge; the natural arch of Tianmen used as a road tunnel; fog that hides a bend; photoreal or PBR rock; smooth dune-like slopes; warm desert canyon colours (this rock is sage grey under green, not red).</dd>
+</dl>
+<div class="sw">
+  <span style="background:#9b9a7e">#9b9a7e sandstone</span><span style="background:#e3dcc0">#e3dcc0 lit rock</span><span class="d" style="background:#4e7752">#4e7752 forest</span>
+  <span class="d" style="background:#263e37">#263e37 shade</span><span style="background:#8baab7">#8baab7 mist</span><span style="background:#e6eef0">#e6eef0 cloud</span><span class="d" style="background:#343e44">#343e44 asphalt</span><span class="d" style="background:#a65949">#a65949 pavilion</span>
+</div>
+
+<h2><small>ROUND 4 · the whole lap</small>The tourist layer: a mountain park that lives</h2>
+<p>The author's fourth round: the map is fine but a little dead. This is a tourist site, so people have built on it: temples, places to look from, footpaths, and stretches of the road left as packed earth. One rule for all of it: <b>everything belongs to one visitor network</b>. A visitor arrives by coach at the gate, walks or rides up, and every platform, stair and walkway leads to the next thing. Nothing is dropped beside the road to fill a gap; the forest and the rock stay the subject.</p>
+<dl>
+  <dt>Family</dt><dd>Hunan mountain architecture, low-poly: grey tile roofs whose corners turn up, red-brown lacquered columns, white plaster or dark plank walls, grey-cream stone bases. Paths are planks on steel brackets, or stone. Modern park equipment is dark blue-grey steel and pale glass (the bridge's family). Accents, small and saturated: red lanterns, strings of five-colour prayer flags, brown park signs.</dd>
+  <dt>Gate and ticket hall</dt><dd>PK 3 940 to 120, the start: a stone and lacquer <i>paifang</i> spanning the road just after the line, the ticket hall and a paved coach park with tour coaches and minivans on the inside, souvenir and food stalls along the park's edge, two stone lions at the gate.</dd>
+  <dt>Village</dt><dd>PK 300 to 520, outside of the road in the woods: a dozen plank houses on stone plinths or stilts, tiled roofs, lanterns on posts, flags across the lane, a tea house. The valley is where people live; nothing this big higher up.</dd>
+  <dt>Shrines</dt><dd>Small roofed shrines on top of the forest bank (PK 470), on top of the corniche cut (PK 1 075) and on a needle (PK 2 700), each reached by a stone stairway or a footbridge.</dd>
+  <dt>Cliff paths</dt><dd>A glass walkway bolted to the face of P2 above the road, a plank walkway round P3, along the cut (PK 1 020 to 1 130) and along the buttress of the descent (PK 2 930 to 3 610), stone stairs at their ends. On the open side of the plateau and of the descent, a paved promenade with a lattice railing follows the cliff edge. Hanging footbridges run from the platforms to needles standing in the void, each needle carrying a pavilion or a shrine.</dd>
+  <dt>Places to look from</dt><dd>Platforms cantilevered over the void on the open side (PK 830, 2 700, 3 085, 3 200, 3 425), each under a red-columned tiled shelter so it reads from the road; timber lookout towers at the first open view (PK 700) and before the bridge (PK 1 640); rest pavilions on the promenade; the existing stone belvedere of the plateau. Each one is set where the car sees it against sky or cloud.</dd>
+  <dt>Cable car and lift</dt><dd>A station on the plateau at the east end of the bridge (PK 2 150): its cables cross above the road and climb over the ravine toward the summit of HERO, pylons standing on needles, cabins hung still on the line. A glass lift in three shafts climbs the east face of P3 right beside the corniche road (PK 1 570), the Bailong lift of the references, with a gangway to a pavilion on the summit.</dd>
+  <dt>Temples</dt><dd>The ledge temple, on the inside after the tunnel (PK 2 580 to 2 720): a stone terrace and its stairway, lions, gate hall, a red wall, a court with the incense burner between two side halls, a main hall with a double roof, a seven-storey pagoda at the back, stalls at its foot. On the flat summit of P5, straight ahead of the same stretch of road, the summit temple: a hall and a tall pagoda against the sky. (HERO is too high to be in the racing camera: nothing but the upper station goes there.)</dd>
+  <dt>Dirt road</dt><dd>Two stretches of the lap are packed ochre earth with two wheel tracks and gravel, no markings: the forest floor from the park gate to the first open view (PK 160 to 700), the old way through the village; and the old service road of the plateau from the tunnel to the temple (PK 2 520 to 2 830). The asphalt returns where the modern works begin: the corniche, the bridge, the descent. Driven as <code>terre</code>: less traction, an easier slide, the car still turns.</dd>
+  <dt>Not this</dt><dd>Anything on the roadway or hiding an apex; neon, billboards or a modern hotel; crowds (a few still figures on platforms only); a second road; a building on the bridge.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#a65949">#a65949 lacquer</span><span class="d" style="background:#59625c">#59625c tile</span><span style="background:#e8e0cc">#e8e0cc plaster</span><span class="d" style="background:#7a5a3c">#7a5a3c plank</span><span class="d" style="background:#d8322a">#d8322a lantern</span><span style="background:#9fd8e6">#9fd8e6 glass</span><span class="d" style="background:#8a7453">#8a7453 earth</span><span style="background:#e0b040">#e0b040 brass</span></div>
+
+<h2><small>ZONE 1 · PK 0 to 735 and 3 700 to the line</small>Forêt: the low rock forest</h2>
+<p>Start at +150 m on a wide, almost flat road, long easy bends, then a smooth climb to +182 m along the feet of P1 and P2. The last 340 m of the lap run through the same woods: the forest is both the start and the finish. Big trunks stand right at the barrier, one side then the other every 35 m.</p>
+<dl>
+  <dt>Mood</dt><dd>Enclosed and green: you slalom between trunks under a canopy, and the mountain only shows in slices between the trees.</dd>
+  <dt>Landmark</dt><dd>The summit of P1, then P2, pale above the treetops on the right; on the last straight, the start gantry between two walls of trees.</dd>
+  <dt>Read at speed</dt><dd><ul><li>dark trunks close to the road, alternating sides: the rhythm of the zone</li><li>angular pines in spaced silhouettes, dense broadleaf undergrowth at ground level</li><li>an 8 m bank on the inside with grey faceted boulders, moss on top</li><li>one or two old stone markers at the changes of rhythm</li><li>first open view at PK 640: the trees stop, the cliff edge comes to 14 m from the barrier</li></ul></dd>
+  <dt>Light</dt><dd>Cream light from the side, strong green, forest shadow as flat blocks across the road. Mist only below the shoulder and far away.</dd>
+  <dt>Transition</dt><dd>The undergrowth thins, bare rock takes over, the first stone parapet appears on the left: the corniches begin.</dd>
+  <dt>Not this</dt><dd>A tree on the racing line or hiding an apex; a jungle (palms, lianas); a building taller than the trees (the gate, the ticket hall and the village stay under the canopy).</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#263e37">#263e37</span><span class="d" style="background:#4e7752">#4e7752</span><span style="background:#82c98c">#82c98c</span><span style="background:#9b9a7e">#9b9a7e</span><span style="background:#e3dcc0">#e3dcc0</span><span style="background:#8baab7">#8baab7</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Zhangjiajie_National_Forest_Park.jpg?width=640" alt="Sandstone pillars rising behind forest in Zhangjiajie"><figcaption><b>Pillars behind the trees: depth in layers</b><i>Keep: wooded vertical silhouettes, the grading with distance, and since round 4 the footpaths and railings.</i>Kuruman, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Zhangjiajie_National_Forest_Park.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/%E5%BC%A0%E5%AE%B6%E7%95%8C%E9%87%91%E9%9E%AD%E6%BA%AA.jpg?width=640" alt="Golden Whip Stream valley floor in Zhangjiajie"><figcaption><b>Valley floor: undergrowth and wet ground</b><i>Keep: density at ground level with few fine details, the green. Not: the stream beside the road.</i>Levaby, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:%E5%BC%A0%E5%AE%B6%E7%95%8C%E9%87%91%E9%9E%AD%E6%BA%AA.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Pilier_rocheux_couronn%C3%A9_de_pins%2C_monts_Tianzi_(2026).jpg?width=640" alt="Sandstone pillar crowned with pines, Tianzi mountains"><figcaption><b>A pillar crowned with pines</b><i>Keep: the beds and joints, the pine perched on a ledge, the flat crown. This is the model for every tower.</i>ICOLEF / visualtravelguide.com, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Pilier_rocheux_couronn%C3%A9_de_pins,_monts_Tianzi_(2026).jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 2 · PK 735 to 1 710</small>Corniches: the ledge round the two towers</h2>
+<p>The road turns right round P2 with the void on the left, runs through a 10 m rock cut, then wraps P3 the other way: wall on the left, the notch of the ravine on the right. +182 to +215 m, 16 m wide: the drift section.</p>
+<dl>
+  <dt>Mood</dt><dd>Exposed and mineral: a ledge cut into a giant wall, the car between rock and air.</dd>
+  <dt>Landmark</dt><dd>The wall of P3 filling one side of the screen for 400 m; at the end, the bridge towers seen over the last bend.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a striated sandstone wall rising from 12 m beyond the barrier to far above the frame</li><li>a continuous low stone parapet on the void side, cream against the blue</li><li>masonry retaining walls under the road where the ledge is built out</li><li>the wall changes side at PK 1 250 (P2 on the right, P3 on the left): the cue for the direction change</li><li>rare pines on the open side, off the critical angles; needles aligned in the distance</li></ul></dd>
+  <dt>Light</dt><dd>Low light raking the horizontal beds: warm cream on the rock, pale blue in the void, the road in the wall's shadow for short stretches only.</dd>
+  <dt>Transition</dt><dd>Vegetation clears, the road straightens; the bridge anchor blocks are seen first, then the towers and cables.</dd>
+  <dt>Not this</dt><dd>A cantilevered walkway used as the road; steel crash barriers; a wall with no foot; rockfall on the lane.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#3c554a">#3c554a</span><span class="d" style="background:#687c65">#687c65</span><span style="background:#b6aa8f">#b6aa8f</span><span style="background:#e9b45b">#e9b45b</span><span style="background:#99b8c5">#99b8c5</span><span style="background:#e9e1cc">#e9e1cc</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Winding_road%2C_Tianmen_Mountain.jpg?width=640" alt="Winding road with hairpins on Tianmen Mountain"><figcaption><b>A real road on this rock: walls and parapets</b><i>Keep: masonry under the outer edge, the road hugging the massif, the pale parapet line. Not: the stacked hairpins (the lap has none).</i>王计, CC BY 2.5. <a href="https://commons.wikimedia.org/wiki/File:Winding_road,_Tianmen_Mountain.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Sentier_%C3%A0_flanc_de_falaise%2C_monts_Tianzi_(2026).jpg?width=640" alt="Path along a cliff face, Tianzi mountains"><figcaption><b>Ledge against the cliff</b><i>Keep: the contact between ledge and wall, the bedding of the rock. Not: the width (ours is 16 m of asphalt).</i>ICOLEF / visualtravelguide.com, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Sentier_%C3%A0_flanc_de_falaise,_monts_Tianzi_(2026).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tianmen_Mountain_cliff_footpath.jpg?width=640" alt="Footpath built out from a cliff on Tianmen Mountain"><figcaption><b>The void under an edge</b><i>Keep: how the drop reads past a low barrier. Not: the footbridge itself, never a hanging road.</i>David Wood, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Tianmen_Mountain_cliff_footpath.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 3 · PK 1 710 to 2 181</small>Pont: the suspension bridge</h2>
+<p>One straight 250 m deck at +215 m over the only gap between the shoulders, a tower at each end, 215 m of air under the wheels, needles standing in the void on both sides.</p>
+<dl>
+  <dt>Mood</dt><dd>A breath: no steering, full throttle, and the whole ravine opens at once.</dd>
+  <dt>Landmark</dt><dd>The far tower and its anchor block, in the axis of the deck from the moment the car straightens.</dd>
+  <dt>Read at speed</dt><dd><ul><li>two dark steel towers, a portal each: they count the distance left</li><li>main cables sagging to the deck at mid-span, hangers at a regular low-density rhythm</li><li>massive stone anchor blocks set in the rock at both ends, same level, no gap in the barrier</li><li>needles rising through the cloud left and right, their feet lost</li><li>HERO to the right, alone and taller than everything</li></ul></dd>
+  <dt>Light</dt><dd>The brightest moment of the lap: open powder-blue sky, cables as dark silhouettes, white-blue void.</dd>
+  <dt>Transition</dt><dd>After the east anchor block rock and plateau vegetation come back; the first bend after the bridge is open, never blind.</dd>
+  <dt>Not this</dt><dd>A glass deck; a second arch or a second bridge; anything standing on the deck; towers rising from the ravine floor.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#162e39">#162e39</span><span style="background:#70c9df">#70c9df</span><span style="background:#91b7c9">#91b7c9</span><span style="background:#c9c3b2">#c9c3b2</span><span style="background:#f0e8d8">#f0e8d8</span><span class="d" style="background:#687d80">#687d80</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Aizhai_Bridge-1.jpg?width=640" alt="Aizhai suspension road bridge over a gorge in Hunan"><figcaption><b>Aizhai bridge, Hunan: a road suspension bridge between two rock shoulders</b><i>Seen from the valley floor. Keep: an opaque road deck very high between two shoulders, its scale against the houses. The closest real model; added for V2. Not: the village under it.</i>Glabb, CC BY-SA 3.0. <a href="https://commons.wikimedia.org/wiki/File:Aizhai_Bridge-1.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Zhangjiajie_Glass_Bridge_01.jpg?width=640" alt="Zhangjiajie Grand Canyon glass bridge"><figcaption><b>Crossing the void at Zhangjiajie</b><i>Keep: the anchoring on both sides, the scale. Not: the glass floor, the pedestrians.</i>Codas, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Zhangjiajie_Glass_Bridge_01.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Model_of_Zhangjiajie_Glass_Bridge.jpg?width=640" alt="Structural model of a suspension bridge"><figcaption><b>Site model: one span between two rock shoulders</b><i>Keep: the deck landing level on both sides, the gap it crosses. Not a source for cable detail.</i>Codas, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Model_of_Zhangjiajie_Glass_Bridge.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 4 · PK 2 181 to 2 826</small>Plateaux: the high plateau and the tunnel</h2>
+<p>The road lands on the high shoulder at +215 m, passes a small pavilion set back on the left and a basin whose stream falls into the ravine on the right, climbs to +225 m and goes straight through a spur of P4, 75 m of rock above the road, in an 80 m tunnel. After it the cliff edge comes back to 12 m from the left barrier.</p>
+<dl>
+  <dt>Mood</dt><dd>The calm before the drop: more intimate, a little water, then a cold dark gate in the mountain.</dd>
+  <dt>Landmark</dt><dd>The tunnel mouth in the face of the spur, with the exit visible through it as a bright dot.</dd>
+  <dt>Read at speed</dt><dd><ul><li>the spur as one continuous striated mass across the road, P4 behind it on the right</li><li>a dark portal cut square in the rock, dressed stone round the mouth, the road in a short trench before it</li><li>a small red-brown pavilion with upturned eaves on a stone platform, tiny against the terrain</li><li>a turquoise basin and a narrow white fall on the inside, never crossing the road</li><li>pale stone and moss on the plateau, isolated pines at the edges, none at the portal</li></ul></dd>
+  <dt>Light</dt><dd>Open and soft on the plateau; cold shade in the tunnel, the exit always visible; one accent of turquoise, one of red-brown.</dd>
+  <dt>Transition</dt><dd>Out of the tunnel the eye slides left to the outside of the mountain and the low cloud comes back before the descent.</dd>
+  <dt>Not this</dt><dd>A temple on the axis of the road or hiding the tunnel mouth (the ledge temple stands on the inside after the tunnel, its pagoda no higher than 30 m); the natural arch of Tianmen as the tunnel; a lake; water on the road; a long or curved tunnel.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#6e7d66">#6e7d66</span><span style="background:#b0a38b">#b0a38b</span><span style="background:#76aebe">#76aebe</span><span style="background:#d9e4d8">#d9e4d8</span><span class="d" style="background:#a65949">#a65949</span><span class="d" style="background:#30484b">#30484b</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Autumn-Admiring_Pavilion_in_Changsha_20230904.jpg?width=640" alt="Aiwan pavilion in Changsha, Hunan"><figcaption><b>Aiwan pavilion, Hunan</b><i>Keep: upturned roof corners, red columns, as a low-poly mesh. Not: the size; ours is 8 m.</i>Huangdan2060, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:Autumn-Admiring_Pavilion_in_Changsha_20230904.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tianmen_Mountain_Heaven_Gate_arch_Zhangjiajie.jpg?width=640" alt="Heaven's Gate natural arch on Tianmen Mountain"><figcaption><b>Pierced rock at Tianmen</b><i>Keep: the profile of the rock round an opening, the beds. Not: the arch itself as a road tunnel.</i>Lianguanlun, CC BY 4.0. <a href="https://commons.wikimedia.org/wiki/File:Tianmen_Mountain_Heaven_Gate_arch_Zhangjiajie.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Baofeng_Lake.jpg?width=640" alt="Baofeng Lake in Zhangjiajie"><figcaption><b>Baofeng water</b><i>Keep: the colour of the water, the rock at its edge. Not: the size of the lake.</i>Yoo Chung, CC BY-SA 2.5. <a href="https://commons.wikimedia.org/wiki/File:Baofeng_Lake.jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>ZONE 5 · PK 2 826 to 3 700</small>Descente: down the buttress above the cloud</h2>
+<p>From +215 to about +165 m in long downhill bends on a continuous buttress: a 26 m rock wall on the right with P5 behind it, the cliff edge 12 m from the left barrier and the sea of clouds below. HERO is in view through every opening. The woods of zone 1 close in again from PK 3 700.</p>
+<dl>
+  <dt>Mood</dt><dd>The big release: the height won is given back, fast and wide, with the cloud under the left wheels.</dd>
+  <dt>Landmark</dt><dd>The HERO needle, alone in the middle of the ravine; P5 as the nearer mass on the right.</dd>
+  <dt>Read at speed</dt><dd><ul><li>a continuous faceted wall on the inside, warmer salmon sandstone than the rest of the lap</li><li>a stone parapet on the outside and the flat white cloud beyond it, below the wheels</li><li>needles of different heights across the ravine, paler with distance, feet in the cloud</li><li>vegetation thickening as the road loses height, groves returning on both sides</li><li>a buried culvert under the road (PK 3 290): a stone headwall, no water on the lane</li></ul></dd>
+  <dt>Light</dt><dd>The same morning as zone 1: light salmon on the rock, blue-grey valley in layers.</dd>
+  <dt>Transition</dt><dd>The groves thicken, the horizon closes, the trunks at the barrier start again: the road flattens and meets the start line with no change of width.</dd>
+  <dt>Not this</dt><dd>Mist at road level; a parallel road or another tunnel; red desert rock; a gap in the parapet.</dd>
+</dl>
+<div class="sw"><span class="d" style="background:#30484b">#30484b</span><span class="d" style="background:#718b82">#718b82</span><span style="background:#9b9a7e">#9b9a7e</span><span style="background:#a5c3c8">#a5c3c8</span><span style="background:#f0ddc6">#f0ddc6</span><span style="background:#ed8f89">#ed8f89</span></div>
+<div class="pics">
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Rock_formations_emerge_from_the_mist_in_Zhangjiajie.jpg?width=640" alt="Rock pillars emerging from mist in Zhangjiajie"><figcaption><b>Pillars out of the mist</b><i>Keep: a low cloud layer hiding the feet, never the road. The model for the sea of clouds and the far needles.</i>Rocio Gil, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Rock_formations_emerge_from_the_mist_in_Zhangjiajie.jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Piliers_de_gr%C3%A8s_des_monts_Tianzi%2C_Zhangjiajie_(2026).jpg?width=640" alt="Sandstone pillars of the Tianzi mountains"><figcaption><b>The range of needles</b><i>Keep: each pillar told apart by its silhouette, the grading with distance. Added for V2, for the far scenery.</i>ICOLEF / visualtravelguide.com, CC BY-SA 4.0. <a href="https://commons.wikimedia.org/wiki/File:Piliers_de_gr%C3%A8s_des_monts_Tianzi,_Zhangjiajie_(2026).jpg">source</a></figcaption></figure>
+  <figure><img loading="lazy" src="https://commons.wikimedia.org/wiki/Special:FilePath/Tianmen_Mountain_38215-Zhangjiajie_(48757755772).jpg?width=640" alt="Cliff-edge walkway on Tianmen Mountain"><figcaption><b>A walkway on the cliff edge</b><i>Keep: the continuous barrier line above the drop, the green crown over it. Not: the footbridge and its crowd.</i>xiquinhosilva, CC BY 2.0. <a href="https://commons.wikimedia.org/wiki/File:Tianmen_Mountain_38215-Zhangjiajie_(48757755772).jpg">source</a></figcaption></figure>
+</div>
+
+<h2><small>MISSING</small>References not found</h2>
+<ul>
+  <li><b>A road tunnel portal cut in sandstone</b> (zone 4): no free image found; the Tianmen arch stands in for the rock only.</li>
+  <li><b>The main cables and hangers of a road suspension bridge seen from the deck</b> (zone 3): the glass bridge is the only deck view.</li>
+  <li><b>A close view of a stone parapet and a masonry retaining wall</b> on a Chinese mountain road (zones 2 and 5): only the distant view of the Tianmen road.</li>
+  <li><b>A waterfall at Zhangjiajie</b> (zone 4): the search only returned falls from another region.</li>
+  <li><b>A road at ground level in the forest</b>, with trunks close to the edge (zone 1).</li>
+  <li><b>"Mountains in Zhangjiajie (2019)"</b>, listed in the bible for zone 5: the file is not on Wikimedia Commons under that name.</li>
+</ul>
+
+<p class="dim" style="margin-top:36px">Images are linked from Wikimedia Commons, not copied into the repository, and are references for shapes and colours only, never textures. Each file's existence, author and licence were read from the Commons record when this sheet was written; recheck the source page before any other use. Altitudes are relative to the ravine floor, not real altitudes of Zhangjiajie.</p>
+</main>
+</body>
+</html>

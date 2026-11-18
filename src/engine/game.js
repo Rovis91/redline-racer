@@ -15,7 +15,7 @@
   const T = buildTrack(THREE, MAP_DEF), CARD = T.car, S = T.S, N = T.n, W = T.W, V3 = THREE.Vector3, M = MAP_DEF, TH = M.th; // active map and its theme: see maps.js
   const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   const wrap = a => Math.atan2(Math.sin(a), Math.cos(a));
-  const AUTO = location.search.includes('auto'); // debug: the autopilot drives
+  const AUTO = /[?&]auto(?![a-z])/.test(location.search); // debug: the autopilot drives (the parameter ?auto alone: ?map=autoroute must not switch it on)
   // 0 outside the sector, 1 inside, linear ramps of `ramp` samples (2 m) before the entry / after the exit
   const span = (a0, a1, on) => (i, ramp) => { if (!on) return 0; const a = (i - a0 + N) % N, L = a1 - a0; return a < L ? 1 : Math.max(0, 1 - (a - L) / ramp, 1 - (N - a) / ramp); };
   const zone = span(T.t0, T.t1, T.tun), hot = span(T.h0, T.h1, true); // zone = tunnel (light, scenery); hot = hot sector (music)
@@ -83,7 +83,7 @@
   }
   // halftone: four inks from darkest to lightest, and one signal ink (lights, red neons), per map
   const PAL = { ville: [0x0a0614, 0x3a1a6a, 0xff3a8a, 0xfff0c8, 0xff2a3a], touge: [0x06100c, 0x1c4a3a, 0x7ab890, 0xfff2c8, 0xff5030], wangan: [0x060a16, 0x1a3a6a, 0xf0a040, 0xfff4d8, 0xff3030],
-    paris: [0x100c14, 0x4a3a5a, 0xd89a70, 0xfff0d8, 0xe83a30], canal: [0x0c0a12, 0x5a2a4a, 0xf08a50, 0xfff0c0, 0xff3a40], stade: [0x0a0a14, 0x3a3060, 0xe8a030, 0xfff4d8, 0xe8362a], givre: [0x080e22, 0x2c4478, 0x8fb4e8, 0xf4f8ff, 0xe8482a], terre: [0x140c08, 0x6a3a1c, 0xe8903a, 0xfff0d0, 0xe8482a], perse: [0x141a3a, 0x5a3a78, 0xf08a3a, 0xfff0d0, 0xc8323c], barrage: [0x0e1012, 0x4a5a5a, 0xe8761e, 0xf4f0e0, 0xb5483c], chapada: [0x08140c, 0x1f5a2c, 0xe8b83a, 0xf2ecd0, 0xff5a3a], plage: [0x0a2a30, 0x0a7fa8, 0x19c7c9, 0xfff4e0, 0xff3d7f], attempt: [0x06100c, 0x1c4a3a, 0x7ab890, 0xfff2c8, 0xff5030] }[M.id];
+    paris: [0x100c14, 0x4a3a5a, 0xd89a70, 0xfff0d8, 0xe83a30], canal: [0x0c0a12, 0x5a2a4a, 0xf08a50, 0xfff0c0, 0xff3a40], stade: [0x0a0a14, 0x3a3060, 0xe8a030, 0xfff4d8, 0xe8362a], givre: [0x080e22, 0x2c4478, 0x8fb4e8, 0xf4f8ff, 0xe8482a], terre: [0x140c08, 0x6a3a1c, 0xe8903a, 0xfff0d0, 0xe8482a], perse: [0x141a3a, 0x5a3a78, 0xf08a3a, 0xfff0d0, 0xc8323c], barrage: [0x0e1012, 0x4a5a5a, 0xe8761e, 0xf4f0e0, 0xb5483c], chapada: [0x08140c, 0x1f5a2c, 0xe8b83a, 0xf2ecd0, 0xff5a3a], plage: [0x0a2a30, 0x0a7fa8, 0x19c7c9, 0xfff4e0, 0xff3d7f], attempt: [0x06100c, 0x1c4a3a, 0x7ab890, 0xfff2c8, 0xff5030], egee: [0x0b2a40, 0x0b4970, 0x45abb4, 0xf7efe0, 0xd74e92], area51: [0x182431, 0x4d428d, 0xd69a72, 0xe8e9df, 0xf5aa75], piliers: [0x162e39, 0x30484b, 0x70c9df, 0xf0e8d8, 0xed8f89], volcan: [0x23292d, 0x194b72, 0xd88d72, 0xe8d9ac, 0xb75d43], lune: [0x0a0d16, 0x303c49, 0x526c80, 0xe8e2d0, 0xd78a40], autoroute: [0x0a2731, 0x264143, 0x29c0c4, 0xf0e6c8, 0xe97e56] }[M.id];
 
   // ---------- low-definition rendering: scene → 270p target → final pass (speed blur, HUD, scanlines) ----------
   const renderer = window.__rendered || (window.__rendered = new THREE.WebGLRenderer({ antialias: false })); // a single one for the whole session: it keeps the shaders from one map to the next
@@ -432,7 +432,7 @@
       if (SHDO.soft) sh.fragmentShader = sh.fragmentShader.replace('#include <shadowmap_pars_fragment>', SHD_SOFT); // th.shadows.soft: filtered shadow edges (4 reads) instead of stair-stepped texels
       const co = m.userData.layerSet; if (co) { // multi-material terrain (scenery.js, terrain: o.layerSet or th.layerSet): up to 4 textures blended per vertex, weights in the layer attribute
         sh.uniforms.uCr = { value: new THREE.Vector4(...[0, 1, 2, 3].map(i => co[i] ? co[i].rep : 1)) }; co.forEach((c, i) => sh.uniforms['uC' + i] = { value: c.map });
-        sh.vertexShader = 'attribute vec4 couche; varying vec4 vCo;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vCo = couche;\n#include <fog_vertex>');
+        sh.vertexShader = 'attribute vec4 layer; varying vec4 vCo;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vCo = layer;\n#include <fog_vertex>');
         sh.fragmentShader = 'varying vec4 vCo; uniform vec4 uCr;\n' + co.map((c, i) => 'uniform sampler2D uC' + i + ';\n').join('') + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment)
           .replace('diffuseColor *= sampledDiffuseColor;', co.map((c, i) => `sampledDiffuseColor = mix(sampledDiffuseColor, texture2D(uC${i}, vMapUv * uCr[${i}]), vCo[${i}]);\n`).join('') + 'diffuseColor *= sampledDiffuseColor;');
       }
@@ -733,7 +733,7 @@
   // brakes: horizontal braking (1/s); 0: the cloud keeps its emitter's speed; imgSize: diameter factor; nearby: closer than 2 × nearby meters to the camera the disc fades out (nothing sticks to the lens)
   const softPuffs = (N, col, op, vitality = 1.4, brakes = 3, imgSize = 1, nearby = 0) => { const P = new Float32Array(N * 3), V = new Float32Array(N * 3), A = new Float32Array(N).fill(1), g = new THREE.BufferGeometry(); let i = 0;
     g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('age', new THREE.BufferAttribute(A, 1));
-    const d = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { col: { value: new THREE.Color(...col) }, sampN: dEch, op: { value: op }, tl: { value: imgSize }, pr: { value: nearby } },
+    const d = new THREE.Points(g, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { col: { value: new THREE.Color(...col) }, ech: dEch, op: { value: op }, tl: { value: imgSize }, pr: { value: nearby } },
       vertexShader: 'attribute float age; varying float a, f; uniform float ech, tl, pr; void main() { a = age; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; f = pr > 0.0 ? clamp(-p.z / pr - 1.0, 0.0, 1.0) : 1.0; gl_PointSize = age < 1.0 ? tl * ech * projectionMatrix[1][1] * (1.1 + 6.0 * age) / -p.z : 0.0; }',
       fragmentShader: 'varying float a, f; uniform vec3 col; uniform float op; void main() { float r = length(gl_PointCoord - 0.5) * 2.0; if (r > 1.0 || a >= 1.0) discard; gl_FragColor = vec4(col, (1.0 - r * r) * (1.0 - a) * min(1.0, 0.15 + a * 4.0) * op * f); }' })); d.frustumCulled = false; d.visible = false; scene.add(d);
     // vivid: live particles; an empty cloud is neither drawn (one draw call per view, reflections included) nor sent to the GPU
@@ -749,6 +749,20 @@
     return { emit(x, y, z, vx, vy, vz) { const k = i++ % n; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); C.set(TH.leaves[Math.random() * TH.leaves.length | 0], k * 3); L[k] = 1 + Math.random() * 1.2; g.attributes.color.needsUpdate = true; },
       step(dt) { const fr = Math.exp(-2.4 * dt); for (let k = 0; k < n; k++) if (L[k] > 0) { const j = k * 3; L[k] -= dt; V[j] *= fr; V[j + 2] *= fr; V[j + 1] = Math.max(-1.3, V[j + 1] - 7 * dt);
           P[j] += (V[j] + Math.sin(L[k] * 9 + k) * 1.6) * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += (V[j + 2] + Math.cos(L[k] * 7 + k) * 1.6) * dt; if (L[k] <= 0) P[j + 1] = -1e4; }
+        g.attributes.position.needsUpdate = true; } }; })();
+  // th.dustBallistic = { grav, rate, size, up } (lune: no air). Instead of the plume, each car throws opaque grains that fly on parabolas and fall back: no drag, no growth, no fade. A grain bounces once, lies still a moment, then is reused.
+  //   grav: their gravity, as a share of the map's (0.4); rate: grains per second for a followed car at full speed (50); size in metres (0.2); up: their highest launch speed (3.5 m/s).
+  //   With it the two soft effects of a car are off as well (the rising puff of a landing, the tyre smoke of a slide): a cloud that hangs is air.
+  //   A grain thrown while its car is in the air keeps the car's velocity and falls at the car's own gravity: it stays beside the car all the way down (its ground is then read under that car, each step). Off by default: no other map sets it
+  const GRAIN = TH.dust && TH.dustBallistic && (() => { const n = 700, P = new Float32Array(n * 3).fill(-1e4), V = new Float32Array(n * 3), C = new Float32Array(n * 3), Gv = new Float32Array(n), Gd = new Float32Array(n), L = new Float32Array(n), B = new Uint8Array(n), OW = new Array(n), g = new THREE.BufferGeometry(); let i = 0;
+    g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('color', new THREE.BufferAttribute(C, 3));
+    const mt = new THREE.PointsMaterial({ size: TH.dustBallistic.size || 0.2, vertexColors: true }), d = new THREE.Points(g, mt); d.frustumCulled = false; scene.add(d);
+    mt.onBeforeCompile = s => { s.vertexShader = s.vertexShader.replace('#include <logdepthbuf_vertex>', 'gl_PointSize = min(gl_PointSize, 9.0); #include <logdepthbuf_vertex>'.replace('; ', ';\n')); }; // a grain that passes close to the lens stays a grain: its size on screen is capped (set at the image)
+    return { emit(x, y, z, vx, vy, vz, grav, ground, owner) { const k = i++ % n, t = 0.7 + Math.random() * 0.45; P.set([x, y, z], k * 3); V.set([vx, vy, vz], k * 3); C.set([TH.dust[0] * t, TH.dust[1] * t, TH.dust[2] * t], k * 3); Gv[k] = grav; Gd[k] = ground; L[k] = 6; B[k] = 0; OW[k] = owner; g.attributes.color.needsUpdate = true; },
+      step(dt) { for (let k = 0; k < n; k++) if (L[k] > 0) { const j = k * 3; L[k] -= dt;
+          if (B[k] < 2) { V[j + 1] -= Gv[k] * dt; P[j] += V[j] * dt; P[j + 1] += V[j + 1] * dt; P[j + 2] += V[j + 2] * dt; const o = OW[k], gd = (o ? S[o.idx].y + (T.dent ? T.dent(P[j], P[j + 2]) : 0) : Gd[k]) + 0.06;
+            if (P[j + 1] < gd) { P[j + 1] = gd; if (B[k]++) L[k] = Math.min(L[k], 1.2); else { V[j + 1] = Math.min(2, -0.3 * V[j + 1]); V[j] *= 0.4; V[j + 2] *= 0.4; } } }
+          if (L[k] <= 0) P[j + 1] = -1e4; }
         g.attributes.position.needsUpdate = true; } }; })();
   if (BURST) BURST.d.renderOrder = -4; // the cloud from other cars passes under the ford's water sheet (renderOrder -2 in scenery-terre.js), as before the sheet went under the particles: seen from afar, it veils their base
   // ford water spray (Spéciale des Ocres: the only earth map with a wet zone): behind each front wheel, drops as white streaks fanned out to the side, falling back, and a bit of foam at water level (short-lived discs: longer-lived, they grow into haze); taller and wider with speed
@@ -802,9 +816,9 @@
     }
     geo.attributes.position.needsUpdate = geo.attributes.color.needsUpdate = true;
     // emissions
-    if (land > 3) for (let i = 0; i < Math.min(14, land * 1.5); i++) { const sd = i & 1 ? 1 : -1, av = i & 2 ? 1.4 : -1.4; // landing: a puff of dust blown from each wheel, outward
+    if (land > 3 && !GRAIN) for (let i = 0; i < Math.min(14, land * 1.5); i++) { const sd = i & 1 ? 1 : -1, av = i & 2 ? 1.4 : -1.4; // landing: a puff of dust blown from each wheel, outward
       emit(car.x + fx * av - fz * sd * 0.9, carY + 0.15, car.z + fz * av + fx * sd * 0.9, car.vx * 0.6 - fz * sd * (3 + Math.random() * 5), 0.5 + Math.random() * 2, car.vz * 0.6 + fx * sd * (3 + Math.random() * 5), 0.35, 0.2, 0.19, 0.17, -1); }
-    if ((car.slide > 0.3 || car.frA || car.dd) && sp > 10 && !car.air) for (const sd of [-0.9, 0.9]) SMOKE.emit(car.x - fx * 1.4 + rx * sd + jit(0.4), carY + 0.25, car.z - fz * 1.4 + rz * sd + jit(0.4), car.vx * 0.65 + rx * sd * 2 + jit(3), 0.6 + Math.random(), car.vz * 0.65 + rz * sd * 2 + jit(3)); // tyre smoke: a cloud that swells and rises, blown outward; it keeps part of the speed, otherwise it passes behind the camera before it has swelled
+    if ((car.slide > 0.3 || car.frA || car.dd) && sp > 10 && !car.air && !GRAIN) for (const sd of [-0.9, 0.9]) SMOKE.emit(car.x - fx * 1.4 + rx * sd + jit(0.4), carY + 0.25, car.z - fz * 1.4 + rz * sd + jit(0.4), car.vx * 0.65 + rx * sd * 2 + jit(3), 0.6 + Math.random(), car.vz * 0.65 + rz * sd * 2 + jit(3)); // tyre smoke: a cloud that swells and rises, blown outward; it keeps part of the speed, otherwise it passes behind the camera before it has swelled
     if (hit > 3) { const s = S[car.idx], sg = Math.sign(car.d); for (let i = 0; i < 16; i++) emit(car.x - s.tz * sg, carY + 0.5, car.z + s.tx * sg, car.vx * 0.5 + jit(14), 2 + Math.random() * 7, car.vz * 0.5 + jit(14), 0.5, 1, 0.75, 0.25, 22); }
     else if (car.rub && sp > 8) { const s = S[car.idx], sg = Math.sign(car.d); for (let i = 0; i < 3; i++) emit(car.x - s.tz * sg, carY + 0.4, car.z + s.tx * sg, car.vx * 0.6 + jit(5), 1 + Math.random() * 4, car.vz * 0.6 + jit(5), 0.35, 1, 0.75, 0.25, 22); } // continuous friction: finer spray than the impact
     for (const fl of hu.fl) { fl.visible = car.boost > 0; fl.scale.y = (0.5 + Math.random() * 0.7) * Math.min(1, car.boost * 2); } // nitro: two flickering exhaust flames, the trails turn blue
@@ -827,13 +841,19 @@
     const { lm, self: car } = VIEWS[0]; // the thunder is player 1's (a single sound, like SOUND.frame)
     if (TH.dust) { for (const c of race ? race.cars : [car]) { const q = T.surf[c.idx], v = Math.hypot(c.vx, c.vz), sd = Math.random() < 0.5 ? -0.8 : 0.8, x = c.x - Math.cos(c.th) * 1.6 - Math.sin(c.th) * sd, z = c.z - Math.sin(c.th) * 1.6 + Math.cos(c.th) * sd; // each car kicks up a plume behind it; in the ford, a spray of water. The dust leaves at the car's speed, then slows down: the plume stays in the chase camera's view
         if (c.air) c.waterT = 0; // in the air, we are no longer in the water: landing a jump in a flooded zone repeats the bow hit (chapada thresholds)
+        if (GRAIN) { const O = TH.dustBallistic, gr = T.grav * (O.grav || 0.4), up = O.up || 3.5, me = VIEWS.some(u => u.car === c), nb = f => (f | 0) + (Math.random() < f % 1); // th.dustBallistic: grains on parabolas instead of the plume; none on the clean floors (the tunnel, a hall the scenery declares indoor)
+          const on = !c.out && !(T.tun && (c.idx - T.t0 + N) % N <= T.t1 - T.t0) && !(sceneryTick && sceneryTick.indoor && sceneryTick.indoor(c.idx) > 0.5), landed = c.grAir > 0.25 && !c.air; c.grAir = c.air ? (c.grAir || 0) + dt : 0;
+          if (on && landed) for (let k = 36; k--;) { const a = Math.random() * 6.283, l = 2 + Math.random() * 6; GRAIN.emit(c.x + Math.cos(a), c.y + 0.1, c.z + Math.sin(a), c.vx * 0.9 + Math.cos(a) * l, 1 + Math.random() * up, c.vz * 0.9 + Math.sin(a) * l, gr, c.y, null); } // the landing: a ring thrown off the wheels
+          if (on && v > 8) for (let k = nb((me ? 1 : 0.35) * (O.rate || 50) * dt * (c.air ? 0.5 : Math.min(1, v / 30) * (1 + Math.min(1, c.slide || 0)))); k--;) { const u = c.air ? 0.9 + Math.random() * 0.1 : 0.8 + Math.random() * 0.17, b = Math.random() * dt; // a slide throws twice as many; b: born at a random instant of the frame
+            GRAIN.emit(x + jit(0.5) - c.vx * b, c.y + 0.12, z + jit(0.5) - c.vz * b, c.vx * u + jit(c.air ? 1 : 2), c.air ? c.vy : 0.6 + Math.random() * up, c.vz * u + jit(c.air ? 1 : 2), c.air ? T.grav * (c.gk || 1) : gr, c.y, c.air ? c : null); }
+          continue; }
         if (v < 8 || c.air || c.out || !(VIEWS.some(v => v.car === c) || c.drift || Math.random() < 0.5)) continue;
         const aq = j => T.surf[(c.idx + j) % N].aq > 0.099, insideWater = aq(0) || aq(1), self = !window.__g.view && VIEWS.some(u => u.car === c); // aq(1): the front wheels, 2 m ahead, are already there
         c.waterT = insideWater ? (c.waterT || 0) + dt : 0; // time spent in the water (scenery only, the simulation does not read it)
         if (insideWater) burst(c, v, self, dt, 1 + 2.5 * Math.max(0, 1 - c.waterT / 0.35) + (aq(4) ? 0 : 2)); // strong: the bow hit at entry, and the wave over the last 8 meters before exit; out of the water, nothing // the ford: a water spray on each side, only where the wet zone is full; on its muddy edges, neither spray nor dust (scenery-terre.js lays the sheet there), and nothing in its muddy edges; lightened for a car followed by a chase camera (not in the inspection camera, __g.view, which looks from afar)
         else if (q.rollAmt > 0.25 && !q.aq) for (let k = 0; k < 2; k++) dust(x + jit(0.6), c.y + 0.15, z + jit(0.6), c.vx * 0.7 + jit(2), 0.3 + Math.random() * 1.2, c.vz * 0.7 + jit(2));
         else if (FIRE && !q.aq && !(T.tun && (c.idx - T.t0 + N) % N <= T.t1 - T.t0)) for (let k = Math.max(1, Math.round((c.drift ? 3 : 1.5) * dt * 60)); k--;) FIRE.emit(x + jit(2), c.y + 0.12, z + jit(2), c.vx * 0.85 + jit(6), 1.5 + Math.random() * 4.5, c.vz * 0.85 + jit(6)); } // they leave at the car's speed then slow down, like the dust: the wake stays in the chase camera's view
-      POUS.step(dt); if (FIRE) FIRE.step(dt); if (BURST) { BURST.step(dt); BURST1.step(dt); FOAM.step(dt); } }
+      POUS.step(dt); if (GRAIN) GRAIN.step(dt); if (FIRE) FIRE.step(dt); if (BURST) { BURST.step(dt); BURST1.step(dt); FOAM.step(dt); } }
     dmgFrame(dt); sceneryFrame(dt); SMOKE.step(dt); dEch.value = RH / 2;
     for (const p of STMS) { for (p.t += dt; p.t > 0.12; p.t -= 0.12) p.f.emit(p.x + jit(0.6), p.y, p.z + jit(0.6), 0.3 + jit(0.4), 1 + Math.random() * 0.6, jit(0.4)); p.f.step(dt); } // steam: always, even far away (40 points per manhole)
     for (let i = 0; i < VN; i++) { const j = i * 6, s = i * VK; if (vS[s + 3] <= 0) { vLayer.fill(0, j, j + 6); continue; }
@@ -1107,7 +1127,7 @@
   //   smokePuff: the grey steam from the front from 0.6 wear; black: smoke from an engine on fire; fire (CASSE mode): it smoulders at 0.7, flares at 0.85, sets the car alight when out of use
   const PXN = 900, pxP = new Float32Array(PXN * 3).fill(-1e4), pxV = new Float32Array(PXN * 3), pxC = new Float32Array(PXN * 3), pxA = new Float32Array(PXN), pxS = new Float32Array(PXN), pxL = new Float32Array(PXN), pxL0 = new Float32Array(PXN), pxK = new Uint8Array(PXN), pxGeo = new THREE.BufferGeometry(); let pxi = 0;
   pxGeo.setAttribute('position', new THREE.BufferAttribute(pxP, 3)); pxGeo.setAttribute('col', new THREE.BufferAttribute(pxC, 3)); pxGeo.setAttribute('al', new THREE.BufferAttribute(pxA, 1)); pxGeo.setAttribute('sz', new THREE.BufferAttribute(pxS, 1));
-  const pxMesh = new THREE.Points(pxGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { sampN: dEch },
+  const pxMesh = new THREE.Points(pxGeo, new THREE.ShaderMaterial({ transparent: true, depthWrite: false, uniforms: { ech: dEch },
     vertexShader: 'attribute vec3 col; attribute float al, sz; varying vec3 c; varying float a; uniform float ech; void main() { c = col; a = al; vec4 p = modelViewMatrix * vec4(position, 1.0); gl_Position = projectionMatrix * p; gl_PointSize = al > 0.0 ? max(1.0, floor(sz * ech * projectionMatrix[1][1] / -p.z)) : 0.0; }',
     fragmentShader: 'varying vec3 c; varying float a; void main() { gl_FragColor = vec4(c, a); }' })); // no disc, no blur: a solid square, in whole pixels
   pxMesh.frustumCulled = false; pxMesh.userData.dyn = 1; scene.add(pxMesh);
@@ -1880,8 +1900,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // (the computation is in sim.js: ground(), which adds the wall's height on a drivable wall; car.y is this ground, or the flight height)
   const yAt = (c, k = 0) => ground(T, c, k);
   // attitude [pitch, roll]: on the ground the car follows the slope of the track and that of the wall; in the air its nose follows its trajectory
-  const attitude = c => { const s = S[c.idx], ax = Math.cos(c.th), az = Math.sin(c.th), gn = slope(s, c.d);
-    return [c.air ? 0.7 * Math.atan2(c.vy, Math.max(5, Math.hypot(c.vx, c.vz))) : Math.atan(s.sl + gn * (s.tx * az - s.tz * ax)), -Math.atan(gn * (s.tx * ax + s.tz * az))]; };
+  const attitude = c => { const s = S[c.idx], ax = Math.cos(c.th), az = Math.sin(c.th), gn = slope(s, c.d), [df, dr] = tilt(T, c); // tilt: the slope of craters (M.dents, M.bowls), zero on every map without them
+    return [c.air ? 0.7 * Math.atan2(c.vy, Math.max(5, Math.hypot(c.vx, c.vz))) : Math.atan(s.sl + gn * (s.tx * az - s.tz * ax) + df), -Math.atan(gn * (s.tx * ax + s.tz * az) + (c.air ? 0 : dr))]; };
   freshView(); // the player's view: the scenery is built, all its light fixtures are declared
   // all the scene's shaders launched at once (the driver compiles them in parallel): scenery culled off-screen at the start no longer compiles its shader mid-race
   // at its first appearance; compile and not compileAsync: without a backdrop, everything must finish in one go (see above)
@@ -1957,12 +1977,12 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     for (const vu of VIEWS) { const c = vu.car, [tg, rl] = attitude(c);
       if (vu.hit > 8) vu.stun = 0.7; if (vu.land > 7) vu.stun = Math.max(vu.stun, Math.min(0.45, (vu.land - 6) * 0.08)); vu.stun -= dt; // a hard landing shakes too
       vu.up = drivetrain(vu, dt, vu.gas);
-      { const s = S[c.idx]; if (!c.air) vu.carY += s.sl * (c.vx * s.tx + c.vz * s.tz) * dt; } vu.carY += (c.y - vu.carY) * Math.min(1, dt * 18); // the slope first, then the smoothing: without it the smoothed car dragged under the road going uphill (30 cm at 13 %) and floated going downhill
+      { const s = S[c.idx], [df, dr] = tilt(T, c), ax = Math.cos(c.th), az = Math.sin(c.th); const q = (df * (c.vx * ax + c.vz * az) + dr * (c.vz * ax - c.vx * az)) * dt; if (!c.air) vu.carY += s.sl * (c.vx * s.tx + c.vz * s.tz) * dt + q; if (q && !c.air) { vu.cy += q; vu.ly += q; } if (M.fallCam && c.air) { vu.cy += c.vy * dt; vu.ly += c.vy * dt; } } vu.carY += (c.y - vu.carY) * Math.min(1, dt * 18); // the slope first, then the smoothing: without it the smoothed car dragged under the road going uphill (30 cm at 13 %) and floated going downhill; q, from tilt: the same for the slope of craters (M.dents, M.bowls), zero on a map without them, and for the two smoothed heights of the camera (cy, ly), which lagged 1.7 m behind a car diving into a crater
       vu.pitch += (tg - vu.pitch) * Math.min(1, dt * 10); vu.roll += (rl - vu.roll) * Math.min(1, dt * 10); // pitch and roll (slope, wall, flight): on their own line, a comment had swallowed them
       if (state === 'title') vu.cth += dt * 0.22; else vu.cth += wrap(c.th - vu.cth) * Math.min(1, dt * 6); // in the menu, the camera orbits the car to show the map
       if ((vu.lookT -= dt) < 0) { const k = Math.exp(-dt * 5); vu.lookA *= k; vu.lookP *= k; } // mouse still for 2.5 s: the camera returns behind the car
       vu.nit = clamp(vu.nit + (c.boost > 0 ? dt / 0.7 : -dt / 1.1), 0, 1); // nitro: 0.7 s to enter, 1.1 s to exit
-      vu.lm += (zone(c.idx, 10) - vu.lm) * Math.min(1, dt * 8); // light: neon night ↔ interchange on red alarm, beating with the music
+      vu.lm += ((sceneryTick && sceneryTick.indoor ? Math.max(zone(c.idx, 10), sceneryTick.indoor(c.idx)) : zone(c.idx, 10)) - vu.lm) * Math.min(1, dt * 8); // tick.indoor(i): 0..1, a hall or underground the scenery builds itself (area51) darkens, adapts the eye and sounds like a tunnel; without it, the engine tunnel alone // light: neon night ↔ interchange on red alarm, beating with the music
     }
     const { carY, lm } = J;
 
@@ -2038,12 +2058,15 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const rs = clamp((rv - 0.4) / 0.6, 0, 1), shake = 0.03 * rs + 0.045 * rs * rs * rs, impact = stun > 0 ? stun * 0.35 : 0; // speed: nothing over the bottom 40 % of the effects range (130 km/h → peak), full at the peak; impact: brief, sharp
     // the camera follows the ground under it, without dropping into a pit the car flies over (±2.5 m around the car's ground), rises with the car in flight and leans with it on a wall
     const y0 = yAt(car), yGround = k => clamp(yAt(car, k), y0 - 2.5, y0 + 2.5) + air;
-    const pc = s.y + wallFace(s, (px - s.x) * nx + (pz - s.z) * nz) + 1.5; // above the wall where the camera is (car high on the wall, camera pushed out towards its top: it went under it)
+    const pc = T.dent ? yAt({ idx: car.idx, x: px, z: pz, d: car.d, y: car.y }) + 1.5 : s.y + wallFace(s, (px - s.x) * nx + (pz - s.z) * nz) + 1.5; // (craters, M.dents and M.bowls: the ground where the camera is, which a crater puts under the ribbon or above the car) // above the wall where the camera is (car high on the wall, camera pushed out towards its top: it went under it)
     // smoothed heights: glued to the car, the camera jumped at takeoff and dropped sharply on landing; softer in flight (~0.4 s) than on the ground (~0.1 s, the slope is still followed). Gap > 20 m (start, reposition): we snap straight to it
     const ky = Math.min(1, dt * (car.air ? 2.5 : 10)), smoothNoise = (k, t) => (vu[k] = Math.abs(t - vu[k]) < 20 ? vu[k] + (t - vu[k]) * ky : t);
     const yc = Math.max(smoothNoise('cy', yGround(-3)), yAt(car, -3) + 0.8 - (M.camH || 3.2)), yl = smoothNoise('ly', yGround(5)); // never under the road at the camera's position
     cam.position.set(px + vib() * shake + (Math.random() - 0.5) * impact, Math.max(pc, yc + (M.camH || 3.2) + lookP - 0.5 * rc) + vib() * shake * 0.7 + (Math.random() - 0.5) * impact, pz);
-    cam.lookAt(car.x + cx * 10, yl + 1.1, car.z + cz * 10); cam.rotateZ(-0.6 * roll);
+    // M.fallCam (a map with a long fall: the Moon's crater jump): in flight the two smoothed heights get the car's vertical speed (views loop: at 30 m/s of fall their 0.4 s of lag left the car 12 m under the frame),
+    // and the camera looks down the trajectory (vu.dive: the slope of the flight, eased in and out over ~0.3 s, so it comes back level after the landing). Other maps: dive stays 0
+    const dive = vu.dive = (vu.dive || 0) + ((M.fallCam && car.air ? clamp(car.vy / Math.max(20, sp), -0.6, 0.15) : 0) - (vu.dive || 0)) * Math.min(1, dt * 3);
+    cam.lookAt(car.x + cx * 10, yl + 1.1 + 6 * dive, car.z + cz * 10); cam.rotateZ(-0.6 * roll);
     cam.rotateX(vib() * shake * 0.12); cam.rotateY(vib() * shake * 0.08); // the image itself jerks (≈ 0.4° at the peak), sharp and small
     const nitE = vu.nit * vu.nit * (3 - 2 * vu.nit); // nitro: smooth start and end (widened field and vignette)
     cam.fov = 62 + 20 * rc + 10 * rv * rv + 3 * car.slide + 6 * nitE; // + grand-angle en fin de course : l'effet tunnel
@@ -2197,7 +2220,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // prepare: once the page is launched, the other maps build in the background, neighbours first, one at a time; for the benchmarks and captures (?auto, ?perf, ?style) we only build what is requested
   const prepare = () => {
     if (window.__prep || AUTO || ST || /[?&]perf\b/.test(location.search)) return;
-    const i0 = MAPS.indexOf(M), ordering = [...new Set(MAPS.flatMap((_, k) => [MAPS[(i0 + k) % MAPS.length], MAPS[(i0 - k + MAPS.length * 2) % MAPS.length]]))];
+    const i0 = MAPS.indexOf(M), ordering = [...new Set(MAPS.flatMap((_, k) => [MAPS[(i0 + k) % MAPS.length], MAPS[(i0 - k + MAPS.length * 2) % MAPS.length]]))].filter(Boolean); // a map outside MAPS (attempt) has no neighbours: i0 = -1
     window.__prep = (async () => { for (const c of ordering) { await built(c); await whoosh(); } })();
   };
   const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)

@@ -57,7 +57,7 @@
   };
 
   // the models: top of the profile, bottom of the body, width, cabin (bottom of the windscreen, top of the windscreen, top of the rear window, bottom of the rear window; width),
-  // wheels (x rear, x front, radius, tyre width, extra rear track), door seals, and the parts specific to the model
+  // wheels (x rear, x front, radius, tyre width, extra rear track, extra front track), door seals, and the parts specific to the model
   const MODELS = {
     // Nissan Skyline GT-R R34 prepared: two-door saloon with high boot, large spoiler on uprights, four round lights, bonnet air intake
     gtr: {
@@ -178,20 +178,86 @@
         B('blackM', 0.12, 0.12, 1.7, 2.22, 0.62, 0), B2('blackM', 0.06, 0.42, 0.06, 2.2, 0.8, 0.5), B('blackM', 0.06, 0.06, 1.06, 2.2, 1.0, 0), // pare-buffle
         B2('headlight', 0.04, 0.12, 0.3, 2.14, 0.86, 0.62), B2('fire', 0.04, 0.2, 0.12, -2.16, 0.86, 0.84), B('blackM', 0.14, 0.14, 1.84, -2.18, 0.56, 0),
         B2('carBody', 0.14, 0.1, 0.14, 0.52, 1.2, 0.9, 1)]
+    },
+    // Kelvin DM-12 (invented, Signal Unknown): early-80s stainless wedge with gull-wing doors. Flat bonnet rising to a raked windscreen, flat roof, black louvres
+    // over the rear window down to a flat high deck, black nose panel with four rectangular lamps, black tail panel with block lights. Unpainted: the livery brushes the steel
+    delorean: {
+      above: [[2.08, 0.2], [2.12, 0.44], [2.04, 0.58], [0.82, 0.76], [-1.5, 0.86], [-2.06, 0.86], [-2.1, 0.7], [-2.08, 0.2]], low: 0.2, w: 1.86,
+      cab: [[0.8, 0.76], [0.05, 1.13], [-0.55, 1.14], [-1.55, 0.86]], wc: 1.5, wheels: [-1.2, 1.2, 0.32, 0.25, 0.03], doors: [0.62, -0.5], plate: 0.4,
+      pieces: (B, B2, R2, E2) => [B('blackM', 0.06, 0.15, 1.72, 2.1, 0.5, 0), B2('headlight', 0.04, 0.09, 0.2, 2.14, 0.5, 0.7), B2('headlight', 0.04, 0.09, 0.2, 2.14, 0.5, 0.46), // nose panel, lamps
+        B('blackM', 0.3, 0.1, 1.82, 1.98, 0.25, 0), B('blackM', 0.3, 0.14, 1.82, -1.98, 0.27, 0), B('blackM', 0.05, 0.2, 1.76, -2.1, 0.72, 0), B2('fire', 0.04, 0.14, 0.48, -2.13, 0.72, 0.58), // bumpers, tail panel, lights
+        ...[0, 1, 2, 3, 4].map(k => B('blackM', 0.13, 0.035, 1.3, -0.68 - k * 0.19, 1.13 - k * 0.053, 0)), // louvres: slats stepping down the rear window
+        B2('blackM', 0.14, 0.09, 0.14, 0.62, 0.84, 0.86)]
+    },
+    // Selene Molab-1 (invented, Lunar Outpost): pressurised lunar rover. A narrow hull between four big mesh wheels left in the open (the two track offsets), each under its flat mudguard,
+    // a wider sealed pod on top (windscreen strip, portholes, solar roof: the livery), dish on its mast, whip antenna, two gas tanks across the stern, lamps on the nose deck, skid bars
+    molab: {
+      above: [[1.86, 0.42], [1.96, 0.66], [1.82, 0.98], [-1.78, 0.98], [-1.92, 0.8], [-1.88, 0.42]], low: 0.42, w: 1.3,
+      cab: [[1.2, 0.98], [0.92, 1.5], [-1.05, 1.5], [-1.3, 0.98]], wc: 1.9, wheels: [-1.3, 1.3, 0.45, 0.34, 0.45, 0.45], doors: [0.5, -0.5], plate: 0.7,
+      pieces: (B, B2, R2, E2) => [B2('blackM', 0.14, 0.2, 0.2, 1.62, 1.08, 0.36), R2('headlight', 0.1, 1.7, 1.08, 0.36), // lamps in their housings on the nose deck
+        ...[-1.3, 1.3].map(x => B2('carBody', 1.04, 0.04, 0.36, x, 0.95, 0.88)), // mudguards
+        B('blackM', 0.1, 0.1, 2.06, 1.97, 0.5, 0), B('blackM', 0.1, 0.1, 2.06, -1.93, 0.5, 0), B2('fire', 0.04, 0.1, 0.2, -1.93, 0.84, 0.48), // skid bars, lights
+        ...[-1.5, -1.72].map(x => ['carBody', new THREE.CylinderGeometry(0.1, 0.1, 1.2, 8).rotateX(Math.PI / 2), x, 1.09, 0, 1]), B2('blackM', 0.36, 0.06, 0.06, -1.61, 1.2, 0.3), // tanks and their straps
+        B('blackM', 0.05, 0.4, 0.05, -0.7, 1.7, 0.5), ['carBody', new THREE.CylinderGeometry(0.28, 0.06, 0.12, 10).rotateZ(-0.5), -0.68, 1.95, 0.5, 1], // dish on its mast
+        B('blackM', 0.03, 0.8, 0.03, -0.9, 1.9, -0.7)] // whip antenna
+    },
+    // Meltemi GTA-SA (invented, Aegean Cliffs): small 1960s Italian notchback coupé, upright nose with four round lamps, thin bumpers, short boot
+    giulia: {
+      above: [[2.0, 0.24], [2.04, 0.56], [1.96, 0.74], [0.8, 0.84], [-1.2, 0.86], [-1.98, 0.82], [-2.04, 0.6], [-2.0, 0.24]], low: 0.24, w: 1.6,
+      cab: [[0.7, 0.84], [0.15, 1.3], [-0.75, 1.3], [-1.3, 0.86]], wc: 1.36, wheels: [-1.2, 1.22, 0.29, 0.2], doors: [0.6, -0.45], plate: 0.42,
+      pieces: (B, B2, R2, E2) => [R2('headlight', 0.11, 2.04, 0.62, 0.58), R2('headlight', 0.075, 2.05, 0.6, 0.33), B('blackM', 0.08, 0.07, 1.64, 2.07, 0.4, 0), B('blackM', 0.08, 0.07, 1.64, -2.06, 0.42, 0),
+        B2('fire', 0.04, 0.1, 0.3, -2.04, 0.68, 0.56), B2('carBody', 0.12, 0.08, 0.1, 0.62, 0.92, 0.74, 1)]
+    },
+    // Tianmen SW-22 (invented, Sky Pillars): late-90s wide-body rally coupé, three-box: blistered wings, bonnet scoop, tall wing on solid end plates, fog lamp covers
+    sw22: {
+      above: [[2.14, 0.2], [2.18, 0.42], [2.1, 0.62], [1.1, 0.82], [0.7, 0.86], [-1.3, 0.9], [-2.1, 0.92], [-2.18, 0.7], [-2.14, 0.2]], low: 0.2, w: 1.72,
+      cab: [[0.72, 0.85], [0.0, 1.33], [-0.95, 1.34], [-1.5, 0.9]], wc: 1.42, wheels: [-1.26, 1.27, 0.32, 0.26, 0.02], doors: [0.6, -0.55], plate: 0.44,
+      pieces: (B, B2, R2, E2) => [E2(profReport([[1.8, 0.22], [1.82, 0.78], [0.76, 0.82], [0.74, 0.22]], 0.22, [1.27], 0.32, 0.35), 0.12, 0.86, 0.04), // blistered wings
+        E2(profReport([[-0.72, 0.22], [-0.76, 0.86], [-1.82, 0.88], [-1.84, 0.22]], 0.22, [-1.26], 0.32, 0.35), 0.12, 0.86, 0.04),
+        B('carBody', 0.34, 0.05, 1.72, -1.92, 1.3, 0, 1), B2('carBody', 0.3, 0.36, 0.05, -1.92, 1.1, 0.8, 1), B('carBody', 0.34, 0.07, 0.5, 1.0, 0.87, 0, 1), // wing, end plates, scoop
+        B2('headlight', 0.04, 0.13, 0.36, 2.15, 0.56, 0.6), R2('headlight', 0.085, 2.18, 0.33, 0.56), B('blackM', 0.3, 0.07, 1.84, 2.04, 0.21, 0),
+        B2('fire', 0.04, 0.12, 0.4, -2.17, 0.76, 0.56), B('blackM', 0.24, 0.14, 1.74, -2.08, 0.28, 0), B2('blackM', 0.03, 0.24, 0.26, -1.68, 0.2, 0.78), B2('carBody', 0.14, 0.09, 0.14, 0.6, 0.93, 0.84, 1)]
+    },
+    // Hekla Evo (invented, Volcanic Island): early-90s boxy rally hatchback, five doors: square box wings, four round lamps, roof spoiler on the hatch, mud flaps
+    delta: {
+      above: [[1.9, 0.22], [1.95, 0.5], [1.9, 0.7], [0.85, 0.84], [-1.7, 0.9], [-1.9, 0.9], [-1.95, 0.6], [-1.9, 0.22]], low: 0.22, w: 1.66,
+      cab: [[0.85, 0.84], [0.3, 1.34], [-1.1, 1.36], [-1.8, 0.9]], wc: 1.42, wheels: [-1.2, 1.24, 0.31, 0.25, 0.02], doors: [0.7, -0.3], plate: 0.42,
+      pieces: (B, B2, R2, E2) => [E2(profReport([[1.76, 0.24], [1.78, 0.8], [0.72, 0.84], [0.7, 0.24]], 0.24, [1.24], 0.31, 0.34), 0.14, 0.83, 0.04),
+        E2(profReport([[-0.66, 0.24], [-0.7, 0.86], [-1.74, 0.88], [-1.76, 0.24]], 0.24, [-1.2], 0.31, 0.34), 0.14, 0.83, 0.04),
+        R2('headlight', 0.09, 1.95, 0.6, 0.62), R2('headlight', 0.075, 1.96, 0.6, 0.4), B('blackM', 0.14, 0.2, 1.74, 1.9, 0.32, 0), R2('headlight', 0.07, 1.98, 0.32, 0.5),
+        B('carBody', 0.26, 0.05, 1.36, -1.2, 1.41, 0, 1), B2('fire', 0.04, 0.14, 0.34, -1.96, 0.72, 0.58), B('blackM', 0.14, 0.18, 1.74, -1.9, 0.31, 0),
+        B2('blackM', 0.03, 0.24, 0.26, -1.6, 0.2, 0.78), B2('carBody', 0.14, 0.09, 0.14, 0.72, 0.92, 0.82, 1)]
+    },
+    // Heron 240 Turbo (invented, Sunken Highway): 1980s Scandinavian saloon, a brick: long square bonnet and boot, upright cabin, big black bumpers, square lamps, air dam
+    heron: {
+      above: [[2.3, 0.26], [2.34, 0.6], [2.3, 0.86], [0.85, 0.92], [-1.35, 0.94], [-2.3, 0.92], [-2.36, 0.66], [-2.32, 0.26]], low: 0.26, w: 1.7,
+      cab: [[0.9, 0.9], [0.5, 1.42], [-0.95, 1.42], [-1.45, 0.94]], wc: 1.5, wheels: [-1.32, 1.34, 0.31, 0.21], doors: [0.72, -0.2], plate: 0.46,
+      pieces: (B, B2, R2, E2) => [B('blackM', 0.16, 0.14, 1.78, 2.34, 0.44, 0), B('blackM', 0.16, 0.14, 1.78, -2.34, 0.44, 0), B('blackM', 0.2, 0.1, 1.66, 2.24, 0.26, 0),
+        B2('headlight', 0.04, 0.16, 0.3, 2.33, 0.7, 0.64), B2('fire', 0.04, 0.26, 0.26, -2.35, 0.74, 0.68), B2('carBody', 0.12, 0.09, 0.12, 0.8, 1.0, 0.9, 1)]
+    },
+    // Bison 1500 (invented, Sunken Highway): a 1980s full-size pick-up left out for years. Long flat bonnet, upright two-seat cab, an open bed (floor lower than its sides and tailgate),
+    // a tool rack behind the cab and a toolbox across the bed, steel bumpers, square lamps. Its livery (textures-cars.js) is the dirt: mud up the flanks, rust, dust on every flat
+    bison: {
+      above: [[2.48, 0.4], [2.54, 0.7], [2.5, 0.96], [0.9, 1.0], [-0.52, 1.0], [-0.55, 0.78], [-2.5, 0.78], [-2.5, 0.4]], low: 0.4, w: 1.9,
+      cab: [[0.9, 0.98], [0.58, 1.55], [-0.38, 1.55], [-0.52, 1.0]], wc: 1.7, wheels: [-1.5, 1.5, 0.37, 0.25], doors: [0.82, -0.46], plate: 0.55,
+      pieces: (B, B2) => [B2('carBody', 1.98, 0.24, 0.07, -1.51, 0.9, 0.915), B('carBody', 0.07, 0.24, 1.9, -2.47, 0.9, 0), // the sides of the bed and its tailgate
+        B2('blackM', 0.06, 0.62, 0.06, -0.62, 1.3, 0.8), B('blackM', 0.06, 0.06, 1.66, -0.62, 1.62, 0), B('blackM', 0.5, 0.28, 1.5, -0.92, 0.92, 0), // rack, toolbox
+        B('blackM', 0.18, 0.16, 1.92, 2.6, 0.48, 0), B('blackM', 0.18, 0.16, 1.92, -2.56, 0.48, 0),
+        B2('headlight', 0.04, 0.16, 0.3, 2.55, 0.8, 0.68), B2('fire', 0.04, 0.28, 0.12, -2.52, 0.72, 0.86), B2('carBody', 0.14, 0.1, 0.16, 0.84, 1.12, 0.98, 1)]
     }
   };
 
   Object.assign(SHAPES, {
     // a car: { zones: { carBody, blackM, headlight, fire } merged geometries, wheels: [rear x, front x, rear z, front z, radius, width], plan: what the livery must draw }
     vehicle: K => {
-      const m = MODELS[K], [xr, xf, r, tw, plus = 0] = m.wheels, ra = r + 0.03, w = m.w;
+      const m = MODELS[K], [xr, xf, r, tw, plus = 0, plusF = 0] = m.wheels, ra = r + 0.03, w = m.w;
       const B = (zn, l, h, ww, x, y, z, unison) => [zn, boxMesh(l, h, ww), x, y, z, unison], B2 = (zn, l, h, ww, x, y, z, unison) => [B(zn, l, h, ww, x, y, z, unison), B(zn, l, h, ww, x, y, -z, unison)];
       const R2 = (zn, rr, x, y, z) => [[zn, roundTone(rr), x, y, z], [zn, roundTone(rr), x, y, -z]], E2 = (p, ww, z, ch = 0.03) => [['carBody', extru(p, ww, ch), 0, 0, z], ['carBody', extru(p, ww, ch), 0, 0, -z]];
       const pieces = [['carBody', extru(profReport(m.above, m.low, [xr, xf], r, ra), w, 0.04), 0, 0, 0], ['carBody', extru(m.cab, m.wc, 0.11), 0, 0, 0],
         ...[xr, xf].map(x => B('blackM', 2 * ra, ra + 0.08, w - 2 * tw - 0.12, x, r + (ra - 0.12) / 2, 0)), // wheel arches: the back, so as not to see through
         ...m.pieces(B, B2, R2, E2).flatMap(p => Array.isArray(p[0]) ? p : [p])]; // B2, R2, E2 give a pair of parts
       const zf = w / 2 - tw / 2 - 0.05; // tyre sidewall set back from the wing
-      return { zones: melt(pieces), wheels: [xr, xf, zf + plus, zf, r, tw], plan: Object.assign({ K, cab: m.cab, wc: m.wc, w, xs: [xr, xf], r, ra, doors: m.doors, plate: m.plate, low: m.low, aboveBody: m.above }, plan) };
+      return { zones: melt(pieces), wheels: [xr, xf, zf + plus, zf + plusF, r, tw], plan: Object.assign({ K, cab: m.cab, wc: m.wc, w, xs: [xr, xf], r, ra, doors: m.doors, plate: m.plate, low: m.low, aboveBody: m.above }, plan) };
     },
     // wheel: tyre and rim in one part, axis along z. The wheel's livery (textures-cars.js): the sidewall and the rim as a disc in the centre, the tread band at the bottom
     wheelCar: (r, w) => {

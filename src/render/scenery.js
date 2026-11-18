@@ -28,6 +28,11 @@
   });
   const GLOW = { emis: 1 }; // self-lit material by itself: shop window, sign, light
   const boxMesh = (h, m, w, ht, d, x, y, z) => h.pose('boxMesh', m, h.scene, [x, y, z], w, ht, d); // single piece with free dimensions
+  // blockout (docs/methods/NEW-MAP.md, phase 2): a flat-colour box at the real size of what will replace it, base at y, local X across the road when ry = h.across(s),
+  // its name on a board above it, facing the car that arrives. Returns the group: phase 3 fills this footprint.
+  const block = (h, label, c, w, ht, d, x, y, z, ry = 0) => { const T = h.THREE, g = new T.Group(), lw = Math.max(10, label.length * 2.2); g.position.set(x, y, z); g.rotation.y = ry; h.scene.add(g);
+    h.pose('boxMesh', h.mat('paint', { c }), g, [0, ht / 2, 0], w, ht, d);
+    const b = new T.Mesh(new T.PlaneGeometry(lw, lw / 4), h.mat('written', { emis: 1, side: T.DoubleSide }, 256, 64, '#16202a', '#ffffff', label, 44)); b.position.y = ht + 2 + lw / 8; g.add(b); return g; };
   // a point at the road edge: sample s, side sd (-1 left, 1 right), at `off` metres from the axis
   const edgePt = (s, sd, off) => [s.x - s.tz * sd * off, s.z + s.tx * sd * off];
   // a group placed on the road at sample s: local X = across (positive to the right), local Z = toward the rear
@@ -82,5 +87,5 @@
   }
 
   window.SCENERY = {}; // each scenery-<map>.js adds its function to it, via Object.assign
-  window.PLACERS = { inst, near, pt, indexed, insts, GLOW, boxMesh, edgePt, marker, weld, terrain }; // the shared placers, for the map files
+  window.PLACERS = { inst, near, pt, indexed, insts, GLOW, boxMesh, block, edgePt, marker, weld, terrain }; // the shared placers, for the map files
 })();

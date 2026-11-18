@@ -36,7 +36,7 @@ Rules this repo actually follows. When in doubt, match the code around you. Arch
 
 ## Shared files need care
 
-All 12 maps run on the same engine. These files are shared: `src/engine/sim.js`, `src/engine/game.js`, `src/engine/session.js`, `src/audio/audio.js`, `src/data/maps.js`, `src/render/textures.js`, `src/render/shapes.js`, `src/render/scenery.js`, `vendor/three/`.
+All 18 maps run on the same engine. These files are shared: `src/engine/sim.js`, `src/engine/game.js`, `src/engine/session.js`, `src/audio/audio.js`, `src/data/maps.js`, `src/render/textures.js`, `src/render/shapes.js`, `src/render/scenery.js`, `vendor/three/`.
 
 - Fix a map in its own folder (`src/maps/<map>/`) first. Touch the engine only when several maps need the same thing.
 - A new engine feature is an option **absent by default**, switched on by a field of the map entry (`th.smooth`, `th.layerSet`, `jumps`, `surf`, …). A map that does not set it must behave and render exactly as before: same shaders, geometries, textures and draw calls. See [methods/MAP-ENGINE-OPTIONS.md](methods/MAP-ENGINE-OPTIONS.md); try an option without editing data with `?opt=<JSON>` or `OPT='…' node tools/bench-quick.js <map>`.
