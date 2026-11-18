@@ -1,7 +1,6 @@
 // "lune", guidance (round 5): what tells the player where to go, and the edge of the road. Runs after the five zones (ZONES of scenery-lune.js). Shapes: shapes-lune-guidage.js; the halos of the lamps are drawn by scenery-lune-vie.js.
 // Colour code of the map: LEFT of the road = cold cyan, RIGHT = amber (a car coming out of the tunnel reads it at once, and the lamps of the hall, the masts and the mouth beacons are already amber).
-//  1. The arena: a corridor of gates from the landing to the mouth of the tunnel, drawn round the small craters (M.dents): a pair of lamp posts every 28 m (7.5 m either side of the path), a row of low pylons at 5.8 m either side every 9 m, arrow boards
-//     two gates before each change of side. The path is computed here from the dents (dynamic programming over the lateral offset to the axis lip-tunnel: clear of every crater, the least detour, at the axis at the mouth). Nothing stands on the path.
+//  1. The arena: a corridor of gates from the landing to the mouth of the tunnel, drawn round the small craters (M.dents): a pair of bend poles every 28 m (7.5 m either side of the path); nothing else. The path is computed here from the dents (dynamic programming over the lateral offset to the axis lip-tunnel: clear of every crater, the least detour, at the axis at the mouth). Nothing stands on the path.
 //  2. The bends of the road (tunnel exit to lip, outside the start hall): an arrow board on the outside, 50 samples (100 m) before each one, bigger at the hairpins, and a row of poles every 12 m on its outside.
 //  3. The edge of the road: no guardrail on the Moon. A low berm of regolith thrown up along the track (inner face exactly on the collision line, ±s.w), a strip of plates on its face, marker posts linked by a cable.
 (window.LUNE = window.LUNE || {}).guidage = ({ h, g, S, N, T, M, EAST, iLip, nArena, LAP, stand, add, edgePt, THREE }) => {
@@ -25,13 +24,7 @@
   const O = []; { let a = best[ks.length - 1].reduce((m, b, i, A) => b.c < A[m].c ? i : m, 0); for (let j = ks.length - 1; j >= 0; j--) { O[j] = OF[a]; a = best[j][a].p; } }
   const PP = ks.map((k, j) => pt(k, O[j])), dir = j => { const a = PP[Math.max(0, j - 1)], b = PP[Math.min(PP.length - 1, j + 1)], l = Math.hypot(b[0] - a[0], b[1] - a[1]); return [(b[0] - a[0]) / l, (b[1] - a[1]) / l]; };
   const ry = ([dx, dz]) => Math.atan2(-dx, -dz), at = ([x, z], [dx, dz], lat) => [x - dz * lat, z + dx * lat]; // lateral + = the driver's right
-  PP.forEach((p, j) => { const d = dir(j); for (const sd of [-1, 1]) { const [x, z] = at(p, d, sd * 7.5); add(stand(x, z, ry(d)), 'jalonLune', [4.5, side(sd)]); } });
-  for (let j = 0; j < PP.length - 1; j++) { const a = PP[j], b = PP[j + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), d = [(b[0] - a[0]) / L, (b[1] - a[1]) / L], n = Math.round(L / 9);
-    for (let q = 0; q < n; q++) for (const sd of [-1, 1]) { const p = [a[0] + (b[0] - a[0]) * q / n, a[1] + (b[1] - a[1]) * q / n], [x, z] = at(p, d, sd * 5.8); if (clear(x, z, 0.5)) add(stand(x, z, ry(d)), 'plotLune', [side(sd)]); } }
-  // an arrow board two gates before each change of side, on the outside of the turn, 13 m from the path
-  for (let j = 2; j < PP.length - 2; j++) { const a = O[j] - O[j - 1], b = O[j + 1] - O[j];
-    if (Math.abs(b) >= 4 && (a === 0 || Math.sign(a) !== Math.sign(b)) && Math.abs(O[j + 1] - O[j - 1]) >= 4) { const turn = Math.sign(b), jb = Math.max(0, j - 2), d = dir(jb); let lat = -turn * 13, [x, z] = at(PP[jb], d, lat); if (!clear(x, z, 3)) [x, z] = at(PP[jb], d, lat = -lat);
-      add(stand(x, z, ry(d)), 'flecheLune', [turn]); } }
+  PP.forEach((p, j) => { const d = dir(j); for (const sd of [-1, 1]) { const [x, z] = at(p, d, sd * 7.5); add(stand(x, z, ry(d)), 'poteauLune', [3, side(sd)]); } }); // the same thin poles as in the bends, in pairs
 
   // ---------- 2. the bends of the road: an arrow board before, poles on the outside ----------
   const turn = i => { const a = S[(i - 8 + N) % N], b = S[(i + 8) % N]; return a.tx * b.tz - a.tz * b.tx; }; // > 0: to the right
