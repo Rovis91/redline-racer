@@ -56,6 +56,7 @@
     egee: [['bandpass', 420, 0.6, 0.035, 0.07, 0.6], ['lowpass', 190, 0.7, 0.07, 0.09, 0.6]], // the meltemi in the air, the swell on the rocks, 11 s (+ the beds and events per zone: AMBZ; the place sounds are placed by the scenery: SOUND.spots)
     piliers: [['bandpass', 380, 0.6, 0.022, 0.08, 0.6], ['lowpass', 110, 0.7, 0.035, 0.05, 0.4]], // wind over the pillars, deep air of the ravine (+ the beds and events per zone: AMBZ; falls, machinery and bells are placed by the scenery: SOUND.spots)
     area51: [['bandpass', 380, 0.6, 0.035, 0.07, 0.6], ['lowpass', 120, 0.7, 0.06, 0.04, 0.4], ['bandpass', 100, 8, 0.012]], // desert wind, the low rumble of the base, a narrow band at 100 Hz that reads as mains hum (+ beds per zone: AMBZ; place sounds: SOUND.spots)
+    autoroute: [['bandpass', 480, 0.6, 0.03, 0.06, 0.6], ['lowpass', 110, 0.7, 0.04, 0.04, 0.4], ['highpass', 5200, 0.7, 0.005, 0.13, 0.9]], // wind among the towers, the deep murmur of a city with nothing in it, a faint insect band (+ the beds and events per zone: AMBZ; the broken main is placed by the scenery: SOUND.spots)
   };
 
   // Beds per zone, in addition to the map's bed: de, a = fractions of the lap between which the bed sounds (open air); tun = the vault's bed, which sounds in a tunnel. c = layers, as AMB.
@@ -75,6 +76,11 @@
       { de: 0.92, a: 1, c: [['bandpass', 800, 0.5, 0.02, 0.09, 0.6], ['highpass', 5200, 0.7, 0.006, 0.13, 0.9]] }, // the woods before the line
       { de: 0.975, a: 1, c: [['bandpass', 500, 0.8, 0.02, 0.13, 0.4], ['bandpass', 1100, 1, 0.009, 0.19, 0.5]] }, { de: 0, a: 0.03, c: [['bandpass', 500, 0.8, 0.02, 0.13, 0.4], ['bandpass', 1100, 1, 0.009, 0.19, 0.5]] }, // the coach park and the gate, both sides of the line: a murmur of visitors
       { tun: 1, c: [['lowpass', 160, 0.7, 0.06], ['bandpass', 700, 0.9, 0.02, 0.2, 0.4]] }], // the tunnel: a low drone
+    autoroute: [...[[0.96, 1], [0, 0.223]].map(([de, a]) => ({ de, a, c: [['bandpass', 520, 0.6, 0.03, 0.07, 0.6], ['highpass', 5200, 0.7, 0.006, 0.13, 0.9]] })), // the boulevard, either side of the line: leaves, far birds
+      { de: 0.223, a: 0.41, c: [['highpass', 3800, 0.6, 0.008, 0.25, 0.8], ['bandpass', 900, 0.9, 0.02, 0.4, 0.6], ['lowpass', 200, 0.7, 0.04, 0.1, 0.5]] }, // the flooded district: water lapping against the walls, a low hollow note
+      { de: 0.41, a: 0.628, c: [['bandpass', 300, 0.5, 0.06, 0.05, 0.8], ['bandpass', 1800, 12, 0.01, 0.15, 0.9]] }, // the slip road and the motorway: open wind, a thin whistle in the reinforcing bars
+      { de: 0.628, a: 0.691, c: [['highpass', 3200, 0.5, 0.03], ['bandpass', 1500, 0.8, 0.03, 0.9, 0.4]] }, // the hole: running water
+      { tun: 1, c: [['lowpass', 90, 0.7, 0.08, 0.05, 0.4], ['bandpass', 600, 1.5, 0.012, 0.1, 0.5], ['highpass', 6500, 0.5, 0.004]] }], // the metro: room tone, a faint hum, a hiss of air
     area51: [{ tun: 1, c: [['bandpass', 100, 8, 0.03], ['lowpass', 140, 0.7, 0.05, 0.05, 0.3], ['bandpass', 2600, 1.2, 0.004, 0.2, 0.9]] }, // hall H1 and the underground B1 (the scenery declares them indoor): ballast hum, ventilation rumble, a faint tick of metal
       { de: 0.29, a: 0.50, c: [['bandpass', 900, 3, 0.02, 0.09, 0.7], ['bandpass', 2300, 8, 0.004, 1.3, 0.9]] }, // the antenna field: wind in the lattice, a halyard
       { de: 0.47, a: 0.60, c: [['bandpass', 45, 4, 0.05, 0.07, 0.9], ['bandpass', 57, 6, 0.02, 0.11, 0.8]] }, // the ridge: the sub-bass hum of the signal, swelling every 14 s like its glow (not phase-locked to it)
@@ -685,6 +691,12 @@
         for (let i = 0, n = [1, 2, 4][v]; i < n; i++) { const d = [0.36, 0.2, 0.11][v], o = osc('sawtooth', f, t + i * (d + 0.06), d, 0.05, bp); o && o.frequency.exponentialRampToValueAtTime(f * (v === 2 ? 0.8 : 0.5), t + i * (d + 0.06) + d * 0.85); } return rnd(6, 14); }
       if (p < 0.426) { const c = nz(t, 2, 0.05, ambEvG, 'bandpass', 420, 0.6, nbuf, 0.7); c && c.frequency.linearRampToValueAtTime(620, t + 1); return rnd(9, 16); } // the Ascension: a gust of the meltemi, 2 s
       return 8; }
+    if (id === 'autoroute') { const p = ambPos, D = ambEvG; // the place decides the event (fractions of the lap, as AMBZ.autoroute); never regular
+      if (ambUnder > 0.5) { osc('sine', rnd(1800, 2600), t, 0.02, 0.05, D); return rnd(1, 3); } // the metro: a drip
+      if (p >= 0.223 && p < 0.628 && Math.random() < 0.4) { const c = nz(t, 0.8, 0.04, D, 'bandpass', 180, 6); c && c.frequency.linearRampToValueAtTime(120, t + 0.8); return rnd(9, 18); } // the flood and the motorway: a long creak of metal (a grounded barge, a hanging slab)
+      if (p < 0.223 || p >= 0.96) { if (Math.random() < 0.6) for (let i = 0; i < 2; i++) { const o = osc('sine', 300, t + i * 0.45, 0.35, 0.03, D); o && o.frequency.linearRampToValueAtTime(260, t + i * 0.45 + 0.3); } // the boulevard: a dove coos
+        else for (let i = 0; i < 2; i++) { const c = nz(t + i * 0.3, 0.18, 0.04, D, 'bandpass', 1400, 4); c && c.frequency.linearRampToValueAtTime(900, t + i * 0.3 + 0.18); } return rnd(5, 11); } // or a crow, far off
+      return rnd(4, 8); }
     if (id === 'piliers') { const p = ambPos, D = ambEvG; if (ambUnder > 0.5) return rnd(2, 4); // nothing under the vault
       if (p < 0.16 || p > 0.92) { for (let i = 0, n = 2 + Math.random() * 4 | 0, f = rnd(2600, 4000); i < n; i++) { const o = osc('sine', f, t + i * 0.11, 0.08, 0.035, D); o && o.frequency.exponentialRampToValueAtTime(f * rnd(0.8, 1.4), t + i * 0.11 + 0.07); } return rnd(3, 8); } // songbirds in the woods
       if ((p > 0.16 && p < 0.42) || (p > 0.7 && p < 0.9)) { const o = osc('sine', rnd(2300, 2700), t, 0.8, 0.03, D); o && o.frequency.exponentialRampToValueAtTime(1500, t + 0.7); return rnd(8, 15); } // a raptor's cry over the void, far
@@ -786,6 +798,7 @@
     piliers: { slap: 0.30, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 2.6, lp: 3000 }, // the pillars answer from far: a long late echo
     perse: { slap: 0.045, sl: 0.22, intoWall: 0.7, rv: 0.09, dur: 2.6, lp: 3400, spots: [[0.455, 0.468, 3.5], [0.523, 0.624, 4.5]] }, // earth facades; spots = [from, to, factor] on the place's room, in fractions of the lap: the passage under the Porte des Nations, the hall of a hundred columns
     area51: { slap: 0.13, sl: 0.08, intoWall: 0.3, rv: 0.04, dur: 1.8, lp: 2800 }, // open basin; the hall and the underground take the tunnel reverb (the scenery declares them indoor)
+    autoroute: { slap: 0.05, sl: 0.25, intoWall: 0.9, rv: 0.1, dur: 1.5, lp: 3600, spots: [[0.658, 0.691, 3.5], [0.889, 0.925, 4.5]] }, // facades both sides: a quick slap; a longer room in the cave and on the station platform (the tube takes the tunnel reverb)
     attempt: { slap: 0.04, sl: 0.1, intoWall: 0.5, rv: 0.05, dur: 1, lp: 3000 },
   };
   const MOTOR_JS = `
