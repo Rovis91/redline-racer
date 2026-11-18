@@ -130,7 +130,7 @@
       rainO: [0, 0, 0], splP: new Float32Array(SN * 3), splA: splA.slice(), splD: new Float32Array(SN) }; // drops (their cumulative offset, see rain) and impacts: same starting draws for all views, rnd is not drawn
     follows(vu, VIEWS.length ? VIEWS[0].self : newCar(T)); VIEWS.push(vu); resize(); return vu; // a view added (in the menu) follows player 1's car, like all views outside a race
   };
-  const renderView = vu => { vu.rt.dispose(); if (vu.rs) vu.rs.dispose(); if (vu.hb) vu.hb.dispose(); if (vu.rt.depthTexture) vu.rt.depthTexture.dispose(); vu.hudT.dispose(); }; // what a view holds on the GPU (its HUD canvas is not in the page)
+  const renderView = vu => { vu.rt.dispose(); if (vu.wr) vu.wr.dispose(); if (vu.rs) vu.rs.dispose(); if (vu.hb) vu.hb.dispose(); if (vu.rt.depthTexture) vu.rt.depthTexture.dispose(); vu.hudT.dispose(); }; // what a view holds on the GPU (its HUD canvas is not in the page)
   const removeView = () => { const vu = VIEWS.pop(); vu.hu.tr.visible = false; renderView(vu); resize(); }; // its trails are no longer held by any view
   let COM = null; // full-screen layer shared by both views: a 2D canvas laid over the game's, { c, g }. It only exists with two players (see players and layer, near the loop)
   let hg = null; // 2D context of the HUD being drawn (the view's, or the shared layer's), for txt, panel, tag
@@ -644,7 +644,88 @@ gl_FragColor.rgb = mix(mix(inC0, uFogOC, smoothstep(uFogOR.x, uFogOR.y, vFogDept
   backdrop && await whoosh();
   // ---------- map scenery: scenery-<map>.js ----------
   const STM = [], steam = (x, y, z) => STM.push([x, y, z]); // steam vents declared by the scenery (plumes: see blur)
-  const beams = [], BREAKABLES = [], sceneryTick = window.SCENERY[TH.scenery]({ breakable: (...a) => BREAKABLES.push(a), guardM: (sg, ...r) => wallStrip(sg, ...r), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, emis, geo, mat, tx, addMat, box, concrete, beams, pose, zones, clothe, steam, softPuffs: (...a) => softPuffs(...a), time: () => race ? -1 : tTraffic, lapCount: () => race ? race.laps : 0 }); // laps: those of the current race (0 outside a race), for the scenery's last lap // blur: the game's particles open to the scenery, to call from the tick (they don't exist yet at load time); the scenery calls step(dt) itself // no traffic in a race: the opponents don't know how to avoid it
+  // ---------- water (h.water): one surface for seas, harbours and floods, that works with the light ----------
+  // water(y, o) lays a horizontal plane at height y and returns its mesh. Per pixel: the mirror image of the scenery and the sky (one more render of the scene per view, from under the plane: see waterFrame),
+  // a Fresnel term (clear and showing the bed close to the camera, a mirror at grazing angles), the sun as a moving glitter path, ripples that flatten with distance (three layers of one normal map, filtered: no shimmer on a 270-line grid),
+  // depth colour and shore foam read from a map of the bed drawn once from above (waterBake). Options and costs: docs/methods/MAP-ENGINE-OPTIONS.md "Water". ?mirror=0 or o.mirror: 0: no extra render, the sky's colours instead.
+  // shortcut: one mirror per view, at the height of the first water of the map; a map with water at two levels needs one target per level.
+  const WATERS = [], MIRROR = Q.get('mirror') !== '0' && TH.waterMirror !== 0; let WNORM = null; // th.waterMirror: 0 switches the mirror render off for a map
+  const waterNormals = () => { if (WNORM) return WNORM; const n = 256, d = new Uint8Array(n * n * 4), hs = k => { const x = Math.sin(k * 127.1) * 43758.5453; return x - Math.floor(x); }; // 24 sine waves of whole frequencies: the image tiles; rg = slope, b = height (the foam's pattern)
+    const WV = Array.from({ length: 24 }, (_, k) => { const fx = Math.round((hs(k) * 2 - 1) * 9), fz = Math.round((hs(k + 50) * 2 - 1) * 9), fq = Math.hypot(fx, fz) || 1; return [fx, fz, hs(k + 100) * 6.283, 1 / fq]; });
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { let gx = 0, gz = 0, hg = 0; for (const [fx, fz, ph, a] of WV) { const t = 6.283 * (fx * i + fz * j) / n + ph, c = Math.cos(t) * a; gx += c * fx; gz += c * fz; hg += Math.sin(t) * a; }
+      const o = (j * n + i) * 4; d[o] = 128 + clamp(gx * 14, -127, 127); d[o + 1] = 128 + clamp(gz * 14, -127, 127); d[o + 2] = clamp(128 + hg * 40, 0, 255); d[o + 3] = 255; }
+    WNORM = new THREE.DataTexture(d, n, n); WNORM.wrapS = WNORM.wrapT = THREE.RepeatWrapping; WNORM.magFilter = THREE.LinearFilter; WNORM.minFilter = THREE.LinearMipmapLinearFilter; WNORM.generateMipmaps = true; WNORM.needsUpdate = true; return WNORM; };
+  const water = (y, o = {}) => {
+    const col = (c, d) => ({ value: new THREE.Color(c ?? d) }), [sw, sh] = o.size || [12000, 12000], [wx, wz] = o.wind || [0.7, 0.3];
+    const mt = new THREE.ShaderMaterial({ fog: true, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor, // alpha of the target stays at 1 or more: ssr reads "not a wet road"
+      uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uN: { value: waterNormals() }, uRef: { value: null }, uRM: { value: new THREE.Matrix4() }, uBa: { value: null }, uBB: { value: new THREE.Vector4() }, uCam: LUX.uCam, uSunD: LUX.uSunD, uSunC: { value: SUNC }, uSkyH: { value: FOG_OUT },
+        uSkyZ: col(o.sky, new THREE.Color(TH.fog).multiplyScalar(0.55)), uShal: col(o.shallow, 0x3fb8b0), uDeep: col(o.deep, 0x0e3a5c), uFoam: col(o.foamCol, 0xf2f6f4),
+        uP: { value: new THREE.Vector4(0, o.ripple ?? 9, o.rough ?? 0.6, 0) }, uQ: { value: new THREE.Vector4(o.depth ?? 8, o.clarity ?? 2.5, o.foam ?? 2.5, o.glitter ?? 1) }, uWind: { value: new THREE.Vector2(wx, wz).multiplyScalar(o.flow ?? 0.035) } }, // uP = (time, ripple size in m, ripple strength, mirror on); uQ = (depth range, clarity in m, foam width in m, glitter)
+      vertexShader: `varying vec3 vW; varying vec4 vR; uniform mat4 uRM;
+        #include <fog_pars_vertex>
+        void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; vR = uRM * w; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+        }`,
+      fragmentShader: `uniform sampler2D uN, uRef, uBa; uniform vec4 uBB, uP, uQ; uniform vec3 uCam, uSunD, uSunC, uSkyH, uSkyZ, uShal, uDeep, uFoam; uniform vec2 uWind; varying vec3 vW; varying vec4 vR;
+        #include <fog_pars_fragment>
+        void main(){
+          vec3 V = uCam - vW; float dist = length(V); V /= dist;
+          vec2 p = vW.xz / uP.y, wd = uWind * uP.x; // ripples: two layers sliding across each other and a swell five times larger; flattened with distance
+          vec2 g = texture2D(uN, p + wd).rg + texture2D(uN, p * 1.93 + vec2(.37, .11) - wd.yx * 1.7).rg - 1. + (texture2D(uN, p * .21 + wd * .4).rg - .5) * 1.5;
+          g *= uP.z / (1. + dist * .004); vec3 N = normalize(vec3(-g.x, 1., -g.y));
+          float F = .02 + .98 * pow(1. - max(dot(N, V), 0.), 5.); // Fresnel: 2 % seen from above, a mirror at grazing angles
+          vec3 rd = reflect(-V, N); rd.y = abs(rd.y);
+          vec3 R = mix(uSkyH, uSkyZ, pow(rd.y, .6));
+          if (uP.w > 0.) R = texture2D(uRef, clamp(vR.xy / vR.w + g * vec2(.05, .12), .002, .998)).rgb; // the mirror image, displaced by the ripples (more in height: reflections stretch towards the viewer)
+          float sp = pow(max(dot(N, normalize(V + uSunD)), 0.), 120.) * uQ.w; // the sun: a path of glitter towards it
+          vec2 bu = (vW.xz - uBB.xy) * uBB.zw; float d = uQ.x; // depth of the water in m, from the map of the bed (0 at the shore, negative under land)
+          if (bu.x > 0. && bu.x < 1. && bu.y > 0. && bu.y < 1.) d = uQ.x - texture2D(uBa, bu).r * (uQ.x + 2.);
+          float dw = max(d, 0.), body = 1. - exp(-dw / uQ.y); // how much of the bed the water hides
+          vec3 c = mix(uShal, uDeep, 1. - exp(-dw / (uQ.y * 2.5))) * (1. + dot(g, normalize(uSunD.xz + 1e-4)) * .45); // each ripple has a lit and a dark flank
+          float lap = .5 + .5 * sin(uP.x * 1.1 - d * 5. / max(uQ.z, .01)), fo = uQ.z > 0. ? smoothstep(uQ.z, 0., d) * step(-1.2, d) : 0.; // foam: a band at the shore that breathes, cut out by the pattern (crisp patches, not a gradient)
+          fo = step(1. - fo * (.55 + .45 * lap), texture2D(uN, vW.xz / 5. + wd * 2.).b * .5 + texture2D(uN, vW.xz / 2.3 - wd).b * .5 + .22);
+          float a = clamp(max(F, body) + sp, 0., 1.);
+          c = (c * (a - F) + R * F) / max(a, .001) + uSunC * sp * 1.6;
+          c = mix(c, uFoam, fo); a = max(a, fo * .92);
+          gl_FragColor = vec4(c, a);
+          #include <fog_fragment>
+        }` });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), mt); m.rotation.x = -Math.PI / 2; m.position.set(o.x || 0, y, o.z || 0); m.renderOrder = o.order ?? 2; m.userData.dyn = 1; scene.add(m); if (o.lift) { mt.polygonOffset = true; mt.polygonOffsetFactor = mt.polygonOffsetUnits = -o.lift; } // o.lift: depth offset, for water a few centimetres over a road (it would show through at a distance)
+    WATERS.push({ m, y, o, U: mt.uniforms, rt: null }); return m; };
+  // the map of the bed, once: the scene drawn from above by a flat camera, each pixel writing its height between -depth (0) and +2 m (1) over the water. Two passes into the same image:
+  // from high up (cliffs and quays read as land), then from o.top above the water (1.5 m) over it, so that what overhangs (bridge, tree crown, lamp head) gives way to the bed under it.
+  const BATHY = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { uY: { value: new V3() } }, fragmentShader: 'uniform vec3 uY; varying float vY; void main(){ gl_FragColor = vec4(clamp((vY - uY.x + uY.y) / (uY.y + uY.z), 0., 1.)); }',
+    vertexShader: `varying float vY;
+      void main(){
+      #include <begin_vertex>
+      vec4 wp = vec4(transformed, 1.);
+      #ifdef USE_INSTANCING
+        wp = instanceMatrix * wp;
+      #endif
+      vY = (modelMatrix * wp).y;
+      #include <project_vertex>
+      }` });
+  const waterBake = w => { const D = w.U.uQ.value.x, top = w.o.top ?? 1.5; let b = w.o.bounds; if (!b) { b = [1e9, 1e9, -1e9, -1e9]; for (const q of S) { b[0] = Math.min(b[0], q.x - 500); b[1] = Math.min(b[1], q.z - 500); b[2] = Math.max(b[2], q.x + 500); b[3] = Math.max(b[3], q.z + 500); } } // o.bounds = [x0, z0, x1, z1]; by default the track and 500 m around it; beyond, deep water
+    const [x0, z0, x1, z1] = b, px = Math.max(0.5, (x1 - x0) / 2048, (z1 - z0) / 2048), cam = new THREE.OrthographicCamera((x0 - x1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, (z0 - z1) / 2, 0, 1), hid = [], cc = new THREE.Color(), ca = renderer.getClearAlpha(); renderer.getClearColor(cc);
+    w.rt = new THREE.WebGLRenderTarget(Math.ceil((x1 - x0) / px), Math.ceil((z1 - z0) / px), { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+    scene.traverse(q => { const mq = q.material; if (q.visible && mq && (!q.isMesh || Array.isArray(mq) || mq.isShaderMaterial || mq.fog === false || mq.transparent && !mq.depthWrite)) { hid.push(q); q.visible = false; } }); // neither sky, particles, glows nor the water itself
+    cam.rotation.x = -Math.PI / 2; cam.layers.mask = 1 | 1 << 2 | 1 << 3; BATHY.uniforms.uY.value.set(w.y, D, 2); scene.overrideMaterial = BATHY; renderer.setRenderTarget(w.rt); renderer.setClearColor(0, 1);
+    for (const [hh, k] of [[3000, 1], [top, 0]]) { cam.position.set((x0 + x1) / 2, w.y + hh, (z0 + z1) / 2); cam.far = hh + D; cam.updateProjectionMatrix(); cam.updateMatrixWorld(); renderer.autoClearColor = !!k; renderer.render(scene, cam); }
+    renderer.autoClearColor = true; scene.overrideMaterial = null; renderer.setClearColor(cc, ca); for (const q of hid) q.visible = true;
+    w.U.uBa.value = w.rt.texture; w.U.uBB.value.set(x0, z1, 1 / (x1 - x0), -1 / (z1 - z0)); };
+  // each frame, per view: the time, and the mirror image: the scene seen by the camera reflected under the water plane, its near plane laid on the water (nothing under the surface shows), into a target half the size of the view's
+  const WCAM = new THREE.PerspectiveCamera(), WPL = new THREE.Plane(), WV4 = new THREE.Vector4(), WQ = new THREE.Vector4(), WB = new THREE.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1), WUP = new V3(), WTG = new V3();
+  const waterFrame = (vu, cam, now, lm) => { const w0 = WATERS[0], y = w0.y, bd = w0.o.bounds, on = MIRROR && w0.o.mirror !== 0 && cam.position.y > y + 0.1 && lm < 0.95 && !(bd && (cam.position.x < bd[0] - 300 || cam.position.x > bd[2] + 300 || cam.position.z < bd[1] - 300 || cam.position.z > bd[3] + 300)); // no mirror under a tunnel, nor 300 m away from a bounded water
+    for (const w of WATERS) { if (!w.rt) waterBake(w); w.U.uP.value.x = now * 0.001; w.U.uP.value.w = on ? 1 : 0; }
+    if (!on) return;
+    const tw = Math.max(1, vu.rt.width >> 1), th = Math.max(1, vu.rt.height >> 1); if (!vu.wr || vu.wr.width !== tw || vu.wr.height !== th) { if (vu.wr) vu.wr.dispose(); vu.wr = new THREE.WebGLRenderTarget(tw, th, { type: vu.rt.texture.type, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }); }
+    cam.updateMatrixWorld(); WCAM.position.set(cam.position.x, 2 * y - cam.position.y, cam.position.z); WTG.set(0, 0, -1).applyQuaternion(cam.quaternion).add(cam.position); WTG.y = 2 * y - WTG.y; WUP.set(0, 1, 0).applyQuaternion(cam.quaternion); WUP.y = -WUP.y;
+    WCAM.up.copy(WUP); WCAM.lookAt(WTG); WCAM.layers.mask = cam.layers.mask; WCAM.updateMatrixWorld(); WCAM.projectionMatrix.copy(cam.projectionMatrix); WCAM.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+    WPL.set(WUP.set(0, 1, 0), -y).applyMatrix4(WCAM.matrixWorldInverse); WV4.set(WPL.normal.x, WPL.normal.y, WPL.normal.z, WPL.constant); const e = WCAM.projectionMatrix.elements; // near plane laid on the water (oblique projection)
+    WQ.set((Math.sign(WV4.x) + e[8]) / e[0], (Math.sign(WV4.y) + e[9]) / e[5], -1, (1 + e[10]) / e[14]); WV4.multiplyScalar(2 / WV4.dot(WQ)); e[2] = WV4.x; e[6] = WV4.y; e[10] = WV4.z + 1; e[14] = WV4.w;
+    for (const w of WATERS) w.m.visible = false; renderer.setRenderTarget(vu.wr); renderer.render(scene, WCAM);
+    for (const w of WATERS) { w.m.visible = true; w.U.uRef.value = vu.wr.texture; w.U.uRM.value.copy(WB).multiply(WCAM.projectionMatrix).multiply(WCAM.matrixWorldInverse); } };
+  const beams = [], BREAKABLES = [], sceneryTick = window.SCENERY[TH.scenery]({ water, breakable: (...a) => BREAKABLES.push(a), guardM: (sg, ...r) => wallStrip(sg, ...r), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, emis, geo, mat, tx, addMat, box, concrete, beams, pose, zones, clothe, steam, softPuffs: (...a) => softPuffs(...a), time: () => race ? -1 : tTraffic, lapCount: () => race ? race.laps : 0 }); // laps: those of the current race (0 outside a race), for the scenery's last lap // blur: the game's particles open to the scenery, to call from the tick (they don't exist yet at load time); the scenery calls step(dt) itself // no traffic in a race: the opponents don't know how to avoid it
 
   // ---------- indoor mask: where the light of the outside does not reach ----------
   // A top-down image of the tunnel and of the halls the scenery declares (tick.indoor): r = indoor level (0..1), g and b = ceiling and floor heights. Every material reads it per pixel (luIn):
@@ -2220,6 +2301,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // the scene matrices once for the view's three renders (reflections, moving shadows, scene): each one recomputed them all
     wheelsInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n && !(vu.shadows && vu.shadows.cacheKey !== stepL)) refFace(); // not in the frame where the fixed scenery's shadow is redone (see shadows): the slice moves to the next frame
     shades(vu, stepL, car, carY);
+    if (WATERS.length) waterFrame(vu, cam, now, lm);
     if (sceneryTick && sceneryTick.liveFeed && !vu.n) sceneryTick.liveFeed(renderer); // a scenery screen that shows the live race (stadium): its capture, before the scene that shows it
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
     if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
@@ -2236,7 +2318,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const ending = () => { cancelAnimationFrame(raf); halt.abort(); clearTimeout(padNoteT); padNote.remove(); if (COM) COM.c.remove(); };
   const frees = () => {
     for (const sc of [scene, fallbackScene]) sc.traverse(o => { if (o.geometry) o.geometry.dispose(); for (const m of [].concat(o.material || [])) { for (const k of ['map', 'emissiveMap', 'alphaMap', 'specularMap']) if (m[k]) m[k].dispose(); m.dispose(); } });
-    VIEWS.forEach(renderView); CUBE.dispose(); refRT.dispose(); post.dispose(); ssr.dispose(); quad.geometry.dispose(); if (sun.shadow.map) sun.shadow.map.dispose();
+    VIEWS.forEach(renderView); WATERS.forEach(w => w.rt && w.rt.dispose()); if (WNORM) WNORM.dispose(); CUBE.dispose(); refRT.dispose(); post.dispose(); ssr.dispose(); quad.geometry.dispose(); if (sun.shadow.map) sun.shadow.map.dispose();
   };
   // arrival on this map (first display or return): what the previous map left in sessionStorage
   const arrival = () => {

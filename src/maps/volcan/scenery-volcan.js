@@ -25,7 +25,7 @@
         { tex: ['rocheVolcan', '#3a3c42', 0.4], slope: [0.07, 0.17] }, // weak marks: on a steep face the terrain stretches them into streaks
         { tex: ['neigeVolcan'], weight: (x, z, y, p) => ss(338, 360, y) * (1 - ss(0.2, 0.42, p)), noise: 0.03 }];
       const g = terrain(h, { stepSec: 8, margin: 440, hollow: relief, mat: h.mat('solVolcan'), layerSet: LAYERS });
-      const sea = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), h.mat('merVolcan', { rep: [250, 250] })); sea.rotation.x = -Math.PI / 2; sea.position.set(-100, 0, -800); h.scene.add(sea);
+      const sea = h.water(0, { size: [16000, 16000], x: -100, z: -800, depth: 10, clarity: 2, shallow: 0x2f7f86, deep: 0x0a2836, ripple: 12, rough: 0.5, wind: [-0.9, 0.3] }); // the engine's water (MAP-ENGINE-OPTIONS.md "Water"): a dark northern sea, rougher than a harbour
       // MAT: the shared materials of the map, one draw pass each for the whole map: every piece of scenery goes into the group `kit`, merged per material at the end. Keys are the zone names of the volcan assemblies.
       const DS = { side: THREE.DoubleSide }, tint = c => h.mat('metalPale', { c }), paint = c => h.mat('bardageVolcan', {}, c), flat = c => h.mat('paint', { c }), MAT = {
         rock: h.mat('rocheVolcan', {}, '#2e3034'), cliff: h.mat('basalteVolcan', {}, '#4a4d54'), crust: h.mat('rocheVolcan', {}, '#1c1c1e', 0.5), scoria: h.mat('scorieVolcan'), stone: h.mat('pierreVolcan'), drystone: h.mat('pierreVolcan', {}, '#8f8b80'),

@@ -23,7 +23,8 @@ captures.html?map=chapada&step=10&size=1920x1080&game=1&opt=<URL-encoded JSON>
 | Light and sky | `th.shadows`, `th.skySeg`, `th.orb.spokes` |
 | Fog | `th.haze`, `th.isFar`, `th.headlightsHaze` |
 | Road | `th.wetVisible`, `th.gloss`, `M.wide`, `M.obst`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
-| Tunnel and hall | `th.tun.h`, `vault`, `opn`, `spokes`, `raysK`, `ambient`, `day`, `without`, `skyDay`, `gloss`, `tex`, `th.eye` |
+| Tunnel and hall | `th.tun.h`, `vault`, `opn`, `spokes`, `raysK`, `ambient`, `day`, `without`, `gloss`, `tex`, `th.eye`, `tick.indoor`, `tick.indoorW`, `tick.indoorH` |
+| Water | `h.water(y, o)`, `th.waterMirror` |
 | Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `th.dustBallistic`, `th.vacuum`, `h.emis` |
 
 ## Textures
@@ -227,12 +228,11 @@ Free-form tunnel: `th.tun.h`, `vault`, `opn`, `spokes`; width comes from `M.wide
 | `tun.spokes` | Colour of an additive light column per opening, leaning toward the sun and reaching the floor, with a luminaire marking its foot. | off |
 | `tun.raysK` | Opacity (so brightness) of the light columns. | 0.55 |
 | `tun.ambient` | Share of ambient light on floor, walls and vault (the rest comes from luminaires). City walls (`th.alarm`) keep 0.85. | 0.55 (`TUN_AMB`) |
-| `tun.day` | Share of sun and sky kept when the car is in the tunnel (1 = nothing goes dark). For an open cave whose scenery makes the rock (`without: ['faces']`): the outside seen through porches and shafts, trees and wood stay lit. Without it, anything not self-lit goes black in the tunnel. | 0 |
+| `tun.day` | Share of sun and sky kept by what stands in the tunnel (1 = nothing goes dark). For an open cave whose scenery makes the rock (`without: ['faces']`): trees and wood under the porches and shafts stay lit. Without it, anything in the tunnel that is not self-lit keeps a quarter of the sky light and no sun. What is outside is never darkened, wherever the camera is. | 0 |
 | `tun.without` | What the engine does not place: `'portals'` (both portals), `'fixtures'` (fixture and emergency housings; the lights stay), `'lightSet'` (no fixture light at all: only the daylight of the openings remains), `'faces'` (free-form tunnel only: no walls, vault or hull; floor, lights, black and light columns remain, and the map's scenery makes the hall). | none |
-| `tun.skyDay: 1` | Under the tunnel the sky keeps its colour instead of taking the tunnel fog colour: daylight shows through the exit mouth and openings. | off |
 | `tun.gloss` | Tunnel floor shine. | 0.3 |
 | `tun.tex` | Textures of walls and vault, in place of `wallFace` and `ceiling` (they receive the same arguments, free to ignore them): `['rockCave', 'rockCave']`. | `wallFace`, `ceiling` |
-| `tun.shard` | Exit glare level; see `th.eye`. | engine value |
+| `tun.shard` | The eye adapts to a tunnel this many times lighter than its paint (1.5: the adapted tunnel is shown ×1.5); see `th.eye`. | 1 |
 
 Behaviour once `h`, `vault` or `opn` is set:
 
@@ -246,24 +246,81 @@ Behaviour once `h`, `vault` or `opn` is set:
 
 ### `tick.indoor(i)`: a hall or underground built by the scenery
 
-A map whose hall or underground is scenery (no engine tunnel, `M.tun` null) can still have it treated as indoors: the tick its scenery returns carries `tick.indoor = i => 0..1` (the level at track sample `i`, 1 = an engine tunnel, with its own ramps at the mouths). The engine takes the larger of this level and its own tunnel: sun and sky light fade, the fog slides to `th.tun.fog` (give `th.tun = { fog, skyDay: 1 }` alone: nothing is built without `M.tun`), the eye adapts (`th.eye`), and the sound takes the tunnel reverb and the `AMBZ { tun: 1 }` bed. The light then comes from the `h.emis` lamps of the scenery. Used by area51 (`scenery-area51-vie.js`). Default: none.
+A map whose hall or underground is scenery (no engine tunnel, `M.tun` null) can still have it treated as indoors: the tick its scenery returns carries `tick.indoor = i => 0..1` (the level at track sample `i`, 1 = an engine tunnel, with its own ramps at the mouths). The engine takes the larger of this level and its own tunnel: sun and sky light fade, the fog slides to `th.tun.fog` (give `th.tun = { fog }` alone: nothing is built without `M.tun`), the eye adapts (`th.eye`), and the sound takes the tunnel reverb and the `AMBZ { tun: 1 }` bed. The light then comes from the `h.emis` lamps of the scenery. Used by area51 (`scenery-area51-vie.js`), lune and volcan. Default: none.
+
+The light is darkened where the hall is, not when the camera is in it (see "Indoor mask" below), so the engine needs the hall's footprint: `tick.indoorW = i => half-width in metres` at sample `i` (default: the drivable half-width `s.w` + 4 m) and `tick.indoorH` = its height in metres (default: 1.2 × `s.w`, at least 12 m). A wall or a roof left outside the footprint is lit as outdoors: it washes out when the eye is adapted to the hall. Give both for a hall much wider or higher than its road.
+
+### Indoor mask and what the eye sees
+
+The engine draws, once per map, a top-down image of the tunnel (its samples, its width, its height under the vault) and of the `tick.indoor` halls. Every material reads it per pixel. A point under it loses the sun and three quarters of the sky light (`tun.day` keeps them), takes the tunnel fog, and is exposed as indoors; a point outside keeps daylight and the outdoor fog whatever the camera does. The sky always keeps its colour (the old `tun.skyDay` is no longer read). The eye (`th.eye`) then decides how each side is shown:
+
+- from outside, the tunnel is `eye.tun` times darker than its paint: a dark mouth;
+- on entering, it stays that dark, then brightens to its painted look as the eye adapts (time constant `blackM`);
+- from inside, the exit and anything seen through an opening are shown up to `glare` times brighter: a bright patch;
+- on leaving, the whole outside is that bright, then settles (time constant `clair`).
+
+The glare is a veil, not a gain: dark tones are multiplied, light ones are pushed towards white without clipping, so road marks stay readable. A map with no tunnel and no hall has no mask and no extra shader line. Cost: one texture read per pixel on maps that have one.
 
 ### `th.eye`: eye adaptation
 
-`th.eye = { tun, blackM, clair }` (none of the three required). Visible without the `net` capture style only.
+`th.eye = { tun, blackM, clair, glare }` (none required). Visible without the `net` capture style only (the darkening of what is indoors shows in every style).
 
 | Field | What it does | Default |
 |---|---|---|
-| `tun` | True tunnel light relative to outside. Closer to 1: the entrance darkens less, the exit dazzles less. | 0.4 |
-| `blackM` | Time constant (s) toward dark. | 0.5 |
-| `clair` | Time constant (s) toward light. | 0.35 |
+| `tun` | True tunnel light relative to outside. Closer to 1: the mouth is less dark from outside, the entrance darkens less, the exit dazzles less. | 0.4 |
+| `blackM` | Time constant (s) toward dark: how long the tunnel stays too dark after entering (about twice this). | 0.7 |
+| `clair` | Time constant (s) toward light: how long the outside dazzles after leaving (about twice this). | 0.8 |
+| `glare` | Cap of the dazzle (×). | 2.5 |
 
-A cave exit that is slow to recover daylight: lower `clair`. A hall too dark on entering: raise `tun`.
+A tunnel painted dark whose road is lost on entering: raise `tun` (autoroute: 0.55). A hall that should hardly change anything: `tun: 0.7`. A night map can set `tun` above 1 (the tunnel is the bright place): entering dazzles, leaving is dark.
 
 ```js
 th: { tun: { ...usualTunnel, raysK: 0.35, ambient: 0.7 },   // quieter columns, lighter vault
-      eye: { tun: 0.7, blackM: 0.5, clair: 0.15 } }
+      eye: { tun: 0.7 } }
 ```
+
+## Water
+
+`h.water(y, o)`, called by the map's scenery, lays one horizontal water surface at height `y` and returns its mesh (a `ShaderMaterial`: it has no `map` to slide; wind and flow are options). Per pixel it gives:
+
+- the mirror image of the scenery and the sky (boats, cliffs, facades, lamps), displaced by the ripples;
+- a Fresnel term: clear and showing the bed or the road close to the camera, a mirror at grazing angles;
+- the sun as a glitter path, and a lit and a dark flank on each ripple;
+- ripples from three layers of one filtered normal map that slide across each other and flatten with distance (no shimmer on the 270-line grid; linear filtering is accepted on water);
+- depth colour (`shallow` over a bed close under the surface, `deep` beyond) and shore foam where the water meets land, quay walls, hulls and wrecks.
+
+```js
+const sea = h.water(SEA, { z: -550, depth: 9, clarity: 3, shallow: 0x35c6c2, deep: 0x0c3f7a, wind: [0.8, 0.5] });                  // egee: sea and harbour
+const water = h.water(0, { size: [900, 2000], x: 725, bounds: [275, -1000, 1175, 1000], depth: 1, top: 1, clarity: 0.45, foam: 0.14, rough: 0.1, lift: 8 }); // autoroute: 30 cm of flood over the lane
+```
+
+| Option | What it does | Default |
+|---|---|---|
+| `size`, `x`, `z` | Size of the plane `[width, depth]` and its centre. | `[12000, 12000]`, 0, 0 |
+| `shallow`, `deep` | Colour of the water over a close bed, and of deep water. | turquoise, navy |
+| `clarity` | Depth (m) at which the bed is two thirds hidden. Low: opaque water; high: the bed shows far out. | 2.5 |
+| `depth` | Depth range (m) the bed map records; deeper reads as `deep`. Keep it above anything that lies beneath the water and is not its bed (a tunnel under a flooded street). | 8 |
+| `top` | Height (m) over the water above which things are not part of the shore (bridges, tree crowns, lamp heads). | 1.5 |
+| `bounds` | `[x0, z0, x1, z1]` of the bed map (2048 px at most on its long side, 0.5 m per pixel at best). Beyond it: deep water. | the track and 500 m around |
+| `foam`, `foamCol` | Width of the shore foam, as a water depth in m (0 = none), and its colour. | 2.5, white |
+| `ripple`, `rough` | Size of the ripples (m per repeat of the pattern) and their strength. Still water: `rough: 0.1`. | 9, 0.6 |
+| `wind`, `flow` | Direction `[x, z]` and speed (repeats per second) of the ripples. | `[0.7, 0.3]`, 0.035 |
+| `glitter` | Strength of the sun's glitter. | 1 |
+| `sky` | Zenith colour reflected when the mirror is off (the horizon is the fog colour). | fog colour × 0.55 |
+| `mirror: 0` | No mirror render for this surface's map: the sky's two colours instead. | on |
+| `lift` | Depth offset, for water a few centimetres over a road (it would show through at a distance). | 0 |
+| `order` | `renderOrder` of the plane. | 2 |
+
+How it is made, and what it costs:
+
+- **Bed map**, once, on the first frame: the scene is drawn twice from above by a flat camera into one image (from high up, then from `top` over the water), each pixel writing its height. Moving scenery is recorded where it stands at that moment. No cost afterwards.
+- **Mirror**, every frame and per view: the scene is drawn once more, seen by the camera reflected under the water, into a target half the size of the view (240 × 135). This is the cost: the draw passes of the scene a second time whenever the camera is above the water and not in a tunnel. Measure a map with `node tools/bench-quick.js <map>` against `OPT='{"th":{"waterMirror":0}}' node tools/bench-quick.js <map>`.
+- **The surface itself**: one draw pass, about 8 texture reads per pixel.
+- **Switches**: `th.waterMirror: 0` (map) or `?mirror=0` (URL) drop the mirror render and keep everything else; the scenery keeps its old plane by not calling `h.water`.
+
+Limits: one mirror per view, at the height of the map's first water (a map with water at two levels gets the first level's image on both). The engine's dynamic lights (fixtures, headlights) do not light the water; they appear in it through the mirror. The wet-road reflections (`ssr`, rain maps) are separate and unchanged.
+
+A shipped map opts in by replacing the line that creates its water plane with `h.water(level, { … })` and removing what animated the old texture (`flows(sea.material, …)`, a second translucent layer): plage, barrage, wangan, chapada and touge would each take one or two lines. Map-made foam strips can stay; set `foam: 0` if they double up.
 
 ## Feedback and particles
 

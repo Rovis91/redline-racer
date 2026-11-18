@@ -66,7 +66,8 @@ Everything per map lives in its `th` (theme) entry in `src/data/maps.js`:
 Each map also has its own HUD style (`th.hud.style`: `cyber`, `strokeLn`, `signPanel`, `plate`, `blk`, `panelBoard`, `rally`, `givre`). It uses the two pixel fonts in `assets/fonts/` (Press Start 2P, DotGothic16).
 
 Lighting notes:
-- Tunnels are painted as seen by an eye already used to the dark. The final pass exposes the image by the eye's adaptation (`vu.eye`, `th.eye`, `th.tun.shard`). Entering and leaving a tunnel is a gradual fade, never a switch.
+- Tunnels are painted as seen by an eye already used to the dark. Light follows the place of each pixel, not of the camera (indoor mask): from outside a tunnel is a dark mouth, on entering it stays too dark for a second or two, from inside the exit is a bright patch, on leaving the outside dazzles then settles (`vu.eye`, `th.eye`, `th.tun.shard`). Always a ramp, never a switch; the glare is a veil that keeps the road marks.
+- Water is the one surface with filtered textures and a mirror image (`h.water`): it reflects the scenery and the sky, shows its bed close to the camera, glitters towards the sun and foams at the shore.
 - Low sun (Paris, Canal): all instanced scenery casts shadows (`inst` in `src/render/scenery.js`, `sun[1] > 0.6`). A low sun stretches shadow texels into staircases, so use `th.shadows: { soft: 1 }`.
 - Keep headlights weak at dawn and on snow (`givre` `headlights: 0.35`). A full beam on a white road washes out the track and the ice patches.
 
