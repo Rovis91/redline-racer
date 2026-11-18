@@ -9,7 +9,6 @@
   const glow = (hex, o) => h.addMat(h.tx('gradient', hex, 1), o); // additive, bright where the drawing's v is 0, nothing where it is 1
 
   // ---------- the water (Z2-01, Z2-02, Z2-07): the plane drifts east on the wind (one layer, slow: no ripple), the car leaves a wake of foam on it, a fish rises now and then beside the lane ----------
-  { const m = water.material.map; TICK.push(dt => { m.offset.x = (m.offset.x - 0.02 * dt * (0.6 + 0.4 * gust) + 1) % 1; }); }
   { const n = 44, g = new THREE.CircleGeometry(1, 10), u = g.attributes.uv; for (let i = 0; i < u.count; i++) u.setXY(i, 0.5, Math.min(1, Math.hypot(u.getX(i) - 0.5, u.getY(i) - 0.5) * 2)); g.rotateX(-PI / 2);
     const im = dyn(new THREE.InstancedMesh(g, glow('#c8d8c8', { opacity: 0.55 }), n)), P = Array.from({ length: n }, () => ({ a: 1 })), o = new THREE.Object3D(), c = new THREE.Color(); im.renderOrder = 3; let k = 0, acc = 0;
     for (let i = 0; i < n; i++) { o.scale.setScalar(1e-4); o.updateMatrix(); im.setMatrixAt(i, o.matrix); im.setColorAt(i, c.setScalar(0)); }

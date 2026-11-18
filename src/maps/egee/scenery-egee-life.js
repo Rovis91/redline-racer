@@ -22,8 +22,6 @@
   // ---------- the sea (G5): the turquoise layer drifts with the wind (0.1 m/s: a swell you feel), a second, larger layer drifts across it so that the tiling never settles ----------
   const FLOWS = [], flows = (m, u, v) => { FLOWS.push([m.map, u, v]); return m; }; // a texture that slides, in repeats per second (as the plage and chapada water)
   LIFE.push(dt => { for (const [t, u, v] of FLOWS) { t.offset.x = (t.offset.x + u * dt + 1) % 1; t.offset.y = (t.offset.y + v * dt + 1) % 1; } });
-  flows(sea.material, -0.012 * WIND[0], 0.012 * WIND[1]);
-  { const p = dyn(new THREE.Mesh(sea.geometry, flows(h.mat('seaTurquoise', { rep: [1700, 1700], transparent: true, opacity: 0.22, depthWrite: false }), 0.009 * WIND[1], 0.009 * WIND[0]))); p.rotation.x = -Math.PI / 2; p.position.set(0, SEA + 0.03, -550); p.renderOrder = 1; h.scene.add(p); }
   // foam (1.2, 4.2): one strip along the foot of the quay wall and a ring round every islet, one mesh; it slides along the stone and breathes on a 5 s swell
   { const P = [], U = [], quad = (a, b, c, d, u0, u1) => { P.push(a[0], a[1], b[0], b[1], c[0], c[1], b[0], b[1], d[0], d[1], c[0], c[1]); U.push(u0, 0, u0, 1, u1, 0, u0, 1, u1, 1, u1, 0); };
     const i0 = Math.round(4540 / LAP * N), cnt = Math.round(680 / LAP * N), e = (k, o) => { const s = S[(i0 + k) % N]; return edgePt(s, 1, s.w + o); };

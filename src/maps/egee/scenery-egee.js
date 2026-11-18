@@ -40,7 +40,7 @@
         { tex: ['pavageEgee'], weight: (x, z, y, p, d) => inside(x, z) || d < 20 ? paved(pkOf(x, z), d) : 0 }, { tex: ['falaiseEgee', '#a08c74'], rep: 0.45, weight: (x, z, y, p, d) => Math.max(ss((p - 0.15 + 0.07 * blot(x, z, 0.09, 2.2)) / 0.16), 0.85 * land(x, z, y, d) * ss((blot(x, z, 0.072, 7.7) - 0.55) / 0.4)) }] });
       // sea: a deep-blue bed under everything and the water over it, half transparent
       const plane = (m, y) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), m); p.rotation.x = -Math.PI / 2; p.position.set(0, y, -550); h.scene.add(p); return p; };
-      plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); const sea = plane(h.mat('seaTurquoise', { rep: [1200, 1200], transparent: true, opacity: 0.6, depthWrite: false }), SEA);
+      plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); const sea = h.water(SEA, { z: -550, depth: 9, clarity: 3, shallow: 0x35c6c2, deep: 0x0c3f7a, wind: [0.8, 0.5] }); // the engine's water (MAP-ENGINE-OPTIONS.md "Water"): mirror, glitter, depth colour and shore foam
       // the game draws the roadway and its guardrail at a constant ±W; the physics walls are at ±s.w (M.wide). As on givre: th.wallH = 0 buries the engine's guardrail, the roadway and the parapet are laid again at the real width
       { const rail = h.mat('guardrail', DS, h.TH.intoWall); for (const sd of [-1, 1]) h.guardM(sd, T.t1, N, s => sd * s.w, 1.1, s => sd * s.w, -2, rail); } // a stone parapet with a lime cap; h.guardM: wears down on impacts
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);

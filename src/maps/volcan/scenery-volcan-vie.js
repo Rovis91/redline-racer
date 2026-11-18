@@ -15,8 +15,6 @@
   const out = o => { scene.attach(o); o.traverse(m => { m.userData.dyn = 1; }); return o; };                                             // out of the kit, same place: it will not be merged
 
   // ---------- the sea: its texture slides with the wind, and a second, finer, translucent layer slides faster over it (the pattern shears as the car moves). 1 more draw pass
-  flows(sea.material, -0.012, 0.003);
-  { const m = new THREE.Mesh(sea.geometry, flows(h.mat('merVolcan', { rep: [170, 170], transparent: true, opacity: 0.4, depthWrite: false }), -0.03, -0.006)); m.rotation.x = -PI / 2; m.position.set(-100, 0.05, -800); m.renderOrder = 1; m.userData.dyn = 1; scene.add(m); }
 
   // ---------- foam: one strip mesh for the whole map, rewritten each frame. A chain is a row of ribs; a rib = a point at the foot of the rock and the direction of the open sea: the foam reaches w metres out,
   // swells and falls back every 5.5 s (a wave runs along a shore; a ring round a stack breathes as one). Chains: a ring round each of the 18 stacks and skerries, both faces of the two breakwaters,
