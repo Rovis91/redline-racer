@@ -27,7 +27,7 @@ A single session builds the whole map, without any detail:
 - **collision walls only where a block carries them**, checked with `?hitbox`;
 - the gearbox and the speedometer scale tuned for the map (no more than a quarter of the lap at the limiter);
 - corner notifications on tight corners only;
-- one scenery file per zone, `src/maps/<map>/scenery-<map>-<zone>.js`, declared in `index.html`, containing only the zone's blocks: this is what makes phase 3 possible in parallel.
+- one scenery file per zone, `src/maps/<map>/scenery-<map>-<zone>.js`, declared in `src/data/map-assets.js`, containing only the zone's blocks: this is what makes phase 3 possible in parallel.
 
 Before handing over: `sh tools/check.sh` green, gold trace redone.
 

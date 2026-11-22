@@ -994,8 +994,9 @@ registerProcessor('moteur', Moteur);`;
       const fzOut = gain(0.3, gate), fe = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, fzOut)); fe.gain.value = 5; const fzIn = gain(6, shaper(8, fe)); // one guitar amp per part, like fuzz
       strip[k] = { in: Object.assign(gain(MX[k], gate), { fz: fzIn }), fzIn, fzOut, gate, pan, rv, ec, ch, lp, hp }; }
   }
-  function initAudio(ctx) { // ctx: offline context for measuring levels (listening bench); with no argument, the browser's audio context
-    if (AC && live && !ctx) return AC.resume();
+  let radioAssetsPending = false;
+  function initAudio(ctx, preparatory = false) { // Bootstrap prepares the suspended graph; gestures only resume it. Sampled radio notes wait for race preparation.
+    if (AC && live && !ctx) { if (radioAssetsPending && !preparatory) { radioAssetsPending = false; readyMs = Promise.all([readyMs, loadRadios(ST)]); } return AC.resume(); }
     if (AC && live) AC.close();
     AC = ctx || new (window.AudioContext || window.webkitAudioContext)(); live = !ctx;
     masterComp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); masterComp.connect(outG);
@@ -1029,7 +1030,7 @@ registerProcessor('moteur', Moteur);`;
     })));
     modOk = false; const ac0 = AC, url = URL.createObjectURL(new Blob([MOTOR_JS], { type: 'application/javascript' }));
     modP = AC.audioWorklet ? AC.audioWorklet.addModule(url).then(() => { if (AC !== ac0) return; modOk = true; for (const v of [...VX, ...AU]) plug(v); }, () => { }) : Promise.resolve(); // without AudioWorklet: no engine, the rest plays
-    readyMs = Promise.all([readyMs, modP, loadRadios(ST)]);
+    radioAssetsPending = preparatory; readyMs = Promise.all([readyMs, modP, preparatory ? Promise.resolve() : loadRadios(ST)]);
     const ns = AC.createBufferSource(); ns.buffer = nbuf; ns.loop = true; ns.start();
     gbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // gravel: tight 7 ms impacts, played faster with speed
     { const x = gbuf.getChannelData(0); let a = 0; for (let i = 0; i < x.length; i++) { if (Math.random() < 0.012) a = 0.3 + 0.7 * Math.random(); x[i] = (Math.random() * 2 - 1) * a; a *= 0.997; } }
@@ -1049,7 +1050,8 @@ registerProcessor('moteur', Moteur);`;
     const aq = gain(0, V.rainFx); ns.connect(filt('lowpass', 450, 0.6, aq));
     rainFx = { rid, rl, aq };
     buildAmb(); retune(AC.currentTime + 0.1); tuneG.gain.value = lvl();
-    if (live) { AC.resume(); timer = timer || setInterval(() => live && pump(), 30); }
+    if (live) { preparatory ? AC.suspend() : AC.resume(); timer = timer || setInterval(() => live && pump(), 30); }
+    return readyMs;
   }
   const beep = f => AC && osc('square', f, AC.currentTime, 0.25, 0.2, V.ui);
   const VOY = [[730, 1090], [270, 2290], [300, 870], [530, 1840], [570, 840]]; // formants of the vowels a, i, ou, è, o
@@ -1232,7 +1234,7 @@ registerProcessor('moteur', Moteur);`;
   document.addEventListener('visibilitychange', () => { if (AC && live) document.hidden ? AC.suspend() : AC.resume(); }); // no choppy music or frozen engine in the background
   window.SOUND = {
     spots, brief: spotHit, spotsState: () => SPOTS.map(l => [l.sound, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // scenery sources; spotsState: test tap (target level of each source)
-    init: initAudio, frame: audioFrame, setStation, mapDef, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrival, quitGame, reprendre,
+    init: initAudio, prepare: () => initAudio(undefined, true), initMenu: () => initAudio(undefined, true), frame: audioFrame, setStation, mapDef, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrival, quitGame, reprendre,
     crash: () => AC && crash(),
     thunder: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // rumble + crackle in the mids
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },

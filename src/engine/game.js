@@ -1,10 +1,10 @@
 // Redline Racer — rendering, effects, HUD, controls and game loop. The track and physics are in sim.js.
 // File outline (search for "// ----------"): rendering and final pass · the three scenery entities (textures.js, shapes.js, placement) · track · city · horizon · car and effects ·
 // game state and controls · HUD · loopSec. See README.md to find where to tune whatLine.
-(window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
+window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // One instance per map, kept in memory (window.__maps): switching map shows an instance already built (sleeps / resumes), without rebuilding anything.
-  // A map not yet seen is built in the background (backdrop = true), in chunks (await whoosh()) so the displayed map keeps running, then resumes() the poster.
-  // Without a backdrop (first load of the page), everything is done in one go, as before: __g exists as soon as the script ends (rhythm.js uses it).
+  // A map not yet seen is built in chunks behind the current menu (backdrop = true), then resumes() displays it.
+  // loader.js loads the selected catalogue before calling this function; GAME_READY resolves once the first map is displayed.
   const whoosh = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = r; c.port2.postMessage(0); }); // not setTimeout: throttled to 1 per second in the background
   let active = false; // only the displayed instance listens to keyboard, mouse and window
   const halt = new AbortController(), addEventListener = (ev, f) => window.addEventListener(ev, e => { if (active) f(e); }, { signal: halt.signal }); // all listeners in this file are removed at once on stop
@@ -264,7 +264,7 @@
 
   const smooth = t => { t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; return t; }; // linear filtering and mipmaps: ?smooth=1 everywhere, th.smooth or mat(…, { smooth: 1 }) for one map (docs/methods/MAP-ENGINE-OPTIONS.md)
   const tex = (w, h, draw, label) => {
-    const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d'));
+    const c = document.createElement('canvas'); c.width = w; c.height = h; draw(c.getContext('2d', { willReadFrequently: label === 'livery' || label === 'wheelCar' }));
     const t = new THREE.CanvasTexture(c); t.magFilter = THREE.NearestFilter; t.minFilter = THREE.NearestMipmapLinearFilter; t.anisotropy = renderer.capabilities.getMaxAnisotropy(); // MipmapLinear: blends between two mipmap levels, no more step lines moving across the ground with the camera; anisotropy at the graphics card's maximum: without it, the mipmap steps of the ground seen at grazing angles move with the car, at 10-100 m (you think you see the textures loading); never linear filtering, except ?smooth=1
     if (P('smooth') || label && TH.smooth && TH.smooth.includes(label)) smooth(t);
     t.wrapS = t.wrapT = THREE.RepeatWrapping; return t;
@@ -277,6 +277,7 @@
   // texture name → its name before the English rename: the noise seed stays the same, so every texture looks exactly as it did
   const SEED_NAME = { paint: 'peinture', neonYellow: 'neonJaune', lampObj: 'lampe', lightRed: 'feuRouge', reflector: 'catadioptre', blinker: 'clignotant', lantern: 'lanterne', lampCanal: 'lampeCanal', concreteDark: 'betonSombre', concretePart: 'beton', concreteGray: 'betonGris', whiteBridge: 'blancPont', chalk: 'craie', stone: 'pierre', steelMat: 'acier', matGray: 'matGris', gantryGray: 'portiqueGris', castiron: 'fonte', iron: 'fer', pylonMat: 'pylone', asphalt: 'bitume', plain: 'plaine', trunk: 'tronc', trunkPalmtree: 'troncPalmier', cedar: 'cedre', foliage: 'feuillage', frond: 'palme', paneDark: 'vitreSombre', tin: 'tole', bodywork: 'carrosserie', lacquer: 'laque', warehouse: 'entrepot', metalPale: 'metalClair', wheelPart: 'roue', tire: 'pneu', radiator: 'calandre', stainless: 'inox', boards: 'planches', coil: 'bobine', strap: 'sangle', cargo: 'cargaison', lattice: 'treillis', shutters: 'persiennes', gondola: 'nacelle', lightsLane: 'feuxVoie', park: 'parc', stucco: 'crepi', brick: 'brique', tinRoof: 'toleToit', skyDef: 'ciel', orb: 'astre', roadway: 'chaussee', roadwayFine: 'chausseeFine', wallFace: 'paroi', ceiling: 'plafond', guardrail: 'glissiere', checker: 'damier', gradient: 'degrade', screenAd: 'ecranPub', streets: 'rues', casements: 'fenetres', casementsLit: 'fenetresAllumees', signboard: 'enseigne', towerFar: 'tourLoin', noise: 'bruit', written: 'ecrit', showcase: 'vitrine', dispenser: 'distributeur', pumpPetrol: 'pompeEssence', striping: 'rayures', signRoad: 'panneauRoute', towerWindows: 'tourFenetres', sidewalk: 'trottoir', slabConcrete: 'dalleBeton', mural: 'fresque', latticeGantry: 'treillisPortique', checkerStripe: 'damierBande', bannerLabel: 'bandeauNom', waterVivid: 'eauVive', rockSnow: 'rocNeige', bannerJump: 'banderoleSaut', cobbles: 'paves', slabs: 'dalles', granite: 'granit', posters: 'affiches', shopfront: 'devanture', clothStriped: 'toileRayee', kiosk: 'kiosque', pink: 'rose', lead: 'plomb', wallGothic: 'murGothique', wallFaceParis: 'paroiParis', ceilingParis: 'plafondParis', crowd: 'foule', vipBoxes: 'loges', steps: 'marches', streamer: 'banderole', grating: 'grillage', lawn: 'gazon', garageOpen: 'garageOuvert', ranking: 'classement', pylonTimer: 'pyloneChrono', terreBeaten: 'terreBattue', faceArena: 'paroiArene', bannerStade: 'banderoleStade', roofArena: 'toitArene', bannerSupporter: 'banderoleSupporter', mud: 'boue', boardStade: 'tableauStade', flame: 'flamme', beam: 'faisceau', screenGiant: 'ecranGeant', snowVirgin: 'neigeVierge', iceVivid: 'glaceVive', rockSnowFar: 'rocNeigeLoin', firSnow: 'sapinNeige', rockGivre: 'rocGivre', terreOchre: 'terreOcre', cliffOchre: 'falaiseOcre', straw: 'paille', tilesCanal: 'tuilesCanal', waterGue: 'eauGue', foam: 'ecume', mudGue: 'boueGue', terreCircuit: 'terrePiste', embankCircuit: 'talusPiste', lavender: 'lavande', bannerRallye: 'banderoleRallye', roadwayTerre: 'chausseeTerre', haze: 'brume', diamond: 'losange', vermilion: 'vermillon', stoneMoss: 'pierreMousse', furCoat: 'pelage', tileTemple: 'tuileTemple', woodTemple: 'boisTemple', gravel: 'gravier', slabsQuay: 'dallesQuai', groundPort: 'solPort', streetVille: 'rueVille', rockGES: 'rocheGES', groundGES: 'solGES', signK: 'panneauK', signKbright: 'panneauKlum', vatGroup: 'cuveGroupe', barkB: 'ecorceB', leavesB: 'feuillesB', needles: 'aiguilles', concretePO2: 'betonPO2', foamGES: 'ecumeGES', netting: 'filet', stripeOrange: 'bandeOrange', signSpd: 'panneauVit', bollardGES: 'borneGES', groundHangar: 'solHalle', concreteGES: 'betonGES', baysHangar: 'baiesHalle', mosaic: 'mosaique', letters: 'lettres', waterGES: 'eauGES', burst: 'gerbe', laneGES: 'voieGES', hazeGES: 'brumeGES', tinOrange: 'toleOrange', conifer: 'conifere', railing: 'gardeCorps', muralBarrage: 'fresqueBarrage', doorStar: 'porteEtoile', roadwayGES: 'chausseeGES', rugEdge: 'tapisBord', rugAlley: 'tapisAllee', paving: 'dallage', slabsPerse: 'dallesPerse', nichesGarden: 'nichesJardin', wallTerre: 'murTerre', frieze: 'frise', ceramic: 'faience', fluting: 'cannelure', sculpts: 'sculpte', wings: 'ailes', awning: 'auvent', stepsPerse: 'marchesPerse', palace: 'palais', cliff: 'falaise', equipment: 'appareil', facadeRaw: 'facadeCrue', strata: 'strates', lionBull: 'lionTaureau', brickRaw: 'briqueCrue', wallHall: 'murSalle', doorStone: 'portePierre', ceilingCedar: 'plafondCedre', vault: 'voute', rug: 'tapis', field: 'champ', flowerbed: 'parterre', tent: 'tente', leafShade: 'feuilleOmbre', leafCanopy: 'feuilleCanopee', leafSun: 'feuilleSoleil', leafFar: 'feuilleLoin', palmJungle: 'palmeJungle', barkJungle: 'ecorceJungle', litterMoss: 'litiereMousse', rockMoss: 'rocheMousse', siltPebbles: 'vaseGalets', waterJade: 'eauJade', waterMarsh: 'eauMarais', dropWire: 'chuteFil', rockCave: 'rocheGrotte', vaultCave: 'vouteGrotte', waterDrop: 'eauChute', foamBasin: 'ecumeBassin', sparkles: 'paillettes', slabsJungle: 'dallesJungle', slabsEdge: 'dallesBord', curbMoss: 'bordureMousse', stoneCity: 'pierreCite', stonePale: 'pierreClaire', stoneShade: 'pierreOmbre', plinthBlack: 'socleNoir', clothTent: 'toileTente', boardsBridge: 'planchesPont', bamboo: 'bambou', noiseFine: 'bruitFin', sandDry: 'sableSec', sandHard: 'sableDur', seaTurquoise: 'merTurquoise', seaWide: 'merLarge', foamSea: 'ecumeMer', slabsStreet: 'dallesRue', tiling: 'carrelage', thatch: 'chaume', limestone: 'calcaire', waterCenote: 'eauCenote', vines: 'lianes', groundGarrigue: 'solGarrigue', arcRadius: 'rayon', sandDamp: 'sableMouille', seaEdge: 'merBord', sandTraces: 'tracesSable', waterLagoon: 'eauLagune', riprap: 'enrochement', faceCave: 'paroiGrotte', waterCave: 'eauGrotte', roots: 'racines', rayCone: 'rayonCone', stain: 'tache', leavesMangrove: 'feuillesMangle', nettingVolley: 'filetVoley', rayStrong: 'rayonFort', raySoft: 'rayonDoux', streamerPlage: 'banderolePlage', bulbs: 'ampoules', pavingQuinta: 'dallageQuinta', boardsQuay: 'planchesMuelle', stuccoPale: 'crepiClair', foamWide: 'ecumeLarge', caustic: 'caustique', livery: 'livree', wheelCar: 'roueVoiture', carTrim: 'garniture', bakery: 'boulangerie', bookshop: 'librairie', pharmacy: 'pharmacie', florist: 'fleuriste', cheeseShop: 'fromagerie', butcher: 'boucherie' };
   const tx = (label, ...a) => { // one catalogue drawing, drawn fresh on each call; rand = the texture's own randomness, seeded by its name: it does not shift rnd, so not the scenery
+    if (typeof TEXTURES[label] !== 'function') throw new Error('Missing texture: ' + label);
     const [w, h, d, tile] = TEXTURES[label](...a); let s = 7; for (const ch of (SEED_NAME[label] || label) + a.map(x => SEED_NAME[x] || x)) s = Math.imul(s ^ ch.charCodeAt(0), 16777619) >>> 0;
     const t = tex(w, h, g => d(g, { R, rnd, veil, speckle, rand: () => (s = s * 1664525 + 1013904223 >>> 0) / 4294967296 }), label); t.tile = tile; return t;
   };
@@ -304,6 +305,7 @@
   // an assembly merged into one geometry per zone (a single draw pass per zone); f = shape name + settings, or the list of boxes already computed
   const EUL = new THREE.Euler(), QUA = new THREE.Quaternion(), M4 = new THREE.Matrix4(), UN = new V3(1, 1, 1);
   const zones = (f, skin, ...a) => {
+    if (typeof f === 'string' && typeof SHAPES[f] !== 'function') throw new Error('Missing shape: ' + f);
     const via = {};
     for (const [zn, w, h, d, px, py, pz, r, shadows] of typeof f === 'string' ? SHAPES[f](...a) : f) {
       const g = clothe(geo('boxMesh', w, h, d), skin[zn]).toNonIndexed(); M4.compose(new V3(px, py, pz), QUA.setFromEuler(EUL.set(...(r || [0, 0, 0]))), UN); g.applyMatrix4(M4);
@@ -1323,7 +1325,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // Home screen: it is first used to choose the language. Left / right (or up / down) changes the language at once, Enter goes to the main menu.
   // (variants tried and dropped: branch prototype/accueil)
   let home = true, aMenu = false, tFlash = 0;
-  const enter = () => { SOUND.init(); home = false; };
+  const enter = () => { SOUND.initMenu(); home = false; };
   const choosesLang = l => { if (l === language) return; language = l; setPref('vpr.langue', language); applyLanguage(); SOUND.beep(550); };
   const homeAct = a => { // a: 'v' up / down, 'h' left / right, 'ok' confirm, '' other key (it only opens the sound)
     aMenu = true;
@@ -1420,6 +1422,13 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     SOUND.init(); home = false;
     if (online()) { if (guest() && !go) return; mode = 'raceCase'; if (!guest()) { if (NET.n < 2) { padSaid("EN ATTENTE D'UN AUTRE JOUEUR"); return; } NET.go(M.id); } } // online: Race only; the host starts for everyone
     if (two() && !AUTO && !PLACES.every(p => p && branch(p))) { enrolled(); return; } // with two players, only the two taken seats start; they are kept: a rematch asks nothing again
+    if (state === 'title' && !AUTO && !ST && !GAME_LOADER.raceLoading) {
+      preparingRace = true; GAME_LOADER.menuHide(); const selected = outTarget || M;
+      GAME_LOADER.beginRace(selected).then(() => {
+        if (selected !== M) { sessionStorage.setItem('vpr.go', 2); changeMap(); }
+        else { outTarget = null; preparingRace = false; start(go); GAME_LOADER.hide(); }
+      }); return;
+    }
     ses.enclosed();
     if (mode === 'tourAll' && EVENING[tnOu().handle] !== M) { // the round is run on another map: we go there without reloading, and the race starts on arrival (vpr.go)
       if (!outTarget) { outTarget = EVENING[tnOu().handle]; try { sessionStorage.setItem('vpr.go', 1); } catch (e) { } changeMap(); } return; } // (tnEnd stays in place while the map arrives: a second press of Enter does not recount the round)
@@ -1436,7 +1445,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // demo = { de: origin map, a: came from the home screen, mode, diff: those of the menu, t: time spent on this map }; from one map to the next it goes through sessionStorage (vpr.demo), the return through vpr.demoEnd.
   const DEMO_WAITING = 25, DEMO_DUR = 50;
   let demo = null, inactive = 0, demoExit = 0;
-  const demoPossible = () => state === 'title' && (home || !choice) && !ins && !enl && !outTarget && VIEWS.length === 1 && !online() && !CHALLENGE_DEF && !AUTO && !ST;
+  const demoPossible = () => false; // Idle menus never build another circuit: input latency has a 500 ms budget.
   function demoLaunch(d) { demo = { ...(d || { de: M.id, a: home, mode, diff }), t: 0 }; mode = 'raceCase'; diff = 1; start(); }
   function demoNext() { outTarget = EVENING[(EVENING.indexOf(M) + 1) % EVENING.length]; try { sessionStorage.setItem('vpr.demo', JSON.stringify(demo)); } catch (e) { } changeMap(); }
   function demoEnd() {
@@ -1451,21 +1460,24 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   // main menu: 0 map, 1 players, 2 mode, 3 difficulty, 4 gearbox, 5 start; d = -1 / +1 (left / right; Enter counts as +1)
   let tnLaps = clamp(+pref('vpr8.tnTours', '3') || 3, 1, 5); // Tournée: laps per round, the TOURS line of the menu (6: shown and walked between BOX and DEMARRER)
   const cache = i => (i === 1 && !two()) || (i === 3 && !isRaceMode()) || (i === 6 && mode !== 'tourAll'); // in solo there is no JOUEURS line; DIFFICULTE only against BOTS
-  let outTarget = null, aimT = 0; // map requested in the menu, not yet shown
+  let outTarget = null, aimT = 0, preparingRace = false; // selection is independent of the constructed scene
   function changeMap() {
-    if (outTarget === M) { outTarget = null; window.__wanted = M.id; return; }
+    if (outTarget === M) { outTarget = null; window.__wanted = M.id; GAME_LOADER.reveal(); return; }
     const c = outTarget; window.__wanted = c.id; // the last requested one: a build finished in the meantime for another map is not shown
-    built(c).then(api => {
+    const preview = GAME_LOADER.keepPreview(), assets = GAME_LOADER.mapScripts(c);
+    Promise.all([preview, assets]).then(() => window.__wanted === c.id ? built(c) : null).then(api => {
+      if (!api) return;
       if (window.__wanted !== c.id || window.__g === api) return;
       setPref('vpr.carte', c.id); try { sessionStorage.setItem('vpr.menu', 1); history.replaceState(null, '', location.pathname + '?map=' + c.id + (Q.has('players') ? '&players=' + VIEWS.length : '')); } catch (e) { } // the number of players follows the preference; forced by the address (?players=), it stays from one map to the next
-      SOUND.mapDef(c); api.resumes();
-    });
+      SOUND.mapDef(c); api.resumes(); GAME_LOADER.reveal(); if (GAME_LOADER.raceLoading) GAME_LOADER.hide();
+    }).catch(e => { if (window.__wanted === c.id) { preparingRace = false; outTarget = null; padSaid('CHARGEMENT IMPOSSIBLE'); GAME_LOADER.reveal(); if (GAME_LOADER.raceLoading) GAME_LOADER.hide(); } console.error(e); });
   }
   function menuAct(d) {
-    if (outTarget && msel === 5) { try { sessionStorage.setItem('vpr.go', 2); } catch (e) { } clearTimeout(aimT); changeMap(); return; } // DEMARRER while a map is arriving: the race starts on it
+    if (outTarget && msel === 5) { if (outTarget === M) outTarget = null; start(); return; }
     if (msel === 0) { // changing map: the name changes at once, the map shows as soon as scrolling stops (0.15 s); already built, immediately
       outTarget = MAPS[(MAPS.indexOf(outTarget || M) + d + MAPS.length) % MAPS.length];
-      clearTimeout(aimT); aimT = setTimeout(changeMap, 150);
+      window.__wanted = outTarget.id;
+      setPref('vpr.carte', outTarget.id); // Selection only updates the card; construction belongs to START.
     } else if (msel === 1) { // split screen only (the line does not exist in solo): 2, 3 or 4 players, kept in the preferences
       players(2 + (VIEWS.length - 2 + d + 3) % 3); setPref('vpr7.joueurs', VIEWS.length); setPref('vpr7.ecran', VIEWS.length); }
     else if (msel === 2) { // one player MODES, two players: Race, Elimination, Glisse duel; difficulty has its own line
@@ -1493,7 +1505,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     command(e);
   };
   const command = e => { // a menu command, from a keyboard key or a gamepad (poll: { code, key, periph })
-    SOUND.init(); inactive = 0; if (demo) { if (!outTarget) demoEnd(); return; }
+    if (preparingRace) return;
+    if (state === 'title') SOUND.initMenu(); else SOUND.init(); inactive = 0; if (demo) { if (!outTarget) demoEnd(); return; }
     if (home) { homeAct(/^(ArrowUp|ArrowDown|KeyW|KeyS)$/.test(e.code) ? 'v' : /^(ArrowLeft|ArrowRight|KeyA|KeyD)$/.test(e.code) ? 'h' : e.code === 'Enter' || e.code === 'Space' ? 'ok' : ''); return; }
     if (choice) { choiceAct(e.code, e.key); return; }
     const key = (e.key || '').toLowerCase(); // actually typed letter, for commands named by a letter (the driving, itself, stays on physical positions)
@@ -1656,9 +1669,10 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       return;
     }
     if (state === 'title') { // main menu: the map turns behind, you choose map, mode and gearbox
+      const menuMap = outTarget || M, HU = menuMap.th.hud, Y = HU.y, C = HU.c, card = MENU_CARDS[menuMap.id] || { car: CARD.label, km: +(T.len / 1000).toFixed(1), points: M.pts };
       R(hg, 'rgba(8,8,12,.45)', 0, 0, HW, HH); const d2 = two(); // with two players, the menu says what is true with two players
       if (HU.over[0]) txt(HU.over[0], cx, 6, 16, C, 'center', 0, JP); txt(mode === 'tourAll' ? 'TOURNEE · ' + EVENING[0].hour + ' > ' + EVENING[EVENING.length - 1].hour : mode === 'raceCase' ? 'COURSE · 3 TOURS' : mode === 'broken' ? 'CASSE · 3 TOURS' : mode === 'elim' ? 'ELIMINATION · 4 TOURS' : mode === 'glisse' ? (d2 ? 'GLISSE EN DUEL' : 'GLISSE') + ' · 2 TOURS' : HU.over[1], cx, 27, 8, C, 'center');
-      const ti = headingMap(M.id, HU.heading, language); txt(ti[0], cx, 44, 24, Y, 'center', 2); txt(ti[1], cx, 70, 24, Y, 'center', 2);
+      const ti = headingMap(menuMap.id, HU.heading, language); txt(ti[0], cx, 44, 24, Y, 'center', 2); txt(ti[1], cx, 70, 24, Y, 'center', 2);
       if (tFlash && performance.now() - tFlash < 400) R(hg, 'rgba(255,255,255,' + (1 - (performance.now() - tFlash) / 400).toFixed(2) + ')', 0, 0, HW, HH); // white flash on leaving the home screen
       panel(cx - 160, 100, 320, 140);
       const L = [['CARTE', (outTarget || M).label + '  ' + (MAPS.indexOf(outTarget || M) + 1) + '/' + MAPS.length], ['JOUEURS', d2 ? VIEWS.length + ' : ECRAN PARTAGE' : 'SOLO'], ['MODE', mode === 'tourAll' ? 'TOURNEE' : mode === 'raceCase' ? 'COURSE' : mode === 'broken' ? 'CASSE' : mode === 'elim' ? 'ELIMINATION' : mode === 'glisse' ? d2 ? 'GLISSE EN DUEL' : 'GLISSE' : 'CONTRE-LA-MONTRE'], ['DIFFICULTE', DIFF[diff].label], [d2 ? 'BOITE J1' : 'BOITE', manual1() ? 'MANUELLE' : 'AUTO'], 0, ['TOURS', '' + tnLaps]].map((r, i) => r && [...r, i]).filter(r => r).filter(r => !cache(r[2]));
@@ -1674,10 +1688,12 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (d2) txt("RIEN N'EST ENREGISTRE", cx - 58, 218, 8, '#e8e8e4'); // no record, medal or ghost either: nothing to show
       else if (!isRaceMode()) { const gl = mode === 'glisse', m = gl ? medG(ses.bestG) : medal(ses.best); if (m) txt(MEDN[m - 1], cx + 152, 196, 8, MEDC[m - 1], 'right'); if (m < 3) txt('VISE ' + MEDN[m] + ' ' + (gl ? GLM[m] + ' PTS' : fmt(REF * MED[m])), cx - 58, 218, 8, MEDC[m]); } // medal earned, and the next one to go for
       txt('HAUT/BAS : CHOISIR  GAUCHE/DROITE : CHANGER', cx, 245, 8, '#e8e8e4', 'center'); txt(d2 ? 'I : INSCRIPTION (MANETTES, JOY-CON, CLAVIER)' : 'FLECHES / ZQSD   ESPACE : GLISSE   X : NITRO', cx, 257, 8, '#e8e8e4', 'center');
-      if (outTarget && !(window.__maps || {})[outTarget.id]) { // chosen map still being built (the first time only): its track in place of the card
-        R(hg, '#08080c', cx - 156, 166, 312, 70); const P = outTarget.pts, xs = P.map(p => p[0]), zs = P.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), k = Math.min(80 / (Math.max(...xs) - x0 || 1), 52 / (Math.max(...zs) - z0 || 1));
+      if (outTarget && outTarget !== M) { // Complete card from offline data; no scene or physics work on selection.
+        R(hg, '#08080c', cx - 156, 166, 312, 70); const P = card.points, xs = P.map(p => p[0]), zs = P.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), k = Math.min(80 / (Math.max(...xs) - x0 || 1), 52 / (Math.max(...zs) - z0 || 1));
         hg.strokeStyle = '#e8e8e4'; hg.lineWidth = 1; hg.beginPath(); P.forEach(p => hg.lineTo(cx - 150 + (p[0] - x0) * k, 172 + (p[1] - z0) * k)); hg.closePath(); hg.stroke();
-        txt(outTarget.label, cx - 58, 174, 8, C); txt('CHARGEMENT...', cx - 58, 196, 8, blink ? Y : '#e8e8e4');
+        txt(card.car, cx - 58, 174, 8, C); txt(('' + card.km).replace('.', ',') + ' KM', cx - 58, 185, 8, '#e8e8e4');
+        let best = 0; try { best = JSON.parse(localStorage.getItem('vpr8.' + (menuMap.id === 'ville' ? '' : menuMap.id + '.') + 'best')) || 0; } catch (e) { }
+        txt('RECORD ' + (best ? fmt(best) : '--'), cx - 58, 196, 8, '#e8e8e4');
       }
       if (online()) tag('SALON ' + NET.code + ' · ' + NET.n + ' JOUEURS', cx, 25, Y); else if (challengeErr) tag(challengeErr, cx, 25, RD); else if (d2) { } else if (CHALLENGE_DEF) tag('DEFI : ' + fmt(CHALLENGE_DEF.t) + ' A BATTRE', cx, 25, GHOSTC[5]);; // in place of the subtitle: lower, the banner was biting into the title
       return;
@@ -1903,9 +1919,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const attitude = c => { const s = S[c.idx], ax = Math.cos(c.th), az = Math.sin(c.th), gn = slope(s, c.d), [df, dr] = tilt(T, c); // tilt: the slope of craters (M.dents, M.bowls), zero on every map without them
     return [c.air ? 0.7 * Math.atan2(c.vy, Math.max(5, Math.hypot(c.vx, c.vz))) : Math.atan(s.sl + gn * (s.tx * az - s.tz * ax) + df), -Math.atan(gn * (s.tx * ax + s.tz * az) + (c.air ? 0 : dr))]; };
   freshView(); // the player's view: the scenery is built, all its light fixtures are declared
-  // all the scene's shaders launched at once (the driver compiles them in parallel): scenery culled off-screen at the start no longer compiles its shader mid-race
-  // at its first appearance; compile and not compileAsync: without a backdrop, everything must finish in one go (see above)
-  renderer.compile(scene, VIEWS[0].cam);
+  if (!backdrop) { GAME_LOADER.progress(0.88, "PREPARATION DE L'IMAGE", 3); await whoosh(); }
+  // Background maps warm the full scene; first boot can display its visible materials while off-screen programs finish compiling.
+  if (backdrop) await renderer.compileAsync(scene, VIEWS[0].cam); else renderer.compile(scene, VIEWS[0].cam);
   // the glass shards (MeshStandardMaterial + envMap) make their PMREM and their shader at the first break: one shard of each glass rendered once into an 8 px target, during loading
   { const rt = new THREE.WebGLRenderTarget(8, 8), ts = GLASS.map(mv => { const t = new THREE.InstancedMesh(SHARD, mv, 1); t.frustumCulled = false; scene.add(t); return t; }), r0 = renderer.getRenderTarget(); renderer.setRenderTarget(rt); renderer.render(scene, VIEWS[0].cam); renderer.setRenderTarget(r0); ts.forEach(t => { scene.remove(t); t.dispose(); }); rt.dispose(); }
   // One or two players: as many views. With two, each has their device and the common full-screen layer is placed on the game's canvas. Set in the menu: called during a race, we come back to it.
@@ -2168,8 +2184,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (!hotList) { // first frame: everything is drawn once without visibility sorting, so that shaders, geometries and textures go to the GPU now and not at the first pass in a race (40 ms stutters)
       hotList = true; const caches = [], triIdx = [];
       scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { triIdx.push(o); o.frustumCulled = false; } });
-      renderer.setRenderTarget(vu.rt); renderer.render(scene, cam);
-      for (const o of caches) o.visible = false; for (const o of triIdx) o.frustumCulled = true;
+      const warm = new THREE.WebGLRenderTarget(8, 8, { type: vu.rt.texture.type }), previous = renderer.getRenderTarget();
+      try { renderer.setRenderTarget(warm); renderer.render(scene, cam); }
+      finally { renderer.setRenderTarget(previous); warm.dispose(); for (const o of caches) o.visible = false; for (const o of triIdx) o.frustumCulled = true; }
     }
     // the scene matrices once for the view's three renders (reflections, moving shadows, scene): each one recomputed them all
     wheelsInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n && !(vu.shadows && vu.shadows.cacheKey !== stepL)) refFace(); // not in the frame where the fixed scenery's shadow is redone (see shadows): the slice moves to the next frame
@@ -2187,7 +2204,25 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   }
   let hotList = false;
   let raf = 0;
-  const loop = now => { raf = requestAnimationFrame(loop); frame(now); };
+  let previewAt = 0;
+  const menuSound = { state: 'title', T, car: null, r: 0, sp: 0, gas: 0, rpm: 0.3, load: 0, spool: 0, hit: 0, bump: 0, tun: 0, amb: 0, otherCars: [] };
+  const loop = now => {
+    raf = requestAnimationFrame(loop);
+    if (preparingRace && state === 'title') { GAME_LOADER.menuHide(); return; }
+    if ((state === 'title' || state === 'pause') && !AUTO && !ST) {
+      last = Math.max(last, now);
+      for (const c of PER.poll({ menu: true, home, two: two() })) command(c);
+      if (ins) inscription(); else if (two()) gamepads2();
+      if (state === 'title' || state === 'pause') {
+        menuSound.state = state; menuSound.car = VIEWS[0].self; SOUND.frame(state === 'pause' ? 0 : 1 / 60, menuSound);
+        const cv = COM ? COM.c : VIEWS[0].hudC; hg = COM ? COM.g : VIEWS[0].hg; hg.clearRect(0, 0, cv.width, cv.height); screens(cv.width);
+        GAME_LOADER.menuFrame(outTarget || M, cv); return;
+      }
+    }
+    GAME_LOADER.menuHide();
+    if (window.__mapBuilding && state === 'title' && now - previewAt < 1000 / 24) return;
+    previewAt = now; frame(now); GAME_LOADER.previewFrame(M.id, renderer.domElement, COM && COM.c);
+  };
   // stop (map change): no more loop or listeners; then frees() gives back to the GPU everything this map put there (the shaders, for their part, stay with the renderer as long as a material uses them)
   const ending = () => { cancelAnimationFrame(raf); halt.abort(); clearTimeout(padNoteT); padNote.remove(); if (COM) COM.c.remove(); };
   const frees = () => {
@@ -2207,32 +2242,39 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const wakeup = () => { active = false; cancelAnimationFrame(raf); padNote.style.display = 'none'; if (COM) COM.c.style.display = 'none'; for (const k in keys) keys[k] = 0; };
   const resumes = () => {
     const av = window.__g; if (av && av !== api) (av.wakeup || av.ending)();
-    active = true; window.__g = api; window.MAP_DEF = M; PER.seek(); // Joy-Con allowed since this map was built (home screen window, opened by another instance): without this, it would never see it
+    active = true; preparingRace = false; window.__g = api; window.MAP_DEF = M; PER.seek(); // Joy-Con allowed since this map was built (home screen window, opened by another instance): without this, it would never see it
     if (state !== 'title') toMenu(); home = true; aMenu = false; choice = false; msel = 5; outTarget = null; demo = null; enl = null; ins = false; inactive = 0; // like a brand-new map
     language = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr'; applyLanguage(); manual = pref('vpr.boite', 'a') === 'm'; VIEWS[0].self.manual = manual; // the settings may have changed on another map
     { const n = +(Q.get('players') || pref('vpr7.joueurs', '1')); players(n > 1 && !CHALLENGE_DEF && !NET.role ? n : 1); }
     if (COM) COM.c.style.display = '';
     arrival(); resize(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
-    prepare();
   };
-  // built(c): the instance of map c, built in the background the first time (one promise per map, shared by all instances)
-  const built = c => { const E = window.__inProgress || (window.__inProgress = {}); return E[c.id] || (E[c.id] = launchGame(c, true)); };
-  // prepare: once the page is launched, the other maps build in the background, neighbours first, one at a time; for the benchmarks and captures (?auto, ?perf, ?style) we only build what is requested
-  const prepare = () => {
-    if (window.__prep || AUTO || ST || /[?&]perf\b/.test(location.search)) return;
-    const i0 = MAPS.indexOf(M), ordering = [...new Set(MAPS.flatMap((_, k) => [MAPS[(i0 + k) % MAPS.length], MAPS[(i0 - k + MAPS.length * 2) % MAPS.length]]))].filter(Boolean); // a map outside MAPS (attempt) has no neighbours: i0 = -1
-    window.__prep = (async () => { for (const c of ordering) { await built(c); await whoosh(); } })();
+  // Catalogue downloads are cached; serialize construction because all map instances share one WebGL renderer.
+  const built = c => {
+    const E = window.__inProgress || (window.__inProgress = {});
+    if (!E[c.id]) {
+      const job = (window.__buildQueue || Promise.resolve()).then(async () => {
+        await GAME_LOADER.mapScripts(c);
+        if (window.__wanted !== c.id) { delete E[c.id]; return null; }
+        window.__mapBuilding = c.id;
+        try { return await launchGame(c, true); } finally { window.__mapBuilding = null; }
+      });
+      E[c.id] = job; window.__buildQueue = job.catch(() => {});
+      job.catch(() => { delete E[c.id]; });
+    }
+    return E[c.id];
   };
-  const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)
+  const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, get menu() { return { id: (outTarget || M).id, row: msel, pauseRow: psel, choiceRow: csel, choice, mode, diff, manual: manual1(), preparing: preparingRace }; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); if (state === 'title' && !AUTO && !ST) { window.__wanted = outTarget.id; setPref('vpr.carte', outTarget.id); } else changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)
   if (/[?&]hitbox\b/.test(location.search)) import('./hitbox.js').then(h => h.watch(THREE, T, scene)); // debug: collision limits in transparent red
-  if (backdrop) { // first frame of the map in advance, in its target: shaders compiled and textures sent to the GPU now, not when it is displayed
+  if (backdrop) { // Upload every resource once, but rasterize only 8 × 8 pixels instead of the full menu with all culling disabled.
     await whoosh(); const vu = VIEWS[0], caches = [], triIdx = [];
     scene.traverse(o => { if (!o.visible) { caches.push(o); o.visible = true; } if (o.frustumCulled) { triIdx.push(o); o.frustumCulled = false; } });
-    renderer.setRenderTarget(vu.rt); renderer.render(scene, vu.cam); renderer.setRenderTarget(null);
-    for (const o of caches) o.visible = false; for (const o of triIdx) o.frustumCulled = true;
+    const warm = new THREE.WebGLRenderTarget(8, 8, { type: vu.rt.texture.type }), previous = renderer.getRenderTarget();
+    try { renderer.setRenderTarget(warm); renderer.render(scene, vu.cam); }
+    finally { renderer.setRenderTarget(previous); warm.dispose(); for (const o of caches) o.visible = false; for (const o of triIdx) o.frustumCulled = true; }
+    hotList = true; // The first displayed frame must not upload and draw the entire scene a second time.
   }
   (window.__maps || (window.__maps = {}))[M.id] = api; (window.__inProgress || (window.__inProgress = {}))[M.id] = Promise.resolve(api);
   if (!backdrop) resumes();
   return api;
-})();
-if (/[?&]perf\b/.test(location.search)) import('./tools/perf.js').then(m => m.runSuite()); // banc de performance : voir tools/perf.js
+};

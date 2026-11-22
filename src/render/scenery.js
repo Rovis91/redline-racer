@@ -14,13 +14,46 @@
     list.forEach((p, i) => { d.position.set(p[0], p[1], p[2]); d.rotation.set(0, p[3] || 0, 0); d.scale.set(p[4] || 1, p[5] || p[4] || 1, p[6] || p[4] || 1); d.updateMatrix(); m.setMatrixAt(i, d.matrix); });
     m.count = list.length; m.frustumCulled = false; m.castShadow = m.receiveShadow = h.TH.sun[1] > 0.6; h.scene.add(m); return m; // low sun (Paris, canal): the whole scenery casts a shadow; at night that would be wasted render time
   }
-  // nearest track sample, by 50 m cells: each cell keeps, on its first query, only the samples that can be the nearest to one of its points
-  // (within the minimum distance to the centre plus two half-diagonals), in order: same result as walking the whole track, ties included (the lowest index)
+  // A balanced spatial tree finds each cell's nearby samples without rescanning the whole track.
+  // The cell candidates stay in track order, preserving the exhaustive search's lowest-index tie break.
   const CELL_SIZE = 50, DG = CELL_SIZE * Math.SQRT1_2, CELLS = new WeakMap();
-  const near = (h, x, z) => { const S = h.S, C = CELLS.get(S) || CELLS.set(S, new Map()).get(S), cx = Math.floor(x / CELL_SIZE), cz = Math.floor(z / CELL_SIZE), k = cx * 65536 + cz; let L = C.get(k);
-    if (!L) { const mx = (cx + 0.5) * CELL_SIZE, mz = (cz + 0.5) * CELL_SIZE, D = S.map(s => Math.hypot(s.x - mx, s.z - mz)); let m = Infinity; for (const d of D) if (d < m) m = d; L = []; D.forEach((d, i) => { if (d <= m + 2 * DG + 1e-6) L.push(i); }); C.set(k, L); }
+  const roadTree = (S, ids, axis = 'x') => {
+    if (!ids.length) return null;
+    ids.sort((a, b) => S[a][axis] - S[b][axis] || a - b); const m = ids.length >> 1, next = axis === 'x' ? 'z' : 'x';
+    return { i: ids[m], axis, lo: roadTree(S, ids.slice(0, m), next), hi: roadTree(S, ids.slice(m + 1), next) };
+  };
+  const roadCandidates = (S, tree, x, z) => {
+    let closest = 0, best = Infinity;
+    const seek = node => {
+      if (!node) return;
+      const s = S[node.i], d = (s.x - x) ** 2 + (s.z - z) ** 2, delta = (node.axis === 'x' ? x - s.x : z - s.z);
+      if (d < best) { best = d; closest = node.i; }
+      seek(delta < 0 ? node.lo : node.hi); if (delta * delta <= best) seek(delta < 0 ? node.hi : node.lo);
+    };
+    seek(tree);
+    const nearest = S[closest], radius = Math.hypot(nearest.x - x, nearest.z - z) + 2 * DG + 1e-6, list = [];
+    const collect = node => {
+      if (!node) return;
+      const s = S[node.i], delta = node.axis === 'x' ? x - s.x : z - s.z;
+      if (Math.hypot(s.x - x, s.z - z) <= radius) list.push(node.i);
+      if (delta <= radius) collect(node.lo); if (delta >= -radius) collect(node.hi);
+    };
+    collect(tree); return list.sort((a, b) => a - b);
+  };
+  const near = (h, x, z) => { const S = h.S;
+    let cache = CELLS.get(S); if (!cache) { cache = { tree: roadTree(S, S.map((_, i) => i)), cells: new Map() }; CELLS.set(S, cache); }
+    const C = cache.cells, cx = Math.floor(x / CELL_SIZE), cz = Math.floor(z / CELL_SIZE), k = cx + ':' + cz; let L = C.get(k);
+    if (!L) { L = roadCandidates(S, cache.tree, (cx + 0.5) * CELL_SIZE, (cz + 0.5) * CELL_SIZE); C.set(k, L); }
     let b = 0, bd = 1e18; for (const i of L) { const s = S[i], d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd) { bd = d; b = i; } } return b; };
   const pt = (h, i) => near(h, h.M.pts[i][0] * h.M.sc, h.M.pts[i][1] * h.M.sc); // nearest track sample to control point i
+  // Index footprints once instead of scanning every placed object for each candidate plant. Bounds stay strict, as in the exhaustive check.
+  const boxMask = (boxes, cell = 64) => {
+    const cells = new Map(), key = (x, z) => Math.floor(x / cell) + ':' + Math.floor(z / cell);
+    for (const b of boxes) for (let x = Math.floor(b[0] / cell); x <= Math.floor(b[1] / cell); x++) for (let z = Math.floor(b[2] / cell); z <= Math.floor(b[3] / cell); z++) {
+      const k = x + ':' + z; if (!cells.has(k)) cells.set(k, []); cells.get(k).push(b);
+    }
+    return (x, z) => { const list = cells.get(key(x, z)); if (list) for (const b of list) if (x > b[0] && x < b[1] && z > b[2] && z < b[3]) return true; return false; };
+  };
   const indexed = (h, g) => { const A = Object.entries(g.attributes), vu = new Map(), retain = [], idx = []; for (let i = 0; i < g.attributes.position.count; i++) { const k = A.map(([, a]) => Array.from(a.array.subarray(i * a.itemSize, (i + 1) * a.itemSize))).join(); let j = vu.get(k); if (j === undefined) { vu.set(k, j = retain.length); retain.push(i); } idx.push(j); } const G = new h.THREE.BufferGeometry(); for (const [n, a] of A) G.setAttribute(n, new h.THREE.Float32BufferAttribute(retain.flatMap(i => Array.from(a.array.subarray(i * a.itemSize, (i + 1) * a.itemSize))), a.itemSize)); G.setIndex(idx); G.userData = g.userData; return G; }; // the zones of an assembly arrive unindexed (36 vertices per box): same triangles, identical vertices shared (24 per box)
   // places an assembly in number: one draw pass per zone, whatever the number of copies. Element as for inst; o.a = settings of the shape; o.tintMat = the zone that takes the colour of each element (8th value: 0xrrggbb)
   const insts = (h, label, skin, list, o = {}) => Object.entries(h.zones(label, skin, ...(o.a || []))).map(([zn, g]) => {
@@ -87,5 +120,5 @@
   }
 
   window.SCENERY = {}; // each scenery-<map>.js adds its function to it, via Object.assign
-  window.PLACERS = { inst, near, pt, indexed, insts, GLOW, boxMesh, block, edgePt, marker, weld, terrain }; // the shared placers, for the map files
+  window.PLACERS = { inst, near, pt, boxMask, indexed, insts, GLOW, boxMesh, block, edgePt, marker, weld, terrain }; // the shared placers, for the map files
 })();

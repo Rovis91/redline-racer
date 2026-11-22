@@ -15,9 +15,10 @@ Rules this repo actually follows. When in doubt, match the code around you. Arch
 
 - No JavaScript at the repo root.
 - File names are unique across the whole repo (`scenery-perse.js`, not `perse/scenery.js`): tools, profiles and stack traces cite bare names (`scenery-perse.js:29`), and `tools/origins.js` relies on it.
-- A new script must get its `<script defer>` line in `index.html`, in load-order position (catalogues before `src/render/scenery.js`, map scenery after it, `game.js` last). `tests/test-maps.js` checks that each map's `scenery-<map>.js` is declared.
+- Declare scripts in `src/data/map-assets.js`: shared engine scripts in `core`, circuit scripts in their ordered `maps[scenery]` list. Only the selected circuit is downloaded. `tests/test-loading.js` checks every circuit file and isolated registration.
 - `local/` and `captures/` are ignored by git: tool output goes to `captures/`, never into tracked folders.
-- Do not hand-edit generated files; rerun their generator: `src/data/gold-laps.js` (`node tools/build-gold-laps.js`), `vendor/three/three.classic.js` (`node tools/three-classic.js`), `src/audio/instruments.js` and `instruments-notes.js` (`tools/instruments.py`), `assets/fonts/dotgothic16-game.woff2` (`tools/font.py`).
+- Menu response is bounded by 500 ms: never construct scenes or run simulation in a menu command. Keep `node tools/bench-menu.js` and its offline-preview variant passing. Track/scenery edits need fresh menu cards/previews.
+- Do not hand-edit generated files; rerun their generator: `src/data/menu-cards.js` (`node tools/build-menu-cards.js`), `assets/previews/*.webp` (`node tools/build-menu-previews.js`), `src/data/gold-laps.js` (`node tools/build-gold-laps.js`), `vendor/three/three.classic.js` (`node tools/three-classic.js`), `src/audio/instruments.js` and `instruments-notes.js` (`tools/instruments.py`), `assets/fonts/dotgothic16-game.woff2` (`tools/font.py`).
 - Patches inside `vendor/three/three.module.js` are marked `// vpr` and must be redone on any three.js update.
 
 ## Tests and the pre-commit hook
@@ -60,7 +61,7 @@ Budgets and how to measure are in [ARCHITECTURE.md](ARCHITECTURE.md#performance-
 - One material per tint makes one draw call per tint: share materials with the same settings (but still call `h.mat`, see Determinism). An emissive material is not shared between a small and a large object.
 - Fewer vertices: no detail smaller than a pixel at 270 lines; low segment counts; remove what is far or hidden by terrain; faces hidden by a neighbour or the ground go.
 - `castShadow` only where it shows. Moving shadow casters go on the `SHDD` / `SHDI` layers; static shadows are redrawn only when the light steps.
-- Everything is compiled and uploaded at load (`renderer.compile`, warm-up frame): no material or texture should appear for the first time mid-race.
+- Everything is compiled and uploaded at load (`renderer.compileAsync`, 8 × 8 warm-up frame): no material or texture should appear for the first time mid-race.
 - No arrays or objects allocated per frame in per-particle or per-drop loops (garbage-collector hitches). Empty particle clouds are hidden.
 - Sound: one-shot sounds create their nodes after the frame (`defer`), bursts of short hits go into a buffer, and an audio parameter is sent only when it changed (`setParam`). Never create hundreds of nodes in one frame.
 - Load size: keep heavy files out of `index.html` (they load on demand); new Japanese text means rerunning `python -I tools/font.py` (`tests/test-font.js` checks it).
