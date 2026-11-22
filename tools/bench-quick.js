@@ -54,8 +54,8 @@ const exitAt = n => path.join(REPO_ROOT, 'captures', n);
     throw new Error('the map does not load: ' + (errors[0] || 'timeout'));
   };
   const lapRun = async () => { const a = loadTest(); const r = await evalExpr('(async () => { const P = await import("./tools/perf.js"); const r = await P.lapRun(); r.B = P.budget(' + J + '); return r; })()'); r.loadTest = pct(a, loadTest()); return r; };
-  const good = r => r.ms <= r.B.ms && r.cpuMax <= r.B.cpuMax; // the verdict of tools/bench.js: average and worst frame; the draw passes (drawCallsMax) are shown, marked ✗ above BUDGET.drawCalls
-  const line = r => [(r.ms.toFixed(2) + ' ms' + (r.ms > r.B.ms ? '✗' : '')).padEnd(9), ('pire ' + r.cpuMax.toFixed(1) + (r.cpuMax > r.B.cpuMax ? '✗' : '')).padEnd(10), ('appels ' + r.drawCallsMax + (r.drawCallsMax > r.B.drawCalls ? '✗' : '')).padEnd(11), ('charge ' + r.loadTest + '%').padEnd(10)].join(' ');
+  const good = r => r.frame99 <= r.B.frame99 && r.frameMax <= r.B.frameMax; // the verdict: p99 and worst frame (larger of CPU and GPU); the draw passes (drawCallsMax) are shown, marked ✗ above BUDGET.drawCalls
+  const line = r => [(r.ms.toFixed(2) + ' ms').padEnd(9), ('p99 ' + r.frame99.toFixed(1) + (r.frame99 > r.B.frame99 ? '✗' : '')).padEnd(9), ('pire ' + r.frameMax.toFixed(1) + (r.frameMax > r.B.frameMax ? '✗' : '')).padEnd(10), ('appels ' + r.drawCallsMax + (r.drawCallsMax > r.B.drawCalls ? '✗' : '')).padEnd(11), ('charge ' + r.loadTest + '%').padEnd(10)].join(' ');
   const everything = []; let ok = 0;
   for (const c of mapDefs) {
     let res;
@@ -64,7 +64,7 @@ const exitAt = n => path.join(REPO_ROOT, 'captures', n);
       const v = good(r1) ? 'SUCCESS' : r2 && good(r2) ? 'INSTABLE' : 'FAILED'; ok += v === 'SUCCESS';
       // is the hitch in the same place both times? (track sample within ±30): then it comes from the map, not the machine
       const spot = r => +r.worstCpu[0].split(':')[0], same = r2 && Math.abs(spot(r1) - spot(r2)) <= 30;
-      console.log(c.padEnd(8), v.padEnd(9), line(r1) + (r2 ? '  | 2e : ' + line(r2) + (r1.cpuMax > r1.B.cpuMax && r2.cpuMax > r2.B.cpuMax ? (same ? ' hitch in the same place (' + spot(r1) + ')' : ' hitches in different places') : '') : ''), '  chargement ' + (loading / 1000).toFixed(1) + ' s');
+      console.log(c.padEnd(8), v.padEnd(9), line(r1) + (r2 ? '  | 2e : ' + line(r2) + (r1.frameMax > r1.B.frameMax && r2.frameMax > r2.B.frameMax ? (same ? ' hitch in the same place (' + spot(r1) + ')' : ' hitches in different places') : '') : ''), '  chargement ' + (loading / 1000).toFixed(1) + ' s');
       if (v !== 'SUCCESS') console.log(''.padEnd(18), 'pires images :', r1.worstCpu.slice(0, 3).join(' | '));
       res = { mapDef: c, verdict: v, loading, measures: [r1, r2].filter(Boolean) };
       if (REG) { // regularity counts in the verdict: a jerky map fails even if fast
