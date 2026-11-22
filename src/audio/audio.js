@@ -999,6 +999,8 @@ registerProcessor('engine', Moteur);`;
     if (AC && live && !ctx) { if (radioAssetsPending && !preparatory) { radioAssetsPending = false; readyMs = Promise.all([readyMs, loadRadios(ST)]); } return AC.resume(); }
     if (AC && live) AC.close();
     AC = ctx || new (window.AudioContext || window.webkitAudioContext)(); live = !ctx;
+    // every source cuts itself loose when it ends: otherwise its chain (envelope, filters) stays wired to the buses until GC, and the audio thread keeps processing thousands of finished notes (piliers: 1,900 to 2,700 dropouts per race, 25 to 35 times fewer with this)
+    for (const k of ['createOscillator', 'createBufferSource', 'createConstantSource']) { const f = AC[k].bind(AC); AC[k] = () => { const n = f(); n.addEventListener('ended', () => n.disconnect()); return n; }; }
     masterComp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); masterComp.connect(outG);
     vu = AC.createAnalyser(); vu.fftSize = 2048; outG.connect(vu); // what actually comes out, for the listening bench's VU meter
     lastHit = 0; lastMus = -9; ambT = 2; rubT = satT = turntable = 0; bigS = false; lastFill = lastRoll = -9; exitAt = -1; grit = tens = 0; glisse = acquired = acqSaid = boostPend = boostL = false; for (const p in was) was[p] = false; drums = 0; mix = inten = driftL = 0; ending = inZone = false; // a new context restarts from stopped
