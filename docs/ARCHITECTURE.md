@@ -24,7 +24,7 @@ Code, comments and docs are in English. On-screen game text is written in French
 There is no JavaScript at the repo root. File names are unique across the whole repo, so a glob like `**/scenery-perse.js` finds exactly one file.
 
 ```
-index.html          the game: page, fonts, script load order
+index.html          the game: loading overlay and fonts (asset inventory in src/data/map-assets.js)
 src/
   engine/           engine
     sim.js            track + physics, no rendering; shared by the game, the tests and the tools
@@ -55,14 +55,15 @@ The 12 map ids (`id` in `src/data/maps.js`, folder name in `src/maps/`): `ville`
 
 ### Load order
 
-`index.html` loads `vendor/three/three.classic.js` (sets `window.THREE`), then every other script with `defer`, in this order:
+`index.html` paints a responsive pixel title over a small still captured from the game (`assets/start-line.webp`), then loads `src/data/map-assets.js` and `src/engine/loader.js`. The asset inventory lists shared scripts in dependency order; the loader downloads them in parallel and executes them as ordered classic scripts (`async = false`, compatible with `file://`):
 
-1. `src/data/maps.js`, `gold-laps.js` (data)
-2. `src/engine/sim.js`, `session.js` (no rendering)
-3. `src/audio/samples.js`, `instruments.js`, `audio.js`
-4. `src/render/textures.js`, `shapes.js`, then each map's `textures-<map>.js` and `shapes-<map>.js`, then `textures-cars.js`, `shapes-cars.js`
-5. `src/render/scenery.js` (creates the empty `SCENERY` and the shared helpers `PLACERS`), then every `scenery-<map>.js`
-6. `src/engine/lang.js`, `devices.js`, `network.js`, and last `game.js`
+1. `vendor/three/three.classic.js`, then map/ghost/taunt data
+2. Physics and sessions, audio, shared texture/shape/car catalogues, shared scenery/crowd helpers, language/devices/network
+3. `src/engine/game.js` registers `launchGame` without starting it
+4. Only the selected circuit's catalogue (`GAME_ASSETS.maps[MAP_DEF.th.scenery]`) plus its explicitly borrowed shape/texture catalogues (`dependencies`); another circuit's scenery is never loaded as a dependency
+5. `launchGame()` builds the selected circuit; `GAME_READY` resolves after its first displayed frames and the overlay exit
+
+Each script has one shared loading promise. Other circuit implementation scripts download only after START; selection loads only a small local preview. Returning to a visited circuit reuses its instance for START. At first boot, a failed script shows a retry button. Later failures keep the selection menu open with a brief error message. The startup loading overlay is never shown when selecting circuits. Its three stages track completed engine scripts, circuit scripts and scene preparation; no timer simulates progress. Transitions respect reduced motion.
 
 Scripts share globals on `window` (`MAPS`, `MAP_DEF`, `buildTrack`, `SCENERY`, `SOUND`, …). `sim.js`, `session.js`, `lang.js` and `devices.js` also load under Node with `require`, which is how the tests use them.
 
@@ -93,13 +94,19 @@ A map is an entry of `MAPS` in `src/data/maps.js` (layout, width, grip, car, rad
 
 Six maps (`egee`, `area51`, `piliers`, `volcan`, `lune`, `autoroute`) are written after the `MAPS` array as `if (id === '<id>') { G.MAP_DEF = … }` blocks; a loop around the blocks runs them once per id and pushes each into `MAPS`, with its French label, title, rivals and subtitle from the `NEW` table above the loop (these replace what the block says). They borrow the car and radio of `touge`. After a layout or car change on any of them: `node tools/build-gold-laps.js egee area51 piliers volcan lune autoroute`, then `sh tools/check.sh`. `lune` and `autoroute` only get the short run of `tests/test-maps.js` (the `BLOCKOUT` list there says why).
 
-A map also needs a place in `EVENING` (Tour order and time of night), a gold trace in `src/data/gold-laps.js` (`node tools/build-gold-laps.js <map>`), and an English title (`HEADING_EN` in `lang.js`, or `th.hud.heading`). Each new file must get its `<script defer>` line in `index.html` at the right place in the load order; `tests/test-maps.js` fails if `scenery-<map>.js` is missing from `index.html` or if any of the above is missing.
+A map also needs a place in `EVENING` (Tour order and time of night), a gold trace in `src/data/gold-laps.js` (`node tools/build-gold-laps.js <map>`), and an English title (`HEADING_EN` in `lang.js`, or `th.hud.heading`). Each new circuit file belongs in its ordered list in `src/data/map-assets.js`; `tests/test-loading.js` checks the complete file inventory and isolated catalogue registration, and `tests/test-maps.js` checks scenery, traces and titles.
 
 `?map=attempt&grip=…&ground=…&car=<map>` opens a driving test track that is not in `MAPS` (end of `maps.js`).
 
 ### Map switching
 
-Changing map does not reload the page. Each map gets its own `launchGame` instance, kept in `window.__maps`. After the first map is shown, the others are built in the background, neighbours first, one at a time (`prepare`, `built`; skipped with `?auto`, `?perf`, `?style`). Switching calls `wakeup()` on the old instance (stops drawing and listening, keeps the GPU resources) and `resumes()` on the new one. The renderer and the sound engine are shared. `ending()` stops an instance (loop and every listener, through one `AbortController`); `frees()` frees its GPU resources. Anything you add that hooks into the page (listener, timer, DOM element) must be undone there.
+Menu navigation has a hard 500 ms input-to-visible-response budget. It runs on a separate 2D canvas (`menu-view`) using the same `screens()` controls and strings; it does not run the simulation, render WebGL, build scenery or fetch circuit implementation scripts. Circuit titles, car names, distances and outlines come from `src/data/menu-cards.js`, generated by `node tools/build-menu-cards.js`. Each circuit has a local still in `assets/previews/<id>.webp`, captured with `node tools/build-menu-previews.js`. A theme-colour background and the complete card appear immediately even if the still is offline. The short preview transition runs on the compositor. Pause and peripheral-enrolment menus use the same lightweight path.
+
+Only START requests a complete circuit. A visible preparation view acknowledges START before construction begins. Builds are serialized and obsolete queued jobs are skipped; shaders compile asynchronously, then one 8 × 8 warm-up uploads the full scene. The first displayed race frame does not repeat that warm-up. Visited instances remain in `window.__maps`. Switching stops the previous instance with `wakeup()` and displays the new one with `resumes()`. The renderer and sound engine are shared. Idle menus never launch demos or build another circuit, so an inactive screen cannot introduce a long task during input.
+
+The audio graph is prepared, suspended, before the menu opens. Menu gestures only resume it; sampled radio notes wait for race preparation. START waits for audio readiness behind its preparation view. Scenery proximity uses a balanced road tree with exact tie order, and frequently read car textures use a CPU canvas to avoid GPU readbacks.
+
+`ending()` stops an instance and removes its listeners through one `AbortController`; `frees()` releases its GPU resources. Anything that hooks into the page must be undone there. `node tools/bench-menu.js` measures trusted keyboard input to the next painted menu frame on all circuits, settings, split-screen and pause with CPU ×4. `--offline-previews` verifies the fallback; each sample and each menu long task must remain below 500 ms. START's acknowledgement is measured separately from race preparation.
 
 ### Split screen
 
@@ -184,7 +191,7 @@ In `src/engine/game.js` (search for it):
 | `pauseItems` | pause menu entries |
 | `OPP`, `SPIKES` | rival colours and taunts |
 | `GLM` | drift-mode medal thresholds per map |
-| `DEMO_WAITING` | idle time before the demo starts |
+| `tools/bench-menu.js` | 500 ms menu response acceptance check |
 
 In `src/audio/audio.js`: `function sched(` (music sequencer and adaptive layers), `function audioFrame(` (engine, tyres, wind, music driven by the race), `rainFrame` (rain sound).
 
@@ -197,8 +204,12 @@ All in `tools/`; each file starts with its usage in a comment.
 | `sh tools/check.sh` | runs every `tests/test*.js`, short ones first, stops at the first failure |
 | `git config core.hooksPath tools/hooks` | once per clone: `tools/hooks/pre-commit` runs `check.sh` before any commit that touches a `.js` file |
 | `node tools/plan.js <map> <shot>` | screenshot of one place on a map in about two seconds (`captures/plans/<map>/`). Shots 1–20 (twentieths of the track), `@<sample>`, `lapRun` (all 20), or named shots from `tools/plans.json`. `--before` stores the "before"; the same command after the change writes a side-by-side. Also `--view=`, `--burst=`, `--style=game`, `--hud` |
-| `node tools/bench-quick.js [maps…]` | performance verdict against `BUDGET`, one headless Chrome kept open: SUCCÈS / ÉCHEC / INSTABLE. `--profile` (per pass, per track section, per scenery object with its source line), `--regularity` (smoothness at 60/120/144 Hz), `--players=2`, `--close` |
+| `node tools/live.js <maps…>` | the game as the player gets it: visible window, sound on, real time, one autopilot race per map. Frame intervals (p99, worst), game work per frame, long tasks, GC pauses, heap, live audio nodes, sound dropouts and audio clock stalls, PASS / FAIL against the target. `--chain[=s]` then every map twice without reloading; `--players=2`; `--cpu` names what ran in each stretch of 40 ms or more |
+| `node tools/bench-quick.js [maps…]` | performance verdict against `BUDGET`, one headless Chrome kept open: SUCCÈS / ÉCHEC / INSTABLE. `--points` (the fast bench: 20 fixed spots per map, about 30 s per map), `--profile` (per pass, per track section, per scenery object with its source line), `--regularity` (smoothness at 60/120/144 Hz), `--players=2`, `--close` |
 | `node tools/bench.js [map]` | same verdict in a visible Chrome window |
+| `node tools/bench-menu.js [--offline-previews]` | menu input-to-paint latency, CPU ×4, every circuit, settings, split-screen and pause; hard 500 ms maximum |
+| `node tools/build-menu-cards.js` | regenerate circuit names, distances and outlines after track edits |
+| `node tools/build-menu-previews.js [map ...]` | capture small circuit stills after scenery changes |
 | `node tools/load.js [map]` | load time as on GitHub Pages: gzip, cache headers, 10 Mbit/s, 100 ms, CPU ×2, cold then warm. `--all`, `--detail`, `--profile` |
 | `node tools/impacts.js [map]` | impacts in real races, no screen, replayed through the damage model |
 | `node tools/build-gold-laps.js [map]` | regenerates gold ghost traces; rerun when physics or a layout changes |
@@ -220,7 +231,10 @@ Node 22.12+ (the tests `require` the ES module `vendor/three/three.module.js`).
 | Test | Covers |
 |---|---|
 | `tests/test.js` | `ville` physics in depth: track geometry, autopilot lap, car performance, drift, nitro, slipstream, races, drift scoring, elimination, Tour, 2 humans, ghosts, challenge links. Its reference times are frozen |
-| `tests/test-maps.js` | every map: valid layout, autopilot lap, plausible car, drift, traffic, gold trace on the road and under the gold time, files declared in `index.html`, English title |
+| `tests/test-nearest.js` | spatial proximity results against exhaustive searches on all circuits, ties and distant/negative cells |
+| `tests/test-menu-cards.js` | offline card metadata matches real tracks and every circuit has a local preview under 100 KB |
+| `tests/test-loading.js` | complete circuit script inventory and isolated catalogues, without eager loading other maps |
+| `tests/test-maps.js` | every map: valid layout, autopilot lap, plausible car, drift, traffic, gold trace on the road and under the gold time, lazy asset inventory, English title |
 | `tests/test-session.js` | game flow without browser |
 | `tests/test-catalogs.js` | each shape and texture name is defined only once across the repo |
 | `tests/test-taunts.js` | rival taunts (`src/data/taunts.js`): enough lines per event, each with its English text |
@@ -233,17 +247,26 @@ Not tested automatically: rendering, HUD, sound, split-screen views. Check those
 
 ## Performance budgets
 
-Frame budget (`BUDGET` in `tools/perf.js`), measured on an autopilot race lap against 3 rivals:
+The target is the player's: 60 frames per second held, a drop to 40 at worst, sound that never stutters or cuts. It applies solo and split screen. Three measures, because none sees everything:
 
-| Measure | Solo | Per view, 2 players (`budget(2)`) |
-|---|---|---|
-| `drawCallsMax` (draw calls per frame, shadows included; machine-independent) | ≤ 300 | ≤ 600 |
-| `ms` (mean frame time, GPU included) | ≤ 3 ms | ≤ 8.3 ms |
-| `msMax` (worst half-second) | ≤ 4.5 ms | ≤ 8.3 ms |
-| `cpuMax` (worst single frame) | ≤ 8.3 ms | ≤ 8.3 ms |
+- **`tools/bench-quick.js --points`** (headless, the routine bench, about 30 s per map): the car is set down at 20 spots spread over the track (as `tools/plan.js` does), drives the last 16 m, then 30 frames are measured one by one with the GPU drained before each, so a frame pays only for itself. Per spot: median and worst frame, draw calls, triangles, frames while arriving (where newly seen scenery compiles its shaders). It misses what only time shows (GC, leaks, sound, a hitch between two spots): use it for every before/after, and the lap below on the reference maps (ville, piliers, area51) at the start and end of a round of fixes.
+- **`tools/bench-quick.js`** (lap: headless, fixed 1/60 s step, offscreen) measures each frame's cost: CPU time of `frame()` and GPU time (timer query), the larger of the two. It is repeatable and locates a cost on the track and in the scenery (`--profile`). Its game clock runs faster than real time, so the sound it computes is not what the player hears.
+- **`tools/live.js`** (visible window, sound on, real time) measures what the player gets: intervals between displayed frames, sound dropouts (`AudioContext.playbackStats`), audio clock stalls, GC pauses, heap and live audio nodes, over whole races and map chains. The machine must stay awake: a screen that switches off stops frames and audio together and reads as a massive failure.
 
-Smoothness (`REGULARITY` in `tools/perf.js`): `judder` ≤ 5 %, `judderMax` ≤ 15 %. Load (`BUDGET` in `tools/load.js`): ≤ 2.5 MB transferred (gzip), ≤ 60 requests, ready in ≤ 6 s, warm visit ≤ 3 s. Memory: `chain()` must show the same counts of geometries, textures and shaders on the second pass through all maps as on the first.
+Live runs: the page's hidden spans (locked screen, minimised window) are left out and reported, since the game then suspends its sound; keep the machine idle under 40 % load (other sessions' heavy jobs included).
 
-Milliseconds depend on the machine and its load (reference: laptop with integrated Intel Arc 140T); compare versions back to back. Draw calls and vertices do not: compare those before and after a change. At the last measurement, some maps were above 300 draw calls (`perse`, `wangan`, `barrage`, `plage`, `paris`, `chapada`). What keeps the numbers down is listed in [CODE-QUALITY.md](CODE-QUALITY.md#performance-rules).
+Frame budget (`BUDGET` in `tools/perf.js`), measured on an autopilot race lap against 3 rivals; `--points` holds the dearest spot's median to `frame99` and every measured frame to `frameMax`:
 
-To fix a failing map: verdict on all maps → classify (`ms` too high = steady cost; `cpuMax` = isolated hitch; a hitch that does not repeat at the same place is the machine) → `--profile <map>` → fix in the map's files first (merge, share materials, fewer vertices, drop needless `castShadow`) → re-profile, capture the area, rerun the bench on all maps and `tests/test-maps.js`.
+| Measure | Solo | 2 players (`budget(2)`, whole frame) | Why |
+|---|---|---|---|
+| `frame99` (99th percentile of max(CPU, GPU) per frame) | ≤ 16.7 ms | ≤ 16.7 ms | 60 frames/s held |
+| `frameMax` (worst frame, loading excluded) | ≤ 25 ms | ≤ 25 ms | never below 40 frames/s |
+| `drawCallsMax` (draw calls per frame, shadows included; machine-independent) | ≤ 300 | ≤ 600 | keeps headroom on weaker GPUs; compared before/after, not part of the verdict |
+
+`tools/live.js` holds the same frame figures on real frame intervals, plus no sound dropout and no audio clock stall. Smoothness (`REGULARITY` in `tools/perf.js`): `judder` ≤ 5 %, `judderMax` ≤ 15 %. Load (`BUDGET` in `tools/load.js`): ≤ 2.5 MB transferred (gzip), ≤ 60 requests, ready in ≤ 6 s, warm visit ≤ 3 s. Memory: `chain()` must show the same counts of geometries, textures and shaders on the second pass through all maps as on the first, and `live.js --chain` no growth of heap or live audio nodes from one pass to the next.
+
+Milliseconds depend on the machine and its load (reference: laptop with integrated Intel Arc 140T, 120 Hz screen); compare versions back to back. Noise on that machine, three passes of the same map: `--points` mean ±0.5 ms, dearest spot ±0.5 to 1.5 ms; lap `frame99` ±1.7 ms, mean `ms` ±0.55 ms; the worst frame is not repeatable, so a spike counts only when it comes back at the same place on the track. A change is kept when it beats that margin. Draw calls and vertices do not depend on the machine: compare those before and after a change. The machine's speed drifts over an evening (the same map measured 30 to 70 % slower two hours later): compare only back to back. Above the 300 draw-call reference (`--points`, solo, dearest spot): plage 516, barrage 510, perse 491, wangan 394, chapada 393, paris 341, autoroute 318; in split screen, above 600: perse, barrage, plage (about 1,050), chapada, wangan, paris, area51, autoroute, canal (608 to 851). What keeps the numbers down is listed in [CODE-QUALITY.md](CODE-QUALITY.md#performance-rules).
+
+Both benches hold the game's own `requestAnimationFrame` loop while measuring: before, each yield let it slip in an extra frame at real time, whose rendering landed in the next timed frame (the lap's `frame99` read 15 to 22 ms on every map instead of 5 to 13).
+
+To fix a failing map: `--points` on all maps → classify (`frame99` too high = steady cost; `frameMax` alone = isolated hitch; a hitch that does not repeat at the same place is the machine; sound and memory come from `tools/live.js`) → `--profile <map>` → fix in the map's files first (merge, share materials, fewer vertices, drop needless `castShadow`) → re-profile, capture the area, rerun the bench on all maps and `tests/test-maps.js`.

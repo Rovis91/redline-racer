@@ -31,7 +31,7 @@ Two to four players share one screen (two gamepads, two Joy-Cons, or the keyboar
 - **Driving model** inspired by a real Japanese GT: automatic or manual gearbox, handbrake slides, nitro, slipstream, smashable scenery.
 - **Live-synthesised soundtrack**: three or more radio stations per track (darksynth, eurobeat, g-funk, rumba…) that react to how you drive.
 - **Challenge links**: send a lap as a URL and your friend races your ghost.
-- **Demo mode**: leave the pad alone and the game plays itself, track after track.
+- **Responsive circuit selection**: local scenery previews and track cards; full circuits are prepared only after Start.
 - Pixel-art 3D with [three.js](https://threejs.org); a static site with no build step.
 
 ## Credits

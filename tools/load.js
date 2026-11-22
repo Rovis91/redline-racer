@@ -1,11 +1,11 @@
 // Loading bench: the game as a player opens it on GitHub Pages, empty cache, throttled network.
-//   node tools/loadTest.js            → index.html (home, default map)
-//   node tools/loadTest.js paris      → index.html?map=paris
+//   node tools/load.js            → index.html (home, default map)
+//   node tools/load.js paris      → index.html?map=paris
 //   --all: each map          --detail: the 15 largest files          --profile: the functions that take the loading time (first visit)
 // Like GitHub Pages: built-in server that gzips text (js, html, json, svg, css) and answers Cache-Control: max-age=600.
 // A fresh windowless Chrome per measurement (empty profile = empty cache), network BUDGET.network, CPU slowed BUDGET.cpu times (modest laptop).
 // Two passes: first visit (empty cache), then next visit (cache kept, within GitHub Pages' 10 minutes).
-// Exit code 0 = within budget, 1 = over budget, 2 = the measurement did not run. Results: captures/loadTest.json. Variables: CHROME, PORT (8871), DBG (9410).
+// Exit code 0 = within budget, 1 = over budget, 2 = the measurement did not run. Results: captures/load.json. Variables: CHROME, PORT (8871), DBG (9410).
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os'), zlib = require('zlib');
 const REPO_ROOT = path.join(__dirname, '..'), PORT = +process.env.PORT || 8871, DBG = +process.env.DBG || 9410;
 const CHROME = process.env.CHROME || ['C:/Program Files/Google/Chrome/Application/chrome.exe', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', '/usr/bin/google-chrome'].find(f => fs.existsSync(f));
@@ -43,7 +43,8 @@ async function measurement(mapDef) {
     if (m.id && att.has(m.id)) { att.get(m.id)(m); att.delete(m.id); }
     else if (m.method === 'Network.responseReceived') files.set(m.params.requestId, { url: m.params.response.url.replace(/^.*?:\d+\//, ''), httpStatus: m.params.response.status, bytes: 0 });
     else if (m.method === 'Network.loadingFinished' && files.has(m.params.requestId)) files.get(m.params.requestId).bytes = m.params.encodedDataLength;
-    else if (m.method === 'Runtime.exceptionThrown') errors.push((m.params.exceptionDetails.exception || {}).description || m.params.exceptionDetails.text); };
+    else if (m.method === 'Runtime.exceptionThrown') errors.push((m.params.exceptionDetails.exception || {}).description || m.params.exceptionDetails.text);
+    else if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') errors.push(m.params.args.map(a => a.description || a.value || '').join(' ')); };
   await new Promise(r => ws.onopen = r);
   const cmd = (method, params = {}) => new Promise(r => { const i = ++id; att.set(i, r); ws.send(JSON.stringify({ id: i, method, params })); });
   const evalExpr = async e => ((await cmd('Runtime.evaluate', { expression: e, returnByValue: true })).result.result || {}).value;
@@ -54,8 +55,8 @@ async function measurement(mapDef) {
   const pass = async () => {
     const profData = opt('profile') && !files.size; if (profData) { await cmd('Profiler.enable'); await cmd('Profiler.setSamplingInterval', { interval: 500 }); await cmd('Profiler.start'); }
     files.clear(); errors.length = 0; const t0 = Date.now(); await cmd('Page.navigate', { url }); let readyMs = 0;
-    for (let i = 0; i < 1200 && !readyMs; i++) { await asleep(50); if (await evalExpr('!!(window.__g && window.__g.M)').catch(() => false)) readyMs = Date.now() - t0; if (errors.length) break; }
-    const nav = await evalExpr('JSON.stringify({ dcl: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart })');
+    for (let i = 0; i < 1200 && !readyMs; i++) { await asleep(50); if (await evalExpr('!!(window.__g && window.__g.M) && (!window.GAME_LOADER || document.getElementById("loading").hidden)').catch(() => false)) readyMs = Date.now() - t0; if (errors.length) break; }
+    const nav = await evalExpr('JSON.stringify({ dcl: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart, firstPaint: Math.round(performance.getEntriesByName("first-contentful-paint")[0]?.startTime || 0) })');
     const m = Object.fromEntries((await cmd('Performance.getMetrics')).result.metrics.map(x => [x.name, x.value]));
     const f = [...files.values()];
     let hotList;

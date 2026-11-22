@@ -12,4 +12,4 @@ three.js racing game, static site with no build step. Main doc: `docs/ARCHITECTU
 
 ## Repo map (no JS at the root)
 
-`index.html` (game) · `src/{engine,data,audio,render,maps/<map>}` · `pages/` (web tools) · `assets/` · `vendor/` · `tests/` · `tools/` · `docs/`. File names are unique across the repo: `glob **/scenery-perse.js` is enough. `local/` and `captures/` are git-ignored. A new map file must be declared in `index.html` (test-maps.js checks it).
+`index.html` (game) · `src/{engine,data,audio,render,maps/<map>}` · `pages/` (web tools) · `assets/` · `vendor/` · `tests/` · `tools/` · `docs/`. File names are unique across the repo: `glob **/scenery-perse.js` is enough. `local/` and `captures/` are git-ignored. A new map file must be declared in `src/data/map-assets.js` (test-loading.js checks it).

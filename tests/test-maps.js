@@ -2,12 +2,13 @@
 // The city has its own, more complete tests, in test.js (its figures must not move: the city's records).
 const assert = require('assert'), THREE = require('../vendor/three/three.module.js');
 require('../src/data/maps.js'); require('../src/data/gold-laps.js'); require('../src/engine/sim.js');
-// inventory: a map is assembled from its entry in mapDefs.js, its scenery (scenery-<map>.js, loaded by index.html after scenery.js), its gold trace (traces-gold.js) and its English title (HEADING_EN of language.js, otherwise the HUD title)
+// inventory: a map is assembled from its data, its lazy-loaded scenery catalogue, its gold trace and its English title.
 globalThis.window = globalThis; require('../src/render/scenery.js'); require('../src/render/crowd.js'); for (const M of MAPS) require('../src/maps/' + M.th.scenery + '/scenery-' + M.th.scenery + '.js'); require('../src/engine/lang.js');
-{ const EN = HEADING_EN, PAGE = require('fs').readFileSync(__dirname + '/../index.html', 'utf8');
+require('../src/data/map-assets.js');
+{ const EN = HEADING_EN;
   for (const M of MAPS) {
     assert(typeof SCENERY[M.th.scenery] === 'function', M.id + ' : no scenery ' + M.th.scenery + ' in scenery-' + M.th.scenery + '.js');
-    assert(PAGE.includes('<script defer src="src/maps/' + M.th.scenery + '/scenery-' + M.th.scenery + '.js"></script>'), M.id + ' : scenery-' + M.th.scenery + '.js absent de index.html');
+    assert(GAME_ASSETS.maps[M.th.scenery].includes('src/maps/' + M.th.scenery + '/scenery-' + M.th.scenery + '.js'), M.id + ' : scenery missing from map-assets.js');
     assert(typeof TRACES_GOLD[M.id] === 'string' && TRACES_GOLD[M.id].startsWith(CHALLENGE_V + '.' + M.id + '.'), M.id + ' : no gold trace in gold-laps.js');
     const t = EN[M.id] || M.th.hud.heading; assert(t && t.length === 2 && t.every(l => l), M.id + ' : titre anglais absent');
   }

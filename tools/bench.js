@@ -2,7 +2,7 @@
 //                                       node tools/bench.js canal      → one map
 //                                       node tools/bench.js --players=2 → split screen    --no-screen → Chrome without window (slower figures on Windows)
 // Starts the server (tools/capture.py) if it is not running, opens the game in a Chrome window (?perf, see tools/perf.js; do not hide it during the measurement), waits for captures/perf.json,
-// then says PASS or FAIL per map on two figures: the average frame time (ms, GPU included) and the worst frame (cpuMax), against BUDGET of perf.js.
+// then says PASS or FAIL per map on two figures: the 99th percentile and the worst frame (frame99, frameMax: the larger of CPU and GPU time per frame), against BUDGET of perf.js.
 // Exit code 0 = everything passes, 1 = at least one map fails, 2 = the bench could not run. Variables: CHROME (path to the browser), PORT (8851).
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http');
 const REPO_ROOT = path.join(__dirname, '..'), PORT = +process.env.PORT || 8851;
@@ -26,12 +26,12 @@ const waitFor = async (test, s) => { for (let i = 0; i < s * 2; i++) { if (await
   await new Promise(r => setTimeout(r, 300)); // the file writing finishes
   const { budget: B, gpu, results } = JSON.parse(fs.readFileSync(exitAt, 'utf8'));
   console.log('Graphics card: ' + gpu + (/swiftshader|llvmpipe|software/i.test(gpu) ? '  ⚠ software rendering: figures are meaningless' : ''));
-  console.log('Reference: average ≤ ' + B.ms + ' ms par image, pire image ≤ ' + B.cpuMax + ' ms\n');
+  console.log('Reference: p99 ≤ ' + B.frame99 + ' ms par image, pire image ≤ ' + B.frameMax + ' ms\n');
   let ok = true; const col = (s, n) => String(s).padEnd(n);
   console.log(col('mapDef', 10) + col('average', 12) + col('pire image', 13) + 'verdict');
   for (const r of results) {
-    const good = r.ms <= B.ms && r.cpuMax <= B.cpuMax; ok = ok && good;
-    console.log(col(r.mapDef, 10) + col(r.ms.toFixed(2) + ' ms' + (r.ms > B.ms ? ' ✗' : ''), 12) + col(r.cpuMax.toFixed(1) + ' ms' + (r.cpuMax > B.cpuMax ? ' ✗' : ''), 13) + (good ? 'SUCCESS' : 'FAILED'));
+    const good = r.frame99 <= B.frame99 && r.frameMax <= B.frameMax; ok = ok && good;
+    console.log(col(r.mapDef, 10) + col(r.frame99.toFixed(1) + ' ms' + (r.frame99 > B.frame99 ? ' ✗' : ''), 12) + col(r.frameMax.toFixed(1) + ' ms' + (r.frameMax > B.frameMax ? ' ✗' : ''), 13) + (good ? 'SUCCESS' : 'FAILED'));
   }
-  ending(ok ? 0 : 1, '\n' + (ok ? 'SUCCESS' : 'FAILED') + ' : ' + results.filter(r => r.ms <= B.ms && r.cpuMax <= B.cpuMax).length + '/' + results.length + ' maps in the reference (details: captures/perf' + d + '.json)');
+  ending(ok ? 0 : 1, '\n' + (ok ? 'SUCCESS' : 'FAILED') + ' : ' + results.filter(r => r.frame99 <= B.frame99 && r.frameMax <= B.frameMax).length + '/' + results.length + ' maps in the reference (details: captures/perf' + d + '.json)');
 })();

@@ -45,7 +45,8 @@
     // a needle standing alone, w × d at the summit, ht high, origin at the centre of its base: thinner taper than a tower, beds 9 m thick, closed by a rock top
     aiguillePiliers: (w = 40, d = 40, ht = 250, seed = 0, taper = 0.07) => stack(oval(w, d, 8, seed), 0, ht, seed, taper, 9, 1, 2.5, 0, 16),
     // a far needle (one of the silhouettes of aiguillePiliers, 40 × 40 × 250): the same rock with the UVs of a painted pillar, u = twice round the needle, v = foot to summit (texture lointainPiliers)
-    aiguilleLointainePiliers: (seed = 0) => { const G = SHAPES.aiguillePiliers(40, 40, 250, seed), P = G.attributes.position, U = G.attributes.uv;
+    // its beds are 27 m and its corners 32 m apart (near: 9 and 16): at 0.75 to 2.8 km a 9 m bed is two pixels, and the painted texture draws the strata; 3 times fewer triangles over about 400 needles, same top outline
+    aiguilleLointainePiliers: (seed = 0) => { const G = stack(oval(40, 40, 8, seed), 0, 250, seed, 0.07, 27, 1, 2.5, 0, 32), P = G.attributes.position, U = G.attributes.uv;
       for (let k = 0; k < P.count; k += 3) { const a = [0, 1, 2].map(i => Math.atan2(P.getZ(k + i), P.getX(k + i))); // per triangle, so that no face runs backwards across the seam
         for (let i = 0; i < 3; i++) { const d = a[i] - a[0]; U.setXY(k + i, (a[i] - (d > Math.PI ? 6.2832 : d < -Math.PI ? -6.2832 : 0)) / Math.PI, 0.005 + 0.99 * P.getY(k + i) / 250); } }
       return G; },

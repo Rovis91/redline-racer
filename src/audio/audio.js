@@ -879,15 +879,15 @@ class WG { // wave guide: two delay lines (forward, back); a, b: reflection at t
 }
 const mix = (v, o, c) => c + (o - c) * v, TAU = 2 * Math.PI, PB = 1.5; // PB: weight of the direct exhaust puffs
 class Moteur extends AudioWorkletProcessor {
-  static get parameterDescriptors() { return [{ name: 'rpm', defaultValue: 900, minValue: 0, maxValue: 15000 }, { name: 'load', defaultValue: 0, minValue: 0, maxValue: 1 }, { name: 'dg', defaultValue: 0, minValue: 0, maxValue: 1 }]; } // dmgP: car damage (game.js), which detunes the ignition
-  constructor() { super(); this.rev = 0; this.jit = 0; this.bl = 0; this.pf = 0; this.dx = 0; this.dy = 0; this.vit = true; this.port.onmessage = e => { if (e.data && e.data.dort !== undefined) this.dort = e.data.dort; else if (e.data) this.cfg(e.data); else this.vit = false; }; } // asleep: vehicle inaudible, nothing is computed (the output stays at zero)
+  static get parameterDescriptors() { return [{ name: 'rpm', defaultValue: 900, minValue: 0, maxValue: 15000 }, { name: 'load', defaultValue: 0, minValue: 0, maxValue: 1 }, { name: 'dmg', defaultValue: 0, minValue: 0, maxValue: 1 }]; } // dmgP: car damage (game.js), which detunes the ignition
+  constructor() { super(); this.rev = 0; this.jit = 0; this.bl = 0; this.pf = 0; this.dx = 0; this.dy = 0; this.vit = true; this.port.onmessage = e => { if (e.data && e.data.asleep !== undefined) this.asleep = e.data.asleep; else if (e.data) this.cfg(e.data); else this.vit = false; }; } // asleep: vehicle inaudible, nothing is computed (the output stays at zero)
   cfg(P) { const k = sampleRate / 44100, L = x => Math.max(2, Math.round(x * k));
     this.ign = P.ign; this.irr = P.irr; this.off = P.off || Array.from({ length: P.n }, (_, i) => i / P.n);
     this.C = this.off.map(() => ({ k: 1 + P.irr * (Math.random() * 2 - 1), f: 1, x0: 1, cy: new WG(L(10), 0.75, 0.75), in: new WG(L(P.int), 0.01, 0.95), ex: new WG(L(P.exh), 0.95, 0.01), xt: new WG(L(P.ext), 0.01, 0.01) }));
     this.st = new WG(L(P.str), 0.01, 0.01); this.mu = P.muf.map(x => new WG(L(x), 0.01, 0.01)); this.ou = new WG(L(P.out), 0.01, 0.01); }
   process(_, outs, par) {
-    if (!this.C || this.dort) return this.vit; // no configuration yet, or asleep
-    const o = outs[0][0], R = par.rpm, LD = par.load, dg = par.dg[0], C = this.C, n = C.length, m = this.mu.length, kb = 1 - Math.exp(-TAU * 125 / sampleRate), kp = 1 - Math.exp(-TAU * 4000 / sampleRate);
+    if (!this.C || this.asleep) return this.vit; // no configuration yet, or asleep
+    const o = outs[0][0], R = par.rpm, LD = par.load, dg = par.dmg[0], C = this.C, n = C.length, m = this.mu.length, kb = 1 - Math.exp(-TAU * 125 / sampleRate), kp = 1 - Math.exp(-TAU * 4000 / sampleRate);
     for (let s = 0; s < o.length; s++) {
       const rpm = R.length > 1 ? R[s] : R[0], ld = LD.length > 1 ? LD[s] : LD[0], ig = 5 * (0.2 + 0.8 * ld);
       this.rev = (this.rev + rpm / 120 / sampleRate) % 1; this.jit += (Math.random() * 0.006 - this.jit) * 0.003; // crankshaft, and the slight wobble of a real engine
@@ -912,7 +912,7 @@ class Moteur extends AudioWorkletProcessor {
     return this.vit;
   }
 }
-registerProcessor('moteur', Moteur);`;
+registerProcessor('engine', Moteur);`;
   let modOk = false, modP = Promise.resolve();
   function plug(v) { // the physical engine arrives once the module is loaded (a moment after init)
     try { const n = new AudioWorkletNode(AC, 'engine', { numberOfInputs: 0, outputChannelCount: [1] }); n.connect(v.eng); v.node = n; v.typ = null;
@@ -994,10 +994,13 @@ registerProcessor('moteur', Moteur);`;
       const fzOut = gain(0.3, gate), fe = filt('peaking', 1000, 1, filt('lowpass', 2600, 0.7, fzOut)); fe.gain.value = 5; const fzIn = gain(6, shaper(8, fe)); // one guitar amp per part, like fuzz
       strip[k] = { in: Object.assign(gain(MX[k], gate), { fz: fzIn }), fzIn, fzOut, gate, pan, rv, ec, ch, lp, hp }; }
   }
-  function initAudio(ctx) { // ctx: offline context for measuring levels (listening bench); with no argument, the browser's audio context
-    if (AC && live && !ctx) return AC.resume();
+  let radioAssetsPending = false;
+  function initAudio(ctx, preparatory = false) { // Bootstrap prepares the suspended graph; gestures only resume it. Sampled radio notes wait for race preparation.
+    if (AC && live && !ctx) { if (radioAssetsPending && !preparatory) { radioAssetsPending = false; readyMs = Promise.all([readyMs, loadRadios(ST)]); } return AC.resume(); }
     if (AC && live) AC.close();
     AC = ctx || new (window.AudioContext || window.webkitAudioContext)(); live = !ctx;
+    // every source cuts itself loose when it ends: otherwise its chain (envelope, filters) stays wired to the buses until GC, and the audio thread keeps processing thousands of finished notes (piliers: 1,900 to 2,700 dropouts per race, 25 to 35 times fewer with this)
+    for (const k of ['createOscillator', 'createBufferSource', 'createConstantSource']) { const f = AC[k].bind(AC); AC[k] = () => { const n = f(); n.addEventListener('ended', () => n.disconnect()); return n; }; }
     masterComp = AC.createDynamicsCompressor(); outG = gain(OUT, AC.destination); masterComp.connect(outG);
     vu = AC.createAnalyser(); vu.fftSize = 2048; outG.connect(vu); // what actually comes out, for the listening bench's VU meter
     lastHit = 0; lastMus = -9; ambT = 2; rubT = satT = turntable = 0; bigS = false; lastFill = lastRoll = -9; exitAt = -1; grit = tens = 0; glisse = acquired = acqSaid = boostPend = boostL = false; for (const p in was) was[p] = false; drums = 0; mix = inten = driftL = 0; ending = inZone = false; // a new context restarts from stopped
@@ -1029,7 +1032,7 @@ registerProcessor('moteur', Moteur);`;
     })));
     modOk = false; const ac0 = AC, url = URL.createObjectURL(new Blob([MOTOR_JS], { type: 'application/javascript' }));
     modP = AC.audioWorklet ? AC.audioWorklet.addModule(url).then(() => { if (AC !== ac0) return; modOk = true; for (const v of [...VX, ...AU]) plug(v); }, () => { }) : Promise.resolve(); // without AudioWorklet: no engine, the rest plays
-    readyMs = Promise.all([readyMs, modP, loadRadios(ST)]);
+    radioAssetsPending = preparatory; readyMs = Promise.all([readyMs, modP, preparatory ? Promise.resolve() : loadRadios(ST)]);
     const ns = AC.createBufferSource(); ns.buffer = nbuf; ns.loop = true; ns.start();
     gbuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate); // gravel: tight 7 ms impacts, played faster with speed
     { const x = gbuf.getChannelData(0); let a = 0; for (let i = 0; i < x.length; i++) { if (Math.random() < 0.012) a = 0.3 + 0.7 * Math.random(); x[i] = (Math.random() * 2 - 1) * a; a *= 0.997; } }
@@ -1049,7 +1052,8 @@ registerProcessor('moteur', Moteur);`;
     const aq = gain(0, V.rainFx); ns.connect(filt('lowpass', 450, 0.6, aq));
     rainFx = { rid, rl, aq };
     buildAmb(); retune(AC.currentTime + 0.1); tuneG.gain.value = lvl();
-    if (live) { AC.resume(); timer = timer || setInterval(() => live && pump(), 30); }
+    if (live) { preparatory ? AC.suspend() : AC.resume(); timer = timer || setInterval(() => live && pump(), 30); }
+    return readyMs;
   }
   const beep = f => AC && osc('square', f, AC.currentTime, 0.25, 0.2, V.ui);
   const VOY = [[730, 1090], [270, 2290], [300, 870], [530, 1840], [570, 840]]; // formants of the vowels a, i, ou, è, o
@@ -1232,7 +1236,7 @@ registerProcessor('moteur', Moteur);`;
   document.addEventListener('visibilitychange', () => { if (AC && live) document.hidden ? AC.suspend() : AC.resume(); }); // no choppy music or frozen engine in the background
   window.SOUND = {
     spots, brief: spotHit, spotsState: () => SPOTS.map(l => [l.sound, l.g ? +(l.g.gain.vv || 0).toFixed(3) : null]), // scenery sources; spotsState: test tap (target level of each source)
-    init: initAudio, frame: audioFrame, setStation, mapDef, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrival, quitGame, reprendre,
+    init: initAudio, prepare: () => initAudio(undefined, true), initMenu: () => initAudio(undefined, true), frame: audioFrame, setStation, mapDef, pump, mix: mixer, dj: djSt, beep, radio, stinger, arrival, quitGame, reprendre,
     crash: () => AC && crash(),
     thunder: () => { if (!AC) return; const t = AC.currentTime + 0.4; nz(t, 2.4, 0.5, V.amb, 'lowpass', 140); nz(t, 1.2, 0.12, V.amb, 'bandpass', 600, 0.6); }, // rumble + crackle in the mids
     toggleMusic() { musicOn = !musicOn; if (AC) musicG.gain.value = musicOn ? 1 : 0; },

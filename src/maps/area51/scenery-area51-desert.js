@@ -11,10 +11,11 @@
   const taken = [], bx = new THREE.Box3(); kit.updateMatrixWorld(true);
   for (const o of kit.children) { bx.setFromObject(o); if (bx.max.x - bx.min.x < 500 && bx.max.z - bx.min.z < 500) taken.push([bx.min.x - 3, bx.max.x + 3, bx.min.z - 3, bx.max.z + 3]); }
   const BUILT = [[1380, 2620, 690, 1050]], inBox = (x, z, L) => L.some(([x0, x1, z0, z1]) => x > x0 && x < x1 && z > z0 && z < z1); // the hangar row and its yards
+  const occupied = PLACERS.boxMask(taken);
   const plant = (shape, x, z, r, skin, sink = 0) => set(shape, x, z, { a: [Math.round(r * 4) / 4, hash(x, z, 5) * 8 | 0], skin, ry: hash(x, z, 6) * 6.28, dy: -sink });
   const [X0, Z0, X1, Z1] = g.box, C = 8;
   for (let cz = Z0; cz < Z1; cz += C) for (let cx = X0; cx < X1; cx += C) { const x = (cx + hash(cx, cz, 1) * C) / k, z = (cz + hash(cx, cz, 2) * C) / k, i = near(h, x * k, z * k), s = S[i], d = Math.hypot(s.x - x * k, s.z - z * k) - s.w, u = hash(cx, cz, 3), v = hash(cx, cz, 4);
-    if (d < 3.5 || d > 330 || (i > t0 - 25 && i < t1 + 25 && d < 150) || inBox(x, z, FLATS) || inBox(x, z, BUILT) || inBox(x * k, z * k, taken)) continue;
+    if (d < 3.5 || d > 330 || (i > t0 - 25 && i < t1 + 25 && d < 150) || inBox(x, z, FLATS) || inBox(x, z, BUILT) || occupied(x * k, z * k)) continue;
     const y = g.hAt(x * k, z * k), slope = (Math.abs(g.hAt(x * k + 3, z * k) - g.hAt(x * k - 3, z * k)) + Math.abs(g.hAt(x * k, z * k + 3) - g.hAt(x * k, z * k - 3))) / 6, w = wash(x, z), grove = patch(x, z, 140, 1), tuft = 0.3 + patch(x, z, 45, 2);
     if (slope > 1.1) continue;
     if (w > 0.7) { if (u < 0.3) plant('caillouArea51', x, z, 0.4 + v * 0.7, MAT.rock, 0.1); continue; }                                  // the bed: washed stones only
