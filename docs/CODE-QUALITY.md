@@ -55,15 +55,15 @@ Each map is a `launchGame` instance that can be suspended and resumed without re
 
 ## Performance rules
 
-Budgets and how to measure are in [ARCHITECTURE.md](ARCHITECTURE.md#performance-budgets). After touching rendering or scenery, run `node tools/bench-quick.js [map]`. Draw calls and vertices are the numbers to compare; milliseconds are noisy. Do not undo these:
+Budgets and how to measure are in [ARCHITECTURE.md](ARCHITECTURE.md#performance-budgets). After touching rendering or scenery, run `node tools/bench-quick.js --points [map]` before and after, back to back (A-B-A when the gain is close to the noise). Draw calls and vertices are the numbers to compare; milliseconds are noisy. Do not undo these:
 
 - **Static scenery is merged** into one mesh per material. Anything that moves, animates or toggles visibility must carry `userData.dyn = 1` (itself or a parent), including a moving `InstancedMesh`; `(await import('./tools/perf.js')).movables()` lists the ones you missed. A static object must not carry `dyn`.
 - One material per tint makes one draw call per tint: share materials with the same settings (but still call `h.mat`, see Determinism). An emissive material is not shared between a small and a large object.
-- Fewer vertices: no detail smaller than a pixel at 270 lines; low segment counts; remove what is far or hidden by terrain; faces hidden by a neighbour or the ground go.
+- Fewer vertices: no detail smaller than a pixel at 270 lines; far copies of a shape get their own lighter version (piliers' far needles: 27 m beds instead of 9 m, a third of the triangles); low segment counts; remove what is far or hidden by terrain; faces hidden by a neighbour or the ground go.
 - `castShadow` only where it shows. Moving shadow casters go on the `SHDD` / `SHDI` layers; static shadows are redrawn only when the light steps.
 - Everything is compiled and uploaded at load (`renderer.compileAsync`, 8 × 8 warm-up frame): no material or texture should appear for the first time mid-race.
 - No arrays or objects allocated per frame in per-particle or per-drop loops (garbage-collector hitches). Empty particle clouds are hidden.
-- Sound: one-shot sounds create their nodes after the frame (`defer`), bursts of short hits go into a buffer, and an audio parameter is sent only when it changed (`setParam`). Never create hundreds of nodes in one frame.
+- Sound: one-shot sounds create their nodes after the frame (`defer`), bursts of short hits go into a buffer, and an audio parameter is sent only when it changed (`setParam`). Never create hundreds of nodes in one frame. Every source disconnects itself when it ends (set on the context in `initAudio`): a finished chain left wired is still processed by the audio thread until GC. Nodes are only freed by a major GC, thousands at once, which itself causes dropouts: fewer nodes per note is the next lever (a unity gain is not a node to create).
 - Load size: keep heavy files out of `index.html` (they load on demand); new Japanese text means rerunning `python -I tools/font.py` (`tests/test-font.js` checks it).
 
 ## UI text
