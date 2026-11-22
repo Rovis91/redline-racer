@@ -3,6 +3,8 @@
 //   node tools/bench-quick.js paris canal     → these maps
 //   node tools/bench-quick.js --profile touge  → verdict, then profile (tools/profReport.js): per pass, per twentieth of track, per scenery object, worst frames, sound.
 //                                                 Writes captures/profil-<carte>.json and compares with the map's previous profile (captures/profil-<carte>.prevRun.json).
+//   --points: the fast bench, pointRun() from tools/perf.js: 20 fixed spots per map, 30 frames each, GPU drained between frames (seconds per map, no lap).
+//            Line: median of the dearest spot, worst frame, first frames arriving at a spot (shader compiles), draw passes. Details per spot in captures/bench-points[2].json
 //   --regularity: adds motion regularity (judder) at 60, 120 and 144 Hz, regularity() from tools/perf.js, against REGULARITY (machine-independent)
 //   --players=2: split screen (budget(2))      --window: Chrome with a window off-screen instead of windowless      --close: closes the kept Chrome, then exits
 // Noise: a shared machine skews timings (not draw passes nor vertices). A failing map is measured once more: PASS, FAIL (twice), or UNSTABLE (one time in two),
@@ -56,6 +58,19 @@ const exitAt = n => path.join(REPO_ROOT, 'captures', n);
   const lapRun = async () => { const a = loadTest(); const r = await evalExpr('(async () => { const P = await import("./tools/perf.js"); const r = await P.lapRun(); r.B = P.budget(' + J + '); return r; })()'); r.loadTest = pct(a, loadTest()); return r; };
   const good = r => r.frame99 <= r.B.frame99 && r.frameMax <= r.B.frameMax; // the verdict: p99 and worst frame (larger of CPU and GPU); the draw passes (drawCallsMax) are shown, marked ✗ above BUDGET.drawCalls
   const line = r => [(r.ms.toFixed(2) + ' ms').padEnd(9), ('p99 ' + r.frame99.toFixed(1) + (r.frame99 > r.B.frame99 ? '✗' : '')).padEnd(9), ('pire ' + r.frameMax.toFixed(1) + (r.frameMax > r.B.frameMax ? '✗' : '')).padEnd(10), ('appels ' + r.drawCallsMax + (r.drawCallsMax > r.B.drawCalls ? '✗' : '')).padEnd(11), ('charge ' + r.loadTest + '%').padEnd(10)].join(' ');
+  if (opt('points')) {
+    const all = []; let okP = 0;
+    for (const c of mapDefs) {
+      try {
+        await load1(c, false); const a = loadTest(), r = await evalExpr('(async () => { const P = await import("./tools/perf.js"); const r = await P.pointRun(); r.B = P.budget(' + J + '); return r; })()'); r.loadTest = pct(a, loadTest()); okP += r.ok;
+        const hot = [...r.points].sort((x, y) => y.ms - x.ms).slice(0, 3).map(p => '@' + p.idx + ' ' + p.ms + ' (cpu ' + p.cpu + ' gpu ' + p.gpu + ', ' + p.drawCalls + ' app)').join(' · ');
+        console.log(c.padEnd(9), (r.ok ? 'OK' : 'FAILED').padEnd(7), ('moy ' + r.ms.toFixed(2)).padEnd(9), ('pire point ' + r.msWorst.toFixed(1) + (r.msWorst > r.B.frame99 ? '✗' : '')).padEnd(16), ('pire ' + r.max.toFixed(1) + (r.max > r.B.frameMax ? '✗' : '')).padEnd(10), ('arrivée ' + r.first.toFixed(0) + ' (' + r.compiled + ' shaders)').padEnd(22), ('appels ' + r.drawCallsMax + (r.drawCallsMax > r.B.drawCalls ? '✗' : '')).padEnd(12), 'charge ' + r.loadTest + '%', ' | ' + hot);
+        all.push(r);
+      } catch (e) { console.log(c.padEnd(9), 'NO RESULT:', e.message.split('\n')[0]); all.push({ mapDef: c, errorMsg: e.message }); }
+    }
+    fs.mkdirSync(exitAt(''), { recursive: true }); fs.writeFileSync(exitAt('bench-points' + (J > 1 ? '2' : '') + '.json'), JSON.stringify(all, null, 1));
+    console.log('\n' + okP + '/' + mapDefs.length + ' maps in the reference'); ws.close(); await req('http://127.0.0.1:' + DBG + '/json/close/' + t.id).catch(() => { }); process.exit(okP === mapDefs.length ? 0 : 1);
+  }
   const everything = []; let ok = 0;
   for (const c of mapDefs) {
     let res;

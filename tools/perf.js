@@ -9,11 +9,13 @@ export const BUDGET = { drawCalls: 300, frame99: 16.7, frameMax: 25 };
 // with n views: n times the solo draw passes; the frame (all views) holds the same 60 Hz target
 export const budget = n => n > 1 ? { ...BUDGET, drawCalls: BUDGET.drawCalls * n } : BUDGET;
 const yieldNow = () => new Promise(r => { const c = new MessageChannel(); c.port1.onmessage = r; c.port2.postMessage(0); }); // a setTimeout would be throttled to 1 per second in the background
+// the game's own loop is held during a measurement: each time the bench yields, a pending requestAnimationFrame would run an extra frame (real timestamps) whose rendering lands in the next timed frame
+const holdLoop = () => { const raf = window.requestAnimationFrame; let held = null; window.requestAnimationFrame = cb => { held = cb; return 0; }; return () => { window.requestAnimationFrame = raf; if (held) raf(held); }; };
 
 export async function lapRun({ images = 0 } = {}) {
   const g = window.__g, gl = g.renderer.getContext(), N = g.T.n, info = g.renderer.info, ext = gl.getExtension('EXT_disjoint_timer_query_webgl2');
   if (g.mode !== 'raceCase') throw new Error('switch to race mode in the menu');
-  g.start(); info.autoReset = false;
+  g.start(); info.autoReset = false; const release = holdLoop();
   // GPU time of each frame: one timer query around frame(), read back a few frames later (a GPU spike on one frame is not diluted in a batch)
   const gq = [], gpu = [], readQ = () => { while (gq.length && gl.getQueryParameter(gq[0][0], gl.QUERY_RESULT_AVAILABLE)) { const [qq, i] = gq.shift(); gpu[i] = gl.getParameter(ext.GPU_DISJOINT_EXT) ? 0 : gl.getQueryParameter(qq, gl.QUERY_RESULT) / 1e6; gl.deleteQuery(qq); } };
   // nothing goes to the screen during the measurement: the final pass is drawn to an offscreen target of the same imgSize. Otherwise the browser locks drawing to the display
@@ -39,7 +41,7 @@ export async function lapRun({ images = 0 } = {}) {
   }
   for (let i = 0; i < 100 && gq.length; i++) { await new Promise(r => setTimeout(r, 10)); readQ(); }
   const frames = cpu.map((c, i) => Math.max(c, gpu[i] || 0));
-  info.autoReset = true; g.renderer.setRenderTarget = outTarget; outOf.dispose(); unwrap.forEach(f => f());
+  info.autoReset = true; g.renderer.setRenderTarget = outTarget; outOf.dispose(); unwrap.forEach(f => f()); release();
   const avg = a => a.reduce((s, v) => s + v, 0) / a.length, q = (a, p) => { const t = [...a].sort((x, y) => x - y); return +t[Math.min(t.length - 1, Math.floor(t.length * p))].toFixed(2); };
   const worstList = (a, o) => a.map((v, i) => [v, i]).sort((x, y) => y[0] - x[0]).slice(0, 4).map(([v, i]) => o[i] + ':' + v.toFixed(1)); // "track sample: ms" of the worst ones
   const sect = (a, o, k) => Array.from({ length: 10 }, (_, s) => { const l = a.filter((_, i) => Math.floor(o[i] * 10 / N) === s); return l.length ? +k(l).toFixed(1) : 0; }); // per tenth of track: where it costs
@@ -48,6 +50,45 @@ export async function lapRun({ images = 0 } = {}) {
     drawCalls: Math.round(avg(drawCalls)), drawCallsMax: Math.max(...drawCalls), tris: Math.round(avg(tris)), trisMax: Math.max(...tris),
     worstBatches: worstList(batch, whereBatch), worstCpu: frames.map((v, i) => [v, i]).sort((x, y) => y[0] - x[0]).slice(0, 6).map(([v, i]) => where[i] + ':' + v.toFixed(1) + ' (cpu ' + cpu[i].toFixed(1) + ' gpu ' + (gpu[i] || 0).toFixed(1) + ', ' + parts[i] + ')'), sectMs: sect(batch, whereBatch, avg), sectCalls: sect(drawCalls, where, l => Math.max(...l)) };
   const B = budget(nv); r.ok = r.drawCallsMax <= B.drawCalls && r.frame99 <= B.frame99 && r.frameMax <= B.frameMax;
+  return r;
+}
+
+// Fixed points: the fast bench (seconds per map instead of a lap). The car is set down at `points` evenly spaced spots of the track, as in tools/plan.js, the autopilot drives
+// the last 16 m (the chase camera settles), then `frames` frames are measured one by one. Before each one the GPU is drained (1-pixel read): each frame pays only for itself,
+// like in the game where the screen paces frames, instead of the backlog of earlier frames that an unsynced lap piles onto random frames.
+// Per point: median and worst frame (larger of CPU and GPU), draw passes, triangles; first: the frames while arriving at the spot, where newly seen scenery compiles its shaders.
+// Misses what only time shows (GC, leaks, sound, a hitch between two points): that is lapRun() on the reference maps and tools/live.js.
+export async function pointRun({ points = 20, frames = 30 } = {}) {
+  const g = window.__g, gl = g.renderer.getContext(), N = g.T.n, info = g.renderer.info, ext = gl.getExtension('EXT_disjoint_timer_query_webgl2');
+  if (g.mode !== 'raceCase') throw new Error('switch to race mode in the menu');
+  g.start(); info.autoReset = false; const release = holdLoop();
+  const cv = g.renderer.domElement, outOf = new THREE.WebGLRenderTarget(cv.width, cv.height), outTarget = g.renderer.setRenderTarget.bind(g.renderer), nv = g.views.length;
+  g.renderer.setRenderTarget = t => { if (!t && nv > 1) { const k = g.renderer.getPixelRatio(); g.renderer.getViewport(outOf.viewport).multiplyScalar(k); g.renderer.getScissor(outOf.scissor).multiplyScalar(k); outOf.scissorTest = g.renderer.getScissorTest(); } outTarget(t || outOf); };
+  const px = new Uint8Array(4), sync = () => { g.renderer.setRenderTarget(outOf); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); };
+  let now = performance.now() + 1e7; const one = () => { info.reset(); const t = performance.now(); g.frame(now += 1000 / 60); return performance.now() - t; };
+  while (g.state !== 'race') one();
+  for (let i = 0; i < 120; i++) one();
+  const med = a => [...a].sort((x, y) => x - y)[a.length >> 1], out = [];
+  for (let p = 0; p < points; p++) {
+    const i = Math.round((p + 0.5) * N / points) % N, i0 = (i - 8 + N) % N, s = g.T.S[i0], c = g.car;
+    Object.assign(c, { x: s.x, y: s.y, z: s.z, th: Math.atan2(s.tz, s.tx), vx: s.tx * 22, vz: s.tz * 22, idx: i0, dist: i0, d: 0, yaw: 0, steer: 0, vy: 0, air: false, drift: false, slide: 0, hit: 0, stun: 0 });
+    const np = info.programs.length; let first = 0; sync();
+    for (let k = 0; k < 120 && c.idx !== i && (i - c.idx + N) % N < 20; k++) { first = Math.max(first, one()); sync(); }
+    const f = [], dc = [], tr = [];
+    for (let k = 0; k < frames; k++) {
+      sync(); const q = ext && gl.createQuery(); if (q) gl.beginQuery(ext.TIME_ELAPSED_EXT, q); const cpu = one(); if (q) gl.endQuery(ext.TIME_ELAPSED_EXT); sync();
+      let gpu = 0; if (q) { for (let w = 0; w < 50 && !gl.getQueryParameter(q, gl.QUERY_RESULT_AVAILABLE); w++) await new Promise(r => setTimeout(r, 1)); gpu = gl.getParameter(ext.GPU_DISJOINT_EXT) ? 0 : gl.getQueryParameter(q, gl.QUERY_RESULT) / 1e6; gl.deleteQuery(q); }
+      f.push([cpu, gpu]); dc.push(info.render.calls); tr.push(info.render.triangles);
+    }
+    const cost = f.map(([a, b]) => Math.max(a, b));
+    out.push({ idx: i, ms: +med(cost).toFixed(2), max: +Math.max(...cost).toFixed(2), cpu: +med(f.map(x => x[0])).toFixed(2), gpu: +med(f.map(x => x[1])).toFixed(2), first: +first.toFixed(1), compiled: info.programs.length - np, drawCalls: Math.max(...dc), ktris: Math.round(Math.max(...tr) / 1000) });
+    await new Promise(r => setTimeout(r, 0));
+  }
+  info.autoReset = true; g.renderer.setRenderTarget = outTarget; outOf.dispose(); release();
+  const worst = [...out].sort((a, b) => b.ms - a.ms), B = budget(nv);
+  const r = { mapDef: g.M.id, views: nv, points: out, ms: +(out.reduce((s, p) => s + p.ms, 0) / out.length).toFixed(2), msWorst: worst[0].ms, msWorstAt: worst[0].idx, max: Math.max(...out.map(p => p.max)),
+    first: Math.max(...out.map(p => p.first)), compiled: out.reduce((s, p) => s + p.compiled, 0), drawCallsMax: Math.max(...out.map(p => p.drawCalls)), ktrisMax: Math.max(...out.map(p => p.ktris)), gpuTimer: !!ext };
+  r.ok = r.msWorst <= B.frame99 && r.max <= B.frameMax; // the dearest point must hold 60 Hz in its median, and no measured frame may pass 25 ms
   return r;
 }
 
