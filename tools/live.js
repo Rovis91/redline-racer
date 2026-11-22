@@ -6,7 +6,8 @@
 // Per map: intervals between displayed frames (p99 and worst against 16.7 and 25 ms), game work per frame, long tasks, GC pauses (trace), JS heap,
 // live audio nodes (created minus destroyed, DevTools WebAudio domain), sound dropouts (AudioContext.playbackStats underruns) and audio clock stalls.
 // Verdict per map against the player's target (BUDGET of tools/perf.js): 99% of frame intervals ≤ 16.7 ms, none above 25 ms, no dropout, no stall.
-// The machine must stay awake and the window on screen: a screen that turns off stops both the frames and the audio clock.
+// The machine must stay awake and the window on screen: a screen that turns off stops both the frames and the audio clock. Spans where the page was hidden
+// (locked screen, minimised window: the game suspends its sound) are left out of every figure and reported as "page hidden"; underruns are then counted per 500 ms sample.
 // Results: captures/live.json. Variables: CHROME, PORT (8851, tools/capture.py server, shared with bench-quick.js), DBG (9420).
 const { spawn } = require('child_process'), fs = require('fs'), path = require('path'), http = require('http'), os = require('os');
 const REPO_ROOT = path.join(__dirname, '..'), PORT = +process.env.PORT || 8851, DBG = +process.env.DBG || 9420, BASE = 'http://127.0.0.1:' + PORT + '/index.html';
@@ -18,9 +19,10 @@ const asleep = ms => new Promise(r => setTimeout(r, ms)), responds = async u => 
 const load = () => { const c = os.cpus(); return [c.reduce((s, x) => s + x.times.idle, 0), c.reduce((s, x) => s + Object.values(x.times).reduce((a, b) => a + b, 0), 0)]; };
 const pct = (a, b) => Math.round(100 * (1 - (b[0] - a[0]) / (b[1] - a[1])));
 // in the page, before the game: every animation frame is stamped (timestamp, work time, car sample), long tasks are kept
-const PROBE = `(() => { const L = window.__live = { f: [], lt: [] }, raf = window.requestAnimationFrame.bind(window);
+const PROBE = `(() => { const L = window.__live = { f: [], lt: [], h: [] }, raf = window.requestAnimationFrame.bind(window);
   window.requestAnimationFrame = cb => raf(ts => { const a = performance.now(); try { cb(ts); } finally { const g = window.__g, l = L.f[L.f.length - 1]; if (l && l[0] === ts) l[1] += performance.now() - a; else L.f.push([ts, performance.now() - a, g && g.car ? g.car.idx : -1]); } });
-  try { new PerformanceObserver(l => { for (const e of l.getEntries()) L.lt.push([Math.round(e.startTime), Math.round(e.duration)]); }).observe({ type: 'longtask' }); } catch (e) { } })();`;
+  try { new PerformanceObserver(l => { for (const e of l.getEntries()) L.lt.push([Math.round(e.startTime), Math.round(e.duration)]); }).observe({ type: 'longtask' }); } catch (e) { }
+  document.addEventListener('visibilitychange', () => { if (document.hidden) L.h.push([performance.now(), null, Date.now(), null]); else { const x = L.h[L.h.length - 1]; if (x && x[1] == null) { x[1] = performance.now(); x[3] = Date.now(); } } }); })();`; // h: spans where the page was hidden (screen locked, window minimised): the game then pauses itself, they are left out
 
 (async () => {
   const unknown = maps.filter(c => !ids.includes(c)); if (unknown.length || !maps.length && !CHAIN) { console.log('maps: ' + ids.join(', ')); process.exit(2); }
@@ -57,32 +59,34 @@ const PROBE = `(() => { const L = window.__live = { f: [], lt: [] }, raf = windo
     }
     return s;
   };
-  const summary = (tag, s, f, lt, gc, ps0, ps1, cpu) => {
-    const iv = []; for (let i = 1; i < f.length; i++) iv.push(f[i][0] - f[i - 1][0]);
-    const worst = iv.map((v, i) => [v, f[i + 1][2], f[i + 1][1]]).sort((a, b) => b[0] - a[0]).slice(0, 5).map(([v, x, w]) => x + ':' + v.toFixed(0) + 'ms(work ' + w.toFixed(1) + ')');
-    const stalls = []; for (let i = 1; i < s.length; i++) if (s[i].ac != null && s[i - 1].ac != null) { const r = (s[i].ac - s[i - 1].ac) / ((s[i].t - s[i - 1].t) / 1000); if (r < 0.9) stalls.push(+r.toFixed(2)); }
+  const summary = (tag, s, f, lt, gc, ps0, ps1, cpu, H = []) => {
+    // a span overlapping a hidden period (plus 1 s after it: resuming) is left out; k: 0 = page clock, 2 = wall clock
+    const hid = (a, b, k) => H.some(h => a < (h[k + 1] == null ? Infinity : h[k + 1] + 1000) && b > h[k]), hiddenS = +H.reduce((t, h) => t + ((h[3] == null ? Date.now() : h[3]) - h[2]) / 1000, 0).toFixed(1);
+    const iv = []; for (let i = 1; i < f.length; i++) if (!hid(f[i - 1][0], f[i][0], 0)) iv.push(f[i][0] - f[i - 1][0]);
+    const worst = f.slice(1).map((x, i) => [x[0] - f[i][0], x[2], x[1], hid(f[i][0], x[0], 0)]).filter(x => !x[3]).sort((a, b) => b[0] - a[0]).slice(0, 5).map(([v, x, w]) => x + ':' + v.toFixed(0) + 'ms(work ' + w.toFixed(1) + ')');
+    const stalls = []; for (let i = 1; i < s.length; i++) if (s[i].ac != null && s[i - 1].ac != null && !hid(s[i - 1].t, s[i].t, 2)) { const r = (s[i].ac - s[i - 1].ac) / ((s[i].t - s[i - 1].t) / 1000); if (r < 0.9) stalls.push(+r.toFixed(2)); }
     const heap = s.map(x => x.heap), nd = s.map(x => x.nodes);
     const r = { map: tag, frames: f.length, seconds: f.length ? +((f[f.length - 1][0] - f[0][0]) / 1000).toFixed(1) : 0, p50: q(iv, 0.5), p99: q(iv, 0.99), max: q(iv, 1), over16: iv.filter(v => v > 16.7 * 1.25).length, over25: iv.filter(v => v > 25).length,
       work99: q(f.map(x => x[1]), 0.99), workMax: q(f.map(x => x[1]), 1), worst, longTasks: lt.length, longMax: lt.reduce((m, x) => Math.max(m, x[1]), 0),
       gc: gc.length, gcMs: +gc.reduce((t, x) => t + x[1], 0).toFixed(1), gcMax: +gc.reduce((m, x) => Math.max(m, x[1]), 0).toFixed(1), gcOver4: gc.filter(x => x[1] > 4).length,
       audioStalls: stalls,
-      underruns: ps1 && ps0 ? { events: (ps1.underrunEvents || 0) - (ps0.underrunEvents || 0), ms: +(((ps1.underrunDuration || 0) - (ps0.underrunDuration || 0)) * 1000).toFixed(1) } : null,
-      heap0: +(heap[0] || 0).toFixed(1), heap1: +(heap[heap.length - 1] || 0).toFixed(1), heapMax: +Math.max(0, ...heap).toFixed(1), nodes0: nd[0], nodes1: nd[nd.length - 1], nodesMax: Math.max(0, ...nd), cpuLoad: cpu, series: s.map(x => [x.idx, x.ur, x.ac == null ? null : +x.ac.toFixed(1), x.nodes, +x.heap.toFixed(1)]) };
+      underruns: ps1 && ps0 ? { events: H.length && s.every(x => x.ur != null) ? s.slice(1).reduce((t, x, i) => t + (hid(s[i].t, x.t, 2) ? 0 : x.ur - s[i].ur), 0) : (ps1.underrunEvents || 0) - (ps0.underrunEvents || 0), ms: +(((ps1.underrunDuration || 0) - (ps0.underrunDuration || 0)) * 1000).toFixed(1) } : null,
+      heap0: +(heap[0] || 0).toFixed(1), heap1: +(heap[heap.length - 1] || 0).toFixed(1), heapMax: +Math.max(0, ...heap).toFixed(1), nodes0: nd[0], nodes1: nd[nd.length - 1], nodesMax: Math.max(0, ...nd), cpuLoad: cpu, hiddenS, series: s.map(x => [x.idx, x.ur, x.ac == null ? null : +x.ac.toFixed(1), x.nodes, +x.heap.toFixed(1)]) };
     r.ok = r.p99 <= 16.7 && r.max <= 25 && !stalls.length && !(r.underruns && r.underruns.events);
     console.log(tag.padEnd(10), (r.ok ? 'PASS' : 'FAIL').padEnd(5), 'p99 ' + r.p99 + ' max ' + r.max + ' ms, >20.8 ' + r.over16 + ', >25 ' + r.over25 + '/' + r.frames + ' | work p99 ' + r.work99 + ' max ' + r.workMax + ' | long ' + r.longTasks + ' (max ' + r.longMax + ') | GC ' + r.gc + ' ' + r.gcMs + ' ms max ' + r.gcMax +
-      ' | audio stalls ' + stalls.length + (r.underruns ? ' underruns ' + r.underruns.events + ' (' + r.underruns.ms + ' ms)' : '') + ' | heap ' + r.heap0 + '→' + r.heap1 + ' MB | nodes ' + r.nodes0 + '→' + r.nodes1 + ' (max ' + r.nodesMax + ') | load ' + cpu + '%');
+      ' | audio stalls ' + stalls.length + (r.underruns ? ' underruns ' + r.underruns.events + ' (' + r.underruns.ms + ' ms)' : '') + ' | heap ' + r.heap0 + '→' + r.heap1 + ' MB | nodes ' + r.nodes0 + '→' + r.nodes1 + ' (max ' + r.nodesMax + ') | load ' + cpu + '%' + (hiddenS ? ' | page hidden ' + hiddenS + ' s, left out' : ''));
     console.log(''.padEnd(10), 'worst: ' + worst.join(' · ')); return r;
   };
   const stats = () => ev('(() => { const a = window.__g && __g.ac; const p = a && a.playbackStats; return p ? JSON.parse(JSON.stringify(p.toJSON ? p.toJSON() : p)) : null; })()');
   const record = async (tag, until) => {
-    await ev('__live.f.length = 0, __live.lt.length = 0'); trace = []; if (!LIGHT) await cmd('Tracing.start', { categories: 'v8,disabled-by-default-v8.gc', options: 'record-continuously' });
+    await ev('__live.f.length = 0, __live.lt.length = 0, __live.h.length = 0'); trace = []; if (!LIGHT) await cmd('Tracing.start', { categories: 'v8,disabled-by-default-v8.gc', options: 'record-continuously' });
     if (CPU) { await cmd('Profiler.enable'); await cmd('Profiler.setSamplingInterval', { interval: 250 }); await cmd('Profiler.start'); }
     const ps0 = await stats().catch(() => null), c0 = load(), s = await sampling(until, tag), c1 = load(), ps1 = await stats().catch(() => null);
     const prof = CPU ? (await cmd('Profiler.stop')).result.profile : null;
     if (!LIGHT) await new Promise(r => { traceDone = r; cmd('Tracing.end'); }); const L = await ev('__live'); if (prof) busy(prof);
     // GC events come in trace microseconds (monotonic clock, same origin as performance.now in Chrome); we keep those inside the race
     const t0 = L.f.length ? L.f[0][0] : 0;
-    return summary(tag, s, L.f.slice(120), L.lt.filter(x => x[0] > t0 + 2000), trace, ps0, ps1, pct(c0, c1));
+    return summary(tag, s, L.f.slice(120), L.lt.filter(x => x[0] > t0 + 2000), trace, ps0, ps1, pct(c0, c1), L.h);
   };
   // long stretches without idle in the profile: what ran in them, by own time and by the outermost game function
   const busy = P => {
