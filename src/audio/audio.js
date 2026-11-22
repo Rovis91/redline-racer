@@ -879,15 +879,15 @@ class WG { // wave guide: two delay lines (forward, back); a, b: reflection at t
 }
 const mix = (v, o, c) => c + (o - c) * v, TAU = 2 * Math.PI, PB = 1.5; // PB: weight of the direct exhaust puffs
 class Moteur extends AudioWorkletProcessor {
-  static get parameterDescriptors() { return [{ name: 'rpm', defaultValue: 900, minValue: 0, maxValue: 15000 }, { name: 'load', defaultValue: 0, minValue: 0, maxValue: 1 }, { name: 'dg', defaultValue: 0, minValue: 0, maxValue: 1 }]; } // dmgP: car damage (game.js), which detunes the ignition
-  constructor() { super(); this.rev = 0; this.jit = 0; this.bl = 0; this.pf = 0; this.dx = 0; this.dy = 0; this.vit = true; this.port.onmessage = e => { if (e.data && e.data.dort !== undefined) this.dort = e.data.dort; else if (e.data) this.cfg(e.data); else this.vit = false; }; } // asleep: vehicle inaudible, nothing is computed (the output stays at zero)
+  static get parameterDescriptors() { return [{ name: 'rpm', defaultValue: 900, minValue: 0, maxValue: 15000 }, { name: 'load', defaultValue: 0, minValue: 0, maxValue: 1 }, { name: 'dmg', defaultValue: 0, minValue: 0, maxValue: 1 }]; } // dmgP: car damage (game.js), which detunes the ignition
+  constructor() { super(); this.rev = 0; this.jit = 0; this.bl = 0; this.pf = 0; this.dx = 0; this.dy = 0; this.vit = true; this.port.onmessage = e => { if (e.data && e.data.asleep !== undefined) this.asleep = e.data.asleep; else if (e.data) this.cfg(e.data); else this.vit = false; }; } // asleep: vehicle inaudible, nothing is computed (the output stays at zero)
   cfg(P) { const k = sampleRate / 44100, L = x => Math.max(2, Math.round(x * k));
     this.ign = P.ign; this.irr = P.irr; this.off = P.off || Array.from({ length: P.n }, (_, i) => i / P.n);
     this.C = this.off.map(() => ({ k: 1 + P.irr * (Math.random() * 2 - 1), f: 1, x0: 1, cy: new WG(L(10), 0.75, 0.75), in: new WG(L(P.int), 0.01, 0.95), ex: new WG(L(P.exh), 0.95, 0.01), xt: new WG(L(P.ext), 0.01, 0.01) }));
     this.st = new WG(L(P.str), 0.01, 0.01); this.mu = P.muf.map(x => new WG(L(x), 0.01, 0.01)); this.ou = new WG(L(P.out), 0.01, 0.01); }
   process(_, outs, par) {
-    if (!this.C || this.dort) return this.vit; // no configuration yet, or asleep
-    const o = outs[0][0], R = par.rpm, LD = par.load, dg = par.dg[0], C = this.C, n = C.length, m = this.mu.length, kb = 1 - Math.exp(-TAU * 125 / sampleRate), kp = 1 - Math.exp(-TAU * 4000 / sampleRate);
+    if (!this.C || this.asleep) return this.vit; // no configuration yet, or asleep
+    const o = outs[0][0], R = par.rpm, LD = par.load, dg = par.dmg[0], C = this.C, n = C.length, m = this.mu.length, kb = 1 - Math.exp(-TAU * 125 / sampleRate), kp = 1 - Math.exp(-TAU * 4000 / sampleRate);
     for (let s = 0; s < o.length; s++) {
       const rpm = R.length > 1 ? R[s] : R[0], ld = LD.length > 1 ? LD[s] : LD[0], ig = 5 * (0.2 + 0.8 * ld);
       this.rev = (this.rev + rpm / 120 / sampleRate) % 1; this.jit += (Math.random() * 0.006 - this.jit) * 0.003; // crankshaft, and the slight wobble of a real engine
@@ -912,7 +912,7 @@ class Moteur extends AudioWorkletProcessor {
     return this.vit;
   }
 }
-registerProcessor('moteur', Moteur);`;
+registerProcessor('engine', Moteur);`;
   let modOk = false, modP = Promise.resolve();
   function plug(v) { // the physical engine arrives once the module is loaded (a moment after init)
     try { const n = new AudioWorkletNode(AC, 'engine', { numberOfInputs: 0, outputChannelCount: [1] }); n.connect(v.eng); v.node = n; v.typ = null;
