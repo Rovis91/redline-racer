@@ -291,6 +291,7 @@
 
   function step(c, inp, T, dt) {
     const S = T.S, n = T.n;
+    c.rev = c.rev > 0 ? c.rev - dt : 0; c.slow = inp.gas > 0 && Math.abs(c.vf) < 2 && !c.rev ? (c.slow || 0) + dt : 0; // for the autopilot: time spent pushing without moving, and backing up left
     points(c, dt); // (before the step: c.hit still carries the impact of the previous step, trucks included)
     if (c.air) flies(c, inp, T.car, dt); else rolling(c, inp, T, dt);
     // position on the track + walls (impossible to cut: a completed lap is always valid)
@@ -394,6 +395,9 @@
   const CAM = { idx: 0, d: 0, vx: 0, vz: 0 }, lorry = (T, c) => Object.assign(CAM, { idx: T.cam.i, d: (Math.floor(c.dist / T.n) & 1 ? 1 : -1) * T.cam.d });
   function autopilot(c, T, lvl = 1, others = []) {
     const S = T.S, n = T.n, sp = Math.hypot(c.vx, c.vz), look = 3 + Math.floor(sp * 0.1);
+    // pinned against a box or another car (gas held under 2 m/s for 1.5 s, counted by step()): back up for 1.2 s, nose swinging toward the road
+    if (c.slow > 1.5) { c.slow = 0; c.rev = 1.2; }
+    if (c.rev > 0) { const la = S[(c.idx + 6) % n]; return { steer: -clamp(wrap(Math.atan2(la.z - c.z, la.x - c.x) - c.th) * 3, -1, 1), gas: 0, brake: 1, hand: false }; }
     let off = 0, vcap = 1e9, best = 1e9;
     for (const o of T.cam ? [...others, lorry(T, c)] : others) {
       if (o === c) continue;
