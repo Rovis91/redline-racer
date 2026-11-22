@@ -1733,8 +1733,10 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // chrono
     const gl = mode === 'glisse'; // Glisse mode: lap on 2, time to hold, then the score, the multiplier and the points of the current slide
     panel(6, 6, 132, 50); txt(race ? 'TOUR ' + car.lap + '/' + race.laps : gl ? 'TOUR ' + clamp(Math.floor(car.dist / N) + 1, 1, 2) + '/2' : 'TOUR ' + ses.lapN, 12, 11, 8, C); if (HU.jp) txt(HU.jp[0], 132, 6, 16, C, 'right', 0, JP);
-    txt(fmt(race ? car.ending || car.out || race.t : ses.tRace), 12, 24, 16, Y, 'left', 1); if (race && !gl) { const nv = Math.max(car.pos, alive().length), dev = raceOrder(race)[car.pos - 2], pc = car.pos === 1 ? Y : car.pos === nv ? RD : '#e8e8e4'; // the position in large next to the timer; below it, the gap in seconds to the car in front (distance / speed: approximate)
-      panel(6, 60, 62, 50); txt(String(car.pos), 14, 68, 32, pc, 'left', 2); txt(car.pos === 1 ? 'ER' : 'E', 46, 68, 8, pc); txt('/' + nv, 46, 94, 8, C); // under the timer: top centre, the end-of-lap banners covered it in 4:3
+    const hold = (H, v, ms, now = performance.now()) => { if (H.v === undefined || v === H.v) { H.v = H.w = v; } else if (v !== H.w) { H.w = v; H.t = now; } else if (now - H.t > ms) H.v = v; return H.v; }; // shows a new value only once it has held for ms: side by side, two cars swapped places every few frames
+    txt(fmt(race ? car.ending || car.out || race.t : ses.tRace), 12, 24, 16, Y, 'left', 1); if (race && !gl) { if (!vu.posH || vu.posH.r !== race) vu.posH = { r: race }; const pos = car.ending || car.out ? car.pos : hold(vu.posH, car.pos, 900); // the place shown: 0.9 s steady before it changes; exact once finished
+      const nv = Math.max(pos, alive().length), dev = raceOrder(race)[car.pos - 2], pc = pos === 1 ? Y : pos === nv ? RD : '#e8e8e4'; // the position in large next to the timer; below it, the gap in seconds to the car in front (distance / speed: approximate)
+      panel(6, 60, 62, 50); txt(String(pos), 14, 68, 32, pc, 'left', 2); txt(pos === 1 ? 'ER' : 'E', 46, 68, 8, pc); txt('/' + nv, 46, 94, 8, C); // under the timer: top centre, the end-of-lap banners covered it in 4:3
       if (dev && !finished) { const g = (dev.dist - car.dist) * 2 / Math.max(sp, 15); txt('+' + g.toFixed(1) + ' ' + pierBuf(dev)[0], 12, 44, 8, g < 1 ? Y : '#e8e8e4'); } else txt(finished ? '' : 'EN TETE', 12, 44, 8, Y); }
     else txt(gl ? 'DELAI ' + fmt(GLT) : ses.best ? 'REC ' + fmt(ses.best) : 'REC --', 12, 44, 8, gl && ses.tRace > GLT ? RD : C); // red: only when the time limit is exceeded
     if (gl && !finished) { const pointAt = race && race.cars[1 - vu.n]; // in duel: the other player's score under their own (frozen if they have finished)
@@ -1779,8 +1781,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
         tmp.set(c.x, model(c).position.y + 2.4, c.z).project(cam);
         const [name, col] = pierBuf(c), x = Math.round((tmp.x + 1) / 2 * HW), y = Math.round((1 - tmp.y) / 2 * HH), w = name.length * 8 + 4;
         let ly = y - 14; while (taken.some(p => Math.abs(p[0] - x) < (p[2] + w) / 2 + 2 && Math.abs(p[1] - ly) < 12)) ly -= 12; // two labels in the same place: the second moves up a notch
-        const L = lab.get(c) || { off: 0, t: 0 }, off = y - 14 - ly; if (off >= L.off) { L.off = off; L.t = now; } else if (now - L.t > 600) L.off = off; // it rises at once, but only drops back after 0.6 s without conflict: at the edge of overlap, it jumped a notch every frame
-        lab.set(c, L); ly = y - 14 - L.off; taken.push([x, ly, w]);
+        const L = lab.get(c) || {}, off = hold(L, y - 14 - ly, y - 14 - ly > (L.v || 0) ? 300 : 1500, now); // a notch up after 0.3 s of overlap, back down after 1.5 s clear: a brief overlap no longer leaves a gap
+        lab.set(c, L); ly = y - 14 - off; taken.push([x, ly, w]);
         R(hg, 'rgba(8,8,12,.75)', x - w / 2, ly, w, 11); txt(name, x, ly + 2, 8, col, 'center'); R(hg, col, x - 2, y - 2, 5, 3); R(hg, col, x - 1, y + 1, 3, 2);
       });
     }
