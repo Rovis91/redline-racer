@@ -190,9 +190,9 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // (1 = dry, 0.5 = soaked, see illuminates); for each of its pixels the reflected ray is followed through the view's depth, and the colour it meets is added:
   // cars, neons, tail lights. What the ray does not find on screen (the sky, what is out of frame) stays with the ribbons and stretched reflections of the dynamic light.
   const ssr = new THREE.ShaderMaterial({
-    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 } },
+    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 }, fz: { value: +TH.reflectionWater || 0 } },
     vertexShader: post.vertexShader,
-    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe; varying vec2 v;
+    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe, fz; varying vec2 v;
       vec3 vpos(vec2 u){ vec4 p = Pi * vec4(u * 2. - 1., texture2D(dz, u).x * 2. - 1., 1.); return p.xyz / p.w; } // position in the camera's frame
       vec2 ecran(vec3 q){ vec4 c = P * vec4(q, 1.); return c.xy / c.w * .5 + .5; }
       void main(){
@@ -214,7 +214,9 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
             vec3 f = vec3(0.); for (int k = -2; k < 2; k++) f += texture2D(t, h + vec2(0., (float(k) + .5) * 2. * px.y)).rgb; // stretched vertically, like a reflection on water
             vec2 bd = min(h, 1. - h); trouve = smoothstep(0., .08, min(bd.x, bd.y)) * (1. - smoothstep(60., 320., a)); // fades out at the edge of the image and in the distance
             float fr = .25 + .75 * pow(1. - max(dot(-e, up), 0.), 3.); // Fresnel: seen at grazing angle, the road is a mirror
-            c.rgb += f * .12 * w * fr * trouve;
+            // th.reflectionWater (standing water, strength): what still water really returns (Schlick, 2 % seen from above, a mirror at grazing angle), in place of the surface's own colour instead of added to it
+            if (fz > 0.) c.rgb = mix(c.rgb, f * .25, min(1., fz * (.02 + .98 * pow(1. - max(dot(-e, nn), 0.), 5.))) * w * trouve);
+            else c.rgb += f * .12 * w * fr * trouve;
           }
         }
         gl_FragColor = vec4(c.rgb, 1. - trouve); // alpha: 0 where the reflection is found; the fallback ribbons add nothing there (see fallback)
@@ -342,7 +344,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // ---------- dynamic light: a single calculation, added to the shader of all the scene's materials (onBeforeCompile) ----------
   // Sky and moon/sun stay as three's (with their shadow). Everything else is computed here, per pixel, with the facet's normal:
   // NL point light fixtures (the nearest along the track + car lights), the headlight beam with a hard cut-off,
-  // the car's shadow by ray tracing on its box (it sweeps the road and walls at each light fixture passed),
+  // the shadow of the view's car and of its two nearest vehicles by ray tracing on their boxes (it sweeps the road and walls at each light fixture passed; the two others also cut the headlight beam),
   // and on shiny surfaces (wet road, puddles = texture alpha, bodywork) the stretched reflection of each source.
   const BRIGHTS = [], emis = (i, x, y, z, col, r, k = 1, tun = 0) => { const l = { i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun }; BRIGHTS.push(l); return l; }; // renders the light: a scenery piece can make its colour (l.c) breathe in its tick (Chapada campfire)
   const NIGHT_COL = TH.headlights / 2.6; // strength of car lights: full at night, weak at dawn and dusk
@@ -350,7 +352,8 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   const SUNC = new THREE.Color(TH.sun[0]).multiplyScalar(TH.sun[1]);
   const LUX = { uLP: { value: Float32Array.from({ length: NL * 4 }, (_, i) => i % 4 === 3 ? 1 : 0) }, uLC: { value: new Float32Array(NL * 3) }, // flat: three is passed the array as-is instead of copying 20 vectors at each draw pass
    
-    uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new THREE.Matrix4() },
+    uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new Float32Array(48) }, uNB: { value: 1 }, // uBox: 3 shadow boxes (the view's car, then its two nearest cars), uNB of them in use
+   
     uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
   const LU_V = `{ vec4 lw = vec4(transformed, 1.);
     #ifdef USE_INSTANCING
@@ -367,11 +370,14 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
     #ifdef MOUILLE
       uniform sampler2D uMo; varying vec2 vMo;
     #endif
-    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam; uniform mat4 uBox; uniform float uGloss, uRetro; uniform int uN; varying vec3 vLw;
-    float luOmbre(vec3 p, vec3 d) { // 0 if the car's box cuts the segment p → p + d; a point inside the box or on its surface is not shadowed
-      vec3 o = (uBox * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
-      float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
-      return a < b && a > .005 && a < 1. ? 0. : 1.;
+    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB; varying vec3 vLw;
+    float luOmbre(vec3 p, vec3 d, int i0) { // 0 if a car's box (from box i0 on: 0 = the view's car, then its two nearest cars) cuts the segment p → p + d; a point inside a box or on its surface is not shadowed
+      for (int k = i0; k < uNB; k++) {
+        vec3 o = (uBox[k] * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox[k]) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
+        float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
+        if (a < b && a > .005 && a < 1.) return 0.;
+      }
+      return 1.;
     }
     `;
   const LU_F = `{
@@ -387,15 +393,20 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         if (i >= uN) break; // only the lights that are on
         vec3 d = uLP[i].xyz - vLw; float a = 1. - dot(d, d) / (uLP[i].w * uLP[i].w);
         if (a <= 0.) continue;
-        if (uLP[i].w > 0.) a *= luOmbre(vLw, d); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
+        if (uLP[i].w > 0.) a *= luOmbre(vLw, d, 0); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
         dif += uLC[i] * (a * a * max(dot(n, l), 0.));
         if (g > 0.) spe += uLC[i] * (a * mix(pow(max(dot(n, normalize(l + v)), 0.), 24.), pow(max(dot(rh, normalize(l.xz + 1e-4)), 0.), 40.), plat));
       }
-      if (g > 0.) spe += plat * (uSunC * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18);
+      if (g > 0.) { float so = 1.; // the sun's streak stops in the shade (same shadow read as three's own lighting)
+      #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0 && (defined(LAMBERT) || defined(PHONG))
+        if (plat > 0.) so = // even on a mesh that takes no shadow itself (a water plane over the road)
+getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
+      #endif
+        spe += plat * (uSunC * so * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18); }
       vec3 hv = vLw - uHP; float f = dot(hv, uHD);
       if (f > .5) { // phares : faisceau large, coupure horizontale nette (feu de croisement)
         vec3 hr = normalize(vec3(-uHD.z, 0., uHD.x));
-        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f); // softened cutoff: a road going uphill no longer makes a hard line
+        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f) * luOmbre(vLw, -hv, 1); // the nearest cars cut the beam; softened cutoff: a road going uphill no longer makes a hard line
         dif += uHC * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)));
         if (uRetro > 0.) dif += uHC * (m * uRetro); // reflectors and signs: return the beam, even above the cutoff
       }
@@ -1912,7 +1923,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false; for (const o of caches) o.visible = true;
   }
 
-  const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
+  const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc), boxM = new THREE.Matrix4(); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
   const TRB = ST && ST.shakes * ST.aa || SHAKES;
   // continuous altitude along the track: read sample by sample, it made the car and the camera jump at each step, all the more visible when driving slowly
   // (the computation is in sim.js: ground(), which adds the wall's height on a drivable wall; car.y is this ground, or the flight height)
@@ -2109,7 +2120,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const dmgP = G.userData.dmgP, hs = (dmgP.ph[0] - dmgP.ph[1]) * 0.55; // one headlight broken: the beam comes from the other, at half strength; both: nothing
     LUX.uCam.value = cam.position; LUX.uHP.value.set(car.x + fx * 1.9 - fz * hs, carY + 0.62, car.z + fz * 1.9 + fx * hs); LUX.uHD.value.set(fx * cp, Math.sin(pitch), fz * cp); LUX.uHC.value.copy(HCB).multiplyScalar(headlightsV * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2));
     if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.14 * kBr * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2); cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
-    G.updateMatrixWorld(); LUX.uBox.value.copy(G.matrixWorld).multiply(BOX).invert(); // G: the view's car model; the cast shadow under the fixtures exists only for it
+    G.updateMatrixWorld(); boxM.copy(G.matrixWorld).multiply(BOX).invert().toArray(LUX.uBox.value, 0); let nb = 1; // G: the view's car model, first shadow box; the two nearest cars follow (below)
     LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
     let nl = 0;
     const LP = LUX.uLP.value, LC = LUX.uLC.value, put = (x, y, z, c, r, k) => { if (nl < NL) { const m = k * BRIGHT_GAIN; const o = nl * 4; LP[o] = x; LP[o + 1] = y; LP[o + 2] = z; LP[o + 3] = r; LC[nl * 3] = c.r * m; LC[nl * 3 + 1] = c.g * m; LC[nl * 3 + 2] = c.b * m; nl++; } };
@@ -2131,6 +2142,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     for (const c of veh.sort((a, b) => d2(a) - d2(b)).slice(0, 2)) {
       const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 6.5 : 10, ar = c.lane === undefined ? 3.4 : 7; // a truck is longer
       const dv = c.lane === undefined ? model(c).userData.dmgP : null, kp = dv ? 1 - (dv.ph[0] + dv.ph[1]) / 2 : 1, kf = dv ? 1 - (dv.fe[0] + dv.fe[1]) / 2 : 1; // its headlights and broken lights
+      if (c.lane === undefined) { const g = model(c); g.updateMatrixWorld(); boxM.copy(g.matrixWorld).multiply(BOX); }
+      else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
+      boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
       put(c.x + ax * av, y + 0.8, c.z + az * av, HEADLIGHT, 14, 3 * nightV * kp); put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
       if (L.neon && race && (c.k < 0 || c.k >= 3)) put(c.x, y + 0.3, c.z, NEONC, 5.5, nightV * (0.8 + 0.4 * pulse)); // the other player's car keeps its underbody neon (c.k: -1 player 1, 3 player 2)
     }
@@ -2138,7 +2152,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (car.idx !== vu.brightIdx) { vu.brightIdx = car.idx; for (const e of vu.brights) { let d = (e.l.i - car.idx + N) % N; if (d > N / 2) d -= N; e.d = d > 0 ? d * 0.5 : -d; } vu.brights.sort((a, b) => a.d - b.d); } // the sort only changes from one track sample to the next
     const LS = vu.brights, ns = NL - nl, dm = LS.length > ns ? LS[ns].d : 1e9;
     for (let k = 0; k < ns && k < LS.length; k++) { const e = LS[k], l = e.l; put(l.x, l.y, l.z, l.c, l.r, Math.min(1, (dm - e.d) / (dm * 0.3 + 0.01)) * (l.tun && TH.alarm ? 0.5 + pulse : 1)); }
-    LUX.uN.value = nl;
+    LUX.uN.value = nl; LUX.uNB.value = nb;
     // rain: each drop recedes at the car's speed, its streak stretches by as much
     const NG = TH.snowSurf || 0, pl = (NG || rainAt(car.idx)) * (1 - lm), gl = NG ? 0.2 : 1.9 * Math.max(1, 0.4 + 0.6 * pl), nr = Math.min(RN, Math.round(400 * pl ** 1.5)); rain.visible = pl > 0.02; splash.visible = !NG && rain.visible; // th.snowSurf = strength of the flakes: the same particles, falling at 4 m/s, with no impact or rain noise
     rainGeo.setDrawRange(0, 2 * nr); rain.position.set(car.x, carY, car.z); RU.uOp.value = Math.min(1, 0.6 + 0.15 * pl);

@@ -21,7 +21,8 @@
       // MAT: the shared materials of the map, one draw pass each: every real piece goes into the group `kit`, merged per material at the end. Keys are the zone names of the autoroute shapes
       const DS = { side: THREE.DoubleSide }, LAID = { ...DS, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }, CUT = { ...LAID, alphaTest: 0.5 }, body = c => h.mat('carrosserieAutoroute', { c }), MAT = {
         asphalt: h.mat('asphalteAutoroute', DS), pave: h.mat('trottoirAutoroute', DS), grass: h.mat('herbeAutoroute'),
-        water: h.mat('eauAutoroute', { rep: [112, 250], transparent: true, opacity: 0.5, c: 0x9ab0a0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8 }), // (the offset: the lane lies 30 cm under it, and would show through at a distance)
+        water: h.mat('eauAutoroute', { rep: [112, 250], transparent: true, opacity: 0.5, c: 0x9ab0a0, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8,
+          blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.ZeroFactor }), // the blend: the colour as usual, and its own alpha (0.5) left in the target, which the engine's reflection pass reads as a soaked surface: the whole flood mirrors the blocks, not only the lane // (the offset: the lane lies 30 cm under it, and would show through at a distance)
         brick: h.mat('briqueAutoroute'), brick2: h.mat('briqueAutoroute', {}, '#6e4a40', 1), brick3: h.mat('briqueAutoroute', {}, '#9a6a4a', 2), stone: h.mat('bureauAutoroute'), stone2: h.mat('bureauAutoroute', {}, '#8f8c82', 1), stone3: h.mat('bureauAutoroute', {}, '#b0a078', 2),
         glass: h.mat('verreAutoroute'), glass2: h.mat('verreAutoroute', {}, 1), tin: h.mat('toleAutoroute'), tin2: h.mat('toleAutoroute', {}, '#7a6a58', 1), shop: h.mat('vitrineAutoroute'), shop2: h.mat('vitrineAutoroute', {}, '#5a5048', 1), hole: h.mat('interieurAutoroute'),
         tunnel: h.mat('tunnelAutoroute', { ...DS, c: 0xb4b4ac }), mur: h.mat('tunMurAutoroute', { ...DS, c: 0xb0b0a6 }), rib: h.mat('tunVouteAutoroute', { ...DS, emis: 1, c: 0x7c7c76 }), vault: h.mat('tunVouteAutoroute', { ...DS, emis: 1, c: 0xa4a49c }),
@@ -40,7 +41,7 @@
       const park = (x, z) => ss((x + 215) / 8) * ss((-115 - x) / 8) * ss((z + 99) / 8) * ss((-11 - z) / 8), wild = (x, z) => Math.max(0, Math.sin(x * 0.045 + 1.3) * Math.sin(z * 0.052 + 0.4) + Math.sin(x * 0.11 + z * 0.07) * 0.5 - 0.55) * 2.2;
       // (two coats on the asphalt: grass where the park was, and grass that has broken through here and there, away from the axis of the streets)
       const g = terrain(h, { stepSec: 10, margin: 300, hollow: (x, z, y) => y - level(x, z), mat: h.mat('asphalteAutoroute'), layerSet: [{ tex: ['herbeAutoroute'], weight: park }, { tex: ['herbeAutoroute'], weight: (x, z) => { const l = lane(x, z); return Math.min(0.7, wild(x, z)) * (l ? ss((l[1] - 5) / 6) : 1); } }] });
-      const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 2000), MAT.water); water.rotation.x = -Math.PI / 2; water.position.set(725, 0, 0); water.renderOrder = 2; h.scene.add(water); // east of x = 275: the shore is where the streets dip under it, around x = 312
+      const water = new THREE.Mesh(new THREE.PlaneGeometry(900, 2000), MAT.water); water.rotation.x = -Math.PI / 2; water.position.set(725, 0, 0); water.renderOrder = 2; water.receiveShadow = true; h.scene.add(water); // east of x = 275: the shore is where the streets dip under it, around x = 312
       // one street asphalt over the engine's own roadway (14 m down the axis of the lane), the same as the ground beside it: the street is one surface from facade to facade
       { const m = h.mat('asphalteAutoroute', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, rep: [1.4, 1] }); for (const [a, b] of [[0, I.eauA + 10], [I.eauB - 10, I.rampe], [I.sol, I.bord], [I.tremie, N]]) h.ribbon(a, b - a, -7.05, 0.01, 7.05, 0.01, m, 10); }
       // the far city: the terrain stops 300 m from the road. A ground slab under the horizon (in four pieces: the cave and the trench lie lower), then a ring of towers in the haze, lower across the river
@@ -115,6 +116,7 @@
       const tick = AUTOROUTE.vie({ h, g, I, zone, O, MAT, BODIES, kit, set, slab, quad, mesh, HH, cityY, groundY, water, TREES, LAMPS, REEDS }); // life and atmosphere, before the merge: what it animates stays out of the kit
       inst(h, h.geo('trunk'), MAT.bark, TREES.bark); for (const k of ['leaf', 'gold', 'ivy', 'ivy2', 'reed']) inst(h, h.geo('canopy'), MAT[k], TREES[k]);
       weld(h, kit); // one mesh per material
+      kit.traverse(o => { if (o.isMesh && !o.material.transparent && o.material.isMeshLambertMaterial) o.castShadow = true; }); // low sun: the blocks shade the streets (and cut the sun's streak on the flood)
       return tick;
     },
   });

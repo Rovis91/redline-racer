@@ -22,7 +22,7 @@ captures.html?map=chapada&step=10&size=1920x1080&game=1&opt=<URL-encoded JSON>
 | Terrain | `th.layerSet` |
 | Light and sky | `th.shadows`, `th.skySeg`, `th.orb.spokes` |
 | Fog | `th.haze`, `th.isFar`, `th.headlightsHaze` |
-| Road | `th.wetVisible`, `th.gloss`, `M.wide`, `M.obst`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
+| Road | `th.wetVisible`, `th.reflectionWater`, `th.gloss`, `M.wide`, `M.obst`, `th.chev`, `th.chevTex`, `th.chevExcept`, `th.chevK`, `th.withoutCones` / `th.cones`, `th.startLine[3]` |
 | Tunnel and hall | `th.tun.h`, `vault`, `opn`, `spokes`, `raysK`, `ambient`, `day`, `without`, `skyDay`, `gloss`, `tex`, `th.eye` |
 | Feedback and particles | `th.graze`, `th.seaSpray`, `th.leaves`, `th.dustBallistic`, `th.vacuum`, `h.emis` |
 
@@ -163,6 +163,10 @@ Inside a fog bank (`th.haze` with four values), car headlights come on at this s
 surf: { zones: [[14, 19, 'damp', 0.5]] },
 th: { wetVisible: 1 }
 ```
+
+### `th.reflectionWater`: standing water
+
+`th: { reflectionWater: 1 }` (or a strength). The screen reflections follow what still water really returns: 2 % seen from above, a mirror at grazing angle (Schlick), and the reflection replaces the surface's colour instead of being added to it. Near the car one sees into the water, far away it mirrors the scenery. For a map with a real sheet of water (`autoroute`); wet asphalt keeps the default. A scenery surface joins the reflection pass by leaving 0.5 in the target's alpha (see the water material in `scenery-autoroute.js`). Cost: none beyond the reflection pass.
 
 ### `th.gloss`: road shine
 
