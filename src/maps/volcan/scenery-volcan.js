@@ -98,7 +98,7 @@
       for (const [x, z, R, H, ry, seed] of [[-3700, -2800, 900, 300, 0.5, 1], [3000, 500, 650, 200, 1.3, 4], [-2800, 2000, 500, 160, -0.4, 7], [1500, -3900, 750, 250, 0.1, 9]]) {
         set('ileVolcan', x, z, { y: 0, ry, m: 'far', a: [R, H, seed] }); set('ileVolcan', x, z, { y: H * 0.56, ry, m: 'farSnow', a: [R * 0.5, H * 0.46, seed] }); }
       for (const z of ZONES) VOLCAN[z]({ h, g, at, set, by, slab, strip, span, gal, frac, beside, range, line, drape, scatter, wall, track, flock, clear, MAT, LAKE, CONE, HT, kit, sea, REG, LIFE, flows });
-      weld(h, kit); // one mesh per material
+      weld(h, kit, null, [MAT.far, MAT.farSnow]); // one mesh per material; houses, walls and rocks shade the ground
       let tv = 0; const tick = (dt, now, car) => { dt = Math.min(dt, 0.1); tv += dt; for (const f of LIFE) f(dt, car, tv); for (const [t, u, v] of FLOWS) { t.offset.x = (t.offset.x + u * dt + 1) % 1; t.offset.y = (t.offset.y + v * dt + 1) % 1; } }; // pause freezes everything (dt = 0)
       if (LIFE.indoor) tick.indoor = LIFE.indoor; return tick;
     },

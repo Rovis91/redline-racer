@@ -133,7 +133,7 @@
         if (Math.abs(Math.atan2(Math.sin(a - aLip), Math.cos(a - aLip))) > 0.2 && Math.abs(Math.atan2(Math.sin(a - aOut), Math.cos(a - aOut))) > 0.15) add(stand(x, z, a), 'rocherLune', [w, w * 0.6, w * 1.2, k], [0, 0, 0], k % 4 ? MAT.rock : MAT.pale); }
       for (const z of ZONES) LUNE[z]({ h, g, S, N, at, LAP, MAT, kit, stand, add, by, sit, tunnel: [S[T.t0], S[T.t1]], lip: S[(iLip - 30 + N) % N], THREE });
       const tick = LUNE.vie({ h, g, S, N, T, LAP, MAT, kit, add, by, REG, iLip, EAST, PL, THREE, edgePt, weld }); // what moves, lights and sounds: it takes its movers out of the kit before the merge
-      weld(h, kit); // one mesh per material
+      weld(h, kit, null, [MAT.far]); // one mesh per material; boulders and base cast the hard shadows of an airless sun
       return tick;
     },
   });

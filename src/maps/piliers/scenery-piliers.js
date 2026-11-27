@@ -171,7 +171,7 @@
       // trees on top of the cut faces of the banks: a green line over the rock, as on the buttress of the references
       BANKS.forEach(([a, b, sd, H]) => { for (let p = a + 40; p < b - 40; p += 9 + 8 * nz(p, H)) { const s = at(p), [x, z] = edgePt(s, sd, s.w + 12 + 1.4 * Math.ceil(H / 5) + 9 + 14 * nz(p, 2)), v = nz(p, 3); if (g.hAt(x, z) < s.y + H * 0.6 || g.dAt(x, z) < 20) continue;
         v > 0.6 ? pine(x, z, 9 + 7 * v) : v > 0.3 ? fir(x, z, 10 + 10 * v) : v > 0.12 ? tree(x, z, 10 + 20 * v) : shrub(x, z, 2); } });
-      weld(h, kit); // one mesh per material
+      weld(h, kit, null, [MAT.far0, MAT.far1, MAT.far2, MAT.farLeaf]); // one mesh per material; the towers and the villages shade the road
       for (const [k, list] of TR) { const [shape, m] = k.split('|'); const kept = list.filter(e => !CLEARS.some(([x, z, r]) => (e[0] - x) ** 2 + (e[2] - z) ** 2 < r * r)); if (kept.length) inst(h, h.geo(shape), MAT[m], kept); }
       let tv = 0; return (dt, now, car) => { tv += dt; for (const f of LIFE) f(dt, car, tv); for (const [t, u, v] of FLOWS) { t.offset.x = (t.offset.x + u * dt + 1) % 1; t.offset.y = (t.offset.y + v * dt + 1) % 1; } }; // pause freezes everything (dt = 0)
     },
