@@ -19,6 +19,7 @@
       "src/render/scenery.js",
       "src/render/crowd.js",
       "src/engine/lang.js",
+      "src/render/menu-ui.js",
       "src/engine/devices.js",
       "src/engine/network.js"
     ],

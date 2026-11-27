@@ -190,9 +190,9 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // (1 = dry, 0.5 = soaked, see illuminates); for each of its pixels the reflected ray is followed through the view's depth, and the colour it meets is added:
   // cars, neons, tail lights. What the ray does not find on screen (the sky, what is out of frame) stays with the ribbons and stretched reflections of the dynamic light.
   const ssr = new THREE.ShaderMaterial({
-    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 } },
+    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 }, fz: { value: +TH.reflectionWater || 0 } },
     vertexShader: post.vertexShader,
-    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe; varying vec2 v;
+    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe, fz; varying vec2 v;
       vec3 vpos(vec2 u){ vec4 p = Pi * vec4(u * 2. - 1., texture2D(dz, u).x * 2. - 1., 1.); return p.xyz / p.w; } // position in the camera's frame
       vec2 ecran(vec3 q){ vec4 c = P * vec4(q, 1.); return c.xy / c.w * .5 + .5; }
       void main(){
@@ -214,7 +214,9 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
             vec3 f = vec3(0.); for (int k = -2; k < 2; k++) f += texture2D(t, h + vec2(0., (float(k) + .5) * 2. * px.y)).rgb; // stretched vertically, like a reflection on water
             vec2 bd = min(h, 1. - h); trouve = smoothstep(0., .08, min(bd.x, bd.y)) * (1. - smoothstep(60., 320., a)); // fades out at the edge of the image and in the distance
             float fr = .25 + .75 * pow(1. - max(dot(-e, up), 0.), 3.); // Fresnel: seen at grazing angle, the road is a mirror
-            c.rgb += f * .12 * w * fr * trouve;
+            // th.reflectionWater (standing water, strength): what still water really returns (Schlick, 2 % seen from above, a mirror at grazing angle), in place of the surface's own colour instead of added to it
+            if (fz > 0.) c.rgb = mix(c.rgb, f * .25, min(1., fz * (.02 + .98 * pow(1. - max(dot(-e, nn), 0.), 5.))) * w * trouve);
+            else c.rgb += f * .12 * w * fr * trouve;
           }
         }
         gl_FragColor = vec4(c.rgb, 1. - trouve); // alpha: 0 where the reflection is found; the fallback ribbons add nothing there (see fallback)
@@ -342,7 +344,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // ---------- dynamic light: a single calculation, added to the shader of all the scene's materials (onBeforeCompile) ----------
   // Sky and moon/sun stay as three's (with their shadow). Everything else is computed here, per pixel, with the facet's normal:
   // NL point light fixtures (the nearest along the track + car lights), the headlight beam with a hard cut-off,
-  // the car's shadow by ray tracing on its box (it sweeps the road and walls at each light fixture passed),
+  // the shadow of the view's car and of its two nearest vehicles by ray tracing on their boxes (it sweeps the road and walls at each light fixture passed; the two others also cut the headlight beam),
   // and on shiny surfaces (wet road, puddles = texture alpha, bodywork) the stretched reflection of each source.
   const BRIGHTS = [], emis = (i, x, y, z, col, r, k = 1, tun = 0) => { const l = { i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun }; BRIGHTS.push(l); return l; }; // renders the light: a scenery piece can make its colour (l.c) breathe in its tick (Chapada campfire)
   const NIGHT_COL = TH.headlights / 2.6; // strength of car lights: full at night, weak at dawn and dusk
@@ -350,7 +352,8 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   const SUNC = new THREE.Color(TH.sun[0]).multiplyScalar(TH.sun[1]);
   const LUX = { uLP: { value: Float32Array.from({ length: NL * 4 }, (_, i) => i % 4 === 3 ? 1 : 0) }, uLC: { value: new Float32Array(NL * 3) }, // flat: three is passed the array as-is instead of copying 20 vectors at each draw pass
    
-    uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new THREE.Matrix4() },
+    uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new Float32Array(48) }, uNB: { value: 1 }, // uBox: 3 shadow boxes (the view's car, then its two nearest cars), uNB of them in use
+   
     uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
   const LU_V = `{ vec4 lw = vec4(transformed, 1.);
     #ifdef USE_INSTANCING
@@ -367,11 +370,14 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
     #ifdef MOUILLE
       uniform sampler2D uMo; varying vec2 vMo;
     #endif
-    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam; uniform mat4 uBox; uniform float uGloss, uRetro; uniform int uN; varying vec3 vLw;
-    float luOmbre(vec3 p, vec3 d) { // 0 if the car's box cuts the segment p → p + d; a point inside the box or on its surface is not shadowed
-      vec3 o = (uBox * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
-      float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
-      return a < b && a > .005 && a < 1. ? 0. : 1.;
+    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB; varying vec3 vLw;
+    float luOmbre(vec3 p, vec3 d, int i0) { // 0 if a car's box (from box i0 on: 0 = the view's car, then its two nearest cars) cuts the segment p → p + d; a point inside a box or on its surface is not shadowed
+      for (int k = i0; k < uNB; k++) {
+        vec3 o = (uBox[k] * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox[k]) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
+        float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
+        if (a < b && a > .005 && a < 1.) return 0.;
+      }
+      return 1.;
     }
     `;
   const LU_F = `{
@@ -387,15 +393,20 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         if (i >= uN) break; // only the lights that are on
         vec3 d = uLP[i].xyz - vLw; float a = 1. - dot(d, d) / (uLP[i].w * uLP[i].w);
         if (a <= 0.) continue;
-        if (uLP[i].w > 0.) a *= luOmbre(vLw, d); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
+        if (uLP[i].w > 0.) a *= luOmbre(vLw, d, 0); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
         dif += uLC[i] * (a * a * max(dot(n, l), 0.));
         if (g > 0.) spe += uLC[i] * (a * mix(pow(max(dot(n, normalize(l + v)), 0.), 24.), pow(max(dot(rh, normalize(l.xz + 1e-4)), 0.), 40.), plat));
       }
-      if (g > 0.) spe += plat * (uSunC * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18);
+      if (g > 0.) { float so = 1.; // the sun's streak stops in the shade (same shadow read as three's own lighting)
+      #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0 && (defined(LAMBERT) || defined(PHONG))
+        if (plat > 0.) so = // even on a mesh that takes no shadow itself (a water plane over the road)
+getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
+      #endif
+        spe += plat * (uSunC * so * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18); }
       vec3 hv = vLw - uHP; float f = dot(hv, uHD);
       if (f > .5) { // phares : faisceau large, coupure horizontale nette (feu de croisement)
         vec3 hr = normalize(vec3(-uHD.z, 0., uHD.x));
-        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f); // softened cutoff: a road going uphill no longer makes a hard line
+        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f) * luOmbre(vLw, -hv, 1); // the nearest cars cut the beam; softened cutoff: a road going uphill no longer makes a hard line
         dif += uHC * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)));
         if (uRetro > 0.) dif += uHC * (m * uRetro); // reflectors and signs: return the beam, even above the cutoff
       }
@@ -1316,7 +1327,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const store = { get: k => { try { return JSON.parse(localStorage.getItem(PRE + k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(PRE + k, JSON.stringify(v)); } catch (e) { } } };
   const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
   // Interface language: 'fr' or 'en', chosen on the home screen and kept (vpr.language). Translation and English titles: language.js
-  let language = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr';
+  let language = pref('vpr.langue', 'en') === 'fr' ? 'fr' : 'en';
   const tr = s => translated(s, language);
   const applyLanguage = () => { document.documentElement.lang = language; document.title = 'Redline Racer'; };
   applyLanguage();
@@ -1373,7 +1384,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     else if (code === 'Enter' || code === 'Space') { players(1); NET.hosting(onNet); mode = 'raceCase'; SOUND.beep(660);
       try { navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + NET.code).then(() => padSaid('LIEN DU SALON COPIE'), () => { }); } catch (e) { } }
   };
-  for (const ev of ['mousedown', 'pointerup', 'touchend']) addEventListener(ev, e => { inactive = 0; if (demo) { if (!outTarget && ev !== 'mousedown') demoEnd(); return; } if (performance.now() - demoExit < 400) return; if (home) { if (ev === 'mousedown') return; if (e.isTrusted && !aMenu) PER.hidAuto(); SOUND.init(); const l = e.clientX < innerWidth / 2 ? 'fr' : 'en'; if (l === language) homeAct('ok'); else { aMenu = true; choosesLang(l); } } else SOUND.init(); }); // on the home screen: a left click picks French, a right click English; a second click on the same side moves on
+  for (const ev of ['mousedown', 'pointerup', 'touchend']) addEventListener(ev, e => { inactive = 0; if (demo) { if (!outTarget && ev !== 'mousedown') demoEnd(); return; } if (performance.now() - demoExit < 400) return; if (home) { if (ev === 'mousedown') return; if (e.isTrusted && !aMenu) PER.hidAuto(); SOUND.init(); if (UI.shown) return; const l = e.clientX < innerWidth / 2 ? 'fr' : 'en'; if (l === language) homeAct('ok'); else { aMenu = true; choosesLang(l); } } else SOUND.init(); }); // on the home screen: a left click picks French, a right click English; a second click on the same side moves on
   const fmt = t => `${t / 60 | 0}'${String(t % 60 | 0).padStart(2, '0')}"${String(t * 100 % 100 | 0).padStart(2, '0')}`;
   addEventListener('mousemove', e => { if (state !== 'race' && state !== 'count') return; const vu = VIEWS[0]; vu.lookA = clamp(vu.lookA + e.movementX * 0.006, -Math.PI, Math.PI); vu.lookP = clamp(vu.lookP + e.movementY * 0.03, -1, 5); vu.lookT = 2.5; }); // free mouse camera: that of the first view (there is only one mouse)
   let state = 'title', count = 0, shown = 0, goT = 0, acc = 0, last = 0, manual = pref('vpr.boite', 'a') === 'm';
@@ -1455,7 +1466,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   }
   // pause menu: [line, action]. With two players, no gearbox line (each has their own, on their device)
   const pauseItems = () => [['REPRENDRE', () => { state = prev; }], ['RECOMMENCER', start], ...(two() ? [] : [['BOITE : ' + (manual ? 'MANUELLE' : 'AUTO'), () => { manual = !manual; VIEWS[0].self.manual = manual; }]]),
-    ['RADIO : ' + labelRadio(), zap], ['QUITTER', toMenu]];
+    ['RADIO : ' + labelRadio(), zap], ['QUITTER', () => { toMenu(); choice = true; csel = two() ? 1 : 0; }]]; // QUITTER: back to Solo / Split screen / Online
   function toMenu() { if (NET.role === 'hostRole') NET.stop(); if (guest()) waiting(); ses.toMenu(); state = 'title'; ins = false; race = null; const c = newCar(T); for (const vu of VIEWS) follows(vu, c); msel = 5; }
   // main menu: 0 map, 1 players, 2 mode, 3 difficulty, 4 gearbox, 5 start; d = -1 / +1 (left / right; Enter counts as +1)
   let tnLaps = clamp(+pref('vpr8.tnTours', '3') || 3, 1, 5); // Tournée: laps per round, the TOURS line of the menu (6: shown and walked between BOX and DEMARRER)
@@ -1524,17 +1535,15 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       return;
     }
     if (e.code === 'Escape' && online() && state !== 'title') { if (guest()) quitsLounge(); else toMenu(); return; } // online, no pause: the guest leaves the lobby, the host goes back to the menu (the guests wait)
+    if (endUI()) { // the finish screen: another map in the same mode, or the main menu; Enter only counts 1.5 s after the finish (a race is not left by crossing the line)
+      if (/^(Arrow(Up|Down|Left|Right)|Key[WASD])$/.test(e.code)) fsel ^= 1; else if ((e.code === 'Enter' || e.code === 'Space') && performance.now() - tEnd > 1500) endGo(); else if (e.code === 'Escape') { fsel = 1; endGo(); } else if (key === 'r' && !two()) start();
+      return;
+    }
     if (e.code === 'Escape' && ses.raceEnd) { toMenu(); return; } // race over: direct return to the menu
     if ((e.code === 'Escape' || key === 'p') && (state === 'race' || state === 'count')) { prev = state; state = 'pause'; psel = 0; return; }
-    if (state === 'title') {
-      const dx = (e.code === 'ArrowRight' || e.code === 'KeyD' ? 1 : 0) - (e.code === 'ArrowLeft' || e.code === 'KeyA' ? 1 : 0);
-      const O = [0, 1, 2, 3, 4, 6, 5], stepSec = s => { do msel = O[(O.indexOf(msel) + s + 7) % 7]; while (cache(msel)); };
-      if (e.code === 'ArrowUp' || e.code === 'KeyW') stepSec(-1);
-      else if (e.code === 'ArrowDown' || e.code === 'KeyS') stepSec(1);
-      else if (e.code === 'Enter' || e.code === 'Space') menuAct(1);
-      else if (dx && msel !== 5) menuAct(dx);
-      else if (e.code === 'Escape') { choice = true; csel = two() ? 1 : 0; if (online()) { csel = 2; enl = { sel: 0, typing: '' }; } }
-      else if (key === 'i' && two()) enrolled(); // with two players: reopen sign-up to change device (taken seats are no longer asked for at the start)
+    if (state === 'title') { // the map menu: wheel, mode, settings (see mapsAct)
+      const a = /^(ArrowUp|KeyW)$/.test(e.code) ? 'up' : /^(ArrowDown|KeyS)$/.test(e.code) ? 'down' : /^(ArrowLeft|KeyA)$/.test(e.code) ? 'left' : /^(ArrowRight|KeyD)$/.test(e.code) ? 'right' : e.code === 'Enter' || e.code === 'Space' ? 'ok' : e.code === 'Escape' ? 'back' : '';
+      if (key === 'i' && two()) enrolled(); else if (a) mapsAct(a);
       return;
     }
     if (mode === 'tourAll' && ses.raceEnd) { if (e.code === 'Enter' && performance.now() - tEnd > 1500) { ses.enclosed(); if (ses.tnEnd.finished) toMenu(); else start(); } } // Tournée: the end-of-round screen, then the next one (no "rejouer"); Enter waits 1.5 s, as in two-player
@@ -1573,10 +1582,10 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   document.fonts.load('8px ' + PS); document.fonts.load('16px ' + JP, 'スピード');
   const castiron = f => { if (hg.f_ !== f) { hg.font = f; hg.f_ = f; } }; // setting the font for each text cost as much as writing it; the last one set is noted on the context (one per view)
   // pixel text; split = red/cyan offset, glitch-style
-  function txt(s, x, y, size, col, align = 'left', split = 0, font = PS) {
+  function txt(s, x, y, size, col, align = 'left', split = 0, font = PS, max = 1e4) { // max: width the text is squeezed into rather than overflow its panel
     s = tr(s); castiron(size + 'px ' + font); hg.textAlign = align; hg.textBaseline = 'top'; x = Math.round(x);
-    if (split && HU.split) { hg.fillStyle = RD; hg.fillText(s, x - split, y); hg.fillStyle = C; hg.fillText(s, x + split, y); }
-    hg.fillStyle = col; hg.fillText(s, x, y);
+    if (split && HU.split) { hg.fillStyle = RD; hg.fillText(s, x - split, y, max); hg.fillStyle = C; hg.fillText(s, x + split, y, max); }
+    hg.fillStyle = col; hg.fillText(s, x, y, max);
   }
   const rackFrame = (c, x, y, w, h) => { R(hg, c, x, y, w, 1); R(hg, c, x, y + h - 1, w, 1); R(hg, c, x, y, 1, h); R(hg, c, x + w - 1, y, 1, h); };
   const panel = (x, y, w, h) => { // one panel style per map
@@ -1651,6 +1660,83 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (blink) tag('ENTREE : CHOISIR', cx, 222, Y);
     txt('HAUT/BAS : CHOISIR   ECHAP : LANGUE', cx, 246, 8, '#c8c8d0', 'center');
   }
+  // ---------- menus: menu-ui.js draws them from a model of the screen; the state and the actions stay here ----------
+  // Front page (language), game choice (Solo / Split screen / Online), map menu in three steps (the wheel with La Tournée as a 19th row, then the mode, then
+  // the settings and START), pause, finish (another map in the same mode, or the main menu). The online lobby, the sign-up, La Tournée's and online finishes keep the screens below.
+  window.__menuTr = s => tr(s); const UI = window.__menuUI || (window.__menuUI = MenuUI({ tr: s => window.__menuTr(s) })); // one canvas for all maps, the text in this map's language
+  const TOUR = { id: 'tour' }, ONLINE_V = MAPS[Math.random() * MAPS.length | 0].id; // the online tile shows a random map
+  let mstep = 'pick', mpick = 0, mrow = 0, quick = false, uiScreen = '';
+  const wheelMaps = () => two() || online() ? MAPS : [...MAPS, TOUR];
+  const modeList = () => online() ? ['raceCase'] : two() ? MODES2 : MODES.filter(m => m !== 'tourAll');
+  const MODE_UI = { solo: ['CONTRE-LA-MONTRE', 'TOURS LANCES CONTRE TON FANTOME', 'FANTOMES BRONZE, ARGENT, OR'], glisse: ['GLISSE', 'DEUX TOURS, CHAQUE DERAPAGE PAYE', 'LES MURS CASSENT LA SERIE'],
+    raceCase: ['COURSE', 'TROIS TOURS CONTRE TROIS IA', 'DEPART ARRETE'], broken: ['CASSE', 'LES DEGATS COMPTENT', 'POINTS : PLACE + TAKEDOWNS'], elim: ['ELIMINATION', 'QUATRE TOURS', 'LE DERNIER SORT A CHAQUE PASSAGE'],
+    tourAll: ['LA TOURNEE', 'UNE COURSE PAR CARTE, DU SOIR A MIDI', 'POINTS CUMULES, UN TROPHEE PAR DIFFICULTE'] };
+  const modeUI = m => { const u = MODE_UI[m]; return { key: m, name: m === 'glisse' && two() ? 'GLISSE EN DUEL' : u[0], lines: m === 'raceCase' && two() ? [['', '', '2 JOUEURS ET 2 RIVAUX', '3 JOUEURS ET 1 RIVAL', '4 JOUEURS, SANS IA'][VIEWS.length], u[2]] : [u[1], u[2]] }; };
+  const modeTo = m => { mode = m; setPref(cacheKey('mode'), JSON.stringify(m)); };
+  const recordOf = id => { let b = 0; try { b = JSON.parse(localStorage.getItem('vpr8.' + (id === 'ville' ? '' : id + '.') + 'best')) || 0; } catch (e) { } return b ? fmt(b) : '--'; };
+  const OPT_ROWS = [[1, 'JOUEURS', () => '' + VIEWS.length], [3, 'DIFFICULTE', () => DIFF[diff].label], [4, () => two() ? 'BOITE J1' : 'BOITE', () => manual1() ? 'MANUELLE' : 'AUTO'], [6, 'TOURS', () => '' + tnLaps]];
+  const optRows = () => OPT_ROWS.filter(r => !cache(r[0])); // the lines of menuAct this mode has (see cache)
+  const pickTo = i => { const L = wheelMaps(); mpick = (i + L.length) % L.length; const c = L[mpick]; if (c !== TOUR) { outTarget = c; window.__wanted = c.id; setPref('vpr.carte', c.id); } }; // the card changes at once; building belongs to START
+  const menuEnter = () => { const L = wheelMaps(); mstep = 'pick'; mrow = 0; mpick = Math.max(0, mode === 'tourAll' && L.includes(TOUR) ? L.indexOf(TOUR) : L.indexOf(outTarget || M)); };
+  const uiGo = () => { if (mode === 'tourAll') { const c = EVENING[tnOu().handle]; outTarget = c === M ? null : c; } msel = 5; menuAct(1); }; // La Tournée: straight to the map of its round
+  function mapsAct(a) {
+    const L = wheelMaps(), ml = modeList();
+    if (mstep === 'pick') {
+      if (a === 'up' || a === 'down') pickTo(mpick + (a === 'up' ? -1 : 1));
+      else if (a === 'ok') { const tour = L[mpick] === TOUR; SOUND.beep(660);
+        if (tour) { if (mode !== 'tourAll') modeTo('tourAll'); } else if (!ml.includes(mode)) modeTo(ml[0]);
+        if (quick) { quick = false; uiGo(); return; } // after a finish: the same mode and settings, at once
+        if (tour || ml.length < 2) { mstep = 'opts'; mrow = 0; } else { mstep = 'setup'; mrow = ml.indexOf(mode); } }
+      else if (a === 'back') { quick = false; choice = true; csel = two() ? 1 : 0; if (online()) { csel = 2; enl = { sel: 0, typing: '' }; } }
+    } else if (mstep === 'setup') {
+      if (a === 'up' || a === 'down') mrow = (mrow + (a === 'up' ? ml.length - 1 : 1)) % ml.length;
+      else if (a === 'ok') { modeTo(ml[mrow]); mstep = 'opts'; mrow = 0; SOUND.beep(660); }
+      else if (a === 'back') mstep = 'pick';
+    } else {
+      const R = optRows(), n = R.length + 1; // the settings, then START
+      if (a === 'up' || a === 'down') mrow = (mrow + (a === 'up' ? n - 1 : 1)) % n;
+      else if (a === 'back') { if (mode === 'tourAll' || ml.length < 2) mstep = 'pick'; else { mstep = 'setup'; mrow = ml.indexOf(mode); } }
+      else if (mrow < R.length) { msel = R[mrow][0]; menuAct(a === 'left' ? -1 : 1); mrow = Math.min(mrow, optRows().length); } // (the players line changes the lines)
+      else if (a === 'ok') uiGo();
+    }
+  }
+  const endUI = () => ses.raceEnd && state === 'race' && !ses.tnEnd && !online() && !demo && !AUTO; // the finishes menu-ui.js draws
+  const endGo = () => { const menu = fsel; toMenu(); if (menu) { choice = true; csel = two() ? 1 : 0; } else quick = true; SOUND.beep(660); };
+  const uiNow = () => AUTO || ST || preparingRace ? '' : state === 'title' ? home ? 'title' : ins || enl ? '' : choice ? 'main' : 'maps' : state === 'pause' ? ins ? '' : 'pause' : endUI() ? 'end' : '';
+  const uiSel = (cur, i, set, ok) => { if (cur === i) ok(); else set(i); }; // a click picks the row, a second click confirms it
+  function uiModel(s) {
+    const modeName = modeUI(mode).name, ord = n => n + (n === 1 ? 'ER' : 'E');
+    if (s === 'title') return { screen: s, lang: language, click: i => { const l = i ? 'fr' : 'en'; aMenu = true; if (l === language) homeAct('ok'); else choosesLang(l); } };
+    if (s === 'main') return { screen: s, sel: csel, items: [['SOLO', "COURSES CONTRE L'IA, GLISSE, CHRONO", 'UNE VOITURE, CINQ MODES, DES MEDAILLES SUR CHAQUE CARTE.'], ['ECRAN PARTAGE', '2 A 4 JOUEURS SUR CET ECRAN', 'MANETTES, JOY-CON OU LES DEUX MOITIES DU CLAVIER.'], ['EN LIGNE', 'COURSE A PLUSIEURS PAR CODE', 'CREE UN SALON ET DONNE LE CODE, OU REJOINS UN AMI.']],
+      videos: [[M.id], ['touge', 'canal', 'givre', 'plage'], [ONLINE_V]], click: i => uiSel(csel, i, j => { csel = j; }, () => choiceAct('Enter')), back: () => choiceAct('Escape'), scroll: d => choiceAct(d > 0 ? 'ArrowDown' : 'ArrowUp') };
+    if (s === 'maps') { const ml = mode === 'tourAll' ? ['tourAll'] : modeList(), t = tn(), r = trophy(), R = optRows();
+      const note = online() ? 'SALON ' + NET.code + ' · ' + NET.n + ' JOUEURS' : challengeErr || (CHALLENGE_DEF ? 'DEFI : ' + fmt(CHALLENGE_DEF.t) + ' A BATTRE' : quick ? modeName + (isRaceMode() ? ' · ' + DIFF[diff].label : '') + " · ENTREE : C'EST PARTI" : '');
+      return { screen: s, step: mstep, sel: mpick, row: mrow, mode: Math.max(0, ml.indexOf(mode)), note, go: mode === 'tourAll' && t ? 'REPRENDRE' : 'DEMARRER',
+        list: wheelMaps().map(c => c === TOUR ? { id: 'tour', tour: true, label: 'LA TOURNEE', sub: 'TOUTES LES CARTES EN UNE NUIT', tourIds: EVENING.map(m => m.id),
+          facts: [['CARTES', '' + EVENING.length], ['MANCHES', 'UNE COURSE PAR CARTE, DU SOIR A MIDI'], ['TROPHEE', r ? MEDN[3 - r] : 'PAS ENCORE'], ['', t ? 'MANCHE ' + (t.handle + 1) + '/' + EVENING.length + ' · ' + t.pts[0] + ' PTS' : 'POINTS CUMULES, UN TROPHEE PAR DIFFICULTE']] }
+          : { id: c.id, label: c.label, sub: c.th.hud.over[1] || '', hour: c.hour, record: recordOf(c.id) }),
+        modes: ml.map(modeUI), opts: R.map(([, l, v]) => [typeof l === 'function' ? l() : l, v()]),
+        foot: (fm => fm === 'tourAll' ? EVENING.length + ' MANCHES · ' + tnLaps + ' TOURS' : two() ? "RIEN N'EST ENREGISTRE" : USING_AI.includes(fm) ? '' : 'SEUL EN PISTE')(mstep === 'setup' ? ml[mrow] : mode), // that of the mode shown
+        click: i => { if (mstep === 'opts') { mrow = i; mapsAct(i < R.length ? 'right' : 'ok'); } else if (mstep === 'setup') uiSel(mrow, i, j => { mrow = j; }, () => mapsAct('ok')); else uiSel(mpick, i, pickTo, () => mapsAct('ok')); },
+        back: () => mapsAct('back'), scroll: d => mapsAct(d > 0 ? 'down' : 'up') }; }
+    if (s === 'pause') { const P = pauseItems(); return { screen: s, sel: psel, items: P.map(p => p[0]), sub: M.label + ' · ' + modeName, video: M.id,
+      click: i => uiSel(psel, i, j => { psel = j; }, () => P[i][1]()), back: () => { state = prev; }, scroll: d => { psel = (psel + (d > 0 ? 1 : P.length - 1)) % P.length; } }; }
+    // end: the standings (or the Glisse score), then the two ways on
+    const me = VIEWS[0].self, gl = ses.glEnd, m = { screen: s, sel: fsel, items: ['NOUVELLE CARTE', 'MENU PRINCIPAL'], sub: M.label + ' · ' + modeName + (isRaceMode() ? ' · ' + DIFF[diff].label : ''),
+      help: fsel ? 'RETOUR A SOLO / ECRAN PARTAGE / EN LIGNE' : "MEME MODE, MEMES REGLAGES : CHOISIS LA CARTE ET C'EST PARTI", click: i => uiSel(fsel, i, j => { fsel = j; }, () => { if (performance.now() - tEnd > 1500) endGo(); }), scroll: () => { fsel ^= 1; } };
+    if (race && race.timedOut) { const o = race.cars.slice().sort((a, b) => b.pts - a.pts); return { ...m, title: 'GLISSE EN DUEL', head: ['PLACE', 'SCORE'], rows: o.map(c => [pierBuf(c)[0], Math.round(c.pts) + ' PTS', c === o[0]]) }; }
+    if (race) { const o = raceOrder(race), t1 = o[0].ending, human = c => two() ? c.k < 0 || c.k >= 3 : c === me;
+      return { ...m, title: two() ? 'ARRIVEE' : (me.out ? (race.broken ? "HORS D'USAGE" : 'ELIMINE') : 'ARRIVEE') + ' : ' + ord(me.pos), head: ['PLACE', race.broken ? 'POINTS' : 'TEMPS'],
+        rows: o.map((c, i) => [!two() && c === me ? 'VOUS' : pierBuf(c)[0], race.broken ? brokenPts(c) + ' PTS' : c.ending ? (i ? '+' + (c.ending - t1).toFixed(2) : fmt(c.ending)) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', human(c)]),
+        foot: two() ? null : [['MEILLEUR TOUR ' + fmt(me.bl), '#e8ecf4'], [race.broken ? 'TAKEDOWNS ' + me.ca.td : 'GLISSES ' + me.nDrift + '  MURS ' + me.nWall, '#9ab4e0']] }; }
+    const md = gl && gl.valid ? medG(gl.score) : 0;
+    return { ...m, title: 'GLISSE : ' + (gl ? gl.score : 0) + ' PTS', stats: [['TEMPS', fmt(ses.tRace)], ['RECORD', !gl || !gl.valid ? 'HORS DELAI' : gl.rec ? 'NOUVEAU RECORD' : ses.bestG + ' PTS'], ['DELAI', fmt(GLT)]],
+      foot: [md ? ['MEDAILLE ' + MEDN[md - 1], MEDC[md - 1]] : ['PAS DE MEDAILLE', '#9ab4e0'], md < 3 ? ['VISE ' + MEDN[md] + ' ' + GLM[md] + ' PTS', MEDC[md]] : ['', '#fff']] };
+  }
+  function uiFrame() { // draws the menu-ui.js screen of the moment; false: none (the race, or a screen of the old kit)
+    const s = uiNow(); if (s !== uiScreen) { if (s === 'maps') menuEnter(); uiScreen = s; }
+    if (!s) { UI.hide(); return false; } UI.draw(uiModel(s)); return true;
+  }
   // Screens common to all players: home, main menu, pause. Drawn in hg on a grid of HW × 270: the HUD of the solo view, the full-screen layer for two players (see layer).
   function screens(HW) {
     const cx = HW / 2, blink = (performance.now() / 160 | 0) % 3 > 0;
@@ -1679,19 +1765,19 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       const greenhouse = L.length > 4; // 5 lines (with two players, against BOTS): closer together, to leave DEMARRER above the track
       L.forEach(([l, v, i], k) => {
         const on = msel === i, y = (greenhouse ? 104 : 105) + k * (greenhouse ? 10 : 12);
-        txt((on ? '> ' : '  ') + l, cx - 152, y, 8, on ? Y : '#e8e8e4'); txt(on ? '< ' + v + ' >' : v, cx + 152, y, 8, on ? Y : C, 'right');
+        txt((on ? '> ' : '  ') + l, cx - 152, y, 8, on ? Y : '#e8e8e4'); txt(on ? '< ' + v + ' >' : v, cx + 152, y, 8, on ? Y : C, 'right', 0, PS, 292 - tr(l).length * 8);
       });
       const go = mode === 'tourAll' && tn() ? 'REPRENDRE' : 'DEMARRER'; if (msel === 5) { if (blink) tag('> ' + go + ' <', cx, greenhouse ? 154 : 152, Y); } else txt(go, cx, greenhouse ? 157 : 155, 8, '#e8e8e4', 'center');
       hg.drawImage(MM.c, cx - 152, 170); // the track, then the map card
-      [CARD.label, (T.len / 1000).toFixed(1).replace('.', ',') + ' KM', mode === 'tourAll' ? (tn() ? 'MANCHE ' + (tn().handle + 1) + '/' + EVENING.length + ' · ' + EVENING[tn().handle].hour + ' · ' + tn().pts[0] + ' PTS' : 'UNE NUIT, ' + EVENING.length + ' MANCHES') : mode === 'raceCase' ? d2 ? ['', '', '2 JOUEURS ET 2 RIVAUX', '3 JOUEURS ET 1 RIVAL', '4 JOUEURS, SANS IA'][VIEWS.length] : '3 TOURS CONTRE 3 IA' : mode === 'elim' ? 'LE DERNIER SORT' : d2 ? 'LE MEILLEUR SCORE GAGNE' : mode === 'glisse' ? 'RECORD ' + (ses.bestG ? ses.bestG + ' PTS' : '--') : 'RECORD ' + (ses.best ? fmt(ses.best) : '--')].forEach((l, i) => txt(l, cx - 58, 174 + i * 11, 8, i ? '#e8e8e4' : C));
-      if (mode === 'tourAll') { const r = trophy(); txt(r ? 'TROPHEE ' + MEDN[3 - r] : 'PAS ENCORE DE TROPHEE', cx - 58, 218, 8, r ? MEDC[3 - r] : '#e8e8e4'); } // the trophy for this difficulty: gold, silver or bronze depending on the best final place
-      if (d2) txt("RIEN N'EST ENREGISTRE", cx - 58, 218, 8, '#e8e8e4'); // no record, medal or ghost either: nothing to show
-      else if (!isRaceMode()) { const gl = mode === 'glisse', m = gl ? medG(ses.bestG) : medal(ses.best); if (m) txt(MEDN[m - 1], cx + 152, 196, 8, MEDC[m - 1], 'right'); if (m < 3) txt('VISE ' + MEDN[m] + ' ' + (gl ? GLM[m] + ' PTS' : fmt(REF * MED[m])), cx - 58, 218, 8, MEDC[m]); } // medal earned, and the next one to go for
-      txt('HAUT/BAS : CHOISIR  GAUCHE/DROITE : CHANGER', cx, 245, 8, '#e8e8e4', 'center'); txt(d2 ? 'I : INSCRIPTION (MANETTES, JOY-CON, CLAVIER)' : 'FLECHES / ZQSD   ESPACE : GLISSE   X : NITRO', cx, 257, 8, '#e8e8e4', 'center');
+      [CARD.label, (T.len / 1000).toFixed(1).replace('.', ',') + ' KM', mode === 'tourAll' ? (tn() ? 'MANCHE ' + (tn().handle + 1) + '/' + EVENING.length + ' · ' + EVENING[tn().handle].hour + ' · ' + tn().pts[0] + ' PTS' : 'UNE NUIT, ' + EVENING.length + ' MANCHES') : mode === 'raceCase' ? d2 ? ['', '', '2 JOUEURS ET 2 RIVAUX', '3 JOUEURS ET 1 RIVAL', '4 JOUEURS, SANS IA'][VIEWS.length] : '3 TOURS CONTRE 3 IA' : mode === 'elim' ? 'LE DERNIER SORT' : d2 ? 'LE MEILLEUR SCORE GAGNE' : mode === 'glisse' ? 'RECORD ' + (ses.bestG ? ses.bestG + ' PTS' : '--') : 'RECORD ' + (ses.best ? fmt(ses.best) : '--')].forEach((l, i) => txt(l, cx - 58, 174 + i * 11, 8, i ? '#e8e8e4' : C, 'left', 0, PS, 210));
+      if (mode === 'tourAll') { const r = trophy(); txt(r ? 'TROPHEE ' + MEDN[3 - r] : 'PAS ENCORE DE TROPHEE', cx - 58, 218, 8, r ? MEDC[3 - r] : '#e8e8e4', 'left', 0, PS, 210); } // the trophy for this difficulty: gold, silver or bronze depending on the best final place
+      if (d2) txt("RIEN N'EST ENREGISTRE", cx - 58, 218, 8, '#e8e8e4', 'left', 0, PS, 210); // no record, medal or ghost either: nothing to show
+      else if (!isRaceMode()) { const gl = mode === 'glisse', m = gl ? medG(ses.bestG) : medal(ses.best); if (m) txt(MEDN[m - 1], cx + 152, 196, 8, MEDC[m - 1], 'right'); if (m < 3) txt('VISE ' + MEDN[m] + ' ' + (gl ? GLM[m] + ' PTS' : fmt(REF * MED[m])), cx - 58, 218, 8, MEDC[m], 'left', 0, PS, 210); } // medal earned, and the next one to go for
+      txt('HAUT/BAS : CHOISIR  GAUCHE/DROITE : CHANGER', cx, 245, 8, '#e8e8e4', 'center', 0, PS, HW - 8); txt(d2 ? 'I : INSCRIPTION (MANETTES, JOY-CON, CLAVIER)' : 'FLECHES / ZQSD   ESPACE : GLISSE   X : NITRO', cx, 257, 8, '#e8e8e4', 'center', 0, PS, HW - 8);
       if (outTarget && outTarget !== M) { // Complete card from offline data; no scene or physics work on selection.
         R(hg, '#08080c', cx - 156, 166, 312, 70); const P = card.points, xs = P.map(p => p[0]), zs = P.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), k = Math.min(80 / (Math.max(...xs) - x0 || 1), 52 / (Math.max(...zs) - z0 || 1));
         hg.strokeStyle = '#e8e8e4'; hg.lineWidth = 1; hg.beginPath(); P.forEach(p => hg.lineTo(cx - 150 + (p[0] - x0) * k, 172 + (p[1] - z0) * k)); hg.closePath(); hg.stroke();
-        txt(card.car, cx - 58, 174, 8, C); txt(('' + card.km).replace('.', ',') + ' KM', cx - 58, 185, 8, '#e8e8e4');
+        txt(card.car, cx - 58, 174, 8, C, 'left', 0, PS, 210); txt(('' + card.km).replace('.', ',') + ' KM', cx - 58, 185, 8, '#e8e8e4');
         let best = 0; try { best = JSON.parse(localStorage.getItem('vpr8.' + (menuMap.id === 'ville' ? '' : menuMap.id + '.') + 'best')) || 0; } catch (e) { }
         txt('RECORD ' + (best ? fmt(best) : '--'), cx - 58, 196, 8, '#e8e8e4');
       }
@@ -1703,7 +1789,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       pauseItems().forEach(([s], i) => i === psel ? tag('> ' + s + ' <', cx, 92 + i * 18, Y) : txt(s, cx, 95 + i * 18, 8, '#e8e8e4', 'center'));
       txt('HAUT / BAS : CHOISIR   ENTREE : VALIDER', cx, 246, 8, C, 'center');
     }
-    if (ses.raceEnd && race && state === 'race') { // with two players, both players finished: the shared board. Race and Elimination: the four cars, the gaps, the best laps; Glisse duel: the two scores and the winner
+    if (ses.raceEnd && race && state === 'race' && !endUI()) { // with two players, both players finished: the shared board. Race and Elimination: the four cars, the gaps, the best laps; Glisse duel: the two scores and the winner
       const o = raceOrder(race), t1 = o[0].ending, label = c => pierBuf(c)[0], ord = n => n + (n === 1 ? 'ER' : 'E');
       R(hg, 'rgba(8,8,12,.8)', 0, 0, HW, HH); panel(cx - 170, 40, 340, 176);
       if (race.timedOut) { const nc = race.cars.length, hi = Math.max(...race.cars.map(c => c.pts)), gs = race.cars.filter(c => c.pts === hi), g = gs.length > 1 ? null : gs[0];
@@ -1821,7 +1907,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (b) L.push(['GLISSES ' + b[0], '#e8e8e4'], ['NITRO ' + b[1], C], ['MURS ' + b[2], b[2] ? RD : '#e8e8e4']);
       const ly = race && !gl ? 114 : 60; panel(6, ly, 132, 8 + L.length * 11); L.forEach(([s, c], i) => txt(s, 12, ly + 5 + i * 11, 8, c)); // in a race, under the position panel
     }
-    const glEnd = ses.glEnd; if (glEnd && state === 'race') { // Glisse mode, both laps completed: the score, if it counts, the record and the medal
+    const glEnd = ses.glEnd; if (glEnd && state === 'race' && !endUI()) { // Glisse mode, both laps completed: the score, if it counts, the record and the medal
       const m = medG(glEnd.score);
       panel(cx - 150, 52, 300, 150); txt('GLISSE : ' + glEnd.score, cx, 60, 16, Y, 'center', 1);
       [[glEnd.valid ? glEnd.rec ? 'NOUVEAU RECORD' : 'RECORD ' + ses.bestG + ' PTS' : 'HORS DELAI : SCORE NON COMPTE', glEnd.valid && glEnd.rec ? C : RD], ['TEMPS ' + fmt(ses.tRace) + '   DELAI ' + fmt(GLT), '#e8e8e4'],
@@ -1831,7 +1917,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (COM && race && race.timedOut && vu.finished && !ses.raceEnd && state === 'race') { // Glisse en duel, ce joueur a fini : son score, en attendant l'autre
       panel(cx - 130, 60, 260, 62); txt('SCORE ' + Math.round(self.pts), cx, 68, 16, Y, 'center', 1); txt(self.ending ? 'TEMPS ' + fmt(self.ending) : 'HORS DELAI : SCORE NUL', cx, 92, 8, self.ending ? '#e8e8e4' : RD, 'center'); txt("L'AUTRE JOUEUR ROULE ENCORE", cx, 106, 8, C, 'center');
     }
-    if (finished && race && state === 'race' && !ses.tnEnd && (alone || !ses.raceEnd && !self.out && !race.timedOut)) { // finish: standings, completed as the others cross the line (with two players: only in the view of the first to finish; the shared board takes over)
+    if (finished && race && state === 'race' && !ses.tnEnd && !endUI() && (alone || !ses.raceEnd && !self.out && !race.timedOut)) { // finish: standings, completed as the others cross the line (with two players: only in the view of the first to finish; the shared board takes over)
       panel(cx - 150, 52, 300, 166); txt((car.out ? (race.broken ? "HORS D'USAGE : " : 'ELIMINE : ') : 'ARRIVEE : ') + car.pos + (car.pos === 1 ? 'ER' : 'E'), cx, 60, 16, Y, 'center', 1); const t1 = raceOrder(race)[0].ending;
       raceOrder(race).forEach((c, i) => { const j = c !== car; txt((i + 1) + '. ' + (j ? pierBuf(c)[0] : 'VOUS'), cx - 138, 86 + i * 15, 8, j ? pierBuf(c)[1] : Y); txt(c.ending ? fmt(c.ending) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.out ? 138 : 50), 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); if (race.broken) txt(brokenPts(c) + ' PTS', cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); else if (i && c.ending) txt('+' + (c.ending - t1).toFixed(2), cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); });
       txt('MEILLEUR TOUR ' + fmt(self.bl), cx, 152, 8, C, 'center'); txt(race.broken ? 'TAKEDOWNS ' + car.ca.td + '  POINTS ' + brokenPts(car) : 'GLISSES ' + car.nDrift + '  NITRO ' + car.nBoost + '  MURS ' + car.nWall, cx, 166, 8, race.broken ? Y : '#e8e8e4', 'center'); txt('NIVEAU ' + DIFF[diff].label, cx, 180, 8, '#e8e8e4', 'center');
@@ -1912,7 +1998,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false; for (const o of caches) o.visible = true;
   }
 
-  const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
+  const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc), boxM = new THREE.Matrix4(); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
   const TRB = ST && ST.shakes * ST.aa || SHAKES;
   // continuous altitude along the track: read sample by sample, it made the car and the camera jump at each step, all the more visible when driving slowly
   // (the computation is in sim.js: ground(), which adds the wall's height on a drivable wall; car.y is this ground, or the flight height)
@@ -1979,7 +2065,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (state === 'race' && !ses.raceEnd) { // end of race, lap completed, Drift over: the session decides, we show and play it
         tTraffic += H; const ev = ses.stepSec(car, H);
         for (const i of ev.arrived) if (VIEWS[i]) { VIEWS[i].finished = true; SOUND.arrival(race.cars[i].pos); } // online, the other humans have no view here
-        if (ev.ending && race) { tEnd = performance.now(); if (mode === 'tourAll') ses.enclosed(); } // Tournée: the round ends at the finish; a single screen shows the race and the overall standings
+        if (ev.ending) { tEnd = performance.now(); if (race && mode === 'tourAll') ses.enclosed(); } // Tournée: the round ends at the finish; a single screen shows the race and the overall standings
         if (ev.lapRun) { VIEWS[0].result = { ...ev.lapRun, T: 5, b: summary(VIEWS[0]) }; if (ev.ghostRun) padSaid('FANTÔME : ' + labelF()); SOUND.stinger(ev.lapRun.rec); } // lap time, shown for 4 s
         if (ev.glisse) SOUND.stinger(ses.glEnd.rec);
       }
@@ -2088,8 +2174,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     cam.rotateX(vib() * shake * 0.12); cam.rotateY(vib() * shake * 0.08); // the image itself jerks (≈ 0.4° at the peak), sharp and small
     const nitE = vu.nit * vu.nit * (3 - 2 * vu.nit); // nitro: smooth start and end (widened field and vignette)
     cam.fov = 62 + 20 * rc + 10 * rv * rv + 3 * car.slide + 6 * nitE; // + grand-angle en fin de course : l'effet tunnel
-    const photo = window.__g.view; // shortcut: debug console only, __g.view = [angle° around the car, distance, height] to inspect the model; replace with a real photo mode if one is wanted
-    if (photo) { const a = car.th + photo[0] * Math.PI / 180; cam.position.set(car.x + Math.cos(a) * photo[1], carY + photo[2], car.z + Math.sin(a) * photo[1]); cam.lookAt(car.x, carY + 0.7, car.z); cam.fov = 45; }
+    const photo = window.__g.view; // shortcut: debug console only, __g.view = [angle° around the car, distance, height, field° (45 by default)] to inspect the model; replace with a real photo mode if one is wanted
+    if (photo && photo.p) { cam.position.set(...photo.p); cam.lookAt(...photo.l); cam.fov = photo.f || 45; } // or { p: position, l: point looked at, f: field° } in the world: tools/build-menu-previews.js flies over the track
+    else if (photo) { const a = car.th + photo[0] * Math.PI / 180; cam.position.set(car.x + Math.cos(a) * photo[1], carY + photo[2], car.z + Math.sin(a) * photo[1]); cam.lookAt(car.x, carY + 0.7, car.z); cam.fov = photo[3] || 45; }
     cam.updateProjectionMatrix();
     const stepL = sunFollow(car);
     // fog and sky: neon night ↔ tunnel; lightning: double flash on the sky and the lighting (the thunder starts from fxFrame)
@@ -2109,7 +2196,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const dmgP = G.userData.dmgP, hs = (dmgP.ph[0] - dmgP.ph[1]) * 0.55; // one headlight broken: the beam comes from the other, at half strength; both: nothing
     LUX.uCam.value = cam.position; LUX.uHP.value.set(car.x + fx * 1.9 - fz * hs, carY + 0.62, car.z + fz * 1.9 + fx * hs); LUX.uHD.value.set(fx * cp, Math.sin(pitch), fz * cp); LUX.uHC.value.copy(HCB).multiplyScalar(headlightsV * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2));
     if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.14 * kBr * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2); cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
-    G.updateMatrixWorld(); LUX.uBox.value.copy(G.matrixWorld).multiply(BOX).invert(); // G: the view's car model; the cast shadow under the fixtures exists only for it
+    G.updateMatrixWorld(); boxM.copy(G.matrixWorld).multiply(BOX).invert().toArray(LUX.uBox.value, 0); let nb = 1; // G: the view's car model, first shadow box; the two nearest cars follow (below)
     LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
     let nl = 0;
     const LP = LUX.uLP.value, LC = LUX.uLC.value, put = (x, y, z, c, r, k) => { if (nl < NL) { const m = k * BRIGHT_GAIN; const o = nl * 4; LP[o] = x; LP[o + 1] = y; LP[o + 2] = z; LP[o + 3] = r; LC[nl * 3] = c.r * m; LC[nl * 3 + 1] = c.g * m; LC[nl * 3 + 2] = c.b * m; nl++; } };
@@ -2130,6 +2217,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     lights.material.size = (TH.headlightsHaze ? 1 + 0.6 * kBr : 1) * 0.5 / Math.tan(vu.cam.fov * Math.PI / 360) * RH / renderer.domElement.height * renderer.getPixelRatio(); // three.js measures points on the canvas (0.5 × its height / distance); we draw into the view's target, RH lines
     for (const c of veh.sort((a, b) => d2(a) - d2(b)).slice(0, 2)) {
       const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 6.5 : 10, ar = c.lane === undefined ? 3.4 : 7; // a truck is longer
+      if (c.lane === undefined) { const g = model(c); g.updateMatrixWorld(); boxM.copy(g.matrixWorld).multiply(BOX); }
+      else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
+      boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
       const dv = c.lane === undefined ? model(c).userData.dmgP : null, kp = dv ? 1 - (dv.ph[0] + dv.ph[1]) / 2 : 1, kf = dv ? 1 - (dv.fe[0] + dv.fe[1]) / 2 : 1; // its headlights and broken lights
       put(c.x + ax * av, y + 0.8, c.z + az * av, HEADLIGHT, 14, 3 * nightV * kp); put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
       if (L.neon && race && (c.k < 0 || c.k >= 3)) put(c.x, y + 0.3, c.z, NEONC, 5.5, nightV * (0.8 + 0.4 * pulse)); // the other player's car keeps its underbody neon (c.k: -1 player 1, 3 player 2)
@@ -2138,7 +2228,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (car.idx !== vu.brightIdx) { vu.brightIdx = car.idx; for (const e of vu.brights) { let d = (e.l.i - car.idx + N) % N; if (d > N / 2) d -= N; e.d = d > 0 ? d * 0.5 : -d; } vu.brights.sort((a, b) => a.d - b.d); } // the sort only changes from one track sample to the next
     const LS = vu.brights, ns = NL - nl, dm = LS.length > ns ? LS[ns].d : 1e9;
     for (let k = 0; k < ns && k < LS.length; k++) { const e = LS[k], l = e.l; put(l.x, l.y, l.z, l.c, l.r, Math.min(1, (dm - e.d) / (dm * 0.3 + 0.01)) * (l.tun && TH.alarm ? 0.5 + pulse : 1)); }
-    LUX.uN.value = nl;
+    LUX.uN.value = nl; LUX.uNB.value = nb;
     // rain: each drop recedes at the car's speed, its streak stretches by as much
     const NG = TH.snowSurf || 0, pl = (NG || rainAt(car.idx)) * (1 - lm), gl = NG ? 0.2 : 1.9 * Math.max(1, 0.4 + 0.6 * pl), nr = Math.min(RN, Math.round(400 * pl ** 1.5)); rain.visible = pl > 0.02; splash.visible = !NG && rain.visible; // th.snowSurf = strength of the flakes: the same particles, falling at 4 m/s, with no impact or rain noise
     rainGeo.setDrawRange(0, 2 * nr); rain.position.set(car.x, carY, car.z); RU.uOp.value = Math.min(1, 0.6 + 0.15 * pl);
@@ -2210,20 +2300,21 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const menuSound = { state: 'title', T, car: null, r: 0, sp: 0, gas: 0, rpm: 0.3, load: 0, spool: 0, hit: 0, bump: 0, tun: 0, amb: 0, otherCars: [] };
   const loop = now => {
     raf = requestAnimationFrame(loop);
-    if (preparingRace && state === 'title') { GAME_LOADER.menuHide(); return; }
+    if (preparingRace && state === 'title') { GAME_LOADER.menuHide(); UI.hide(); return; }
     if ((state === 'title' || state === 'pause') && !AUTO && !ST) {
       last = Math.max(last, now);
       for (const c of PER.poll({ menu: true, home, two: two() })) command(c);
       if (ins) inscription(); else if (two()) gamepads2();
       if (state === 'title' || state === 'pause') {
         menuSound.state = state; menuSound.car = VIEWS[0].self; SOUND.frame(state === 'pause' ? 0 : 1 / 60, menuSound);
+        if (uiFrame()) { GAME_LOADER.menuHide(); return; }
         const cv = COM ? COM.c : VIEWS[0].hudC; hg = COM ? COM.g : VIEWS[0].hg; hg.clearRect(0, 0, cv.width, cv.height); screens(cv.width);
         GAME_LOADER.menuFrame(outTarget || M, cv); return;
       }
     }
     GAME_LOADER.menuHide();
     if (window.__mapBuilding && state === 'title' && now - previewAt < 1000 / 24) return;
-    previewAt = now; frame(now); GAME_LOADER.previewFrame(M.id, renderer.domElement, COM && COM.c);
+    previewAt = now; frame(now); GAME_LOADER.previewFrame(M.id, renderer.domElement, COM && COM.c); uiFrame();
   };
   // stop (map change): no more loop or listeners; then frees() gives back to the GPU everything this map put there (the shaders, for their part, stay with the renderer as long as a material uses them)
   const ending = () => { cancelAnimationFrame(raf); halt.abort(); clearTimeout(padNoteT); padNote.remove(); if (COM) COM.c.remove(); };
@@ -2246,7 +2337,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const av = window.__g; if (av && av !== api) (av.wakeup || av.ending)();
     active = true; preparingRace = false; window.__g = api; window.MAP_DEF = M; PER.seek(); // Joy-Con allowed since this map was built (home screen window, opened by another instance): without this, it would never see it
     if (state !== 'title') toMenu(); home = true; aMenu = false; choice = false; msel = 5; outTarget = null; demo = null; enl = null; ins = false; inactive = 0; // like a brand-new map
-    language = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr'; applyLanguage(); manual = pref('vpr.boite', 'a') === 'm'; VIEWS[0].self.manual = manual; // the settings may have changed on another map
+    language = pref('vpr.langue', 'en') === 'fr' ? 'fr' : 'en'; applyLanguage(); manual = pref('vpr.boite', 'a') === 'm'; VIEWS[0].self.manual = manual; // the settings may have changed on another map
     { const n = +(Q.get('players') || pref('vpr7.joueurs', '1')); players(n > 1 && !CHALLENGE_DEF && !NET.role ? n : 1); }
     if (COM) COM.c.style.display = '';
     arrival(); resize(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
@@ -2266,7 +2357,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     return E[c.id];
   };
-  const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, get menu() { return { id: (outTarget || M).id, row: msel, pauseRow: psel, choiceRow: csel, choice, mode, diff, manual: manual1(), preparing: preparingRace }; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); if (state === 'title' && !AUTO && !ST) { window.__wanted = outTarget.id; setPref('vpr.carte', outTarget.id); } else changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)
+  const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, get menu() { return { id: (outTarget || M).id, row: msel, pauseRow: psel, choiceRow: csel, choice, mode, diff, manual: manual1(), preparing: preparingRace, step: mstep, pick: mpick, opt: mrow, opts: optRows().length }; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); if (state === 'title' && !AUTO && !ST) { window.__wanted = outTarget.id; setPref('vpr.carte', outTarget.id); } else changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)
   if (/[?&]hitbox\b/.test(location.search)) import('./hitbox.js').then(h => h.watch(THREE, T, scene)); // debug: collision limits in transparent red
   if (backdrop) { // Upload every resource once, but rasterize only 8 × 8 pixels instead of the full menu with all culling disabled.
     await whoosh(); const vu = VIEWS[0], caches = [], triIdx = [];

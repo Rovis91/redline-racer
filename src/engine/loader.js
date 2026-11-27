@@ -7,19 +7,22 @@
   let preview = null, previewOwner = null, previewAnimation = null, previewRevision = 0;
   let menu = null;
   let menuAnimation = null;
-  const pictures = new Map();
+  const pictures = new Map(), clip = Object.assign(document.createElement('video'), { muted: true, loop: true, playsInline: true, preload: 'auto' }); // the menu's moving background: assets/previews/<map>.webm, tools/build-menu-previews.js
   const menuFrame = (map, hud) => {
     if (!menu) { menu = document.body.appendChild(document.createElement('canvas')); menu.id = 'menu-view'; menu.setAttribute('aria-hidden', 'true'); menu.style.cssText = 'pointer-events:none;z-index:8'; }
     if (menu.width !== hud.width || menu.height !== hud.height) { menu.width = hud.width; menu.height = hud.height; }
     if (!pictures.has(map.id)) { const im = new Image(); im.decoding = 'async'; im.src = 'assets/previews/' + map.id + '.webp'; pictures.set(map.id, im); }
     const g = menu.getContext('2d'), im = pictures.get(map.id), color = '#' + Number(map.th.fog).toString(16).padStart(6, '0'); g.imageSmoothingEnabled = false;
+    if (!reduced.matches && clip.dataset.map !== map.id) { clip.dataset.map = map.id; clip.src = 'assets/previews/' + map.id + '.webm'; clip.play().catch(() => {}); } // one decoder, its source swapped with the map
+    const cover = (src, w, h) => { const s = Math.max(menu.width / w, menu.height / h); g.drawImage(src, (menu.width - w * s) / 2, (menu.height - h * s) / 2, w * s, h * s); };
     g.fillStyle = color; g.fillRect(0, 0, menu.width, menu.height);
-    if (im.complete && im.naturalWidth) { const scale = Math.max(menu.width / im.width, menu.height / im.height), w = im.width * scale, h = im.height * scale; g.drawImage(im, (menu.width - w) / 2, (menu.height - h) / 2, w, h); }
-    g.drawImage(hud, 0, 0); menu.hidden = false;
+    if (clip.dataset.map === map.id && clip.readyState >= 2) cover(clip, clip.videoWidth, clip.videoHeight); // the clip once it plays, the still until then (or offline, or reduced motion)
+    else if (im.complete && im.naturalWidth) cover(im, im.width, im.height);
+    g.drawImage(hud, 0, 0); menu.hidden = false; if (clip.paused && !clip.error && clip.dataset.map === map.id && !reduced.matches) clip.play().catch(() => {});
     if (menu.dataset.map !== map.id) { menu.dataset.map = map.id; if (menuAnimation) menuAnimation.cancel(); if (!reduced.matches) menuAnimation = menu.animate([{ opacity: 0.75 }, { opacity: 1 }], { duration: 100, easing: 'ease-out' }); }
   };
-  const menuHide = () => { if (menu) menu.hidden = true; };
-  const language = () => { try { return localStorage.getItem('vpr.langue') === 'en' ? 'en' : 'fr'; } catch (e) { return 'fr'; } };
+  const menuHide = () => { if (menu) menu.hidden = true; if (!clip.paused) clip.pause(); };
+  const language = () => { try { return localStorage.getItem('vpr.langue') === 'fr' ? 'fr' : 'en'; } catch (e) { return 'en'; } };
   const bootEnglish = { 'MISE EN ROUTE': 'STARTING UP', 'PREPARATION DU CIRCUIT': 'PREPARING THE TRACK', 'PREPARATION DE L\'IMAGE': 'PREPARING THE PICTURE', 'PRET A ROULER': 'READY TO DRIVE', 'PREPARATION DU JEU': 'PREPARING THE GAME', 'COURSE ARCADE': 'ARCADE RACING', 'VILLE A PLEIN REGIME': 'FULL THROTTLE CITY', 'LA NUIT EST A VOUS.': 'THE NIGHT IS YOURS.', '18 CIRCUITS': '18 TRACKS', 'RADIO EN DIRECT': 'LIVE RADIO', "JUSQU'A 4 JOUEURS": 'UP TO 4 PLAYERS', 'REESSAYER': 'RETRY', 'CHARGEMENT IMPOSSIBLE': 'UNABLE TO LOAD' };
   const text = s => bootEnglish[s] ? language() === 'en' ? bootEnglish[s] : s : window.translated ? translated(s, language()) : s;
   const progress = (value, label, step) => {
