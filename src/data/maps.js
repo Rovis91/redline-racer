@@ -1412,7 +1412,7 @@
         // life and atmosphere (docs/methods/MAP-ENGINE-OPTIONS.md): soft shadow edges under the low sun, the eye adapting into the tube and out of it, haze over the flood, from the motorway and in the tube,
         // dead leaves behind the cars and spray in the flood (dust), the flooded lane seen wet (the scenery leaves the engine's roadway bare there), the water's drawing filtered
         shadows: { soft: 1 }, eye: { tun: 0.55, blackM: 0.5, clair: 0.2 }, haze: [[K.eauA + 2, K.eauB - 1, 0.8], [K.fusion, K.travee + 2, 0.78], [K.bouche + 2, K.station + 4, 0.72]], skySeg: 32,
-        dust: [0.62, 0.56, 0.46], leaves: [[0.72, 0.55, 0.2], [0.55, 0.4, 0.16], [0.4, 0.3, 0.14]], wetVisible: 1, smooth: ['eauAutoroute'],
+        dust: [0.62, 0.56, 0.46], leaves: [[0.72, 0.55, 0.2], [0.55, 0.4, 0.16], [0.4, 0.3, 0.14]], wetVisible: 1, reflectionWater: 1, smooth: ['eauAutoroute'],
         chev: 0, withoutCones: 1, guardM: 0, wallH: 0, road: ['#3e4146', '#3e4146', '#3e4146', '#3e4146', '#3e4146', '#3e4146', false], intoWall: ['#c8c2b0', '#9a9484', '#7a8a5a', '#6a6a60'], startLine: [0xe9b850, 0xf0e6c8, '#f0e6c8'],
         tun: { ground: ['#33383a', '#33383a', '#33383a', '#33383a', '#33383a', '#33383a'], wallMeshes: ['#2c2a24', '#2c2a24'], wallFace: ['#2c3a34', '#3a4a40', '#4a5a4c', '#141a16'], ceiling: ['#1c1a16', '#2a2620', '#2a2620', '#2a2620'],
           fog: 0x2e3c34, portal: 0x8f8c82, neons: [0xd8e8c8, 0xd8e8c8], hull: 0, h: 5.2, without: ['walls', 'gates', 'lamps', 'lights'], day: 0.4 }, // the scenery builds the metro: straight walls, the track winds between them
