@@ -83,6 +83,7 @@
           const [x, z] = edgePt(s, sd, W + 10.5); stalls.push([x, s.y - 0.15, z, Math.atan2(-sd * s.tz, sd * s.tx), 1, 1, 1, cols[(k * 3 + (sd > 0 ? 1 : 0)) % 4]]);
           if (k % 5 === 1) h.steam(x, s.y + 1.4, z); // steam from the stoves, a few
         }
+        for (let i = i0 + 8, k = 0; i < i1 - 4; i += 16, k++) { const s = S[i], [x, z] = edgePt(s, k & 1 ? 1 : -1, W + 5); emis(i, x, s.y + 2.2, z, 0xff9a40, 13, 2.2); } // the stoves and bulbs of the stalls spill onto the slab, the crowd and the road edge: one side then the other
         for (let k = 0; k < 70; k++) { const s = S[i0 + 2 + (al() * (n - 4) | 0)], sd = al() < 0.5 ? -1 : 1, [x, z] = edgePt(s, sd, W + 3.5 + al() * 4.5), ht = 1.55 + al() * 0.3;
           people.push([x, s.y - 0.15 + ht / 2, z, al() * 6, 1, ht / 1.7, 1]); if (al() < 0.55) parap.push([x, s.y + ht + 0.2, z, 0, 0.9 + al() * 0.3]); }
         inst(h, geo('boxMesh', 0.5, 1.7, 0.35), mat('paint', { c: 0x3a3448 }), people);
@@ -101,6 +102,7 @@
         inst(h, geo('lanternStreet'), mat('paint', { emis: 1, c: 0xff2a30 }), lant);
         inst(h, geo('boxMesh', 0.3, 0.12, 0.3), mat('paint', { emis: 1, c: 0xffd05a }), lant.map(p => [p[0], p[1] - 0.46, p[2], p[3]])); // the golden tassel under each lantern
         box(18, 3.2, 0.4, mat('written', GLOWI, 224, 40, '#2a0408', '#ffd05a', '夜市 MARCHE DE NUIT', 26), ...(s => [s.x, s.y + 9.2, s.z])(S[i0 + 2])).rotation.y = h.across(S[i0 + 2]); // the entrance sign, placed on the first wire
+        emis(i0 + 2, S[i0 + 2].x, S[i0 + 2].y + 6.5, S[i0 + 2].z, 0xffd05a, 14, 0.8); // the entrance sign lights the road under it
       }
       { // the tunnel entrance into a residential block, like the Chongqing metro: the expressway enters through a hole in the middle of the floors
         const T = h.T, K = 15, a = S[T.t0], b = S[T.t0 + K], L = Math.hypot(b.x - a.x, b.z - a.z), ux = (b.x - a.x) / L, uz = (b.z - a.z) / L; // axis: the chord of the tunnel's first 30 m, which turns
@@ -111,6 +113,7 @@
           m.position.set(a.x + ux * c + uz * x, (y0 + y1) / 2, a.z + uz * c - ux * x); m.rotation.y = ry; m.castShadow = m.receiveShadow = true; scene.add(m); };
         blk(-w / 2, -tr, low, high); blk(tr, w / 2, low, high); blk(-tr, tr, yh, high); blk(-tr, tr, low, yl);
         box(2 * tr, 4, 0.5, signMats[4], a.x - ux * 1.3, yh + 3, a.z - uz * 1.3).rotation.y = ry; // sign above the hole
+        emis(T.t0, a.x - ux * 3, a.y + 8, a.z - uz * 3, 0xff003c, 14, 0.9); // its red falls on the road in front of the mouth
       }
       h.beams.push(...beams); // game.js turns them toward the camera of each view
       return (dt, now) => { // signs that blink, crackle or scroll; holograms, traffic, beacons
