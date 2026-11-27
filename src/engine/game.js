@@ -1284,9 +1284,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     // the shadow of the fixed scenery (see shadows) only reads depth: everything that carries it, merged or single, is drawn there into one position mesh per patch and per shadow face, on the SHDF layer that only the shadow camera sees,
     // instead of one pass per material (up to 110 draw passes in the frame where the moon changes step). Kept apart: what the depth depends on through the material (alphaTest cutout, displacement, clipping planes)
-    { const SD = [THREE.BackSide, THREE.FrontSide, THREE.DoubleSide], MO = new Map(), lo = new Map(); // SD: the face three draws in the shadow, from material.side
+    { const MO = new Map(), lo = new Map(); // both faces are drawn unless the material says otherwise: with back faces alone (three's default), the depth bias leaves a lit sliver at the foot of each object
       const onlyMap = o => { const m = o.material; return o.castShadow && o.layers.mask === 1 && !o.customDepthMaterial && !(m.alphaTest > 0 && (m.map || m.alphaMap)) && !m.alphaToCoverage && !(m.displacementMap && m.displacementScale) && !(m.clippingPlanes && m.clippingPlanes.length); };
-      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? SD[o.material.side]; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
+      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? THREE.DoubleSide; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
         const k = sd + '|' + Math.floor(v.x / COBBLE) + ':' + Math.floor(v.z / COBBLE); if (!lo.has(k)) lo.set(k, []); lo.get(k).push([g, mw]); o.castShadow = false; }
       for (const [k, l] of lo) { const n = l.reduce((s, [g]) => s + g.attributes.position.count, 0), P = new Float32Array(n * 3), I = new (n > 65535 ? Uint32Array : Uint16Array)(l.reduce((s, [g]) => s + (g.index || g.attributes.position).count, 0)); let b = 0, p = 0;
         for (const [g, mw] of l) { const a = g.attributes.position, x = g.index, c = (x || a).count, mirror = mw && mw.determinant() < 0;
