@@ -53,7 +53,7 @@ The phase that follows static scenery: water, light, motion, wildlife, sound and
 | Rising points | steam `STM` | chapada |
 | Permanent plume | `h.steam(x, y, z)` | `src/engine/game.js` |
 | Beam turned toward the camera | `h.beams` | ville |
-| Moving group in one pass | `weld(h, grp, fmly)` | `src/render/scenery.js` |
+| Moving group in one pass | `weld(h, grp, fmly)` (a fourth argument is for a static kit: ART-STYLE.md, shadows) | `src/render/scenery.js` |
 
 ### Shapes ready to place
 

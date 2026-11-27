@@ -1284,9 +1284,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     // the shadow of the fixed scenery (see shadows) only reads depth: everything that carries it, merged or single, is drawn there into one position mesh per patch and per shadow face, on the SHDF layer that only the shadow camera sees,
     // instead of one pass per material (up to 110 draw passes in the frame where the moon changes step). Kept apart: what the depth depends on through the material (alphaTest cutout, displacement, clipping planes)
-    { const SD = [THREE.BackSide, THREE.FrontSide, THREE.DoubleSide], MO = new Map(), lo = new Map(); // SD: the face three draws in the shadow, from material.side
+    { const MO = new Map(), lo = new Map(); // both faces are drawn unless the material says otherwise: with back faces alone (three's default), the depth bias leaves a lit sliver at the foot of each object
       const onlyMap = o => { const m = o.material; return o.castShadow && o.layers.mask === 1 && !o.customDepthMaterial && !(m.alphaTest > 0 && (m.map || m.alphaMap)) && !m.alphaToCoverage && !(m.displacementMap && m.displacementScale) && !(m.clippingPlanes && m.clippingPlanes.length); };
-      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? SD[o.material.side]; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
+      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? THREE.DoubleSide; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
         const k = sd + '|' + Math.floor(v.x / COBBLE) + ':' + Math.floor(v.z / COBBLE); if (!lo.has(k)) lo.set(k, []); lo.get(k).push([g, mw]); o.castShadow = false; }
       for (const [k, l] of lo) { const n = l.reduce((s, [g]) => s + g.attributes.position.count, 0), P = new Float32Array(n * 3), I = new (n > 65535 ? Uint32Array : Uint16Array)(l.reduce((s, [g]) => s + (g.index || g.attributes.position).count, 0)); let b = 0, p = 0;
         for (const [g, mw] of l) { const a = g.attributes.position, x = g.index, c = (x || a).count, mirror = mw && mw.determinant() < 0;
@@ -1969,7 +1969,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = vec4(0.); gl_FragDepth = unpackRGBAToDepth(texture2D(t, v)); }' }),
     SHDS = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: post.vertexShader, depthTest: false, depthWrite: false,
       fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = packDepthToRGBA(texture2D(t, v).x); }' }),
-    shadeScene = new THREE.Scene(), shadeDeep = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.BackSide }), shadeDeepI = shadeDeep.clone(), // one per layer: using the same one for both made three recompute the program key at each switch from one to the other
+    shadeScene = new THREE.Scene(), shadeDeep = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetUnits: -16000 }), shadeDeepI = shadeDeep.clone(), // both faces, pulled about 1 m towards the sun (polygonOffsetUnits, in 24-bit depth steps over the 800 * FAR range): the sun's depth bias (1.2 m) otherwise eats the shadow of anything as low as a car and detaches the rest from its foot. One per layer: using the same one for both made three recompute the program key at each switch from one to the other
     shadeNul = new THREE.WebGLRenderTarget(1, 1), shadeFixed = new THREE.OrthographicCamera(-1e-6, 1e-6, 1e-6, -1e-6, 0, 1e-6); // shadeFixed: sees nothing (far below the map, null field) and only layer 0: the render that takes it only makes the fixed scenery's shadow (shadowMap.render is not called outside a render)
   shadeFixed.position.set(0, -1e7, 0); shadeFixed.updateMatrixWorld(); shadeFixed.layers.set(30); sun.layers.enable(30); // layer 30: the sun alone; without it, this render drew into its one-pixel target everything not culled off-screen (particles, water: about twenty passes)
   const shadeQ = new THREE.Mesh(quad.geometry, SHD); shadeQ.frustumCulled = false; shadeScene.add(shadeQ);
@@ -2221,6 +2221,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
       boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
       const dv = c.lane === undefined ? model(c).userData.dmgP : null, kp = dv ? 1 - (dv.ph[0] + dv.ph[1]) / 2 : 1, kf = dv ? 1 - (dv.fe[0] + dv.fe[1]) / 2 : 1; // its headlights and broken lights
+      if (c.lane === undefined) { const g = model(c); g.updateMatrixWorld(); boxM.copy(g.matrixWorld).multiply(BOX); }
+      else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
+      boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
       put(c.x + ax * av, y + 0.8, c.z + az * av, HEADLIGHT, 14, 3 * nightV * kp); put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
       if (L.neon && race && (c.k < 0 || c.k >= 3)) put(c.x, y + 0.3, c.z, NEONC, 5.5, nightV * (0.8 + 0.4 * pulse)); // the other player's car keeps its underbody neon (c.k: -1 player 1, 3 player 2)
     }

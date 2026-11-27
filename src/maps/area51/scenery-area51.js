@@ -91,7 +91,7 @@
       const ctx = { h, g, S, N, MAT, near, wash, FLATS, BLOCS, RUNWAY, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt, REG, reg, weld };
       for (const z of ZONES) AREA51[z](ctx);
       const tick = AREA51.vie(ctx); // life (V3): takes what moves out of the kit before the merge, and returns the map's tick
-      weld(h, kit); // one mesh per material
+      weld(h, kit, null, [MAT.far]); // one mesh per material; hangars, dishes and aircraft shade the tarmac
       return tick;
     },
   });

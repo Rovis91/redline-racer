@@ -68,6 +68,7 @@ Each map also has its own HUD style (`th.hud.style`: `cyber`, `strokeLn`, `signP
 Lighting notes:
 - Tunnels are painted as seen by an eye already used to the dark. The final pass exposes the image by the eye's adaptation (`vu.eye`, `th.eye`, `th.tun.shard`). Entering and leaving a tunnel is a gradual fade, never a switch.
 - Low sun (Paris, Canal): all instanced scenery casts shadows (`inst` in `src/render/scenery.js`, `sun[1] > 0.6`). A low sun stretches shadow texels into staircases, so use `th.shadows: { soft: 1 }`.
+- A day map whose scenery is one kit merged with `weld` passes a fourth argument, the materials left out (far backdrops): `weld(h, kit, null, [MAT.far])` makes the kit's opaque lit meshes cast (piliers, lune, area51, volcan); self-lit, cut-out and decal materials never cast.
 - Keep headlights weak at dawn and on snow (`givre` `headlights: 0.35`). A full beam on a white road washes out the track and the ice patches.
 
 ## Readability rules
