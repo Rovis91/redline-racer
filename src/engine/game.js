@@ -325,7 +325,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
 
   // sky in bands (night, dawn or dusk depending on the map), stars, moon or sun
   const skyMat = mat('skyDef', { emis: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars);
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.skySeg || 48, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.skySeg || 48, 12), skyMat); sky.userData.dyn = 1; scene.add(sky); skyMat.userData.hz = 1; // the sky takes the sun's tint of the haze (HZ_F)
   const SD = new V3(...TH.orb.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('orb', TH.orb.col, TH.orb.shadows) }));
   sunDisc.scale.set(TH.orb.imgSize, TH.orb.imgSize, 1); scene.add(sunDisc);
@@ -354,7 +354,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
    
     uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new Float32Array(48) }, uNB: { value: 1 }, // uBox: 3 shadow boxes (the view's car, then its two nearest cars), uNB of them in use
    
-    uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
+    uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uHz: { value: new THREE.Color() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
   const LU_V = `{ vec4 lw = vec4(transformed, 1.);
     #ifdef USE_INSTANCING
       lw = instanceMatrix * lw;
@@ -370,7 +370,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
     #ifdef MOUILLE
       uniform sampler2D uMo; varying vec2 vMo;
     #endif
-    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB; varying vec3 vLw;
+    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam, uHz; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB; varying vec3 vLw;
     float luOmbre(vec3 p, vec3 d, int i0) { // 0 if a car's box (from box i0 on: 0 = the view's car, then its two nearest cars) cuts the segment p → p + d; a point inside a box or on its surface is not shadowed
       for (int k = i0; k < uNB; k++) {
         vec3 o = (uBox[k] * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox[k]) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
@@ -421,6 +421,8 @@ getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, dir
       gl_FragColor.rgb += 1. - exp(-1.3 * (diffuseColor.rgb + .07) * dif) + spe * (g * (.12 + pow(1. - max(dot(n, v), 0.), 3.))); // even dark asphalt responds; light tones saturate gently
     }
     `;
+  // haze tinted by the sun: toward the sun, fog and sky slide to the orb's colour; uHz = (orb colour - fog colour) × strength, zero at night, under a tunnel and in a haze bank
+  const HZ_F = '(pow(max(dot(normalize(vLw - uCam), uSunD), 0.), 4.) - .2)', FOG_F = THREE.ShaderChunk.fog_fragment.replace('fogColor,', `fogColor + uHz * ${HZ_F},`);
   const SHD_SOFT = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/float depth = texture2D\( shadowMap, shadowCoord\.xy \)\.r;[\s\S]*?#endif/, `vec2 tp = shadowCoord.xy * shadowMapSize - .5, fp = fract(tp), b0 = (floor(tp) + .5) / shadowMapSize, dt = 1. / shadowMapSize;
         shadow = mix(mix(step(shadowCoord.z, texture2D(shadowMap, b0).r), step(shadowCoord.z, texture2D(shadowMap, b0 + vec2(dt.x, 0.)).r), fp.x),
           mix(step(shadowCoord.z, texture2D(shadowMap, b0 + vec2(0., dt.y)).r), step(shadowCoord.z, texture2D(shadowMap, b0 + dt).r), fp.x), fp.y);`); // getShadow of BasicShadowMap in bilinear (non-inverted depth, the game's own)
@@ -449,10 +451,12 @@ getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, dir
         sh.fragmentShader = 'varying vec4 vCo; uniform vec4 uCr;\n' + co.map((c, i) => 'uniform sampler2D uC' + i + ';\n').join('') + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment)
           .replace('diffuseColor *= sampledDiffuseColor;', co.map((c, i) => `sampledDiffuseColor = mix(sampledDiffuseColor, texture2D(uC${i}, vMapUv * uCr[${i}]), vCo[${i}]);\n`).join('') + 'diffuseColor *= sampledDiffuseColor;');
       }
+      if (readQ) sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', FOG_F);
+      if (m.userData.hz) sh.fragmentShader = 'uniform vec3 uHz, uSunD, uCam; varying vec3 vLw;\n' + sh.fragmentShader.replace('#include <fog_fragment>', `{ vec3 hd = normalize(vLw - uCam); float hh = 1. - clamp(hd.y, 0., 1.); gl_FragColor.rgb += uHz * (${HZ_F} * hh * hh); }`); // on the sky: full at the horizon (where it meets the fogged scenery), gone at the zenith
       if (m.userData.mo) sh.fragmentShader = '#define MOUILLE\n' + (MV ? '#define MOUVIS\n' : '') + sh.fragmentShader; // at the top, before LU_H which uses it
       sh.fragmentShader = '#undef OPAQUE\n' + sh.fragmentShader; // r151+ forces the alpha of opaques to 1 before fog_fragment: the puddles (texture alpha) and the wetness read it
     };
-    m.customProgramCacheKey = () => 'lu' + readQ + opaque + limp + (m.userData.mo ? 'mo' + (MV ? 'mv' : '') + (m.userData.mo0 ?? '') : '') + (SHDO.soft ? 'od' : '') + (m.userData.layerSet ? 'c' + m.userData.layerSet.length : '');
+    m.customProgramCacheKey = () => 'lu' + readQ + opaque + limp + (m.userData.hz ? 'hz' : '') + (m.userData.mo ? 'mo' + (MV ? 'mv' : '') + (m.userData.mo0 ?? '') : '') + (SHDO.soft ? 'od' : '') + (m.userData.layerSet ? 'c' + m.userData.layerSet.length : '');
   };
   const gloss = (m, g) => { m.userData.gloss = g; return m; }, retroRefl = (m, r = 1.5) => { m.userData.retroRefl = r; return m; };
 
@@ -2197,7 +2201,8 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     LUX.uCam.value = cam.position; LUX.uHP.value.set(car.x + fx * 1.9 - fz * hs, carY + 0.62, car.z + fz * 1.9 + fx * hs); LUX.uHD.value.set(fx * cp, Math.sin(pitch), fz * cp); LUX.uHC.value.copy(HCB).multiplyScalar(headlightsV * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2));
     if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.14 * kBr * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2); cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
     G.updateMatrixWorld(); boxM.copy(G.matrixWorld).multiply(BOX).invert().toArray(LUX.uBox.value, 0); let nb = 1; // G: the view's car model, first shadow box; the two nearest cars follow (below)
-    LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
+    LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uHz.value.copy(ORB).sub(FOG_OUT).multiplyScalar(FOG_OUT.g > 0.4 ? Math.min(1.25, 5 * (1 - SD.y) ** 2) * (1 - lm) * (1 - kBr) : 0); // only a daylight haze takes the tint: the night fogs (and the moon's black one) are all under 0.25
+    LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
     let nl = 0;
     const LP = LUX.uLP.value, LC = LUX.uLC.value, put = (x, y, z, c, r, k) => { if (nl < NL) { const m = k * BRIGHT_GAIN; const o = nl * 4; LP[o] = x; LP[o + 1] = y; LP[o + 2] = z; LP[o + 3] = r; LC[nl * 3] = c.r * m; LC[nl * 3 + 1] = c.g * m; LC[nl * 3 + 2] = c.b * m; nl++; } };
     put(car.x - fx * 4.4, carY + 0.35, car.z - fz * 4.4, RED, -9, nightV * (inp.brake || car.frA ? 2.4 : 0.45) * (1 - (dmgP.fe[0] + dmgP.fe[1]) / 2)); // rear lights (minus the broken ones): they tint what follows, more so when braking
