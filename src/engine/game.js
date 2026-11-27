@@ -189,17 +189,23 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // reflections of the wet road computed on screen: between the scene and the final pass. The road writes into the target's alpha how wet it is
   // (1 = dry, 0.5 = soaked, see illuminates); for each of its pixels the reflected ray is followed through the view's depth, and the colour it meets is added:
   // cars, neons, tail lights. What the ray does not find on screen (the sky, what is out of frame) stays with the ribbons and stretched reflections of the dynamic light.
+  const RIDES = '.011'; // slope of each of the four ripple waves on standing water (th.reflectionWater)
   const ssr = new THREE.ShaderMaterial({
-    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 }, fz: { value: +TH.reflectionWater || 0 } },
+    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 }, fz: { value: +TH.reflectionWater || 0 }, cw: { value: new THREE.Matrix4() }, ri: { value: new THREE.Vector4() } },
     vertexShader: post.vertexShader,
-    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe, fz; varying vec2 v;
+    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe, fz; uniform mat4 cw; uniform vec4 ri; varying vec2 v;
       vec3 vpos(vec2 u){ vec4 p = Pi * vec4(u * 2. - 1., texture2D(dz, u).x * 2. - 1., 1.); return p.xyz / p.w; } // position in the camera's frame
+      vec3 ride(vec2 x, vec2 d, float f, float om){ float ph = dot(x, d) * f + ri.x * om, k = smoothstep(.7, 2., fwidth(ph)); return vec3(d * cos(ph) * (1. - k), k); } // one wave's slope; where a pixel spans too much of its phase it fades instead of shimmering, and z says by how much
       vec2 ecran(vec3 q){ vec4 c = P * vec4(q, 1.); return c.xy / c.w * .5 + .5; }
       void main(){
         vec4 c = texture2D(t, v); float w = c.a > ${(0.95 - WATER).toFixed(2)} && c.a < .99 ? (1. - c.a) / ${WATER.toFixed(2)} : 0., trouve = 0.;
         if (w > 0.) {
-          vec3 p = vpos(v), e = normalize(p), nn = up; // th.reflectionSlope: the mirror is the road surface itself (normal taken from depth) and not the horizontal plane; far away, where depth lacks precision, it falls back to vertical
+          vec3 p = vpos(v), e = normalize(p), nn = up; float et = 2.; // th.reflectionSlope: the mirror is the road surface itself (normal taken from depth) and not the horizontal plane; far away, where depth lacks precision, it falls back to vertical
           if (pe > 0.) { vec3 g = normalize(cross(dFdx(p), dFdy(p))); if (dot(g, up) < 0.) g = -g; if (dot(g, up) > .93) nn = normalize(mix(g, up, smoothstep(30., 90., -p.z))); }
+          if (fz > 0.) { // th.reflectionWater: ripples of a light wind tilt the mirror (cw: the camera's world matrix; ri: time, then x, z and strength of the wake around the view's car)
+            vec2 x = (cw * vec4(p, 1.)).xz; vec3 sl = ride(x, vec2(.87, .5), 4.6, 1.9) + ride(x, vec2(-.34, .94), 2.9, 1.4) + ride(x, vec2(.64, -.77), 1.7, 1.) + ride(x, vec2(-.98, -.17), .9, .7);
+            et += sl.z * 1.2; sl.xy *= ${RIDES} * (1. + ri.w * exp(-dot(x - ri.yz, x - ri.yz) / 30.)); nn = normalize(vec3(sl.x, 1., sl.y) * mat3(cw)); // the waves too fine to draw smear the reflection taller instead (et)
+          }
           vec3 r = reflect(e, nn), q = p; float s = .4, a = 0., b = 0.; vec2 h = vec2(-1.);
           for (int i = 0; i < 22; i++) { // steps that grow longer: 0.4 m at the start, over 300 m at the end
             b = a; a += s; s *= 1.28; q = p + r * a; vec2 u = ecran(q);
@@ -211,7 +217,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
             }
           }
           if (h.x >= 0.) {
-            vec3 f = vec3(0.); for (int k = -2; k < 2; k++) f += texture2D(t, h + vec2(0., (float(k) + .5) * 2. * px.y)).rgb; // stretched vertically, like a reflection on water
+            vec3 f = vec3(0.); for (int k = -2; k < 2; k++) f += texture2D(t, h + vec2(0., (float(k) + .5) * et * px.y)).rgb; // stretched vertically, like a reflection on water
             vec2 bd = min(h, 1. - h); trouve = smoothstep(0., .08, min(bd.x, bd.y)) * (1. - smoothstep(60., 320., a)); // fades out at the edge of the image and in the distance
             float fr = .25 + .75 * pow(1. - max(dot(-e, up), 0.), 3.); // Fresnel: seen at grazing angle, the road is a mirror
             // th.reflectionWater (standing water, strength): what still water really returns (Schlick, 2 % seen from above, a mirror at grazing angle), in place of the surface's own colour instead of added to it
@@ -2297,7 +2303,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     shades(vu, stepL, car, carY);
     if (sceneryTick && sceneryTick.liveFeed && !vu.n) sceneryTick.liveFeed(renderer); // a scenery screen that shows the live race (stadium): its capture, before the scene that shows it
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
-    if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
+    if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); if (R.fz.value) { R.cw.value.copy(cam.matrixWorld); R.ri.value.set(now / 1000 % 3600, car.x, car.z, Math.min(3, Math.hypot(car.vx, car.vz) / 8)); } renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       FALLBACK.rDz.value = vu.rt.depthTexture; FALLBACK.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(fallbackScene, cam); renderer.autoClear = true; }
     { const OE = TH.eye || {}, EYE_BLACK = OE.blackM ?? EYE_N, EYE_PALE = OE.clair ?? EYE_C, real = Math.log(1 - (1 - (OE.tun ?? TUN)) * lm), outTarget = real - Math.log(T.tun && TH.tun.shard || 1) * lm; // the eye: true = log of the true light; th.tun.shard: the eye adapts to a tunnel lighter than its paint
       vu.eye += (outTarget - vu.eye) * (1 - Math.exp(-dt / (outTarget > vu.eye ? EYE_PALE : EYE_BLACK))); U.ex.value = Math.min(Math.exp(real - vu.eye), Math.max(1.6, T.tun && TH.tun.shard || 1)); } // glare at most ×1.6
