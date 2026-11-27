@@ -17,8 +17,8 @@ const server=http.createServer((q,r)=>{const f=path.resolve(root,'.'+decodeURICo
  await cmd('Runtime.enable');await cmd('Page.enable');await cmd('Network.enable');await cmd('Emulation.setCPUThrottlingRate',{rate:cpu});
  await cmd('Page.addScriptToEvaluateOnNewDocument',{source:`localStorage.clear();sessionStorage.clear();`});
  if(offline)await cmd('Network.setBlockedURLs',{urls:['*assets/previews/*']});
- const url='http://127.0.0.1:'+port+'/index.html?map=ville';await cmd('Page.navigate',{url});await until(`location.href===${JSON.stringify(url)} && !!window.__g && document.getElementById('loading').hidden && !!document.getElementById('menu-view')`);
- await ev(`window.menuPaints=0;const paint=GAME_LOADER.menuFrame;GAME_LOADER.menuFrame=(...args)=>{paint(...args);menuPaints++;};window.menuLongTasks=[];window.measureMenuTasks=true;new PerformanceObserver(l=>{if(measureMenuTasks)menuLongTasks.push(...l.getEntries().map(x=>x.duration));}).observe({type:'longtask'});`);
+ const url='http://127.0.0.1:'+port+'/index.html?map=ville';await cmd('Page.navigate',{url});await until(`location.href===${JSON.stringify(url)} && !!window.__g && document.getElementById('loading').hidden && !!document.getElementById('menu-ui')`);
+ await ev(`window.menuPaints=0;const paint=__menuUI.draw;__menuUI.draw=(...args)=>{paint(...args);menuPaints++;};window.menuLongTasks=[];window.measureMenuTasks=true;new PerformanceObserver(l=>{if(measureMenuTasks)menuLongTasks.push(...l.getEntries().map(x=>x.duration));}).observe({type:'longtask'});`);
  await cmd('Network.emulateNetworkConditions',{offline:false,latency:100,downloadThroughput:10e6/8,uploadThroughput:10e6/8});
  const samples=[];
  const key=async(code,check='true',painted=true)=>{
@@ -26,13 +26,13 @@ const server=http.createServer((q,r)=>{const f=path.resolve(root,'.'+decodeURICo
  await cmd('Input.dispatchKeyEvent',{type:'keyDown',timestamp:Date.now()/1000,code,key:code==='Enter'?'Enter':code});await cmd('Input.dispatchKeyEvent',{type:'keyUp',code,key:code==='Enter'?'Enter':code});
  const ms=await ev('menuResponse');samples.push({code,ms:+ms.toFixed(1)});assert(ms<=budget,code+' response '+ms+' ms exceeds '+budget+' ms');return ms;
  };
- await key('ArrowRight');await key('ArrowLeft');await key('Enter','!__g.home');await key('Enter');await key('ArrowDown','__g.menu.row===0');
- const ids=await ev('MAPS.map(m=>m.id)');const initial=await ev('Object.keys(__maps)');
- for(let pass=0;pass<3;pass++)for(let i=1;i<=ids.length;i++){const target=ids[i%ids.length];await key('ArrowRight',`document.getElementById('menu-view').dataset.map==='${target}'`);}
+ await key('ArrowRight');await key('ArrowLeft');await key('Enter','!__g.home');await key('Enter','!__g.menu.choice');
+ const ids=await ev('MAPS.map(m=>m.id)');const initial=await ev('Object.keys(__maps)');const rows=ids.length+1; // the maps, then La Tournée
+ for(let pass=0;pass<3;pass++)for(let i=1;i<=rows;i++)await key('ArrowDown',`__g.menu.pick===${i%rows}`+(i%rows<ids.length?` && __g.menu.id==='${ids[i%rows]}'`:''));
  assert.deepStrictEqual(await ev('Object.keys(__maps)'),initial,'Browsing must not construct another circuit');assert.deepStrictEqual(await ev('Object.keys(__inProgress)'),initial,'Browsing must not queue circuit builds');
- await key('ArrowDown');await key('ArrowRight');await key('ArrowLeft');await key('ArrowDown');await key('ArrowRight');await key('ArrowLeft');
+ await key('Enter',`__g.menu.step==='setup'`);await key('ArrowDown');await key('ArrowUp');await key('Enter',`__g.menu.step==='opts'`);await key('ArrowRight');await key('ArrowLeft');await key('Escape',`__g.menu.step==='setup'`);await key('Escape',`__g.menu.step==='pick'`);
  // Return through the choice screen and exercise online navigation and split-screen settings.
- await key('Escape');await key('ArrowDown');await key('ArrowDown');await key('Enter');await key('Escape');await key('ArrowUp');await key('Enter');await key('ArrowDown','__g.menu.row===0');await key('ArrowDown','__g.menu.row===1');await key('ArrowRight','__g.views.length===3');await key('ArrowRight','__g.views.length===4');await key('ArrowLeft','__g.views.length===3');await key('ArrowLeft','__g.views.length===2');
+ await key('Escape','__g.menu.choice');await key('ArrowDown');await key('ArrowDown');await key('Enter');await key('Escape');await key('ArrowUp');await key('Enter','!__g.menu.choice');await key('Enter',`__g.menu.step==='setup'`);await key('Enter',`__g.menu.step==='opts'`);await key('ArrowRight','__g.views.length===3');await key('ArrowRight','__g.views.length===4');await key('ArrowLeft','__g.views.length===3');await key('ArrowLeft','__g.views.length===2');
  assert.deepStrictEqual(errors,[]);
  const extra=requests.filter(u=>/\/src\/maps\//.test(u)&&!u.includes('/ville/'));assert.deepStrictEqual(extra,[],'A menu choice fetched circuit implementation scripts');
  const values=samples.map(s=>s.ms).sort((a,b)=>a-b),long=await ev('menuLongTasks');const report={budgetMs:budget,cpuThrottle:cpu,offlinePreviews:offline,inputs:samples.length,maxMs:values.at(-1),p95Ms:values[Math.floor(values.length*.95)],longTaskMaxMs:Math.max(0,...long),mapsBuilt:initial,samples};
@@ -40,10 +40,11 @@ const server=http.createServer((q,r)=>{const f=path.resolve(root,'.'+decodeURICo
  fs.writeFileSync(path.join(root,'captures/menu-budget'+(offline?'-offline':'')+'.json'),JSON.stringify(report,null,2));console.log(JSON.stringify({...report,samples:undefined}));
  const shot=await cmd('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(root,'captures/menu-budget.png'),Buffer.from(shot.result.data,'base64'));
  // START is acknowledged by a visible preparation view before any expensive construction.
- await key('Escape');await key('ArrowUp');await key('Enter');await ev(`__g.mapDef('lune')`);await until(`document.getElementById('menu-view').dataset.map==='lune'`);
+ await key('Escape',`__g.menu.step==='setup'`);await key('Escape',`__g.menu.step==='pick'`);await key('Escape','__g.menu.choice');await key('ArrowUp');await key('Enter','!__g.menu.choice');
+ while(await ev(`__g.menu.id!=='lune'`))await key('ArrowDown');
  await delay(250);const selectedShot=await cmd('Page.captureScreenshot',{format:'png'});fs.writeFileSync(path.join(root,'captures/menu-selected-lune.png'),Buffer.from(selectedShot.result.data,'base64'));
- // Downward moves find START regardless of the current mode's optional rows.
- while(await ev('__g.menu.row!==5'))await key('ArrowDown');
+ // the mode, then downward moves find START whatever the mode's settings
+ await key('Enter',`__g.menu.step==='setup'`);await key('Enter',`__g.menu.step==='opts'`);while(await ev('__g.menu.opt!==__g.menu.opts'))await key('ArrowDown');
  await ev(`window.measureMenuTasks=false;window.startResponse=new Promise(resolve=>{window.addEventListener('keydown',function f(e){if(e.code!=='Enter')return;window.removeEventListener('keydown',f,true);const t=performance.now();requestAnimationFrame(function check(){if(!document.getElementById('loading').hidden)requestAnimationFrame(()=>resolve(performance.now()-t));else requestAnimationFrame(check);});},true);});void 0;`);
  await cmd('Input.dispatchKeyEvent',{type:'keyDown',code:'Enter',key:'Enter'});await cmd('Input.dispatchKeyEvent',{type:'keyUp',code:'Enter',key:'Enter'});const ack=await ev('startResponse');assert(ack<=budget,'START acknowledgement exceeds budget');
  await until(`__g.M.id==='lune' && __g.state!=='title' && document.getElementById('loading').hidden`);console.log('START ack '+ack.toFixed(1)+' ms; selected circuit launched');await until(`__g.state==='race'`);await key('Escape',`__g.state==='pause'`);await ev(`measureMenuTasks=true;void 0`);for(let i=0;i<12;i++){await key('ArrowDown',`__g.menu.pauseRow===1`);await key('ArrowUp',`__g.menu.pauseRow===0`);}await ev(`measureMenuTasks=false;void 0`);await key('Escape',`__g.state==='race'`,false);const all=samples.map(s=>s.ms).concat(ack).sort((a,b)=>a-b);Object.assign(report,{inputs:all.length,maxMs:all.at(-1),p95Ms:all[Math.floor(all.length*.95)],startAckMs:+ack.toFixed(1),longTaskMaxMs:Math.max(0,...await ev('menuLongTasks')),samples});assert(report.longTaskMaxMs<=budget,'A menu task exceeded the response budget');fs.writeFileSync(path.join(root,'captures/menu-budget'+(offline?'-offline':'')+'.json'),JSON.stringify(report,null,2));console.log('ALL MENUS '+JSON.stringify({...report,samples:undefined}));

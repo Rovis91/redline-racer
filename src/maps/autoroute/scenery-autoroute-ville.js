@@ -41,6 +41,8 @@
       if (r < 0.55) { decal('crack', x, y, z, 6 + 6 * HH(v, 4), 6 + 6 * HH(v, 5), HH(v, 6) * 6); if (!wet && HH(v, 7) < 0.4 && Math.abs(d) > 3) tuft(x, z, y, v); }
       else if (!wet && r < 0.8) decal('moss', x, y, z, 4 + 5 * HH(v, 4), 3 + 4 * HH(v, 5), HH(v, 6) * 6);
       else if (!wet && Math.abs(d) > 2.5) { tuft(x, z, y, v); tuft(x + 0.8, z + 0.5, y, v + 1); } } });
+  // (round 5) turn arrows still on the asphalt before the boulevard's end, in the north lanes: the road goes left
+  for (const x of [258, 280, 300]) decal('arrowG', x, cityY(x) + 0.05, -5.8, 4, 9, Math.PI / 2);
   // the boulevard's lane lines, what is left of them: four dashed lines between the kerbs from the checkpoint to the motorway bridge, in lengths of 40 m with gaps where the paint has gone
   for (let x = -300; x < 300; x += 40) for (const z of [-8.6, -4.3, 4.3, 8.6]) if (HH(x, z) < 0.7 && !O.some(o => o.label !== 'ILOT' && Math.abs(o.x - x - 20) < 26 && Math.abs(o.z - z) < o.hx + o.hz + 1)) decal('mark', x + 20, cityY(x + 20) + (Math.abs(z) < 7 ? 0.03 : -0.03), z, 40, 0.5);
 };

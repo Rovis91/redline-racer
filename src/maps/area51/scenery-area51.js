@@ -58,7 +58,7 @@
         verriere: h.mat('verriereArea51', { emis: 1 }), danger: h.mat('dangerArea51'), stripe: h.mat('striping'), tarmac: h.mat('tarmacArea51'), piste: h.mat('tarmacArea51', { c: 0xb4b8c4 }), yellow: h.mat('jauneArea51'), paintW: h.mat('blancArea51'),
         stealth: h.mat('furtifArea51', DS), trefle: h.mat('trefleArea51'),
         rock: h.mat('rocheArea51', {}, '#a5604a'), far: h.mat('rocheArea51', {}, '#6a5a96', 0.4), playa: h.mat('playaArea51'), sol: h.mat('solArea51'),
-        sage: h.mat('brousseArea51', {}, '#84966e'), creo: h.mat('brousseArea51', {}, '#5c6a3c'), yucca: h.mat('brousseArea51', {}, '#6e8250'), bark: h.mat('brousseArea51', {}, '#77593e'), rust: tint(0x8a5238), alien: tint(0xb4c2b0), oeil: h.mat('paneDark'),
+        sage: h.mat('brousseArea51', {}, '#84966e'), creo: h.mat('brousseArea51', {}, '#5c6a3c'), yucca: h.mat('brousseArea51', {}, '#6e8250'), bark: h.mat('brousseArea51', {}, '#77593e'), rust: tint(0x8a5238), alien: tint(0xeee6d4), oeil: h.mat('paneDark'),
         green: h.mat('feuVertArea51', { emis: 1 }), sodium: h.mat('sodium', { emis: 1 }), // desert plants, the hulk, the visitor; runway light colours that the white (neon), red (fire) and blue (pool) do not cover
         murB1: h.mat('tunMurArea51'), vouteB1: h.mat('tunVouteArea51'), solB1: h.mat('tunSolArea51') }; // underground and hall surfaces (textures-area51-route.js)
       Object.assign(MAT, { door: MAT.gray, sign: MAT.gray, floor: MAT.tarmac, steelMat: MAT.steel, lampObj: MAT.neon, iron: MAT.gray, vat: MAT.white, chassis: MAT.gray, cabin: MAT.red, pane: MAT.glass, radiator: MAT.gray, headlight: MAT.neon, lightOrange: MAT.neon, wheelPart: MAT.steel, tire: MAT.dark });
@@ -91,7 +91,7 @@
       const ctx = { h, g, S, N, MAT, near, wash, FLATS, BLOCS, RUNWAY, kit, on, set, side, along, avion, sideXZ, seg, cube, surf, inside, dish, smp, pk, idx, t0, t1, rooms, room, THREE, k, edgePt, REG, reg, weld };
       for (const z of ZONES) AREA51[z](ctx);
       const tick = AREA51.vie(ctx); // life (V3): takes what moves out of the kit before the merge, and returns the map's tick
-      weld(h, kit); // one mesh per material
+      weld(h, kit, null, [MAT.far]); // one mesh per material; hangars, dishes and aircraft shade the tarmac
       return tick;
     },
   });

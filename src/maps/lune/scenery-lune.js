@@ -2,7 +2,7 @@
 // Shapes: shapes-lune-*.js; textures: textures-lune.js; mood and references: docs/proposals/lunar-outpost/AMBIANCE-V2.html. See docs/methods/NEW-MAP.md, phase 3.
 (function () {
   const { near, edgePt, terrain, weld } = PLACERS;
-  const ZONES = ['base', 'occidental', 'cretes', 'arene', 'bassin'], LAP = 5288; // LAP: plan length of the layout, the unit of its chainages (PK)
+  const ZONES = ['base', 'occidental', 'cretes', 'arene', 'bassin', 'guidage'], LAP = 5288; // LAP: plan length of the layout, the unit of its chainages (PK)
   // A crater in section: a flat floor, an inner wall that curves up ever steeper to a sharp crest, an outer slope that falls steeply from the crest and flattens out (both concave, power P).
   // The two craters the road enters: [x east, z = -north, floor radius, rim radius, outer foot radius, floor altitude, rim altitude]. EAST is the arena: inside M.place its ground is M.bowls, the same curve
   const P = 2.5, EAST = [470, -200, 200, 360, 520, -30, 70, 0, 0.13, 322], SOUTH = [283, 383, 60, 222, 300, -28, 25, 0.035, 0.22, 100]; // the two rims are 30 m apart: each crater is a full circle
@@ -78,15 +78,14 @@
       h.ribbon(T.t1, nOut, s => -s.w, 0, s => s.w, 0, h.mat('pisteLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }), 32);
       // the floor of the tunnel is the engine's (its material is lit by the tunnel): found by its shape, a ribbon of the tunnel's length at road level, it takes the same track drawing
       { const y0 = S[T.t0].y, fl = h.scene.children.find(o => o.isMesh && o.material && o.material.isMeshBasicMaterial && o.geometry.attributes.position.count === (nTun + 1) * 2 && [0, 1].every(k => Math.abs(o.geometry.attributes.position.getY(k) - y0) < 0.01)); if (fl) fl.material.map = h.tx('pisteLune'); }
-      // th.guardM = 0: the guardrails are placed here, on the same stretch only: none under the flight, none across the arena
-      for (const sd of [-1, 1]) h.guardM(sd, T.t1, nOut, s => sd * s.w, h.TH.wallH, s => sd * s.w, -2, h.mat('guardrail', DS, h.TH.intoWall));
+      // th.guardM = 0: no guardrail on the Moon; the edge of the road is the berms of scenery-lune-guidage.js (inner face on the collision line, ±s.w)
       // the sky is the engine's sphere (radius 2500, it follows the camera): it takes the Moon's sky, stars down to the horizon (the shared sky drawing keeps them above 28°, out of the racing camera's view)
       { const sky = h.scene.children.find(o => o.isMesh && o.geometry.type === 'SphereGeometry' && o.geometry.parameters.radius === 2500); if (sky) { const t = h.tx('cielLune'); t.minFilter = THREE.NearestFilter; sky.material.map = t; } }
       // MAT: the shared materials of the map, one draw pass each for the whole map; its keys are the zone names of the lune shapes (shapes-lune-*.js). Every piece of scenery goes into the group `kit`, merged per material at the end
       const MAT = { shell: h.mat('coqueLune', {}, '#e8e2d0'), hall: h.mat('coqueLune', {}, '#9aa0ac'), dark: h.mat('concreteDark'), steel: h.mat('steelMat'), lattice: h.mat('lattice', { alphaTest: 0.5, ...DS }, '#c8c4b8'),
         amber: h.mat('metalPale', { c: 0xd78a40 }), glow: h.mat('paint', { emis: 1, c: 0xffa040 }), hublot: h.mat('hublotLune', { emis: 1 }, '#ffe9b8'), ceil: h.mat('hublotLune', { emis: 1 }, '#cfe8ff'), solar: h.mat('solaireLune'),
         glass: h.mat('paneDark'), dish: h.mat('metalPale', { c: 0xe8e2d0, ...DS }), rock: h.mat('rocheLune', {}, '#5d6472'), pale: h.mat('rocheLune', {}, '#a9afba', 0.6), far: h.mat('rocheLune', {}, '#3a404c', 0.4),
-        strata: h.mat('rocheLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, '#3d4452', 0.5), crest: h.mat('regolitheLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, '#c4c8d2'), plain: h.mat('regolitheLune', {}, '#565b68'), earth: h.mat('terreLune', { emis: 1, fog: false }) };
+        strata: h.mat('rocheLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, '#3d4452', 0.5), crest: h.mat('regolitheLune', { ...DS, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }, '#c4c8d2'), plain: h.mat('regolitheLune', {}, '#565b68'), earth: h.mat('terreLune', { emis: 1, fog: false }), cyan: h.mat('paint', { emis: 1, c: 0x6fd8ff }) };
       MAT.tire = MAT.dark;
       const kit = new THREE.Group(); h.scene.add(kit);
       // rings laid on the ground, one mesh per material: the strata of a crater wall, the pale crest of a rim, the dark bottom of a small crater. ring(x, z, radii from inside to outside, material, [[angle, half-width], …] left open)
@@ -131,9 +130,9 @@
           if (Math.hypot(S[near(h, x, z)].x - x, S[near(h, x, z)].z - z) > 11 + w / 2) add(stand(x, z, hash(i, sd + 7) * 6.28), 'rocherLune', [w, w * (0.5 + 0.4 * hash(i, sd + 8)), w * (0.8 + 0.6 * hash(i, sd + 9)), i + sd], [0, 0, 0], hash(i, sd + 11) < 0.25 ? MAT.pale : MAT.rock); } }
       for (let k = 0; k < 40; k++) { const a = k * 0.157 * 2.02 + hash(k, 3) * 0.1, r = PL.r + 10 + 26 * hash(k, 4), x = EAST[0] + r * Math.cos(a), z = EAST[1] + r * Math.sin(a), w = 4 + 10 * hash(k, 6); // and a broken ring of them on the wall of the arena, just above where the car can climb
         if (Math.abs(Math.atan2(Math.sin(a - aLip), Math.cos(a - aLip))) > 0.2 && Math.abs(Math.atan2(Math.sin(a - aOut), Math.cos(a - aOut))) > 0.15) add(stand(x, z, a), 'rocherLune', [w, w * 0.6, w * 1.2, k], [0, 0, 0], k % 4 ? MAT.rock : MAT.pale); }
-      for (const z of ZONES) LUNE[z]({ h, g, S, N, at, LAP, MAT, kit, stand, add, by, sit, tunnel: [S[T.t0], S[T.t1]], lip: S[(iLip - 30 + N) % N], THREE });
+      for (const z of ZONES) LUNE[z]({ h, g, S, N, at, LAP, MAT, kit, stand, add, by, sit, tunnel: [S[T.t0], S[T.t1]], lip: S[(iLip - 30 + N) % N], THREE, M, T, EAST, iLip, nArena, edgePt });
       const tick = LUNE.vie({ h, g, S, N, T, LAP, MAT, kit, add, by, REG, iLip, EAST, PL, THREE, edgePt, weld }); // what moves, lights and sounds: it takes its movers out of the kit before the merge
-      weld(h, kit); // one mesh per material
+      weld(h, kit, null, [MAT.far]); // one mesh per material; boulders and base cast the hard shadows of an airless sun
       return tick;
     },
   });

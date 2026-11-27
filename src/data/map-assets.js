@@ -19,6 +19,7 @@
       "src/render/scenery.js",
       "src/render/crowd.js",
       "src/engine/lang.js",
+      "src/render/menu-ui.js",
       "src/engine/devices.js",
       "src/engine/network.js"
     ],
@@ -81,15 +82,19 @@
         "src/maps/volcan/shapes-volcan-port.js",
         "src/maps/volcan/shapes-volcan-rural.js",
         "src/maps/volcan/shapes-volcan-expedition.js",
+        "src/maps/volcan/shapes-volcan-flore.js",
         "src/maps/volcan/relief-volcan.js",
         "src/maps/volcan/scenery-volcan.js",
         "src/maps/volcan/scenery-volcan-port.js",
         "src/maps/volcan/scenery-volcan-village.js",
         "src/maps/volcan/scenery-volcan-fermes.js",
         "src/maps/volcan/scenery-volcan-falaises.js",
+        "src/maps/volcan/scenery-volcan-approche.js",
         "src/maps/volcan/scenery-volcan-cratere.js",
+        "src/maps/volcan/scenery-volcan-galerie.js",
         "src/maps/volcan/scenery-volcan-descente.js",
         "src/maps/volcan/scenery-volcan-cote.js",
+        "src/maps/volcan/scenery-volcan-flore.js",
         "src/maps/volcan/scenery-volcan-vie.js"
       ],
       "plage": [
@@ -145,12 +150,14 @@
         "src/maps/lune/textures-lune-route.js",
         "src/maps/lune/shapes-lune-relief.js",
         "src/maps/lune/shapes-lune-base.js",
+        "src/maps/lune/shapes-lune-guidage.js",
         "src/maps/lune/scenery-lune.js",
         "src/maps/lune/scenery-lune-base.js",
         "src/maps/lune/scenery-lune-occidental.js",
         "src/maps/lune/scenery-lune-cretes.js",
         "src/maps/lune/scenery-lune-arene.js",
         "src/maps/lune/scenery-lune-bassin.js",
+        "src/maps/lune/scenery-lune-guidage.js",
         "src/maps/lune/scenery-lune-vie.js"
       ],
       "autoroute": [

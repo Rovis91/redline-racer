@@ -10,57 +10,40 @@
   /* polices pixel embarquées (SIL Open Font License) ; tout le HUD est dessiné dans le canvas du jeu */
   @font-face { font-family: "Press Start 2P"; font-display: swap; src: url(assets/fonts/press-start-2p-latin-400-normal.woff2) format("woff2"); }
   @font-face { font-family: DotGothic16; font-display: swap; src: url(assets/fonts/dotgothic16-game.woff2) format("woff2"); }
-  #loading { position: fixed; inset: 0; z-index: 20; isolation: isolate; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(24px, 4vw, 64px); box-sizing: border-box; overflow: hidden; background: #08080c; color: #f4f0e8; font: 11px/1.7 "Press Start 2P", monospace; }
+  /* loading screen: the menus' look (src/render/menu-ui.js): the start line dimmed, a dark leaning band, REDLINE in heat, RACER in chrome, a thin hot bar */
+  #loading { position: fixed; inset: 0; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: #0a0c12 url(assets/start-line.webp) center / cover; color: #d8dce6; font: bold 12px Verdana, Tahoma, sans-serif; }
   #loading[hidden] { display: none; }
-  .loading-art { position: absolute; z-index: -3; right: 0; top: 0; width: 80%; height: 100%; object-fit: cover; object-position: 54% center; image-rendering: pixelated; animation: boot-art 700ms ease-out both; }
-  #loading::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, #08080c 2%, rgba(8,8,12,.94) 27%, rgba(8,8,12,.25) 76%), linear-gradient(0deg, #08080c, transparent 40%); }
-  #loading::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .12; background: repeating-linear-gradient(0deg, transparent 0 3px, #000 3px 4px); }
-  .loading-header, .loading-footer, .loading-progress-label { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
-  .loading-mark { font-size: 10px; letter-spacing: .14em; color: #00f0ff; }
-  .loading-index { color: #b7bdc7; font-size: 9px; }
-  .loading-content { width: min(65%, 800px); padding: 30px 0; animation: boot-enter 450ms 70ms ease-out both; }
-  .loading-kicker { color: #00f0ff; font-size: clamp(9px, 1vw, 12px); letter-spacing: .1em; margin: 0 0 24px; }
-  #loading-title { color: #ffe65b; font-size: clamp(36px, 6.2vw, 88px); line-height: 1.25; letter-spacing: -.055em; margin: 0 0 26px; text-shadow: 4px 4px 0 #9c3225; }
-  #loading-title span { display: block; }
-  .loading-tagline { color: #dedee6; font-size: clamp(9px, 1vw, 12px); max-width: 500px; line-height: 2; }
-  .loading-footer { align-items: flex-end; }
-  .loading-console { width: min(560px, 62%); }
-  .loading-progress-label { margin-bottom: 13px; font-size: 9px; min-height: 30px; }
-  #loading-status { color: #e6e7ec; margin: 0; }
-  #loading-count { color: #00f0ff; white-space: nowrap; }
-  .loading-track { height: 6px; background: #30303a; overflow: hidden; }
-  #loading-fill { display: block; height: 100%; width: 100%; background: #ffe65b; transform: scaleX(0); transform-origin: left; transition: transform 150ms ease-out; }
-  #loading-circuit { color: #b7bdc7; margin: 14px 0 0; font-size: 8px; line-height: 1.8; min-height: 2em; }
-  .loading-facts { color: #b7bdc7; font-size: 8px; text-align: right; line-height: 2.3; margin: 0; }
-  #loading-retry { margin-top: 20px; padding: 14px 18px; background: #ffe65b; color: #08080c; border: 0; font: inherit; cursor: pointer; transition: transform 150ms ease; }
-  #loading-retry:hover { transform: translateY(-2px); } #loading-retry:active { transform: translateY(1px); } #loading-retry:focus-visible { outline: 3px solid #00f0ff; outline-offset: 4px; }
-  @keyframes boot-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  @keyframes boot-art { from { opacity: 0; transform: scale(1.025); } to { opacity: 1; transform: scale(1); } }
-  @media (max-width: 700px) { .loading-art { width: 100%; object-position: 63% center; } #loading::before { background: linear-gradient(90deg, rgba(8,8,12,.77), rgba(8,8,12,.22)), linear-gradient(0deg, #08080c 2%, transparent 80%); } .loading-content { width: 100%; } #loading-title { font-size: clamp(34px, 10vw, 66px); } .loading-console { width: 100%; } .loading-facts { display: none; } .loading-index { font-size: 7px; } .loading-kicker { line-height: 2; max-width: 280px; } .loading-tagline { max-width: 290px; } }
-  @media (max-height: 500px) { .loading-content { padding: 12px 0; } #loading-title { font-size: 36px; margin-bottom: 12px; } .loading-kicker { margin-bottom: 8px; } .loading-tagline { display: none; } }
-  @media (prefers-reduced-motion: reduce) { .loading-art, .loading-content { animation: none; } #loading-fill, #loading-retry { transition: none; } }
+  #loading::before { content: ""; position: absolute; inset: 0; background: rgba(5,6,10,.72); }
+  #loading::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .15; background: repeating-linear-gradient(0deg, transparent 0 2px, #000 2px 3px); }
+  .loading-band { position: relative; width: 100%; padding: 2.2vh 0 2.6vh; background: #0a0c12; clip-path: polygon(3% 0, 100% 0, 97% 100%, 0 100%); text-align: center; animation: boot-in 300ms ease-out both; }
+  .loading-band::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: repeating-linear-gradient(-45deg, #ffd200 0 8px, #0a0c12 8px 16px); }
+  #loading-title { margin: 0; font: italic 900 clamp(40px, 9vw, 112px)/1 "Arial Black", "Arial Bold", Arial, sans-serif; letter-spacing: -.02em; filter: drop-shadow(3px 3px 0 rgba(0,0,0,.6)); }
+  #loading-title span { display: inline-block; padding: 0 .06em; -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-stroke: .02em #0a0c12; }
+  #loading-title span:first-child { background-image: linear-gradient(#fff6b0, #ffd200 50%, #ff8a00 55%, #e8361c); }
+  #loading-title span + span { background-image: linear-gradient(#fff, #dfe6f2 45%, #7d889c 55%, #f4f6fa); }
+  .loading-console { position: relative; width: min(420px, 70vw); margin-top: 5vh; text-align: center; }
+  .loading-track { height: 5px; background: #000; outline: 1px solid rgba(150,190,255,.35); }
+  #loading-fill { display: block; height: 100%; background: linear-gradient(90deg, #ffd200, #ff8a00 70%, #e8361c); transform: scaleX(0); transform-origin: left; transition: transform 150ms ease-out; }
+  #loading-status { margin: 12px 0 0; font-size: 11px; letter-spacing: .08em; color: #ffd200; text-shadow: 1px 1px 0 #000; }
+  #loading-circuit { margin: 4px 0 0; min-height: 1.4em; font-size: 10px; color: #8a97b0; text-shadow: 1px 1px 0 #000; }
+  #loading-count { display: none; }
+  #loading-retry { margin-top: 16px; padding: 10px 26px; border: 1px solid #fff0c8; background: linear-gradient(#ffc860, #ff9418 50%, #e06a08 50%, #ffa030); color: #0a0c12; font: italic 900 14px "Arial Black", Arial, sans-serif; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); cursor: pointer; }
+  #loading-retry:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+  @keyframes boot-in { from { transform: translateX(-100%); } to { transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .loading-band { animation: none; } #loading-fill { transition: none; } }
   html, body { margin: 0; height: 100%; background: #08080c; overflow: hidden; }
   canvas { position: fixed; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
 </style>
 </head>
 <body>
 <div id="loading" role="status" aria-live="polite" aria-busy="true">
-  <img class="loading-art" src="assets/start-line.webp" alt="" fetchpriority="high" width="1440" height="900">
-  <header class="loading-header"><span class="loading-mark">RR / 01</span><span class="loading-index" data-boot-text="COURSE ARCADE">COURSE ARCADE</span></header>
-  <div class="loading-content">
-    <p class="loading-kicker" data-boot-text="VILLE A PLEIN REGIME">VILLE A PLEIN REGIME</p>
-    <h1 id="loading-title"><span>REDLINE</span><span>RACER</span></h1>
-    <p class="loading-tagline" data-boot-text="LA NUIT EST A VOUS.">LA NUIT EST A VOUS.</p>
+  <div class="loading-band"><h1 id="loading-title"><span>REDLINE</span><span>RACER</span></h1></div>
+  <div class="loading-console">
+    <div class="loading-track" role="progressbar" aria-label="PREPARATION DU JEU" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="loading-fill"></span></div>
+    <p id="loading-status">MISE EN ROUTE</p><span id="loading-count" aria-hidden="true">01 / 03</span>
+    <p id="loading-circuit">REDLINE RACER</p>
+    <button id="loading-retry" type="button" hidden>REESSAYER</button>
   </div>
-  <footer class="loading-footer">
-    <div class="loading-console">
-      <div class="loading-progress-label"><p id="loading-status">MISE EN ROUTE</p><span id="loading-count" aria-hidden="true">01 / 03</span></div>
-      <div class="loading-track" role="progressbar" aria-label="PREPARATION DU JEU" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span id="loading-fill"></span></div>
-      <p id="loading-circuit">REDLINE RACER</p>
-      <button id="loading-retry" type="button" hidden>REESSAYER</button>
-    </div>
-    <p class="loading-facts"><span data-boot-text="18 CIRCUITS">18 CIRCUITS</span><br><span data-boot-text="RADIO EN DIRECT">RADIO EN DIRECT</span><br><span data-boot-text="JUSQU'A 4 JOUEURS">JUSQU'A 4 JOUEURS</span></p>
-  </footer>
 </div>
 <script defer src="src/data/map-assets.js"></script>
 <script defer src="src/engine/loader.js"></script>

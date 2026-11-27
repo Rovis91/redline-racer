@@ -22,12 +22,11 @@
     panneauArea51: () => [...pair(sd => ['steel', 0.2, 5, 0.2, sd * 1.6, 2.5, 0]), ['sign', 4, 2.2, 0.2, 0, 4, 0]],
     // earth-covered magazine (igloo), everything but the earth: the mound is the simple shape butteArea51 at the same origin (middle of the mound; the front is at -13 on X, toward the road).
     // Concrete headwall 15 m wide and 7 m high that holds the earth, splayed wing walls stepping down, a recessed double blast door with its hazard band, a lamp and an explosive-class placard, a level loading apron
-    // (3 m thick, its top 0.9 m up: on the 10 % slope its low side shows as a loading kerb, its high side meets the ground), a vent, and the lightning protection every magazine has: two masts at opposite corners and the catenary wire between them
+    // (3 m thick, its top 0.9 m up: on the 10 % slope its low side shows as a loading kerb, its high side meets the ground) and a vent (no lightning masts or wires: nothing in the air)
     iglooArea51: () => [['concrete', 0.9, 8.4, 15, -13, 2.7, 0], ['dark', 1.3, 0.4, 15.6, -13, 7.1, 0], ...pair(sd => [['concrete', 0.7, 7.5, 6.5, -14.3, 0.25, sd * 10.3, [0, sd * 0.45, 0]], ['concrete', 0.7, 5.4, 4.4, -16.5, -0.8, sd * 15, [0, sd * 0.45, 0]],
       ['door', 0.3, 4.6, 2.5, -13.62, 2.8, sd * 1.3], ['steel', 0.34, 0.25, 2.3, -13.64, 1.4, sd * 1.3], ['steel', 0.34, 0.25, 2.3, -13.64, 4.2, sd * 1.3], ['danger', 0.4, 1.1, 0.4, -22.6, 1.45, sd * 6]]).flat(),
       ['dark', 0.3, 5.4, 5.8, -13.5, 2.9, 0], ['danger', 0.3, 0.6, 5.8, -13.64, 5.5, 0], ['neon', 0.5, 0.3, 0.9, -13.7, 6.4, 0], ['amber', 0.1, 1.3, 1.3, -13.5, 3.4, 5.6, [0.7854, 0, 0]],
-      ['concrete', 9.6, 3, 13, -18.3, -0.6, 0], ['steel', 0.7, 2.4, 0.7, 8, 7.2, 0], ['dark', 1.3, 0.3, 1.3, 8, 8.5, 0],
-      ['steel', 0.25, 18, 0.25, -11, 8, 12.5], ['steel', 0.25, 18, 0.25, 16, 8, -12.5], ['steel', 0.1, 0.1, 36.8, 2.5, 16.8, 0, [0, 2.318, 0]]],
+      ['concrete', 9.6, 3, 13, -18.3, -0.6, 0], ['steel', 0.7, 2.4, 0.7, 8, 7.2, 0], ['dark', 1.3, 0.3, 1.3, 8, 8.5, 0]],
     // the earth over a magazine (simple shape; give it the ground material): a barrel vault len long, ht high and w wide under its fill, closed and rounded at the back, drawn in to the headwall at the front
     butteArea51: (len = 31, ht = 6.5, w = 24) => { const g = SHAPES.ringsArea51(10, [[-12.6, ht * 0.96, 7.4], [-8, ht + 0.5, w / 2], [len - 21, ht + 0.5, w / 2], [len - 16, ht * 0.8, w * 0.4], [len - 12.5, 0.6, 1]], true, 0.05); g.rotateZ(-Math.PI / 2); g.translate(0, -0.5, 0); return g; },
     // open storage pad inside a revetment (the three earth banks are merlonArea51, placed round it): a concrete pad, palletised crates under their hazard bands, a tarpaulined stack

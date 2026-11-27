@@ -254,6 +254,11 @@
             else if (u < 0.6) binList.push([x, y, z, r]); else if (u < 0.85) benches.push([x, y, z, r + Math.PI]); } }
         for (let k = 0; k < n; k += 15) { const i = (i0 + k) % N, s = S[i]; for (const sd of [-1, 1]) { if (i >= pt(h, 36) || i < pt(h, 3) && sd > 0) continue; // the motorway lamps already light the return (points 36 to 40); the marina only has its bollards
           const [x, z] = edgePt(s, sd, W + 4.8); if (!ok(x, z, 0.5)) continue; rev.push([x, s.y + 0.15, z, Math.atan2(s.tx * sd, s.tz * sd)]); const [lx, lz] = edgePt(s, sd, W + 3.7); h.emis(i, lx, s.y + 6, lz, 0xffd8a0, 24, 1.6); } }
+        // what the lit fronts spill at street level: the ground-floor windows of the towers nearest the road, in the colour of their panes, then a cold pool in front of each group of vending machines; never two within 12 samples
+        { const lit = [], spill = (x, y, z, c, r, k) => { const i = near(h, x, z); if (lit.some(j => Math.min((i - j + N) % N, (j - i + N) % N) < 12)) return; lit.push(i); h.emis(i, x, y, z, c, r, k); };
+          tl.forEach((l, q) => l.forEach(([x, , z, , w]) => { const s = S[near(h, x, z)], dx = s.x - x, dz = s.z - z, ax = Math.abs(dx) > Math.abs(dz), o = w / 2 + 1.5, lx = x + (ax ? Math.sign(dx) * o : 0), lz = z + (ax ? 0 : Math.sign(dz) * o);
+            if (Math.hypot(dx, dz) < W + 46 && Math.abs(s.y - g.hAt(lx, lz)) < 2.5) spill(lx, g.hAt(lx, lz) + 2.5, lz, [0xffc070, 0xcfe0ff, 0xffb070][q], 14, 1.4); }));
+          dis.forEach(([x, y, z, r], q) => { if (!q || dis[q - 1][3] !== r || Math.hypot(x - dis[q - 1][0], z - dis[q - 1][2]) > 3) spill(x + Math.sin(r) * 1.4, y + 1.6, z + Math.cos(r) * 1.4, 0xcfe4ff, 10, 1.3); }); }
         insts(h, 'dispenser', { carBody: M('metalPale', { c: 0xe8e8ec }), facade: M('towerWindows', GLOW, ['#f4f8ff', '#ff4a5a', '#4ab0ff']) }, dis);
         insts(h, 'trashcan', { binOf: M('metalPale', { c: 0x2a6a3a }), bin2: M('metalPale', { c: 0x2a4a8a }) }, binList);
         insts(h, 'bench', { vert: M('boards', { c: 0x9a7a5a }), iron: M('matGray') }, benches);

@@ -130,7 +130,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
       rainO: [0, 0, 0], splP: new Float32Array(SN * 3), splA: splA.slice(), splD: new Float32Array(SN) }; // drops (their cumulative offset, see rain) and impacts: same starting draws for all views, rnd is not drawn
     follows(vu, VIEWS.length ? VIEWS[0].self : newCar(T)); VIEWS.push(vu); resize(); return vu; // a view added (in the menu) follows player 1's car, like all views outside a race
   };
-  const renderView = vu => { vu.rt.dispose(); if (vu.rs) vu.rs.dispose(); if (vu.hb) vu.hb.dispose(); if (vu.rt.depthTexture) vu.rt.depthTexture.dispose(); vu.hudT.dispose(); }; // what a view holds on the GPU (its HUD canvas is not in the page)
+  const renderView = vu => { vu.rt.dispose(); if (vu.wr) vu.wr.dispose(); if (vu.rs) vu.rs.dispose(); if (vu.hb) vu.hb.dispose(); if (vu.rt.depthTexture) vu.rt.depthTexture.dispose(); vu.hudT.dispose(); }; // what a view holds on the GPU (its HUD canvas is not in the page)
   const removeView = () => { const vu = VIEWS.pop(); vu.hu.tr.visible = false; renderView(vu); resize(); }; // its trails are no longer held by any view
   let COM = null; // full-screen layer shared by both views: a 2D canvas laid over the game's, { c, g }. It only exists with two players (see players and layer, near the loop)
   let hg = null; // 2D context of the HUD being drawn (the view's, or the shared layer's), for txt, panel, tag
@@ -141,12 +141,14 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         for (int i = 0; i < 8; i++) { vec4 g = gt[i]; if (g.z <= 0.) continue; vec2 q = (v - g.xy) * as / g.z; q.y /= g.w; float r2 = dot(q, q);
           if (r2 < 1.) { o.xy += -(v - g.xy) * (1.6 + .4 * r2); o.z *= 1. - .3 * r2 * r2; } }
         return o; }`;
+  // exposure of the final pass. Above 1 (the eye still adapted to the dark: tunnel exit, the outside seen from inside) it is a veil rather than a gain (1 - (1 - c)^e): dark tones are multiplied by e, light ones are pushed towards white without clipping, so the road keeps its marks in the glare. Identity at e = 1.
+  const EXPO = 'vec3 expo(vec3 c, float e){ return e > 1. ? 1. - pow(1. - min(c, 1.), vec3(e)) : min(c * e, 1.); }';
   const post = new THREE.ShaderMaterial({
     uniforms: { t: { value: null }, h: { value: null }, hb: { value: null }, dz: { value: null }, ex: { value: 1 }, amt: { value: 0 }, ab: { value: 0 }, vig: { value: 0 }, res: { value: 270 }, bloom: { value: TH.bloom }, scan: { value: TH.scan }, px: { value: new THREE.Vector2(1 / 480, 1 / 270) },
       gt: { value: Array.from({ length: 8 }, () => new THREE.Vector4()) },
       ray: { value: [0, 1, 2, 3].map(() => new THREE.Vector4()) }, rayC: { value: [0, 1, 2, 3].map(() => new THREE.Color(0)) } }, // rays: screen position (xy), source depth (z), 1 / halo radius² (w); colour × strength
     vertexShader: 'varying vec2 v; void main(){ v = uv; gl_Position = vec4(position.xy, 0., 1.); }',
-    fragmentShader: `uniform sampler2D t, h, hb; uniform float amt, ab, vig, res, scan, ex; uniform vec2 px; varying vec2 v; ${AIR}
+    fragmentShader: `uniform sampler2D t, h, hb; uniform float amt, ab, vig, res, scan, ex; uniform vec2 px; varying vec2 v; ${AIR} ${EXPO}
       float b2(vec2 a){ a = floor(a); return fract(a.x / 2. + a.y * a.y * .75); } // 4×4 Bayer matrix, built recursively
       void main(){
         float e = ex; // exposure: the eye (see TUN and renderView)
@@ -156,7 +158,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         float nf = clamp(ceil(length(d * amt * l * .182 / px)) + 1., 1., 8.), pas = nf > 1. ? amt * l * .182 / (nf - 1.) : 0.;
         for (int i = 0; i < 8; i++) { if (float(i) >= nf) break;
           vec2 u = c0 + d * (1. - pas * float(i));
-          c += min(vec3(texture2D(t, u + d * ab).r, texture2D(t, u).g, texture2D(t, u - d * ab).b) * e, 1.); // + chromatic aberration; exposed and clipped to white, sample by sample like the old 8-bit target
+          c += expo(vec3(texture2D(t, u + d * ab).r, texture2D(t, u).g, texture2D(t, u - d * ab).b), e); // + chromatic aberration; exposed and clipped to white, sample by sample like the old 8-bit target
         }
         c /= nf;
         c += texture2D(hb, v).rgb; // halo and rays, computed once per cell of the grid (see halo)
@@ -172,11 +174,11 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   quad.frustumCulled = false; postScene.add(quad);
   // halo and light rays: they do not change from one scene line to the next within a cell of the 270 grid; computed here once per cell (a quarter of the pixels), the final pass reads them back (th.bloom, rays: see post)
   const halo = new THREE.ShaderMaterial({ uniforms: post.uniforms, vertexShader: post.vertexShader, depthTest: false, depthWrite: false,
-    fragmentShader: `uniform sampler2D t, dz; uniform float bloom, ex; uniform vec2 px; uniform vec4 ray[4]; uniform vec3 rayC[4]; varying vec2 v; ${AIR}
+    fragmentShader: `uniform sampler2D t, dz; uniform float bloom, ex; uniform vec2 px; uniform vec4 ray[4]; uniform vec3 rayC[4]; varying vec2 v; ${AIR} ${EXPO}
       void main(){
         float e = ex; vec3 ai = air(v, px); vec2 w = v + ai.xy;
         vec3 bl = vec3(0.); // halo: adds what exceeds a brightness threshold, sampled in a ring
-        for (int i = 0; i < 12; i++) { float a = float(i) * .5236, rr = 2. + 2.5 * mod(float(i), 3.); bl += max(min(texture2D(t, w + vec2(cos(a), sin(a)) * rr * px).rgb * e, 1.) - .5, 0.); }
+        for (int i = 0; i < 12; i++) { float a = float(i) * .5236, rr = 2. + 2.5 * mod(float(i), 3.); bl += max(expo(texture2D(t, w + vec2(cos(a), sin(a)) * rr * px).rgb, e) - .5, 0.); }
         vec3 ry = vec3(0.); float j = fract(52.98 * fract(dot(v / px, vec2(.0671, .0058)))); // light rays: a halo around each source, masked by what is in front of it, stretched towards the pixel; per-pixel offset, grain rather than steps
         for (int k = 0; k < 4; k++) if (rayC[k] != vec3(0.)) {
           vec2 s = ray[k].xy, dd = (s - v) / 12., q; float f = 0.;
@@ -189,17 +191,23 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // reflections of the wet road computed on screen: between the scene and the final pass. The road writes into the target's alpha how wet it is
   // (1 = dry, 0.5 = soaked, see illuminates); for each of its pixels the reflected ray is followed through the view's depth, and the colour it meets is added:
   // cars, neons, tail lights. What the ray does not find on screen (the sky, what is out of frame) stays with the ribbons and stretched reflections of the dynamic light.
+  const RIDES = '.011'; // slope of each of the four ripple waves on standing water (th.reflectionWater)
   const ssr = new THREE.ShaderMaterial({
-    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 } },
+    uniforms: { t: { value: null }, dz: { value: null }, P: { value: new THREE.Matrix4() }, Pi: { value: new THREE.Matrix4() }, up: { value: new V3() }, px: { value: new THREE.Vector2() }, pe: { value: TH.reflectionSlope ? 1 : 0 }, fz: { value: +TH.reflectionWater || 0 }, cw: { value: new THREE.Matrix4() }, ri: { value: new THREE.Vector4() } },
     vertexShader: post.vertexShader,
-    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe; varying vec2 v;
+    fragmentShader: `uniform sampler2D t, dz; uniform mat4 P, Pi; uniform vec3 up; uniform vec2 px; uniform float pe, fz; uniform mat4 cw; uniform vec4 ri; varying vec2 v;
       vec3 vpos(vec2 u){ vec4 p = Pi * vec4(u * 2. - 1., texture2D(dz, u).x * 2. - 1., 1.); return p.xyz / p.w; } // position in the camera's frame
+      vec3 ride(vec2 x, vec2 d, float f, float om){ float ph = dot(x, d) * f + ri.x * om, k = smoothstep(.7, 2., fwidth(ph)); return vec3(d * cos(ph) * (1. - k), k); } // one wave's slope; where a pixel spans too much of its phase it fades instead of shimmering, and z says by how much
       vec2 ecran(vec3 q){ vec4 c = P * vec4(q, 1.); return c.xy / c.w * .5 + .5; }
       void main(){
         vec4 c = texture2D(t, v); float w = c.a > ${(0.95 - WATER).toFixed(2)} && c.a < .99 ? (1. - c.a) / ${WATER.toFixed(2)} : 0., trouve = 0.;
         if (w > 0.) {
-          vec3 p = vpos(v), e = normalize(p), nn = up; // th.reflectionSlope: the mirror is the road surface itself (normal taken from depth) and not the horizontal plane; far away, where depth lacks precision, it falls back to vertical
+          vec3 p = vpos(v), e = normalize(p), nn = up; float et = 2.; // th.reflectionSlope: the mirror is the road surface itself (normal taken from depth) and not the horizontal plane; far away, where depth lacks precision, it falls back to vertical
           if (pe > 0.) { vec3 g = normalize(cross(dFdx(p), dFdy(p))); if (dot(g, up) < 0.) g = -g; if (dot(g, up) > .93) nn = normalize(mix(g, up, smoothstep(30., 90., -p.z))); }
+          if (fz > 0.) { // th.reflectionWater: ripples of a light wind tilt the mirror (cw: the camera's world matrix; ri: time, then x, z and strength of the wake around the view's car)
+            vec2 x = (cw * vec4(p, 1.)).xz; vec3 sl = ride(x, vec2(.87, .5), 4.6, 1.9) + ride(x, vec2(-.34, .94), 2.9, 1.4) + ride(x, vec2(.64, -.77), 1.7, 1.) + ride(x, vec2(-.98, -.17), .9, .7);
+            et += sl.z * 1.2; sl.xy *= ${RIDES} * (1. + ri.w * exp(-dot(x - ri.yz, x - ri.yz) / 30.)); nn = normalize(vec3(sl.x, 1., sl.y) * mat3(cw)); // the waves too fine to draw smear the reflection taller instead (et)
+          }
           vec3 r = reflect(e, nn), q = p; float s = .4, a = 0., b = 0.; vec2 h = vec2(-1.);
           for (int i = 0; i < 22; i++) { // steps that grow longer: 0.4 m at the start, over 300 m at the end
             b = a; a += s; s *= 1.28; q = p + r * a; vec2 u = ecran(q);
@@ -211,10 +219,12 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
             }
           }
           if (h.x >= 0.) {
-            vec3 f = vec3(0.); for (int k = -2; k < 2; k++) f += texture2D(t, h + vec2(0., (float(k) + .5) * 2. * px.y)).rgb; // stretched vertically, like a reflection on water
+            vec3 f = vec3(0.); for (int k = -2; k < 2; k++) f += texture2D(t, h + vec2(0., (float(k) + .5) * et * px.y)).rgb; // stretched vertically, like a reflection on water
             vec2 bd = min(h, 1. - h); trouve = smoothstep(0., .08, min(bd.x, bd.y)) * (1. - smoothstep(60., 320., a)); // fades out at the edge of the image and in the distance
             float fr = .25 + .75 * pow(1. - max(dot(-e, up), 0.), 3.); // Fresnel: seen at grazing angle, the road is a mirror
-            c.rgb += f * .12 * w * fr * trouve;
+            // th.reflectionWater (standing water, strength): what still water really returns (Schlick, 2 % seen from above, a mirror at grazing angle), in place of the surface's own colour instead of added to it
+            if (fz > 0.) c.rgb = mix(c.rgb, f * .25, min(1., fz * (.02 + .98 * pow(1. - max(dot(-e, nn), 0.), 5.))) * w * trouve);
+            else c.rgb += f * .12 * w * fr * trouve;
           }
         }
         gl_FragColor = vec4(c.rgb, 1. - trouve); // alpha: 0 where the reflection is found; the fallback ribbons add nothing there (see fallback)
@@ -224,10 +234,9 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   const FALLBACK = { rDz: { value: null }, rRes: { value: new THREE.Vector2() } }, fallbackScene = new THREE.Scene();
   const ssrScene = new THREE.Scene(), ssrQuad = new THREE.Mesh(quad.geometry, ssr); ssrQuad.frustumCulled = false; ssrScene.add(ssrQuad);
   // eye adaptation (without a style): tunnels are painted as seen by an eye already adapted to the dark; the "true" light there is TUN times weaker.
-  // vu.eye = log of the light the view's eye is adapted to (0 outside, log TUN adapted to the tunnel); exposure = true light / eye light (renderView):
-  // on entry the image darkens then the eye adjusts; on exit the outside dazzles (at most ×1.6) then the eye closes again, in 1 to 2 s; once adapted, the image is the painted scene, colours included.
-  // (The old version measured the image's brightness and brought it back to that of the outside: a tunnel painted brighter than the night, wangan, stayed at ×0.4; a darker one, the city, capped.)
-  const TUN = 0.4, EYE_N = 0.5, EYE_C = 0.35; // true light of tunnels; eye time constants (s) towards dark, towards bright; th.eye = { tun, noir, clair } replaces them for a map
+  // vu.eye = log of the light the view's eye is adapted to (0 outside, log TUN adapted to the tunnel). What is outdoors is shown × 1 / eye light, what is indoors (indoor mask) × TUN / eye light:
+  // from outside the tunnel is a dark mouth; on entry it stays too dark, then the eye adjusts and it becomes the painted scene; from inside the exit is a bright patch; on leaving, the outside dazzles (at most × GLARE, soft knee: see EXPO) then settles. Always a ramp of 1 to 2 s.
+  const TUN = 0.4, EYE_N = 0.7, EYE_C = 0.8, GLARE = 2.5; // true light of tunnels; eye time constants (s) towards dark, towards bright; cap of the dazzle; th.eye = { tun, blackM, clair, glare } replaces them for a map
   if (ST) { // final pass for styles: the scene as is, the style's effect, the HUD (always on its 270-line grid), a light vignette
     Object.assign(post.uniforms, { dz: { value: null }, scr: { value: new THREE.Vector2(1, 1) }, pallet: { value: PAL.map(c => new THREE.Color(c)) } });
     post.fragmentShader = `uniform sampler2D t, h, dz; uniform float amt, vig; uniform vec2 px, ecr; uniform vec3 pal[5]; varying vec2 v; ${AIR}
@@ -322,8 +331,8 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   const GLOWI = { emis: 1 }, BRIGHT2 = { emis: 1, side: THREE.DoubleSide }; // self-lit; likewise, visible from both sides
 
   // sky in bands (night, dawn or dusk depending on the map), stars, moon or sun
-  const skyMat = mat('skyDef', { emis: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars);
-  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.skySeg || 48, 12), skyMat); sky.userData.dyn = 1; scene.add(sky);
+  const skyMat = mat('skyDef', { emis: 1, side: THREE.BackSide, fog: false, net: 1 }, TH.sky, TH.stars); skyMat.userData.noIn = 1;
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(2500, TH.skySeg || 48, 12), skyMat); sky.userData.dyn = 1; scene.add(sky); skyMat.userData.hz = 1; // the sky takes the sun's tint of the haze (HZ_F)
   const SD = new V3(...TH.orb.dir).normalize();
   const sunDisc = new THREE.Sprite(new THREE.SpriteMaterial({ fog: false, transparent: true, alphaTest: 0.5, depthWrite: false, map: tx('orb', TH.orb.col, TH.orb.shadows) }));
   sunDisc.scale.set(TH.orb.imgSize, TH.orb.imgSize, 1); scene.add(sunDisc);
@@ -342,16 +351,19 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   // ---------- dynamic light: a single calculation, added to the shader of all the scene's materials (onBeforeCompile) ----------
   // Sky and moon/sun stay as three's (with their shadow). Everything else is computed here, per pixel, with the facet's normal:
   // NL point light fixtures (the nearest along the track + car lights), the headlight beam with a hard cut-off,
-  // the car's shadow by ray tracing on its box (it sweeps the road and walls at each light fixture passed),
+  // the shadow of the view's car and of its two nearest vehicles by ray tracing on their boxes (it sweeps the road and walls at each light fixture passed; the two others also cut the headlight beam),
   // and on shiny surfaces (wet road, puddles = texture alpha, bodywork) the stretched reflection of each source.
   const BRIGHTS = [], emis = (i, x, y, z, col, r, k = 1, tun = 0) => { const l = { i, x, y, z, c: new THREE.Color(col).multiplyScalar(k), r, tun }; BRIGHTS.push(l); return l; }; // renders the light: a scenery piece can make its colour (l.c) breathe in its tick (Chapada campfire)
   const NIGHT_COL = TH.headlights / 2.6; // strength of car lights: full at night, weak at dawn and dusk
   let headlightsV = TH.headlights, nightV = NIGHT_COL; // th.headlightsHaze: inside a haze bank (th.haze with four values), the cars' lights come on at this strength, in proportion to the bank; without the option, headlightsV = TH.headlights and nightV = NIGHT_COL
   const SUNC = new THREE.Color(TH.sun[0]).multiplyScalar(TH.sun[1]);
+  let INDOOR = null, tunHW = null; // the indoor mask (built once the scenery is there, see below) and the engine tunnel's (height, half-width) at a sample
   const LUX = { uLP: { value: Float32Array.from({ length: NL * 4 }, (_, i) => i % 4 === 3 ? 1 : 0) }, uLC: { value: new Float32Array(NL * 3) }, // flat: three is passed the array as-is instead of copying 20 vectors at each draw pass
    
-    uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new THREE.Matrix4() },
-    uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
+    uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new Float32Array(48) }, uNB: { value: 1 }, // uBox: 3 shadow boxes (the view's car, then its two nearest cars), uNB of them in use
+    uOP: { value: new Float32Array(6) }, uOD: { value: new Float32Array(6) }, uOC: { value: new Float32Array(6) }, uNO: { value: 0 }, // headlight beams of the two nearest vehicles (origin, direction, colour), uNO of them in use
+   
+    uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uHz: { value: new THREE.Color() }, uInT: { value: null }, uInB: { value: new THREE.Vector4() }, uInP: { value: new THREE.Vector4(0, 1, 1, 1) }, uFogOC: { value: new THREE.Color() }, uFogOR: { value: new THREE.Vector2() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
   const LU_V = `{ vec4 lw = vec4(transformed, 1.);
     #ifdef USE_INSTANCING
       lw = instanceMatrix * lw;
@@ -367,17 +379,39 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
     #ifdef MOUILLE
       uniform sampler2D uMo; varying vec2 vMo;
     #endif
-    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam; uniform mat4 uBox; uniform float uGloss, uRetro; uniform int uN; varying vec3 vLw;
-    float luOmbre(vec3 p, vec3 d) { // 0 if the car's box cuts the segment p → p + d; a point inside the box or on its surface is not shadowed
-      vec3 o = (uBox * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
-      float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
-      return a < b && a > .005 && a < 1. ? 0. : 1.;
+    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam, uHz; uniform vec3 uOP[2], uOD[2], uOC[2]; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB, uNO; varying vec3 vLw;
+    #ifdef INDOOR
+      // indoor mask (see INDOOR): how much the point is under a tunnel or in a hall, whatever the camera does. uInP = (base height, light the eye gives indoors, exposure of the final pass, share of sun and sky kept indoors)
+      uniform sampler2D uInT; uniform vec4 uInB, uInP; uniform vec3 uFogOC; uniform vec2 uFogOR;
+      float luIn(vec3 p) { vec4 t = texture2D(uInT, (p.xz - uInB.xy) * uInB.zw); float y = p.y - uInP.x; return t.r * step(y, t.g) * step(t.b, y); }
+      vec3 luEye(vec3 c, float k) { vec3 t = min(c * uInP.y, 1.); return mix(c, uInP.z > 1. ? 1. - pow(1. - t, vec3(1. / uInP.z)) : t / uInP.z, k); } // the final pass exposes the whole image for the outside (expo): undone here for what is indoors
+    #endif
+    float luOmbre(vec3 p, vec3 d, int i0) { // 0 if a car's box (from box i0 on: 0 = the view's car, then its two nearest cars) cuts the segment p → p + d; a point inside a box or on its surface is not shadowed
+      for (int k = i0; k < uNB; k++) {
+        vec3 o = (uBox[k] * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox[k]) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
+        float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
+        if (a < b && a > .005 && b < 1.) return 0.; // b < 1: a light inside a box shines out of it (the headlights of a nearby vehicle)
+      }
+      return 1.;
+    }
+    vec3 luPhare(vec3 n, vec3 o, vec3 hd, vec3 c, float retro, int i0) { // a headlight beam on the pixel: wide, horizontal cut-off (dipped beam); retro: share returned by reflectors and signs, even above the cut-off; i0: first shadow box that cuts it
+      vec3 hv = vLw - o; float f = dot(hv, hd);
+      if (f <= .5) return vec3(0.);
+      vec3 hr = normalize(vec3(-hd.z, 0., hd.x));
+      float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, hd)) / f) * smoothstep(75., 25., f) * luOmbre(vLw, -hv, i0); // softened cutoff: a road going uphill no longer makes a hard line
+      return c * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)) + m * retro);
     }
     `;
   const LU_F = `{
       vec3 n = normalize(cross(dFdx(vLw), dFdy(vLw))), v = normalize(uCam - vLw); // uCam rather than cameraPosition: three does not supply it for Basic and Lambert materials (it stays at the world origin)
       if (dot(n, v) < 0.) n = -n;
-      float g = uGloss + (1. - diffuseColor.a) * 2., plat = step(.8, n.y);
+      float g = uGloss + (1. - diffuseColor.a) * 2., plat = step(.8, n.y), inL = 0.;
+      #ifdef INDOOR
+        inL = luIn(vLw);
+        #ifdef IN_LIT
+          gl_FragColor.rgb *= 1. - (1. - uInP.w) * inL; // sun and sky do not reach indoors
+        #endif
+      #endif
       #ifdef MOUILLE
         vec4 mo = texture2D(uMo, vec2(vMo.x, fract(vMo.y))); mo.r = smoothstep(.15, .85, mo.r); // r = race wetness, g = rain (see MOTOR); half dry, it already shows
         g = mix(g, mix(0., max(g, .25), mo.r), mo.g); // under rain: the dry line is matte, the rest shines
@@ -387,18 +421,18 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         if (i >= uN) break; // only the lights that are on
         vec3 d = uLP[i].xyz - vLw; float a = 1. - dot(d, d) / (uLP[i].w * uLP[i].w);
         if (a <= 0.) continue;
-        if (uLP[i].w > 0.) a *= luOmbre(vLw, d); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
+        if (uLP[i].w > 0.) a *= luOmbre(vLw, d, 0); vec3 l = normalize(d); // negative range: light carried by the car, which does not cast the shadow of its own box
         dif += uLC[i] * (a * a * max(dot(n, l), 0.));
         if (g > 0.) spe += uLC[i] * (a * mix(pow(max(dot(n, normalize(l + v)), 0.), 24.), pow(max(dot(rh, normalize(l.xz + 1e-4)), 0.), 40.), plat));
       }
-      if (g > 0.) spe += plat * (uSunC * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18);
-      vec3 hv = vLw - uHP; float f = dot(hv, uHD);
-      if (f > .5) { // phares : faisceau large, coupure horizontale nette (feu de croisement)
-        vec3 hr = normalize(vec3(-uHD.z, 0., uHD.x));
-        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f); // softened cutoff: a road going uphill no longer makes a hard line
-        dif += uHC * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)));
-        if (uRetro > 0.) dif += uHC * (m * uRetro); // reflectors and signs: return the beam, even above the cutoff
-      }
+      if (g > 0.) { float so = 1.; // the sun's streak stops in the shade (same shadow read as three's own lighting)
+      #if defined(USE_SHADOWMAP) && NUM_DIR_LIGHT_SHADOWS > 0 && (defined(LAMBERT) || defined(PHONG))
+        if (plat > 0.) so = // even on a mesh that takes no shadow itself (a water plane over the road)
+getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
+      #endif
+        spe += plat * (uSunC * so * (1. - inL) * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18); }
+      dif += luPhare(n, uHP, uHD, uHC, uRetro, 1); // the view's car: the nearest cars cut its beam
+      for (int i = 0; i < 2; i++) { if (i >= uNO) break; dif += luPhare(n, uOP[i], uOD[i], uOC[i], 0., 0); } // the two nearest vehicles: the view's car cuts theirs too
       if (uRetro > 0.) gl_FragColor.rgb *= .3;
       gl_FragColor.rgb *= .55 + .45 * diffuseColor.a; // water darkens the ground
       #ifdef MOUILLE
@@ -407,9 +441,18 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
       #ifdef MOUVIS
         gl_FragColor.rgb *= 1. - .3 * mo.g * mo.r; // th.wetVisible: wet asphalt is darker (rain alone does not darken it: rendering of rain maps unchanged)
       #endif
+      if (n.y > .5) for (int k = 0; k < uNB; k++) { // contact shadow: the ground just under a shadow box is darker, fading out around its footprint and as the car leaves the ground. Before the dynamic light: the car's own lights still reach under it
+        vec3 o = (uBox[k] * vec4(vLw, 1.)).xyz; // box space: the footprint is |x|, |z| < 1, the underside y = -1 (above -.75 it is the car itself)
+        gl_FragColor.rgb *= 1. - .6 * step(o.y, -.75) * smoothstep(-2.2, -1.1, o.y) * smoothstep(1.3, .8, abs(o.x)) * smoothstep(1.4, .7, abs(o.z));
+      }
       gl_FragColor.rgb += 1. - exp(-1.3 * (diffuseColor.rgb + .07) * dif) + spe * (g * (.12 + pow(1. - max(dot(n, v), 0.), 3.))); // even dark asphalt responds; light tones saturate gently
+      #ifdef INDOOR
+        gl_FragColor.rgb = luEye(gl_FragColor.rgb, inL);
+      #endif
     }
     `;
+  // haze tinted by the sun: toward the sun, fog and sky slide to the orb's colour; uHz = (orb colour - fog colour) × strength, zero at night, under a tunnel and in a haze bank
+  const HZ_F = '(pow(max(dot(normalize(vLw - uCam), uSunD), 0.), 4.) - .2)', FOG_F = THREE.ShaderChunk.fog_fragment.replace('fogColor,', `fogColor + uHz * ${HZ_F},`);
   const SHD_SOFT = THREE.ShaderChunk.shadowmap_pars_fragment.replace(/float depth = texture2D\( shadowMap, shadowCoord\.xy \)\.r;[\s\S]*?#endif/, `vec2 tp = shadowCoord.xy * shadowMapSize - .5, fp = fract(tp), b0 = (floor(tp) + .5) / shadowMapSize, dt = 1. / shadowMapSize;
         shadow = mix(mix(step(shadowCoord.z, texture2D(shadowMap, b0).r), step(shadowCoord.z, texture2D(shadowMap, b0 + vec2(dt.x, 0.)).r), fp.x),
           mix(step(shadowCoord.z, texture2D(shadowMap, b0 + vec2(0., dt.y)).r), step(shadowCoord.z, texture2D(shadowMap, b0 + dt).r), fp.x), fp.y);`); // getShadow of BasicShadowMap in bilinear (non-inverted depth, the game's own)
@@ -426,7 +469,18 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         sh.vertexShader = '#define MOUILLE\nuniform vec2 uMoN; varying vec2 vMo;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vMo = vec2(uv.x, (uv.y * 16. + uMoN.x) / uMoN.y);\n#include <fog_vertex>');
       }
       sh.vertexShader = 'varying vec3 vLw, vAf; uniform vec2 uRes;\n' + sh.vertexShader.replace('#include <fog_vertex>', LU_V + '#include <fog_vertex>');
-      if (readQ) sh.fragmentShader = LU_H + sh.fragmentShader.replace('#include <fog_fragment>', LU_F + '#include <fog_fragment>');
+      const ind = INDOOR && !m.userData.noIn; // the fog of an outdoor point stays the outdoor fog when the camera is under the tunnel (and the reverse); additive planes only take the eye
+      if (readQ) sh.fragmentShader = LU_H + sh.fragmentShader.replace(`#include <fog_fragment>`, LU_F + (ind ? `vec3 inC0 = gl_FragColor.rgb;
+#include <fog_fragment>
+#ifdef USE_FOG
+gl_FragColor.rgb = mix(mix(inC0, uFogOC, smoothstep(uFogOR.x, uFogOR.y, vFogDepth)), gl_FragColor.rgb, luIn(vLw));
+#endif
+` : `#include <fog_fragment>`));
+      else if (ind) sh.fragmentShader = LU_H + sh.fragmentShader.replace(`#include <fog_fragment>`, `gl_FragColor.rgb = luEye(gl_FragColor.rgb, luIn(vLw));
+#include <fog_fragment>`);
+      if (ind) sh.fragmentShader = `#define INDOOR
+` + (m.isMeshBasicMaterial ? `` : `#define IN_LIT
+`) + sh.fragmentShader;
       if (limp) { sh.vertexShader = 'attribute float mou; varying float vMou;\n' + sh.vertexShader.replace('#include <fog_vertex>', 'vMou = mou;\n#include <fog_vertex>'); sh.fragmentShader = 'varying float vMou;\n' + sh.fragmentShader; }
       if (opaque) sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', (limp ? `gl_FragColor.a = 1. - ${WATER.toFixed(2)} * clamp(vMou * .3 + (1. - diffuseColor.a) * min(vMou, 1.), 0., 1.);` : 'gl_FragColor.a = 1.;') + '\n#include <fog_fragment>');
       // textures without perspective correction: vAf = uv × w, interpolated then divided by interpolated w, gives back the affine interpolation on screen
@@ -438,10 +492,12 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
         sh.fragmentShader = 'varying vec4 vCo; uniform vec4 uCr;\n' + co.map((c, i) => 'uniform sampler2D uC' + i + ';\n').join('') + sh.fragmentShader.replace('#include <map_fragment>', THREE.ShaderChunk.map_fragment)
           .replace('diffuseColor *= sampledDiffuseColor;', co.map((c, i) => `sampledDiffuseColor = mix(sampledDiffuseColor, texture2D(uC${i}, vMapUv * uCr[${i}]), vCo[${i}]);\n`).join('') + 'diffuseColor *= sampledDiffuseColor;');
       }
+      if (readQ) sh.fragmentShader = sh.fragmentShader.replace('#include <fog_fragment>', FOG_F);
+      if (m.userData.hz) sh.fragmentShader = 'uniform vec3 uHz, uSunD, uCam; varying vec3 vLw;\n' + sh.fragmentShader.replace('#include <fog_fragment>', `{ vec3 hd = normalize(vLw - uCam); float hh = 1. - clamp(hd.y, 0., 1.); gl_FragColor.rgb += uHz * (${HZ_F} * hh * hh); }`); // on the sky: full at the horizon (where it meets the fogged scenery), gone at the zenith
       if (m.userData.mo) sh.fragmentShader = '#define MOUILLE\n' + (MV ? '#define MOUVIS\n' : '') + sh.fragmentShader; // at the top, before LU_H which uses it
       sh.fragmentShader = '#undef OPAQUE\n' + sh.fragmentShader; // r151+ forces the alpha of opaques to 1 before fog_fragment: the puddles (texture alpha) and the wetness read it
     };
-    m.customProgramCacheKey = () => 'lu' + readQ + opaque + limp + (m.userData.mo ? 'mo' + (MV ? 'mv' : '') + (m.userData.mo0 ?? '') : '') + (SHDO.soft ? 'od' : '') + (m.userData.layerSet ? 'c' + m.userData.layerSet.length : '');
+    m.customProgramCacheKey = () => 'lu' + readQ + opaque + limp + (m.userData.hz ? 'hz' : '') + (INDOOR && !m.userData.noIn ? 'in' : '') + (m.userData.mo ? 'mo' + (MV ? 'mv' : '') + (m.userData.mo0 ?? '') : '') + (SHDO.soft ? 'od' : '') + (m.userData.layerSet ? 'c' + m.userData.layerSet.length : '');
   };
   const gloss = (m, g) => { m.userData.gloss = g; return m; }, retroRefl = (m, r = 1.5) => { m.userData.retroRefl = r; return m; };
 
@@ -510,7 +566,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
     let ground; const FT = u.h != null || !!u.vault || !!u.opn, FI = new Map(); for (let k = 0; k <= cT; k++) FI.set(S[(T.t0 + k) % N], k / cT);
     const val = (v, d) => s => { const f = FI.get(s) ?? 0; if (v == null) return d; if (typeof v === 'number') return v; if (typeof v === 'function') return v(f, s);
       let j = 0; while (j < v.length - 1 && v[j + 1][0] < f) j++; const [fa, a] = v[j], [fb, b] = v[Math.min(j + 1, v.length - 1)]; return fb > fa ? a + (b - a) * clamp((f - fa) / (fb - fa), 0, 1) : a; };
-    const tw = FT ? s => s.w : () => W, hh = val(u.h, 8), vt = val(u.vault, 0), hm = s => hh(s) - vt(s), ceilingFn = (s, x) => hm(s) + vt(s) * Math.sqrt(Math.max(0, 1 - (x / tw(s)) ** 2));
+    const tw = FT ? s => s.w : () => W, hh = val(u.h, 8), vt = val(u.vault, 0), hm = s => hh(s) - vt(s); tunHW = s => [hh(s), tw(s)]; const ceilingFn = (s, x) => hm(s) + vt(s) * Math.sqrt(Math.max(0, 1 - (x / tw(s)) ** 2));
     const WITHOUT = new Set(u.without || []); // th.tun.without: what the engine does not place: 'portals', 'fixtures' (the lights stay, without their housings); 'lightSet': no fixture light, only the daylight from the openings; 'faces': neither walls, vault nor hull, the map's scenery makes them
     const isOpen = k => (u.opn || []).some(([a, b]) => k >= a * cT && k <= b * cT), facets = [] /* ceiling: pieces [start, length] outside the openings */;
     for (let k = 0, a = -1; k <= cT; k++) { const o = isOpen(k) || k === cT; if (!o && a < 0) a = k; if (o && a >= 0) { facets.push([a, k - a + (k === cT && !isOpen(k))]); a = -1; } }
@@ -618,8 +674,103 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   backdrop && await whoosh();
   // ---------- map scenery: scenery-<map>.js ----------
   const STM = [], steam = (x, y, z) => STM.push([x, y, z]); // steam vents declared by the scenery (plumes: see blur)
-  const beams = [], BREAKABLES = [], sceneryTick = window.SCENERY[TH.scenery]({ breakable: (...a) => BREAKABLES.push(a), guardM: (sg, ...r) => wallStrip(sg, ...r), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, emis, geo, mat, tx, addMat, box, concrete, beams, pose, zones, clothe, steam, softPuffs: (...a) => softPuffs(...a), time: () => race ? -1 : tTraffic, lapCount: () => race ? race.laps : 0 }); // laps: those of the current race (0 outside a race), for the scenery's last lap // blur: the game's particles open to the scenery, to call from the tick (they don't exist yet at load time); the scenery calls step(dt) itself // no traffic in a race: the opponents don't know how to avoid it
+  // ---------- water (h.water): one surface for seas, harbours and floods, that works with the light ----------
+  // water(y, o) lays a horizontal plane at height y and returns its mesh. Per pixel: the mirror image of the scenery and the sky (one more render of the scene per view, from under the plane: see waterFrame),
+  // a Fresnel term (clear and showing the bed close to the camera, a mirror at grazing angles), the sun as a moving glitter path, ripples that flatten with distance (three layers of one normal map, filtered: no shimmer on a 270-line grid),
+  // depth colour and shore foam read from a map of the bed drawn once from above (waterBake). Options and costs: docs/methods/MAP-ENGINE-OPTIONS.md "Water". ?mirror=0 or o.mirror: 0: no extra render, the sky's colours instead.
+  // shortcut: one mirror per view, at the height of the first water of the map; a map with water at two levels needs one target per level.
+  const WATERS = [], MIRROR = Q.get('mirror') !== '0' && TH.waterMirror !== 0; let WNORM = null; // th.waterMirror: 0 switches the mirror render off for a map
+  const waterNormals = () => { if (WNORM) return WNORM; const n = 256, d = new Uint8Array(n * n * 4), hs = k => { const x = Math.sin(k * 127.1) * 43758.5453; return x - Math.floor(x); }; // 24 sine waves of whole frequencies: the image tiles; rg = slope, b = height (the foam's pattern)
+    const WV = Array.from({ length: 24 }, (_, k) => { const fx = Math.round((hs(k) * 2 - 1) * 9), fz = Math.round((hs(k + 50) * 2 - 1) * 9), fq = Math.hypot(fx, fz) || 1; return [fx, fz, hs(k + 100) * 6.283, 1 / fq]; });
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) { let gx = 0, gz = 0, hg = 0; for (const [fx, fz, ph, a] of WV) { const t = 6.283 * (fx * i + fz * j) / n + ph, c = Math.cos(t) * a; gx += c * fx; gz += c * fz; hg += Math.sin(t) * a; }
+      const o = (j * n + i) * 4; d[o] = 128 + clamp(gx * 14, -127, 127); d[o + 1] = 128 + clamp(gz * 14, -127, 127); d[o + 2] = clamp(128 + hg * 40, 0, 255); d[o + 3] = 255; }
+    WNORM = new THREE.DataTexture(d, n, n); WNORM.wrapS = WNORM.wrapT = THREE.RepeatWrapping; WNORM.magFilter = THREE.LinearFilter; WNORM.minFilter = THREE.LinearMipmapLinearFilter; WNORM.generateMipmaps = true; WNORM.needsUpdate = true; return WNORM; };
+  const water = (y, o = {}) => {
+    const col = (c, d) => ({ value: new THREE.Color(c ?? d) }), [sw, sh] = o.size || [12000, 12000], [wx, wz] = o.wind || [0.7, 0.3];
+    const mt = new THREE.ShaderMaterial({ fog: true, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor, blendSrcAlpha: THREE.OneFactor, blendDstAlpha: THREE.OneFactor, // alpha of the target stays at 1 or more: ssr reads "not a wet road"
+      uniforms: { ...THREE.UniformsUtils.clone(THREE.UniformsLib.fog), uN: { value: waterNormals() }, uRef: { value: null }, uRM: { value: new THREE.Matrix4() }, uBa: { value: null }, uBB: { value: new THREE.Vector4() }, uCam: LUX.uCam, uSunD: LUX.uSunD, uSunC: { value: SUNC }, uSkyH: { value: FOG_OUT },
+        uSkyZ: col(o.sky, new THREE.Color(TH.fog).multiplyScalar(0.55)), uShal: col(o.shallow, 0x3fb8b0), uDeep: col(o.deep, 0x0e3a5c), uFoam: col(o.foamCol, 0xf2f6f4),
+        uP: { value: new THREE.Vector4(0, o.ripple ?? 9, o.rough ?? 0.6, 0) }, uQ: { value: new THREE.Vector4(o.depth ?? 8, o.clarity ?? 2.5, o.foam ?? 2.5, o.glitter ?? 1) }, uWind: { value: new THREE.Vector2(wx, wz).multiplyScalar(o.flow ?? 0.035) } }, // uP = (time, ripple size in m, ripple strength, mirror on); uQ = (depth range, clarity in m, foam width in m, glitter)
+      vertexShader: `varying vec3 vW; varying vec4 vR; uniform mat4 uRM;
+        #include <fog_pars_vertex>
+        void main(){ vec4 w = modelMatrix * vec4(position, 1.); vW = w.xyz; vR = uRM * w; vec4 mvPosition = viewMatrix * w; gl_Position = projectionMatrix * mvPosition;
+        #include <fog_vertex>
+        }`,
+      fragmentShader: `uniform sampler2D uN, uRef, uBa; uniform vec4 uBB, uP, uQ; uniform vec3 uCam, uSunD, uSunC, uSkyH, uSkyZ, uShal, uDeep, uFoam; uniform vec2 uWind; varying vec3 vW; varying vec4 vR;
+        #include <fog_pars_fragment>
+        void main(){
+          vec3 V = uCam - vW; float dist = length(V); V /= dist;
+          vec2 p = vW.xz / uP.y, wd = uWind * uP.x; // ripples: two layers sliding across each other and a swell five times larger; flattened with distance
+          vec2 g = texture2D(uN, p + wd).rg + texture2D(uN, p * 1.93 + vec2(.37, .11) - wd.yx * 1.7).rg - 1. + (texture2D(uN, p * .21 + wd * .4).rg - .5) * 1.5;
+          g *= uP.z / (1. + dist * .004); vec3 N = normalize(vec3(-g.x, 1., -g.y));
+          float F = .02 + .98 * pow(1. - max(dot(N, V), 0.), 5.); // Fresnel: 2 % seen from above, a mirror at grazing angles
+          vec3 rd = reflect(-V, N); rd.y = abs(rd.y);
+          vec3 R = mix(uSkyH, uSkyZ, pow(rd.y, .6));
+          if (uP.w > 0.) R = texture2D(uRef, clamp(vR.xy / vR.w + g * vec2(.05, .12), .002, .998)).rgb; // the mirror image, displaced by the ripples (more in height: reflections stretch towards the viewer)
+          float sp = pow(max(dot(N, normalize(V + uSunD)), 0.), 120.) * uQ.w; // the sun: a path of glitter towards it
+          vec2 bu = (vW.xz - uBB.xy) * uBB.zw; float d = uQ.x; // depth of the water in m, from the map of the bed (0 at the shore, negative under land)
+          if (bu.x > 0. && bu.x < 1. && bu.y > 0. && bu.y < 1.) d = uQ.x - texture2D(uBa, bu).r * (uQ.x + 2.);
+          float dw = max(d, 0.), body = 1. - exp(-dw / uQ.y); // how much of the bed the water hides
+          vec3 c = mix(uShal, uDeep, 1. - exp(-dw / (uQ.y * 2.5))) * (1. + dot(g, normalize(uSunD.xz + 1e-4)) * .45); // each ripple has a lit and a dark flank
+          float lap = .5 + .5 * sin(uP.x * 1.1 - d * 5. / max(uQ.z, .01)), fo = uQ.z > 0. ? smoothstep(uQ.z, 0., d) * step(-1.2, d) : 0.; // foam: a band at the shore that breathes, cut out by the pattern (crisp patches, not a gradient)
+          fo = step(1. - fo * (.55 + .45 * lap), texture2D(uN, vW.xz / 5. + wd * 2.).b * .5 + texture2D(uN, vW.xz / 2.3 - wd).b * .5 + .22);
+          float a = clamp(max(F, body) + sp, 0., 1.);
+          c = (c * (a - F) + R * F) / max(a, .001) + uSunC * sp * 1.6;
+          c = mix(c, uFoam, fo); a = max(a, fo * .92);
+          gl_FragColor = vec4(c, a);
+          #include <fog_fragment>
+        }` });
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(sw, sh), mt); m.rotation.x = -Math.PI / 2; m.position.set(o.x || 0, y, o.z || 0); m.renderOrder = o.order ?? 2; m.userData.dyn = 1; scene.add(m); if (o.lift) { mt.polygonOffset = true; mt.polygonOffsetFactor = mt.polygonOffsetUnits = -o.lift; } // o.lift: depth offset, for water a few centimetres over a road (it would show through at a distance)
+    WATERS.push({ m, y, o, U: mt.uniforms, rt: null }); return m; };
+  // the map of the bed, once: the scene drawn from above by a flat camera, each pixel writing its height between -depth (0) and +2 m (1) over the water. Two passes into the same image:
+  // from high up (cliffs and quays read as land), then from o.top above the water (1.5 m) over it, so that what overhangs (bridge, tree crown, lamp head) gives way to the bed under it.
+  const BATHY = new THREE.ShaderMaterial({ side: THREE.DoubleSide, uniforms: { uY: { value: new V3() } }, fragmentShader: 'uniform vec3 uY; varying float vY; void main(){ gl_FragColor = vec4(clamp((vY - uY.x + uY.y) / (uY.y + uY.z), 0., 1.)); }',
+    vertexShader: `varying float vY;
+      void main(){
+      #include <begin_vertex>
+      vec4 wp = vec4(transformed, 1.);
+      #ifdef USE_INSTANCING
+        wp = instanceMatrix * wp;
+      #endif
+      vY = (modelMatrix * wp).y;
+      #include <project_vertex>
+      }` });
+  const waterBake = w => { const D = w.U.uQ.value.x, top = w.o.top ?? 1.5; let b = w.o.bounds; if (!b) { b = [1e9, 1e9, -1e9, -1e9]; for (const q of S) { b[0] = Math.min(b[0], q.x - 500); b[1] = Math.min(b[1], q.z - 500); b[2] = Math.max(b[2], q.x + 500); b[3] = Math.max(b[3], q.z + 500); } } // o.bounds = [x0, z0, x1, z1]; by default the track and 500 m around it; beyond, deep water
+    const [x0, z0, x1, z1] = b, px = Math.max(0.5, (x1 - x0) / 2048, (z1 - z0) / 2048), cam = new THREE.OrthographicCamera((x0 - x1) / 2, (x1 - x0) / 2, (z1 - z0) / 2, (z0 - z1) / 2, 0, 1), hid = [], cc = new THREE.Color(), ca = renderer.getClearAlpha(); renderer.getClearColor(cc);
+    w.rt = new THREE.WebGLRenderTarget(Math.ceil((x1 - x0) / px), Math.ceil((z1 - z0) / px), { type: THREE.HalfFloatType, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+    scene.traverse(q => { const mq = q.material; if (q.visible && mq && (!q.isMesh || Array.isArray(mq) || mq.isShaderMaterial || mq.fog === false || mq.transparent && !mq.depthWrite)) { hid.push(q); q.visible = false; } }); // neither sky, particles, glows nor the water itself
+    cam.rotation.x = -Math.PI / 2; cam.layers.mask = 1 | 1 << 2 | 1 << 3; BATHY.uniforms.uY.value.set(w.y, D, 2); scene.overrideMaterial = BATHY; renderer.setRenderTarget(w.rt); renderer.setClearColor(0, 1);
+    for (const [hh, k] of [[3000, 1], [top, 0]]) { cam.position.set((x0 + x1) / 2, w.y + hh, (z0 + z1) / 2); cam.far = hh + D; cam.updateProjectionMatrix(); cam.updateMatrixWorld(); renderer.autoClearColor = !!k; renderer.render(scene, cam); }
+    renderer.autoClearColor = true; scene.overrideMaterial = null; renderer.setClearColor(cc, ca); for (const q of hid) q.visible = true;
+    w.U.uBa.value = w.rt.texture; w.U.uBB.value.set(x0, z1, 1 / (x1 - x0), -1 / (z1 - z0)); };
+  // each frame, per view: the time, and the mirror image: the scene seen by the camera reflected under the water plane, its near plane laid on the water (nothing under the surface shows), into a target half the size of the view's
+  const WCAM = new THREE.PerspectiveCamera(), WPL = new THREE.Plane(), WV4 = new THREE.Vector4(), WQ = new THREE.Vector4(), WB = new THREE.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1), WUP = new V3(), WTG = new V3();
+  const waterFrame = (vu, cam, now, lm) => { const w0 = WATERS[0], y = w0.y, bd = w0.o.bounds, on = MIRROR && w0.o.mirror !== 0 && cam.position.y > y + 0.1 && lm < 0.95 && !(bd && (cam.position.x < bd[0] - 300 || cam.position.x > bd[2] + 300 || cam.position.z < bd[1] - 300 || cam.position.z > bd[3] + 300)); // no mirror under a tunnel, nor 300 m away from a bounded water
+    for (const w of WATERS) { if (!w.rt) waterBake(w); w.U.uP.value.x = now * 0.001; w.U.uP.value.w = on ? 1 : 0; }
+    if (!on) return;
+    const tw = Math.max(1, vu.rt.width >> 1), th = Math.max(1, vu.rt.height >> 1); if (!vu.wr || vu.wr.width !== tw || vu.wr.height !== th) { if (vu.wr) vu.wr.dispose(); vu.wr = new THREE.WebGLRenderTarget(tw, th, { type: vu.rt.texture.type, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter }); }
+    cam.updateMatrixWorld(); WCAM.position.set(cam.position.x, 2 * y - cam.position.y, cam.position.z); WTG.set(0, 0, -1).applyQuaternion(cam.quaternion).add(cam.position); WTG.y = 2 * y - WTG.y; WUP.set(0, 1, 0).applyQuaternion(cam.quaternion); WUP.y = -WUP.y;
+    WCAM.up.copy(WUP); WCAM.lookAt(WTG); WCAM.layers.mask = cam.layers.mask; WCAM.updateMatrixWorld(); WCAM.projectionMatrix.copy(cam.projectionMatrix); WCAM.projectionMatrixInverse.copy(cam.projectionMatrixInverse);
+    WPL.set(WUP.set(0, 1, 0), -y).applyMatrix4(WCAM.matrixWorldInverse); WV4.set(WPL.normal.x, WPL.normal.y, WPL.normal.z, WPL.constant); const e = WCAM.projectionMatrix.elements; // near plane laid on the water (oblique projection)
+    WQ.set((Math.sign(WV4.x) + e[8]) / e[0], (Math.sign(WV4.y) + e[9]) / e[5], -1, (1 + e[10]) / e[14]); WV4.multiplyScalar(2 / WV4.dot(WQ)); e[2] = WV4.x; e[6] = WV4.y; e[10] = WV4.z + 1; e[14] = WV4.w;
+    for (const w of WATERS) w.m.visible = false; renderer.setRenderTarget(vu.wr); renderer.render(scene, WCAM);
+    for (const w of WATERS) { w.m.visible = true; w.U.uRef.value = vu.wr.texture; w.U.uRM.value.copy(WB).multiply(WCAM.projectionMatrix).multiply(WCAM.matrixWorldInverse); } };
+  const beams = [], BREAKABLES = [], sceneryTick = window.SCENERY[TH.scenery]({ water, breakable: (...a) => BREAKABLES.push(a), guardM: (sg, ...r) => wallStrip(sg, ...r), THREE, scene, T, S, N, W, M, TH, ribbon, rnd, across, zone, emis, geo, mat, tx, addMat, box, concrete, beams, pose, zones, clothe, steam, softPuffs: (...a) => softPuffs(...a), time: () => race ? -1 : tTraffic, lapCount: () => race ? race.laps : 0 }); // laps: those of the current race (0 outside a race), for the scenery's last lap // blur: the game's particles open to the scenery, to call from the tick (they don't exist yet at load time); the scenery calls step(dt) itself // no traffic in a race: the opponents don't know how to avoid it
 
+  // ---------- indoor mask: where the light of the outside does not reach ----------
+  // A top-down image of the tunnel and of the halls the scenery declares (tick.indoor): r = indoor level (0..1), g and b = ceiling and floor heights. Every material reads it per pixel (luIn):
+  // sun, sky light, fog and the eye's exposure follow the place of the POINT, not of the camera. From outside, the tunnel is a dark mouth; from inside, the exit is a bright patch (see the eye, viewFrame).
+  // tick.indoorW(i): half-width of a scenery hall at sample i (s.w + 4 m by default); tick.indoorH: its height (1.2 × s.w, at least 12 m). No tunnel, no hall: no mask, no shader line.
+  { const ti = sceneryTick && sceneryTick.indoor, L = T.t1 - T.t0, lv = Float32Array.from({ length: N }, (_, i) => { const a = (i - T.t0 + N) % N; return Math.max(T.tun && a <= L ? Math.min(1, (a + 1) / 4, (L - a + 1) / 4) : 0, ti ? ti(i) : 0); }); // 8 m of half-light inside each mouth
+    const on = []; lv.forEach((l, i) => { if (l > 0.01) { const s = S[i], tn = T.tun && (i - T.t0 + N) % N <= L && tunHW ? tunHW(s) : null; on.push([s, l, tn ? tn[1] + 1.5 : sceneryTick.indoorW ? sceneryTick.indoorW(i) : s.w + 4, tn ? tn[0] + 0.6 : sceneryTick.indoorH || Math.max(12, s.w * 1.2)]); } });
+    if (on.length) { let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9; for (const [s, , r] of on) { x0 = Math.min(x0, s.x - r - 8); x1 = Math.max(x1, s.x + r + 8); z0 = Math.min(z0, s.z - r - 8); z1 = Math.max(z1, s.z + r + 8); y0 = Math.min(y0, s.y - 3); }
+      const px = Math.max(1, (x1 - x0) / 1024, (z1 - z0) / 1024), w = Math.ceil((x1 - x0) / px), h = Math.ceil((z1 - z0) / px), D = new Float32Array(w * h * 4); for (let k = 0; k < w * h; k++) { D[k * 4 + 1] = -1e4; D[k * 4 + 2] = 1e4; }
+      for (const [s, l, r, ht] of on) { const R = r + 2 * px, cx = (s.x - x0) / px, cz = (s.z - z0) / px; // heights are written two texels wider than the level: the filtered edge of r never reads an empty height
+        for (let j = Math.max(0, Math.floor(cz - R / px)); j <= Math.min(h - 1, cz + R / px); j++) for (let i = Math.max(0, Math.floor(cx - R / px)); i <= Math.min(w - 1, cx + R / px); i++) {
+          const d = Math.hypot(i + 0.5 - cx, j + 0.5 - cz) * px, o = (j * w + i) * 4; if (d > R) continue;
+          D[o] = Math.max(D[o], l * clamp((r - d) / px + 0.5, 0, 1)); D[o + 1] = Math.max(D[o + 1], s.y + ht - y0); D[o + 2] = Math.min(D[o + 2], s.y - 3 - y0); } }
+      INDOOR = new THREE.DataTexture(Uint16Array.from(D, THREE.DataUtils.toHalfFloat), w, h, THREE.RGBAFormat, THREE.HalfFloatType); INDOOR.minFilter = INDOOR.magFilter = THREE.LinearFilter; INDOOR.needsUpdate = true;
+      LUX.uInT.value = INDOOR; LUX.uInB.value.set(x0, z0, 1 / (w * px), 1 / (h * px)); const dj = T.tun && TH.tun.day || 0; LUX.uInP.value.set(y0, 1, 1, 0.25 * TH.hemi[2] / (TH.hemi[2] + 0.5 * TH.sun[1]) * (1 - dj) + dj); } } // w: what a lit surface keeps indoors, a quarter of the sky light and no sun (th.tun.day: all of it)
   // rain: sharp streaks that lengthen and rush towards the camera with speed, leaning with the wind; bright head, tail fading out (additive blend, no blur)
   // strength 1 = 400 drops; beyond that (downpour, rain zones > 1), more drops, longer; and impacts that splash back onto the roadway in front of the car
   const RN = 2400, rainP = new Float32Array(RN * 3), rainGeo = new THREE.BufferGeometry();
@@ -1273,9 +1424,9 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     // the shadow of the fixed scenery (see shadows) only reads depth: everything that carries it, merged or single, is drawn there into one position mesh per patch and per shadow face, on the SHDF layer that only the shadow camera sees,
     // instead of one pass per material (up to 110 draw passes in the frame where the moon changes step). Kept apart: what the depth depends on through the material (alphaTest cutout, displacement, clipping planes)
-    { const SD = [THREE.BackSide, THREE.FrontSide, THREE.DoubleSide], MO = new Map(), lo = new Map(); // SD: the face three draws in the shadow, from material.side
+    { const MO = new Map(), lo = new Map(); // both faces are drawn unless the material says otherwise: with back faces alone (three's default), the depth bias leaves a lit sliver at the foot of each object
       const onlyMap = o => { const m = o.material; return o.castShadow && o.layers.mask === 1 && !o.customDepthMaterial && !(m.alphaTest > 0 && (m.map || m.alphaMap)) && !m.alphaToCoverage && !(m.displacementMap && m.displacementScale) && !(m.clippingPlanes && m.clippingPlanes.length); };
-      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? SD[o.material.side]; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
+      for (const [g, mw, o] of shadows) { if (!onlyMap(o)) continue; const sd = o.material.shadowSide ?? THREE.DoubleSide; if (!g.boundingSphere) g.computeBoundingSphere(); v.copy(g.boundingSphere.center); if (mw) v.applyMatrix4(mw);
         const k = sd + '|' + Math.floor(v.x / COBBLE) + ':' + Math.floor(v.z / COBBLE); if (!lo.has(k)) lo.set(k, []); lo.get(k).push([g, mw]); o.castShadow = false; }
       for (const [k, l] of lo) { const n = l.reduce((s, [g]) => s + g.attributes.position.count, 0), P = new Float32Array(n * 3), I = new (n > 65535 ? Uint32Array : Uint16Array)(l.reduce((s, [g]) => s + (g.index || g.attributes.position).count, 0)); let b = 0, p = 0;
         for (const [g, mw] of l) { const a = g.attributes.position, x = g.index, c = (x || a).count, mirror = mw && mw.determinant() < 0;
@@ -1316,7 +1467,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const store = { get: k => { try { return JSON.parse(localStorage.getItem(PRE + k)); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(PRE + k, JSON.stringify(v)); } catch (e) { } } };
   const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { } };
   // Interface language: 'fr' or 'en', chosen on the home screen and kept (vpr.language). Translation and English titles: language.js
-  let language = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr';
+  let language = pref('vpr.langue', 'en') === 'fr' ? 'fr' : 'en';
   const tr = s => translated(s, language);
   const applyLanguage = () => { document.documentElement.lang = language; document.title = 'Redline Racer'; };
   applyLanguage();
@@ -1373,7 +1524,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     else if (code === 'Enter' || code === 'Space') { players(1); NET.hosting(onNet); mode = 'raceCase'; SOUND.beep(660);
       try { navigator.clipboard.writeText(location.origin + location.pathname + '?room=' + NET.code).then(() => padSaid('LIEN DU SALON COPIE'), () => { }); } catch (e) { } }
   };
-  for (const ev of ['mousedown', 'pointerup', 'touchend']) addEventListener(ev, e => { inactive = 0; if (demo) { if (!outTarget && ev !== 'mousedown') demoEnd(); return; } if (performance.now() - demoExit < 400) return; if (home) { if (ev === 'mousedown') return; if (e.isTrusted && !aMenu) PER.hidAuto(); SOUND.init(); const l = e.clientX < innerWidth / 2 ? 'fr' : 'en'; if (l === language) homeAct('ok'); else { aMenu = true; choosesLang(l); } } else SOUND.init(); }); // on the home screen: a left click picks French, a right click English; a second click on the same side moves on
+  for (const ev of ['mousedown', 'pointerup', 'touchend']) addEventListener(ev, e => { inactive = 0; if (demo) { if (!outTarget && ev !== 'mousedown') demoEnd(); return; } if (performance.now() - demoExit < 400) return; if (home) { if (ev === 'mousedown') return; if (e.isTrusted && !aMenu) PER.hidAuto(); SOUND.init(); if (UI.shown) return; const l = e.clientX < innerWidth / 2 ? 'fr' : 'en'; if (l === language) homeAct('ok'); else { aMenu = true; choosesLang(l); } } else SOUND.init(); }); // on the home screen: a left click picks French, a right click English; a second click on the same side moves on
   const fmt = t => `${t / 60 | 0}'${String(t % 60 | 0).padStart(2, '0')}"${String(t * 100 % 100 | 0).padStart(2, '0')}`;
   addEventListener('mousemove', e => { if (state !== 'race' && state !== 'count') return; const vu = VIEWS[0]; vu.lookA = clamp(vu.lookA + e.movementX * 0.006, -Math.PI, Math.PI); vu.lookP = clamp(vu.lookP + e.movementY * 0.03, -1, 5); vu.lookT = 2.5; }); // free mouse camera: that of the first view (there is only one mouse)
   let state = 'title', count = 0, shown = 0, goT = 0, acc = 0, last = 0, manual = pref('vpr.boite', 'a') === 'm';
@@ -1455,7 +1606,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   }
   // pause menu: [line, action]. With two players, no gearbox line (each has their own, on their device)
   const pauseItems = () => [['REPRENDRE', () => { state = prev; }], ['RECOMMENCER', start], ...(two() ? [] : [['BOITE : ' + (manual ? 'MANUELLE' : 'AUTO'), () => { manual = !manual; VIEWS[0].self.manual = manual; }]]),
-    ['RADIO : ' + labelRadio(), zap], ['QUITTER', toMenu]];
+    ['RADIO : ' + labelRadio(), zap], ['QUITTER', () => { toMenu(); choice = true; csel = two() ? 1 : 0; }]]; // QUITTER: back to Solo / Split screen / Online
   function toMenu() { if (NET.role === 'hostRole') NET.stop(); if (guest()) waiting(); ses.toMenu(); state = 'title'; ins = false; race = null; const c = newCar(T); for (const vu of VIEWS) follows(vu, c); msel = 5; }
   // main menu: 0 map, 1 players, 2 mode, 3 difficulty, 4 gearbox, 5 start; d = -1 / +1 (left / right; Enter counts as +1)
   let tnLaps = clamp(+pref('vpr8.tnTours', '3') || 3, 1, 5); // Tournée: laps per round, the TOURS line of the menu (6: shown and walked between BOX and DEMARRER)
@@ -1524,17 +1675,15 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       return;
     }
     if (e.code === 'Escape' && online() && state !== 'title') { if (guest()) quitsLounge(); else toMenu(); return; } // online, no pause: the guest leaves the lobby, the host goes back to the menu (the guests wait)
+    if (endUI()) { // the finish screen: another map in the same mode, or the main menu; Enter only counts 1.5 s after the finish (a race is not left by crossing the line)
+      if (/^(Arrow(Up|Down|Left|Right)|Key[WASD])$/.test(e.code)) fsel ^= 1; else if ((e.code === 'Enter' || e.code === 'Space') && performance.now() - tEnd > 1500) endGo(); else if (e.code === 'Escape') { fsel = 1; endGo(); } else if (key === 'r' && !two()) start();
+      return;
+    }
     if (e.code === 'Escape' && ses.raceEnd) { toMenu(); return; } // race over: direct return to the menu
     if ((e.code === 'Escape' || key === 'p') && (state === 'race' || state === 'count')) { prev = state; state = 'pause'; psel = 0; return; }
-    if (state === 'title') {
-      const dx = (e.code === 'ArrowRight' || e.code === 'KeyD' ? 1 : 0) - (e.code === 'ArrowLeft' || e.code === 'KeyA' ? 1 : 0);
-      const O = [0, 1, 2, 3, 4, 6, 5], stepSec = s => { do msel = O[(O.indexOf(msel) + s + 7) % 7]; while (cache(msel)); };
-      if (e.code === 'ArrowUp' || e.code === 'KeyW') stepSec(-1);
-      else if (e.code === 'ArrowDown' || e.code === 'KeyS') stepSec(1);
-      else if (e.code === 'Enter' || e.code === 'Space') menuAct(1);
-      else if (dx && msel !== 5) menuAct(dx);
-      else if (e.code === 'Escape') { choice = true; csel = two() ? 1 : 0; if (online()) { csel = 2; enl = { sel: 0, typing: '' }; } }
-      else if (key === 'i' && two()) enrolled(); // with two players: reopen sign-up to change device (taken seats are no longer asked for at the start)
+    if (state === 'title') { // the map menu: wheel, mode, settings (see mapsAct)
+      const a = /^(ArrowUp|KeyW)$/.test(e.code) ? 'up' : /^(ArrowDown|KeyS)$/.test(e.code) ? 'down' : /^(ArrowLeft|KeyA)$/.test(e.code) ? 'left' : /^(ArrowRight|KeyD)$/.test(e.code) ? 'right' : e.code === 'Enter' || e.code === 'Space' ? 'ok' : e.code === 'Escape' ? 'back' : '';
+      if (key === 'i' && two()) enrolled(); else if (a) mapsAct(a);
       return;
     }
     if (mode === 'tourAll' && ses.raceEnd) { if (e.code === 'Enter' && performance.now() - tEnd > 1500) { ses.enclosed(); if (ses.tnEnd.finished) toMenu(); else start(); } } // Tournée: the end-of-round screen, then the next one (no "rejouer"); Enter waits 1.5 s, as in two-player
@@ -1573,10 +1722,10 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   document.fonts.load('8px ' + PS); document.fonts.load('16px ' + JP, 'スピード');
   const castiron = f => { if (hg.f_ !== f) { hg.font = f; hg.f_ = f; } }; // setting the font for each text cost as much as writing it; the last one set is noted on the context (one per view)
   // pixel text; split = red/cyan offset, glitch-style
-  function txt(s, x, y, size, col, align = 'left', split = 0, font = PS) {
+  function txt(s, x, y, size, col, align = 'left', split = 0, font = PS, max = 1e4) { // max: width the text is squeezed into rather than overflow its panel
     s = tr(s); castiron(size + 'px ' + font); hg.textAlign = align; hg.textBaseline = 'top'; x = Math.round(x);
-    if (split && HU.split) { hg.fillStyle = RD; hg.fillText(s, x - split, y); hg.fillStyle = C; hg.fillText(s, x + split, y); }
-    hg.fillStyle = col; hg.fillText(s, x, y);
+    if (split && HU.split) { hg.fillStyle = RD; hg.fillText(s, x - split, y, max); hg.fillStyle = C; hg.fillText(s, x + split, y, max); }
+    hg.fillStyle = col; hg.fillText(s, x, y, max);
   }
   const rackFrame = (c, x, y, w, h) => { R(hg, c, x, y, w, 1); R(hg, c, x, y + h - 1, w, 1); R(hg, c, x, y, 1, h); R(hg, c, x + w - 1, y, 1, h); };
   const panel = (x, y, w, h) => { // one panel style per map
@@ -1651,6 +1800,83 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (blink) tag('ENTREE : CHOISIR', cx, 222, Y);
     txt('HAUT/BAS : CHOISIR   ECHAP : LANGUE', cx, 246, 8, '#c8c8d0', 'center');
   }
+  // ---------- menus: menu-ui.js draws them from a model of the screen; the state and the actions stay here ----------
+  // Front page (language), game choice (Solo / Split screen / Online), map menu in three steps (the wheel with La Tournée as a 19th row, then the mode, then
+  // the settings and START), pause, finish (another map in the same mode, or the main menu). The online lobby, the sign-up, La Tournée's and online finishes keep the screens below.
+  window.__menuTr = s => tr(s); const UI = window.__menuUI || (window.__menuUI = MenuUI({ tr: s => window.__menuTr(s) })); // one canvas for all maps, the text in this map's language
+  const TOUR = { id: 'tour' }, ONLINE_V = MAPS[Math.random() * MAPS.length | 0].id; // the online tile shows a random map
+  let mstep = 'pick', mpick = 0, mrow = 0, quick = false, uiScreen = '';
+  const wheelMaps = () => two() || online() ? MAPS : [...MAPS, TOUR];
+  const modeList = () => online() ? ['raceCase'] : two() ? MODES2 : MODES.filter(m => m !== 'tourAll');
+  const MODE_UI = { solo: ['CONTRE-LA-MONTRE', 'TOURS LANCES CONTRE TON FANTOME', 'FANTOMES BRONZE, ARGENT, OR'], glisse: ['GLISSE', 'DEUX TOURS, CHAQUE DERAPAGE PAYE', 'LES MURS CASSENT LA SERIE'],
+    raceCase: ['COURSE', 'TROIS TOURS CONTRE TROIS IA', 'DEPART ARRETE'], broken: ['CASSE', 'LES DEGATS COMPTENT', 'POINTS : PLACE + TAKEDOWNS'], elim: ['ELIMINATION', 'QUATRE TOURS', 'LE DERNIER SORT A CHAQUE PASSAGE'],
+    tourAll: ['LA TOURNEE', 'UNE COURSE PAR CARTE, DU SOIR A MIDI', 'POINTS CUMULES, UN TROPHEE PAR DIFFICULTE'] };
+  const modeUI = m => { const u = MODE_UI[m]; return { key: m, name: m === 'glisse' && two() ? 'GLISSE EN DUEL' : u[0], lines: m === 'raceCase' && two() ? [['', '', '2 JOUEURS ET 2 RIVAUX', '3 JOUEURS ET 1 RIVAL', '4 JOUEURS, SANS IA'][VIEWS.length], u[2]] : [u[1], u[2]] }; };
+  const modeTo = m => { mode = m; setPref(cacheKey('mode'), JSON.stringify(m)); };
+  const recordOf = id => { let b = 0; try { b = JSON.parse(localStorage.getItem('vpr8.' + (id === 'ville' ? '' : id + '.') + 'best')) || 0; } catch (e) { } return b ? fmt(b) : '--'; };
+  const OPT_ROWS = [[1, 'JOUEURS', () => '' + VIEWS.length], [3, 'DIFFICULTE', () => DIFF[diff].label], [4, () => two() ? 'BOITE J1' : 'BOITE', () => manual1() ? 'MANUELLE' : 'AUTO'], [6, 'TOURS', () => '' + tnLaps]];
+  const optRows = () => OPT_ROWS.filter(r => !cache(r[0])); // the lines of menuAct this mode has (see cache)
+  const pickTo = i => { const L = wheelMaps(); mpick = (i + L.length) % L.length; const c = L[mpick]; if (c !== TOUR) { outTarget = c; window.__wanted = c.id; setPref('vpr.carte', c.id); } }; // the card changes at once; building belongs to START
+  const menuEnter = () => { const L = wheelMaps(); mstep = 'pick'; mrow = 0; mpick = Math.max(0, mode === 'tourAll' && L.includes(TOUR) ? L.indexOf(TOUR) : L.indexOf(outTarget || M)); };
+  const uiGo = () => { if (mode === 'tourAll') { const c = EVENING[tnOu().handle]; outTarget = c === M ? null : c; } msel = 5; menuAct(1); }; // La Tournée: straight to the map of its round
+  function mapsAct(a) {
+    const L = wheelMaps(), ml = modeList();
+    if (mstep === 'pick') {
+      if (a === 'up' || a === 'down') pickTo(mpick + (a === 'up' ? -1 : 1));
+      else if (a === 'ok') { const tour = L[mpick] === TOUR; SOUND.beep(660);
+        if (tour) { if (mode !== 'tourAll') modeTo('tourAll'); } else if (!ml.includes(mode)) modeTo(ml[0]);
+        if (quick) { quick = false; uiGo(); return; } // after a finish: the same mode and settings, at once
+        if (tour || ml.length < 2) { mstep = 'opts'; mrow = 0; } else { mstep = 'setup'; mrow = ml.indexOf(mode); } }
+      else if (a === 'back') { quick = false; choice = true; csel = two() ? 1 : 0; if (online()) { csel = 2; enl = { sel: 0, typing: '' }; } }
+    } else if (mstep === 'setup') {
+      if (a === 'up' || a === 'down') mrow = (mrow + (a === 'up' ? ml.length - 1 : 1)) % ml.length;
+      else if (a === 'ok') { modeTo(ml[mrow]); mstep = 'opts'; mrow = 0; SOUND.beep(660); }
+      else if (a === 'back') mstep = 'pick';
+    } else {
+      const R = optRows(), n = R.length + 1; // the settings, then START
+      if (a === 'up' || a === 'down') mrow = (mrow + (a === 'up' ? n - 1 : 1)) % n;
+      else if (a === 'back') { if (mode === 'tourAll' || ml.length < 2) mstep = 'pick'; else { mstep = 'setup'; mrow = ml.indexOf(mode); } }
+      else if (mrow < R.length) { msel = R[mrow][0]; menuAct(a === 'left' ? -1 : 1); mrow = Math.min(mrow, optRows().length); } // (the players line changes the lines)
+      else if (a === 'ok') uiGo();
+    }
+  }
+  const endUI = () => ses.raceEnd && state === 'race' && !ses.tnEnd && !online() && !demo && !AUTO; // the finishes menu-ui.js draws
+  const endGo = () => { const menu = fsel; toMenu(); if (menu) { choice = true; csel = two() ? 1 : 0; } else quick = true; SOUND.beep(660); };
+  const uiNow = () => AUTO || ST || preparingRace ? '' : state === 'title' ? home ? 'title' : ins || enl ? '' : choice ? 'main' : 'maps' : state === 'pause' ? ins ? '' : 'pause' : endUI() ? 'end' : '';
+  const uiSel = (cur, i, set, ok) => { if (cur === i) ok(); else set(i); }; // a click picks the row, a second click confirms it
+  function uiModel(s) {
+    const modeName = modeUI(mode).name, ord = n => n + (n === 1 ? 'ER' : 'E');
+    if (s === 'title') return { screen: s, lang: language, click: i => { const l = i ? 'fr' : 'en'; aMenu = true; if (l === language) homeAct('ok'); else choosesLang(l); } };
+    if (s === 'main') return { screen: s, sel: csel, items: [['SOLO', "COURSES CONTRE L'IA, GLISSE, CHRONO", 'UNE VOITURE, CINQ MODES, DES MEDAILLES SUR CHAQUE CARTE.'], ['ECRAN PARTAGE', '2 A 4 JOUEURS SUR CET ECRAN', 'MANETTES, JOY-CON OU LES DEUX MOITIES DU CLAVIER.'], ['EN LIGNE', 'COURSE A PLUSIEURS PAR CODE', 'CREE UN SALON ET DONNE LE CODE, OU REJOINS UN AMI.']],
+      videos: [[M.id], ['touge', 'canal', 'givre', 'plage'], [ONLINE_V]], click: i => uiSel(csel, i, j => { csel = j; }, () => choiceAct('Enter')), back: () => choiceAct('Escape'), scroll: d => choiceAct(d > 0 ? 'ArrowDown' : 'ArrowUp') };
+    if (s === 'maps') { const ml = mode === 'tourAll' ? ['tourAll'] : modeList(), t = tn(), r = trophy(), R = optRows();
+      const note = online() ? 'SALON ' + NET.code + ' · ' + NET.n + ' JOUEURS' : challengeErr || (CHALLENGE_DEF ? 'DEFI : ' + fmt(CHALLENGE_DEF.t) + ' A BATTRE' : quick ? modeName + (isRaceMode() ? ' · ' + DIFF[diff].label : '') + " · ENTREE : C'EST PARTI" : '');
+      return { screen: s, step: mstep, sel: mpick, row: mrow, mode: Math.max(0, ml.indexOf(mode)), note, go: mode === 'tourAll' && t ? 'REPRENDRE' : 'DEMARRER',
+        list: wheelMaps().map(c => c === TOUR ? { id: 'tour', tour: true, label: 'LA TOURNEE', sub: 'TOUTES LES CARTES EN UNE NUIT', tourIds: EVENING.map(m => m.id),
+          facts: [['CARTES', '' + EVENING.length], ['MANCHES', 'UNE COURSE PAR CARTE, DU SOIR A MIDI'], ['TROPHEE', r ? MEDN[3 - r] : 'PAS ENCORE'], ['', t ? 'MANCHE ' + (t.handle + 1) + '/' + EVENING.length + ' · ' + t.pts[0] + ' PTS' : 'POINTS CUMULES, UN TROPHEE PAR DIFFICULTE']] }
+          : { id: c.id, label: c.label, sub: c.th.hud.over[1] || '', hour: c.hour, record: recordOf(c.id) }),
+        modes: ml.map(modeUI), opts: R.map(([, l, v]) => [typeof l === 'function' ? l() : l, v()]),
+        foot: (fm => fm === 'tourAll' ? EVENING.length + ' MANCHES · ' + tnLaps + ' TOURS' : two() ? "RIEN N'EST ENREGISTRE" : USING_AI.includes(fm) ? '' : 'SEUL EN PISTE')(mstep === 'setup' ? ml[mrow] : mode), // that of the mode shown
+        click: i => { if (mstep === 'opts') { mrow = i; mapsAct(i < R.length ? 'right' : 'ok'); } else if (mstep === 'setup') uiSel(mrow, i, j => { mrow = j; }, () => mapsAct('ok')); else uiSel(mpick, i, pickTo, () => mapsAct('ok')); },
+        back: () => mapsAct('back'), scroll: d => mapsAct(d > 0 ? 'down' : 'up') }; }
+    if (s === 'pause') { const P = pauseItems(); return { screen: s, sel: psel, items: P.map(p => p[0]), sub: M.label + ' · ' + modeName, video: M.id,
+      click: i => uiSel(psel, i, j => { psel = j; }, () => P[i][1]()), back: () => { state = prev; }, scroll: d => { psel = (psel + (d > 0 ? 1 : P.length - 1)) % P.length; } }; }
+    // end: the standings (or the Glisse score), then the two ways on
+    const me = VIEWS[0].self, gl = ses.glEnd, m = { screen: s, sel: fsel, items: ['NOUVELLE CARTE', 'MENU PRINCIPAL'], sub: M.label + ' · ' + modeName + (isRaceMode() ? ' · ' + DIFF[diff].label : ''),
+      help: fsel ? 'RETOUR A SOLO / ECRAN PARTAGE / EN LIGNE' : "MEME MODE, MEMES REGLAGES : CHOISIS LA CARTE ET C'EST PARTI", click: i => uiSel(fsel, i, j => { fsel = j; }, () => { if (performance.now() - tEnd > 1500) endGo(); }), scroll: () => { fsel ^= 1; } };
+    if (race && race.timedOut) { const o = race.cars.slice().sort((a, b) => b.pts - a.pts); return { ...m, title: 'GLISSE EN DUEL', head: ['PLACE', 'SCORE'], rows: o.map(c => [pierBuf(c)[0], Math.round(c.pts) + ' PTS', c === o[0]]) }; }
+    if (race) { const o = raceOrder(race), t1 = o[0].ending, human = c => two() ? c.k < 0 || c.k >= 3 : c === me;
+      return { ...m, title: two() ? 'ARRIVEE' : (me.out ? (race.broken ? "HORS D'USAGE" : 'ELIMINE') : 'ARRIVEE') + ' : ' + ord(me.pos), head: ['PLACE', race.broken ? 'POINTS' : 'TEMPS'],
+        rows: o.map((c, i) => [!two() && c === me ? 'VOUS' : pierBuf(c)[0], race.broken ? brokenPts(c) + ' PTS' : c.ending ? (i ? '+' + (c.ending - t1).toFixed(2) : fmt(c.ending)) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', human(c)]),
+        foot: two() ? null : [['MEILLEUR TOUR ' + fmt(me.bl), '#e8ecf4'], [race.broken ? 'TAKEDOWNS ' + me.ca.td : 'GLISSES ' + me.nDrift + '  MURS ' + me.nWall, '#9ab4e0']] }; }
+    const md = gl && gl.valid ? medG(gl.score) : 0;
+    return { ...m, title: 'GLISSE : ' + (gl ? gl.score : 0) + ' PTS', stats: [['TEMPS', fmt(ses.tRace)], ['RECORD', !gl || !gl.valid ? 'HORS DELAI' : gl.rec ? 'NOUVEAU RECORD' : ses.bestG + ' PTS'], ['DELAI', fmt(GLT)]],
+      foot: [md ? ['MEDAILLE ' + MEDN[md - 1], MEDC[md - 1]] : ['PAS DE MEDAILLE', '#9ab4e0'], md < 3 ? ['VISE ' + MEDN[md] + ' ' + GLM[md] + ' PTS', MEDC[md]] : ['', '#fff']] };
+  }
+  function uiFrame() { // draws the menu-ui.js screen of the moment; false: none (the race, or a screen of the old kit)
+    const s = uiNow(); if (s !== uiScreen) { if (s === 'maps') menuEnter(); uiScreen = s; }
+    if (!s) { UI.hide(); return false; } UI.draw(uiModel(s)); return true;
+  }
   // Screens common to all players: home, main menu, pause. Drawn in hg on a grid of HW × 270: the HUD of the solo view, the full-screen layer for two players (see layer).
   function screens(HW) {
     const cx = HW / 2, blink = (performance.now() / 160 | 0) % 3 > 0;
@@ -1679,19 +1905,19 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       const greenhouse = L.length > 4; // 5 lines (with two players, against BOTS): closer together, to leave DEMARRER above the track
       L.forEach(([l, v, i], k) => {
         const on = msel === i, y = (greenhouse ? 104 : 105) + k * (greenhouse ? 10 : 12);
-        txt((on ? '> ' : '  ') + l, cx - 152, y, 8, on ? Y : '#e8e8e4'); txt(on ? '< ' + v + ' >' : v, cx + 152, y, 8, on ? Y : C, 'right');
+        txt((on ? '> ' : '  ') + l, cx - 152, y, 8, on ? Y : '#e8e8e4'); txt(on ? '< ' + v + ' >' : v, cx + 152, y, 8, on ? Y : C, 'right', 0, PS, 292 - tr(l).length * 8);
       });
       const go = mode === 'tourAll' && tn() ? 'REPRENDRE' : 'DEMARRER'; if (msel === 5) { if (blink) tag('> ' + go + ' <', cx, greenhouse ? 154 : 152, Y); } else txt(go, cx, greenhouse ? 157 : 155, 8, '#e8e8e4', 'center');
       hg.drawImage(MM.c, cx - 152, 170); // the track, then the map card
-      [CARD.label, (T.len / 1000).toFixed(1).replace('.', ',') + ' KM', mode === 'tourAll' ? (tn() ? 'MANCHE ' + (tn().handle + 1) + '/' + EVENING.length + ' · ' + EVENING[tn().handle].hour + ' · ' + tn().pts[0] + ' PTS' : 'UNE NUIT, ' + EVENING.length + ' MANCHES') : mode === 'raceCase' ? d2 ? ['', '', '2 JOUEURS ET 2 RIVAUX', '3 JOUEURS ET 1 RIVAL', '4 JOUEURS, SANS IA'][VIEWS.length] : '3 TOURS CONTRE 3 IA' : mode === 'elim' ? 'LE DERNIER SORT' : d2 ? 'LE MEILLEUR SCORE GAGNE' : mode === 'glisse' ? 'RECORD ' + (ses.bestG ? ses.bestG + ' PTS' : '--') : 'RECORD ' + (ses.best ? fmt(ses.best) : '--')].forEach((l, i) => txt(l, cx - 58, 174 + i * 11, 8, i ? '#e8e8e4' : C));
-      if (mode === 'tourAll') { const r = trophy(); txt(r ? 'TROPHEE ' + MEDN[3 - r] : 'PAS ENCORE DE TROPHEE', cx - 58, 218, 8, r ? MEDC[3 - r] : '#e8e8e4'); } // the trophy for this difficulty: gold, silver or bronze depending on the best final place
-      if (d2) txt("RIEN N'EST ENREGISTRE", cx - 58, 218, 8, '#e8e8e4'); // no record, medal or ghost either: nothing to show
-      else if (!isRaceMode()) { const gl = mode === 'glisse', m = gl ? medG(ses.bestG) : medal(ses.best); if (m) txt(MEDN[m - 1], cx + 152, 196, 8, MEDC[m - 1], 'right'); if (m < 3) txt('VISE ' + MEDN[m] + ' ' + (gl ? GLM[m] + ' PTS' : fmt(REF * MED[m])), cx - 58, 218, 8, MEDC[m]); } // medal earned, and the next one to go for
-      txt('HAUT/BAS : CHOISIR  GAUCHE/DROITE : CHANGER', cx, 245, 8, '#e8e8e4', 'center'); txt(d2 ? 'I : INSCRIPTION (MANETTES, JOY-CON, CLAVIER)' : 'FLECHES / ZQSD   ESPACE : GLISSE   X : NITRO', cx, 257, 8, '#e8e8e4', 'center');
+      [CARD.label, (T.len / 1000).toFixed(1).replace('.', ',') + ' KM', mode === 'tourAll' ? (tn() ? 'MANCHE ' + (tn().handle + 1) + '/' + EVENING.length + ' · ' + EVENING[tn().handle].hour + ' · ' + tn().pts[0] + ' PTS' : 'UNE NUIT, ' + EVENING.length + ' MANCHES') : mode === 'raceCase' ? d2 ? ['', '', '2 JOUEURS ET 2 RIVAUX', '3 JOUEURS ET 1 RIVAL', '4 JOUEURS, SANS IA'][VIEWS.length] : '3 TOURS CONTRE 3 IA' : mode === 'elim' ? 'LE DERNIER SORT' : d2 ? 'LE MEILLEUR SCORE GAGNE' : mode === 'glisse' ? 'RECORD ' + (ses.bestG ? ses.bestG + ' PTS' : '--') : 'RECORD ' + (ses.best ? fmt(ses.best) : '--')].forEach((l, i) => txt(l, cx - 58, 174 + i * 11, 8, i ? '#e8e8e4' : C, 'left', 0, PS, 210));
+      if (mode === 'tourAll') { const r = trophy(); txt(r ? 'TROPHEE ' + MEDN[3 - r] : 'PAS ENCORE DE TROPHEE', cx - 58, 218, 8, r ? MEDC[3 - r] : '#e8e8e4', 'left', 0, PS, 210); } // the trophy for this difficulty: gold, silver or bronze depending on the best final place
+      if (d2) txt("RIEN N'EST ENREGISTRE", cx - 58, 218, 8, '#e8e8e4', 'left', 0, PS, 210); // no record, medal or ghost either: nothing to show
+      else if (!isRaceMode()) { const gl = mode === 'glisse', m = gl ? medG(ses.bestG) : medal(ses.best); if (m) txt(MEDN[m - 1], cx + 152, 196, 8, MEDC[m - 1], 'right'); if (m < 3) txt('VISE ' + MEDN[m] + ' ' + (gl ? GLM[m] + ' PTS' : fmt(REF * MED[m])), cx - 58, 218, 8, MEDC[m], 'left', 0, PS, 210); } // medal earned, and the next one to go for
+      txt('HAUT/BAS : CHOISIR  GAUCHE/DROITE : CHANGER', cx, 245, 8, '#e8e8e4', 'center', 0, PS, HW - 8); txt(d2 ? 'I : INSCRIPTION (MANETTES, JOY-CON, CLAVIER)' : 'FLECHES / ZQSD   ESPACE : GLISSE   X : NITRO', cx, 257, 8, '#e8e8e4', 'center', 0, PS, HW - 8);
       if (outTarget && outTarget !== M) { // Complete card from offline data; no scene or physics work on selection.
         R(hg, '#08080c', cx - 156, 166, 312, 70); const P = card.points, xs = P.map(p => p[0]), zs = P.map(p => p[1]), x0 = Math.min(...xs), z0 = Math.min(...zs), k = Math.min(80 / (Math.max(...xs) - x0 || 1), 52 / (Math.max(...zs) - z0 || 1));
         hg.strokeStyle = '#e8e8e4'; hg.lineWidth = 1; hg.beginPath(); P.forEach(p => hg.lineTo(cx - 150 + (p[0] - x0) * k, 172 + (p[1] - z0) * k)); hg.closePath(); hg.stroke();
-        txt(card.car, cx - 58, 174, 8, C); txt(('' + card.km).replace('.', ',') + ' KM', cx - 58, 185, 8, '#e8e8e4');
+        txt(card.car, cx - 58, 174, 8, C, 'left', 0, PS, 210); txt(('' + card.km).replace('.', ',') + ' KM', cx - 58, 185, 8, '#e8e8e4');
         let best = 0; try { best = JSON.parse(localStorage.getItem('vpr8.' + (menuMap.id === 'ville' ? '' : menuMap.id + '.') + 'best')) || 0; } catch (e) { }
         txt('RECORD ' + (best ? fmt(best) : '--'), cx - 58, 196, 8, '#e8e8e4');
       }
@@ -1703,7 +1929,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       pauseItems().forEach(([s], i) => i === psel ? tag('> ' + s + ' <', cx, 92 + i * 18, Y) : txt(s, cx, 95 + i * 18, 8, '#e8e8e4', 'center'));
       txt('HAUT / BAS : CHOISIR   ENTREE : VALIDER', cx, 246, 8, C, 'center');
     }
-    if (ses.raceEnd && race && state === 'race') { // with two players, both players finished: the shared board. Race and Elimination: the four cars, the gaps, the best laps; Glisse duel: the two scores and the winner
+    if (ses.raceEnd && race && state === 'race' && !endUI()) { // with two players, both players finished: the shared board. Race and Elimination: the four cars, the gaps, the best laps; Glisse duel: the two scores and the winner
       const o = raceOrder(race), t1 = o[0].ending, label = c => pierBuf(c)[0], ord = n => n + (n === 1 ? 'ER' : 'E');
       R(hg, 'rgba(8,8,12,.8)', 0, 0, HW, HH); panel(cx - 170, 40, 340, 176);
       if (race.timedOut) { const nc = race.cars.length, hi = Math.max(...race.cars.map(c => c.pts)), gs = race.cars.filter(c => c.pts === hi), g = gs.length > 1 ? null : gs[0];
@@ -1821,7 +2047,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (b) L.push(['GLISSES ' + b[0], '#e8e8e4'], ['NITRO ' + b[1], C], ['MURS ' + b[2], b[2] ? RD : '#e8e8e4']);
       const ly = race && !gl ? 114 : 60; panel(6, ly, 132, 8 + L.length * 11); L.forEach(([s, c], i) => txt(s, 12, ly + 5 + i * 11, 8, c)); // in a race, under the position panel
     }
-    const glEnd = ses.glEnd; if (glEnd && state === 'race') { // Glisse mode, both laps completed: the score, if it counts, the record and the medal
+    const glEnd = ses.glEnd; if (glEnd && state === 'race' && !endUI()) { // Glisse mode, both laps completed: the score, if it counts, the record and the medal
       const m = medG(glEnd.score);
       panel(cx - 150, 52, 300, 150); txt('GLISSE : ' + glEnd.score, cx, 60, 16, Y, 'center', 1);
       [[glEnd.valid ? glEnd.rec ? 'NOUVEAU RECORD' : 'RECORD ' + ses.bestG + ' PTS' : 'HORS DELAI : SCORE NON COMPTE', glEnd.valid && glEnd.rec ? C : RD], ['TEMPS ' + fmt(ses.tRace) + '   DELAI ' + fmt(GLT), '#e8e8e4'],
@@ -1831,7 +2057,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     if (COM && race && race.timedOut && vu.finished && !ses.raceEnd && state === 'race') { // Glisse en duel, ce joueur a fini : son score, en attendant l'autre
       panel(cx - 130, 60, 260, 62); txt('SCORE ' + Math.round(self.pts), cx, 68, 16, Y, 'center', 1); txt(self.ending ? 'TEMPS ' + fmt(self.ending) : 'HORS DELAI : SCORE NUL', cx, 92, 8, self.ending ? '#e8e8e4' : RD, 'center'); txt("L'AUTRE JOUEUR ROULE ENCORE", cx, 106, 8, C, 'center');
     }
-    if (finished && race && state === 'race' && !ses.tnEnd && (alone || !ses.raceEnd && !self.out && !race.timedOut)) { // finish: standings, completed as the others cross the line (with two players: only in the view of the first to finish; the shared board takes over)
+    if (finished && race && state === 'race' && !ses.tnEnd && !endUI() && (alone || !ses.raceEnd && !self.out && !race.timedOut)) { // finish: standings, completed as the others cross the line (with two players: only in the view of the first to finish; the shared board takes over)
       panel(cx - 150, 52, 300, 166); txt((car.out ? (race.broken ? "HORS D'USAGE : " : 'ELIMINE : ') : 'ARRIVEE : ') + car.pos + (car.pos === 1 ? 'ER' : 'E'), cx, 60, 16, Y, 'center', 1); const t1 = raceOrder(race)[0].ending;
       raceOrder(race).forEach((c, i) => { const j = c !== car; txt((i + 1) + '. ' + (j ? pierBuf(c)[0] : 'VOUS'), cx - 138, 86 + i * 15, 8, j ? pierBuf(c)[1] : Y); txt(c.ending ? fmt(c.ending) : c.out ? 'SORT A ' + fmt(c.out) : 'EN PISTE', cx + (c.out ? 138 : 50), 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); if (race.broken) txt(brokenPts(c) + ' PTS', cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); else if (i && c.ending) txt('+' + (c.ending - t1).toFixed(2), cx + 138, 86 + i * 15, 8, j ? '#e8e8e4' : Y, 'right'); });
       txt('MEILLEUR TOUR ' + fmt(self.bl), cx, 152, 8, C, 'center'); txt(race.broken ? 'TAKEDOWNS ' + car.ca.td + '  POINTS ' + brokenPts(car) : 'GLISSES ' + car.nDrift + '  NITRO ' + car.nBoost + '  MURS ' + car.nWall, cx, 166, 8, race.broken ? Y : '#e8e8e4', 'center'); txt('NIVEAU ' + DIFF[diff].label, cx, 180, 8, '#e8e8e4', 'center');
@@ -1883,7 +2109,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = vec4(0.); gl_FragDepth = unpackRGBAToDepth(texture2D(t, v)); }' }),
     SHDS = new THREE.ShaderMaterial({ uniforms: { t: { value: null } }, vertexShader: post.vertexShader, depthTest: false, depthWrite: false,
       fragmentShader: '#include <packing>\nuniform sampler2D t; varying vec2 v; void main(){ gl_FragColor = packDepthToRGBA(texture2D(t, v).x); }' }),
-    shadeScene = new THREE.Scene(), shadeDeep = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.BackSide }), shadeDeepI = shadeDeep.clone(), // one per layer: using the same one for both made three recompute the program key at each switch from one to the other
+    shadeScene = new THREE.Scene(), shadeDeep = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetUnits: -16000 }), shadeDeepI = shadeDeep.clone(), // both faces, pulled about 1 m towards the sun (polygonOffsetUnits, in 24-bit depth steps over the 800 * FAR range): the sun's depth bias (1.2 m) otherwise eats the shadow of anything as low as a car and detaches the rest from its foot. One per layer: using the same one for both made three recompute the program key at each switch from one to the other
     shadeNul = new THREE.WebGLRenderTarget(1, 1), shadeFixed = new THREE.OrthographicCamera(-1e-6, 1e-6, 1e-6, -1e-6, 0, 1e-6); // shadeFixed: sees nothing (far below the map, null field) and only layer 0: the render that takes it only makes the fixed scenery's shadow (shadowMap.render is not called outside a render)
   shadeFixed.position.set(0, -1e7, 0); shadeFixed.updateMatrixWorld(); shadeFixed.layers.set(30); sun.layers.enable(30); // layer 30: the sun alone; without it, this render drew into its one-pixel target everything not culled off-screen (particles, water: about twenty passes)
   const shadeQ = new THREE.Mesh(quad.geometry, SHD); shadeQ.frustumCulled = false; shadeScene.add(shadeQ);
@@ -1912,7 +2138,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     renderer.autoClear = true; scene.overrideMaterial = null; S.map.scissorTest = false; for (const o of caches) o.visible = true;
   }
 
-  const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
+  const RED = new THREE.Color(0xff1828), ETIN = new THREE.Color(0xff8a20), BLUE = new THREE.Color(0x3a9cff), HEADLIGHT = new THREE.Color(0xfff2d0), NEONC = new THREE.Color(L.neon || 0), BOX = new THREE.Matrix4().makeScale(ENCt.x / 2, ENCt.y / 2, ENCt.z / 2).setPosition(ENCc), boxM = new THREE.Matrix4(); // BOX: encloses the whole body, for the shadow (a point inside or above it is not shaded)
   const TRB = ST && ST.shakes * ST.aa || SHAKES;
   // continuous altitude along the track: read sample by sample, it made the car and the camera jump at each step, all the more visible when driving slowly
   // (the computation is in sim.js: ground(), which adds the wall's height on a drivable wall; car.y is this ground, or the flight height)
@@ -1979,7 +2205,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       if (state === 'race' && !ses.raceEnd) { // end of race, lap completed, Drift over: the session decides, we show and play it
         tTraffic += H; const ev = ses.stepSec(car, H);
         for (const i of ev.arrived) if (VIEWS[i]) { VIEWS[i].finished = true; SOUND.arrival(race.cars[i].pos); } // online, the other humans have no view here
-        if (ev.ending && race) { tEnd = performance.now(); if (mode === 'tourAll') ses.enclosed(); } // Tournée: the round ends at the finish; a single screen shows the race and the overall standings
+        if (ev.ending) { tEnd = performance.now(); if (race && mode === 'tourAll') ses.enclosed(); } // Tournée: the round ends at the finish; a single screen shows the race and the overall standings
         if (ev.lapRun) { VIEWS[0].result = { ...ev.lapRun, T: 5, b: summary(VIEWS[0]) }; if (ev.ghostRun) padSaid('FANTÔME : ' + labelF()); SOUND.stinger(ev.lapRun.rec); } // lap time, shown for 4 s
         if (ev.glisse) SOUND.stinger(ses.glEnd.rec);
       }
@@ -2088,29 +2314,32 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     cam.rotateX(vib() * shake * 0.12); cam.rotateY(vib() * shake * 0.08); // the image itself jerks (≈ 0.4° at the peak), sharp and small
     const nitE = vu.nit * vu.nit * (3 - 2 * vu.nit); // nitro: smooth start and end (widened field and vignette)
     cam.fov = 62 + 20 * rc + 10 * rv * rv + 3 * car.slide + 6 * nitE; // + grand-angle en fin de course : l'effet tunnel
-    const photo = window.__g.view; // shortcut: debug console only, __g.view = [angle° around the car, distance, height] to inspect the model; replace with a real photo mode if one is wanted
-    if (photo) { const a = car.th + photo[0] * Math.PI / 180; cam.position.set(car.x + Math.cos(a) * photo[1], carY + photo[2], car.z + Math.sin(a) * photo[1]); cam.lookAt(car.x, carY + 0.7, car.z); cam.fov = 45; }
+    const photo = window.__g.view; // shortcut: debug console only, __g.view = [angle° around the car, distance, height, field° (45 by default)] to inspect the model; replace with a real photo mode if one is wanted
+    if (photo && photo.p) { cam.position.set(...photo.p); cam.lookAt(...photo.l); cam.fov = photo.f || 45; } // or { p: position, l: point looked at, f: field° } in the world: tools/build-menu-previews.js flies over the track
+    else if (photo) { const a = car.th + photo[0] * Math.PI / 180; cam.position.set(car.x + Math.cos(a) * photo[1], carY + photo[2], car.z + Math.sin(a) * photo[1]); cam.lookAt(car.x, carY + 0.7, car.z); cam.fov = photo[3] || 45; }
     cam.updateProjectionMatrix();
     const stepL = sunFollow(car);
     // fog and sky: neon night ↔ tunnel; lightning: double flash on the sky and the lighting (the thunder starts from fxFrame)
-    scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = lerp(TH.fogD[0] * FAR, 15, lm); scene.fog.far = lerp(TH.fogD[1] * FAR * (HAZE ? HAZE[car.idx] : 1), 320, lm);
+    scene.fog.color.copy(FOG_OUT).lerp(FOG_IN, lm); scene.fog.near = TH.fogD[0] * FAR; scene.fog.far = TH.fogD[1] * FAR * (HAZE ? HAZE[car.idx] : 1);
     let kBr = 0; for (const [z, n0, n1] of hazeZ) { const k = z(car.idx, 90); if (k > 0) { scene.fog.near = lerp(scene.fog.near, n0, k); scene.fog.far = lerp(scene.fog.far, n1, k); kBr = Math.max(kBr, k); } }
-    { const far = Math.min(3000, Math.max(scene.fog.far * 1.5, TH.isFar || 0)), kf = far * 0.95 / 2500; // the camera no longer draws beyond the fog; sky (2 500 m) and orb (2 000 m) are brought back within range; th.isFar: minimum range of the maps whose far objects outside the fog (fog: false: dam peaks, silhouettes and touge halo) exceed 1.5 × the fog
+    const farOut = scene.fog.far; LUX.uFogOC.value.copy(FOG_OUT); LUX.uFogOR.value.set(scene.fog.near, farOut); scene.fog.near = lerp(scene.fog.near, 15, lm); scene.fog.far = lerp(farOut, 320, lm); // the outdoor fog, kept for what is outdoors (indoor mask); the camera's own slides to the tunnel's
+    { const far = Math.min(3000, Math.max((INDOOR ? farOut : scene.fog.far) * 1.5, TH.isFar || 0)), kf = far * 0.95 / 2500; // the camera no longer draws beyond the fog; sky (2 500 m) and orb (2 000 m) are brought back within range; th.isFar: minimum range of the maps whose far objects outside the fog (fog: false: dam peaks, silhouettes and touge halo) exceed 1.5 × the fog
       if (far !== cam.far) { cam.far = far; cam.updateProjectionMatrix(); }
       sky.position.copy(cam.position); sky.scale.setScalar(kf); sunDisc.position.copy(cam.position).addScaledVector(SD, 2000 * kf); sunDisc.scale.set(TH.orb.imgSize * kf, TH.orb.imgSize * kf, 1); }
     headlightsV = Math.max(TH.headlights, (TH.headlightsHaze || 0) * kBr); nightV = headlightsV / 2.6;
     if (veilHaze) { veilHaze.visible = kBr > 0.01; veilHaze.position.copy(cam.position); veilHaze.material.opacity = Math.min(1, kBr * 1.6); veilHaze.material.color.copy(scene.fog.color); } // th.haze: a bank of fog over part of the track layout
-    skyMat.color.copy(WHITE).lerp(FOG_IN, TH.tun && TH.tun.skyDay ? 0 : lm); // th.tun.skyDay: the sky keeps its colour under the tunnel (daylight is seen through the mouth and the openings)
+    skyMat.color.copy(WHITE); // the sky keeps its colour under the tunnel: daylight is seen through the mouth and the openings
     const fl = flashT > 0 && lm < 0.5 ? ((flashT * 14 | 0) & 1 ? 1 : 0.3) : 0;
-    { const night = lm * (1 - (TH.tun && TH.tun.day || 0)); hemi.intensity = Math.PI * (TH.hemi[2] * (1 - 0.75 * night) + 3 * fl); sun.intensity = Math.PI * TH.sun[1] * (1 - night); } // th.tun.day: share of daylight kept under the tunnel (open cave: what is seen through the portals and wells stays in the sun) // × π: three r155+ no longer has "inherited" intensities // in a tunnel, sky and orb fade: only the fixtures remain skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
+    hemi.intensity = Math.PI * (TH.hemi[2] + 3 * fl); // sun and sky no longer fade with the camera: the indoor mask darkens what is under the tunnel, pixel by pixel (th.tun.day: share kept there) // × π: three r155+ no longer has "inherited" intensities // in a tunnel, sky and orb fade: only the fixtures remain skyMat.color.multiplyScalar(1 + 2.5 * fl); scene.fog.color.lerp(FLASH, 0.45 * fl);
     beams.forEach((b, i) => b.rotation.set(0, Math.atan2(cam.position.x - b.position.x, cam.position.z - b.position.z), Math.sin(now * 0.0004 * (i % 3 + 1) + i) * 0.5)); // the spotlight beams face the camera
     // dynamic light: headlights, the car's shadow box, reflections, then the list of fixtures
     const cp = Math.cos(pitch);
     const dmgP = G.userData.dmgP, hs = (dmgP.ph[0] - dmgP.ph[1]) * 0.55; // one headlight broken: the beam comes from the other, at half strength; both: nothing
     LUX.uCam.value = cam.position; LUX.uHP.value.set(car.x + fx * 1.9 - fz * hs, carY + 0.62, car.z + fz * 1.9 + fx * hs); LUX.uHD.value.set(fx * cp, Math.sin(pitch), fz * cp); LUX.uHC.value.copy(HCB).multiplyScalar(headlightsV * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2));
     if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.14 * kBr * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2); cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
-    G.updateMatrixWorld(); LUX.uBox.value.copy(G.matrixWorld).multiply(BOX).invert(); // G: the view's car model; the cast shadow under the fixtures exists only for it
-    LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
+    G.updateMatrixWorld(); boxM.copy(G.matrixWorld).multiply(BOX).invert().toArray(LUX.uBox.value, 0); let nb = 1, no = 0; // G: the view's car model, first shadow box; the two nearest cars follow (below)
+    LUX.uSunC.value.copy(SUNC); LUX.uHz.value.copy(ORB).sub(FOG_OUT).multiplyScalar(FOG_OUT.g > 0.4 ? Math.min(1.25, 5 * (1 - SD.y) ** 2) * (1 - lm) * (1 - kBr) : 0); // only a daylight haze takes the tint: the night fogs (and the moon's black one) are all under 0.25
+    LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
     let nl = 0;
     const LP = LUX.uLP.value, LC = LUX.uLC.value, put = (x, y, z, c, r, k) => { if (nl < NL) { const m = k * BRIGHT_GAIN; const o = nl * 4; LP[o] = x; LP[o + 1] = y; LP[o + 2] = z; LP[o + 3] = r; LC[nl * 3] = c.r * m; LC[nl * 3 + 1] = c.g * m; LC[nl * 3 + 2] = c.b * m; nl++; } };
     put(car.x - fx * 4.4, carY + 0.35, car.z - fz * 4.4, RED, -9, nightV * (inp.brake || car.frA ? 2.4 : 0.45) * (1 - (dmgP.fe[0] + dmgP.fe[1]) / 2)); // rear lights (minus the broken ones): they tint what follows, more so when braking
@@ -2121,7 +2350,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // car lights (rear, neon, nitro): without the shadow box. Low and very close to it, they projected it as crisp rectangles onto the road and the walls around (especially the nitro while drifting, the box sideways)
     if (car.boost > 0) put(car.x - fx * 3.2, carY + 0.45, car.z - fz * 3.2, BLUE, -10, 2.5 * (0.5 + nightV) * (0.8 + 0.4 * Math.random()));
     if (fl) put(car.x + 30, carY + 70, car.z - 20, FLASH, 140, 2.2 * fl);
-    // the two nearest vehicles (opponents, or traffic trucks): headlights in front, red lights behind
+    // the two nearest vehicles (opponents, or traffic trucks): a headlight beam in front, red lights behind
     const d2 = c => (c.x - car.x) ** 2 + (c.z - car.z) ** 2;
     const veh = race ? race.cars.filter(c => c !== car && !portion(c)) : M.traffic && state !== 'title' ? traffic(T, tTraffic).slice() : [];
     let nf = 0; veh.forEach(c => { if (d2(c) < 1600) return; const i = nf++, ax = Math.cos(c.th), az = Math.sin(c.th), k = c.lane === undefined, ar = k ? ENCt.x / 2 + 0.05 : 6.5, l = k ? ENCt.z / 2 - 0.3 : 1; // on the rear of the body, or of the trailer
@@ -2129,16 +2358,21 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     lightsGeo.setDrawRange(0, nf * 2); lightsGeo.attributes.position.needsUpdate = true;
     lights.material.size = (TH.headlightsHaze ? 1 + 0.6 * kBr : 1) * 0.5 / Math.tan(vu.cam.fov * Math.PI / 360) * RH / renderer.domElement.height * renderer.getPixelRatio(); // three.js measures points on the canvas (0.5 × its height / distance); we draw into the view's target, RH lines
     for (const c of veh.sort((a, b) => d2(a) - d2(b)).slice(0, 2)) {
-      const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 6.5 : 10, ar = c.lane === undefined ? 3.4 : 7; // a truck is longer
+      const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 1.9 : 10, ar = c.lane === undefined ? 3.4 : 7; // a truck is longer
       const dv = c.lane === undefined ? model(c).userData.dmgP : null, kp = dv ? 1 - (dv.ph[0] + dv.ph[1]) / 2 : 1, kf = dv ? 1 - (dv.fe[0] + dv.fe[1]) / 2 : 1; // its headlights and broken lights
-      put(c.x + ax * av, y + 0.8, c.z + az * av, HEADLIGHT, 14, 3 * nightV * kp); put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
+      if (c.lane === undefined) { const g = model(c); g.updateMatrixWorld(); boxM.copy(g.matrixWorld).multiply(BOX); }
+      else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
+      boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
+      if (kp > 0 && d2(c) < 22500) { const o = 3 * no++, m = 0.5 * headlightsV * kp; LUX.uOP.value.set([c.x + ax * av, y + 0.7, c.z + az * av], o); LUX.uOD.value.set([ax, 0, az], o); LUX.uOC.value.set([HCB.r * m, HCB.g * m, HCB.b * m], o); } // its beam, level with the road, where it points, at half the strength of the view's (three beams overlap on the road); beyond 150 m it reaches nothing in view
+      put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
       if (L.neon && race && (c.k < 0 || c.k >= 3)) put(c.x, y + 0.3, c.z, NEONC, 5.5, nightV * (0.8 + 0.4 * pulse)); // the other player's car keeps its underbody neon (c.k: -1 player 1, 3 player 2)
     }
+    LUX.uNO.value = no;
     // fixed fixtures: the nearest along the track (those ahead count double), faded at the end of the list so that none lights up all at once
     if (car.idx !== vu.brightIdx) { vu.brightIdx = car.idx; for (const e of vu.brights) { let d = (e.l.i - car.idx + N) % N; if (d > N / 2) d -= N; e.d = d > 0 ? d * 0.5 : -d; } vu.brights.sort((a, b) => a.d - b.d); } // the sort only changes from one track sample to the next
     const LS = vu.brights, ns = NL - nl, dm = LS.length > ns ? LS[ns].d : 1e9;
     for (let k = 0; k < ns && k < LS.length; k++) { const e = LS[k], l = e.l; put(l.x, l.y, l.z, l.c, l.r, Math.min(1, (dm - e.d) / (dm * 0.3 + 0.01)) * (l.tun && TH.alarm ? 0.5 + pulse : 1)); }
-    LUX.uN.value = nl;
+    LUX.uN.value = nl; LUX.uNB.value = nb;
     // rain: each drop recedes at the car's speed, its streak stretches by as much
     const NG = TH.snowSurf || 0, pl = (NG || rainAt(car.idx)) * (1 - lm), gl = NG ? 0.2 : 1.9 * Math.max(1, 0.4 + 0.6 * pl), nr = Math.min(RN, Math.round(400 * pl ** 1.5)); rain.visible = pl > 0.02; splash.visible = !NG && rain.visible; // th.snowSurf = strength of the flakes: the same particles, falling at 4 m/s, with no impact or rain noise
     rainGeo.setDrawRange(0, 2 * nr); rain.position.set(car.x, carY, car.z); RU.uOp.value = Math.min(1, 0.6 + 0.15 * pl);
@@ -2190,15 +2424,17 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
       try { renderer.setRenderTarget(warm); renderer.render(scene, cam); }
       finally { renderer.setRenderTarget(previous); warm.dispose(); for (const o of caches) o.visible = false; for (const o of triIdx) o.frustumCulled = true; }
     }
+    { const OE = TH.eye || {}, tunL = OE.tun ?? TUN, shard = T.tun && TH.tun.shard || 1, outTarget = Math.log(1 - (1 - tunL / shard) * lm); // the eye: log of the light it is adapted to, 0 outside; th.tun.shard: it adapts to a tunnel lighter than its paint
+      vu.eye += (outTarget - vu.eye) * (1 - Math.exp(-dt / (outTarget > vu.eye ? OE.clair ?? EYE_C : OE.blackM ?? EYE_N)));
+      const gain = Math.exp(-vu.eye), U = post.uniforms; U.ex.value = Math.min(gain, OE.glare ?? GLARE); LUX.uInP.value.y = ST ? 1 : tunL * gain; LUX.uInP.value.z = ST ? 1 : U.ex.value; } // the outside is exposed by the final pass (capped: th.eye.glare), the indoors by its own materials (luEye): tunL from outside, 1 once adapted
     // the scene matrices once for the view's three renders (reflections, moving shadows, scene): each one recomputed them all
     wheelsInst(); scene.updateMatrixWorld(); scene.matrixWorldAutoUpdate = false; if (!vu.n && !(vu.shadows && vu.shadows.cacheKey !== stepL)) refFace(); // not in the frame where the fixed scenery's shadow is redone (see shadows): the slice moves to the next frame
     shades(vu, stepL, car, carY);
+    if (WATERS.length) waterFrame(vu, cam, now, lm);
     if (sceneryTick && sceneryTick.liveFeed && !vu.n) sceneryTick.liveFeed(renderer); // a scenery screen that shows the live race (stadium): its capture, before the scene that shows it
     renderer.setRenderTarget(vu.rt); renderer.render(scene, cam); scene.matrixWorldAutoUpdate = true;
-    if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
+    if (vu.rs) { const R = ssr.uniforms; R.t.value = vu.rt.texture; R.dz.value = vu.rt.depthTexture; R.P.value.copy(cam.projectionMatrix); R.Pi.value.copy(cam.projectionMatrixInverse); R.up.value.set(0, 1, 0).transformDirection(cam.matrixWorldInverse); R.px.value.set(1 / vu.rw, 1 / RH); if (R.fz.value) { R.cw.value.copy(cam.matrixWorld); R.ri.value.set(now / 1000 % 3600, car.x, car.z, Math.min(3, Math.hypot(car.vx, car.vz) / 8)); } renderer.setRenderTarget(vu.rs); renderer.render(ssrScene, postCam);
       FALLBACK.rDz.value = vu.rt.depthTexture; FALLBACK.rRes.value.set(vu.rw, RH); renderer.autoClear = false; renderer.render(fallbackScene, cam); renderer.autoClear = true; }
-    { const OE = TH.eye || {}, EYE_BLACK = OE.blackM ?? EYE_N, EYE_PALE = OE.clair ?? EYE_C, real = Math.log(1 - (1 - (OE.tun ?? TUN)) * lm), outTarget = real - Math.log(T.tun && TH.tun.shard || 1) * lm; // the eye: true = log of the true light; th.tun.shard: the eye adapts to a tunnel lighter than its paint
-      vu.eye += (outTarget - vu.eye) * (1 - Math.exp(-dt / (outTarget > vu.eye ? EYE_PALE : EYE_BLACK))); U.ex.value = Math.min(Math.exp(real - vu.eye), Math.max(1.6, T.tun && TH.tun.shard || 1)); } // glare at most ×1.6
     if (vu.hb) { U.hb.value = vu.hb.texture; renderer.setRenderTarget(vu.hb); renderer.render(haloScene, postCam); }
     renderer.setRenderTarget(null);
     if (COM) { const [cols, rows] = grid(VIEWS.length), x = (vu.n % cols) * vu.w, y = (rows - 1 - (vu.n / cols | 0)) * HH; renderer.setViewport(x * KL, y * KL, vu.w * KL, HH * KL); renderer.setScissor(x * KL, y * KL, vu.w * KL, HH * KL); } // two players: the view's final pass in its band (y counted from the bottom: player 1 at the top); the shader does not change, its blur centre and vignette are relative to the band
@@ -2210,26 +2446,27 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
   const menuSound = { state: 'title', T, car: null, r: 0, sp: 0, gas: 0, rpm: 0.3, load: 0, spool: 0, hit: 0, bump: 0, tun: 0, amb: 0, otherCars: [] };
   const loop = now => {
     raf = requestAnimationFrame(loop);
-    if (preparingRace && state === 'title') { GAME_LOADER.menuHide(); return; }
+    if (preparingRace && state === 'title') { GAME_LOADER.menuHide(); UI.hide(); return; }
     if ((state === 'title' || state === 'pause') && !AUTO && !ST) {
       last = Math.max(last, now);
       for (const c of PER.poll({ menu: true, home, two: two() })) command(c);
       if (ins) inscription(); else if (two()) gamepads2();
       if (state === 'title' || state === 'pause') {
         menuSound.state = state; menuSound.car = VIEWS[0].self; SOUND.frame(state === 'pause' ? 0 : 1 / 60, menuSound);
+        if (uiFrame()) { GAME_LOADER.menuHide(); return; }
         const cv = COM ? COM.c : VIEWS[0].hudC; hg = COM ? COM.g : VIEWS[0].hg; hg.clearRect(0, 0, cv.width, cv.height); screens(cv.width);
         GAME_LOADER.menuFrame(outTarget || M, cv); return;
       }
     }
     GAME_LOADER.menuHide();
     if (window.__mapBuilding && state === 'title' && now - previewAt < 1000 / 24) return;
-    previewAt = now; frame(now); GAME_LOADER.previewFrame(M.id, renderer.domElement, COM && COM.c);
+    previewAt = now; frame(now); GAME_LOADER.previewFrame(M.id, renderer.domElement, COM && COM.c); uiFrame();
   };
   // stop (map change): no more loop or listeners; then frees() gives back to the GPU everything this map put there (the shaders, for their part, stay with the renderer as long as a material uses them)
   const ending = () => { cancelAnimationFrame(raf); halt.abort(); clearTimeout(padNoteT); padNote.remove(); if (COM) COM.c.remove(); };
   const frees = () => {
     for (const sc of [scene, fallbackScene]) sc.traverse(o => { if (o.geometry) o.geometry.dispose(); for (const m of [].concat(o.material || [])) { for (const k of ['map', 'emissiveMap', 'alphaMap', 'specularMap']) if (m[k]) m[k].dispose(); m.dispose(); } });
-    VIEWS.forEach(renderView); CUBE.dispose(); refRT.dispose(); post.dispose(); ssr.dispose(); quad.geometry.dispose(); if (sun.shadow.map) sun.shadow.map.dispose();
+    VIEWS.forEach(renderView); WATERS.forEach(w => w.rt && w.rt.dispose()); if (WNORM) WNORM.dispose(); CUBE.dispose(); refRT.dispose(); post.dispose(); ssr.dispose(); quad.geometry.dispose(); if (sun.shadow.map) sun.shadow.map.dispose();
   };
   // arrival on this map (first display or return): what the previous map left in sessionStorage
   const arrival = () => {
@@ -2246,7 +2483,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const av = window.__g; if (av && av !== api) (av.wakeup || av.ending)();
     active = true; preparingRace = false; window.__g = api; window.MAP_DEF = M; PER.seek(); // Joy-Con allowed since this map was built (home screen window, opened by another instance): without this, it would never see it
     if (state !== 'title') toMenu(); home = true; aMenu = false; choice = false; msel = 5; outTarget = null; demo = null; enl = null; ins = false; inactive = 0; // like a brand-new map
-    language = pref('vpr.langue', 'fr') === 'en' ? 'en' : 'fr'; applyLanguage(); manual = pref('vpr.boite', 'a') === 'm'; VIEWS[0].self.manual = manual; // the settings may have changed on another map
+    language = pref('vpr.langue', 'en') === 'fr' ? 'fr' : 'en'; applyLanguage(); manual = pref('vpr.boite', 'a') === 'm'; VIEWS[0].self.manual = manual; // the settings may have changed on another map
     { const n = +(Q.get('players') || pref('vpr7.joueurs', '1')); players(n > 1 && !CHALLENGE_DEF && !NET.role ? n : 1); }
     if (COM) COM.c.style.display = '';
     arrival(); resize(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
@@ -2266,7 +2503,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     }
     return E[c.id];
   };
-  const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, get menu() { return { id: (outTarget || M).id, row: msel, pauseRow: psel, choiceRow: csel, choice, mode, diff, manual: manual1(), preparing: preparingRace }; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); if (state === 'title' && !AUTO && !ST) { window.__wanted = outTarget.id; setPref('vpr.carte', outTarget.id); } else changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)
+  const api = { get scenery() { return { dz: MDZ, obj: OBJ, showMarks: mi, beg: DEBRIS.length, twists: wallTwists, mark, pane: w => pane(carG, w, 0, 0), oil: hi, dirty: [carG, ...opps].map(g => +dirtyDe(g).n.toFixed(2)) }; }, wakeup, resumes, get enl() { return enl; }, get demo() { return demo; }, get inactive() { return inactive; }, frame, start, ending, frees, players, places: PLACES, get ins() { return ins; }, get com() { return COM; }, get menu() { return { id: (outTarget || M).id, row: msel, pauseRow: psel, choiceRow: csel, choice, mode, diff, manual: manual1(), preparing: preparingRace, step: mstep, pick: mpick, opt: mrow, opts: optRows().length }; }, mapDef: id => { outTarget = MAPS.find(m => m.id === id); if (state === 'title' && !AUTO && !ST) { window.__wanted = outTarget.id; setPref('vpr.carte', outTarget.id); } else changeMap(); }, get tnEnd() { return ses.tnEnd; }, get challenge() { return { CHALLENGE_DEF, challengeErr, lastIdx: ses.lastIdx }; }, get ghostRun() { return { label: labelF(), visible: ghostM.visible, colour: ghostM.material.color.getHexString(), x: ghostM.position.x, z: ghostM.position.z }; }, M, T, scene, cam: VIEWS[0].cam, views: VIEWS, renderer, LUX, get race() { return race; }, get mode() { return mode; }, keys, ambAt, nearS, get home() { return home; }, get car() { return VIEWS[0].self; }, get state() { return state; }, get t() { return ses.tRace; }, get ac() { return SOUND.ac; }, get out() { return SOUND.out; }, get smp() { return SOUND.smp; }, damage: x => { for (const g of [carG, ...opps]) { const D = g.userData.dmgP; D.z0 = [1, 1, 1, 1]; for (const [a, b, i] of [[1, 0, 0], [-1, 0, 1], [0, -1, 2], [0, 1, 3]]) for (let k = 0; k < 60 && D.z[i] < x - 0.01; k++) dmgImpact(g, a, b, 12); } } }; // instance of the map (and test handle, on window.__g when it is displayed); damage(x): each zone of each car damaged to x (captures)
   if (/[?&]hitbox\b/.test(location.search)) import('./hitbox.js').then(h => h.watch(THREE, T, scene)); // debug: collision limits in transparent red
   if (backdrop) { // Upload every resource once, but rasterize only 8 × 8 pixels instead of the full menu with all culling disabled.
     await whoosh(); const vu = VIEWS[0], caches = [], triIdx = [];
