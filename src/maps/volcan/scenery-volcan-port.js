@@ -18,5 +18,5 @@
   [[140, 'yellow'], [212, 'red'], [252, 'blue'], [356, 'yellow'], [444, 'pink']].forEach(([pk, c]) => by('barqueVolcan', Q + pk, 1, 25, { y: 0.2, a: [8, c, 'trim'] }));
   [[60, 'red', 70], [230, 'yellow', 86], [380, 'blue', 74]].forEach(([pk, c, off], i) => by('bateauVolcan', Q + pk, 1, off, { y: 0, turn: 0.6 + i, a: [22, c, 'trim'] }));
   by('digueVolcan', Q + 470, 1, 20, { road: true, a: [150] }); by('digueVolcan', Q + 6, 1, 20, { road: true, a: [80] });
-  [['trim', 0, [5, 3.6, 30, 12]], ['red', 12, [4.6, 4.2, 6, 12]], ['dark', 30, [4.4, 4.4, 0.8, 12]], ['lamp', 30.8, [2.2, 2.2, 3, 10]], ['red', 33.8, [2.7, 0.3, 2, 10]]].forEach(([m, y, a]) => by('cylVolcan', Q + 470, 1, 176, { road: true, dy: y, m, a })); // the lighthouse, white with a red band: the landmark of the straight
+  [['trim', 0, [5, 3.6, 30, 12]], ['red', 12, [4.6, 4.2, 6, 12]], ['dark', 30, [4.4, 4.4, 0.8, 12]], ['lamp', 30.8, [2.2, 2.2, 3, 10]], ['red', 33.8, [2.7, 0.3, 2, 10]]].forEach(([m, y, a]) => by('cylVolcan', Q + 470, 1, 163, { road: true, dy: y, m, a })); // the lighthouse, white with a red band: the landmark of the straight
 };

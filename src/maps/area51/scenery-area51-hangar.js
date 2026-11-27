@@ -1,12 +1,14 @@
 // "area51", zone 1: Hangars (start on the apron lane in front of H3 and H2, chicane in the fire alley, then H1 crossed east to west; 0 to +1.5 m, 20 m wide). Real scenery (V2).
 // The placers are described in scenery-area51.js; the shapes are in shapes-area51-hall.js, -avion.js and -airfield.js.
 // The row faces the runway (north) and its hangars are open: the black prototypes are what this base is for, and they are what the player must see. Sizes are set for reading from the lane, larger than the blocks of the blockout.
-(window.AREA51 = window.AREA51 || {}).hangar = ({ set, surf, avion, MAT }) => {
-  set('hallArea51', 1710, 880, { y: 0, skin: { ...MAT, floor: MAT.solB1 } });                                                     // H1, a 300 × 116 m hall with a door in each gable: its floor is 0.2 m under the lane
+(window.AREA51 = window.AREA51 || {}).hangar = ({ h, set, surf, avion, MAT, pk, idx }) => {
+  // a working hangar: pale painted floor and light cladding inside, so the grey aircraft stand out from both
+  set('hallArea51', 1710, 880, { y: 0, skin: { ...MAT, floor: h.mat('tarmacArea51', { c: 0x8c919c }), tin: h.mat('toleArea51', {}, '#a2a690'), roof: h.mat('toleArea51', { side: 2 }, '#8a8e80', 0.5) } });                                                     // H1, a 300 × 116 m hall with a door in each gable: its floor is 0.2 m under the lane
   // four prototypes in H1, alternately south and north of the weaving lane, each on a stand outlined in yellow: a needle nose to the wall, the wing along the wall, the arrowhead nose to the lane, a second needle
   const stand = (x, z, w, d) => { for (const sd of [-1, 1]) { surf('yellow', x + sd * w / 2, z, 0.5, d, 1.38, 0.08); surf('yellow', x, z + sd * d / 2, w, 0.5, 1.38, 0.08); } };
-  avion('sr71', 1795, 906, { y: 1.3, s: 1.6 }); stand(1795, 906, 34, 56); avion('b2', 1725, 842, { y: 1.3 }); stand(1725, 842, 58, 26);
-  avion('f117', 1655, 915, { y: 1.3, s: 1.8, ry: Math.PI }); stand(1655, 913, 30, 42); avion('sr71', 1585, 856, { y: 1.3, s: 1.5, ry: Math.PI }); stand(1585, 854, 32, 52);
+  const work = (x, z) => h.emis(idx(x, z), x * h.M.sc, 5, z * h.M.sc, 0xfff0d8, 30, 1.2); // work lamps low under each prototype (real engine lights)
+  avion('sr71', 1795, 906, { y: 1.3, s: 1.6 }); stand(1795, 906, 34, 56); work(1795, 906); avion('b2', 1725, 842, { y: 1.3 }); stand(1725, 842, 58, 26); work(1725, 842);
+  avion('f117', 1655, 915, { y: 1.3, s: 1.8, ry: Math.PI }); stand(1655, 913, 30, 42); work(1655, 913); avion('sr71', 1585, 856, { y: 1.3, s: 1.5, ry: Math.PI }); stand(1585, 854, 32, 52); work(1585, 854);
   // H2 and H3, open on the apron, east of the fire alley the chicane takes: the wing in H2, two needles in H3, noses out
   set('shedOpenArea51', 2040, 880, { y: 0 }); avion('b2', 2040, 872, { y: 0.4, s: 1.5, ry: Math.PI }); set('shedOpenArea51', 2180, 880, { y: 0 }); for (const x of [2152, 2208]) avion('sr71', x, 880, { y: 0.4, s: 1.5, ry: Math.PI });
   // the apron before the door of H1: three arrowheads parked north of the lane, a needle further west, a tank truck between H2 and H3, containers and a power cart along the wall of H1

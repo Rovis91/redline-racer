@@ -35,14 +35,16 @@
   // The visitors. Each stands in the open, in the field of the race camera, never behind anything opaque; it is small, so it is only recognised for the second before the car passes it.
   // [chainage, side, distance from the wall, raised by, scale, turned by, raised arm, dark (a silhouette against light)]
   const P = { door: pk(1856, 881) + 8, radome: pk(700, 1185) + 9, rock: pk(295, 425), depot: pk(440, 380) + 20 + 42 * 3.5, board: pk(2250, 660) - 199 };
-  const visitor = (p, sd, off, o = {}) => { const a = side('alienArea51', p, sd, off, 0.3, { a: [o.s || 1.4, o.wave || 0], dy: o.dy || 0, skin: o.dark ? { alien: MAT.dark, oeil: MAT.dark } : MAT }); a.rotation.y += o.ry || 0; return a; };
+  const visitor = (p, sd, off, o = {}) => { const a = side('alienArea51', p, sd, off, 0.3, { a: [(o.s || 1.4) * 2.4, o.wave || 0], dy: o.dy || 0, skin: MAT }); a.rotation.y += o.ry || 0; return a; }; // pale skin (MAT.alien) on every visitor: a pale figure shows against the blue-hour palette, a black one did not
   visitor(P.door, 1, 2.5, { ry: -1.2 });                                    // 1. in the east doorway of hall H1, against the jamb, grey in the shadow of the hall
   visitor(P.radome, Math.sign(S[idx(700, 1185)].k) || 1, 3.5, { ry: -0.8, wave: 1 }); // 4. beside the fenced radome in the S down to the dish: in front of it, one arm raised
   visitor(P.rock, Math.sign(S[idx(295, 425)].k) || 1, 14.7, { dy: 10, s: 1.8, dark: 1 }); // 5. on top of the outcrop the descent bends round, against the sky
   visitor(P.depot, -1, 7, { ry: 0.6, wave: 1 });                                   // 6. between two magazines of the depot, on the service lane
   visitor(pk(870, 380), -1, 4.9, { dy: 3.4, dark: 1 });                     // 7. on the roof of the left booth of the main gate, against the sky
   visitor(P.board, 1, 4.7, { ry: -1.57 });                                  // 8. on runway A's exit, standing between the posts of the "200" board
+  // five more at the places the eye goes, each ~25 m beside the road, standing, facing it (chainage = 2 x track sample): the end of the long straight past the dish, the exit of the right-hander, the end of the straight to the main gate, the brow on the lake side
+  for (const [sm, sd] of [[1090, 1], [1500, 1], [1700, -1], [2330, 1], [2700, -1]]) visitor(sm * 2, sd, 2.5, { ry: -1.57, s: 1.1 });
   // 2. at the control-room window above the reactor gallery, a dark shape against the lit glass; 3. on the roof of the east portal of B1, seen as the road dives to it
-  seg('alienArea51', S[idx(1210, 1324) + 3], -19.7, 9.85, { a: [1.5], skin: { alien: MAT.dark, oeil: MAT.dark } }).rotation.y += Math.PI;
-  seg('alienArea51', S[t0 - 6], 9, 19.8, { a: [3, 1] }).rotation.y += Math.PI / 2;
+  seg('alienArea51', S[idx(1210, 1324) + 3], -19.7, 9.85, { a: [3.6] }).rotation.y += Math.PI;
+  seg('alienArea51', S[t0 - 6], 9, 19.8, { a: [5, 1] }).rotation.y += Math.PI / 2;
 };

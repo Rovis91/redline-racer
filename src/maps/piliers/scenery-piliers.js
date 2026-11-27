@@ -125,8 +125,12 @@
       // needle(east, north, w, d, top, seed, far): a needle standing on the ravine floor with its crown and two pines; far = 1: in the pale tints of the distance, no pines
       const needle = (x, n, w, d, top, seed = 0, far = 0) => { set('aiguillePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: ROCKS[seed % 3] }); set('aiguilleCouronnePiliers', x, n, { y: 0, a: [w, d, top, seed], skin: far ? MAT.farLeaf : MAT.leaf });
         if (!far) for (let k = 0; k < 2; k++) pine(x + (nz(seed, k) - 0.5) * w * 0.5, -n + (nz(k, seed) - 0.5) * d * 0.5, 9 + 6 * nz(seed + k), top + 1); };
-      // a white fall down a rock face, from (x, y, z) to (x1, y1, z1), w wide; hero = 1: the signature fall, wider, with a bright core (built by scenery-piliers-vie.js: sliding sheets)
-      const fall = (a, b, w, hero = 0) => FALLS.push([a, b, w, hero]);
+      // a white fall: fall(path, w, hero) with path = [x, y, z] points from the lip down, w wide; hero = 1: the signature fall, wider, with a bright core (built by scenery-piliers-vie.js: sliding sheets).
+      // The path is never a straight line through the rock: fallPath follows the outermost rock of the face (the stack's beds step out unevenly) with 1.8 m to spare, leaves the lip under the crown and ends 3 m above the highest mist sheet (y 140), in its boil
+      const FALLV = { 0: 1, 2: 1, 5: 3 }, FALL_END = 143, fall = (path, w, hero = 0) => FALLS.push([path[0], path[path.length - 1], w, hero, path]);
+      const fallPath = (G, x, n, r, w, yT) => { const P = G.attributes.position, ys = []; for (let y = yT; y > FALL_END; y -= 6) ys.push(y); ys.push(FALL_END);
+        const rim = (y0, y1) => { let m = -1e9; for (let k = 0; k < P.count; k++) { const y = P.getY(k); if (y < y0 || y > y1) continue; const dx = P.getX(k) - x, dz = P.getZ(k) + n; if (Math.abs(-dx * r[1] + dz * r[0]) < w / 2 + 14) m = Math.max(m, dx * r[0] + dz * r[1]); } return m; };
+        let prev = -1e9; return ys.map((y, k) => { const f = rim(ys[Math.min(k + 1, ys.length - 1)] - 0.5, ys[Math.max(k - 1, 0)] + 0.5), o = k ? Math.max(prev, f + 1.8) : f - 1; prev = o; return [x + r[0] * o, y, -n + r[1] * o]; }); };
       TOWERS.forEach(([t, P], q) => { const cx = P.reduce((a, p) => a + p[0], 0) / P.length, cn = P.reduce((a, p) => a + p[1], 0) / P.length;
         const rock = q === 4 ? MAT.warm : ROCKS[q % 3], G = clear(h.pose('stackPiliers', rock, kit, [0, 0, 0], P, 60, t, q, 0.125, 6, 0, 3.4, 0).geometry, ...(q < 6 ? [cx, -cn] : [])); h.pose('couronnePiliers', MAT.leaf, kit, [0, 0, 0], P, t + 0.5, q);
         // the summit: pines and broadleaf trees standing on the crown, denser toward the edge
@@ -136,10 +140,10 @@
           const out = Math.atan2(-(z + cn), x - cx); bush(x, z, 4 + 4 * v, 1.8, y - 0.4); ivy(x + Math.cos(out) * w * 0.5, y, z - Math.sin(out) * w * 0.5, out, 5 + 6 * v, 5 + 9 * nz(z, y));
           if (v > 0.62) cliffPine(x, z, (9 + 8 * nz(y, x)) * k, out, y - 0.5); else if (v > 0.3) { pine(x, z, (6 + 7 * nz(y, x)) * k, y - 0.5); if (v > 0.45) pine(x + 2.5, z - 2, (5 + 5 * nz(x, y)) * k, y - 0.5); } else shrub(x, z, 1 + 1.5 * v, y - 0.3); }
         // columns split off the tower: lower needles standing against its flanks
-        if (q < 6) for (let k = 0; k < 6; k++) { const i = (k * 2 + q) % P.length, [x, n] = P[i], l = Math.hypot(x - cx, n - cn), o = 1 + (16 + 26 * nz(k, q + 3)) / l, X = cx + (x - cx) * o, Nn = cn + (n - cn) * o, w = 12 + 12 * nz(q, k + 5);
+        if (q < 6) for (let k = 0; k < 6; k++) { const i = (k * 2 + q) % P.length; if (i === FALLV[q]) continue; const [x, n] = P[i], l = Math.hypot(x - cx, n - cn), o = 1 + (16 + 26 * nz(k, q + 3)) / l, X = cx + (x - cx) * o, Nn = cn + (n - cn) * o, w = 12 + 12 * nz(q, k + 5);
           if (g.dAt(X, -Nn) > 60) needle(X, Nn, w, w * (0.8 + 0.5 * nz(k, q)), t * (0.42 + 0.34 * nz(q + k, 2)), q * 7 + k); }
-        // a fall on the three tallest, down the flank that looks at the ravine
-        if (q === 0 || q === 2 || q === 5) { const [x, n] = P[q === 5 ? 3 : 1], l = Math.hypot(x - cx, n - cn), at2 = (o, y) => [cx + (x - cx) * (1 + o / l), y, -(cn + (n - cn) * (1 + o / l))]; fall(at2(7.5, t - 14), at2((t - 76) / 8 + 9, 76), q === 5 ? 9 : 5, q === 5); } });
+        // a fall on the three tallest, down the flank that looks at the ravine (the needle that would stand on its line is left out above)
+        if (FALLV[q]) { const [x, n] = P[FALLV[q]], l = Math.hypot(x - cx, n - cn), r = [(x - cx) / l, -(n - cn) / l], w = q === 5 ? 9 : 5; fall(fallPath(G, x, n, r, w, t - 3), w, q === 5); } });
       // the far field: the map is a forest of pillars in a sea of clouds. Instanced needles (four silhouettes, scaled) at three ranges from the centre of the lap: 120 between 0.75 and 1.2 km, 150 out to 1.9 km
       // and 130 out to 2.8 km, larger as they get farther so they still read; none within 150 m of the road. They carry no trees: each is painted (lointainPiliers, three drawings: wooded cap, clinging trees,
       // gullies, ledges, strata) and takes one of seven tints, so no two neighbours read the same; only the faceted crown that rounds the summit is a second shape

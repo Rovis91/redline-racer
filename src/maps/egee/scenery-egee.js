@@ -40,7 +40,7 @@
         { tex: ['pavageEgee'], weight: (x, z, y, p, d) => inside(x, z) || d < 20 ? paved(pkOf(x, z), d) : 0 }, { tex: ['falaiseEgee', '#a08c74'], rep: 0.45, weight: (x, z, y, p, d) => Math.max(ss((p - 0.15 + 0.07 * blot(x, z, 0.09, 2.2)) / 0.16), 0.85 * land(x, z, y, d) * ss((blot(x, z, 0.072, 7.7) - 0.55) / 0.4)) }] });
       // sea: a deep-blue bed under everything and the water over it, half transparent
       const plane = (m, y) => { const p = new THREE.Mesh(new THREE.PlaneGeometry(12000, 12000), m); p.rotation.x = -Math.PI / 2; p.position.set(0, y, -550); h.scene.add(p); return p; };
-      plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); const sea = plane(h.mat('seaTurquoise', { rep: [1200, 1200], transparent: true, opacity: 0.6, depthWrite: false }), SEA);
+      plane(h.mat('seaWide', { rep: [500, 500] }), SEA - 8.3); const sea = h.water(SEA, { z: -550, depth: 9, clarity: 3, shallow: 0x35c6c2, deep: 0x0c3f7a, wind: [0.8, 0.5] }); // the engine's water (MAP-ENGINE-OPTIONS.md "Water"): mirror, glitter, depth colour and shore foam
       // the game draws the roadway and its guardrail at a constant ±W; the physics walls are at ±s.w (M.wide). As on givre: th.wallH = 0 buries the engine's guardrail, the roadway and the parapet are laid again at the real width
       { const rail = h.mat('guardrail', DS, h.TH.intoWall); for (const sd of [-1, 1]) h.guardM(sd, T.t1, N, s => sd * s.w, 1.1, s => sd * s.w, -2, rail); } // a stone parapet with a lime cap; h.guardM: wears down on impacts
       h.ribbon(T.t1, N, s => -s.w, 0, s => s.w, 0, h.mat('roadway', { side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 }, ...h.TH.road), 32);
@@ -109,17 +109,18 @@
       const ctx = { h, g, THREE, MAT, kit, S, N, SEA, LAP, smp, pos, grp, set, box, house, wall, plant, grove, mill, shrine, hut, path, cross, aire, pen, hsh, boat, wire, up, sea, MILLS, BOATS, ISLETS };
       for (const z of ZONES) EGEE[z](ctx);
       const tick = EGEE.life(ctx); // what moves and sounds (scenery-egee-life.js): its fixed pieces (poles, posts) go into kit before the weld, the rest lives outside it
-      // the island's power network: it leaves the substation at the end of the harbour town (PK 556, island side) as two lines, and every line ends at a building it feeds. No pole without a wire.
-      // Town line: back along the pavement of the front (a service wire to each house of the front), then up the Descente on the island side to its two farms; it ends at the upper farm.
-      // Plateau line: a span over the road to the sea side, up the Ascension against the sky (spans over to the two farms and the country chapel), over to the island side at the top of the climb, then the plateau:
-      // the houses, the three mills, the chapel with the blue dome; it ends at the last house. The Balcon keeps a clear sky
-      { const out = pk => smp(pk).k > 0 ? -1 : 1, town = poles(3826, LAP + 556, -1, 5.6, 26), post = town[town.length - 1], climb = poles(584, 1928, 1, 4.6, 28), crest = poles(1950, 2742, -1, 5.2, 22);
-        set('posteEgee', 556, -1, 13); line(post, pos(556, -1, 10), 'wire poste'); line(post, climb[0], 'wire span poste'); line(climb[climb.length - 1], crest[0], 'wire span PK 1940');
+      // the island's power network: it leaves the substation at the end of the harbour town (PK 556, island side) and every line ends at a building it feeds. No pole without a wire.
+      // Town line: back along the pavement of the front (a service wire to each house of the front), it stops at the first house of the front: the Descente above it keeps its sea view and its houses clear.
+      // Climb line: from the substation across the road, up the Ascension to the last farm of the low slope (PK 1600), where it ends: nothing above it, the upper slope keeps a clear sky.
+      // Hill line: the only one on the hilltop. It reaches the plateau from the back, from a second substation deep inland, and runs 62 m behind the island-side houses, outside the views of the chapels, the mills and the sea
+      // (round 5: the poles of the road side were in front of every landmark). Only the island-side buildings are fed.
+      { const town = poles(4478, LAP + 556, -1, 5.6, 26), post = town[town.length - 1], climb = poles(584, 1620, 1, 4.6, 28), back = poles(2000, 2740, -1, 62, 44),
+          lead = [150, 100].map(o => { set('poteauEgee', 1990, -1, o); return Object.assign(pos(1990, -1, o), { pk: 1990, sd: -1 }); });
+        set('posteEgee', 556, -1, 13); line(post, pos(556, -1, 10), 'wire poste'); line(post, climb[0], 'wire span poste');
+        set('posteEgee', 1990, -1, 200); line(lead[0], pos(1990, -1, 197), 'wire poste hill'); line(lead[0], lead[1], 'wire hill'); line(lead[1], back[0], 'wire hill');
         for (const p of town) if (p.pk > 4476 && p.pk < LAP + 345) wire(up(p, 8.2), up(pos(p.pk + 7, -1, 7.7), 6), 'wire feed PK ' + Math.round(p.pk % LAP));
-        feed(town, 3830, -1, 12.4, 4.2); feed(town, 4190, -1, 12.4, 4.2);
-        feed(climb, 1085, -1, 12.4, 4.2); feed(climb, 1310, -1, 13.2, 4.2); feed(climb, 1600, -1, 14.4, 4.2); feed(climb, 1968, 1, 8.4, 6); feed(crest, 1940, -1, 6.4, 6);
-        feed(crest, 2060, out(2060), 6.4, 5); for (const pk of [2190, 2240, 2290]) feed(crest, pk, -1, 22, 5); feed(crest, 2400, -1, 22.5, 9); feed(crest, 2470, -1, 9.4, 5); feed(crest, 2600, -1, 34.4, 4); feed(crest, 2640, 1, 30.4, 4);
-        feed(crest, 2655, out(2655), 9, 5.5); feed(crest, 2730, out(2730), 6.4, 6); }
+        feed(climb, 1085, -1, 12.4, 4.2); feed(climb, 1310, -1, 13.2, 4.2); feed(climb, 1600, -1, 14.4, 4.2);
+        for (const pk of [2190, 2240, 2290]) feed(back, pk, -1, 22, 5); feed(back, 2400, -1, 22.5, 9); feed(back, 2470, -1, 9.4, 5); feed(back, 2600, -1, 34.4, 4); }
       // nothing over the road: a piece whose footprint (its box in its own frame, read every 4 m) comes within 1.5 m of the drivable band at road height is taken out, whatever placed it.
       // A long piece set beside one stretch of road can reach another one further along the lap (bends, the stacked stretches of the Ascension)
       { const B = new THREE.Box3(), b = new THREE.Box3(), v = new THREE.Vector3(); const out = []; for (const G of [...kit.children]) { if (!G.isGroup) continue; G.updateMatrixWorld(true); B.makeEmpty();

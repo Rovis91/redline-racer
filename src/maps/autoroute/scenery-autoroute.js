@@ -2,7 +2,7 @@
 // This file: the ground of the whole city (the streets are the terrain itself: the engine only lays 14 m of roadway down the axis of the lane), the water, the far city, the shared materials (MAT), the placers,
 // and real(): the scenery of every solid box of the map. Collision follows the objects: M.obst (src/data/maps.js) lists the boxes the cars hit, each with the name of what stands there,
 // and real() builds that thing inside the footprint. Nothing the car can reach is placed any other way: what the zone files add stands out of reach (behind a box, above the lane, under the deck).
-// The city itself is scenery-autoroute-ville.js; each zone file builds its own structure (deck, cave, tube, ramp); shapes and textures are shapes-autoroute-*.js and textures-autoroute*.js.
+// The city itself is scenery-autoroute-ville.js; each zone file builds its own structure (deck, cave, tram line); shapes and textures are shapes-autoroute-*.js and textures-autoroute*.js.
 // See docs/methods/NEW-MAP.md, phase 3, and docs/proposals/sunken-highway/AMBIANCE-V2.html.
 (function () {
   const { near, terrain, inst, weld } = PLACERS;
@@ -16,7 +16,7 @@
   Object.assign(SCENERY, {
     autoroute(h) {
       const { THREE, S, N, T } = h, M = T.mapDef, I = Object.fromEntries(Object.entries(M.key).map(([k, i]) => [k, near(h, M.pts[i][0], M.pts[i][1])]));
-      // zone(i): what the lane is at sample i. 'rue': laid on the ground of the city; 'pont': slip road, deck and fallen span; 'cave': the hole, from the ledge to the mouth of the tube; 'tube'; 'tremie': the ramp in its trench
+      // zone(i): what the lane is at sample i. 'rue': laid on the ground of the city; 'pont': slip road, deck and fallen span; 'cave': the hole, from the ledge to the mouth of the tram line's box; 'tube': the line under cover; 'tremie': its open trench
       const zone = i => i < I.rampe ? 'rue' : i < I.sol ? 'pont' : i < I.bord ? 'rue' : i < T.t0 ? 'cave' : i < T.t1 ? 'tube' : i < I.tremie ? 'tremie' : 'rue';
       // MAT: the shared materials of the map, one draw pass each: every real piece goes into the group `kit`, merged per material at the end. Keys are the zone names of the autoroute shapes
       const DS = { side: THREE.DoubleSide }, LAID = { ...DS, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }, CUT = { ...LAID, alphaTest: 0.5 }, body = c => h.mat('carrosserieAutoroute', { c }), MAT = {
@@ -31,12 +31,14 @@
         concrete: h.mat('concretePart', DS), dark: h.mat('concreteDark', DS), yellow: body(0xb8a050), steel: h.mat('matGray'), rubble: h.mat('gravatsAutoroute', { c: 0xa8a298 }), tile: h.mat('carrelageAutoroute', { ...DS, c: 0xa0a69c }),
         ivy: h.mat('lierreAutoroute'), ivy2: h.mat('lierreAutoroute', {}, '#2f4a1f'), vine: h.mat('lierreDecoupeAutoroute', { ...DS, alphaTest: 0.5 }), vine2: h.mat('lierreDecoupeAutoroute', { ...DS, alphaTest: 0.5 }, '#6a7f2e'),
         reed: h.mat('lierreAutoroute', {}, '#7a9a50'), blade: h.mat('roseauDecoupeAutoroute', { ...DS, alphaTest: 0.5 }), leaf: h.mat('feuillageAutoroute'), gold: h.mat('feuillageAutoroute', {}, '#b89a40'), bark: h.mat('trunk'),
-        body: h.mat('carrosserieAutoroute'), rust: body(0x8a4a2a), olive: body(0x5a6240), canvas: body(0x7a7450), pane: h.mat('paneDark'), lamp: h.mat('lampObj', { emis: 1 }), sign: h.mat('panneauAutoroute', {}, 'CENTRE VILLE') };
+        body: h.mat('carrosserieAutoroute'), rust: body(0x8a4a2a), olive: body(0x5a6240), canvas: body(0x7a7450), pane: h.mat('paneDark'), lamp: h.mat('lampObj', { emis: 1 }), sign: h.mat('panneauAutoroute', {}, 'CENTRE VILLE'), chevron: h.mat('chevronAutoroute', DS), arrowG: h.mat('flecheAutoroute', CUT, 0), arrowD: h.mat('flecheAutoroute', CUT, 1) };
       MAT.tyre = MAT.dark; const BODIES = [MAT.rust, body(0xb8b4a8), body(0x6f8296), body(0x7a3a34), body(0xb9ae94), body(0x7d8a6a)], kit = new THREE.Group(); h.scene.add(kit);
       // the ground. Within 22 m of the lane where it is laid on the city, the ground is the lane's own altitude (6 cm under the engine's roadway); elsewhere the city's slope (groundY).
-      // Dug out: the cave the street fell into, and the trench of the metro ramp. Their slopes (a vertex every 10 m) lie under what covers them: buildings, the slabs left of the street, the lids of the trench
+      // Dug out: the cave the street fell into, and the open trench of the tram line. Their slopes (a vertex every 10 m) lie under what covers them: buildings, the slabs left of the street, the lids of the trench
       const RUE = S.filter((s, i) => zone(i) === 'rue' && i % 2 === 0), lane = (x, z) => { let b = null, bd = 1600; for (const s of RUE) { const d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd) { bd = d; b = s; } } return b && [b.y, Math.sqrt(bd)]; };
-      const level = (x, z) => { if (x > 62 && x < 146 && z > 205 && z < 235) return -12; if (x > -409 && x < -366 && z > 13 && z < 35) return -10;
+      // (the open trench of the tram line: dug within 13 m of its axis, deep enough that the slope back up to the street, one vertex further out, passes under its floor at the walls; its file puts lids back over the slopes)
+      const OPEN = S.filter((s, i) => i >= T.t1 - 2 && i < I.tremie - 2), level = (x, z) => { if (x > 62 && x < 146 && z > 205 && z < 235) return -12;
+        { let b = null, bd = 169; for (const s of OPEN) { const d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd) { bd = d; b = s; } } if (b) return b.y - 0.3 - 1.2 * (2.5 - b.y); }
         const l = lane(x, z), y0 = groundY(x); return l ? l[0] - 0.06 + (y0 - l[0] + 0.06) * ss((l[1] - 22) / 18) : y0; };
       const park = (x, z) => ss((x + 215) / 8) * ss((-115 - x) / 8) * ss((z + 99) / 8) * ss((-11 - z) / 8), wild = (x, z) => Math.max(0, Math.sin(x * 0.045 + 1.3) * Math.sin(z * 0.052 + 0.4) + Math.sin(x * 0.11 + z * 0.07) * 0.5 - 0.55) * 2.2;
       // (two coats on the asphalt: grass where the park was, and grass that has broken through here and there, away from the axis of the streets)
@@ -79,6 +81,11 @@
         if (is(/IMMEUBLE EFFONDRE/)) { set('ruineAutoroute', x, z, { y, ry, a: [w, Math.max(14, ht * 1.7), d, v & 1 ? 'brick' : 'stone', v] }); rim(); }
         else if (is(/EBOULEMENT|EBOULIS|GRAVATS|QUAI EFFONDRE/)) { set('eboulisAutoroute', x, z, { y: y - 0.1, ry, a: [w, Math.max(1.2, ht || 1.4), d, v] }); if (l > 5) rim(); if (l > 2.5) for (let i = 0; i < 3; i++) tuft(...off((HH(v, i) - 0.5) * L, (HH(v, i + 5) - 0.5) * l), y + 0.6, v + i); }
         else if (is(/RUE AFFAISSEE/)) { set('eboulisAutoroute', x, z, { y: y - 0.6, ry, a: [w, 1.6, d, v] }); for (const t of [-0.3, 0.1, 0.34]) along('dalleAutoroute', t * L, { a: [L * 0.22, l * 0.9, (HH(v, t) - 0.5) * 0.7] }); }
+        else if (is(/TRAM EN TRAVERS/)) { along('tramAutoroute', -L * 0.22, { a: [0], ry: ryL + 0.3, skin: { ...MAT, body: BODIES[1] } }); along('tramAutoroute', L * 0.22, { a: [2], ry: ryL - 0.22, skin: { ...MAT, body: BODIES[1] } }, l * 0.1); barriers(-l * 0.38); }
+        else if (is(/MAT TRAM/)) { slab('steel', x, y, z, 0.28, 7.4, 0.28); slab('concrete', x, y, z, 0.7, 0.4, 0.7); }
+        else if (is(/TRAM [ABC]/)) set('tramAutoroute', x, z, { y: y + 0.02, ry, a: ['ABC'.indexOf(label.slice(-1))], skin: { ...MAT, body: BODIES[1] } });
+        else if (is(/BALISE/)) { along('barriereAutoroute', 0); const [ax, az] = off(-L / 2 + 0.15), [bx, bz] = off(L / 2 - 0.15); quad('chevron', [ax, y + 0.98, az], [bx, y + 0.98, bz], [bx, y + 1.9, bz], [ax, y + 1.9, az], 0.92); for (const t of [-L / 2 + 0.5, L / 2 - 0.5]) slab('steel', ...[off(t)[0], y + 0.85, off(t)[1]], 0.08, 0.2, 0.08); }
+        else if (is(/FLECHE CHANTIER/)) set('flecheChantierAutoroute', x, z, { y, ry }).scale.setScalar(1.4);                       // (a big one: it must be read from the top of the fallen span)
         else if (is(/BARRAGE MILITAIRE/)) { barriers(-l * 0.3); along('camionAutoroute', -L * 0.12, { a: [2], ry: ryL + 0.15 }, l * 0.15); along('sacsAutoroute', L * 0.28, { a: [Math.min(10, L * 0.3)] }, l * 0.1); }
         else if (is(/CONVOI MILITAIRE/)) { along('camionAutoroute', -L * 0.32, { a: [2] }); along('blindeAutoroute', -L * 0.05, { ry: ryL + 0.3 }); along('camionAutoroute', L * 0.24, { a: [2], ry: ryL - 0.1 }); barriers(-l * 0.4); }
         else if (is(/CAMION MILITAIRE/)) along('camionAutoroute', 0, { a: [2] });
@@ -105,10 +112,10 @@
         else if (is(/ECHAFAUDAGE/)) { set('echafaudageAutoroute', x, z, { y, ry, a: [w, ht + 2, d, v] }); set('eboulisAutoroute', x, z, { y, ry, a: [w * 0.6, 1.5, d, v] }); }
         else if (is(/TRAVEE EFFONDREE|DALLE CASSEE/)) { set('dalleAutoroute', x, z, { y, ry, a: [w, d, 0.3] }); if (w > 12) set('eboulisAutoroute', x, z, { y, ry, a: [w, 2, d, v] }); }
         else if (is(/ROSELIERE/)) { REEDS.push(set('roseauxAutoroute', x, z, { y: -0.6, ry: ry + (long ? Math.PI / 2 : 0), a: [l, L, v] })); }
-        else if (is(/MUR TREMIE/)) slab('concrete', x, -9.5, z, w, 13, d, ry);                                                      // the walls of the trench, from under its floor to a parapet 1 m above the street
+        else if (is(/MUR TREMIE/)) slab('concrete', x, -4.6, z, w, 8, d, ry);                                                       // the walls of the tram trench, from under its floor to a parapet 0.9 m above the street
         else return false; return true; };
       // every solid box of the map with a name gets its scenery, on the lane's ground at that place (the lane's own altitude where one passes within 30 m at that level, the ground elsewhere)
-      const NONE = /^(ILOT|PARC|TALUS)$/; // built by the city (ville) and by the hole (trou), from the same boxes
+      const NONE = /^(ILOT|PARC|TALUS|QUAI TRAM|TRAVEE TOMBEE)$/; // built by the city (ville), the hole (trou), the tram line (metro) and the bridge (pont), from the same boxes
       for (const [x, z, hx, hz, ry, oy, label, ht] of M.obst) { if (!label || NONE.test(label)) continue; let y = null, bd = 900; for (const s of S) { const d = (s.x - x) ** 2 + (s.z - z) ** 2; if (d < bd && Math.abs(s.y - oy) < 4) { bd = d; y = s.y; } }
         if (!real(label, 2 * hx, ht, 2 * hz, x, y ?? g.hAt(x, z), z, ry)) console.warn('autoroute: nothing built for', label); }
       const O = M.obst.map(([x, z, hx, hz, ry, y, label, ht]) => ({ x, z, hx, hz, ry, y, label, ht }));
