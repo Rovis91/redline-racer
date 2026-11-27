@@ -418,6 +418,10 @@ getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, dir
       #ifdef MOUVIS
         gl_FragColor.rgb *= 1. - .3 * mo.g * mo.r; // th.wetVisible: wet asphalt is darker (rain alone does not darken it: rendering of rain maps unchanged)
       #endif
+      if (n.y > .5) for (int k = 0; k < uNB; k++) { // contact shadow: the ground just under a shadow box is darker, fading out around its footprint and as the car leaves the ground. Before the dynamic light: the car's own lights still reach under it
+        vec3 o = (uBox[k] * vec4(vLw, 1.)).xyz; // box space: the footprint is |x|, |z| < 1, the underside y = -1 (above -.75 it is the car itself)
+        gl_FragColor.rgb *= 1. - .6 * step(o.y, -.75) * smoothstep(-2.2, -1.1, o.y) * smoothstep(1.3, .8, abs(o.x)) * smoothstep(1.4, .7, abs(o.z));
+      }
       gl_FragColor.rgb += 1. - exp(-1.3 * (diffuseColor.rgb + .07) * dif) + spe * (g * (.12 + pow(1. - max(dot(n, v), 0.), 3.))); // even dark asphalt responds; light tones saturate gently
     }
     `;
