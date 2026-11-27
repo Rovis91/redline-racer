@@ -166,7 +166,7 @@ th: { wetVisible: 1 }
 
 ### `th.reflectionWater`: standing water
 
-`th: { reflectionWater: 1 }` (or a strength). The screen reflections follow what still water really returns: 2 % seen from above, a mirror at grazing angle (Schlick), and the reflection replaces the surface's colour instead of being added to it. Near the car one sees into the water, far away it mirrors the scenery. For a map with a real sheet of water (`autoroute`); wet asphalt keeps the default. A scenery surface joins the reflection pass by leaving 0.5 in the target's alpha (see the water material in `scenery-autoroute.js`). Cost: none beyond the reflection pass.
+`th: { reflectionWater: 1 }` (or a strength). The screen reflections follow what still water really returns: 2 % seen from above, a mirror at grazing angle (Schlick), and the reflection replaces the surface's colour instead of being added to it. Near the car one sees into the water, far away it mirrors the scenery. The mirror is not still: four scrolling waves tilt its normal (slope `RIDES` each in `game.js`, stronger around the view's car when it moves), and the waves too fine for a pixel smear the reflection taller instead of shimmering. For a map with a real sheet of water (`autoroute`); wet asphalt keeps the default. A scenery surface joins the reflection pass by leaving 0.5 in the target's alpha (see the water material in `scenery-autoroute.js`). Cost: none beyond the reflection pass.
 
 ### `th.gloss`: road shine
 
