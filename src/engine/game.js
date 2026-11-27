@@ -359,6 +359,7 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
   const LUX = { uLP: { value: Float32Array.from({ length: NL * 4 }, (_, i) => i % 4 === 3 ? 1 : 0) }, uLC: { value: new Float32Array(NL * 3) }, // flat: three is passed the array as-is instead of copying 20 vectors at each draw pass
    
     uHP: { value: new V3() }, uHD: { value: new V3(1, 0, 0) }, uHC: { value: new THREE.Color(0xfff2d0).multiplyScalar(TH.headlights * 1.1 * BRIGHT_GAIN) }, uBox: { value: new Float32Array(48) }, uNB: { value: 1 }, // uBox: 3 shadow boxes (the view's car, then its two nearest cars), uNB of them in use
+    uOP: { value: new Float32Array(6) }, uOD: { value: new Float32Array(6) }, uOC: { value: new Float32Array(6) }, uNO: { value: 0 }, // headlight beams of the two nearest vehicles (origin, direction, colour), uNO of them in use
    
     uSunD: { value: SD }, uCam: { value: new V3() }, uSunC: { value: new THREE.Color() }, uSky: { value: new THREE.Color() }, uHz: { value: new THREE.Color() }, uN: { value: 0 }, uRes: { value: new THREE.Vector2() } };
   const LU_V = `{ vec4 lw = vec4(transformed, 1.);
@@ -376,14 +377,21 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
     #ifdef MOUILLE
       uniform sampler2D uMo; varying vec2 vMo;
     #endif
-    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam, uHz; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB; varying vec3 vLw;
+    uniform vec4 uLP[NL]; uniform vec3 uLC[NL]; uniform vec3 uHP, uHD, uHC, uSunD, uSunC, uSky, uCam, uHz; uniform vec3 uOP[2], uOD[2], uOC[2]; uniform mat4 uBox[3]; uniform float uGloss, uRetro; uniform int uN, uNB, uNO; varying vec3 vLw;
     float luOmbre(vec3 p, vec3 d, int i0) { // 0 if a car's box (from box i0 on: 0 = the view's car, then its two nearest cars) cuts the segment p → p + d; a point inside a box or on its surface is not shadowed
       for (int k = i0; k < uNB; k++) {
         vec3 o = (uBox[k] * vec4(p, 1.)).xyz, iv = 1. / (mat3(uBox[k]) * d + 1e-5), t0 = (-1. - o) * iv, t1 = (1. - o) * iv, mn = min(t0, t1), mx = max(t0, t1);
         float a = max(max(mn.x, mn.y), mn.z), b = min(min(mx.x, mx.y), mx.z);
-        if (a < b && a > .005 && a < 1.) return 0.;
+        if (a < b && a > .005 && b < 1.) return 0.; // b < 1: a light inside a box shines out of it (the headlights of a nearby vehicle)
       }
       return 1.;
+    }
+    vec3 luPhare(vec3 n, vec3 o, vec3 hd, vec3 c, float retro, int i0) { // a headlight beam on the pixel: wide, horizontal cut-off (dipped beam); retro: share returned by reflectors and signs, even above the cut-off; i0: first shadow box that cuts it
+      vec3 hv = vLw - o; float f = dot(hv, hd);
+      if (f <= .5) return vec3(0.);
+      vec3 hr = normalize(vec3(-hd.z, 0., hd.x));
+      float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, hd)) / f) * smoothstep(75., 25., f) * luOmbre(vLw, -hv, i0); // softened cutoff: a road going uphill no longer makes a hard line
+      return c * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)) + m * retro);
     }
     `;
   const LU_F = `{
@@ -409,13 +417,8 @@ window.launchGame = async (MAP_DEF = window.MAP_DEF, backdrop = false) => {
 getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowIntensity, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]);
       #endif
         spe += plat * (uSunC * so * pow(max(dot(rh, normalize(uSunD.xz)), 0.), 50.) * 3.5 + uSky * .18); }
-      vec3 hv = vLw - uHP; float f = dot(hv, uHD);
-      if (f > .5) { // phares : faisceau large, coupure horizontale nette (feu de croisement)
-        vec3 hr = normalize(vec3(-uHD.z, 0., uHD.x));
-        float m = smoothstep(1.3, .6, abs(dot(hv, hr)) / f) / (1. + f * f * .0006), lo = m * smoothstep(.3, .02, dot(hv, cross(hr, uHD)) / f) * smoothstep(75., 25., f) * luOmbre(vLw, -hv, 1); // the nearest cars cut the beam; softened cutoff: a road going uphill no longer makes a hard line
-        dif += uHC * (lo * (.45 + .55 * max(dot(n, -normalize(hv)), 0.)));
-        if (uRetro > 0.) dif += uHC * (m * uRetro); // reflectors and signs: return the beam, even above the cutoff
-      }
+      dif += luPhare(n, uHP, uHD, uHC, uRetro, 1); // the view's car: the nearest cars cut its beam
+      for (int i = 0; i < 2; i++) { if (i >= uNO) break; dif += luPhare(n, uOP[i], uOD[i], uOC[i], 0., 0); } // the two nearest vehicles: the view's car cuts theirs too
       if (uRetro > 0.) gl_FragColor.rgb *= .3;
       gl_FragColor.rgb *= .55 + .45 * diffuseColor.a; // water darkens the ground
       #ifdef MOUILLE
@@ -2210,7 +2213,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     const dmgP = G.userData.dmgP, hs = (dmgP.ph[0] - dmgP.ph[1]) * 0.55; // one headlight broken: the beam comes from the other, at half strength; both: nothing
     LUX.uCam.value = cam.position; LUX.uHP.value.set(car.x + fx * 1.9 - fz * hs, carY + 0.62, car.z + fz * 1.9 + fx * hs); LUX.uHD.value.set(fx * cp, Math.sin(pitch), fz * cp); LUX.uHC.value.copy(HCB).multiplyScalar(headlightsV * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2));
     if (cones) { cones.visible = kBr > 0.02; cones.material.opacity = 0.14 * kBr * (1 - (dmgP.ph[0] + dmgP.ph[1]) / 2); cones.position.copy(LUX.uHP.value); cones.rotation.set(0, Math.atan2(fx, fz), 0); }
-    G.updateMatrixWorld(); boxM.copy(G.matrixWorld).multiply(BOX).invert().toArray(LUX.uBox.value, 0); let nb = 1; // G: the view's car model, first shadow box; the two nearest cars follow (below)
+    G.updateMatrixWorld(); boxM.copy(G.matrixWorld).multiply(BOX).invert().toArray(LUX.uBox.value, 0); let nb = 1, no = 0; // G: the view's car model, first shadow box; the two nearest cars follow (below)
     LUX.uSunC.value.copy(SUNC).multiplyScalar(1 - lm); LUX.uHz.value.copy(ORB).sub(FOG_OUT).multiplyScalar(FOG_OUT.g > 0.4 ? Math.min(1.25, 5 * (1 - SD.y) ** 2) * (1 - lm) * (1 - kBr) : 0); // only a daylight haze takes the tint: the night fogs (and the moon's black one) are all under 0.25
     LUX.uSky.value.copy(scene.fog.color); LUX.uRes.value.set(TRB ? vu.rw / 2 / TRB : 0, RH / 2 / TRB);
     let nl = 0;
@@ -2223,7 +2226,7 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     // car lights (rear, neon, nitro): without the shadow box. Low and very close to it, they projected it as crisp rectangles onto the road and the walls around (especially the nitro while drifting, the box sideways)
     if (car.boost > 0) put(car.x - fx * 3.2, carY + 0.45, car.z - fz * 3.2, BLUE, -10, 2.5 * (0.5 + nightV) * (0.8 + 0.4 * Math.random()));
     if (fl) put(car.x + 30, carY + 70, car.z - 20, FLASH, 140, 2.2 * fl);
-    // the two nearest vehicles (opponents, or traffic trucks): headlights in front, red lights behind
+    // the two nearest vehicles (opponents, or traffic trucks): a headlight beam in front, red lights behind
     const d2 = c => (c.x - car.x) ** 2 + (c.z - car.z) ** 2;
     const veh = race ? race.cars.filter(c => c !== car && !portion(c)) : M.traffic && state !== 'title' ? traffic(T, tTraffic).slice() : [];
     let nf = 0; veh.forEach(c => { if (d2(c) < 1600) return; const i = nf++, ax = Math.cos(c.th), az = Math.sin(c.th), k = c.lane === undefined, ar = k ? ENCt.x / 2 + 0.05 : 6.5, l = k ? ENCt.z / 2 - 0.3 : 1; // on the rear of the body, or of the trailer
@@ -2231,17 +2234,16 @@ diffuseColor.rgb = mix(diffuseColor.rgb, uSaleC, saleM * 0.88);`;
     lightsGeo.setDrawRange(0, nf * 2); lightsGeo.attributes.position.needsUpdate = true;
     lights.material.size = (TH.headlightsHaze ? 1 + 0.6 * kBr : 1) * 0.5 / Math.tan(vu.cam.fov * Math.PI / 360) * RH / renderer.domElement.height * renderer.getPixelRatio(); // three.js measures points on the canvas (0.5 × its height / distance); we draw into the view's target, RH lines
     for (const c of veh.sort((a, b) => d2(a) - d2(b)).slice(0, 2)) {
-      const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 6.5 : 10, ar = c.lane === undefined ? 3.4 : 7; // a truck is longer
-      if (c.lane === undefined) { const g = model(c); g.updateMatrixWorld(); boxM.copy(g.matrixWorld).multiply(BOX); }
-      else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
-      boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
+      const ax = Math.cos(c.th), az = Math.sin(c.th), y = c.y, av = c.lane === undefined ? 1.9 : 10, ar = c.lane === undefined ? 3.4 : 7; // a truck is longer
       const dv = c.lane === undefined ? model(c).userData.dmgP : null, kp = dv ? 1 - (dv.ph[0] + dv.ph[1]) / 2 : 1, kf = dv ? 1 - (dv.fe[0] + dv.fe[1]) / 2 : 1; // its headlights and broken lights
       if (c.lane === undefined) { const g = model(c); g.updateMatrixWorld(); boxM.copy(g.matrixWorld).multiply(BOX); }
       else boxM.makeRotationY(-c.th).setPosition(c.x + ax * 1.5, y + 1.9, c.z + az * 1.5).scale(tmp.set(8.3, 1.9, 1.3)); // a truck: 16.6 m long between its lights (10 m ahead, 7 behind), 3.8 high
       boxM.invert().toArray(LUX.uBox.value, 16 * nb++); // its shadow box, under the fixtures and in the view's headlights
-      put(c.x + ax * av, y + 0.8, c.z + az * av, HEADLIGHT, 14, 3 * nightV * kp); put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
+      if (kp > 0 && d2(c) < 22500) { const o = 3 * no++, m = 0.5 * headlightsV * kp; LUX.uOP.value.set([c.x + ax * av, y + 0.7, c.z + az * av], o); LUX.uOD.value.set([ax, 0, az], o); LUX.uOC.value.set([HCB.r * m, HCB.g * m, HCB.b * m], o); } // its beam, level with the road, where it points, at half the strength of the view's (three beams overlap on the road); beyond 150 m it reaches nothing in view
+      put(c.x - ax * ar, y + 0.7, c.z - az * ar, RED, 9, (c.lane === undefined && model(c).userData.fr ? 2.4 : 1.4) * nightV * kf);
       if (L.neon && race && (c.k < 0 || c.k >= 3)) put(c.x, y + 0.3, c.z, NEONC, 5.5, nightV * (0.8 + 0.4 * pulse)); // the other player's car keeps its underbody neon (c.k: -1 player 1, 3 player 2)
     }
+    LUX.uNO.value = no;
     // fixed fixtures: the nearest along the track (those ahead count double), faded at the end of the list so that none lights up all at once
     if (car.idx !== vu.brightIdx) { vu.brightIdx = car.idx; for (const e of vu.brights) { let d = (e.l.i - car.idx + N) % N; if (d > N / 2) d -= N; e.d = d > 0 ? d * 0.5 : -d; } vu.brights.sort((a, b) => a.d - b.d); } // the sort only changes from one track sample to the next
     const LS = vu.brights, ns = NL - nl, dm = LS.length > ns ? LS[ns].d : 1e9;
